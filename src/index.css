@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-display: "Space Grotesk", sans-serif;
+
+  --color-emerald-50: #f7ebfa;
+  --color-emerald-100: #f0ccf7;
+  --color-emerald-200: #e299f0;
+  --color-emerald-300: #cd60e2;
+  --color-emerald-400: #b032c7;
+  --color-emerald-500: #8c10b0; /* brand purple */
+  --color-emerald-600: #7b1fa2;
+  --color-emerald-700: #621184;
+  --color-emerald-800: #4e0e6b;
+  --color-emerald-850: #3f0956;
+  --color-emerald-900: #300642;
+  --color-emerald-950: #1a0126;
+
+  --color-amber-50: #fdfaf4;
+  --color-amber-100: #faf1df;
+  --color-amber-200: #f4dcbf;
+  --color-amber-300: #ecc292;
+  --color-amber-400: #f4e6d4; /* cream active pill background */
+  --color-amber-500: #dfa04c; /* warm gold accent */
+  --color-amber-600: #c28135;
+  --color-amber-700: #9e6022;
+}
+
+/* Custom support utility classes */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Custom fade-in and slide animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Printable layout styling to omit background controls and preserve dark headers */
+@media print {
+  body {
+    background-color: white !important;
+    color: black !important;
+  }
+  #bottom-navbar, #btn-back-receipt, #btn-print-receipt, #btn-share-receipt, #btn-download-receipt, #phone-mockup-frame::before {
+    display: none !important;
+  }
+  #receipt-container {
+    padding: 0 !important;
+    background-color: white !important;
+  }
+  .print\:shadow-none {
+    box-shadow: none !important;
+  }
+  .print\:border-none {
+    border: none !important;
+  }
+}

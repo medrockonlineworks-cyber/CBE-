@@ -1,0 +1,190 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User digital banking registration record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "maxLength": 100 },
+        "phone": { "type": "string", "pattern": "^\\+251[0-9]{9}$" },
+        "email": { "type": "string", "maxLength": 150 },
+        "role": { "type": "string", "enum": ["user", "admin"] },
+        "status": { "type": "string", "enum": ["active", "suspended"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "accountNumber": { "type": "string", "maxLength": 20 },
+        "balance": { "type": "number" },
+        "availableBalance": { "type": "number" },
+        "biometricEnabled": { "type": "boolean" }
+      },
+      "required": ["id", "name", "phone", "email", "role", "status", "accountNumber", "balance", "createdAt"]
+    },
+    "BankAccount": {
+      "title": "Bank Account Details",
+      "description": "Savings or checking account status and balance information",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "accountNumber": { "type": "string", "maxLength": 20 },
+        "accountType": { "type": "string", "enum": ["savings", "checking"] },
+        "balance": { "type": "number" },
+        "availableBalance": { "type": "number" },
+        "status": { "type": "string", "enum": ["active", "frozen"] },
+        "currency": { "type": "string", "enum": ["ETB"] }
+      },
+      "required": ["id", "userId", "accountNumber", "accountType", "balance", "availableBalance", "status", "currency"]
+    },
+    "Transaction": {
+      "title": "Transaction Ledger",
+      "description": "Simulated or actual transfers, deposits, and payments ledger log",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 64 },
+        "type": { "type": "string", "enum": ["send", "receive", "transfer", "bill", "airtime"] },
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string", "maxLength": 100 },
+        "senderAccount": { "type": "string", "maxLength": 30 },
+        "recipientId": { "type": "string" },
+        "recipientName": { "type": "string", "maxLength": 100 },
+        "recipientAccount": { "type": "string", "maxLength": 30 },
+        "recipientBank": { "type": "string", "maxLength": 100 },
+        "amount": { "type": "number" },
+        "fee": { "type": "number" },
+        "description": { "type": "string", "maxLength": 200 },
+        "status": { "type": "string", "enum": ["pending", "success", "failed"] },
+        "reference": { "type": "string", "maxLength": 64 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "type", "recipientName", "recipientAccount", "recipientBank", "amount", "fee", "status", "reference", "createdAt"]
+    },
+    "Beneficiary": {
+      "title": "Beneficiary Profile",
+      "description": "Saved recipient credentials for quick internal/external transfers",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string", "maxLength": 100 },
+        "accountNumber": { "type": "string", "maxLength": 30 },
+        "bankName": { "type": "string", "maxLength": 100 },
+        "phone": { "type": "string" }
+      },
+      "required": ["id", "userId", "name", "accountNumber", "bankName"]
+    },
+    "BillPayment": {
+      "title": "Bill Payment",
+      "description": "Payment records for utilities and broadband services",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "category": { "type": "string", "enum": ["electricity", "water", "internet", "telecom", "tv", "other"] },
+        "companyName": { "type": "string", "maxLength": 100 },
+        "customerId": { "type": "string", "maxLength": 50 },
+        "amount": { "type": "number" },
+        "fee": { "type": "number" },
+        "status": { "type": "string", "enum": ["pending", "success", "failed"] },
+        "reference": { "type": "string", "maxLength": 64 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "category", "companyName", "customerId", "amount", "fee", "status", "reference", "createdAt"]
+    },
+    "AirtimePurchase": {
+      "title": "Airtime Purchase",
+      "description": "Mobile topup records for carrier networks",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "network": { "type": "string", "enum": ["Ethio Telecom", "Safaricom"] },
+        "phone": { "type": "string", "pattern": "^\\+251[0-9]{9}$" },
+        "amount": { "type": "number" },
+        "packageType": { "type": "string", "enum": ["airtime", "data"] },
+        "packageDetails": { "type": "string", "maxLength": 100 },
+        "status": { "type": "string", "enum": ["pending", "success", "failed"] },
+        "reference": { "type": "string", "maxLength": 64 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "network", "phone", "amount", "packageType", "status", "reference", "createdAt"]
+    },
+    "SystemNotification": {
+      "title": "System Notification",
+      "description": "Alert logs and transaction notifications dispatched to users",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string", "maxLength": 150 },
+        "body": { "type": "string", "maxLength": 300 },
+        "isRead": { "type": "boolean" },
+        "type": { "type": "string", "enum": ["info", "success", "warning", "alert"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "title", "body", "isRead", "type", "createdAt"]
+    },
+    "Admin": {
+      "title": "Administrator Profile",
+      "description": "Secure reference document to allowlist admin user UIDs",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string", "maxLength": 150 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "email", "createdAt"]
+    },
+    "AuditLog": {
+      "title": "Security Audit Log",
+      "description": "Cryptographically logged ledger transactions and admin events",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "userEmail": { "type": "string", "maxLength": 150 },
+        "action": { "type": "string", "maxLength": 100 },
+        "details": { "type": "string", "maxLength": 1000 },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "userEmail", "action", "details", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Registered digital banking customer accounts"
+    },
+    "/users/{userId}/accounts/{accountId}": {
+      "schema": { "$ref": "#/entities/BankAccount" },
+      "description": "Savings/checking ledger balances"
+    },
+    "/transactions/{transactionId}": {
+      "schema": { "$ref": "#/entities/Transaction" },
+      "description": "Global transaction activities list"
+    },
+    "/users/{userId}/beneficiaries/{beneficiaryId}": {
+      "schema": { "$ref": "#/entities/Beneficiary" },
+      "description": "Saved beneficiaries list"
+    },
+    "/users/{userId}/payments/{paymentId}": {
+      "schema": { "$ref": "#/entities/BillPayment" },
+      "description": "Customer utility bills ledger"
+    },
+    "/users/{userId}/airtime/{airtimeId}": {
+      "schema": { "$ref": "#/entities/AirtimePurchase" },
+      "description": "Customer mobile topup records"
+    },
+    "/users/{userId}/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/SystemNotification" },
+      "description": "In-app message notifications inbox"
+    },
+    "/admins/{adminId}": {
+      "schema": { "$ref": "#/entities/Admin" },
+      "description": "Whitelist of administrative user credentials"
+    },
+    "/auditLogs/{logId}": {
+      "schema": { "$ref": "#/entities/AuditLog" },
+      "description": "Security audit logger chain"
+    }
+  }
+}

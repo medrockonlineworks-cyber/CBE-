@@ -1,0 +1,6 @@
+{
+  "name": "Tana Digital Bank",
+  "description": "A modern mobile banking application prototype inspired by Ethiopian digital banking layouts, featuring a secure multi-screen UI, dashboard, transactions, bill payments, and admin controls.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

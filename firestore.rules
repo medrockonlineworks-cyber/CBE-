@@ -1,0 +1,226 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Global Safety Net - Default Deny Catch-All
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- REUSABLE SECURITY PRIMITIVES & HELPER FUNCTIONS ---
+    
+    // Validate custom alphanumeric ID formats to prevent poison inputs
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Role Lookup: Admins are listed in the secure /admins/{uid} collection
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // Check if the current user matches the owner parameter
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Checks standard email verification flags for robust access security
+    function isVerifiedUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
+    // --- ENTITY SPECIFIC FIELD BLUEPRINTS (VALIDATION HELPERS) ---
+
+    // 2. User Validation Blueprint
+    function isValidUser(data) {
+      return data.keys().hasAll(['id', 'name', 'phone', 'email', 'role', 'status', 'accountNumber', 'balance', 'createdAt'])
+        && data.id is string && data.id.size() <= 128
+        && data.name is string && data.name.size() <= 100
+        && data.phone is string && data.phone.size() == 13 && data.phone.matches('^\\+251[0-9]{9}$')
+        && data.email is string && data.email.size() <= 150
+        && data.role in ['user', 'admin']
+        && data.status in ['active', 'suspended']
+        && data.accountNumber is string && data.accountNumber.size() <= 20
+        && data.balance is number
+        && data.availableBalance is number;
+    }
+
+    // 3. Bank Account Validation Blueprint
+    function isValidBankAccount(data) {
+      return data.keys().hasAll(['id', 'userId', 'accountNumber', 'accountType', 'balance', 'availableBalance', 'status', 'currency'])
+        && data.id is string && data.id.size() <= 128
+        && data.userId is string && data.userId.size() <= 128
+        && data.accountNumber is string && data.accountNumber.size() <= 20
+        && data.accountType in ['savings', 'checking']
+        && data.balance is number
+        && data.availableBalance is number
+        && data.status in ['active', 'frozen']
+        && data.currency == 'ETB';
+    }
+
+    // 4. Transaction Validation Blueprint
+    function isValidTransaction(data) {
+      return data.keys().hasAll(['id', 'type', 'recipientName', 'recipientAccount', 'recipientBank', 'amount', 'fee', 'status', 'reference', 'createdAt'])
+        && data.id is string && data.id.size() <= 64
+        && data.type in ['send', 'receive', 'transfer', 'bill', 'airtime']
+        && data.recipientName is string && data.recipientName.size() <= 100
+        && data.recipientAccount is string && data.recipientAccount.size() <= 30
+        && data.recipientBank is string && data.recipientBank.size() <= 100
+        && data.amount is number && data.amount > 0
+        && data.fee is number && data.fee >= 0
+        && data.status in ['pending', 'success', 'failed']
+        && data.reference is string && data.reference.size() <= 64;
+    }
+
+    // --- CORES & ROUTE RULES ---
+
+    // Users Collection rules
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      
+      // Blanket search/list queries are forbidden to prevent PII scraping
+      allow list: if isAdmin();
+
+      // Only allow creation of owner profiles, with strict system defaults (e.g. role = user, status = active, balance = 1000)
+      allow create: if isOwner(userId) 
+        && isValidUser(incoming()) 
+        && incoming().role == 'user' 
+        && incoming().status == 'active' 
+        && incoming().balance == 1000.00
+        && incoming().createdAt == request.time;
+
+      // Allow users to update their preferred name or email, preventing self-adjustment of balance/role
+      allow update: if (
+        isOwner(userId) 
+        && isValidUser(incoming())
+        && incoming().role == existing().role
+        && incoming().status == existing().status
+        && incoming().balance == existing().balance
+        && incoming().accountNumber == existing().accountNumber
+        && incoming().createdAt == existing().createdAt
+        && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'email', 'biometricEnabled'])
+      ) || (
+        isAdmin() 
+        && isValidUser(incoming())
+        && incoming().id == existing().id
+        && incoming().accountNumber == existing().accountNumber
+        && incoming().createdAt == existing().createdAt
+        // Admins can adjust status or balances, but not core identifiers
+        && incoming().diff(existing()).affectedKeys().hasAny(['status', 'balance', 'availableBalance'])
+      );
+
+      allow delete: if false; // Accounts cannot be deleted via Client SDKs
+
+      // Sub-collection: Accounts (Savings Ledger)
+      match /accounts/{accountId} {
+        allow get: if isOwner(userId) || isAdmin();
+        allow list: if isOwner(userId) || isAdmin();
+        
+        allow create: if isOwner(userId) 
+          && isValidBankAccount(incoming())
+          && incoming().userId == userId
+          && incoming().balance == 0
+          && incoming().status == 'active';
+
+        // Balance updates must be atomic or processed by admin
+        allow update: if (
+          isOwner(userId)
+          && isValidBankAccount(incoming())
+          && incoming().userId == userId
+          && incoming().balance == existing().balance // users cannot arbitrary inflate balance
+          && incoming().diff(existing()).affectedKeys().hasOnly(['status']) // user can freeze account
+        ) || isAdmin();
+
+        allow delete: if false;
+      }
+
+      // Sub-collection: Beneficiaries
+      match /beneficiaries/{beneficiaryId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId) && incoming().userId == userId;
+        allow update: if isOwner(userId) && incoming().userId == userId;
+        allow delete: if isOwner(userId);
+      }
+
+      // Sub-collection: Payments (Bills)
+      match /payments/{paymentId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) && incoming().userId == userId && incoming().createdAt == request.time;
+        allow update: if false; // Historical logs are immutable
+        allow delete: if false;
+      }
+
+      // Sub-collection: Airtime Purchases
+      match /airtime/{airtimeId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow create: if isOwner(userId) && incoming().userId == userId && incoming().createdAt == request.time;
+        allow update: if false;
+        allow delete: if false;
+      }
+
+      // Sub-collection: Notifications (Inbox)
+      match /notifications/{notificationId} {
+        allow read: if isOwner(userId);
+        allow create: if isAdmin() || isOwner(userId); // System alerts
+        allow update: if isOwner(userId) && incoming().diff(existing()).affectedKeys().hasOnly(['isRead']);
+        allow delete: if isOwner(userId);
+      }
+    }
+
+    // Transactions Collection rules (Global Ledger)
+    match /transactions/{transactionId} {
+      allow get: if isSignedIn() && (
+        resource.data.senderId == request.auth.uid || 
+        resource.data.recipientId == request.auth.uid || 
+        isAdmin()
+      );
+
+      // Query safety: Users can only query transactions where they are active participants
+      allow list: if isSignedIn() && (
+        resource.data.senderId == request.auth.uid || 
+        resource.data.recipientId == request.auth.uid || 
+        isAdmin()
+      );
+
+      // Creating transactions is allowed, but must enforce exact balance checking via Cloud Functions (Server-side) in production
+      allow create: if isSignedIn() 
+        && isValidTransaction(incoming())
+        && (incoming().senderId == request.auth.uid || incoming().recipientId == request.auth.uid)
+        && incoming().createdAt == request.time;
+
+      allow update: if isAdmin() // Only admins can adjust status (e.g., mark pending as success/failed)
+        && isValidTransaction(incoming())
+        && incoming().id == existing().id
+        && incoming().diff(existing()).affectedKeys().hasOnly(['status']);
+
+      allow delete: if false; // Transactions ledger is immutable
+    }
+
+    // Admins Whitelist Collection
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+      allow write: if false; // Admins must be provisioned directly via Console or Admin SDK (Security Precaution)
+    }
+
+    // Cryptographic Audit Logs Collection
+    match /auditLogs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn() 
+        && incoming().userId == request.auth.uid 
+        && incoming().createdAt == request.time;
+      allow update, delete: if false; // Audit logs are immutable and permanent
+    }
+  }
+}
