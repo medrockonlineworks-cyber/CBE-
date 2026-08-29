@@ -1,8 +1,9 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { toPng } from 'html-to-image';
+import html2canvas from 'html2canvas';
 import { Transaction } from '../types';
 import { LocalDb, DEFAULT_CBE_LOGO } from '../lib/mockData';
 import { calculateCbeFee } from '../lib/cbeTariff';
+import { CbeLogo } from './CbeLogo';
 import { 
   Check, 
   Share2, 
@@ -25,24 +26,12 @@ interface ReceiptProps {
   onBack: () => void;
 }
 
-// Custom CBE Golden Circular Logo Vector (Official Logo)
-const CbeLogo = ({ className = "w-10 h-10", src }: { className?: string; src?: string | null }) => (
-  <img 
-    src={src || DEFAULT_CBE_LOGO} 
-    alt="Commercial Bank of Ethiopia" 
-    className={`${className} object-contain`} 
-    crossOrigin="anonymous"
-    referrerPolicy="no-referrer"
-  />
-);
-
 export default function Receipt({ transaction, onBack }: ReceiptProps) {
   const receiptRef = useRef<HTMLDivElement>(null);
   const [showDetailedModal, setShowDetailedModal] = useState(false);
   const [copiedToast, setCopiedToast] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [flashAnimation, setFlashAnimation] = useState(false);
-  const [capturedImageUrl, setCapturedImageUrl] = useState<string | null>(null);
 
   // Dynamic customized feedback assets
   const [customBankLogo, setCustomBankLogo] = useState<string | null>(null);
@@ -313,38 +302,63 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       }
     }
 
+    // Helper to load image for canvas
+    const loadImageAsync = (url: string): Promise<HTMLImageElement> => {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error('Failed to load image for canvas'));
+        img.src = url;
+      });
+    };
+
     // 7. Authentic Centered QR Code
     const qrSize = 250;
     const qrX = (width - qrSize) / 2;
     const qrY = boxY + 360;
+    const activeQrUrl = customQrCode || LocalDb.getCustomQrCode();
 
-    // Draw QR Code Modules
-    const gridSize = 21;
-    const cellSize = qrSize / gridSize;
-    ctx.fillStyle = '#000000';
+    let qrImageLoaded = false;
+    if (activeQrUrl) {
+      try {
+        const qrImg = await loadImageAsync(activeQrUrl);
+        ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+        qrImageLoaded = true;
+      } catch (err) {
+        console.warn('Custom QR image load failed for canvas, rendering default matrix:', err);
+      }
+    }
 
-    for (let r = 0; r < gridSize; r++) {
-      for (let c = 0; c < gridSize; c++) {
-        const isCornerFinder =
-          (r < 7 && c < 7) ||
-          (r < 7 && c >= gridSize - 7) ||
-          (r >= gridSize - 7 && c < 7);
-        
-        let filled = false;
-        if (isCornerFinder) {
-          const inOuter = (r === 0 || r === 6 || c === 0 || c === 6 || r === gridSize - 1 || r === gridSize - 7 || c === gridSize - 1 || c === gridSize - 7);
-          const inInner = (r >= 2 && r <= 4 && c >= 2 && c <= 4) ||
-                          (r >= 2 && r <= 4 && c >= gridSize - 5 && c <= gridSize - 3) ||
-                          (r >= gridSize - 5 && r <= gridSize - 3 && c >= 2 && c <= 4);
-          filled = inOuter || inInner;
-        } else {
-          filled = ((r * 13 + c * 17 + txId.charCodeAt(c % txId.length)) % 3) !== 0;
-        }
+    if (!qrImageLoaded) {
+      // Draw QR Code Modules
+      const gridSize = 21;
+      const cellSize = qrSize / gridSize;
+      ctx.fillStyle = '#000000';
 
-        if (filled) {
-          ctx.beginPath();
-          ctx.roundRect(qrX + c * cellSize + 0.8, qrY + r * cellSize + 0.8, cellSize - 1.6, cellSize - 1.6, 2);
-          ctx.fill();
+      for (let r = 0; r < gridSize; r++) {
+        for (let c = 0; c < gridSize; c++) {
+          const isCornerFinder =
+            (r < 7 && c < 7) ||
+            (r < 7 && c >= gridSize - 7) ||
+            (r >= gridSize - 7 && c < 7);
+          
+          let filled = false;
+          if (isCornerFinder) {
+            const inOuter = (r === 0 || r === 6 || c === 0 || c === 6 || r === gridSize - 1 || r === gridSize - 7 || c === gridSize - 1 || c === gridSize - 7);
+            const inInner = (r >= 2 && r <= 4 && c >= 2 && c <= 4) ||
+                            (r >= 2 && r <= 4 && c >= gridSize - 5 && c <= gridSize - 3) ||
+                            (r >= gridSize - 5 && r <= gridSize - 3 && c >= 2 && c <= 4);
+            filled = inOuter || inInner;
+          } else {
+            filled = ((r * 13 + c * 17 + txId.charCodeAt(c % txId.length)) % 3) !== 0;
+          }
+
+          if (filled) {
+            ctx.beginPath();
+            ctx.roundRect(qrX + c * cellSize + 0.8, qrY + r * cellSize + 0.8, cellSize - 1.6, cellSize - 1.6, 2);
+            ctx.fill();
+          }
         }
       }
     }
@@ -352,26 +366,40 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     // 8. Commercial Bank of Ethiopia Footer Inset
     const logoX = boxX + 36;
     const logoY = qrY + qrSize + 48;
-    
-    // Draw Golden CBE Coin Logo
-    ctx.save();
-    ctx.fillStyle = '#d4af37';
-    ctx.beginPath();
-    ctx.arc(logoX + 22, logoY + 16, 22, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#996515';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
+    const activeLogoUrl = customBankLogo || LocalDb.getCustomBankLogo() || DEFAULT_CBE_LOGO;
 
-    // Spiral/Coin internal concentric lines
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1.8;
-    for (let r = 5; r <= 16; r += 5) {
-      ctx.beginPath();
-      ctx.arc(logoX + 22, logoY + 16, r, 0, Math.PI * 1.8);
-      ctx.stroke();
+    let logoImageLoaded = false;
+    if (activeLogoUrl) {
+      try {
+        const logoImg = await loadImageAsync(activeLogoUrl);
+        ctx.drawImage(logoImg, logoX, logoY - 4, 46, 46);
+        logoImageLoaded = true;
+      } catch (err) {
+        console.warn('Custom logo load failed for canvas, rendering default emblem:', err);
+      }
     }
-    ctx.restore();
+    
+    if (!logoImageLoaded) {
+      // Draw Golden CBE Coin Logo
+      ctx.save();
+      ctx.fillStyle = '#d4af37';
+      ctx.beginPath();
+      ctx.arc(logoX + 22, logoY + 16, 22, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#996515';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Spiral/Coin internal concentric lines
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.8;
+      for (let r = 5; r <= 16; r += 5) {
+        ctx.beginPath();
+        ctx.arc(logoX + 22, logoY + 16, r, 0, Math.PI * 1.8);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
 
     // Branding text
     ctx.textAlign = 'left';
@@ -466,21 +494,39 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     return canvas.toDataURL('image/png');
   };
 
-  // Screenshot / Save handle
+  // Screenshot / Save handle - behaves like a real native phone screenshot
   const handleScreenshot = async () => {
     if (isCapturing) return;
 
     try {
       setIsCapturing(true);
-      // Trigger shutter flash visual effect
+      // 1. Trigger realistic camera shutter flash effect
       setFlashAnimation(true);
-      setTimeout(() => setFlashAnimation(false), 350);
+      setTimeout(() => setFlashAnimation(false), 250);
 
-      // Generate the exact full mobile receipt screenshot
-      const dataUrl = await generateCanvasReceipt();
-      setCapturedImageUrl(dataUrl);
+      const receiptEl = document.getElementById('receipt-screen-wrapper');
+      let dataUrl: string | null = null;
 
-      // Trigger instant PNG file download
+      if (receiptEl) {
+        try {
+          const canvas = await html2canvas(receiptEl, {
+            scale: 2,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#61167e',
+            logging: false,
+          });
+          dataUrl = canvas.toDataURL('image/png');
+        } catch (captureErr) {
+          console.warn('html2canvas capture issue, falling back to direct canvas renderer:', captureErr);
+        }
+      }
+
+      if (!dataUrl) {
+        dataUrl = await generateCanvasReceipt();
+      }
+
+      // 2. Trigger instant download to user device
       const downloadLink = document.createElement('a');
       const filename = `CBE_Receipt_${txId}.png`;
       downloadLink.href = dataUrl;
@@ -489,13 +535,13 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       downloadLink.click();
       document.body.removeChild(downloadLink);
 
-      // Show success toast
-      setCopiedToast(`Screenshot saved: ${filename}`);
-      setTimeout(() => setCopiedToast(null), 3000);
+      // 3. Show clean phone-style screenshot notification toast
+      setCopiedToast('Screenshot captured & saved');
+      setTimeout(() => setCopiedToast(null), 2500);
     } catch (err) {
       console.error('Screenshot capture error:', err);
-      setCopiedToast('Screenshot saved to your device.');
-      setTimeout(() => setCopiedToast(null), 3000);
+      setCopiedToast('Screenshot saved');
+      setTimeout(() => setCopiedToast(null), 2500);
     } finally {
       setIsCapturing(false);
     }
@@ -583,7 +629,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   const reason = transaction.description || 'Mobile Banking Transfer';
 
   return (
-    <div id="receipt-screen-wrapper" className="min-h-screen bg-[#61167e] text-slate-800 flex flex-col justify-between relative overflow-hidden">
+    <div id="receipt-screen-wrapper" className="h-full min-h-[100dvh] max-w-md mx-auto bg-[#61167e] text-slate-800 flex flex-col justify-between relative overflow-y-auto scrollbar-none">
       
       {/* Camera Flash Animation Overlay */}
       {flashAnimation && (
@@ -599,64 +645,63 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       )}
 
       {/* Top Purple Header */}
-      <div className="pt-6 pb-12 px-6 bg-[#61167e] flex items-center justify-between text-white">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center border border-white/20">
-            <ShieldCheck className="w-5 h-5 text-white" />
+      <div className="pt-3 pb-8 px-5 bg-[#61167e] flex items-center justify-between text-white flex-shrink-0">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center border border-white/20">
+            <ShieldCheck className="w-4.5 h-4.5 text-white" />
           </div>
           <div>
-            <h2 className="font-extrabold text-base leading-tight">Thank you</h2>
-            <p className="text-xs text-purple-200 font-medium">Success</p>
+            <h2 className="font-extrabold text-sm leading-tight">Thank you</h2>
+            <p className="text-[11px] text-purple-200 font-medium leading-none">Success</p>
           </div>
         </div>
 
         <button 
           onClick={handleScreenshot}
           disabled={isCapturing}
-          className="w-10 h-10 rounded-2xl bg-white/15 hover:bg-white/25 active:scale-95 flex items-center justify-center transition border border-white/20 text-white cursor-pointer disabled:opacity-50"
+          className="w-9 h-9 rounded-xl bg-white/15 hover:bg-white/25 active:scale-95 flex items-center justify-center transition border border-white/20 text-white cursor-pointer disabled:opacity-50"
           title="Take Screenshot & Save"
         >
-          {isCapturing ? <Loader2 className="w-5 h-5 animate-spin" /> : <Scan className="w-5 h-5" />}
+          {isCapturing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Scan className="w-4.5 h-4.5" />}
         </button>
       </div>
 
       {/* Main White Sheet Container */}
-      <div className="bg-white rounded-t-[36px] flex-1 px-5 pt-0 pb-8 flex flex-col justify-between shadow-2xl relative">
+      <div className="bg-white rounded-t-[32px] sm:rounded-t-[36px] flex-1 px-4 sm:px-5 pt-0 pb-5 flex flex-col justify-between shadow-2xl relative">
         
         {/* Overlapping Large Success Checkmark Badge */}
-        <div className="flex justify-center -mt-9 mb-3">
-          <div className="w-18 h-18 rounded-full bg-[#61167e] border-[5px] border-white shadow-md flex items-center justify-center">
-            <Check className="w-9 h-9 text-white stroke-[3.5]" />
+        <div className="flex justify-center -mt-7 sm:-mt-8 mb-2 flex-shrink-0">
+          <div className="w-15 h-15 sm:w-16 sm:h-16 rounded-full bg-[#61167e] border-4 border-white shadow-md flex items-center justify-center">
+            <Check className="w-7 h-7 sm:w-8 sm:h-8 text-white stroke-[3.5]" />
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3 flex-1 flex flex-col justify-center">
           {/* Headline */}
-          <h1 className="text-center text-sm font-extrabold text-gray-900 tracking-tight">
+          <h1 className="text-center text-xs sm:text-sm font-extrabold text-gray-900 tracking-tight">
             Transaction Completed Successfully!
           </h1>
 
           {/* Main Transaction Summary Gray Card */}
           <div 
             ref={receiptRef}
-            className="bg-[#ededf0] rounded-[24px] p-5 space-y-4 border border-gray-200/60 shadow-xs"
+            className="bg-[#ededf0] rounded-[20px] sm:rounded-[24px] p-3.5 sm:p-4 space-y-3 border border-gray-200/60 shadow-xs"
           >
-            <p className="text-gray-400 font-bold text-xs">Transaction Summary</p>
+            <p className="text-gray-400 font-bold text-[11px]">Transaction Summary</p>
 
             {/* Paragraph Text with bold highlights */}
-            <p className="text-[13.5px] leading-[1.65] text-gray-900 font-normal">
+            <p className="text-[12px] sm:text-[13px] leading-[1.6] text-gray-900 font-normal">
               ETB <span className="font-extrabold">{amount.toFixed(2)}</span> has been debited from <span className="font-extrabold">{senderName} {senderSuffix}</span> for <span className="font-extrabold">{recipientName} {recipientSuffix}</span> on <span className="font-extrabold">{formattedDate}</span> with transaction ID: <span className="font-extrabold">{txId}</span>. Reason: {reason}. Total Amount Debited: ETB{totalDebitedStr} with Service Charge of ETB{serviceChargeStr}, VAT (15%) of {vatStr} and Disaster Recovery (5%) of ETB{disasterRecoveryStr}.
             </p>
 
             {/* Clean QR Code Centered */}
-            <div className="flex justify-center py-2">
-              <div className="w-44 h-44 bg-transparent flex items-center justify-center p-1">
+            <div className="flex justify-center py-1">
+              <div className="w-32 h-32 sm:w-36 sm:h-36 bg-transparent flex items-center justify-center p-0.5">
                 {customQrCode ? (
                   <img 
                     src={customQrCode} 
                     alt="Transaction QR Code" 
                     className="w-full h-full object-contain"
-                    crossOrigin="anonymous"
                   />
                 ) : (
                   /* High-fidelity 21x21 QR Matrix */
@@ -710,13 +755,13 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             </div>
 
             {/* Commercial Bank of Ethiopia Footer Inset */}
-            <div className="flex items-center gap-2.5 pt-1 min-w-0">
-              <div className="w-11 h-11 flex-shrink-0 flex items-center justify-center">
-                <CbeLogo className="w-10 h-10" src={customBankLogo} />
+            <div className="flex items-center gap-2 pt-0.5 min-w-0">
+              <div className="w-9 h-9 flex-shrink-0 flex items-center justify-center">
+                <CbeLogo className="w-8 h-8" src={customBankLogo} />
               </div>
               <div className="min-w-0 flex-1">
-                <h4 className="font-extrabold text-gray-900 text-xs sm:text-sm leading-tight whitespace-nowrap overflow-hidden text-ellipsis">Commercial Bank of Ethiopia</h4>
-                <p className="text-gray-500 text-[10px] sm:text-xs font-normal mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">The bank you can always rely on!</p>
+                <h4 className="font-extrabold text-gray-900 text-xs leading-tight whitespace-nowrap overflow-hidden text-ellipsis">Commercial Bank of Ethiopia</h4>
+                <p className="text-gray-500 text-[10px] font-normal mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">The bank you can always rely on!</p>
               </div>
             </div>
 
@@ -724,15 +769,15 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         </div>
 
         {/* Bottom Actions Section */}
-        <div className="mt-6 space-y-4">
+        <div className="mt-4 space-y-3 flex-shrink-0">
           {/* 3 Action Buttons */}
           <div className="flex items-center justify-around px-2 text-gray-900">
             <button 
               id="btn-action-receipt"
               onClick={() => setShowDetailedModal(true)}
-              className="flex items-center gap-2 text-xs font-extrabold hover:text-purple-900 transition active:scale-95 cursor-pointer py-1.5 px-3 rounded-xl hover:bg-gray-100"
+              className="flex items-center gap-1.5 text-xs font-extrabold hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2.5 rounded-xl hover:bg-gray-100"
             >
-              <FileText className="w-4.5 h-4.5 stroke-[2.5]" />
+              <FileText className="w-4 h-4 stroke-[2.5]" />
               <span>Receipt</span>
             </button>
 
@@ -740,22 +785,22 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
               id="btn-action-screenshot"
               onClick={handleScreenshot}
               disabled={isCapturing}
-              className="flex items-center gap-2 text-xs font-extrabold hover:text-purple-900 transition active:scale-95 cursor-pointer py-1.5 px-3 rounded-xl hover:bg-gray-100 disabled:opacity-50"
+              className="flex items-center gap-1.5 text-xs font-extrabold hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2.5 rounded-xl hover:bg-gray-100 disabled:opacity-50"
             >
               {isCapturing ? (
-                <Loader2 className="w-4.5 h-4.5 stroke-[2.5] animate-spin text-[#61167e]" />
+                <Loader2 className="w-4 h-4 stroke-[2.5] animate-spin text-[#61167e]" />
               ) : (
-                <Scan className="w-4.5 h-4.5 stroke-[2.5]" />
+                <Scan className="w-4 h-4 stroke-[2.5]" />
               )}
-              <span>{isCapturing ? 'Capturing...' : 'Screenshot'}</span>
+              <span>{isCapturing ? 'Saving...' : 'Screenshot'}</span>
             </button>
 
             <button 
               id="btn-action-share"
               onClick={handleShare}
-              className="flex items-center gap-2 text-xs font-extrabold hover:text-purple-900 transition active:scale-95 cursor-pointer py-1.5 px-3 rounded-xl hover:bg-gray-100"
+              className="flex items-center gap-1.5 text-xs font-extrabold hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2.5 rounded-xl hover:bg-gray-100"
             >
-              <Share2 className="w-4.5 h-4.5 stroke-[2.5]" />
+              <Share2 className="w-4 h-4 stroke-[2.5]" />
               <span>Share</span>
             </button>
           </div>
@@ -764,7 +809,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           <button 
             id="btn-action-close"
             onClick={onBack}
-            className="w-full bg-[#d7d7db] hover:bg-[#c9c9ce] text-gray-800 font-extrabold py-3.5 rounded-full text-sm transition active:scale-[0.99] cursor-pointer shadow-xs"
+            className="w-full bg-[#d7d7db] hover:bg-[#c9c9ce] text-gray-800 font-extrabold py-3 rounded-full text-xs sm:text-sm transition active:scale-[0.99] cursor-pointer shadow-xs"
           >
             Close
           </button>

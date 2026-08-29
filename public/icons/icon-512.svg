@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="100" fill="#1a0126"/>
+  <circle cx="256" cy="256" r="230" fill="#300642" stroke="#dfa04c" stroke-width="4" opacity="0.6"/>
+  <defs>
+    <linearGradient id="gold512" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F9E79F"/>
+      <stop offset="35%" stop-color="#D4AC0D"/>
+      <stop offset="70%" stop-color="#B7950B"/>
+      <stop offset="100%" stop-color="#7D6608"/>
+    </linearGradient>
+    <linearGradient id="inner512" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#B9770E"/>
+      <stop offset="50%" stop-color="#F5B041"/>
+      <stop offset="100%" stop-color="#FAD7A0"/>
+    </linearGradient>
+    <radialGradient id="shine512" cx="35%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#FFF9C4" stop-opacity="0.9"/>
+      <stop offset="60%" stop-color="#D4AF37" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#8C6239" stop-opacity="0.1"/>
+    </radialGradient>
+  </defs>
+  
+  <!-- Radiating Spiral Waves -->
+  <g stroke="#C69214" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.85" transform="translate(42, 42) scale(3.55)">
+    <path d="M60 22 C40 22, 16 35, 12 55 C8 75, 26 95, 52 98 C78 101, 104 88, 108 65 C112 42, 90 28, 68 28 C46 28, 30 42, 28 58 C26 74, 40 86, 58 87 C76 88, 90 78, 92 64 C94 50, 82 40, 68 40"/>
+    <path d="M56 16 C32 17, 10 32, 6 56 C2 80, 22 102, 50 106 C78 110, 108 96, 114 70 C120 44, 98 22, 72 22" opacity="0.6"/>
+  </g>
+
+  <!-- Coin Body -->
+  <circle cx="282" cy="262" r="134" fill="url(#gold512)" stroke="#7D6608" stroke-width="5"/>
+  <circle cx="282" cy="262" r="120" fill="url(#inner512)" stroke="#F9E79F" stroke-width="3"/>
+  <circle cx="282" cy="262" r="120" fill="url(#shine512)"/>
+  <circle cx="282" cy="262" r="110" fill="none" stroke="#7D6608" stroke-width="3" stroke-dasharray="6 6" opacity="0.7"/>
+  <circle cx="282" cy="262" r="92" fill="#FAD7A0" stroke="#935116" stroke-width="4"/>
+
+  <!-- CBE Monogram -->
+  <g fill="#7E5109" transform="translate(212, 198) scale(2.3)">
+    <path d="M30 4 C15 4, 4 15, 4 30 C4 45, 15 56, 30 56 C45 56, 56 45, 56 30 C56 15, 45 4, 30 4 Z M30 10 C41 10, 50 19, 50 30 C50 41, 41 50, 30 50 C19 50, 10 41, 10 30 C10 19, 19 10, 30 10 Z"/>
+    <rect x="26" y="16" width="8" height="28" rx="2" fill="#6E2C00"/>
+    <path d="M18 24 Q30 15 42 24 L42 28 Q30 19 18 28 Z" fill="#6E2C00"/>
+    <circle cx="30" cy="22" r="3.5" fill="#FAD7A0"/>
+    <rect x="18" y="40" width="24" height="4" rx="1" fill="#6E2C00"/>
+  </g>
+</svg>

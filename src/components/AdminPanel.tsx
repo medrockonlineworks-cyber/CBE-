@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { LocalDb, DEFAULT_CBE_LOGO } from '../lib/mockData';
 import { UserProfile, Transaction, AuditLog } from '../types';
+import { CbeLogo } from './CbeLogo';
+import { compressImageFile } from '../lib/imageUtils';
 import { 
   Users, 
   TrendingUp, 
@@ -17,7 +19,8 @@ import {
   Image as ImageIcon,
   Upload,
   QrCode as QrIcon,
-  RefreshCw
+  RefreshCw,
+  Loader2
 } from 'lucide-react';
 
 interface AdminPanelProps {
@@ -82,42 +85,34 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
   };
 
   // Feedback customization handlers
-  const handleBankLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleBankLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
-    if (file.size > 2 * 1024 * 1024) {
-      alert("Image is too large. Please select an image smaller than 2MB.");
-      return;
-    }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
+    try {
+      const dataUrl = await compressImageFile(file, 400, 0.9);
       LocalDb.setCustomBankLogo(dataUrl);
       setCustomBankLogo(dataUrl);
       LocalDb.addAuditLog(currentUser.id, currentUser.email, 'UPLOAD_BANK_LOGO', 'Uploaded a custom bank logo image for receipts and feedback.');
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      console.error('Failed to compress bank logo:', err);
+      alert('Failed to process image. Please try another image file.');
+    }
   };
 
-  const handleQrCodeUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleQrCodeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
-    if (file.size > 2 * 1024 * 1024) {
-      alert("Image is too large. Please select an image smaller than 2MB.");
-      return;
-    }
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
+    try {
+      const dataUrl = await compressImageFile(file, 400, 0.9);
       LocalDb.setCustomQrCode(dataUrl);
       setCustomQrCode(dataUrl);
       LocalDb.addAuditLog(currentUser.id, currentUser.email, 'UPLOAD_QR_CODE', 'Uploaded a custom QR code image for receipts and feedback.');
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      console.error('Failed to compress QR code:', err);
+      alert('Failed to process image. Please try another image file.');
+    }
   };
 
   const handleResetBankLogo = () => {
@@ -540,19 +535,10 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
                 <p className="text-xs font-mono uppercase text-slate-400 font-bold">Logo Preview</p>
                 <div className="flex items-center gap-4 bg-slate-950/30 p-3 rounded-2xl border border-slate-800">
                   <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-md p-1.5 border border-[#dfa04c]/30 flex-shrink-0 overflow-hidden">
-                    {customBankLogo ? (
-                      <img 
-                        src={customBankLogo} 
-                        alt="Custom Logo Preview" 
-                        className="w-full h-full object-contain"
-                      />
-                    ) : (
-                      <img 
-                        src={DEFAULT_CBE_LOGO} 
-                        alt="CBE Logo" 
-                        className="w-full h-full object-contain"
-                      />
-                    )}
+                    <CbeLogo 
+                      src={customBankLogo} 
+                      className="w-full h-full object-contain"
+                    />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-white text-sm truncate">

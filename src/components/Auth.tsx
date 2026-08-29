@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { LocalDb, DEFAULT_CBE_LOGO } from '../lib/mockData';
 import { UserProfile } from '../types';
+import { CbeLogo } from './CbeLogo';
 import { 
   Phone, 
   Lock, 
@@ -13,6 +14,7 @@ import {
   KeyRound,
   Fingerprint
 } from 'lucide-react';
+import AppInstallPrompt from './AppInstallPrompt';
 
 interface AuthProps {
   onLoginSuccess: (user: UserProfile) => void;
@@ -257,11 +259,9 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
       {/* Header Branding */}
       <div className="text-center pt-6 relative">
         <div className="flex flex-col justify-center items-center gap-2 mb-2">
-          <img 
-            src={customBankLogo || DEFAULT_CBE_LOGO} 
-            alt="Commercial Bank of Ethiopia" 
+          <CbeLogo 
+            src={customBankLogo} 
             className="w-16 h-16 object-contain drop-shadow-md"
-            referrerPolicy="no-referrer"
           />
           <div className="text-center max-w-full px-2">
             <h1 className="text-lg sm:text-xl font-extrabold tracking-tight leading-none text-[#deb356] whitespace-nowrap overflow-hidden text-ellipsis">
@@ -624,26 +624,31 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
 
       {/* Quick Launch Demo Accounts */}
       {screen === 'login' && (
-        <div className="border-t border-white/10 pt-6 relative z-10 text-center">
-          <p className="text-[10px] uppercase tracking-widest font-bold text-amber-400/70 mb-3">Quick Sandbox Login For Testing</p>
-          <div className="grid grid-cols-2 gap-2.5">
-            <button
-              id="btn-demo-user"
-              onClick={loadAbebeDemoUser}
-              className="bg-white/5 hover:bg-white/10 text-emerald-200 border border-white/5 p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              <User className="w-4 h-4 text-amber-400" />
-              <span>Demo User (Abebe)</span>
-            </button>
-            <button
-              id="btn-demo-admin"
-              onClick={loadAdminDemoUser}
-              className="bg-white/5 hover:bg-white/10 text-emerald-200 border border-white/5 p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
-            >
-              <Fingerprint className="w-4 h-4 text-amber-400" />
-              <span>Demo Admin (Leykun)</span>
-            </button>
+        <div className="border-t border-white/10 pt-6 relative z-10 text-center space-y-5">
+          <div>
+            <p className="text-[10px] uppercase tracking-widest font-bold text-amber-400/70 mb-3">Quick Sandbox Login For Testing</p>
+            <div className="grid grid-cols-2 gap-2.5">
+              <button
+                id="btn-demo-user"
+                onClick={loadAbebeDemoUser}
+                className="bg-white/5 hover:bg-white/10 text-emerald-200 border border-white/5 p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer touch-manipulation"
+              >
+                <User className="w-4 h-4 text-amber-400" />
+                <span>Demo User (Abebe)</span>
+              </button>
+              <button
+                id="btn-demo-admin"
+                onClick={loadAdminDemoUser}
+                className="bg-white/5 hover:bg-white/10 text-emerald-200 border border-white/5 p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer touch-manipulation"
+              >
+                <Fingerprint className="w-4 h-4 text-amber-400" />
+                <span>Demo Admin (Leykun)</span>
+              </button>
+            </div>
           </div>
+
+          {/* Android PWA Installation Card */}
+          <AppInstallPrompt mode="card" className="text-left" />
         </div>
       )}
 

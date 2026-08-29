@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { UserProfile, Transaction, SystemNotification } from '../types';
 import { LocalDb, DEFAULT_CBE_LOGO } from '../lib/mockData';
+import { CbeLogo as CbeGoldenLogo } from './CbeLogo';
 import { 
   Eye, 
   EyeOff, 
@@ -28,7 +29,12 @@ import {
   ShieldCheck,
   Globe,
   Grid,
-  ArrowLeft
+  Settings,
+  ShieldAlert,
+  Sliders,
+  UserCheck,
+  LogOut,
+  Sparkles
 } from 'lucide-react';
 
 interface DashboardProps {
@@ -36,19 +42,10 @@ interface DashboardProps {
   onNavigateToTab: (tab: 'home' | 'transfer' | 'payments' | 'history' | 'profile', subTab?: string) => void;
   onSelectTransaction: (tx: Transaction) => void;
   onLogout: () => void;
+  onOpenAdmin?: () => void;
 }
 
-// Custom CBE Golden Circular Logo Vector
-const CbeGoldenLogo = ({ className = "w-8 h-8", src }: { className?: string; src?: string | null }) => (
-  <img 
-    src={src || DEFAULT_CBE_LOGO} 
-    alt="Commercial Bank of Ethiopia" 
-    className={`${className} object-contain`} 
-    referrerPolicy="no-referrer"
-  />
-);
-
-export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransaction, onLogout }: DashboardProps) {
+export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransaction, onLogout, onOpenAdmin }: DashboardProps) {
   const [showBalance, setShowBalance] = useState<boolean>(() => {
     const saved = localStorage.getItem('tana_show_balance');
     return saved !== 'false';
@@ -60,6 +57,7 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
   const [selectedLanguage, setSelectedLanguage] = useState('English');
   const [showLangModal, setShowLangModal] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
+  const [showAppLauncher, setShowAppLauncher] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentDateTime, setCurrentDateTime] = useState<Date>(new Date());
   
@@ -122,7 +120,11 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
   // Masked / Unmasked Account helper controlled by eye toggle
   const formatCardAccount = () => {
     const acc = currentUser.accountNumber || '100012348657';
-    const accountTypeName = currentUser.accountType === 'checking' ? 'Current Account' : (currentUser.accountType === 'cbe_birr' ? 'CBEBirr Wallet' : 'Wadiah Staff Sa 1');
+    const accountTypeName = currentUser.accountType === 'checking' 
+      ? 'Current Account' 
+      : (currentUser.accountType === 'cbe_birr' 
+        ? 'CBEBirr Wallet' 
+        : 'Saving Account 1');
     if (!showBalance) {
       const last4 = acc.slice(-4);
       return `${accountTypeName} **** ${last4}`;
@@ -162,22 +164,15 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
         {/* Top App Bar Row */}
         <div className="flex items-center justify-between gap-2">
           
-          {/* Left: Back Arrow + Grid/Apps Icon + User Greeting */}
+          {/* Left: Grid/Apps 4-dot Icon + User Greeting */}
           <div className="flex items-center gap-2.5">
             <button 
-              onClick={() => onNavigateToTab('profile')}
-              className="p-1 text-white hover:text-purple-200 transition cursor-pointer"
-              title="Menu"
+              id="btn-app-launcher"
+              onClick={() => setShowAppLauncher(true)}
+              className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center hover:bg-white/25 active:scale-95 transition cursor-pointer border border-white/20 shadow-xs"
+              title="App Launcher (Settings & Admin Services)"
             >
-              <ArrowLeft className="w-5 h-5 stroke-[2.5]" />
-            </button>
-
-            <button 
-              onClick={() => onNavigateToTab('transfer')}
-              className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center hover:bg-white/25 transition cursor-pointer border border-white/20"
-              title="All Services"
-            >
-              <div className="grid grid-cols-2 gap-0.5">
+              <div className="grid grid-cols-2 gap-1 p-0.5">
                 <div className="w-1.5 h-1.5 bg-white rounded-xs" />
                 <div className="w-1.5 h-1.5 bg-white rounded-xs" />
                 <div className="w-1.5 h-1.5 bg-white rounded-xs" />
@@ -778,6 +773,157 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
             >
               Continue to Transfer
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* 8. App Launcher (4-Dot Menu) Drawer Modal */}
+      {showAppLauncher && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 animate-fade-in">
+          <div className="bg-white rounded-t-3xl sm:rounded-3xl max-w-sm w-full p-5 space-y-4 shadow-2xl animate-slide-up border border-gray-100">
+            
+            {/* Header */}
+            <div className="flex justify-between items-center pb-3 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-[#61167e] flex items-center justify-center text-white shadow-xs">
+                  <div className="grid grid-cols-2 gap-1 p-0.5">
+                    <div className="w-1.5 h-1.5 bg-white rounded-xs" />
+                    <div className="w-1.5 h-1.5 bg-white rounded-xs" />
+                    <div className="w-1.5 h-1.5 bg-white rounded-xs" />
+                    <div className="w-1.5 h-1.5 bg-white rounded-xs" />
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm text-gray-900 leading-tight">App Launcher</h3>
+                  <p className="text-[10px] text-gray-500 font-medium">Quick Access &amp; System Tools</p>
+                </div>
+              </div>
+              
+              <button 
+                id="btn-close-app-launcher"
+                onClick={() => setShowAppLauncher(false)} 
+                className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-800 transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Menu Items Grid */}
+            <div className="space-y-2 pt-1">
+              
+              {/* 1. App Settings & Profile */}
+              <button
+                id="launcher-btn-settings"
+                onClick={() => {
+                  setShowAppLauncher(false);
+                  onNavigateToTab('profile');
+                }}
+                className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-gray-50 hover:bg-purple-50/70 border border-gray-100 transition group cursor-pointer text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-purple-100 text-[#61167e] flex items-center justify-center group-hover:scale-105 transition shadow-xs">
+                    <Settings className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-gray-900 group-hover:text-[#61167e] transition">Settings &amp; Preferences</h4>
+                    <p className="text-[11px] text-gray-500">Device security, language, theme &amp; branding</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-[#61167e] group-hover:translate-x-0.5 transition" />
+              </button>
+
+              {/* 2. Admin Council (Only for Administrators or Leykun) */}
+              {isAdmin && (
+                <button
+                  id="launcher-btn-admin"
+                  onClick={() => {
+                    setShowAppLauncher(false);
+                    if (onOpenAdmin) {
+                      onOpenAdmin();
+                    } else {
+                      onNavigateToTab('profile');
+                    }
+                  }}
+                  className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-amber-500/10 hover:from-amber-500/20 hover:to-purple-500/20 border border-amber-300/40 transition group cursor-pointer text-left shadow-xs"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center group-hover:scale-105 transition shadow-xs">
+                      <ShieldAlert className="w-5 h-5 text-slate-950" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <h4 className="text-xs font-extrabold text-amber-950">Admin Council</h4>
+                        <span className="bg-amber-400 text-slate-950 text-[9px] font-black px-1.5 py-0.2 rounded-full uppercase tracking-wider">
+                          Master Control
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-amber-900/80">User management, audit logs, balances &amp; logo control</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-amber-800 group-hover:translate-x-0.5 transition" />
+                </button>
+              )}
+
+              {/* 3. All Transfer & Bank Services */}
+              <button
+                id="launcher-btn-services"
+                onClick={() => {
+                  setShowAppLauncher(false);
+                  onNavigateToTab('transfer');
+                }}
+                className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-gray-50 hover:bg-purple-50/70 border border-gray-100 transition group cursor-pointer text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition shadow-xs">
+                    <Landmark className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-gray-900 group-hover:text-emerald-800 transition">Banking &amp; Transfers</h4>
+                    <p className="text-[11px] text-gray-500">Send money, other bank transfers, bill payments &amp; airtime</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-emerald-700 group-hover:translate-x-0.5 transition" />
+              </button>
+
+              {/* 4. Transactions & Statement History */}
+              <button
+                id="launcher-btn-history"
+                onClick={() => {
+                  setShowAppLauncher(false);
+                  onNavigateToTab('history');
+                }}
+                className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-gray-50 hover:bg-purple-50/70 border border-gray-100 transition group cursor-pointer text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center group-hover:scale-105 transition shadow-xs">
+                    <Building className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-gray-900 group-hover:text-blue-800 transition">History &amp; Statements</h4>
+                    <p className="text-[11px] text-gray-500">Review official CBE transfer receipts and past logs</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-blue-700 group-hover:translate-x-0.5 transition" />
+              </button>
+
+            </div>
+
+            {/* Bottom Actions */}
+            <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
+              <span className="text-[10px] text-gray-400 font-medium">Logged in as {currentUser.email}</span>
+              <button
+                id="launcher-btn-logout"
+                onClick={() => {
+                  setShowAppLauncher(false);
+                  onLogout();
+                }}
+                className="text-xs font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1 p-1 cursor-pointer"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Log Out</span>
+              </button>
+            </div>
+
           </div>
         </div>
       )}

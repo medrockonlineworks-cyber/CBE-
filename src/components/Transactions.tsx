@@ -262,7 +262,7 @@ export default function Transactions({ currentUser, onTransactionComplete, initi
       try {
         if (transferSubTab === 'own') {
           // Own account transfer simulation
-          const targetName = selectedFromAccount === 'savings' ? 'Wadiah Staff Sa' : 'Savings Account';
+          const targetName = selectedFromAccount === 'savings' ? 'Saving Account (Secondary)' : 'Saving Account (Primary)';
           const targetAcc = selectedFromAccount === 'savings' ? '1000987654321' : currentUser.accountNumber;
           
           const tx = LocalDb.createTransaction(
@@ -799,8 +799,8 @@ export default function Transactions({ currentUser, onTransactionComplete, initi
                       onChange={(e) => setSelectedFromAccount(e.target.value as 'savings' | 'wadiah')}
                       className="bg-transparent text-sm font-black border-none p-0 pr-6 text-white focus:ring-0 focus:outline-none cursor-pointer font-sans"
                     >
-                      <option value="savings" className="bg-emerald-950 text-white">Savings Account - {currentUser.accountNumber.slice(0, 4)}••••{currentUser.accountNumber.slice(-4)}</option>
-                      <option value="wadiah" className="bg-emerald-950 text-white">Wadiah Staff Sa - 1000888888888</option>
+                      <option value="savings" className="bg-emerald-950 text-white">Saving Account - {currentUser.accountNumber.slice(0, 4)}••••{currentUser.accountNumber.slice(-4)}</option>
+                      <option value="wadiah" className="bg-emerald-950 text-white">Saving Account 2 - 1000888888888</option>
                     </select>
                   </div>
                   <ChevronRight className="w-4 h-4 text-emerald-200 pointer-events-none rotate-90" />
@@ -903,9 +903,9 @@ export default function Transactions({ currentUser, onTransactionComplete, initi
                       className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3 text-sm focus:outline-none font-semibold text-gray-700"
                     >
                       {selectedFromAccount === 'savings' ? (
-                        <option>Wadiah Staff Sa - 1000888888888</option>
+                        <option>Saving Account 2 - 1000888888888</option>
                       ) : (
-                        <option>Savings Account - {currentUser.accountNumber}</option>
+                        <option>Saving Account - {currentUser.accountNumber}</option>
                       )}
                     </select>
                   </div>

@@ -200,7 +200,50 @@ const saveData = <T>(key: string, value: T): void => {
   localStorage.setItem(key, JSON.stringify(value));
 };
 
-export const DEFAULT_CBE_LOGO = 'https://ethiopianlogos.com/logos/commercial_bank_of_ethiopia/commercial_bank_of_ethiopia.png';
+// Self-contained, zero-network, reliable CBE Golden Emblem SVG data URI
+export const DEFAULT_CBE_LOGO = `data:image/svg+xml;utf8,${encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <defs>
+    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F9E79F"/>
+      <stop offset="35%" stop-color="#D4AC0D"/>
+      <stop offset="70%" stop-color="#B7950B"/>
+      <stop offset="100%" stop-color="#7D6608"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#B9770E"/>
+      <stop offset="50%" stop-color="#F5B041"/>
+      <stop offset="100%" stop-color="#FAD7A0"/>
+    </linearGradient>
+    <radialGradient id="sh" cx="35%" cy="35%" r="60%">
+      <stop offset="0%" stop-color="#FFF9C4" stop-opacity="0.9"/>
+      <stop offset="60%" stop-color="#D4AF37" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#8C6239" stop-opacity="0.1"/>
+    </radialGradient>
+  </defs>
+  <!-- Radiating Spiral Waves -->
+  <g stroke="#C69214" stroke-width="1.3" stroke-linecap="round" fill="none" opacity="0.85">
+    <path d="M60 22 C40 22, 16 35, 12 55 C8 75, 26 95, 52 98 C78 101, 104 88, 108 65 C112 42, 90 28, 68 28 C46 28, 30 42, 28 58 C26 74, 40 86, 58 87 C76 88, 90 78, 92 64 C94 50, 82 40, 68 40"/>
+    <path d="M56 16 C32 17, 10 32, 6 56 C2 80, 22 102, 50 106 C78 110, 108 96, 114 70 C120 44, 98 22, 72 22" opacity="0.6"/>
+    <path d="M64 26 C44 26, 22 38, 18 58 C14 78, 30 96, 56 99 C82 102, 102 88, 105 68" opacity="0.5"/>
+    <path d="M50 30 C34 32, 22 44, 20 58 C18 72, 30 84, 48 87" opacity="0.7"/>
+  </g>
+  <!-- Coin Body -->
+  <circle cx="68" cy="62" r="38" fill="url(#g1)" stroke="#7D6608" stroke-width="1.5"/>
+  <circle cx="68" cy="62" r="34" fill="url(#g2)" stroke="#F9E79F" stroke-width="1"/>
+  <circle cx="68" cy="62" r="34" fill="url(#sh)"/>
+  <circle cx="68" cy="62" r="31" fill="none" stroke="#7D6608" stroke-width="1" stroke-dasharray="2 2" opacity="0.7"/>
+  <circle cx="68" cy="62" r="26" fill="#FAD7A0" stroke="#935116" stroke-width="1.2"/>
+  <!-- CBE Monogram -->
+  <g fill="#7E5109" transform="translate(48, 44) scale(0.65)">
+    <path d="M30 4 C15 4, 4 15, 4 30 C4 45, 15 56, 30 56 C45 56, 56 45, 56 30 C56 15, 45 4, 30 4 Z M30 10 C41 10, 50 19, 50 30 C50 41, 41 50, 30 50 C19 50, 10 41, 10 30 C10 19, 19 10, 30 10 Z"/>
+    <rect x="26" y="16" width="8" height="28" rx="2" fill="#6E2C00"/>
+    <path d="M18 24 Q30 15 42 24 L42 28 Q30 19 18 28 Z" fill="#6E2C00"/>
+    <circle cx="30" cy="22" r="3.5" fill="#FAD7A0"/>
+    <rect x="18" y="40" width="24" height="4" rx="1" fill="#6E2C00"/>
+  </g>
+</svg>
+`)}`;
 
 export class LocalDb {
   static getUsers(): UserProfile[] {
@@ -438,28 +481,48 @@ export class LocalDb {
   }
 
   static getCustomBankLogo(): string | null {
-    return localStorage.getItem('tana_custom_bank_logo');
+    try {
+      const val = localStorage.getItem('tana_custom_bank_logo');
+      return (val && val.trim().length > 0) ? val : null;
+    } catch {
+      return null;
+    }
   }
 
   static setCustomBankLogo(logo: string | null): void {
-    if (logo === null) {
-      localStorage.removeItem('tana_custom_bank_logo');
-    } else {
-      localStorage.setItem('tana_custom_bank_logo', logo);
+    try {
+      if (!logo || logo.trim().length === 0) {
+        localStorage.removeItem('tana_custom_bank_logo');
+      } else {
+        localStorage.setItem('tana_custom_bank_logo', logo);
+      }
+    } catch (err) {
+      console.warn('[LocalDb] Failed writing custom logo to localStorage:', err);
     }
-    window.dispatchEvent(new Event('cbe_logo_updated'));
+    
+    // Broadcast across windows and local components
+    window.dispatchEvent(new CustomEvent('cbe_logo_updated', { detail: { logo } }));
   }
 
   static getCustomQrCode(): string | null {
-    return localStorage.getItem('tana_custom_qr_code');
+    try {
+      const val = localStorage.getItem('tana_custom_qr_code');
+      return (val && val.trim().length > 0) ? val : null;
+    } catch {
+      return null;
+    }
   }
 
   static setCustomQrCode(qr: string | null): void {
-    if (qr === null) {
-      localStorage.removeItem('tana_custom_qr_code');
-    } else {
-      localStorage.setItem('tana_custom_qr_code', qr);
+    try {
+      if (!qr || qr.trim().length === 0) {
+        localStorage.removeItem('tana_custom_qr_code');
+      } else {
+        localStorage.setItem('tana_custom_qr_code', qr);
+      }
+    } catch (err) {
+      console.warn('[LocalDb] Failed writing custom QR code to localStorage:', err);
     }
-    window.dispatchEvent(new Event('cbe_qr_updated'));
+    window.dispatchEvent(new CustomEvent('cbe_qr_updated', { detail: { qr } }));
   }
 }

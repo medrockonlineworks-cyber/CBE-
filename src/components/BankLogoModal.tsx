@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { LocalDb, DEFAULT_CBE_LOGO } from '../lib/mockData';
 import { UserProfile } from '../types';
+import { CbeLogo } from './CbeLogo';
+import { compressImageFile } from '../lib/imageUtils';
 import { 
   Image as ImageIcon, 
   Upload, 
@@ -10,7 +12,8 @@ import {
   X, 
   ShieldCheck, 
   Sparkles,
-  Eye
+  Eye,
+  Loader2
 } from 'lucide-react';
 
 interface BankLogoModalProps {
@@ -23,8 +26,8 @@ interface BankLogoModalProps {
 const PRESET_LOGOS = [
   {
     name: 'Official CBE Emblem (Default)',
-    url: 'https://ethiopianlogos.com/logos/commercial_bank_of_ethiopia/commercial_bank_of_ethiopia.png',
-    description: 'Official Commercial Bank of Ethiopia emblem'
+    url: DEFAULT_CBE_LOGO,
+    description: 'Official Commercial Bank of Ethiopia golden emblem'
   },
   {
     name: 'CBE Birr Vector Emblem',
@@ -37,6 +40,7 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
   const [currentLogo, setCurrentLogo] = useState<string | null>(null);
   const [previewLogo, setPreviewLogo] = useState<string | null>(null);
   const [customUrlInput, setCustomUrlInput] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -52,23 +56,22 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
 
   if (!isOpen) return null;
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setErrorMsg('');
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 3 * 1024 * 1024) {
-      setErrorMsg('Image file size exceeds 3MB limit. Please select a smaller image.');
-      return;
+    try {
+      setIsProcessing(true);
+      const optimizedDataUrl = await compressImageFile(file, 400, 0.9);
+      setPreviewLogo(optimizedDataUrl);
+      applyLogoChange(optimizedDataUrl);
+    } catch (err: any) {
+      console.error('Image compression failed:', err);
+      setErrorMsg('Failed to process image. Please choose another file.');
+    } finally {
+      setIsProcessing(false);
     }
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result as string;
-      setPreviewLogo(dataUrl);
-      applyLogoChange(dataUrl);
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleUrlApply = (e: React.FormEvent) => {
@@ -155,11 +158,9 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
 
           <div className="bg-[#18191c] rounded-2xl p-4 text-white relative overflow-hidden border border-white/10 shadow-lg">
             <div className="flex items-center gap-3 relative z-10 min-w-0">
-              <img 
-                src={previewLogo || DEFAULT_CBE_LOGO} 
-                alt="Bank Logo Preview" 
+              <CbeLogo 
+                src={previewLogo} 
                 className="w-10 h-10 object-contain flex-shrink-0 drop-shadow-md rounded-md bg-white/5 p-0.5"
-                referrerPolicy="no-referrer"
               />
               <div className="min-w-0 flex-1">
                 <h4 className="text-[#deb356] font-extrabold text-sm tracking-wide leading-none whitespace-nowrap overflow-hidden text-ellipsis">
@@ -194,13 +195,23 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
             1. Upload Logo from Device (PNG, SVG, JPG, WebP)
           </label>
           <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-[#61167e]/30 rounded-2xl bg-purple-50/40 hover:bg-purple-50 transition cursor-pointer group">
-            <Upload className="w-6 h-6 text-[#61167e] group-hover:scale-110 transition mb-1.5" />
-            <span className="text-xs font-bold text-[#61167e]">Click to Browse Image</span>
-            <span className="text-[10px] text-gray-400 mt-0.5">Supports transparent PNG, SVG, or JPG (max 3MB)</span>
+            {isProcessing ? (
+              <div className="flex flex-col items-center justify-center py-2">
+                <Loader2 className="w-7 h-7 text-[#61167e] animate-spin mb-1" />
+                <span className="text-xs font-bold text-[#61167e]">Optimizing &amp; Applying Image...</span>
+              </div>
+            ) : (
+              <>
+                <Upload className="w-6 h-6 text-[#61167e] group-hover:scale-110 transition mb-1.5" />
+                <span className="text-xs font-bold text-[#61167e]">Click or Tap to Browse Image</span>
+                <span className="text-[10px] text-gray-400 mt-0.5">Supports any resolution image (auto-optimized)</span>
+              </>
+            )}
             <input 
               type="file" 
               accept="image/*" 
               onChange={handleFileUpload} 
+              disabled={isProcessing}
               className="hidden" 
             />
           </label>

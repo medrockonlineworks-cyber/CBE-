@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { UserProfile } from '../types';
 import { LocalDb, DEFAULT_CBE_LOGO } from '../lib/mockData';
+import { CbeLogo } from './CbeLogo';
 import { 
   User, 
   Lock, 
@@ -21,6 +22,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import BankLogoModal from './BankLogoModal';
+import AppInstallPrompt from './AppInstallPrompt';
 
 interface ProfileProps {
   currentUser: UserProfile;
@@ -182,12 +184,12 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
             <div className="bg-slate-800/90 rounded-2xl p-4 border border-slate-700/80 space-y-3">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
-                  <img 
-                    src={customBankLogo || DEFAULT_CBE_LOGO} 
-                    alt="Current CBE Logo" 
-                    className="w-11 h-11 object-contain rounded-xl bg-white/10 p-1 border border-white/10 flex-shrink-0"
-                    referrerPolicy="no-referrer"
-                  />
+                  <div className="w-11 h-11 rounded-xl bg-white/10 p-1 border border-white/10 flex-shrink-0 flex items-center justify-center">
+                    <CbeLogo 
+                      src={customBankLogo} 
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-white whitespace-nowrap">Bank Logo &amp; Emblem</p>
                     <p className="text-[10px] text-slate-400">Change Commercial Bank of Ethiopia logo</p>
@@ -204,6 +206,9 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
             </div>
           </div>
         )}
+
+        {/* Android PWA Installation & App Details */}
+        <AppInstallPrompt mode="card" />
 
         {/* Security & Access Section */}
         <div className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 space-y-4">
