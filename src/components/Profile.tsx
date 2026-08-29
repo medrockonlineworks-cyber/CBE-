@@ -505,12 +505,13 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
         </div>
       )}
 
-      {/* Bank Logo Modal */}
+      {/* Bank Logo & QR Modal */}
       <BankLogoModal 
         isOpen={showLogoModal}
         onClose={() => setShowLogoModal(false)}
         currentUser={currentUser}
         onLogoUpdated={(logo) => setCustomBankLogo(logo)}
+        onQrUpdated={(qr) => setCustomQrCode(qr)}
       />
 
       {/* QR Code Modal */}
