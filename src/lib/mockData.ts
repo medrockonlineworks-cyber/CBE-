@@ -539,26 +539,4 @@ export class LocalDb {
     // Broadcast across windows and local components
     window.dispatchEvent(new CustomEvent('cbe_logo_updated', { detail: { logo } }));
   }
-
-  static getCustomQrCode(): string | null {
-    try {
-      const val = localStorage.getItem('tana_custom_qr_code');
-      return (val && val.trim().length > 0) ? val : null;
-    } catch {
-      return null;
-    }
-  }
-
-  static setCustomQrCode(qr: string | null): void {
-    try {
-      if (!qr || qr.trim().length === 0) {
-        localStorage.removeItem('tana_custom_qr_code');
-      } else {
-        localStorage.setItem('tana_custom_qr_code', qr);
-      }
-    } catch (err) {
-      console.warn('[LocalDb] Failed writing custom QR code to localStorage:', err);
-    }
-    window.dispatchEvent(new CustomEvent('cbe_qr_updated', { detail: { qr } }));
-  }
 }

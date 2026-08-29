@@ -4,7 +4,6 @@ import { UserProfile, Transaction, AuditLog } from '../types';
 import { CbeLogo } from './CbeLogo';
 import { compressImageFile } from '../lib/imageUtils';
 import BankLogoModal from './BankLogoModal';
-import QrCodeModal from './QrCodeModal';
 import { 
   Users, 
   TrendingUp, 
@@ -20,7 +19,6 @@ import {
   ArrowLeft,
   Image as ImageIcon,
   Upload,
-  QrCode as QrIcon,
   RefreshCw,
   Loader2,
   Link as LinkIcon,
@@ -39,10 +37,7 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [customBankLogo, setCustomBankLogo] = useState<string | null>(null);
-  const [customQrCode, setCustomQrCode] = useState<string | null>(null);
   const [showLogoModal, setShowLogoModal] = useState(false);
-  const [showQrModal, setShowQrModal] = useState(false);
-  const [qrUrlInput, setQrUrlInput] = useState('');
   
   // Search / Filters
   const [userSearch, setUserSearch] = useState('');
@@ -59,7 +54,6 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
     setTransactions(LocalDb.getTransactions());
     setAuditLogs(LocalDb.getAuditLogs());
     setCustomBankLogo(LocalDb.getCustomBankLogo());
-    setCustomQrCode(LocalDb.getCustomQrCode());
   };
 
   useEffect(() => {
@@ -108,31 +102,10 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
     }
   };
 
-  const handleQrCodeUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const dataUrl = await compressImageFile(file, 400, 0.9);
-      LocalDb.setCustomQrCode(dataUrl);
-      setCustomQrCode(dataUrl);
-      LocalDb.addAuditLog(currentUser.id, currentUser.email, 'UPLOAD_QR_CODE', 'Uploaded a custom QR code image for receipts and feedback.');
-    } catch (err) {
-      console.error('Failed to compress QR code:', err);
-      alert('Failed to process image. Please try another image file.');
-    }
-  };
-
   const handleResetBankLogo = () => {
     LocalDb.setCustomBankLogo(null);
     setCustomBankLogo(null);
     LocalDb.addAuditLog(currentUser.id, currentUser.email, 'RESET_BANK_LOGO', 'Reset the bank logo to the official Commercial Bank of Ethiopia (CBE) SVG logo.');
-  };
-
-  const handleResetQrCode = () => {
-    LocalDb.setCustomQrCode(null);
-    setCustomQrCode(null);
-    LocalDb.addAuditLog(currentUser.id, currentUser.email, 'RESET_QR_CODE', 'Reset the feedback QR code to the default simulated interactive QR grid.');
   };
 
   // Metrics
@@ -571,129 +544,6 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
                 )}
               </div>
             </div>
-
-            {/* QR Code Customizer */}
-            <div className="bg-slate-800/30 border border-slate-800 p-6 rounded-3xl space-y-6 flex flex-col justify-between">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-amber-400/10 text-amber-400 rounded-xl">
-                      <QrIcon className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-white text-base">Custom Receipt QR Code</h4>
-                      <p className="text-slate-400 text-xs">Replaces the dynamic matrix on receipts &amp; feedback</p>
-                    </div>
-                  </div>
-
-                  <button
-                    id="btn-open-qr-manager"
-                    type="button"
-                    onClick={() => setShowQrModal(true)}
-                    className="bg-amber-400 hover:bg-amber-300 text-purple-950 text-xs font-extrabold px-3 py-1.5 rounded-xl transition flex items-center gap-1 shadow-sm cursor-pointer"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                    <span>Open QR Modal</span>
-                  </button>
-                </div>
-
-                {/* Upload Field */}
-                <div className="space-y-2">
-                  <label className="block text-xs font-mono uppercase text-slate-400 font-bold">Upload Custom QR Image</label>
-                  <div className="relative border-2 border-dashed border-slate-700 hover:border-amber-400/50 rounded-2xl p-4 transition flex flex-col items-center justify-center text-center cursor-pointer bg-slate-950/40">
-                    <input 
-                      id="input-qr-code-upload"
-                      type="file" 
-                      accept="image/*"
-                      onChange={handleQrCodeUpload}
-                      className="absolute inset-0 opacity-0 cursor-pointer"
-                    />
-                    <Upload className="w-8 h-8 text-slate-500 mb-2" />
-                    <p className="text-xs text-slate-300 font-semibold">Click to browse or drag QR code image here</p>
-                    <p className="text-[10px] text-slate-500 mt-1 font-mono">PNG, JPG, SVG, WEBP (auto-compressed)</p>
-                  </div>
-                </div>
-
-                {/* Direct URL input */}
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-mono uppercase text-slate-400 font-bold">Or Paste QR Image URL</label>
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <LinkIcon className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-3" />
-                      <input 
-                        id="input-admin-qr-url"
-                        type="url"
-                        value={qrUrlInput}
-                        onChange={(e) => setQrUrlInput(e.target.value)}
-                        placeholder="https://example.com/qr.png"
-                        className="w-full bg-slate-950 border border-slate-700 rounded-xl pl-8 pr-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-amber-400/50 font-mono"
-                      />
-                    </div>
-                    <button
-                      id="btn-admin-apply-qr-url"
-                      type="button"
-                      onClick={() => {
-                        if (!qrUrlInput.trim()) return;
-                        LocalDb.setCustomQrCode(qrUrlInput.trim());
-                        setCustomQrCode(qrUrlInput.trim());
-                        LocalDb.addAuditLog(currentUser.id, currentUser.email, 'UPLOAD_QR_CODE', 'Applied custom QR code image URL.');
-                        setQrUrlInput('');
-                      }}
-                      className="bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 px-3 py-2 rounded-xl text-xs font-bold transition cursor-pointer"
-                    >
-                      Apply URL
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Preview & Actions */}
-              <div className="border-t border-slate-800/80 pt-4 space-y-4">
-                <p className="text-xs font-mono uppercase text-slate-400 font-bold">Receipt QR Status &amp; Preview</p>
-                <div className="flex items-center gap-4 bg-slate-950/30 p-3 rounded-2xl border border-slate-800">
-                  <div className="w-16 h-16 rounded-xl bg-white flex items-center justify-center shadow-md p-1 border border-slate-100 flex-shrink-0 overflow-hidden">
-                    {customQrCode ? (
-                      <img 
-                        src={customQrCode} 
-                        alt="Custom QR Preview" 
-                        className="w-full h-full object-contain"
-                      />
-                    ) : (
-                      <div className="grid grid-cols-4 gap-0.5 w-full h-full p-0.5 opacity-80">
-                        {Array.from({ length: 16 }).map((_, i) => (
-                          <div 
-                            key={i} 
-                            className={`rounded-[1px] ${
-                              (i % 3 === 0 || i === 2 || i === 7 || i === 13) ? 'bg-[#1a0126]' : 'bg-transparent'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-white text-sm truncate">
-                      {customQrCode ? 'Custom Uploaded QR Code' : 'Dynamic 33x33 Matrix (Default)'}
-                    </p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">
-                      {customQrCode ? 'Stored in persistent localStorage base64' : 'Dynamic mathematical 33x33 matrix (1,089 modules)'}
-                    </p>
-                  </div>
-                </div>
-
-                {customQrCode && (
-                  <button
-                    id="btn-reset-qr-code"
-                    type="button"
-                    onClick={handleResetQrCode}
-                    className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl border border-slate-700 bg-slate-850 hover:bg-slate-750 text-xs font-bold text-slate-300 transition cursor-pointer"
-                  >
-                    <RefreshCw className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Reset to High-Density 33x33 Dynamic Matrix</span>
-                  </button>
-                )}
-              </div>
-            </div>
           </div>
         </div>
       )}
@@ -767,21 +617,12 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
         </div>
       )}
 
-      {/* Bank Logo & QR Modal */}
+      {/* Bank Logo Modal */}
       <BankLogoModal 
         isOpen={showLogoModal}
         onClose={() => setShowLogoModal(false)}
         currentUser={currentUser}
         onLogoUpdated={(logo) => setCustomBankLogo(logo)}
-        onQrUpdated={(qr) => setCustomQrCode(qr)}
-      />
-
-      {/* QR Code Modal */}
-      <QrCodeModal 
-        isOpen={showQrModal}
-        onClose={() => setShowQrModal(false)}
-        currentUser={currentUser}
-        onQrUpdated={(qr) => setCustomQrCode(qr)}
       />
     </div>
   );
