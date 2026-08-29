@@ -19,9 +19,11 @@ import {
   ShieldAlert,
   Image as ImageIcon,
   Upload,
-  Sparkles
+  Sparkles,
+  QrCode as QrIcon
 } from 'lucide-react';
 import BankLogoModal from './BankLogoModal';
+import QrCodeModal from './QrCodeModal';
 import AppInstallPrompt from './AppInstallPrompt';
 
 interface ProfileProps {
@@ -41,7 +43,9 @@ const LANGUAGES = [
 export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdmin }: ProfileProps) {
   const [activeLang, setActiveLang] = useState('en');
   const [showLogoModal, setShowLogoModal] = useState(false);
+  const [showQrModal, setShowQrModal] = useState(false);
   const [customBankLogo, setCustomBankLogo] = useState<string | null>(() => LocalDb.getCustomBankLogo());
+  const [customQrCode, setCustomQrCode] = useState<string | null>(() => LocalDb.getCustomQrCode());
   
   const isAdmin = currentUser.role === 'admin' || currentUser.email === 'leykunjemaneh3@gmail.com';
   
@@ -196,11 +200,54 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
                   </div>
                 </div>
                 <button
+                  id="btn-profile-change-logo"
                   onClick={() => setShowLogoModal(true)}
                   className="bg-[#61167e] hover:bg-[#7b1fa2] text-white text-xs font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer border border-purple-400/30 shadow-md flex-shrink-0"
                 >
                   <Upload className="w-3.5 h-3.5" />
                   <span>Change Logo</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Custom Receipt QR Code Setting */}
+            <div className="bg-slate-800/90 rounded-2xl p-4 border border-slate-700/80 space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-11 h-11 rounded-xl bg-white p-1 border border-white/10 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                    {customQrCode ? (
+                      <img 
+                        src={customQrCode} 
+                        alt="QR Thumbnail" 
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <div className="grid grid-cols-3 gap-0.5 w-full h-full p-0.5">
+                        {Array.from({ length: 9 }).map((_, i) => (
+                          <div 
+                            key={i} 
+                            className={`rounded-[0.5px] ${
+                              (i % 2 === 0 || i === 7) ? 'bg-black' : 'bg-transparent'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-white whitespace-nowrap">Receipt QR Code</p>
+                    <p className="text-[10px] text-slate-400">
+                      {customQrCode ? 'Custom QR active' : 'Default 33x33 matrix active'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  id="btn-profile-upload-qr"
+                  onClick={() => setShowQrModal(true)}
+                  className="bg-amber-400 hover:bg-amber-300 text-purple-950 text-xs font-extrabold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-md flex-shrink-0"
+                >
+                  <QrIcon className="w-3.5 h-3.5" />
+                  <span>Upload QR Code</span>
                 </button>
               </div>
             </div>
@@ -464,6 +511,14 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
         onClose={() => setShowLogoModal(false)}
         currentUser={currentUser}
         onLogoUpdated={(logo) => setCustomBankLogo(logo)}
+      />
+
+      {/* QR Code Modal */}
+      <QrCodeModal 
+        isOpen={showQrModal}
+        onClose={() => setShowQrModal(false)}
+        currentUser={currentUser}
+        onQrUpdated={(qr) => setCustomQrCode(qr)}
       />
 
     </div>

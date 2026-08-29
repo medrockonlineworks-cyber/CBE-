@@ -60,9 +60,45 @@ const now = Date.now();
 const hour = 3600 * 1000;
 const day = 24 * hour;
 
+export function generateCbeTxId(): string {
+  const yearShort = new Date().getFullYear().toString().slice(-2); // e.g. "26"
+  // 4 random digits (0000 - 9999)
+  const rand4 = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  // 2 random uppercase letters (A-Z)
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const char1 = letters[Math.floor(Math.random() * letters.length)];
+  const char2 = letters[Math.floor(Math.random() * letters.length)];
+  // 2 random digits (00 - 99)
+  const rand2 = Math.floor(Math.random() * 100).toString().padStart(2, '0');
+  
+  return `FT${yearShort}${rand4}${char1}${char2}${rand2}`;
+}
+
+export function formatTo12CharTxId(rawId?: string): string {
+  if (!rawId) return generateCbeTxId();
+  const cleaned = rawId.trim().toUpperCase();
+  if (/^FT\d{6}[A-Z]{2}\d{2}$/.test(cleaned) || (cleaned.startsWith('FT') && cleaned.length === 12)) {
+    return cleaned;
+  }
+  // Generate deterministic 12-char ID from raw string hash
+  let hash = 0;
+  for (let i = 0; i < cleaned.length; i++) {
+    hash = (hash << 5) - hash + cleaned.charCodeAt(i);
+    hash |= 0;
+  }
+  const absHash = Math.abs(hash);
+  const yearShort = new Date().getFullYear().toString().slice(-2);
+  const digits4 = (absHash % 10000).toString().padStart(4, '0');
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const l1 = letters[Math.floor((absHash / 13) % 26)];
+  const l2 = letters[Math.floor((absHash / 37) % 26)];
+  const d2 = (Math.floor(absHash / 7) % 100).toString().padStart(2, '0');
+  return `FT${yearShort}${digits4}${l1}${l2}${d2}`;
+}
+
 const INITIAL_TRANSACTIONS: Transaction[] = [
   {
-    id: 'TX892341A',
+    id: 'FT268923AB01',
     type: 'receive',
     recipientId: 'user_1',
     recipientName: 'Abebe Kebede',
@@ -78,7 +114,7 @@ const INITIAL_TRANSACTIONS: Transaction[] = [
     createdAt: new Date(now - 3 * hour).toISOString()
   },
   {
-    id: 'TX104928C',
+    id: 'FT261049CD42',
     type: 'transfer',
     senderId: 'user_1',
     senderName: 'Abebe Kebede',
@@ -94,7 +130,7 @@ const INITIAL_TRANSACTIONS: Transaction[] = [
     createdAt: new Date(now - 1 * day - 4 * hour).toISOString()
   },
   {
-    id: 'TX394857F',
+    id: 'FT263948EF15',
     type: 'bill',
     senderId: 'user_1',
     senderName: 'Abebe Kebede',
@@ -110,7 +146,7 @@ const INITIAL_TRANSACTIONS: Transaction[] = [
     createdAt: new Date(now - 3 * day).toISOString()
   },
   {
-    id: 'TX491823B',
+    id: 'FT264918GH77',
     type: 'airtime',
     senderId: 'user_1',
     senderName: 'Abebe Kebede',
@@ -295,7 +331,11 @@ export class LocalDb {
   }
 
   static getTransactions(): Transaction[] {
-    return loadData('tana_transactions', INITIAL_TRANSACTIONS);
+    const txs = loadData<Transaction[]>('tana_transactions', INITIAL_TRANSACTIONS);
+    return txs.map(t => ({
+      ...t,
+      id: formatTo12CharTxId(t.id)
+    }));
   }
 
   static setTransactions(txs: Transaction[]): void {
@@ -401,12 +441,8 @@ export class LocalDb {
     users[userIndex] = user;
     this.setUsers(users);
 
-    // Realistic CBE Transaction ID format: FT + YY + 6 digits + letters
-    const currentYearShort = new Date().getFullYear().toString().slice(-2);
-    const randomDigits = Math.floor(100000 + Math.random() * 900000).toString();
-    const randomLetter1 = String.fromCharCode(65 + Math.floor(Math.random() * 26));
-    const randomLetter2 = String.fromCharCode(65 + Math.floor(Math.random() * 26));
-    const cbeTxId = `FT${currentYearShort}${randomDigits}${randomLetter1}17${randomLetter2}`;
+    // Realistic CBE Transaction ID format: 12 characters exactly (e.g. FT263211VK07)
+    const cbeTxId = generateCbeTxId();
 
     // Create the transaction
     const txs = this.getTransactions();

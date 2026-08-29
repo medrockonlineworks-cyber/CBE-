@@ -1,7 +1,7 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import html2canvas from 'html2canvas';
 import { Transaction } from '../types';
-import { LocalDb, DEFAULT_CBE_LOGO } from '../lib/mockData';
+import { LocalDb, DEFAULT_CBE_LOGO, formatTo12CharTxId } from '../lib/mockData';
 import { calculateCbeFee } from '../lib/cbeTariff';
 import { CbeLogo } from './CbeLogo';
 import { 
@@ -20,6 +20,102 @@ import {
   Loader2,
   Image as ImageIcon
 } from 'lucide-react';
+
+/**
+ * Generates an authentic, high-density 33x33 QR matrix with Finder patterns,
+ * Timing patterns, Alignment block, and unique deterministic data modules.
+ */
+export function getDenseQrMatrix(txId: string, payload: string): boolean[][] {
+  const gridSize = 33;
+  const matrix: boolean[][] = Array.from({ length: gridSize }, () => Array(gridSize).fill(false));
+
+  // Helper to draw 7x7 Finder Pattern with quiet border
+  const drawFinder = (startRow: number, startCol: number) => {
+    for (let r = -1; r <= 7; r++) {
+      for (let c = -1; c <= 7; c++) {
+        const row = startRow + r;
+        const col = startCol + c;
+        if (row >= 0 && row < gridSize && col >= 0 && col < gridSize) {
+          if (r === -1 || r === 7 || c === -1 || c === 7) {
+            matrix[row][col] = false; // Quiet separator
+          } else if (r === 0 || r === 6 || c === 0 || c === 6) {
+            matrix[row][col] = true; // Outer 7x7 ring
+          } else if (r >= 2 && r <= 4 && c >= 2 && c <= 4) {
+            matrix[row][col] = true; // Inner 3x3 solid block
+          } else {
+            matrix[row][col] = false; // Middle ring
+          }
+        }
+      }
+    }
+  };
+
+  // 1. Finder patterns at 3 corners
+  drawFinder(0, 0); // Top-Left
+  drawFinder(0, gridSize - 7); // Top-Right
+  drawFinder(gridSize - 7, 0); // Bottom-Left
+
+  // 2. Timing patterns (alternating black/white at row 6 & col 6)
+  for (let i = 8; i < gridSize - 8; i++) {
+    matrix[6][i] = i % 2 === 0;
+    matrix[i][6] = i % 2 === 0;
+  }
+
+  // 3. Standard Alignment pattern (5x5 module) at center (24, 24)
+  const alignCenter = 24;
+  for (let r = -2; r <= 2; r++) {
+    for (let c = -2; c <= 2; c++) {
+      const row = alignCenter + r;
+      const col = alignCenter + c;
+      if (row >= 0 && row < gridSize && col >= 0 && col < gridSize) {
+        if (Math.abs(r) === 2 || Math.abs(c) === 2) {
+          matrix[row][col] = true; // Outer 5x5 ring
+        } else if (r === 0 && c === 0) {
+          matrix[row][col] = true; // Center 1x1 dot
+        } else {
+          matrix[row][col] = false;
+        }
+      }
+    }
+  }
+
+  // 4. Dark Module
+  matrix[gridSize - 8][8] = true;
+
+  // 5. Seed-based high-density data modules unique to this transaction
+  const seedString = `${txId}|${payload}|CBE_RECEIPT_V4_ETH`;
+  let hash1 = 5381;
+  let hash2 = 0x811c9dc5;
+  for (let i = 0; i < seedString.length; i++) {
+    const code = seedString.charCodeAt(i);
+    hash1 = ((hash1 << 5) + hash1) + code;
+    hash2 = (hash2 ^ code) * 16777619;
+  }
+
+  const isReserved = (r: number, c: number): boolean => {
+    if (r <= 7 && c <= 7) return true;
+    if (r <= 7 && c >= gridSize - 8) return true;
+    if (r >= gridSize - 8 && c <= 7) return true;
+    if (r === 6 || c === 6) return true;
+    if (r >= alignCenter - 2 && r <= alignCenter + 2 && c >= alignCenter - 2 && c <= alignCenter + 2) return true;
+    return false;
+  };
+
+  for (let r = 0; r < gridSize; r++) {
+    for (let c = 0; c < gridSize; c++) {
+      if (isReserved(r, c)) continue;
+      
+      const charIndex = (r * 11 + c * 17) % seedString.length;
+      const charCode = seedString.charCodeAt(charIndex);
+      const val = Math.abs((r * 31 + c * 47 + charCode * 13 + (hash1 ^ (hash2 >>> (r % 16)))) % 100);
+      
+      // High data density ~56%
+      matrix[r][c] = val < 56;
+    }
+  }
+
+  return matrix;
+}
 
 interface ReceiptProps {
   transaction: Transaction;
@@ -52,6 +148,69 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       window.removeEventListener('cbe_qr_updated', handleUpdate);
     };
   }, []);
+
+  // Mathematical computations with CBE rules
+  const amount = transaction.amount;
+  const cbeFee = calculateCbeFee(amount, transaction.type, false);
+  const serviceCharge = transaction.serviceCharge !== undefined 
+    ? transaction.serviceCharge 
+    : (transaction.fee > 0 ? transaction.fee : cbeFee.serviceCharge);
+  const vat = transaction.vat !== undefined 
+    ? transaction.vat 
+    : Number((serviceCharge * 0.15).toFixed(2));
+  const disasterRecovery = transaction.disasterRecovery !== undefined 
+    ? transaction.disasterRecovery 
+    : Number((serviceCharge * 0.05).toFixed(2));
+  const totalDebited = transaction.totalDebited !== undefined 
+    ? transaction.totalDebited 
+    : Number((amount + serviceCharge + vat + disasterRecovery).toFixed(2));
+
+  const totalDebitedStr = totalDebited.toFixed(2);
+  const serviceChargeStr = serviceCharge.toFixed(2);
+  const vatStr = vat.toFixed(2);
+  const disasterRecoveryStr = disasterRecovery.toFixed(2);
+
+  // Formatting Sender & Recipient names & account suffixes
+  const senderName = transaction.senderName || "Global Online Market";
+  const rawSenderAccount = transaction.senderAccount || "6671";
+  const senderSuffix = rawSenderAccount.length >= 4 
+    ? `ETB-${rawSenderAccount.slice(-4)}` 
+    : `ETB-6671`;
+
+  const recipientName = transaction.recipientName || "Addisu Abebe Mengistu";
+  const rawRecipientAccount = transaction.recipientAccount || "6547";
+  const recipientSuffix = rawRecipientAccount.length >= 4 && !rawRecipientAccount.includes('+251')
+    ? `ETB-${rawRecipientAccount.slice(-4)}` 
+    : `ETB-6547`;
+
+  // Date formatting: e.g. "Aug 21, 2026 05:56 PM"
+  const formatSummaryDate = (dateInput: any) => {
+    const d = new Date(dateInput);
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const month = months[d.getMonth()];
+    const day = d.getDate();
+    const year = d.getFullYear();
+    
+    let hours = d.getHours();
+    const minutes = d.getMinutes().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const hourStr = hours.toString().padStart(2, '0');
+    
+    return `${month} ${day}, ${year} ${hourStr}:${minutes} ${ampm}`;
+  };
+  const formattedDate = formatSummaryDate(transaction.createdAt);
+
+  // Dynamic realistic CBE Transaction ID: 12 characters exactly (e.g. FT263211VK07)
+  const txId = formatTo12CharTxId(transaction.id);
+
+  const reason = transaction.description || 'Mobile Banking Transfer';
+
+  // Memoized 33x33 High-Density QR Matrix
+  const qrMatrix = useMemo(() => {
+    return getDenseQrMatrix(txId, `${amount}|${rawRecipientAccount}|${rawSenderAccount}|${formattedDate}`);
+  }, [txId, amount, rawRecipientAccount, rawSenderAccount, formattedDate]);
 
   // Print handle
   const handlePrint = () => {
@@ -331,32 +490,17 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     }
 
     if (!qrImageLoaded) {
-      // Draw QR Code Modules
-      const gridSize = 21;
+      // Draw High-Density 33x33 QR Code Modules
+      const matrix = getDenseQrMatrix(txId, `${amount}|${rawRecipientAccount}|${rawSenderAccount}`);
+      const gridSize = matrix.length; // 33
       const cellSize = qrSize / gridSize;
       ctx.fillStyle = '#000000';
 
       for (let r = 0; r < gridSize; r++) {
         for (let c = 0; c < gridSize; c++) {
-          const isCornerFinder =
-            (r < 7 && c < 7) ||
-            (r < 7 && c >= gridSize - 7) ||
-            (r >= gridSize - 7 && c < 7);
-          
-          let filled = false;
-          if (isCornerFinder) {
-            const inOuter = (r === 0 || r === 6 || c === 0 || c === 6 || r === gridSize - 1 || r === gridSize - 7 || c === gridSize - 1 || c === gridSize - 7);
-            const inInner = (r >= 2 && r <= 4 && c >= 2 && c <= 4) ||
-                            (r >= 2 && r <= 4 && c >= gridSize - 5 && c <= gridSize - 3) ||
-                            (r >= gridSize - 5 && r <= gridSize - 3 && c >= 2 && c <= 4);
-            filled = inOuter || inInner;
-          } else {
-            filled = ((r * 13 + c * 17 + txId.charCodeAt(c % txId.length)) % 3) !== 0;
-          }
-
-          if (filled) {
+          if (matrix[r][c]) {
             ctx.beginPath();
-            ctx.roundRect(qrX + c * cellSize + 0.8, qrY + r * cellSize + 0.8, cellSize - 1.6, cellSize - 1.6, 2);
+            ctx.roundRect(qrX + c * cellSize + 0.5, qrY + r * cellSize + 0.5, cellSize - 1, cellSize - 1, 1);
             ctx.fill();
           }
         }
@@ -568,66 +712,6 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     }
   };
 
-  // Mathematical computations with CBE rules
-  const amount = transaction.amount;
-  const cbeFee = calculateCbeFee(amount, transaction.type, false);
-  const serviceCharge = transaction.serviceCharge !== undefined 
-    ? transaction.serviceCharge 
-    : (transaction.fee > 0 ? transaction.fee : cbeFee.serviceCharge);
-  const vat = transaction.vat !== undefined 
-    ? transaction.vat 
-    : Number((serviceCharge * 0.15).toFixed(2));
-  const disasterRecovery = transaction.disasterRecovery !== undefined 
-    ? transaction.disasterRecovery 
-    : Number((serviceCharge * 0.05).toFixed(2));
-  const totalDebited = transaction.totalDebited !== undefined 
-    ? transaction.totalDebited 
-    : Number((amount + serviceCharge + vat + disasterRecovery).toFixed(2));
-
-  const totalDebitedStr = totalDebited.toFixed(2);
-  const serviceChargeStr = serviceCharge.toFixed(2);
-  const vatStr = vat.toFixed(2);
-  const disasterRecoveryStr = disasterRecovery.toFixed(2);
-
-  // Formatting Sender & Recipient names & account suffixes
-  const senderName = transaction.senderName || "Global Online Market";
-  const rawSenderAccount = transaction.senderAccount || "6671";
-  const senderSuffix = rawSenderAccount.length >= 4 
-    ? `ETB-${rawSenderAccount.slice(-4)}` 
-    : `ETB-6671`;
-
-  const recipientName = transaction.recipientName || "Addisu Abebe Mengistu";
-  const rawRecipientAccount = transaction.recipientAccount || "6547";
-  const recipientSuffix = rawRecipientAccount.length >= 4 && !rawRecipientAccount.includes('+251')
-    ? `ETB-${rawRecipientAccount.slice(-4)}` 
-    : `ETB-6547`;
-
-  // Date formatting: e.g. "Aug 21, 2026 05:56 PM"
-  const formatSummaryDate = (dateInput: any) => {
-    const d = new Date(dateInput);
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const month = months[d.getMonth()];
-    const day = d.getDate();
-    const year = d.getFullYear();
-    
-    let hours = d.getHours();
-    const minutes = d.getMinutes().toString().padStart(2, '0');
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    hours = hours % 12;
-    hours = hours ? hours : 12;
-    const hourStr = hours.toString().padStart(2, '0');
-    
-    return `${month} ${day}, ${year} ${hourStr}:${minutes} ${ampm}`;
-  };
-  const formattedDate = formatSummaryDate(transaction.createdAt);
-
-  // Dynamic realistic CBE Transaction ID (e.g. FT262244K17Z)
-  const txId = transaction.id.toUpperCase().startsWith('FT') 
-    ? transaction.id.toUpperCase() 
-    : `FT${transaction.id.replace(/\D/g, '').slice(0, 6) || '262244'}K17Z`;
-
-  const reason = transaction.description || 'Mobile Banking Transfer';
-
   return (
     <div id="receipt-screen-wrapper" className="h-full min-h-[100dvh] max-w-md mx-auto bg-[#61167e] text-slate-800 flex flex-col justify-between relative overflow-y-auto scrollbar-none">
       
@@ -694,7 +778,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
               ETB <span className="font-extrabold">{amount.toFixed(2)}</span> has been debited from <span className="font-extrabold">{senderName} {senderSuffix}</span> for <span className="font-extrabold">{recipientName} {recipientSuffix}</span> on <span className="font-extrabold">{formattedDate}</span> with transaction ID: <span className="font-extrabold">{txId}</span>. Reason: {reason}. Total Amount Debited: ETB{totalDebitedStr} with Service Charge of ETB{serviceChargeStr}, VAT (15%) of {vatStr} and Disaster Recovery (5%) of ETB{disasterRecoveryStr}.
             </p>
 
-            {/* Clean QR Code Centered */}
+            {/* High-Density Realistic QR Code Centered */}
             <div className="flex justify-center py-1">
               <div className="w-32 h-32 sm:w-36 sm:h-36 bg-transparent flex items-center justify-center p-0.5">
                 {customQrCode ? (
@@ -704,51 +788,21 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                     className="w-full h-full object-contain"
                   />
                 ) : (
-                  /* High-fidelity 21x21 QR Matrix */
+                  /* High-fidelity 33x33 Dense QR Matrix (1,089 crisp modules) */
                   <div 
-                    className="grid gap-[2px] w-full h-full"
-                    style={{ gridTemplateColumns: 'repeat(21, minmax(0, 1fr))' }}
+                    className="grid gap-[1px] w-full h-full"
+                    style={{ gridTemplateColumns: `repeat(${qrMatrix.length}, minmax(0, 1fr))` }}
                   >
-                    {Array.from({ length: 441 }).map((_, i) => {
-                      const row = Math.floor(i / 21);
-                      const col = i % 21;
-                      
-                      const isTopLeft = row < 7 && col < 7;
-                      const isTopRight = row < 7 && col >= 14;
-                      const isBottomLeft = row >= 14 && col < 7;
-                      
-                      const isFinderOuter = 
-                        (isTopLeft && (row === 0 || row === 6 || col === 0 || col === 6)) ||
-                        (isTopRight && (row === 0 || row === 6 || col === 14 || col === 20)) ||
-                        (isBottomLeft && (row === 14 || row === 20 || col === 0 || col === 6));
-                        
-                      const isFinderInner = 
-                        (isTopLeft && (row >= 2 && row <= 4 && col >= 2 && col <= 4)) ||
-                        (isTopRight && (row >= 2 && row <= 4 && col >= 16 && col <= 18)) ||
-                        (isBottomLeft && (row >= 16 && row <= 18 && col >= 2 && col <= 4));
-
-                      const hash = (row * 37 + col * 19 + i * 3) % 7;
-                      const isPixelFilled = hash === 0 || hash === 2 || hash === 5 || ((row + col) % 3 === 0 && row > 7 && col > 7);
-
-                      if (isFinderOuter || isFinderInner) {
-                        return <div key={i} className="bg-black rounded-[1px]" />;
-                      }
-
-                      if ((isTopLeft && !isFinderOuter && !isFinderInner) ||
-                          (isTopRight && !isFinderOuter && !isFinderInner) ||
-                          (isBottomLeft && !isFinderOuter && !isFinderInner)) {
-                        return <div key={i} className="bg-transparent" />;
-                      }
-
-                      return (
+                    {qrMatrix.flatMap((row, rIdx) =>
+                      row.map((filled, cIdx) => (
                         <div 
-                          key={i} 
-                          className={`rounded-[0.5px] ${
-                            isPixelFilled ? 'bg-black' : 'bg-transparent'
+                          key={`${rIdx}-${cIdx}`} 
+                          className={`rounded-[0.2px] ${
+                            filled ? 'bg-black' : 'bg-transparent'
                           }`}
                         />
-                      );
-                    })}
+                      ))
+                    )}
                   </div>
                 )}
               </div>
