@@ -172,11 +172,11 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
               className="w-9 h-9 rounded-2xl bg-white/20 hover:bg-white/30 border border-white/25 flex items-center justify-center active:scale-95 transition cursor-pointer shadow-xs"
               title="App Launcher (Services & Admin)"
             >
-              <div className="grid grid-cols-2 gap-1 p-0.5">
-                <div className="w-1.5 h-1.5 rounded-full border border-white/90 bg-white/40" />
-                <div className="w-1.5 h-1.5 rounded-full border border-white/90 bg-white/40" />
-                <div className="w-1.5 h-1.5 rounded-full border border-white/90 bg-white/40" />
-                <div className="w-1.5 h-1.5 rounded-full border border-white/90 bg-white/40" />
+              <div className="grid grid-cols-2 gap-[3px] p-0.5">
+                <div className="w-1.5 h-1.5 rounded-[1px] bg-white shadow-xs" />
+                <div className="w-1.5 h-1.5 rounded-[1px] bg-white shadow-xs" />
+                <div className="w-1.5 h-1.5 rounded-[1px] bg-white shadow-xs" />
+                <div className="w-1.5 h-1.5 rounded-[1px] bg-white shadow-xs" />
               </div>
             </button>
 

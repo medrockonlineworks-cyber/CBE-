@@ -981,7 +981,22 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           className="w-9 h-9 rounded-xl bg-white/15 hover:bg-white/25 active:scale-95 flex items-center justify-center transition border border-white/20 text-white cursor-pointer disabled:opacity-50 shadow-xs"
           title="Take iPhone Screenshot & Save"
         >
-          {isCapturing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Scan className="w-4.5 h-4.5" />}
+          {isCapturing ? (
+            <Loader2 className="w-4.5 h-4.5 animate-spin text-white" />
+          ) : (
+            /* 4-corner bracket frame with dashed center box matching the bottom screenshot icon */
+            <div className="relative w-[19px] h-[19px] flex items-center justify-center flex-shrink-0">
+              {/* Outer corner brackets */}
+              <div className="absolute top-0 left-0 w-1.5 h-1.5 border-t-2 border-l-2 border-white rounded-tl-[1px]" />
+              <div className="absolute top-0 right-0 w-1.5 h-1.5 border-t-2 border-r-2 border-white rounded-tr-[1px]" />
+              <div className="absolute bottom-0 left-0 w-1.5 h-1.5 border-b-2 border-l-2 border-white rounded-bl-[1px]" />
+              <div className="absolute bottom-0 right-0 w-1.5 h-1.5 border-b-2 border-r-2 border-white rounded-br-[1px]" />
+              {/* Inner dashed viewfinder rect with center circle */}
+              <div className="w-2.5 h-2 border border-dashed border-white/90 rounded-[1px] flex items-center justify-center">
+                <div className="w-1 h-1 rounded-full bg-white" />
+              </div>
+            </div>
+          )}
         </button>
       </div>
 
@@ -1105,8 +1120,10 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                   <div className="absolute top-0 right-0 w-1.5 h-1.5 border-t-2 border-r-2 border-black rounded-tr-[1px]" />
                   <div className="absolute bottom-0 left-0 w-1.5 h-1.5 border-b-2 border-l-2 border-black rounded-bl-[1px]" />
                   <div className="absolute bottom-0 right-0 w-1.5 h-1.5 border-b-2 border-r-2 border-black rounded-br-[1px]" />
-                  {/* Inner dashed viewfinder rect */}
-                  <div className="w-2 h-1.5 border border-dashed border-black/80 rounded-[1px]" />
+                  {/* Inner dashed viewfinder rect with center circle */}
+                  <div className="w-2.5 h-2 border border-dashed border-black/90 rounded-[1px] flex items-center justify-center">
+                    <div className="w-1 h-1 rounded-full bg-black" />
+                  </div>
                 </div>
               )}
               <span>{isCapturing ? 'Saving...' : 'Screenshot'}</span>
