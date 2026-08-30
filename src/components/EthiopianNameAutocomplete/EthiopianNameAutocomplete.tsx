@@ -33,6 +33,7 @@ export default function EthiopianNameAutocomplete({
   showPopularityBadge = true,
   allowManualEntry = true,
   extractActiveToken = false,
+  suggestFullNames = true,
   leftIcon,
   theme = 'cbe',
   ...rest
@@ -44,6 +45,7 @@ export default function EthiopianNameAutocomplete({
   const {
     query,
     suggestions,
+    fullNameSuggestions,
     isLoading,
     isOpen,
     setIsOpen,
@@ -62,7 +64,8 @@ export default function EthiopianNameAutocomplete({
     debounceMs,
     onSelect,
     onChange,
-    extractActiveToken
+    extractActiveToken,
+    suggestFullNames
   });
 
   // Close dropdown on click outside
@@ -256,24 +259,75 @@ export default function EthiopianNameAutocomplete({
           {/* Header info banner */}
           <div className="px-3.5 py-1.5 text-[11px] font-medium flex items-center justify-between text-slate-400 border-b border-slate-100">
             <span>
-              {searchTerm ? `Suggestions for "${searchTerm}"` : 'Popular Ethiopian Names'}
+              {searchTerm ? `Suggestions for "${searchTerm}"` : 'Ethiopian Names & Full 3-Part Names'}
             </span>
             <span className="text-[10px] text-slate-400 font-mono">
-              {suggestions.length} found
+              {(fullNameSuggestions?.length || 0) + suggestions.length} suggestions
             </span>
           </div>
+
+          {/* Full Name Suggestions (First + Father + Grandfather e.g. Leykun Jemaneh Ylma) */}
+          {fullNameSuggestions && fullNameSuggestions.length > 0 && (
+            <div className="bg-purple-50/40 border-b border-purple-100/60 pb-1">
+              <div className="px-3.5 pt-2 pb-1 flex items-center gap-1 text-[10px] font-bold text-purple-800 uppercase tracking-wider">
+                <Sparkles className="w-3 h-3 text-[#dfa04c]" />
+                <span>Full Name Suggestions (3-Part)</span>
+              </div>
+              {fullNameSuggestions.map((item, idx) => {
+                const isSelected = highlightedIndex === idx;
+                return (
+                  <div
+                    key={`fullname-${idx}-${item.fullName}`}
+                    id={`${id}-fullname-option-${idx}`}
+                    role="option"
+                    aria-selected={isSelected}
+                    onMouseEnter={() => setHighlightedIndex(idx)}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      handleSelect(item);
+                    }}
+                    onClick={() => handleSelect(item)}
+                    className={`px-3.5 py-2.5 flex items-center justify-between cursor-pointer text-sm transition select-none ${
+                      isSelected ? 'bg-purple-100 text-[#7b1fa2] font-bold' : 'hover:bg-purple-100/60'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="text-[9px] font-mono font-bold px-1.5 py-0.5 rounded uppercase bg-amber-500/15 text-amber-900 border border-amber-300/40 flex-shrink-0">
+                        FULL
+                      </span>
+                      <div className="min-w-0">
+                        <p className="font-bold text-slate-900 truncate flex items-center gap-1.5">
+                          <span>{item.fullName}</span>
+                        </p>
+                        <p className="text-[10px] text-purple-700/70 font-medium">
+                          {item.firstName} (Self) • {item.fathersName} (Father) • {item.grandfathersName} (Grandfather)
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {query.toLowerCase() === item.fullName.toLowerCase() && (
+                        <Check className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           {/* Suggestions List */}
           {suggestions.length > 0 ? (
             suggestions.map((sug, index) => {
-              const isSelected = highlightedIndex === index;
+              const adjustedIndex = (fullNameSuggestions?.length || 0) + index;
+              const isSelected = highlightedIndex === adjustedIndex;
               return (
                 <div
                   key={sug.item.id || index}
                   id={`${id}-option-${index}`}
                   role="option"
                   aria-selected={isSelected}
-                  onMouseEnter={() => setHighlightedIndex(index)}
+                  onMouseEnter={() => setHighlightedIndex(adjustedIndex)}
                   onMouseDown={(e) => {
                     e.preventDefault();
                     handleSelect(sug);
@@ -329,7 +383,7 @@ export default function EthiopianNameAutocomplete({
                 </div>
               );
             })
-          ) : (
+          ) : (!fullNameSuggestions || fullNameSuggestions.length === 0) ? (
             <div className="px-4 py-5 text-center text-xs text-slate-500">
               <p className="font-medium text-slate-700">No matching name in database</p>
               {allowManualEntry && (
@@ -338,7 +392,7 @@ export default function EthiopianNameAutocomplete({
                 </p>
               )}
             </div>
-          )}
+          ) : null}
 
           {/* Footer note informing user that manual entry is always supported */}
           {allowManualEntry && (

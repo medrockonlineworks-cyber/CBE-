@@ -22,6 +22,7 @@ export interface EthiopianNameAutocompleteProps extends Omit<InputHTMLAttributes
   showPopularityBadge?: boolean;
   allowManualEntry?: boolean; // Defaults to true (never forces selection)
   extractActiveToken?: boolean; // Allows tokenized 3-part name suggestions in single field
+  suggestFullNames?: boolean; // When true, includes authentic full 3-part Ethiopian names (e.g. Leykun Jemaneh Ylma)
   leftIcon?: ReactNode;
   theme?: 'dark' | 'light' | 'cbe';
 }

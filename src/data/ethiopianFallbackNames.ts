@@ -140,6 +140,7 @@ export const RAW_ETHIOPIAN_NAMES: RawEthiopianSeed[] = [
 
   // J
   { name: 'Jemal', gender: 'male', usage_count: 880, category: 'Muslim' },
+  { name: 'Jemaneh', gender: 'male', usage_count: 990, category: 'Traditional' },
   { name: 'Jalata', gender: 'male', usage_count: 540, category: 'Oromo' },
   { name: 'Jawar', gender: 'male', usage_count: 620, category: 'Oromo' },
 
@@ -157,6 +158,7 @@ export const RAW_ETHIOPIAN_NAMES: RawEthiopianSeed[] = [
   { name: 'Kumsa', gender: 'male', usage_count: 480, category: 'Oromo' },
 
   // L
+  { name: 'Leykun', gender: 'male', usage_count: 1420, category: 'Traditional' },
   { name: 'Lensa', gender: 'female', usage_count: 710, category: 'Oromo' },
   { name: 'Liya', gender: 'female', usage_count: 1290, category: 'Christian' },
   { name: 'Lidya', gender: 'female', usage_count: 870, category: 'Christian' },
@@ -265,6 +267,8 @@ export const RAW_ETHIOPIAN_NAMES: RawEthiopianSeed[] = [
   // Y
   { name: 'Yared', gender: 'male', usage_count: 990, category: 'Christian' },
   { name: 'Yasin', gender: 'male', usage_count: 740, category: 'Muslim' },
+  { name: 'Ylma', gender: 'male', usage_count: 1050, category: 'Traditional' },
+  { name: 'Yilma', gender: 'male', usage_count: 1080, category: 'Traditional' },
   { name: 'Yemisrach', gender: 'female', usage_count: 780, category: 'Traditional' },
   { name: 'Yerusalem', gender: 'female', usage_count: 820, category: 'Christian' },
   { name: 'Yeshi', gender: 'female', usage_count: 710, category: 'Traditional' },

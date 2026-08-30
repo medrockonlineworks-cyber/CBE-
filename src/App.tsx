@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { UserProfile, Transaction } from './types';
 import { LocalDb } from './lib/mockData';
 import Auth from './components/Auth';
+import Home from './pages/Home';
 import Dashboard from './components/Dashboard';
 import Transactions from './components/Transactions';
 import Payments from './components/Payments';
@@ -15,8 +16,20 @@ import AppInstallPrompt from './components/AppInstallPrompt';
 
 export default function App() {
   // Authentication & View Session States
-  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
-  const [activeView, setActiveView] = useState<'auth' | 'main' | 'receipt' | 'admin'>('auth');
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
+    try {
+      const users = LocalDb.getUsers();
+      const savedUserId = typeof window !== 'undefined' ? localStorage.getItem('tana_active_user_id') : null;
+      if (savedUserId) {
+        const match = users.find(u => u.id === savedUserId);
+        if (match && match.status !== 'suspended') return match;
+      }
+      return users[0] || null;
+    } catch {
+      return null;
+    }
+  });
+  const [activeView, setActiveView] = useState<'auth' | 'main' | 'receipt' | 'admin'>('main');
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [initialTxTab, setInitialTxTab] = useState<'send' | 'transfer' | 'merchant' | 'receive' | 'airtime'>('send');
@@ -124,12 +137,27 @@ export default function App() {
 
   // View Router Render Picker
   const renderTabContent = () => {
-    if (!currentUser) return null;
+    const activeUser = currentUser || {
+      id: 'demo-user-1',
+      name: 'Abdurahman',
+      email: 'abdurahman@cbe.et',
+      phone: '+251911234567',
+      accountNumber: '1000284758657',
+      accountType: 'wadiah' as const,
+      balance: 25430.00,
+      availableBalance: 25430.00,
+      currency: 'ETB',
+      role: 'user' as const,
+      status: 'active' as const,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
     switch (activeTab) {
       case 'home':
         return (
-          <Dashboard 
-            currentUser={currentUser}
+          <Home 
+            currentUser={activeUser}
             onNavigateToTab={(tab, subTab) => {
               setActiveTab(tab);
               if (tab === 'transfer' && subTab) {
@@ -140,14 +168,13 @@ export default function App() {
               } catch {}
             }}
             onSelectTransaction={handleSelectTransaction}
-            onLogout={handleLogout}
             onOpenAdmin={() => navigateTo('admin', 'profile')}
           />
         );
       case 'transfer':
         return (
           <Transactions 
-            currentUser={currentUser}
+            currentUser={activeUser}
             onTransactionComplete={handleTransactionComplete}
             initialTab={initialTxTab}
           />
@@ -155,28 +182,33 @@ export default function App() {
       case 'payments':
         return (
           <Payments 
-            currentUser={currentUser}
+            currentUser={activeUser}
             onPaymentComplete={handleTransactionComplete}
           />
         );
       case 'history':
         return (
           <History 
-            currentUser={currentUser}
+            currentUser={activeUser}
             onSelectTransaction={handleSelectTransaction}
           />
         );
       case 'profile':
         return (
           <Profile 
-            currentUser={currentUser}
+            currentUser={activeUser}
             onLogout={handleLogout}
             onUpdateUser={handleUpdateUserProfile}
             onOpenAdmin={() => navigateTo('admin', 'profile')}
           />
         );
       default:
-        return null;
+        return (
+          <Home 
+            currentUser={activeUser}
+            onNavigateToTab={(tab) => setActiveTab(tab)}
+          />
+        );
     }
   };
 
@@ -202,31 +234,35 @@ export default function App() {
             <Auth onLoginSuccess={handleLoginSuccess} />
           )}
 
-          {activeView === 'main' && currentUser && (
+          {activeView === 'main' && (
             <div className="flex-1 flex flex-col relative pb-28">
               {/* Optional Top PWA Banner when installable */}
               <AppInstallPrompt mode="banner" />
 
               {renderTabContent()}
               
-              {/* Floating bottom navigation */}
-              <Navigation 
-                activeTab={activeTab}
-                onChangeTab={(tab) => {
-                  setActiveTab(tab);
-                  try {
-                    window.history.pushState({ view: 'main', tab }, '', window.location.pathname);
-                  } catch {}
-                  // Quick refresh of session model when tab changes
-                  const users = LocalDb.getUsers();
-                  const match = users.find(u => u.id === currentUser.id);
-                  if (match) {
-                    setCurrentUser(match);
-                  }
-                }}
-                currentUser={currentUser}
-                onOpenAdmin={() => navigateTo('admin', 'profile')}
-              />
+              {/* Floating bottom navigation for secondary sub-tabs */}
+              {activeTab !== 'home' && (
+                <Navigation 
+                  activeTab={activeTab}
+                  onChangeTab={(tab) => {
+                    setActiveTab(tab);
+                    try {
+                      window.history.pushState({ view: 'main', tab }, '', window.location.pathname);
+                    } catch {}
+                    // Quick refresh of session model when tab changes
+                    if (currentUser) {
+                      const users = LocalDb.getUsers();
+                      const match = users.find(u => u.id === currentUser.id);
+                      if (match) {
+                        setCurrentUser(match);
+                      }
+                    }
+                  }}
+                  currentUser={currentUser || undefined}
+                  onOpenAdmin={() => navigateTo('admin', 'profile')}
+                />
+              )}
             </div>
           )}
 

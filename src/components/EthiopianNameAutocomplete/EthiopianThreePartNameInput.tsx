@@ -47,12 +47,33 @@ export default function EthiopianThreePartNameInput({
           id={`${idPrefix}-first-name`}
           label="First Name"
           value={firstName}
-          onChange={(val) => updateParts(val, fathersName, grandfathersName)}
-          placeholder="e.g. Abebe"
+          onChange={(val) => {
+            // If user pasted or selected a multi-word name, auto-split
+            const parts = val.trim().split(/\s+/);
+            if (parts.length >= 3) {
+              updateParts(parts[0], parts[1], parts.slice(2).join(' '));
+            } else if (parts.length === 2) {
+              updateParts(parts[0], parts[1], grandfathersName);
+            } else {
+              updateParts(val, fathersName, grandfathersName);
+            }
+          }}
+          placeholder="e.g. Leykun, Abebe"
           required={required}
           disabled={disabled}
           theme={theme}
           maxSuggestions={6}
+          suggestFullNames={true}
+          onSelect={(selectedName) => {
+            const parts = selectedName.trim().split(/\s+/);
+            if (parts.length >= 3) {
+              updateParts(parts[0], parts[1], parts.slice(2).join(' '));
+            } else if (parts.length === 2) {
+              updateParts(parts[0], parts[1], grandfathersName);
+            } else {
+              updateParts(selectedName, fathersName, grandfathersName);
+            }
+          }}
         />
 
         {/* 2. Father's Name (Patronymic) */}
@@ -61,12 +82,13 @@ export default function EthiopianThreePartNameInput({
           label="Father's Name"
           value={fathersName}
           onChange={(val) => updateParts(firstName, val, grandfathersName)}
-          placeholder="e.g. Kebede"
+          placeholder="e.g. Jemaneh, Kebede"
           required={required}
           disabled={disabled}
           genderFilter="male"
           theme={theme}
           maxSuggestions={6}
+          suggestFullNames={false}
         />
 
         {/* 3. Grandfather's Name */}
@@ -75,11 +97,12 @@ export default function EthiopianThreePartNameInput({
           label="Grandfather's Name"
           value={grandfathersName}
           onChange={(val) => updateParts(firstName, fathersName, val)}
-          placeholder="e.g. Tadesse"
+          placeholder="e.g. Ylma, Tadesse"
           disabled={disabled}
           genderFilter="male"
           theme={theme}
           maxSuggestions={6}
+          suggestFullNames={false}
         />
       </div>
 

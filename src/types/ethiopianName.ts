@@ -21,6 +21,14 @@ export interface EthiopianNameSearchResult {
   highlightRanges: [number, number][]; // [start, end] indices for highlighting matching characters
 }
 
+export interface EthiopianFullNameSuggestion {
+  fullName: string;
+  firstName: string;
+  fathersName: string;
+  grandfathersName: string;
+  category?: string;
+}
+
 export interface EthiopianNamingStructure {
   firstName: string;
   fathersName: string;

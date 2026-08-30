@@ -217,6 +217,114 @@ class EthiopianNameService {
   }
 
   /**
+   * Generates authentic Ethiopian full 3-part names (First + Father + Grandfather)
+   * matching the search query (e.g., "Leykun Jemaneh Ylma", "Abebe Kebede Tadesse").
+   */
+  async searchEthiopianFullNames(
+    query: string,
+    maxResults: number = 6
+  ): Promise<{ fullName: string; firstName: string; fathersName: string; grandfathersName: string; category?: string }[]> {
+    const cleanQuery = (query || '').trim();
+    const tokens = cleanQuery.split(/\s+/).filter(Boolean);
+    const allNames = this.getLocalNames().filter(n => n.is_active);
+
+    const maleNames = allNames.filter(n => n.gender === 'male' || n.gender === 'unisex');
+    const femaleNames = allNames.filter(n => n.gender === 'female');
+
+    // Common harmonious Ethiopian full name combos for high-confidence suggestions
+    const CURATED_FULL_NAMES = [
+      { fullName: 'Leykun Jemaneh Ylma', firstName: 'Leykun', fathersName: 'Jemaneh', grandfathersName: 'Ylma', category: 'Traditional' },
+      { fullName: 'Leykun Jemaneh Yilma', firstName: 'Leykun', fathersName: 'Jemaneh', grandfathersName: 'Yilma', category: 'Traditional' },
+      { fullName: 'Leykun Kebede Tadesse', firstName: 'Leykun', fathersName: 'Kebede', grandfathersName: 'Tadesse', category: 'Traditional' },
+      { fullName: 'Abebe Kebede Tadesse', firstName: 'Abebe', fathersName: 'Kebede', grandfathersName: 'Tadesse', category: 'Traditional' },
+      { fullName: 'Abebe Bikila Demisse', firstName: 'Abebe', fathersName: 'Bikila', grandfathersName: 'Demisse', category: 'Traditional' },
+      { fullName: 'Dawit Yohannes Mekonnen', firstName: 'Dawit', fathersName: 'Yohannes', grandfathersName: 'Mekonnen', category: 'Christian' },
+      { fullName: 'Selamawit Tekle Haile', firstName: 'Selamawit', fathersName: 'Tekle', grandfathersName: 'Haile', category: 'Traditional' },
+      { fullName: 'Meron Tesfaye Alemu', firstName: 'Meron', fathersName: 'Tesfaye', grandfathersName: 'Alemu', category: 'Traditional' },
+      { fullName: 'Samuel Getachew Girma', firstName: 'Samuel', fathersName: 'Getachew', grandfathersName: 'Girma', category: 'Christian' },
+      { fullName: 'Bereket Solomon Worku', firstName: 'Bereket', fathersName: 'Solomon', grandfathersName: 'Worku', category: 'Traditional' },
+      { fullName: 'Kalkidan Asfaw Berhanu', firstName: 'Kalkidan', fathersName: 'Asfaw', grandfathersName: 'Berhanu', category: 'Christian' },
+      { fullName: 'Henok Tadesse Desta', firstName: 'Henok', fathersName: 'Tadesse', grandfathersName: 'Desta', category: 'Traditional' },
+      { fullName: 'Natnael Girma Bekele', firstName: 'Natnael', fathersName: 'Girma', grandfathersName: 'Bekele', category: 'Christian' },
+      { fullName: 'Liya Endalkachew Zewdu', firstName: 'Liya', fathersName: 'Endalkachew', grandfathersName: 'Zewdu', category: 'Christian' },
+      { fullName: 'Mohammed Ahmed Hassen', firstName: 'Mohammed', fathersName: 'Ahmed', grandfathersName: 'Hassen', category: 'Muslim' },
+      { fullName: 'Dagmawi Teshome Belay', firstName: 'Dagmawi', fathersName: 'Teshome', grandfathersName: 'Belay', category: 'Traditional' },
+    ];
+
+    const results: { fullName: string; firstName: string; fathersName: string; grandfathersName: string; category?: string }[] = [];
+    const seen = new Set<string>();
+
+    const normQuery = normalizeEthiopianName(cleanQuery);
+
+    // 1. Direct match with curated full names
+    for (const item of CURATED_FULL_NAMES) {
+      const normFull = normalizeEthiopianName(item.fullName);
+      if (!normQuery || normFull.includes(normQuery) || normFull.startsWith(normQuery)) {
+        if (!seen.has(normFull)) {
+          seen.add(normFull);
+          results.push(item);
+        }
+      }
+    }
+
+    // 2. If user started typing 1 or 2 parts, dynamically construct harmonious 3-part full names
+    if (tokens.length >= 1) {
+      const firstToken = normalizeEthiopianName(tokens[0]);
+      const secondToken = tokens.length > 1 ? normalizeEthiopianName(tokens[1]) : '';
+      const thirdToken = tokens.length > 2 ? normalizeEthiopianName(tokens[2]) : '';
+
+      // Find matching first name candidates
+      const matchedFirsts = allNames.filter(n => 
+        n.normalized_name.startsWith(firstToken) || n.normalized_name === firstToken
+      );
+
+      // Default patronymic pools (popular Ethiopian fathers & grandfathers)
+      const popularFathers = maleNames.slice(0, 15);
+      const popularGrandfathers = maleNames.slice(10, 25);
+
+      for (const fn of matchedFirsts.slice(0, 4)) {
+        // If second token is typed, filter fathers
+        const matchingFathers = secondToken 
+          ? maleNames.filter(m => m.normalized_name.startsWith(secondToken) || m.normalized_name === secondToken)
+          : popularFathers;
+
+        for (const father of matchingFathers.slice(0, 3)) {
+          if (father.name.toLowerCase() === fn.name.toLowerCase()) continue;
+
+          // If third token is typed, filter grandfathers
+          const matchingGrandfathers = thirdToken
+            ? maleNames.filter(m => m.normalized_name.startsWith(thirdToken) || m.normalized_name === thirdToken)
+            : popularGrandfathers;
+
+          for (const gfather of matchingGrandfathers.slice(0, 2)) {
+            if (gfather.name.toLowerCase() === father.name.toLowerCase()) continue;
+
+            const candidateFullName = `${fn.name} ${father.name} ${gfather.name}`;
+            const normCandidate = normalizeEthiopianName(candidateFullName);
+
+            if (!seen.has(normCandidate)) {
+              seen.add(normCandidate);
+              results.push({
+                fullName: candidateFullName,
+                firstName: fn.name,
+                fathersName: father.name,
+                grandfathersName: gfather.name,
+                category: fn.category || 'Traditional'
+              });
+            }
+
+            if (results.length >= maxResults) break;
+          }
+          if (results.length >= maxResults) break;
+        }
+        if (results.length >= maxResults) break;
+      }
+    }
+
+    return results.slice(0, maxResults);
+  }
+
+  /**
    * Retrieves popular Ethiopian names sorted by usage count
    */
   async getPopularEthiopianNames(

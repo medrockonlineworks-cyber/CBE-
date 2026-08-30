@@ -12,7 +12,8 @@ export interface UserProfile {
   accountNumber: string;
   accountType?: 'savings' | 'checking' | 'wadiah' | 'cbe_birr';
   balance: number;
-  availableBalance: number;
+  availableBalance?: number;
+  currency?: string;
   pinHash?: string;
   biometricEnabled?: boolean;
 }
