@@ -208,6 +208,12 @@ service cloud.firestore {
       allow delete: if false; // Transactions ledger is immutable
     }
 
+    // Ethiopian Names Database Collection
+    match /ethiopianNames/{nameId} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+
     // Admins Whitelist Collection
     match /admins/{adminId} {
       allow read: if isSignedIn();

@@ -112,14 +112,15 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
       setErrorMsg('Full Name cannot be empty.');
       return;
     }
-    if (!editAccount.trim() || editAccount.trim().length < 6) {
-      setErrorMsg('Please enter a valid Account Number (at least 6 digits, e.g. 1000...).');
+    const cleanEditAcc = editAccount.replace(/\D/g, '');
+    if (cleanEditAcc.length !== 13) {
+      setErrorMsg(`Bank account number must be exactly 13 digits (currently ${cleanEditAcc.length} digits). CBE account numbers cannot be less than or greater than 13 digits.`);
       return;
     }
 
     const updated = LocalDb.updateUserProfile(currentUser.id, {
       name: editName.trim(),
-      accountNumber: editAccount.trim(),
+      accountNumber: cleanEditAcc,
       phone: editPhone.trim(),
       email: editEmail.trim(),
       accountType: editAccountType
@@ -156,8 +157,9 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
       setErrorMsg('Account holder name is required.');
       return;
     }
-    if (!newAccNumber.trim()) {
-      setErrorMsg('Account number is required.');
+    const cleanNewAcc = newAccNumber.replace(/\D/g, '');
+    if (cleanNewAcc.length !== 13) {
+      setErrorMsg(`Account number must be exactly 13 digits (entered ${cleanNewAcc.length} digits).`);
       return;
     }
 
@@ -176,7 +178,7 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
       role: 'user',
       status: 'active',
       createdAt: new Date().toISOString(),
-      accountNumber: newAccNumber.trim(),
+      accountNumber: cleanNewAcc,
       accountType: newAccType,
       balance: parsedBalance,
       availableBalance: parsedBalance,

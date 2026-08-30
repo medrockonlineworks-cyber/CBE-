@@ -53,7 +53,8 @@ export default function EthiopianNameAutocomplete({
     handleSelect,
     clear,
     handleKeyDown,
-    searchTerm
+    searchTerm,
+    handleOpenDropdown
   } = useEthiopianNameAutocomplete({
     initialValue: value,
     maxSuggestions,
@@ -66,13 +67,17 @@ export default function EthiopianNameAutocomplete({
 
   // Close dropdown on click outside
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, [setIsOpen]);
 
   // Render highlighted text matching query characters
@@ -177,7 +182,7 @@ export default function EthiopianNameAutocomplete({
           }
           value={query}
           onChange={handleInputChange}
-          onFocus={() => setIsOpen(true)}
+          onFocus={handleOpenDropdown}
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           required={required}
@@ -201,7 +206,7 @@ export default function EthiopianNameAutocomplete({
               id={`${id}-btn-clear`}
               type="button"
               onClick={clear}
-              className="p-1 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition"
+              className="p-1 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition cursor-pointer"
               title="Clear input"
               aria-label="Clear name input"
             >
@@ -214,12 +219,16 @@ export default function EthiopianNameAutocomplete({
             type="button"
             onClick={() => {
               if (!disabled) {
-                setIsOpen(!isOpen);
+                if (!isOpen) {
+                  handleOpenDropdown();
+                } else {
+                  setIsOpen(false);
+                }
                 inputRef.current?.focus();
               }
             }}
             tabIndex={-1}
-            className="p-1 text-slate-400 hover:text-slate-600 transition"
+            className="p-1 text-slate-400 hover:text-slate-600 transition cursor-pointer"
             aria-label="Toggle Ethiopian name suggestions"
           >
             <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180 text-[#7b1fa2]' : ''}`} />
@@ -242,7 +251,7 @@ export default function EthiopianNameAutocomplete({
         <div
           id={listboxId}
           role="listbox"
-          className={`absolute left-0 right-0 top-full mt-1.5 max-h-72 overflow-y-auto rounded-2xl border z-50 py-1.5 animate-in fade-in zoom-in-95 duration-150 divide-y divide-slate-100/50 ${themeStyles.dropdown} ${dropdownClassName}`}
+          className={`absolute left-0 right-0 top-full mt-1.5 max-h-72 overflow-y-auto rounded-2xl border z-[999] py-1.5 animate-in fade-in zoom-in-95 duration-150 divide-y divide-slate-100/50 shadow-2xl ${themeStyles.dropdown} ${dropdownClassName}`}
         >
           {/* Header info banner */}
           <div className="px-3.5 py-1.5 text-[11px] font-medium flex items-center justify-between text-slate-400 border-b border-slate-100">
@@ -265,6 +274,10 @@ export default function EthiopianNameAutocomplete({
                   role="option"
                   aria-selected={isSelected}
                   onMouseEnter={() => setHighlightedIndex(index)}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    handleSelect(sug);
+                  }}
                   onClick={() => handleSelect(sug)}
                   className={`px-3.5 py-2.5 flex items-center justify-between cursor-pointer text-sm transition select-none ${themeStyles.itemHover} ${
                     isSelected ? themeStyles.itemActive : ''

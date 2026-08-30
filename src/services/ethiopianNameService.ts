@@ -13,6 +13,7 @@ import {
   calculateLevenshteinDistance 
 } from '../utils/normalizeName';
 import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
+import { firebaseService } from './firebaseService';
 
 const LOCAL_STORAGE_KEY = 'tana_ethiopian_names_db_v2';
 const RECENT_SEARCHES_KEY = 'tana_eth_recent_searches_cache';
@@ -29,20 +30,27 @@ class EthiopianNameService {
     if (this.inMemoryCache && this.inMemoryCache.length > 0) {
       return this.inMemoryCache;
     }
+    const fallbackList = getInitialEthiopianNames();
     try {
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          this.inMemoryCache = parsed;
-          return parsed;
+          // Merge any fallback names not in stored list
+          const existingNormMap = new Set(parsed.map((p: EthiopianName) => p.normalized_name));
+          const missing = fallbackList.filter(f => !existingNormMap.has(f.normalized_name));
+          const merged = [...parsed, ...missing];
+          this.inMemoryCache = merged;
+          if (missing.length > 0) {
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(merged));
+          }
+          return merged;
         }
       }
     } catch (err) {
       console.warn('Error loading Ethiopian names from localStorage, using fallback dataset:', err);
     }
 
-    const fallbackList = getInitialEthiopianNames();
     this.saveLocalNames(fallbackList);
     this.inMemoryCache = fallbackList;
     return fallbackList;
@@ -337,6 +345,9 @@ class EthiopianNameService {
       }
     }
 
+    // Sync to Firebase Firestore
+    firebaseService.syncEthiopianName(newRecord).catch(() => {});
+
     return newRecord;
   }
 
@@ -376,6 +387,9 @@ class EthiopianNameService {
 
     all[index] = updatedItem;
     this.saveLocalNames([...all]);
+
+    // Sync to Firebase Firestore
+    firebaseService.syncEthiopianName(updatedItem).catch(() => {});
 
     const supabase = getSupabase();
     if (supabase && isSupabaseConfigured()) {

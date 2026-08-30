@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ethiopianNameService } from '../services/ethiopianNameService';
 import { EthiopianName, EthiopianNameSearchResult, EthiopianNameGender } from '../types/ethiopianName';
-import { debounce } from '../utils/debounce';
 
 interface UseEthiopianNameAutocompleteProps {
   initialValue?: string;
@@ -10,17 +9,17 @@ interface UseEthiopianNameAutocompleteProps {
   debounceMs?: number;
   onSelect?: (name: string, item?: EthiopianName) => void;
   onChange?: (value: string) => void;
-  extractActiveToken?: boolean; // When true, searches for the last word token being typed
+  extractActiveToken?: boolean;
 }
 
 export function useEthiopianNameAutocomplete({
   initialValue = '',
   maxSuggestions = 8,
   genderFilter,
-  debounceMs = 250,
+  debounceMs = 100,
   onSelect,
   onChange,
-  extractActiveToken = false
+  extractActiveToken = true
 }: UseEthiopianNameAutocompleteProps = {}) {
   const [query, setQuery] = useState(initialValue);
   const [suggestions, setSuggestions] = useState<EthiopianNameSearchResult[]>([]);
@@ -29,30 +28,22 @@ export function useEthiopianNameAutocomplete({
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
 
   const requestTokenRef = useRef(0);
-  const isSelectedRef = useRef(false);
-
-  // Synchronize when initialValue changes externally
-  useEffect(() => {
-    if (initialValue !== undefined && initialValue !== query && !isOpen) {
-      setQuery(initialValue);
-    }
-  }, [initialValue]);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Determine what query string to send to the search service
   const getSearchTerm = useCallback((rawQuery: string): string => {
-    if (!extractActiveToken) return rawQuery;
-    const tokens = rawQuery.trimStart().split(' ');
+    if (!extractActiveToken) return rawQuery.trim();
+    const tokens = rawQuery.trimStart().split(/\s+/);
     return tokens[tokens.length - 1] || '';
   }, [extractActiveToken]);
 
-  // Core search function with cancellation token
+  // Core search function
   const performSearch = useCallback(async (currentQuery: string, token: number) => {
     const term = getSearchTerm(currentQuery);
     setIsLoading(true);
 
     try {
       const results = await ethiopianNameService.searchEthiopianNames(term, maxSuggestions, genderFilter);
-      // Ensure no race conditions from stale requests
       if (token === requestTokenRef.current) {
         setSuggestions(results);
         setHighlightedIndex(-1);
@@ -66,35 +57,52 @@ export function useEthiopianNameAutocomplete({
     }
   }, [getSearchTerm, maxSuggestions, genderFilter]);
 
-  // Debounced searcher
-  const debouncedSearch = useRef(
-    debounce((currentQuery: string, token: number) => {
-      performSearch(currentQuery, token);
-    }, debounceMs)
-  ).current;
+  // Trigger search when isOpen becomes true or query changes
+  const triggerSearch = useCallback((newQuery: string) => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    const currentToken = ++requestTokenRef.current;
+
+    // Run immediately for responsive local experience
+    performSearch(newQuery, currentToken);
+  }, [performSearch]);
+
+  // Synchronize when initialValue changes externally
+  useEffect(() => {
+    if (initialValue !== undefined && initialValue !== query) {
+      setQuery(initialValue);
+      if (isOpen) {
+        triggerSearch(initialValue);
+      }
+    }
+  }, [initialValue, isOpen, triggerSearch]);
+
+  // When dropdown opens, immediately load matching or popular suggestions
+  const handleOpenDropdown = useCallback(() => {
+    setIsOpen(true);
+    triggerSearch(query);
+  }, [query, triggerSearch]);
 
   // Listen for database changes to refresh suggestions live
   useEffect(() => {
     const handleDbUpdate = () => {
       if (isOpen) {
-        requestTokenRef.current += 1;
-        performSearch(query, requestTokenRef.current);
+        triggerSearch(query);
       }
     };
     window.addEventListener('ethiopian_names_updated', handleDbUpdate);
     return () => window.removeEventListener('ethiopian_names_updated', handleDbUpdate);
-  }, [isOpen, query, performSearch]);
+  }, [isOpen, query, triggerSearch]);
 
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement> | string) => {
     const val = typeof e === 'string' ? e : e.target.value;
-    isSelectedRef.current = false;
     setQuery(val);
     setIsOpen(true);
     onChange?.(val);
-
-    const nextToken = ++requestTokenRef.current;
-    debouncedSearch(val, nextToken);
-  }, [debouncedSearch, onChange]);
+    triggerSearch(val);
+  }, [onChange, triggerSearch]);
 
   const handleSelect = useCallback((suggestion: EthiopianNameSearchResult | EthiopianName | string) => {
     let selectedName = '';
@@ -112,18 +120,20 @@ export function useEthiopianNameAutocomplete({
 
     let finalQuery = selectedName;
     if (extractActiveToken) {
-      const tokens = query.trimStart().split(' ');
-      tokens[tokens.length - 1] = selectedName;
-      finalQuery = tokens.join(' ');
+      const tokens = query.trimStart().split(/\s+/);
+      if (tokens.length > 1) {
+        tokens[tokens.length - 1] = selectedName;
+        finalQuery = tokens.join(' ');
+      } else {
+        finalQuery = selectedName;
+      }
     }
 
-    isSelectedRef.current = true;
     setQuery(finalQuery);
     setIsOpen(false);
     setHighlightedIndex(-1);
 
     if (selectedItem) {
-      // Increment usage count in background
       ethiopianNameService.incrementNameUsage(selectedItem.id);
     }
 
@@ -142,8 +152,8 @@ export function useEthiopianNameAutocomplete({
   // Keyboard navigation handler
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (!isOpen || suggestions.length === 0) {
-      if (e.key === 'ArrowDown' && query.length > 0) {
-        setIsOpen(true);
+      if (e.key === 'ArrowDown' || e.key === 'Enter') {
+        handleOpenDropdown();
         e.preventDefault();
       }
       return;
@@ -179,7 +189,7 @@ export function useEthiopianNameAutocomplete({
       default:
         break;
     }
-  }, [isOpen, suggestions, highlightedIndex, query, handleSelect]);
+  }, [isOpen, suggestions, highlightedIndex, handleSelect, handleOpenDropdown]);
 
   return {
     query,
@@ -194,6 +204,7 @@ export function useEthiopianNameAutocomplete({
     handleSelect,
     clear,
     handleKeyDown,
-    searchTerm: getSearchTerm(query)
+    searchTerm: getSearchTerm(query),
+    handleOpenDropdown
   };
 }

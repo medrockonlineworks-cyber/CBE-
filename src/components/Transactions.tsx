@@ -123,31 +123,36 @@ export default function Transactions({ currentUser, onTransactionComplete, initi
   // Floating Action QR Scanner Simulation Overlay
   const [showScanner, setShowScanner] = useState(false);
 
-  // Auto look up names for accounts when typed
+  // Auto look up names for accounts when typed (Strictly 13 digits)
   useEffect(() => {
-    if (transferAccount.length >= 10) {
+    const cleanAcc = transferAccount.replace(/\D/g, '');
+    if (cleanAcc.length === 13) {
       setIsAccountVerifying(true);
       const timer = setTimeout(() => {
         setIsAccountVerifying(false);
         // Match mock database profiles
-        if (transferAccount === '1000246810121') {
+        if (cleanAcc === '1000246810121') {
           setVerifiedAccountName('Selamawit Tekle');
-          setTransferRecipientName('Selamawit Tekle');
-        } else if (transferAccount === '013204958100') {
+          if (!transferRecipientName || transferRecipientName === 'External Account') {
+            setTransferRecipientName('Selamawit Tekle');
+          }
+        } else if (cleanAcc === '1000132049581') {
           setVerifiedAccountName('Kidus Yohannes');
-          setTransferRecipientName('Kidus Yohannes');
-        } else if (transferAccount === '0234059681') {
+          if (!transferRecipientName || transferRecipientName === 'External Account') {
+            setTransferRecipientName('Kidus Yohannes');
+          }
+        } else if (cleanAcc === '1000234059681') {
           setVerifiedAccountName('Desta Kassahun');
-          setTransferRecipientName('Desta Kassahun');
+          if (!transferRecipientName || transferRecipientName === 'External Account') {
+            setTransferRecipientName('Desta Kassahun');
+          }
         } else {
           setVerifiedAccountName('External CBE Account Holder');
-          if (!transferRecipientName) {
-            setTransferRecipientName('External Account');
-          }
         }
-      }, 700);
+      }, 500);
       return () => clearTimeout(timer);
     } else {
+      setIsAccountVerifying(false);
       setVerifiedAccountName('');
     }
   }, [transferAccount]);
@@ -254,9 +259,12 @@ export default function Transactions({ currentUser, onTransactionComplete, initi
       return;
     }
 
-    if (transferSubTab === 'other' && transferAccount.length < 8) {
-      setErrorMsg('Please enter a valid account number (minimum 8 digits).');
-      return;
+    if (transferSubTab === 'other') {
+      const cleanAcc = transferAccount.replace(/\D/g, '');
+      if (cleanAcc.length !== 13) {
+        setErrorMsg(`Bank account number must be exactly 13 digits (currently entered ${cleanAcc.length} digits). It cannot be less than or greater than 13 digits.`);
+        return;
+      }
     }
 
     requestPinAuthorize(() => {
@@ -443,12 +451,19 @@ export default function Transactions({ currentUser, onTransactionComplete, initi
   // Add a quick Beneficiary
   const handleAddBeneficiary = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newBenName || !newBenAcc) return;
+    setErrorMsg('');
+    if (!newBenName.trim() || !newBenAcc.trim()) return;
+
+    const cleanAcc = newBenAcc.replace(/\D/g, '');
+    if (cleanAcc.length !== 13) {
+      setErrorMsg(`Beneficiary bank account must be exactly 13 digits (entered ${cleanAcc.length} digits).`);
+      return;
+    }
 
     LocalDb.addBeneficiary({
       userId: currentUser.id,
-      name: newBenName,
-      accountNumber: newBenAcc,
+      name: newBenName.trim(),
+      accountNumber: cleanAcc,
       bankName: newBenBank
     });
 
@@ -456,7 +471,7 @@ export default function Transactions({ currentUser, onTransactionComplete, initi
     setNewBenName('');
     setNewBenAcc('');
     setShowAddBen(false);
-    setSuccessMsg('Beneficiary saved successfully!');
+    setSuccessMsg('Beneficiary saved successfully with valid 13-digit CBE account!');
   };
 
   // Quick Action: Pre-fill fields from Recents/Beneficiaries list
@@ -710,14 +725,22 @@ export default function Transactions({ currentUser, onTransactionComplete, initi
                     required
                     theme="cbe"
                   />
-                  <input
-                    type="text"
-                    placeholder="Account Number"
-                    value={newBenAcc}
-                    onChange={(e) => setNewBenAcc(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-100 rounded-xl px-3.5 py-2.5 text-xs font-mono"
-                    required
-                  />
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center text-[10px]">
+                      <span className="text-gray-500 font-bold">Account Number</span>
+                      <span className="font-mono text-gray-400">{newBenAcc.replace(/\D/g, '').length}/13 digits</span>
+                    </div>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={13}
+                      placeholder="13-digit Bank Account (e.g. 1000246810121)"
+                      value={newBenAcc}
+                      onChange={(e) => setNewBenAcc(e.target.value.replace(/\D/g, '').slice(0, 13))}
+                      className="w-full bg-gray-50 border border-gray-100 rounded-xl px-3.5 py-2.5 text-xs font-mono font-semibold"
+                      required
+                    />
+                  </div>
                   <select
                     value={newBenBank}
                     onChange={(e) => setNewBenBank(e.target.value)}
@@ -825,7 +848,18 @@ export default function Transactions({ currentUser, onTransactionComplete, initi
                 {/* ACCOUNT NUMBER (Other Account Only) */}
                 {transferSubTab === 'other' && (
                   <div className="space-y-1">
-                    <label className="text-xs text-gray-500 font-bold">Account Number</label>
+                    <div className="flex justify-between items-center">
+                      <label className="text-xs text-gray-500 font-bold">Account Number</label>
+                      <span className={`text-[10px] font-mono font-bold ${
+                        transferAccount.length === 13 
+                          ? 'text-emerald-700 font-extrabold' 
+                          : transferAccount.length > 0 
+                            ? 'text-amber-600' 
+                            : 'text-gray-400'
+                      }`}>
+                        {transferAccount.length}/13 digits
+                      </span>
+                    </div>
                     <div className="relative">
                       <div className="absolute left-3.5 top-[13px] text-gray-400">
                         <Building className="w-4 h-4" />
@@ -833,16 +867,25 @@ export default function Transactions({ currentUser, onTransactionComplete, initi
                       <input 
                         id="input-transfer-acc"
                         type="text" 
-                        placeholder="Enter 13-digit account number"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength={13}
+                        placeholder="Enter exactly 13-digit CBE account"
                         value={transferAccount}
-                        onChange={(e) => setTransferAccount(e.target.value.replace(/\D/g, ''))}
-                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3 pl-10 pr-10 text-sm focus:outline-none focus:border-emerald-800 focus:bg-white transition font-mono font-semibold"
+                        onChange={(e) => setTransferAccount(e.target.value.replace(/\D/g, '').slice(0, 13))}
+                        className={`w-full bg-gray-50 border rounded-2xl px-4 py-3 pl-10 pr-10 text-sm focus:outline-none focus:bg-white transition font-mono font-semibold ${
+                          transferAccount.length === 13
+                            ? 'border-emerald-500 focus:border-emerald-700 ring-1 ring-emerald-500/20'
+                            : transferAccount.length > 0
+                              ? 'border-amber-400 focus:border-amber-500'
+                              : 'border-gray-100 focus:border-emerald-800'
+                        }`}
                         required
                       />
                       <button
                         type="button"
                         onClick={() => {
-                          setTransferAccount('1000246810121'); // Prefill Selamawit
+                          setTransferAccount('1000246810121'); // Prefill Selamawit (13 digits)
                           setSuccessMsg('Scanned Selamawit Account QR Code!');
                         }}
                         className="absolute right-3 top-[11px] p-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-emerald-800 transition cursor-pointer"
@@ -851,6 +894,13 @@ export default function Transactions({ currentUser, onTransactionComplete, initi
                         <Scan className="w-4 h-4" />
                       </button>
                     </div>
+
+                    {/* Account length helper */}
+                    {transferAccount.length > 0 && transferAccount.length < 13 && (
+                      <p className="text-[11px] text-amber-600 font-medium pl-1">
+                        ⚠️ CBE Account must be exactly 13 digits ({13 - transferAccount.length} more needed)
+                      </p>
+                    )}
 
                     {/* Account lookup loader / verification display */}
                     {isAccountVerifying && (

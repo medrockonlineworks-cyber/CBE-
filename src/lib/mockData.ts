@@ -9,6 +9,7 @@ import {
   TransactionType
 } from '../types';
 import { calculateCbeFee } from './cbeTariff';
+import { firebaseService } from '../services/firebaseService';
 
 // Helper to generate IDs
 const generateId = () => Math.random().toString(36).substring(2, 11).toUpperCase();
@@ -397,6 +398,7 @@ export class LocalDb {
     };
     list.push(newLog);
     saveData('tana_audit_logs', list);
+    firebaseService.syncAuditLog(newLog).catch(() => {});
   }
 
   // Business operations
@@ -478,6 +480,10 @@ export class LocalDb {
 
     // Add audit log
     this.addAuditLog(userId, user.email, `TX_CREATE_${type.toUpperCase()}`, `Processed transaction of ETB ${amount} to ${recipientName} (ID: ${cbeTxId}). Total debited with CBE Tariff/VAT: ETB ${totalCost}.`);
+
+    // Sync transaction and updated user balance to Firebase Firestore
+    firebaseService.syncTransaction(newTx).catch(() => {});
+    firebaseService.syncUserProfile(user).catch(() => {});
 
     return newTx;
   }
@@ -580,6 +586,7 @@ export class LocalDb {
     );
 
     window.dispatchEvent(new CustomEvent('cbe_user_updated', { detail: { user: updatedUser } }));
+    firebaseService.syncUserProfile(updatedUser).catch(() => {});
     return updatedUser;
   }
 
