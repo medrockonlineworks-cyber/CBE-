@@ -19,7 +19,15 @@ import {
   CheckCircle2,
   FileText,
   Loader2,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Wifi,
+  Lock,
+  Sparkles,
+  MessageSquare,
+  X,
+  RotateCcw,
+  User,
+  ExternalLink
 } from 'lucide-react';
 
 /**
@@ -129,6 +137,33 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   const [copiedToast, setCopiedToast] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [flashAnimation, setFlashAnimation] = useState(false);
+  const [islandExpanded, setIslandExpanded] = useState(false);
+  const [showSmsBanner, setShowSmsBanner] = useState(true);
+  const [statusTime, setStatusTime] = useState<string>(() => {
+    const now = new Date();
+    const hours = now.getHours() % 12 || 12;
+    const mins = now.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${mins}`;
+  });
+
+  // Automatically pop down CBE SMS message on opening receipt for 1 minute (60s)
+  useEffect(() => {
+    setShowSmsBanner(true);
+    const timer = setTimeout(() => {
+      setShowSmsBanner(false);
+    }, 60000);
+    return () => clearTimeout(timer);
+  }, [transaction.id]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date();
+      const hours = now.getHours() % 12 || 12;
+      const mins = now.getMinutes().toString().padStart(2, '0');
+      setStatusTime(`${hours}:${mins}`);
+    }, 10000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Dynamic customized feedback assets
   const [customBankLogo, setCustomBankLogo] = useState<string | null>(null);
@@ -168,11 +203,18 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   const disasterRecoveryStr = disasterRecovery.toFixed(2);
 
   // Formatting Sender & Recipient names & account suffixes
-  const senderName = transaction.senderName || "Global Online Market";
-  const rawSenderAccount = transaction.senderAccount || "6671";
+  const senderName = transaction.senderName || "Leykun Jemaneh Ylma";
+  const rawSenderAccount = transaction.senderAccount || "4747";
   const senderSuffix = rawSenderAccount.length >= 4 
     ? `ETB-${rawSenderAccount.slice(-4)}` 
-    : `ETB-6671`;
+    : `ETB-4747`;
+
+  const cbeSenderFullName = transaction.senderName || "Leykun Jemaneh Ylma";
+  const cbeAmountStr = transaction.amount !== undefined ? transaction.amount.toFixed(1) : "10.0";
+  const cbeAccountMasked = rawSenderAccount.length >= 4
+    ? `1********${rawSenderAccount.slice(-4)}`
+    : "1********4747";
+  const cbeSmsText = `Dear ${cbeSenderFullName} A debit transaction of ETB ${cbeAmountStr}. has occurred on your account ${cbeAccountMasked}. Service`;
 
   const recipientName = transaction.recipientName || "Addisu Abebe Mengistu";
   const rawRecipientAccount = transaction.recipientAccount || "6547";
@@ -243,67 +285,111 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     // Smooth rendering
     ctx.imageSmoothingEnabled = true;
 
-    // 1. Phone Top Status Bar & Purple Background
+    // 1. Phone Top Status Bar & Purple Background (iPhone Dynamic Island Header)
     ctx.fillStyle = '#68137e';
     ctx.fillRect(0, 0, width, 220);
 
-    // Current Time for Status Bar
+    // Current Time for Status Bar (iOS standard format)
     const now = new Date();
     let statusHours = now.getHours();
     const statusMinutes = now.getMinutes().toString().padStart(2, '0');
     const statusTimeStr = `${statusHours % 12 || 12}:${statusMinutes}`;
 
-    // Status Bar - Left Time & Camera Icon
+    // 1A. iOS Status Bar - Left: Time in SF Pro / iOS Typography
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 19px system-ui, -apple-system, sans-serif';
+    ctx.font = '600 18px -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText(statusTimeStr, 34, 38);
+    ctx.fillText(statusTimeStr, 44, 42);
 
-    // Camera circle icon next to time
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 2;
+    // 1B. Center: iPhone 17 Dynamic Island Pill (Slimmer 2026 Micro-Sensor Architecture)
+    const islandW = 160;
+    const islandH = 30;
+    const islandX = (width - islandW) / 2;
+    const islandY = 16;
+    
+    // iPhone 17 Dynamic Island Shadow & Precision Opaque Glass Body
+    ctx.fillStyle = '#000000';
     ctx.beginPath();
-    ctx.arc(92, 32, 7, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(92, 32, 2.5, 0, Math.PI * 2);
+    ctx.roundRect(islandX, islandY, islandW, islandH, 15);
     ctx.fill();
 
-    // Status Bar - Right Icons (LTE, arrows, signal bars, battery)
-    ctx.textAlign = 'right';
-    ctx.font = 'bold 13px system-ui, -apple-system, sans-serif';
-    ctx.fillText('LTE', width - 105, 34);
-    
-    // Up/Down small arrows
-    ctx.font = '11px system-ui, -apple-system, sans-serif';
-    ctx.fillText('↑↓', width - 90, 34);
+    // iPhone 17 Under-display TrueDepth Lens & Integrated Front Camera
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.arc(islandX + islandW - 20, islandY + islandH / 2, 4.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#1e293b';
+    ctx.beginPath();
+    ctx.arc(islandX + islandW - 20, islandY + islandH / 2, 1.8, 0, Math.PI * 2);
+    ctx.fill();
 
-    // Signal Bars
-    const barX = width - 82;
+    // iPhone 17 Micro Sensor Dot on Left of Island
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.arc(islandX + 18, islandY + islandH / 2, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 1C. iOS Status Bar - Right: Cellular 4-Bars, Wi-Fi, and iOS Battery
+    // 4 Cellular Bars (iOS Stepped Rounded Bars)
+    const cellX = width - 136;
     for (let b = 0; b < 4; b++) {
       ctx.fillStyle = '#ffffff';
       const bHeight = 4 + b * 3.5;
-      ctx.fillRect(barX + b * 4.5, 36 - bHeight, 3, bHeight);
+      ctx.beginPath();
+      ctx.roundRect(cellX + b * 4.5, 42 - bHeight, 3, bHeight, 1);
+      ctx.fill();
     }
 
-    // Battery Icon with percentage '20'
-    const battX = width - 58;
+    // iOS Wi-Fi Icon (3 concentric curved arcs)
+    const wifiX = width - 105;
+    const wifiY = 40;
     ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1.8;
+    ctx.lineCap = 'round';
+    
+    // Outer Arc
     ctx.beginPath();
-    ctx.roundRect(battX, 23, 26, 14, 3);
+    ctx.arc(wifiX, wifiY, 8.5, -Math.PI * 0.75, -Math.PI * 0.25);
     ctx.stroke();
-    ctx.fillRect(battX + 26, 27, 2, 6);
+    // Middle Arc
+    ctx.beginPath();
+    ctx.arc(wifiX, wifiY, 5.5, -Math.PI * 0.75, -Math.PI * 0.25);
+    ctx.stroke();
+    // Center Dot
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 11px system-ui, -apple-system, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('20', battX + 13, 34);
+    ctx.beginPath();
+    ctx.arc(wifiX, wifiY - 0.5, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // iOS Battery Icon (Rounded body + positive terminal knob + battery fill)
+    const battX = width - 78;
+    const battY = 28;
+    const battW = 28;
+    const battH = 15;
+    
+    // Battery Outer Border
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.roundRect(battX, battY, battW, battH, 4);
+    ctx.stroke();
+
+    // Battery Positive Terminal Knob on Right
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.roundRect(battX + battW + 1.5, battY + 4, 2, 7, 1);
+    ctx.fill();
+
+    // Battery Inner Charge Level (White iOS style fill)
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.roundRect(battX + 2.5, battY + 2.5, battW - 7, battH - 5, 2.5);
+    ctx.fill();
 
     // 2. Top Purple Header: "Thank you / Success" & Top Scan Button
     // Shield with checkmark badge
     const shieldX = 36;
-    const shieldY = 82;
+    const shieldY = 92;
     ctx.save();
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
@@ -635,31 +721,16 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     ctx.textAlign = 'center';
     ctx.fillText('Close', width / 2, closeBtnY + 36);
 
-    // 11. Android Bottom Navigation Bar
-    const navY = height - 60;
+    // 11. iPhone Bottom Home Indicator
+    const navY = height - 48;
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, navY, width, 60);
+    ctx.fillRect(0, navY, width, 48);
 
-    // Three vertical lines (Recents)
-    ctx.fillStyle = '#94a3b8';
-    const recX = 140;
-    ctx.fillRect(recX, navY + 20, 2.5, 18);
-    ctx.fillRect(recX + 7, navY + 20, 2.5, 18);
-    ctx.fillRect(recX + 14, navY + 20, 2.5, 18);
-
-    // Home rounded button
-    ctx.strokeStyle = '#94a3b8';
-    ctx.lineWidth = 2.5;
+    // Centered iOS Home Indicator Bar
+    ctx.fillStyle = '#1e293b';
     ctx.beginPath();
-    ctx.roundRect(width / 2 - 10, navY + 19, 20, 20, 6);
-    ctx.stroke();
-
-    // Back chevron <
-    ctx.beginPath();
-    ctx.moveTo(width - 135, navY + 20);
-    ctx.lineTo(width - 146, navY + 29);
-    ctx.lineTo(width - 135, navY + 38);
-    ctx.stroke();
+    ctx.roundRect((width - 200) / 2, height - 24, 200, 7, 3.5);
+    ctx.fill();
 
     return canvas.toDataURL('image/png');
   };
@@ -754,23 +825,154 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         </div>
       )}
 
-      {/* Top Purple Header */}
-      <div className="pt-3 pb-8 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0">
+      {/* 0. Pop Down CBE SMS Message Notification (Active for 5 Seconds) */}
+      <div 
+        className={`fixed top-2.5 left-3 right-3 max-w-sm sm:max-w-md mx-auto z-50 transition-all duration-500 ease-out transform ${
+          showSmsBanner 
+            ? 'translate-y-0 opacity-100 scale-100 pointer-events-auto shadow-2xl' 
+            : '-translate-y-28 opacity-0 scale-95 pointer-events-none'
+        }`}
+      >
+        <div className="bg-[#242429]/95 backdrop-blur-xl text-white rounded-2xl border border-white/10 p-3.5 shadow-2xl relative overflow-hidden ring-1 ring-black/50">
+          <div className="flex gap-3 items-start">
+            {/* Purple Circular Avatar with User Silhouette and Blue Message Badge */}
+            <div className="relative flex-shrink-0 mt-0.5">
+              <div className="w-10 h-10 rounded-full bg-[#8e24aa] flex items-center justify-center shadow-md">
+                <User className="w-5.5 h-5.5 text-white" />
+              </div>
+              <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-[#2563eb] rounded-full border border-[#242429] flex items-center justify-center shadow-xs">
+                <MessageSquare className="w-2.5 h-2.5 text-white fill-white" />
+              </div>
+            </div>
+
+            {/* Content Body */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-baseline gap-2">
+                <span className="font-bold text-[14px] text-white leading-tight">CBE</span>
+                <span className="text-[12px] text-gray-400 font-normal">now</span>
+              </div>
+              <p className="text-[12.5px] text-gray-200 leading-[1.32] mt-1 font-normal line-clamp-2 select-text">
+                {cbeSmsText}
+              </p>
+
+              {/* Bottom Actions Row */}
+              <div className="flex items-center justify-between mt-2.5 pt-0.5">
+                <button 
+                  onClick={() => setShowSmsBanner(false)}
+                  className="text-[#3b82f6] text-[13px] font-medium hover:underline cursor-pointer transition active:opacity-75"
+                >
+                  Mark as read
+                </button>
+                <div className="flex items-center gap-1.5 text-gray-400">
+                  <button 
+                    onClick={() => setShowSmsBanner(false)}
+                    className="p-1 rounded-md hover:bg-white/10 text-gray-400 hover:text-white transition cursor-pointer"
+                    title="Open message"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 1. iPhone Top Status Bar (Time, Dynamic Island, Cellular, Wi-Fi, Battery) */}
+      <div className="w-full pt-2.5 pb-1 px-5 flex items-center justify-between text-white select-none z-20 flex-shrink-0">
+        {/* Left: iOS Time */}
+        <div className="w-16 sm:w-20 text-left">
+          <span className="font-semibold text-[13px] sm:text-[14px] tracking-tight font-sans text-white/95 drop-shadow-xs">
+            {statusTime}
+          </span>
+        </div>
+
+        {/* Center: iPhone 17 Dynamic Island Pill with Interactive Expansion */}
+        <div className="flex-1 flex justify-center">
+          <button
+            type="button"
+            onClick={() => setIslandExpanded(!islandExpanded)}
+            className={`bg-black text-white rounded-full transition-all duration-300 ease-out flex items-center justify-between shadow-2xl border border-white/10 ${
+              islandExpanded 
+                ? 'px-3 py-1 w-56 gap-2 scale-105 ring-2 ring-purple-500/30' 
+                : 'h-5.5 w-22 px-2 hover:w-26 cursor-pointer hover:border-white/20'
+            }`}
+            title="iPhone 17 Dynamic Island"
+          >
+            {islandExpanded ? (
+              <>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-ping flex-shrink-0" />
+                  <div className="flex flex-col text-left">
+                    <span className="text-[10px] font-black tracking-tight text-white leading-tight">iPhone 17 Pro</span>
+                    <span className="text-[8px] text-emerald-400 font-bold uppercase tracking-wider">CBE Verified</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 text-[10px] text-purple-300 font-medium flex-shrink-0 bg-white/10 px-1.5 py-0.5 rounded-full">
+                  <Lock className="w-2.5 h-2.5 text-purple-200" />
+                  <span className="text-[9px]">FaceID Active</span>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Left Micro-TrueDepth Sensor */}
+                <div className="w-1.5 h-1.5 rounded-full bg-[#111827] border border-gray-700/60 flex items-center justify-center">
+                  <div className="w-0.5 h-0.5 rounded-full bg-blue-900/60" />
+                </div>
+                {/* Center subtle CBE green pulse indicator */}
+                <div className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
+                {/* Right Camera Lens Dot with optical coating */}
+                <div className="w-2 h-2 rounded-full bg-[#0a0f1d] border border-gray-700/60 flex items-center justify-center">
+                  <div className="w-0.5 h-0.5 rounded-full bg-purple-900/80" />
+                </div>
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Right: iOS Cellular 4-Bars, Wi-Fi, and iOS Battery Indicator */}
+        <div className="w-16 sm:w-20 flex items-center justify-end gap-1.5 text-white">
+          {/* Cellular 4-Bars */}
+          <div className="flex items-end gap-[1.5px] h-3" title="Cellular Full Signal">
+            <div className="w-[3px] h-1.5 bg-white rounded-[0.5px]" />
+            <div className="w-[3px] h-2 bg-white rounded-[0.5px]" />
+            <div className="w-[3px] h-2.5 bg-white rounded-[0.5px]" />
+            <div className="w-[3px] h-3 bg-white rounded-[0.5px]" />
+          </div>
+
+          {/* Wi-Fi Icon */}
+          <span title="Wi-Fi Connected" className="flex items-center">
+            <Wifi className="w-3.5 h-3.5 text-white stroke-[2.4]" />
+          </span>
+
+          {/* iOS Battery with Terminal Knob (Crisp White) */}
+          <div className="flex items-center gap-[1.5px]" title="Battery: 90% Charged">
+            <div className="w-5.5 h-3 rounded-[3.5px] border-[1.5px] border-white p-[1px] flex items-center bg-black/15">
+              <div className="h-full w-[88%] bg-white rounded-[1px]" />
+            </div>
+            <div className="w-[1.5px] h-1.5 bg-white rounded-r-[1px]" />
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Top Purple Navigation / App Header */}
+      <div className="pt-1 pb-7 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0">
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center border border-white/20">
-            <ShieldCheck className="w-4.5 h-4.5 text-white" />
+          <div className="w-8 h-8 rounded-xl bg-white/15 backdrop-blur-xs flex items-center justify-center border border-white/20 shadow-xs">
+            <ShieldCheck className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h2 className="font-extrabold text-sm leading-tight">Thank you</h2>
+            <h2 className="font-extrabold text-sm leading-tight text-white">Thank you</h2>
             <p className="text-[11px] text-purple-200 font-medium leading-none">Success</p>
           </div>
         </div>
 
+        {/* Screenshot Button */}
         <button 
           onClick={handleScreenshot}
           disabled={isCapturing}
-          className="w-9 h-9 rounded-xl bg-white/15 hover:bg-white/25 active:scale-95 flex items-center justify-center transition border border-white/20 text-white cursor-pointer disabled:opacity-50"
-          title="Take Screenshot & Save"
+          className="w-9 h-9 rounded-xl bg-white/15 hover:bg-white/25 active:scale-95 flex items-center justify-center transition border border-white/20 text-white cursor-pointer disabled:opacity-50 shadow-xs"
+          title="Take iPhone Screenshot & Save"
         >
           {isCapturing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Scan className="w-4.5 h-4.5" />}
         </button>
@@ -849,38 +1051,55 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         </div>
 
         {/* Bottom Actions Section */}
-        <div className="mt-4 space-y-3 flex-shrink-0">
-          {/* 3 Action Buttons */}
-          <div className="flex items-center justify-around px-2 text-gray-900">
+        <div className="mt-4 space-y-3.5 flex-shrink-0">
+          {/* 3 Action Buttons matching exact app icons */}
+          <div className="flex items-center justify-around px-3 text-black">
+            {/* Receipt Button */}
             <button 
               id="btn-action-receipt"
               onClick={() => setShowDetailedModal(true)}
-              className="flex items-center gap-1.5 text-xs font-extrabold hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2.5 rounded-xl hover:bg-gray-100"
+              className="flex items-center gap-2 text-[13.5px] font-medium text-black hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2 rounded-xl"
             >
-              <FileText className="w-4 h-4 stroke-[2.5]" />
+              {/* Document with $ sign icon */}
+              <div className="relative w-4 h-[18px] bg-black rounded-[2px] flex items-center justify-center text-white flex-shrink-0">
+                {/* Folded top-right corner */}
+                <div className="absolute -top-[0.5px] -right-[0.5px] w-[5px] h-[5px] bg-[#f8f9fa] border-b border-l border-black" />
+                <span className="text-[10px] font-black font-sans leading-none mt-0.5">$</span>
+              </div>
               <span>Receipt</span>
             </button>
 
+            {/* Screenshot Button */}
             <button 
               id="btn-action-screenshot"
               onClick={handleScreenshot}
               disabled={isCapturing}
-              className="flex items-center gap-1.5 text-xs font-extrabold hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2.5 rounded-xl hover:bg-gray-100 disabled:opacity-50"
+              className="flex items-center gap-2 text-[13.5px] font-medium text-black hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2 rounded-xl disabled:opacity-50"
             >
               {isCapturing ? (
-                <Loader2 className="w-4 h-4 stroke-[2.5] animate-spin text-[#68137e]" />
+                <Loader2 className="w-[18px] h-[18px] stroke-[2.2] animate-spin text-[#68137e]" />
               ) : (
-                <Scan className="w-4 h-4 stroke-[2.5]" />
+                /* 4-corner bracket frame with dashed center box */
+                <div className="relative w-[18px] h-[18px] flex items-center justify-center flex-shrink-0">
+                  {/* Outer corner brackets */}
+                  <div className="absolute top-0 left-0 w-1.5 h-1.5 border-t-2 border-l-2 border-black rounded-tl-[1px]" />
+                  <div className="absolute top-0 right-0 w-1.5 h-1.5 border-t-2 border-r-2 border-black rounded-tr-[1px]" />
+                  <div className="absolute bottom-0 left-0 w-1.5 h-1.5 border-b-2 border-l-2 border-black rounded-bl-[1px]" />
+                  <div className="absolute bottom-0 right-0 w-1.5 h-1.5 border-b-2 border-r-2 border-black rounded-br-[1px]" />
+                  {/* Inner dashed viewfinder rect */}
+                  <div className="w-2 h-1.5 border border-dashed border-black/80 rounded-[1px]" />
+                </div>
               )}
               <span>{isCapturing ? 'Saving...' : 'Screenshot'}</span>
             </button>
 
+            {/* Share Button */}
             <button 
               id="btn-action-share"
               onClick={handleShare}
-              className="flex items-center gap-1.5 text-xs font-extrabold hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2.5 rounded-xl hover:bg-gray-100"
+              className="flex items-center gap-2 text-[13.5px] font-medium text-black hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2 rounded-xl"
             >
-              <Share2 className="w-4 h-4 stroke-[2.5]" />
+              <Share2 className="w-[18px] h-[18px] stroke-[2.2] fill-black text-black" />
               <span>Share</span>
             </button>
           </div>
@@ -889,10 +1108,23 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           <button 
             id="btn-action-close"
             onClick={onBack}
-            className="w-full bg-[#d7d7db] hover:bg-[#c9c9ce] text-gray-800 font-extrabold py-3 rounded-full text-xs sm:text-sm transition active:scale-[0.99] cursor-pointer shadow-xs"
+            className="w-full bg-[#d7d7db] hover:bg-[#ceced3] active:bg-[#c4c4c9] text-[#333333] font-bold py-3.5 rounded-full text-[15px] transition active:scale-[0.99] cursor-pointer shadow-xs"
           >
             Close
           </button>
+
+          {/* Android Navigation Bar indicator */}
+          <div className="pt-2 flex items-center justify-around px-8 text-gray-400">
+            <div className="w-4 h-3 flex flex-col justify-between py-0.5 opacity-60">
+              <div className="h-0.5 bg-gray-500 rounded-full" />
+              <div className="h-0.5 bg-gray-500 rounded-full" />
+              <div className="h-0.5 bg-gray-500 rounded-full" />
+            </div>
+            <div className="w-3.5 h-3.5 rounded-full border-2 border-gray-500 opacity-60" />
+            <div className="w-3.5 h-3.5 flex items-center justify-center opacity-60">
+              <div className="w-2.5 h-2.5 border-l-2 border-b-2 border-gray-500 rotate-45" />
+            </div>
+          </div>
         </div>
 
       </div>

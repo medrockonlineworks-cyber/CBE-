@@ -95,8 +95,17 @@ input, select, textarea {
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes progressShrink {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
 .animate-fade-in {
   animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-shrink-5s {
+  animation: progressShrink 5s linear forwards;
 }
 
 /* Printable layout styling to omit background controls and preserve dark headers */
