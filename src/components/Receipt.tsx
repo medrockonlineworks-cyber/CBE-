@@ -848,39 +848,39 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       >
         <div 
           onClick={() => setShowSmsBanner(false)}
-          className="bg-[#2c2c2e]/90 backdrop-blur-2xl text-white rounded-[22px] border border-white/15 p-3 px-3.5 shadow-[0_12px_40px_rgba(0,0,0,0.55)] relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform select-none"
+          className="bg-[#1c1c1e]/95 backdrop-blur-[36px] -webkit-backdrop-blur-[36px] text-white rounded-[22px] border border-white/20 p-3.5 px-4 shadow-[0_18px_50px_rgba(0,0,0,0.65)] relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all select-none"
         >
           {/* iOS App Header Row */}
-          <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1.5">
               {/* iOS Green Messages App Icon */}
               <div className="w-[18px] h-[18px] rounded-[4.5px] bg-gradient-to-b from-[#34c759] to-[#30d158] flex items-center justify-center shadow-xs">
                 <MessageSquare className="w-2.5 h-2.5 text-white fill-white" />
               </div>
-              <span className="text-[11px] font-semibold tracking-wide text-white/70 uppercase">Messages</span>
+              <span className="text-[11px] font-semibold tracking-wider text-white/80 uppercase">Messages</span>
             </div>
-            <span className="text-[11px] text-white/50 font-normal">now</span>
+            <span className="text-[11.5px] text-white/60 font-medium">now</span>
           </div>
 
           {/* iOS Message Content Row */}
-          <div className="flex gap-2.5 items-start pl-0.5">
+          <div className="flex gap-3 items-start pl-0.5">
             {/* Sender Contact Avatar */}
-            <div className="w-9 h-9 rounded-full bg-[#8e24aa] flex items-center justify-center text-white font-bold text-xs flex-shrink-0 shadow-sm border border-white/10 mt-0.5">
+            <div className="w-9 h-9 rounded-full bg-[#8e24aa] flex items-center justify-center text-white font-bold text-xs flex-shrink-0 shadow-md border border-white/20 mt-0.5">
               <span className="tracking-tight">CBE</span>
             </div>
 
             {/* Sender Name & Text Preview */}
             <div className="flex-1 min-w-0 pr-1">
-              <h4 className="font-semibold text-[13.5px] text-white leading-tight">CBE</h4>
-              <p className="text-[12.5px] text-white/85 leading-[1.35] mt-0.5 font-normal line-clamp-2 select-text">
+              <h4 className="font-bold text-[14px] text-white leading-tight">CBE</h4>
+              <p className="text-[13px] text-[#f2f2f7] leading-[1.38] mt-0.5 font-normal line-clamp-2 select-text font-sans">
                 {cbeSmsText}
               </p>
             </div>
           </div>
 
           {/* iOS Subtle Bottom Dismiss Drag Handle */}
-          <div className="pt-2 flex justify-center">
-            <div className="w-9 h-[3.5px] bg-white/25 rounded-full" />
+          <div className="pt-2.5 flex justify-center">
+            <div className="w-9 h-[3.5px] bg-white/30 rounded-full" />
           </div>
         </div>
       </div>
