@@ -1060,11 +1060,21 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
               onClick={() => setShowDetailedModal(true)}
               className="flex items-center gap-2 text-[13.5px] font-medium text-black hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2 rounded-xl"
             >
-              {/* Document with $ sign icon */}
-              <div className="relative w-4 h-[18px] bg-black rounded-[2px] flex items-center justify-center text-white flex-shrink-0">
+              {/* Document with 2 top-left horizontal lines, folded top-right corner, and $ sign icon */}
+              <div className="relative w-4 h-[18px] bg-black rounded-[2.5px] flex flex-col justify-between p-[2px] text-white flex-shrink-0 overflow-hidden">
                 {/* Folded top-right corner */}
-                <div className="absolute -top-[0.5px] -right-[0.5px] w-[5px] h-[5px] bg-[#f8f9fa] border-b border-l border-black" />
-                <span className="text-[10px] font-black font-sans leading-none mt-0.5">$</span>
+                <div className="absolute -top-[0.5px] -right-[0.5px] w-[5.5px] h-[5.5px] bg-[#f8f9fa] border-b border-l border-black" />
+                
+                {/* Top-left two horizontal lines */}
+                <div className="flex flex-col gap-[1.5px] w-[7px] pt-[0.5px] pl-[0.5px]">
+                  <div className="h-[1.2px] w-full bg-white rounded-full" />
+                  <div className="h-[1.2px] w-4/5 bg-white rounded-full" />
+                </div>
+
+                {/* Centered $ symbol */}
+                <div className="flex items-center justify-center flex-1">
+                  <span className="text-[9px] font-black font-sans leading-none mt-0.5">$</span>
+                </div>
               </div>
               <span>Receipt</span>
             </button>
@@ -1113,17 +1123,9 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             Close
           </button>
 
-          {/* Android Navigation Bar indicator */}
-          <div className="pt-2 flex items-center justify-around px-8 text-gray-400">
-            <div className="w-4 h-3 flex flex-col justify-between py-0.5 opacity-60">
-              <div className="h-0.5 bg-gray-500 rounded-full" />
-              <div className="h-0.5 bg-gray-500 rounded-full" />
-              <div className="h-0.5 bg-gray-500 rounded-full" />
-            </div>
-            <div className="w-3.5 h-3.5 rounded-full border-2 border-gray-500 opacity-60" />
-            <div className="w-3.5 h-3.5 flex items-center justify-center opacity-60">
-              <div className="w-2.5 h-2.5 border-l-2 border-b-2 border-gray-500 rotate-45" />
-            </div>
+          {/* iPhone 17 Native Home Navigation Bar Indicator */}
+          <div className="pt-2.5 pb-0.5 flex justify-center items-center">
+            <div className="w-32 sm:w-36 h-[4.5px] bg-[#1a1a1a] rounded-full shadow-xs" />
           </div>
         </div>
 
