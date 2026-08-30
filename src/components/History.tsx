@@ -7,7 +7,9 @@ import {
   TrendingDown, 
   SlidersHorizontal,
   Calendar,
-  AlertCircle
+  AlertCircle,
+  ArrowDownLeft,
+  ArrowUpRight
 } from 'lucide-react';
 
 interface HistoryProps {
@@ -18,6 +20,7 @@ interface HistoryProps {
 export default function History({ currentUser, onSelectTransaction }: HistoryProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [creditDebitFilter, setCreditDebitFilter] = useState<'all' | 'credit' | 'debit'>('all');
   const [typeFilter, setTypeFilter] = useState<'all' | TransactionType>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'success' | 'pending' | 'failed'>('all');
 
@@ -32,11 +35,18 @@ export default function History({ currentUser, onSelectTransaction }: HistoryPro
     setTransactions(userList.sort((a,b) => b.createdAt.localeCompare(a.createdAt)));
   }, [currentUser]);
 
+  const isCreditTx = (t: Transaction) => {
+    return t.type === 'receive' || t.recipientId === currentUser.id || t.recipientAccount === currentUser.accountNumber;
+  };
+
   // Apply filters
   const filteredTransactions = transactions.filter((t) => {
-    const isReceive = t.type === 'receive' || t.recipientId === currentUser.id;
-    const participantName = isReceive ? t.senderName || 'Cash Deposit' : t.recipientName;
+    const isCredit = isCreditTx(t);
+    const participantName = isCredit ? t.senderName || 'Cash Deposit' : t.recipientName;
     
+    if (creditDebitFilter === 'credit' && !isCredit) return false;
+    if (creditDebitFilter === 'debit' && isCredit) return false;
+
     const matchesSearch = 
       participantName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       t.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -49,6 +59,9 @@ export default function History({ currentUser, onSelectTransaction }: HistoryPro
     return matchesSearch && matchesType && matchesStatus;
   });
 
+  const totalCreditCount = transactions.filter(t => isCreditTx(t)).length;
+  const totalDebitCount = transactions.filter(t => !isCreditTx(t)).length;
+
   return (
     <div id="history-screen" className="max-w-md mx-auto bg-gray-50 min-h-screen pb-28 font-sans">
       
@@ -60,6 +73,65 @@ export default function History({ currentUser, onSelectTransaction }: HistoryPro
 
       <div className="p-5 space-y-4">
         
+        {/* All, Credit, Debit Filter Tabs */}
+        <div className="bg-white p-1.5 rounded-2xl shadow-sm border border-gray-100 flex gap-1.5">
+          <button
+            id="btn-history-filter-all"
+            type="button"
+            onClick={() => setCreditDebitFilter('all')}
+            className={`flex-1 py-2 rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 cursor-pointer ${
+              creditDebitFilter === 'all'
+                ? 'bg-[#68137e] text-white shadow-md'
+                : 'text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            <span>All</span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold ${
+              creditDebitFilter === 'all' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'
+            }`}>
+              {transactions.length}
+            </span>
+          </button>
+
+          <button
+            id="btn-history-filter-credit"
+            type="button"
+            onClick={() => setCreditDebitFilter('credit')}
+            className={`flex-1 py-2 rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 cursor-pointer ${
+              creditDebitFilter === 'credit'
+                ? 'bg-emerald-700 text-white shadow-md'
+                : 'text-emerald-800 hover:bg-emerald-50/60'
+            }`}
+          >
+            <ArrowDownLeft className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Credit</span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold ${
+              creditDebitFilter === 'credit' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-800'
+            }`}>
+              {totalCreditCount}
+            </span>
+          </button>
+
+          <button
+            id="btn-history-filter-debit"
+            type="button"
+            onClick={() => setCreditDebitFilter('debit')}
+            className={`flex-1 py-2 rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 cursor-pointer ${
+              creditDebitFilter === 'debit'
+                ? 'bg-rose-700 text-white shadow-md'
+                : 'text-rose-800 hover:bg-rose-50/60'
+            }`}
+          >
+            <ArrowUpRight className="w-3.5 h-3.5 text-rose-400" />
+            <span>Debit</span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold ${
+              creditDebitFilter === 'debit' ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-800'
+            }`}>
+              {totalDebitCount}
+            </span>
+          </button>
+        </div>
+
         {/* Search Input */}
         <div className="relative">
           <Search className="absolute left-4 top-3.5 w-4 h-4 text-gray-400" />
@@ -127,7 +199,7 @@ export default function History({ currentUser, onSelectTransaction }: HistoryPro
             </div>
           ) : (
             filteredTransactions.map((tx) => {
-              const isReceive = tx.type === 'receive' || tx.recipientId === currentUser.id;
+              const isCredit = isCreditTx(tx);
               return (
                 <button
                   id={`btn-history-tx-${tx.id}`}
@@ -137,14 +209,21 @@ export default function History({ currentUser, onSelectTransaction }: HistoryPro
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      isReceive ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'
+                      isCredit ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'
                     }`}>
-                      {isReceive ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
+                      {isCredit ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
                     </div>
                     <div>
-                      <p className="text-sm font-extrabold text-gray-900 leading-none">
-                        {isReceive ? tx.senderName || 'Cash Deposit' : tx.recipientName}
-                      </p>
+                      <div className="flex items-center gap-1.5">
+                        <span className={`text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded ${
+                          isCredit ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                        }`}>
+                          {isCredit ? 'Credit' : 'Debit'}
+                        </span>
+                        <p className="text-sm font-extrabold text-gray-900 leading-none">
+                          {isCredit ? tx.senderName || 'Cash Deposit' : tx.recipientName}
+                        </p>
+                      </div>
                       <p className="text-[10px] text-gray-400 font-medium mt-1 font-mono">
                         {new Date(tx.createdAt).toLocaleString()}
                       </p>
@@ -156,9 +235,9 @@ export default function History({ currentUser, onSelectTransaction }: HistoryPro
 
                   <div className="text-right">
                     <p className={`text-sm font-black font-mono leading-none ${
-                      isReceive ? 'text-emerald-700' : 'text-gray-900'
+                      isCredit ? 'text-emerald-700' : 'text-gray-900'
                     }`}>
-                      {isReceive ? '+' : '-'}ETB {tx.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      {isCredit ? '+' : '-'}ETB {tx.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </p>
                     <span className={`inline-block mt-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
                       tx.status === 'success' ? 'bg-emerald-100 text-emerald-800' :

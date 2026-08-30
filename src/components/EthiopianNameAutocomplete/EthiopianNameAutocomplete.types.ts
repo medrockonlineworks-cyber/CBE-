@@ -27,6 +27,8 @@ export interface EthiopianNameAutocompleteProps extends Omit<InputHTMLAttributes
   theme?: 'dark' | 'light' | 'cbe';
 }
 
+export type EthiopianNameInputMethod = 'split' | 'single' | 'wizard' | 'presets';
+
 export interface EthiopianThreePartNameProps {
   idPrefix?: string;
   firstName: string;
@@ -37,4 +39,8 @@ export interface EthiopianThreePartNameProps {
   disabled?: boolean;
   theme?: 'dark' | 'light' | 'cbe';
   className?: string;
+  defaultInputMethod?: EthiopianNameInputMethod;
+  allowMethodSwitching?: boolean;
+  showAmharicPreview?: boolean;
+  showQuickActions?: boolean;
 }

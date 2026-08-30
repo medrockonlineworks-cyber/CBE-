@@ -9,6 +9,7 @@ import {
 import { isSupabaseConfigured } from '../lib/supabase';
 import { isValidEthiopianNameString } from '../utils/normalizeName';
 import EthiopianNameAutocomplete from '../components/EthiopianNameAutocomplete/EthiopianNameAutocomplete';
+import EthiopianThreePartNameInput from '../components/EthiopianNameAutocomplete/EthiopianThreePartNameInput';
 import { 
   Search, 
   Plus, 
@@ -65,8 +66,12 @@ export default function AdminEthiopianNames({ onBack }: AdminEthiopianNamesProps
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Test Sandbox State
+  const [testSandboxMode, setTestSandboxMode] = useState<'single' | 'three_part'>('three_part');
   const [testQuery, setTestQuery] = useState('');
   const [testSelected, setTestSelected] = useState('');
+  const [testFirst, setTestFirst] = useState('Leykun');
+  const [testFather, setTestFather] = useState('Jemaneh');
+  const [testGrandfather, setTestGrandfather] = useState('Ylma');
 
   const loadData = async () => {
     setIsLoading(true);
@@ -359,46 +364,114 @@ export default function AdminEthiopianNames({ onBack }: AdminEthiopianNamesProps
 
       {/* Interactive Testing Sandbox */}
       <div className="bg-gradient-to-r from-purple-950/40 via-slate-900 to-amber-950/30 border border-purple-900/40 rounded-3xl p-5 md:p-6 shadow-xl">
-        <div className="flex items-center gap-2 mb-3">
-          <Zap className="w-5 h-5 text-amber-400" />
-          <h2 className="text-base font-black text-white">Live Autocomplete Testing Sandbox</h2>
-          <span className="text-[10px] font-mono bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full border border-purple-500/30 font-semibold">
-            250ms Debounced Engine
-          </span>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+          <div className="flex items-center gap-2">
+            <Zap className="w-5 h-5 text-amber-400" />
+            <h2 className="text-base font-black text-white">Live Naming Suggestion Sandbox</h2>
+            <span className="text-[10px] font-mono bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full border border-purple-500/30 font-semibold">
+              Self • Father • Grandfather
+            </span>
+          </div>
+
+          {/* Mode Switcher for Sandbox */}
+          <div className="flex items-center gap-1 bg-slate-950/80 p-1 rounded-xl border border-slate-800 self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => setTestSandboxMode('three_part')}
+              className={`px-3 py-1 text-xs font-bold rounded-lg transition cursor-pointer ${
+                testSandboxMode === 'three_part'
+                  ? 'bg-amber-400 text-slate-950'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              3-Part Input Methods
+            </button>
+            <button
+              type="button"
+              onClick={() => setTestSandboxMode('single')}
+              className={`px-3 py-1 text-xs font-bold rounded-lg transition cursor-pointer ${
+                testSandboxMode === 'single'
+                  ? 'bg-amber-400 text-slate-950'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              Single Autocomplete
+            </button>
+          </div>
         </div>
+
         <p className="text-xs text-slate-300 mb-4">
-          Test typing an Ethiopian name below to see the prefix-first matching, ranking algorithm, and highlighted substrings in real-time.
+          {testSandboxMode === 'three_part' 
+            ? 'Test the 4 input methods for Ethiopian naming suggestions: 3-Field Split, Smart Single (Token detection), Step-by-Step Wizard, and Quick Presets.'
+            : 'Test typing an Ethiopian name below to see prefix-first matching, ranking algorithm, and highlighted substrings in real-time.'}
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-          <div className="bg-white p-4 rounded-2xl shadow-inner">
-            <EthiopianNameAutocomplete
-              id="test-sandbox-autocomplete"
-              label="Recipient Name Autocomplete"
-              placeholder="Start typing e.g. 'A', 'Da', 'Te', 'Me', 'Ab'..."
-              value={testQuery}
-              onChange={setTestQuery}
-              onSelect={(name, item) => {
-                setTestSelected(`Selected: ${name} (ID: ${item?.id || 'manual'})`);
+        {testSandboxMode === 'three_part' ? (
+          <div className="space-y-4">
+            <EthiopianThreePartNameInput
+              idPrefix="admin-test-sandbox"
+              firstName={testFirst}
+              fathersName={testFather}
+              grandfathersName={testGrandfather}
+              onChange={(parts) => {
+                setTestFirst(parts.firstName);
+                setTestFather(parts.fathersName);
+                setTestGrandfather(parts.grandfathersName);
+                setTestSelected(`Full: ${parts.fullName} (Self: ${parts.firstName}, Father: ${parts.fathersName}, Grandfather: ${parts.grandfathersName})`);
               }}
               theme="cbe"
             />
+            
+            <div className="bg-slate-950/70 border border-slate-800 rounded-2xl p-4 space-y-2 font-mono text-xs text-slate-300">
+              <div className="flex justify-between border-b border-slate-800 pb-1.5 text-slate-400">
+                <span>Self / First Name:</span>
+                <span className="text-purple-300 font-bold">&quot;{testFirst || 'Empty'}&quot;</span>
+              </div>
+              <div className="flex justify-between border-b border-slate-800 pb-1.5 text-slate-400">
+                <span>Father's Name:</span>
+                <span className="text-blue-300 font-bold">&quot;{testFather || 'Empty'}&quot;</span>
+              </div>
+              <div className="flex justify-between border-b border-slate-800 pb-1.5 text-slate-400">
+                <span>Grandfather's Name:</span>
+                <span className="text-emerald-300 font-bold">&quot;{testGrandfather || 'Empty'}&quot;</span>
+              </div>
+              <div className="flex justify-between border-b border-slate-800 pb-1.5 text-slate-400">
+                <span>Combined Full Name:</span>
+                <span className="text-amber-300 font-black">{[testFirst, testFather, testGrandfather].filter(Boolean).join(' ') || 'None'}</span>
+              </div>
+            </div>
           </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+            <div className="bg-white p-4 rounded-2xl shadow-inner">
+              <EthiopianNameAutocomplete
+                id="test-sandbox-autocomplete"
+                label="Recipient Name Autocomplete"
+                placeholder="Start typing e.g. 'A', 'Da', 'Te', 'Me', 'Ab'..."
+                value={testQuery}
+                onChange={setTestQuery}
+                onSelect={(name, item) => {
+                  setTestSelected(`Selected: ${name} (ID: ${item?.id || 'manual'})`);
+                }}
+                theme="cbe"
+              />
+            </div>
 
-          <div className="bg-slate-950/70 border border-slate-800 rounded-2xl p-4 space-y-2 font-mono text-xs text-slate-300">
-            <div className="flex justify-between border-b border-slate-800 pb-1.5 text-slate-400">
-              <span>Input Value:</span>
-              <span className="text-amber-300 font-bold">&quot;{testQuery}&quot;</span>
-            </div>
-            <div className="flex justify-between border-b border-slate-800 pb-1.5 text-slate-400">
-              <span>Selection Feedback:</span>
-              <span className="text-emerald-400 font-bold">{testSelected || 'Awaiting selection...'}</span>
-            </div>
-            <div className="text-[11px] text-slate-400 pt-1 leading-relaxed font-sans">
-              Matches are ranked: Exact Match &gt; Starts With &gt; Word Starts With &gt; Contains &gt; Fuzzy. Users can type any custom name if not listed.
+            <div className="bg-slate-950/70 border border-slate-800 rounded-2xl p-4 space-y-2 font-mono text-xs text-slate-300">
+              <div className="flex justify-between border-b border-slate-800 pb-1.5 text-slate-400">
+                <span>Input Value:</span>
+                <span className="text-amber-300 font-bold">&quot;{testQuery}&quot;</span>
+              </div>
+              <div className="flex justify-between border-b border-slate-800 pb-1.5 text-slate-400">
+                <span>Selection Feedback:</span>
+                <span className="text-emerald-400 font-bold">{testSelected || 'Awaiting selection...'}</span>
+              </div>
+              <div className="text-[11px] text-slate-400 pt-1 leading-relaxed font-sans">
+                Matches are ranked: Exact Match &gt; Starts With &gt; Word Starts With &gt; Contains &gt; Fuzzy. Users can type any custom name if not listed.
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Filter and Search Bar */}

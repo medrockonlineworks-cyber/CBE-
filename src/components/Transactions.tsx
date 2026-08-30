@@ -2,16 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { UserProfile, Transaction, Beneficiary } from '../types';
 import { LocalDb } from '../lib/mockData';
 import { calculateCbeFee } from '../lib/cbeTariff';
-import EthiopianNameAutocomplete from './EthiopianNameAutocomplete';
+import EthiopianNameAutocomplete, { EthiopianThreePartNameInput } from './EthiopianNameAutocomplete';
+import AccountCard from './AccountCard';
 import { 
   Send, 
   ArrowLeftRight, 
   ArrowDownLeft, 
+  ArrowUpRight,
   PhoneCall, 
   Check, 
   Copy, 
   AlertCircle, 
   TrendingDown, 
+  TrendingUp,
   UserPlus, 
   QrCode, 
   Share2, 
@@ -28,12 +31,17 @@ import {
   X,
   Search,
   ChevronRight,
-  User
+  User,
+  SlidersHorizontal,
+  RotateCw,
+  Receipt as ReceiptIcon,
+  Plus
 } from 'lucide-react';
 
 interface TransactionsProps {
   currentUser: UserProfile;
   onTransactionComplete: (tx: Transaction) => void;
+  onSelectTransaction?: (tx: Transaction) => void;
   initialTab?: 'send' | 'transfer' | 'merchant' | 'receive' | 'airtime';
 }
 
@@ -51,7 +59,19 @@ const ETHIOPIAN_BANKS = [
   'Zemen Bank'
 ];
 
-export default function Transactions({ currentUser, onTransactionComplete, initialTab }: TransactionsProps) {
+export default function Transactions({ currentUser, onTransactionComplete, onSelectTransaction, initialTab }: TransactionsProps) {
+  // View mode: 'records' | 'transfer'
+  const [viewMode, setViewMode] = useState<'records' | 'transfer'>('records');
+  // Direct filter tabs requested by user: 'all' | 'credit' | 'debit'
+  const [filterType, setFilterType] = useState<'all' | 'credit' | 'debit'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'success' | 'pending' | 'failed'>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [transactionsList, setTransactionsList] = useState<Transaction[]>([]);
+  const [customLogoUrl, setCustomLogoUrl] = useState<string | null>(null);
+  const [currentDateTime, setCurrentDateTime] = useState('01 Jul 2026 • 10:14 AM');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [selectedTxDetail, setSelectedTxDetail] = useState<Transaction | null>(null);
+
   const [activeTab, setActiveTab] = useState<TxModuleTab>('send');
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -68,10 +88,40 @@ export default function Transactions({ currentUser, onTransactionComplete, initi
   const [newBenAcc, setNewBenAcc] = useState('');
   const [newBenBank, setNewBenBank] = useState('Tana Digital Bank');
 
-  // Load Beneficiaries
+  // Load Beneficiaries and Transactions
   useEffect(() => {
     setBeneficiaries(LocalDb.getBeneficiaries(currentUser.id));
+    setCustomLogoUrl(LocalDb.getCustomBankLogo());
+    loadTransactions();
+
+    const updateTime = () => {
+      const now = new Date();
+      const options: Intl.DateTimeFormatOptions = {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      };
+      setCurrentDateTime(now.toLocaleDateString('en-GB', options).replace(',', ' •'));
+    };
+
+    updateTime();
+    const interval = setInterval(updateTime, 60000);
+    return () => clearInterval(interval);
   }, [currentUser]);
+
+  const loadTransactions = () => {
+    const list = LocalDb.getTransactions();
+    setTransactionsList(list.sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
+  };
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    loadTransactions();
+    setTimeout(() => setIsRefreshing(false), 500);
+  };
 
   // Set active tab if passed from parent
   useEffect(() => {
@@ -513,67 +563,438 @@ export default function Transactions({ currentUser, onTransactionComplete, initi
     }
   };
 
+  // Check if a transaction is a credit (inflow/received) or debit (outflow/sent)
+  const isCreditTx = (t: Transaction) => {
+    if (t.type === 'receive') return true;
+    if (t.recipientAccount === currentUser.accountNumber) return true;
+    if (t.recipientId === currentUser.id && t.senderId !== currentUser.id) return true;
+    return false;
+  };
+
+  const filteredRecords = transactionsList.filter((t) => {
+    const isCredit = isCreditTx(t);
+
+    if (filterType === 'credit' && !isCredit) return false;
+    if (filterType === 'debit' && isCredit) return false;
+
+    if (statusFilter !== 'all' && t.status !== statusFilter) return false;
+
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      const matchesRecipient = (t.recipientName || '').toLowerCase().includes(term);
+      const matchesSender = (t.senderName || '').toLowerCase().includes(term);
+      const matchesAccount = (t.recipientAccount || '').includes(term) || (t.senderAccount || '').includes(term);
+      const matchesRef = (t.reference || '').toLowerCase().includes(term) || (t.id || '').toLowerCase().includes(term);
+      const matchesDesc = (t.description || '').toLowerCase().includes(term);
+      if (!matchesRecipient && !matchesSender && !matchesAccount && !matchesRef && !matchesDesc) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+
+  const totalCreditCount = transactionsList.filter(t => isCreditTx(t)).length;
+  const totalDebitCount = transactionsList.filter(t => !isCreditTx(t)).length;
+
+  const totalCreditAmount = transactionsList
+    .filter(t => isCreditTx(t) && t.status === 'success')
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  const totalDebitAmount = transactionsList
+    .filter(t => !isCreditTx(t) && t.status === 'success')
+    .reduce((sum, t) => sum + t.amount + (t.fee || 0), 0);
+
   return (
-    <div id="transactions-screen" className="max-w-md mx-auto bg-gray-50 min-h-screen pb-28 font-sans relative">
+    <div id="transactions-screen" className="min-h-full w-full bg-[#F7F7F7] font-sans relative flex flex-col justify-between overflow-x-hidden text-gray-900 pb-28 select-none">
       
-      {/* Header Banner */}
-      <div className="bg-[#68137e] text-white px-5 pt-7 pb-8 rounded-b-[2rem] shadow-md relative">
-        <h2 className="text-xl font-extrabold text-white flex items-center gap-2">
-          <span>CBE Financial Gate</span>
-        </h2>
-        <p className="text-purple-200 text-xs mt-0.5">Commercial Bank of Ethiopia Transfers &amp; Services</p>
-        
-        {/* Horizontal segment selector tabs */}
-        <div className="flex bg-black/20 p-1.5 rounded-2xl mt-5 border border-white/10 gap-1 overflow-x-auto scrollbar-none">
-          {[
-            { id: 'send', label: 'Other Banks', icon: Send },
-            { id: 'transfer', label: 'CBE Transfer', icon: ArrowLeftRight },
-            { id: 'merchant', label: 'Pay Merchant', icon: CreditCard },
-            { id: 'receive', label: 'Receive', icon: ArrowDownLeft },
-            { id: 'airtime', label: 'Airtime', icon: PhoneCall },
-          ].map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                id={`tx-subtab-${tab.id}`}
-                key={tab.id}
-                onClick={() => {
-                  setActiveTab(tab.id as TxModuleTab);
-                  setErrorMsg('');
-                  setSuccessMsg('');
-                  setMerchantStep(1); // Reset merchant screen step
-                }}
-                className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${
-                  isActive 
-                    ? 'bg-white text-[#68137e] shadow-md' 
-                    : 'text-purple-200 hover:text-white hover:bg-white/10'
-                }`}
-              >
-                <Icon className="w-3.5 h-3.5" />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
+      {/* 1. HERO BACKGROUND WITH SMOOTH CURVED WAVE TRANSITION */}
+      <div 
+        className="hero-background absolute top-0 left-0 right-0 h-[280px] sm:h-[300px] pointer-events-none z-0 overflow-hidden"
+        style={{
+          background: 'linear-gradient(135deg, #70189F 0%, #8420AE 55%, #8E29B9 100%)',
+        }}
+      >
+        {/* Soft Ambient Glow Elements */}
+        <div className="absolute -top-16 -left-16 w-64 h-64 rounded-full bg-white/10 blur-3xl pointer-events-none" />
+        <div className="absolute top-20 -right-20 w-80 h-80 rounded-full bg-[#8E29B9]/30 blur-3xl pointer-events-none" />
+
+        {/* SVG Smooth Curved Transition Wave */}
+        <svg
+          className="hero-curve absolute bottom-0 left-0 w-full h-[140px] sm:h-[160px] text-[#F7F7F7]"
+          viewBox="0 0 1440 320"
+          preserveAspectRatio="none"
+          fill="currentColor"
+        >
+          <path d="M0,192L48,181.3C96,171,192,149,288,160C384,171,480,213,576,224C672,235,768,213,864,186.7C960,160,1056,128,1152,122.7C1248,117,1344,139,1392,149.3L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z" />
+        </svg>
       </div>
 
-      {/* Main Content Form Area */}
-      <div className="p-5">
-        
-        {/* Error/Success banners */}
-        {errorMsg && (
-          <div className="mb-4 bg-red-500/10 border border-red-500/20 text-red-800 text-xs py-2.5 px-4 rounded-2xl flex items-center gap-2.5">
-            <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
-            <span>{errorMsg}</span>
+      {/* 2. TOP HEADER */}
+      <div className="relative z-10 flex flex-col w-full">
+        <div className="px-5 pt-4 pb-2 flex items-center justify-between text-white">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-sm">
+              <ArrowLeftRight className="w-4 h-4 text-amber-300" />
+            </div>
+            <div>
+              <h1 className="text-base font-extrabold text-white tracking-wide">Transactions</h1>
+              <p className="text-[10px] text-purple-200">{currentDateTime}</p>
+            </div>
           </div>
-        )}
-        {successMsg && (
-          <div className="mb-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 text-xs py-2.5 px-4 rounded-2xl flex items-center gap-2.5">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-            <span>{successMsg}</span>
+
+          <div className="flex items-center gap-2">
+            <button
+              id="btn-refresh-transactions"
+              type="button"
+              onClick={handleRefresh}
+              className={`p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition active:scale-95 cursor-pointer ${isRefreshing ? 'animate-spin' : ''}`}
+              title="Refresh ledger"
+            >
+              <RotateCw className="w-4 h-4" />
+            </button>
+            <button
+              id="btn-toggle-viewmode"
+              type="button"
+              onClick={() => setViewMode(viewMode === 'records' ? 'transfer' : 'records')}
+              className="bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-3 py-1.5 rounded-full backdrop-blur-md border border-white/20 flex items-center gap-1.5 cursor-pointer transition active:scale-95 shadow-sm"
+            >
+              {viewMode === 'records' ? (
+                <>
+                  <Send className="w-3.5 h-3.5 text-amber-300" />
+                  <span>Send Money</span>
+                </>
+              ) : (
+                <>
+                  <ReceiptIcon className="w-3.5 h-3.5 text-emerald-300" />
+                  <span>View Records</span>
+                </>
+              )}
+            </button>
           </div>
-        )}
+        </div>
+
+        {/* 3. EXACT ACCOUNT CARD (Without changing the card) */}
+        <main className="w-full mt-2 sm:mt-3 flex flex-col">
+          <AccountCard
+            bankName="Commercial Bank of Ethiopia"
+            slogan="The bank you can always rely on!"
+            balance={currentUser.balance}
+            currency={currentUser.currency || 'ETB'}
+            accountType="Saving Account"
+            accountNumber={currentUser.accountNumber}
+            dateTimeString={currentDateTime}
+            showBalanceDefault={false}
+            customLogoUrl={customLogoUrl}
+          />
+
+          {/* Error/Success banners */}
+          <div className="max-w-md mx-auto w-full px-4 mt-3">
+            {errorMsg && (
+              <div className="mb-2 bg-red-500/10 border border-red-500/20 text-red-800 text-xs py-2 px-3 rounded-2xl flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+                <span>{errorMsg}</span>
+              </div>
+            )}
+            {successMsg && (
+              <div className="mb-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 text-xs py-2 px-3 rounded-2xl flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                <span>{successMsg}</span>
+              </div>
+            )}
+          </div>
+
+          {/* 4. MAIN CONTENT BELOW THE CARD */}
+          <div className="w-full max-w-md mx-auto px-4 mt-2 space-y-3">
+            {viewMode === 'records' ? (
+              <>
+                {/* 3 Direct Filter Tabs: ALL, CREDIT, DEBIT */}
+                <div className="bg-white p-1.5 rounded-2xl shadow-sm border border-gray-100 flex gap-1.5">
+                  <button
+                    id="btn-tab-filter-all"
+                    type="button"
+                    onClick={() => setFilterType('all')}
+                    className={`flex-1 py-2 rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                      filterType === 'all'
+                        ? 'bg-[#68137e] text-white shadow-md'
+                        : 'text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    <span>All</span>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold ${
+                      filterType === 'all' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-500'
+                    }`}>
+                      {transactionsList.length}
+                    </span>
+                  </button>
+
+                  <button
+                    id="btn-tab-filter-credit"
+                    type="button"
+                    onClick={() => setFilterType('credit')}
+                    className={`flex-1 py-2 rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                      filterType === 'credit'
+                        ? 'bg-emerald-700 text-white shadow-md'
+                        : 'text-emerald-800 hover:bg-emerald-50/60'
+                    }`}
+                  >
+                    <ArrowDownLeft className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Credit</span>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold ${
+                      filterType === 'credit' ? 'bg-white/20 text-white' : 'bg-emerald-100 text-emerald-800'
+                    }`}>
+                      {totalCreditCount}
+                    </span>
+                  </button>
+
+                  <button
+                    id="btn-tab-filter-debit"
+                    type="button"
+                    onClick={() => setFilterType('debit')}
+                    className={`flex-1 py-2 rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 cursor-pointer ${
+                      filterType === 'debit'
+                        ? 'bg-rose-700 text-white shadow-md'
+                        : 'text-rose-800 hover:bg-rose-50/60'
+                    }`}
+                  >
+                    <ArrowUpRight className="w-3.5 h-3.5 text-rose-400" />
+                    <span>Debit</span>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold ${
+                      filterType === 'debit' ? 'bg-white/20 text-white' : 'bg-rose-100 text-rose-800'
+                    }`}>
+                      {totalDebitCount}
+                    </span>
+                  </button>
+                </div>
+
+                {/* Summary Inflow / Outflow Metric Cards */}
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div className="bg-gradient-to-br from-emerald-50 to-emerald-100/50 p-3 rounded-2xl border border-emerald-200/60 flex items-center gap-2.5 shadow-sm">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                      <ArrowDownLeft className="w-5 h-5 stroke-[2.4]" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-extrabold text-emerald-900 uppercase tracking-tight">Credit (Received)</p>
+                      <p className="text-xs sm:text-sm font-black font-mono text-emerald-700 truncate">
+                        +{totalCreditAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })} ETB
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="bg-gradient-to-br from-rose-50 to-rose-100/50 p-3 rounded-2xl border border-rose-200/60 flex items-center gap-2.5 shadow-sm">
+                    <div className="w-9 h-9 rounded-xl bg-rose-600 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                      <ArrowUpRight className="w-5 h-5 stroke-[2.4]" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-extrabold text-rose-900 uppercase tracking-tight">Debit (Sent)</p>
+                      <p className="text-xs sm:text-sm font-black font-mono text-rose-700 truncate">
+                        -{totalDebitAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })} ETB
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Search & Status Filters */}
+                <div className="bg-white p-3 rounded-2xl border border-gray-100 shadow-sm space-y-2.5">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <input
+                      id="input-search-ledger"
+                      type="text"
+                      placeholder="Search recipient, sender, reference (FT...)..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="w-full bg-gray-50 border border-gray-100 rounded-xl pl-9 pr-4 py-2 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-purple-800 focus:bg-white transition"
+                    />
+                    {searchTerm && (
+                      <button
+                        onClick={() => setSearchTerm('')}
+                        className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Status Pills: All, Completed/Success, Pending, Failed */}
+                  <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pt-1">
+                    {(['all', 'success', 'pending', 'failed'] as const).map((st) => (
+                      <button
+                        key={st}
+                        onClick={() => setStatusFilter(st)}
+                        className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wide transition cursor-pointer flex-shrink-0 ${
+                          statusFilter === st
+                            ? 'bg-[#68137e] text-white'
+                            : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
+                        }`}
+                      >
+                        {st === 'all' ? 'All Status' : st === 'success' ? 'Completed' : st}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Transaction Records List */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-[11px] font-bold text-gray-600 uppercase tracking-wider">
+                      {filterType === 'all' ? 'All Transaction Records' : filterType === 'credit' ? 'Credit (Received) Records' : 'Debit (Sending) Records'}
+                    </span>
+                    <span className="text-[10px] font-mono font-semibold text-gray-400">
+                      {filteredRecords.length} records
+                    </span>
+                  </div>
+
+                  {filteredRecords.length > 0 ? (
+                    filteredRecords.map((tx) => {
+                      const isCredit = isCreditTx(tx);
+                      return (
+                        <div
+                          key={tx.id}
+                          id={`tx-card-${tx.id}`}
+                          onClick={() => {
+                            if (onSelectTransaction) {
+                              onSelectTransaction(tx);
+                            } else {
+                              setSelectedTxDetail(tx);
+                            }
+                          }}
+                          className="bg-white hover:bg-purple-50/20 active:scale-[0.99] p-3.5 rounded-2xl border border-gray-100 shadow-sm transition-all cursor-pointer flex items-center justify-between gap-3 group"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            {/* Inflow / Outflow Icon */}
+                            <div className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 font-bold shadow-sm ${
+                              isCredit
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                                : 'bg-rose-50 text-rose-700 border border-rose-200'
+                            }`}>
+                              {isCredit ? (
+                                <ArrowDownLeft className="w-5 h-5 stroke-[2.2]" />
+                              ) : (
+                                <ArrowUpRight className="w-5 h-5 stroke-[2.2]" />
+                              )}
+                            </div>
+
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-md ${
+                                  isCredit 
+                                    ? 'bg-emerald-100/70 text-emerald-800' 
+                                    : 'bg-rose-100/70 text-rose-800'
+                                }`}>
+                                  {isCredit ? 'CREDIT • RECEIVED' : 'DEBIT • SENT'}
+                                </span>
+                                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${
+                                  tx.status === 'success' 
+                                    ? 'bg-emerald-50 text-emerald-700' 
+                                    : tx.status === 'pending' 
+                                      ? 'bg-amber-50 text-amber-700' 
+                                      : 'bg-red-50 text-red-700'
+                                }`}>
+                                  {tx.status === 'success' ? 'Completed' : tx.status}
+                                </span>
+                              </div>
+
+                              <p className="text-xs sm:text-[13px] font-extrabold text-gray-900 mt-1 truncate">
+                                {isCredit ? (tx.senderName || 'Cash Deposit') : tx.recipientName}
+                              </p>
+                              <p className="text-[10px] text-gray-400 font-mono mt-0.5 truncate">
+                                {tx.reference || tx.id} • {new Date(tx.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Right Side: Amount */}
+                          <div className="text-right flex-shrink-0">
+                            <p className={`text-xs sm:text-sm font-black font-mono ${
+                              isCredit ? 'text-emerald-700' : 'text-gray-900'
+                            }`}>
+                              {isCredit ? '+' : '-'}{tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                              <span className="text-[10px] font-normal text-gray-500 ml-1">ETB</span>
+                            </p>
+                            <p className="text-[10px] text-gray-400 capitalize mt-0.5">
+                              {tx.type}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="bg-white p-8 rounded-3xl border border-gray-100 text-center space-y-2">
+                      <div className="w-12 h-12 rounded-2xl bg-purple-50 text-[#70189F] flex items-center justify-center mx-auto">
+                        <ReceiptIcon className="w-6 h-6 stroke-[1.8]" />
+                      </div>
+                      <p className="text-xs font-bold text-gray-800">No {filterType !== 'all' ? filterType : ''} records found</p>
+                      <p className="text-[11px] text-gray-400">Transactions will automatically appear here once initiated or received.</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Make New Transfer Button */}
+                <div className="pt-2">
+                  <button
+                    id="btn-initiate-transfer"
+                    type="button"
+                    onClick={() => setViewMode('transfer')}
+                    className="w-full bg-[#68137e] hover:bg-[#570f69] active:scale-[0.99] text-white p-3.5 rounded-2xl font-extrabold text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <Send className="w-4 h-4 text-amber-300" />
+                    <span>Make New Transfer or Payment</span>
+                  </button>
+                </div>
+              </>
+            ) : (
+              /* VIEW MODE: TRANSFER */
+              <div className="space-y-4">
+                {/* Switch back banner */}
+                <div className="flex items-center justify-between bg-white p-2.5 rounded-2xl border border-gray-100">
+                  <span className="text-xs font-extrabold text-gray-900">Transfer Financial Gateway</span>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('records')}
+                    className="text-xs font-bold text-[#68137e] hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <ArrowDownLeft className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>View Credit/Debit Records</span>
+                  </button>
+                </div>
+
+                {/* Horizontal segment selector tabs */}
+                <div className="flex bg-[#68137e] p-1.5 rounded-2xl border border-purple-300/20 gap-1 overflow-x-auto scrollbar-none shadow-md">
+                  {[
+                    { id: 'send', label: 'Other Banks', icon: Send },
+                    { id: 'transfer', label: 'CBE Transfer', icon: ArrowLeftRight },
+                    { id: 'merchant', label: 'Pay Merchant', icon: CreditCard },
+                    { id: 'receive', label: 'Receive', icon: ArrowDownLeft },
+                    { id: 'airtime', label: 'Airtime', icon: PhoneCall },
+                  ].map((tab) => {
+                    const Icon = tab.icon;
+                    const isActive = activeTab === tab.id;
+                    return (
+                      <button
+                        id={`tx-subtab-${tab.id}`}
+                        key={tab.id}
+                        onClick={() => {
+                          setActiveTab(tab.id as TxModuleTab);
+                          setErrorMsg('');
+                          setSuccessMsg('');
+                          setMerchantStep(1);
+                        }}
+                        className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${
+                          isActive 
+                            ? 'bg-white text-[#68137e] shadow-md' 
+                            : 'text-purple-200 hover:text-white hover:bg-white/10'
+                        }`}
+                      >
+                        <Icon className="w-3.5 h-3.5" />
+                        <span>{tab.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Main Content Form Area */}
+                <div className="space-y-4 pt-1">
 
         {/* ================= SEND MONEY SCREEN (Internal Tana Bank) ================= */}
         {activeTab === 'send' && (
@@ -606,17 +1027,22 @@ export default function Transactions({ currentUser, onTransactionComplete, initi
                 />
               </div>
 
-              {/* Recipient Name / Account Holder Name Input */}
+              {/* Recipient Name / Account Holder Name Input (Self, Father, Grandfather with Multiple Input Methods) */}
               <div className="space-y-1">
-                <EthiopianNameAutocomplete
-                  id="input-send-recipient-name"
-                  label="Account Holder Name"
-                  placeholder="Enter Ethiopian recipient name (e.g. Abebe, Selam, Dawit...)"
-                  value={sendRecipientName}
-                  onChange={setSendRecipientName}
-                  required
-                  theme="cbe"
-                />
+                {(() => {
+                  const parts = sendRecipientName.trim().split(/\s+/);
+                  return (
+                    <EthiopianThreePartNameInput
+                      idPrefix="send-recipient"
+                      firstName={parts[0] || ''}
+                      fathersName={parts[1] || ''}
+                      grandfathersName={parts.slice(2).join(' ') || ''}
+                      onChange={({ fullName }) => setSendRecipientName(fullName)}
+                      required
+                      theme="cbe"
+                    />
+                  );
+                })()}
               </div>
 
               {/* Quick Beneficiaries Select */}
@@ -716,15 +1142,20 @@ export default function Transactions({ currentUser, onTransactionComplete, initi
 
               {showAddBen && (
                 <form onSubmit={handleAddBeneficiary} className="space-y-3 pt-3 mt-3 border-t border-gray-50">
-                  <EthiopianNameAutocomplete
-                    id="input-new-ben-name"
-                    label="Beneficiary Full Name"
-                    placeholder="e.g. Abebe Kebede, Meron Tesfaye..."
-                    value={newBenName}
-                    onChange={setNewBenName}
-                    required
-                    theme="cbe"
-                  />
+                  {(() => {
+                    const parts = newBenName.trim().split(/\s+/);
+                    return (
+                      <EthiopianThreePartNameInput
+                        idPrefix="new-ben-recipient"
+                        firstName={parts[0] || ''}
+                        fathersName={parts[1] || ''}
+                        grandfathersName={parts.slice(2).join(' ') || ''}
+                        onChange={({ fullName }) => setNewBenName(fullName)}
+                        required
+                        theme="cbe"
+                      />
+                    );
+                  })()}
                   <div className="space-y-1">
                     <div className="flex justify-between items-center text-[10px]">
                       <span className="text-gray-500 font-bold">Account Number</span>
@@ -915,18 +1346,23 @@ export default function Transactions({ currentUser, onTransactionComplete, initi
                   </div>
                 )}
 
-                {/* ACCOUNT HOLDER NAME (Other Account Only) */}
+                {/* ACCOUNT HOLDER NAME (Other Account Only - Self, Father, Grandfather with Multiple Input Methods) */}
                 {transferSubTab === 'other' && (
                   <div className="space-y-1">
-                    <EthiopianNameAutocomplete
-                      id="input-transfer-recipient"
-                      label="Account Holder Name"
-                      placeholder="Enter recipient's full Ethiopian name"
-                      value={transferRecipientName}
-                      onChange={setTransferRecipientName}
-                      required
-                      theme="cbe"
-                    />
+                    {(() => {
+                      const parts = transferRecipientName.trim().split(/\s+/);
+                      return (
+                        <EthiopianThreePartNameInput
+                          idPrefix="transfer-recipient"
+                          firstName={parts[0] || ''}
+                          fathersName={parts[1] || ''}
+                          grandfathersName={parts.slice(2).join(' ') || ''}
+                          onChange={({ fullName }) => setTransferRecipientName(fullName)}
+                          required
+                          theme="cbe"
+                        />
+                      );
+                    })()}
                   </div>
                 )}
 
@@ -1570,6 +2006,11 @@ export default function Transactions({ currentUser, onTransactionComplete, initi
           </form>
         )}
 
+                </div>
+              </div>
+            )}
+          </div>
+        </main>
       </div>
 
       {/* FLOATING ACTION QR SCANNER BUTTON (Bottom-Right, Screenshot 1 Alignment) */}

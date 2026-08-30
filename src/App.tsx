@@ -176,6 +176,7 @@ export default function App() {
           <Transactions 
             currentUser={activeUser}
             onTransactionComplete={handleTransactionComplete}
+            onSelectTransaction={handleSelectTransaction}
             initialTab={initialTxTab}
           />
         );
