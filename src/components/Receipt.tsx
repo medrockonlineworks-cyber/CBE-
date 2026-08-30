@@ -126,6 +126,16 @@ export function getDenseQrMatrix(txId: string, payload: string): boolean[][] {
   return matrix;
 }
 
+// Helper for authentic CBE currency formatting: e.g. 100.00, 1,000.00, 136,748.00
+export const formatCbeCurrency = (val: number | string | undefined): string => {
+  const num = typeof val === 'number' ? val : parseFloat(String(val || '0'));
+  if (isNaN(num)) return '0.00';
+  return num.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
+
 interface ReceiptProps {
   transaction: Transaction;
   onBack: () => void;
@@ -197,10 +207,16 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     ? transaction.totalDebited 
     : Number((amount + serviceCharge + vat + disasterRecovery).toFixed(2));
 
-  const totalDebitedStr = totalDebited.toFixed(2);
-  const serviceChargeStr = serviceCharge.toFixed(2);
-  const vatStr = vat.toFixed(2);
-  const disasterRecoveryStr = disasterRecovery.toFixed(2);
+  const amountFormatted = formatCbeCurrency(amount);
+  const totalDebitedFormatted = formatCbeCurrency(totalDebited);
+  const serviceChargeFormatted = formatCbeCurrency(serviceCharge);
+  const vatFormatted = formatCbeCurrency(vat);
+  const disasterRecoveryFormatted = formatCbeCurrency(disasterRecovery);
+
+  const totalDebitedStr = totalDebitedFormatted;
+  const serviceChargeStr = serviceChargeFormatted;
+  const vatStr = vatFormatted;
+  const disasterRecoveryStr = disasterRecoveryFormatted;
 
   // Formatting Sender & Recipient names & account suffixes
   const senderName = transaction.senderName || "Leykun Jemaneh Ylma";
@@ -503,20 +519,17 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     type TextFragment = { text: string; bold: boolean };
     const fragments: TextFragment[] = [
       { text: 'ETB ', bold: false },
-      { text: `${amount.toFixed(2)}`, bold: true },
+      { text: `${amountFormatted}`, bold: true },
       { text: ' has been debited from ', bold: false },
-      { text: `${senderName} ${senderSuffix}`, bold: true },
-      { text: ' for ', bold: false },
-      { text: `${recipientName} ${recipientSuffix}`, bold: true },
-      { text: ' on ', bold: false },
+      { text: `${senderName}`, bold: true },
+      { text: ` ${senderSuffix} for `, bold: false },
+      { text: `${recipientName}`, bold: true },
+      { text: ` ${recipientSuffix} on `, bold: false },
       { text: `${formattedDate}`, bold: true },
       { text: ' with transaction ID: ', bold: false },
       { text: `${txId}.`, bold: true },
-      { text: ' Reason: ', bold: false },
-      { text: `${reason}`, bold: false },
-      { text: '\nTotal Amount Debited: ', bold: false },
-      { text: `ETB${totalDebitedStr}`, bold: false },
-      { text: ` with Service Charge of ETB${serviceChargeStr}, VAT (15%) of ${vatStr} and Disaster Recovery (5%) of ETB${disasterRecoveryStr}.`, bold: false }
+      { text: ` Reason: ${reason} `, bold: false },
+      { text: `\nTotal Amount Debited: ${totalDebitedFormatted} ETB with Service Charge of ETB${serviceChargeFormatted}, VAT (15%) of ETB${vatFormatted} and Disaster Recovery (5%) of ETB${disasterRecoveryFormatted}.`, bold: false }
     ];
 
     let cursorX = boxX + 26;
@@ -825,55 +838,49 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         </div>
       )}
 
-      {/* 0. Pop Down CBE SMS Message Notification (Active for 5 Seconds) */}
+      {/* 0. Pop Down CBE SMS Message Notification (iPhone iOS Messages Banner) */}
       <div 
-        className={`fixed top-2.5 left-3 right-3 max-w-sm sm:max-w-md mx-auto z-50 transition-all duration-500 ease-out transform ${
+        className={`fixed top-3 left-3 right-3 max-w-sm sm:max-w-md mx-auto z-50 transition-all duration-500 cubic-bezier(0.32, 0.72, 0, 1) transform ${
           showSmsBanner 
             ? 'translate-y-0 opacity-100 scale-100 pointer-events-auto shadow-2xl' 
             : '-translate-y-28 opacity-0 scale-95 pointer-events-none'
         }`}
       >
-        <div className="bg-[#242429]/95 backdrop-blur-xl text-white rounded-2xl border border-white/10 p-3.5 shadow-2xl relative overflow-hidden ring-1 ring-black/50">
-          <div className="flex gap-3 items-start">
-            {/* Purple Circular Avatar with User Silhouette and Blue Message Badge */}
-            <div className="relative flex-shrink-0 mt-0.5">
-              <div className="w-10 h-10 rounded-full bg-[#8e24aa] flex items-center justify-center shadow-md">
-                <User className="w-5.5 h-5.5 text-white" />
-              </div>
-              <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 bg-[#2563eb] rounded-full border border-[#242429] flex items-center justify-center shadow-xs">
+        <div 
+          onClick={() => setShowSmsBanner(false)}
+          className="bg-[#2c2c2e]/90 backdrop-blur-2xl text-white rounded-[22px] border border-white/15 p-3 px-3.5 shadow-[0_12px_40px_rgba(0,0,0,0.55)] relative overflow-hidden cursor-pointer active:scale-[0.98] transition-transform select-none"
+        >
+          {/* iOS App Header Row */}
+          <div className="flex items-center justify-between mb-1.5">
+            <div className="flex items-center gap-1.5">
+              {/* iOS Green Messages App Icon */}
+              <div className="w-[18px] h-[18px] rounded-[4.5px] bg-gradient-to-b from-[#34c759] to-[#30d158] flex items-center justify-center shadow-xs">
                 <MessageSquare className="w-2.5 h-2.5 text-white fill-white" />
               </div>
+              <span className="text-[11px] font-semibold tracking-wide text-white/70 uppercase">Messages</span>
+            </div>
+            <span className="text-[11px] text-white/50 font-normal">now</span>
+          </div>
+
+          {/* iOS Message Content Row */}
+          <div className="flex gap-2.5 items-start pl-0.5">
+            {/* Sender Contact Avatar */}
+            <div className="w-9 h-9 rounded-full bg-[#8e24aa] flex items-center justify-center text-white font-bold text-xs flex-shrink-0 shadow-sm border border-white/10 mt-0.5">
+              <span className="tracking-tight">CBE</span>
             </div>
 
-            {/* Content Body */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-baseline gap-2">
-                <span className="font-bold text-[14px] text-white leading-tight">CBE</span>
-                <span className="text-[12px] text-gray-400 font-normal">now</span>
-              </div>
-              <p className="text-[12.5px] text-gray-200 leading-[1.32] mt-1 font-normal line-clamp-2 select-text">
+            {/* Sender Name & Text Preview */}
+            <div className="flex-1 min-w-0 pr-1">
+              <h4 className="font-semibold text-[13.5px] text-white leading-tight">CBE</h4>
+              <p className="text-[12.5px] text-white/85 leading-[1.35] mt-0.5 font-normal line-clamp-2 select-text">
                 {cbeSmsText}
               </p>
-
-              {/* Bottom Actions Row */}
-              <div className="flex items-center justify-between mt-2.5 pt-0.5">
-                <button 
-                  onClick={() => setShowSmsBanner(false)}
-                  className="text-[#3b82f6] text-[13px] font-medium hover:underline cursor-pointer transition active:opacity-75"
-                >
-                  Mark as read
-                </button>
-                <div className="flex items-center gap-1.5 text-gray-400">
-                  <button 
-                    onClick={() => setShowSmsBanner(false)}
-                    className="p-1 rounded-md hover:bg-white/10 text-gray-400 hover:text-white transition cursor-pointer"
-                    title="Open message"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
             </div>
+          </div>
+
+          {/* iOS Subtle Bottom Dismiss Drag Handle */}
+          <div className="pt-2 flex justify-center">
+            <div className="w-9 h-[3.5px] bg-white/25 rounded-full" />
           </div>
         </div>
       </div>
@@ -1001,9 +1008,11 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           >
             <p className="text-gray-400 font-bold text-[11px]">Transaction Summary</p>
 
-            {/* Paragraph Text with bold highlights */}
-            <p className="text-[12px] sm:text-[13px] leading-[1.6] text-gray-900 font-normal">
-              ETB <span className="font-extrabold">{amount.toFixed(2)}</span> has been debited from <span className="font-extrabold">{senderName} {senderSuffix}</span> for <span className="font-extrabold">{recipientName} {recipientSuffix}</span> on <span className="font-extrabold">{formattedDate}</span> with transaction ID: <span className="font-extrabold">{txId}</span>. Reason: {reason}. Total Amount Debited: ETB{totalDebitedStr} with Service Charge of ETB{serviceChargeStr}, VAT (15%) of {vatStr} and Disaster Recovery (5%) of ETB{disasterRecoveryStr}.
+            {/* Paragraph Text with bold highlights matching CBE reference */}
+            <p className="text-[12px] sm:text-[13px] leading-[1.65] text-gray-900 font-normal select-text">
+              ETB <span className="font-bold text-black">{amountFormatted}</span> has been debited from <span className="font-bold text-black">{senderName}</span> {senderSuffix} for <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason}
+              <br className="my-0.5" />
+              Total Amount Debited: {totalDebitedFormatted} ETB with Service Charge of ETB{serviceChargeFormatted}, VAT (15%) of ETB{vatFormatted} and Disaster Recovery (5%) of ETB{disasterRecoveryFormatted}.
             </p>
 
             {/* High-Density Realistic QR Code Centered */}
