@@ -16,6 +16,7 @@ import {
   Receipt as ReceiptLucideIcon,
   Camera,
   Scan,
+  Focus,
   CheckCircle2,
   FileText,
   Loader2,
@@ -403,62 +404,74 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     ctx.fill();
 
     // 2. Top Purple Header: "Thank you / Success" & Top Scan Button
-    // Shield with checkmark badge
+    // White Shield with Purple Checkmark
     const shieldX = 36;
-    const shieldY = 92;
+    const shieldY = 106;
     ctx.save();
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
-    ctx.arc(shieldX + 18, shieldY + 18, 18, 0, Math.PI * 2);
+    const sX = shieldX;
+    const sY = shieldY;
+    ctx.moveTo(sX + 18, sY + 2);
+    ctx.lineTo(sX + 33, sY + 7);
+    ctx.lineTo(sX + 33, sY + 18);
+    ctx.bezierCurveTo(sX + 33, sY + 28, sX + 24, sY + 34, sX + 18, sY + 38);
+    ctx.bezierCurveTo(sX + 12, sY + 34, sX + 3, sY + 28, sX + 3, sY + 18);
+    ctx.lineTo(sX + 3, sY + 7);
+    ctx.closePath();
     ctx.fill();
 
-    // Shield checkmark
+    // Purple checkmark inside shield
     ctx.strokeStyle = '#68137e';
-    ctx.lineWidth = 3.5;
+    ctx.lineWidth = 3.2;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.beginPath();
-    ctx.moveTo(shieldX + 10, shieldY + 18);
-    ctx.lineTo(shieldX + 16, shieldY + 24);
-    ctx.lineTo(shieldX + 26, shieldY + 12);
+    ctx.moveTo(sX + 12, sY + 19);
+    ctx.lineTo(sX + 16.5, sY + 23.5);
+    ctx.lineTo(sX + 24, sY + 14);
     ctx.stroke();
     ctx.restore();
 
     // "Thank you" & "Success" text
     ctx.textAlign = 'left';
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 25px system-ui, -apple-system, sans-serif';
+    ctx.font = 'bold 24px system-ui, -apple-system, sans-serif';
     ctx.fillText('Thank you', shieldX + 46, shieldY + 18);
-    ctx.fillStyle = '#e9d5ff';
-    ctx.font = '500 17px system-ui, -apple-system, sans-serif';
-    ctx.fillText('Success', shieldX + 46, shieldY + 40);
+    ctx.fillStyle = '#f3e8ff';
+    ctx.font = '400 16px system-ui, -apple-system, sans-serif';
+    ctx.fillText('Success', shieldX + 46, shieldY + 38);
 
-    // Top Right Viewfinder / Scan Button
-    const scanBtnX = width - 78;
-    const scanBtnY = 80;
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-    ctx.lineWidth = 1.5;
+    // Top Right Viewfinder / Scan Button (Translucent circle with focus icon)
+    const scanBtnX = width - 82;
+    const scanBtnY = 96;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
     ctx.beginPath();
-    ctx.roundRect(scanBtnX, scanBtnY, 44, 44, 12);
+    ctx.arc(scanBtnX + 22, scanBtnY + 22, 22, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+    ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Viewfinder corners
+    // Viewfinder focus brackets & center ring
+    const vfX = scanBtnX + 11;
+    const vfY = scanBtnY + 11;
+    const vfS = 22;
+    const vfCr = 4;
     ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 2.5;
-    const vfX = scanBtnX + 10;
-    const vfY = scanBtnY + 10;
-    const vfS = 24;
+    ctx.lineWidth = 2.4;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
     // Top-left
-    ctx.beginPath(); ctx.moveTo(vfX, vfY + 6); ctx.lineTo(vfX, vfY); ctx.lineTo(vfX + 6, vfY); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(vfX, vfY + vfCr + 2); ctx.lineTo(vfX, vfY + 2); ctx.arcTo(vfX, vfY, vfX + 2, vfY, 2); ctx.lineTo(vfX + vfCr + 2, vfY); ctx.stroke();
     // Top-right
-    ctx.beginPath(); ctx.moveTo(vfX + vfS - 6, vfY); ctx.lineTo(vfX + vfS, vfY); ctx.lineTo(vfX + vfS, vfY + 6); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(vfX + vfS - vfCr - 2, vfY); ctx.lineTo(vfX + vfS - 2, vfY); ctx.arcTo(vfX + vfS, vfY, vfX + vfS, vfY + 2, 2); ctx.lineTo(vfX + vfS, vfY + vfCr + 2); ctx.stroke();
     // Bottom-left
-    ctx.beginPath(); ctx.moveTo(vfX, vfY + vfS - 6); ctx.lineTo(vfX, vfY + vfS); ctx.lineTo(vfX + 6, vfY + vfS); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(vfX, vfY + vfS - vfCr - 2); ctx.lineTo(vfX, vfY + vfS - 2); ctx.arcTo(vfX, vfY + vfS, vfX + 2, vfY + vfS, 2); ctx.lineTo(vfX + vfCr + 2, vfY + vfS); ctx.stroke();
     // Bottom-right
-    ctx.beginPath(); ctx.moveTo(vfX + vfS - 6, vfY + vfS); ctx.lineTo(vfX + vfS, vfY + vfS); ctx.lineTo(vfX + vfS, vfY + vfS - 6); ctx.stroke();
-    // Center point
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath(); ctx.arc(vfX + vfS / 2, vfY + vfS / 2, 2.5, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(vfX + vfS - vfCr - 2, vfY + vfS); ctx.lineTo(vfX + vfS - 2, vfY + vfS); ctx.arcTo(vfX + vfS, vfY + vfS, vfX + vfS, vfY + vfS - 2, 2); ctx.lineTo(vfX + vfS, vfY + vfS - vfCr - 2); ctx.stroke();
+    // Center circle ring
+    ctx.beginPath(); ctx.arc(vfX + vfS / 2, vfY + vfS / 2, 4, 0, Math.PI * 2); ctx.stroke();
 
     // 3. Main White Card
     const cardTop = 180;
@@ -470,31 +483,31 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     // 4. Overlapping Large Success Checkmark Circle
     const badgeX = width / 2;
     const badgeY = cardTop;
-    const badgeR = 54;
+    const badgeR = 66;
     ctx.save();
     ctx.fillStyle = '#68137e';
     ctx.beginPath();
     ctx.arc(badgeX, badgeY, badgeR, 0, Math.PI * 2);
     ctx.fill();
-    ctx.lineWidth = 6.5;
+    ctx.lineWidth = 8;
     ctx.strokeStyle = '#ffffff';
     ctx.stroke();
 
     // Big Bold Checkmark
     ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 7;
+    ctx.lineWidth = 10;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     ctx.beginPath();
-    ctx.moveTo(badgeX - 22, badgeY + 2);
-    ctx.lineTo(badgeX - 6, badgeY + 19);
-    ctx.lineTo(badgeX + 24, badgeY - 15);
+    ctx.moveTo(badgeX - 27, badgeY + 3);
+    ctx.lineTo(badgeX - 7, badgeY + 25);
+    ctx.lineTo(badgeX + 29, badgeY - 19);
     ctx.stroke();
     ctx.restore();
 
-    // 5. Headline Text
+    // 5. Headline Text (Normal weight as requested)
     ctx.fillStyle = '#111827';
-    ctx.font = 'bold 22px system-ui, -apple-system, sans-serif';
+    ctx.font = 'normal 21px system-ui, -apple-system, sans-serif';
     ctx.textAlign = 'center';
     ctx.fillText('Transaction Completed Successfully!', width / 2, cardTop + 90);
 
@@ -696,12 +709,47 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
     // Button 2: Screenshot
     const b2X = width / 2 - 40;
-    // Viewfinder icon
     const sIcoX = b2X - 22;
     const sIcoY = actY - 14;
+    const sz = 18;
+    const cr = 4;
     ctx.strokeStyle = '#1e293b';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(sIcoX, sIcoY, 18, 18);
+    ctx.lineWidth = 2.2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    // 4 rounded corners
+    // Top-left
+    ctx.beginPath();
+    ctx.moveTo(sIcoX, sIcoY + cr + 1);
+    ctx.lineTo(sIcoX, sIcoY + 2);
+    ctx.arcTo(sIcoX, sIcoY, sIcoX + 2, sIcoY, 2);
+    ctx.lineTo(sIcoX + cr + 1, sIcoY);
+    ctx.stroke();
+    // Top-right
+    ctx.beginPath();
+    ctx.moveTo(sIcoX + sz - cr - 1, sIcoY);
+    ctx.lineTo(sIcoX + sz - 2, sIcoY);
+    ctx.arcTo(sIcoX + sz, sIcoY, sIcoX + sz, sIcoY + 2, 2);
+    ctx.lineTo(sIcoX + sz, sIcoY + cr + 1);
+    ctx.stroke();
+    // Bottom-left
+    ctx.beginPath();
+    ctx.moveTo(sIcoX, sIcoY + sz - cr - 1);
+    ctx.lineTo(sIcoX, sIcoY + sz - 2);
+    ctx.arcTo(sIcoX, sIcoY + sz, sIcoX + 2, sIcoY + sz, 2);
+    ctx.lineTo(sIcoX + cr + 1, sIcoY + sz);
+    ctx.stroke();
+    // Bottom-right
+    ctx.beginPath();
+    ctx.moveTo(sIcoX + sz - cr - 1, sIcoY + sz);
+    ctx.lineTo(sIcoX + sz - 2, sIcoY + sz);
+    ctx.arcTo(sIcoX + sz, sIcoY + sz, sIcoX + sz, sIcoY + sz - 2, 2);
+    ctx.lineTo(sIcoX + sz, sIcoY + sz - cr - 1);
+    ctx.stroke();
+    // Center circle
+    ctx.beginPath();
+    ctx.arc(sIcoX + sz / 2, sIcoY + sz / 2, 3.5, 0, Math.PI * 2);
+    ctx.stroke();
     ctx.fillStyle = '#1e293b';
     ctx.font = 'bold 17px system-ui, -apple-system, sans-serif';
     ctx.fillText('Screenshot', b2X + 4, actY);
@@ -963,39 +1011,41 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       </div>
 
       {/* 2. Top Purple Navigation / App Header */}
-      <div className="pt-1 pb-7 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-white/15 backdrop-blur-xs flex items-center justify-center border border-white/20 shadow-xs">
-            <ShieldCheck className="w-5 h-5 text-white" />
+      <div className="pt-6 sm:pt-7 pb-8 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0">
+        <div className="flex items-center gap-3">
+          {/* Solid White Shield with Purple Checkmark Icon matching reference */}
+          <div className="w-8.5 h-8.5 flex-shrink-0 flex items-center justify-center">
+            <svg className="w-8.5 h-8.5 drop-shadow-xs" viewBox="0 0 24 24" fill="none">
+              <path 
+                d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z" 
+                fill="#ffffff" 
+              />
+              <path 
+                d="M9 12l2.2 2.2 4.3-4.4" 
+                stroke="#68137e" 
+                strokeWidth="2.5" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+              />
+            </svg>
           </div>
           <div>
-            <h2 className="font-extrabold text-sm leading-tight text-white">Thank you</h2>
-            <p className="text-[11px] text-purple-200 font-medium leading-none">Success</p>
+            <h2 className="font-bold text-[16px] sm:text-[17px] leading-tight text-white tracking-tight">Thank you</h2>
+            <p className="text-[12px] sm:text-[13px] text-purple-100 font-normal leading-tight mt-0.5">Success</p>
           </div>
         </div>
 
-        {/* Screenshot Button */}
+        {/* Screenshot Button (Translucent circular badge with focus viewfinder) */}
         <button 
           onClick={handleScreenshot}
           disabled={isCapturing}
-          className="w-9 h-9 rounded-xl bg-white/15 hover:bg-white/25 active:scale-95 flex items-center justify-center transition border border-white/20 text-white cursor-pointer disabled:opacity-50 shadow-xs"
+          className="w-11 h-11 rounded-full bg-white/20 hover:bg-white/30 active:scale-95 flex items-center justify-center transition border border-white/20 text-white cursor-pointer disabled:opacity-50 shadow-xs"
           title="Take iPhone Screenshot & Save"
         >
           {isCapturing ? (
-            <Loader2 className="w-4.5 h-4.5 animate-spin text-white" />
+            <Loader2 className="w-5 h-5 animate-spin text-white" />
           ) : (
-            /* 4-corner bracket frame with dashed center box matching the bottom screenshot icon */
-            <div className="relative w-[19px] h-[19px] flex items-center justify-center flex-shrink-0">
-              {/* Outer corner brackets */}
-              <div className="absolute top-0 left-0 w-1.5 h-1.5 border-t-2 border-l-2 border-white rounded-tl-[1px]" />
-              <div className="absolute top-0 right-0 w-1.5 h-1.5 border-t-2 border-r-2 border-white rounded-tr-[1px]" />
-              <div className="absolute bottom-0 left-0 w-1.5 h-1.5 border-b-2 border-l-2 border-white rounded-bl-[1px]" />
-              <div className="absolute bottom-0 right-0 w-1.5 h-1.5 border-b-2 border-r-2 border-white rounded-br-[1px]" />
-              {/* Inner dashed viewfinder rect with center circle */}
-              <div className="w-2.5 h-2 border border-dashed border-white/90 rounded-[1px] flex items-center justify-center">
-                <div className="w-1 h-1 rounded-full bg-white" />
-              </div>
-            </div>
+            <Focus className="w-5.5 h-5.5 text-white stroke-[2.2]" />
           )}
         </button>
       </div>
@@ -1004,15 +1054,25 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       <div className="bg-white rounded-t-[32px] sm:rounded-t-[36px] flex-1 px-4 sm:px-5 pt-0 pb-5 flex flex-col justify-between shadow-2xl relative">
         
         {/* Overlapping Large Success Checkmark Badge */}
-        <div className="flex justify-center -mt-7 sm:-mt-8 mb-2 flex-shrink-0">
-          <div className="w-15 h-15 sm:w-16 sm:h-16 rounded-full bg-[#68137e] border-4 border-white shadow-md flex items-center justify-center">
-            <Check className="w-7 h-7 sm:w-8 sm:h-8 text-white stroke-[3.5]" />
+        <div className="flex justify-center -mt-10 sm:-mt-11 mb-2.5 flex-shrink-0">
+          <div className="w-[82px] h-[82px] sm:w-[92px] sm:h-[92px] rounded-full bg-[#68137e] border-[5.5px] sm:border-[6.5px] border-white shadow-[0_4px_18px_rgba(0,0,0,0.15)] flex items-center justify-center">
+            <svg 
+              className="w-11 h-11 sm:w-12 sm:h-12 text-white" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="3.8" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
           </div>
         </div>
 
         <div className="space-y-3 flex-1 flex flex-col justify-center">
-          {/* Headline */}
-          <h1 className="text-center text-xs sm:text-sm font-extrabold text-gray-900 tracking-tight">
+          {/* Headline (Normal weight as requested) */}
+          <h1 className="text-center text-[13.5px] sm:text-[15px] font-normal text-gray-900 tracking-tight">
             Transaction Completed Successfully!
           </h1>
 
@@ -1113,18 +1173,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
               {isCapturing ? (
                 <Loader2 className="w-[18px] h-[18px] stroke-[2.2] animate-spin text-[#68137e]" />
               ) : (
-                /* 4-corner bracket frame with dashed center box */
-                <div className="relative w-[18px] h-[18px] flex items-center justify-center flex-shrink-0">
-                  {/* Outer corner brackets */}
-                  <div className="absolute top-0 left-0 w-1.5 h-1.5 border-t-2 border-l-2 border-black rounded-tl-[1px]" />
-                  <div className="absolute top-0 right-0 w-1.5 h-1.5 border-t-2 border-r-2 border-black rounded-tr-[1px]" />
-                  <div className="absolute bottom-0 left-0 w-1.5 h-1.5 border-b-2 border-l-2 border-black rounded-bl-[1px]" />
-                  <div className="absolute bottom-0 right-0 w-1.5 h-1.5 border-b-2 border-r-2 border-black rounded-br-[1px]" />
-                  {/* Inner dashed viewfinder rect with center circle */}
-                  <div className="w-2.5 h-2 border border-dashed border-black/90 rounded-[1px] flex items-center justify-center">
-                    <div className="w-1 h-1 rounded-full bg-black" />
-                  </div>
-                </div>
+                <Focus className="w-[18px] h-[18px] stroke-[2.4] text-black" />
               )}
               <span>{isCapturing ? 'Saving...' : 'Screenshot'}</span>
             </button>
