@@ -144,7 +144,7 @@ export default function Payments({ currentUser, onPaymentComplete }: PaymentsPro
     <div id="payments-screen" className="max-w-md mx-auto bg-gray-50 min-h-screen pb-28 font-sans">
       
       {/* Banner */}
-      <div className="bg-[#61167e] text-white px-5 pt-7 pb-8 rounded-b-[2rem] shadow-md">
+      <div className="bg-[#68137e] text-white px-5 pt-7 pb-8 rounded-b-[2rem] shadow-md">
         <h2 className="text-xl font-extrabold">Bill Payments &amp; Utilities</h2>
         <p className="text-purple-200 text-xs mt-0.5">Pay electric, water, internet and TV bills directly via CBE.</p>
       </div>
@@ -165,12 +165,12 @@ export default function Payments({ currentUser, onPaymentComplete }: PaymentsPro
                 onClick={() => handleCategoryChange(key)}
                 className={`p-4 rounded-2xl border text-left flex flex-col justify-between transition h-28 cursor-pointer ${
                   isActive 
-                    ? 'bg-purple-50 border-[#61167e] text-[#61167e] shadow-md scale-[1.02]' 
+                    ? 'bg-purple-50 border-[#68137e] text-[#68137e] shadow-md scale-[1.02]' 
                     : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50'
                 }`}
               >
                 <div className={`p-2 rounded-xl w-9 h-9 flex items-center justify-center ${
-                  isActive ? 'bg-[#61167e] text-white' : 'bg-gray-50 text-gray-600'
+                  isActive ? 'bg-[#68137e] text-white' : 'bg-gray-50 text-gray-600'
                 }`}>
                   <Icon className="w-5 h-5" />
                 </div>

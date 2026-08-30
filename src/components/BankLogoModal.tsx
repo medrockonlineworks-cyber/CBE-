@@ -128,14 +128,14 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
         <div className="flex justify-between items-start pb-3 border-b border-gray-100">
           <div>
             <div className="flex items-center gap-1.5 text-[#deb356] font-bold text-xs">
-              <ShieldCheck className="w-4 h-4 text-[#61167e]" />
-              <span className="text-[#61167e]">Admin Branding Node</span>
+              <ShieldCheck className="w-4 h-4 text-[#68137e]" />
+              <span className="text-[#68137e]">Admin Branding Node</span>
             </div>
             <h3 className="text-lg font-extrabold text-gray-900 mt-0.5">
               Manage Bank Logo Images
             </h3>
             <p className="text-xs text-gray-500 mt-0.5">
-              Authorized access for <span className="font-semibold text-[#61167e] font-mono">{currentUser.email}</span>
+              Authorized access for <span className="font-semibold text-[#68137e] font-mono">{currentUser.email}</span>
             </p>
           </div>
           <button 
@@ -151,7 +151,7 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs font-bold text-gray-700">
             <span className="flex items-center gap-1.5">
-              <Eye className="w-3.5 h-3.5 text-[#61167e]" />
+              <Eye className="w-3.5 h-3.5 text-[#68137e]" />
               Live Card Preview
             </span>
             <span className="text-[10px] text-gray-400 font-mono">Real-time sync</span>
@@ -195,16 +195,16 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
           <label className="block text-xs font-bold text-gray-800">
             1. Upload Logo from Device (PNG, SVG, JPG, WebP)
           </label>
-          <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-[#61167e]/30 rounded-2xl bg-purple-50/40 hover:bg-purple-50 transition cursor-pointer group">
+          <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-[#68137e]/30 rounded-2xl bg-purple-50/40 hover:bg-purple-50 transition cursor-pointer group">
             {isProcessingLogo ? (
               <div className="flex flex-col items-center justify-center py-2">
-                <Loader2 className="w-7 h-7 text-[#61167e] animate-spin mb-1" />
-                <span className="text-xs font-bold text-[#61167e]">Optimizing &amp; Applying Image...</span>
+                <Loader2 className="w-7 h-7 text-[#68137e] animate-spin mb-1" />
+                <span className="text-xs font-bold text-[#68137e]">Optimizing &amp; Applying Image...</span>
               </div>
             ) : (
               <>
-                <Upload className="w-6 h-6 text-[#61167e] group-hover:scale-110 transition mb-1.5" />
-                <span className="text-xs font-bold text-[#61167e]">Click or Tap to Browse Image</span>
+                <Upload className="w-6 h-6 text-[#68137e] group-hover:scale-110 transition mb-1.5" />
+                <span className="text-xs font-bold text-[#68137e]">Click or Tap to Browse Image</span>
                 <span className="text-[10px] text-gray-400 mt-0.5">Supports any resolution image (auto-optimized)</span>
               </>
             )}
@@ -233,13 +233,13 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
                 placeholder="https://example.com/cbe-logo.png" 
                 value={customLogoUrlInput}
                 onChange={(e) => setCustomLogoUrlInput(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-3 py-2 text-xs font-mono text-gray-800 focus:outline-none focus:border-[#61167e] focus:bg-white"
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-3 py-2 text-xs font-mono text-gray-800 focus:outline-none focus:border-[#68137e] focus:bg-white"
               />
             </div>
             <button 
               id="btn-apply-logo-url"
               type="submit"
-              className="bg-[#61167e] hover:bg-[#4d0f66] text-white px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer"
+              className="bg-[#68137e] hover:bg-[#530d66] text-white px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer"
             >
               Apply
             </button>
@@ -260,7 +260,7 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
                   setPreviewLogo(preset.url);
                   applyLogoChange(preset.url);
                 }}
-                className="w-full p-2.5 rounded-xl border border-gray-100 hover:border-[#61167e]/40 hover:bg-purple-50/30 transition text-left flex items-center justify-between cursor-pointer"
+                className="w-full p-2.5 rounded-xl border border-gray-100 hover:border-[#68137e]/40 hover:bg-purple-50/30 transition text-left flex items-center justify-between cursor-pointer"
               >
                 <div className="flex items-center gap-2.5">
                   <img 

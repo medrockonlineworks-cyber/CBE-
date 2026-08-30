@@ -53,7 +53,7 @@ export default function History({ currentUser, onSelectTransaction }: HistoryPro
     <div id="history-screen" className="max-w-md mx-auto bg-gray-50 min-h-screen pb-28 font-sans">
       
       {/* Top Banner */}
-      <div className="bg-[#61167e] text-white px-5 pt-7 pb-8 rounded-b-[2rem] shadow-md">
+      <div className="bg-[#68137e] text-white px-5 pt-7 pb-8 rounded-b-[2rem] shadow-md">
         <h2 className="text-xl font-extrabold">Transaction History</h2>
         <p className="text-purple-200 text-xs mt-0.5">Commercial Bank of Ethiopia statement &amp; activity history</p>
       </div>

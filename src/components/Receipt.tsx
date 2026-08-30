@@ -244,7 +244,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     ctx.imageSmoothingEnabled = true;
 
     // 1. Phone Top Status Bar & Purple Background
-    ctx.fillStyle = '#61167e';
+    ctx.fillStyle = '#68137e';
     ctx.fillRect(0, 0, width, 220);
 
     // Current Time for Status Bar
@@ -311,7 +311,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     ctx.fill();
 
     // Shield checkmark
-    ctx.strokeStyle = '#61167e';
+    ctx.strokeStyle = '#68137e';
     ctx.lineWidth = 3.5;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
@@ -370,7 +370,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     const badgeY = cardTop;
     const badgeR = 54;
     ctx.save();
-    ctx.fillStyle = '#61167e';
+    ctx.fillStyle = '#68137e';
     ctx.beginPath();
     ctx.arc(badgeX, badgeY, badgeR, 0, Math.PI * 2);
     ctx.fill();
@@ -683,7 +683,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             scale: 2,
             useCORS: true,
             allowTaint: true,
-            backgroundColor: '#61167e',
+            backgroundColor: '#68137e',
             logging: false,
           });
           dataUrl = canvas.toDataURL('image/png');
@@ -739,7 +739,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   };
 
   return (
-    <div id="receipt-screen-wrapper" className="h-full min-h-[100dvh] max-w-md mx-auto bg-[#61167e] text-slate-800 flex flex-col justify-between relative overflow-y-auto scrollbar-none">
+    <div id="receipt-screen-wrapper" className="h-full min-h-[100dvh] max-w-md mx-auto bg-[#68137e] text-slate-800 flex flex-col justify-between relative overflow-y-auto scrollbar-none">
       
       {/* Camera Flash Animation Overlay */}
       {flashAnimation && (
@@ -755,7 +755,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       )}
 
       {/* Top Purple Header */}
-      <div className="pt-3 pb-8 px-5 bg-[#61167e] flex items-center justify-between text-white flex-shrink-0">
+      <div className="pt-3 pb-8 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-lg bg-white/15 flex items-center justify-center border border-white/20">
             <ShieldCheck className="w-4.5 h-4.5 text-white" />
@@ -781,7 +781,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         
         {/* Overlapping Large Success Checkmark Badge */}
         <div className="flex justify-center -mt-7 sm:-mt-8 mb-2 flex-shrink-0">
-          <div className="w-15 h-15 sm:w-16 sm:h-16 rounded-full bg-[#61167e] border-4 border-white shadow-md flex items-center justify-center">
+          <div className="w-15 h-15 sm:w-16 sm:h-16 rounded-full bg-[#68137e] border-4 border-white shadow-md flex items-center justify-center">
             <Check className="w-7 h-7 sm:w-8 sm:h-8 text-white stroke-[3.5]" />
           </div>
         </div>
@@ -868,7 +868,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
               className="flex items-center gap-1.5 text-xs font-extrabold hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2.5 rounded-xl hover:bg-gray-100 disabled:opacity-50"
             >
               {isCapturing ? (
-                <Loader2 className="w-4 h-4 stroke-[2.5] animate-spin text-[#61167e]" />
+                <Loader2 className="w-4 h-4 stroke-[2.5] animate-spin text-[#68137e]" />
               ) : (
                 <Scan className="w-4 h-4 stroke-[2.5]" />
               )}
@@ -944,7 +944,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             <div className="pt-2 flex gap-2">
               <button 
                 onClick={handlePrint}
-                className="flex-1 bg-[#61167e] hover:bg-[#52106b] text-white py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
+                className="flex-1 bg-[#68137e] hover:bg-[#530d66] text-white py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
               >
                 <Printer className="w-3.5 h-3.5" />
                 <span>Print Official PDF</span>

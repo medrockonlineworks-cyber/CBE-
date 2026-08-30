@@ -5,26 +5,37 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   --font-display: "Space Grotesk", sans-serif;
 
+  --color-cbe-purple: #68137e;
+  --color-cbe-purple-dark: #530d66;
+  --color-cbe-purple-light: #7e1c97;
+  --color-cbe-purple-soft: #fbf2ff;
+  --color-cbe-cream: #fae7cb;
+  --color-cbe-cream-border: #f2dac0;
+  --color-cbe-gold: #deb356;
+  --color-cbe-gold-dark: #c89234;
+  --color-cbe-card: #18191c;
+  --color-cbe-bg: #f6f7fb;
+
   --color-emerald-50: #f7ebfa;
   --color-emerald-100: #f0ccf7;
   --color-emerald-200: #e299f0;
   --color-emerald-300: #cd60e2;
   --color-emerald-400: #b032c7;
-  --color-emerald-500: #8c10b0; /* brand purple */
-  --color-emerald-600: #7b1fa2;
-  --color-emerald-700: #621184;
-  --color-emerald-800: #4e0e6b;
-  --color-emerald-850: #3f0956;
-  --color-emerald-900: #300642;
-  --color-emerald-950: #1a0126;
+  --color-emerald-500: #68137e; /* brand purple */
+  --color-emerald-600: #58106c;
+  --color-emerald-700: #490b5a;
+  --color-emerald-800: #3b074a;
+  --color-emerald-850: #2d0439;
+  --color-emerald-900: #21022b;
+  --color-emerald-950: #14011b;
 
   --color-amber-50: #fdfaf4;
   --color-amber-100: #faf1df;
   --color-amber-200: #f4dcbf;
   --color-amber-300: #ecc292;
-  --color-amber-400: #f4e6d4; /* cream active pill background */
-  --color-amber-500: #dfa04c; /* warm gold accent */
-  --color-amber-600: #c28135;
+  --color-amber-400: #fae7cb; /* cream active pill background */
+  --color-amber-500: #deb356; /* warm gold accent */
+  --color-amber-600: #c89234;
   --color-amber-700: #9e6022;
 }
 

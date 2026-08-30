@@ -267,10 +267,10 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
     <div id="profile-screen" className="max-w-md mx-auto bg-gray-50 min-h-screen pb-28 font-sans">
       
       {/* Profile Header */}
-      <div className="bg-[#61167e] text-white px-5 pt-7 pb-8 rounded-b-[2rem] shadow-md text-center space-y-3 relative">
+      <div className="bg-[#68137e] text-white px-5 pt-7 pb-8 rounded-b-[2rem] shadow-md text-center space-y-3 relative">
         <div className="w-20 h-20 rounded-full bg-white/15 border-2 border-[#deb356] mx-auto flex items-center justify-center font-black text-[#deb356] text-3xl shadow-lg relative">
           {currentUser.name.split(' ').map(n => n[0]).join('')}
-          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#61167e] border border-white/20 rounded-full flex items-center justify-center">
+          <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#68137e] border border-white/20 rounded-full flex items-center justify-center">
             <User className="w-3.5 h-3.5 text-purple-200" />
           </div>
         </div>
@@ -320,7 +320,7 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
         <div className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 bg-purple-50 text-[#61167e] rounded-xl">
+              <div className="p-2 bg-purple-50 text-[#68137e] rounded-xl">
                 <CreditCard className="w-5 h-5" />
               </div>
               <div>
@@ -331,7 +331,7 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
             <button
               id="btn-edit-profile-action"
               onClick={handleOpenEditProfile}
-              className="bg-[#61167e] hover:bg-[#7b1fa2] text-white text-xs font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1 cursor-pointer shadow-sm"
+              className="bg-[#68137e] hover:bg-[#7e1c97] text-white text-xs font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1 cursor-pointer shadow-sm"
             >
               <Edit3 className="w-3.5 h-3.5" />
               <span>Edit</span>
@@ -389,7 +389,7 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
               setShowNewAccountForm(false);
               setShowAccountsModal(true);
             }}
-            className="w-full bg-white hover:bg-gray-50 text-[#61167e] text-xs font-bold py-2.5 px-3 rounded-2xl border border-purple-150 transition flex items-center justify-between cursor-pointer"
+            className="w-full bg-white hover:bg-gray-50 text-[#68137e] text-xs font-bold py-2.5 px-3 rounded-2xl border border-purple-150 transition flex items-center justify-between cursor-pointer"
           >
             <span>View All Registered Accounts ({LocalDb.getUsers().length})</span>
             <ChevronRight className="w-4 h-4 text-purple-400" />
@@ -434,7 +434,7 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
                 <button
                   id="btn-profile-change-logo"
                   onClick={() => setShowLogoModal(true)}
-                  className="bg-[#61167e] hover:bg-[#7b1fa2] text-white text-xs font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer border border-purple-400/30 shadow-md flex-shrink-0"
+                  className="bg-[#68137e] hover:bg-[#7e1c97] text-white text-xs font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 cursor-pointer border border-purple-400/30 shadow-md flex-shrink-0"
                 >
                   <Upload className="w-3.5 h-3.5" />
                   <span>Change Logo</span>
@@ -701,7 +701,7 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
           <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-gray-100 relative animate-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between pb-3 border-b border-gray-100">
               <div className="flex items-center gap-2">
-                <div className="p-2 bg-purple-50 text-[#61167e] rounded-xl">
+                <div className="p-2 bg-purple-50 text-[#68137e] rounded-xl">
                   <Edit3 className="w-5 h-5" />
                 </div>
                 <div>
@@ -739,7 +739,7 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
                   <button
                     type="button"
                     onClick={() => setEditAccount(generateRandomCbeAccount())}
-                    className="text-[11px] text-[#61167e] hover:text-[#7b1fa2] font-extrabold flex items-center gap-1 cursor-pointer"
+                    className="text-[11px] text-[#68137e] hover:text-[#7e1c97] font-extrabold flex items-center gap-1 cursor-pointer"
                   >
                     <Shuffle className="w-3 h-3" />
                     <span>Generate A/C</span>
@@ -753,7 +753,7 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
                     value={editAccount}
                     onChange={(e) => setEditAccount(e.target.value.replace(/\s+/g, ''))}
                     placeholder="1000..."
-                    className="w-full bg-gray-50 border border-gray-200 focus:border-[#61167e] focus:bg-white rounded-xl py-2.5 pl-10 pr-3 text-xs font-mono font-bold text-gray-900 focus:outline-none transition tracking-wide"
+                    className="w-full bg-gray-50 border border-gray-200 focus:border-[#68137e] focus:bg-white rounded-xl py-2.5 pl-10 pr-3 text-xs font-mono font-bold text-gray-900 focus:outline-none transition tracking-wide"
                     required
                   />
                 </div>
@@ -766,7 +766,7 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
                 <select
                   value={editAccountType}
                   onChange={(e) => setEditAccountType(e.target.value as any)}
-                  className="w-full bg-gray-50 border border-gray-200 focus:border-[#61167e] focus:bg-white rounded-xl py-2.5 px-3 text-xs font-semibold text-gray-900 focus:outline-none transition"
+                  className="w-full bg-gray-50 border border-gray-200 focus:border-[#68137e] focus:bg-white rounded-xl py-2.5 px-3 text-xs font-semibold text-gray-900 focus:outline-none transition"
                 >
                   <option value="savings">CBE Regular Savings</option>
                   <option value="wadiah">CBE Noor (Wadiah / Non-Interest)</option>
@@ -808,7 +808,7 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
                 <button
                   id="btn-save-profile-modal"
                   type="submit"
-                  className="flex-1 bg-[#61167e] hover:bg-[#7b1fa2] text-white font-extrabold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-md"
+                  className="flex-1 bg-[#68137e] hover:bg-[#7e1c97] text-white font-extrabold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-md"
                 >
                   <Save className="w-3.5 h-3.5" />
                   <span>Save Changes</span>
@@ -861,13 +861,13 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
                         onClick={() => handleSwitchAccount(u)}
                         className={`p-3.5 rounded-2xl border transition cursor-pointer flex items-center justify-between ${
                           isCurrent
-                            ? 'bg-purple-50/80 border-[#61167e] shadow-sm'
+                            ? 'bg-purple-50/80 border-[#68137e] shadow-sm'
                             : 'bg-gray-50 hover:bg-purple-50/40 border-gray-200'
                         }`}
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0 ${
-                            isCurrent ? 'bg-[#61167e] text-amber-300' : 'bg-gray-200 text-gray-700'
+                            isCurrent ? 'bg-[#68137e] text-amber-300' : 'bg-gray-200 text-gray-700'
                           }`}>
                             {u.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                           </div>
@@ -875,7 +875,7 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
                             <div className="flex items-center gap-1.5">
                               <p className="text-xs font-bold text-gray-900 truncate">{u.name}</p>
                               {isCurrent && (
-                                <span className="bg-[#61167e] text-white text-[9px] font-bold px-1.5 py-0.2 rounded-md">
+                                <span className="bg-[#68137e] text-white text-[9px] font-bold px-1.5 py-0.2 rounded-md">
                                   Active
                                 </span>
                               )}
@@ -886,7 +886,7 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
                         </div>
 
                         {!isCurrent && (
-                          <span className="text-xs text-[#61167e] font-extrabold bg-white px-2.5 py-1 rounded-xl border border-purple-200 shadow-2xs hover:bg-purple-100 flex-shrink-0">
+                          <span className="text-xs text-[#68137e] font-extrabold bg-white px-2.5 py-1 rounded-xl border border-purple-200 shadow-2xs hover:bg-purple-100 flex-shrink-0">
                             Switch
                           </span>
                         )}
@@ -935,7 +935,7 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
                     <button
                       type="button"
                       onClick={() => setNewAccNumber(generateRandomCbeAccount())}
-                      className="text-[11px] text-[#61167e] hover:text-[#7b1fa2] font-extrabold flex items-center gap-1 cursor-pointer"
+                      className="text-[11px] text-[#68137e] hover:text-[#7e1c97] font-extrabold flex items-center gap-1 cursor-pointer"
                     >
                       <Shuffle className="w-3 h-3" />
                       <span>Randomize</span>
@@ -949,7 +949,7 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
                       placeholder="1000..."
                       value={newAccNumber}
                       onChange={(e) => setNewAccNumber(e.target.value.replace(/\s+/g, ''))}
-                      className="w-full bg-gray-50 border border-gray-200 focus:border-[#61167e] focus:bg-white rounded-xl py-2.5 pl-10 pr-3 text-xs font-mono font-bold text-gray-900 focus:outline-none transition"
+                      className="w-full bg-gray-50 border border-gray-200 focus:border-[#68137e] focus:bg-white rounded-xl py-2.5 pl-10 pr-3 text-xs font-mono font-bold text-gray-900 focus:outline-none transition"
                       required
                     />
                   </div>
@@ -960,7 +960,7 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
                   <select
                     value={newAccType}
                     onChange={(e) => setNewAccType(e.target.value as any)}
-                    className="w-full bg-gray-50 border border-gray-200 focus:border-[#61167e] focus:bg-white rounded-xl py-2.5 px-3 text-xs font-semibold text-gray-900 focus:outline-none transition"
+                    className="w-full bg-gray-50 border border-gray-200 focus:border-[#68137e] focus:bg-white rounded-xl py-2.5 px-3 text-xs font-semibold text-gray-900 focus:outline-none transition"
                   >
                     <option value="savings">CBE Regular Savings</option>
                     <option value="wadiah">CBE Noor (Wadiah / Non-Interest)</option>
@@ -1003,7 +1003,7 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
                   <button
                     id="btn-create-account-submit"
                     type="submit"
-                    className="flex-1 bg-[#61167e] hover:bg-[#7b1fa2] text-white font-extrabold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-md"
+                    className="flex-1 bg-[#68137e] hover:bg-[#7e1c97] text-white font-extrabold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-md"
                   >
                     <UserPlus className="w-3.5 h-3.5" />
                     <span>Create &amp; Activate</span>

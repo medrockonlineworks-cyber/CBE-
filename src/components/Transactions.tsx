@@ -517,7 +517,7 @@ export default function Transactions({ currentUser, onTransactionComplete, initi
     <div id="transactions-screen" className="max-w-md mx-auto bg-gray-50 min-h-screen pb-28 font-sans relative">
       
       {/* Header Banner */}
-      <div className="bg-[#61167e] text-white px-5 pt-7 pb-8 rounded-b-[2rem] shadow-md relative">
+      <div className="bg-[#68137e] text-white px-5 pt-7 pb-8 rounded-b-[2rem] shadow-md relative">
         <h2 className="text-xl font-extrabold text-white flex items-center gap-2">
           <span>CBE Financial Gate</span>
         </h2>
@@ -546,7 +546,7 @@ export default function Transactions({ currentUser, onTransactionComplete, initi
                 }}
                 className={`flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${
                   isActive 
-                    ? 'bg-white text-[#61167e] shadow-md' 
+                    ? 'bg-white text-[#68137e] shadow-md' 
                     : 'text-purple-200 hover:text-white hover:bg-white/10'
                 }`}
               >

@@ -261,16 +261,16 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
   };
 
   return (
-    <div className="max-w-md mx-auto bg-gradient-to-br from-[#4a0d61] via-[#61167e] to-[#3a084c] min-h-screen text-white flex flex-col justify-between p-6 pb-12 relative overflow-hidden">
+    <div className="max-w-md mx-auto bg-gradient-to-br from-[#530d66] via-[#68137e] to-[#3a084c] min-h-screen text-white flex flex-col justify-between p-6 pb-12 relative overflow-hidden">
       {/* Background radial overlay */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(222,179,86,0.18),transparent_60%)]" />
 
       {/* Top simulated SMS banner */}
       {simulatedSmsToast && (
-        <div id="sms-toast" className="fixed top-4 left-4 right-4 max-w-sm mx-auto bg-[#deb356] text-[#4a0d61] px-4 py-3 rounded-2xl shadow-2xl border border-amber-300 font-sans z-50 animate-bounce flex items-start gap-3">
-          <Smartphone className="w-5 h-5 flex-shrink-0 text-[#4a0d61] mt-0.5" />
+        <div id="sms-toast" className="fixed top-4 left-4 right-4 max-w-sm mx-auto bg-[#deb356] text-[#530d66] px-4 py-3 rounded-2xl shadow-2xl border border-amber-300 font-sans z-50 animate-bounce flex items-start gap-3">
+          <Smartphone className="w-5 h-5 flex-shrink-0 text-[#530d66] mt-0.5" />
           <div className="flex-1">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#4a0d61]/80 font-mono">SMS Verification Code Received</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#530d66]/80 font-mono">SMS Verification Code Received</p>
             <p className="text-sm font-extrabold mt-0.5">{simulatedSmsToast}</p>
           </div>
         </div>
@@ -712,7 +712,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
                   className="w-full bg-white/5 hover:bg-white/10 text-emerald-100 border border-white/10 p-2.5 rounded-2xl text-xs font-semibold transition flex items-center justify-between cursor-pointer touch-manipulation group"
                 >
                   <div className="flex items-center gap-2.5 text-left min-w-0">
-                    <div className="w-8 h-8 rounded-full bg-[#61167e] border border-amber-400/40 flex items-center justify-center font-bold text-amber-300 text-xs flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-[#68137e] border border-amber-400/40 flex items-center justify-center font-bold text-amber-300 text-xs flex-shrink-0">
                       {u.name.split(' ').map(n => n[0]).join('')}
                     </div>
                     <div className="min-w-0">
