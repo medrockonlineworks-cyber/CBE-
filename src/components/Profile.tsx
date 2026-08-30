@@ -19,10 +19,18 @@ import {
   ShieldAlert,
   Image as ImageIcon,
   Upload,
-  Sparkles
+  Sparkles,
+  Edit3,
+  CreditCard,
+  Shuffle,
+  Users,
+  UserPlus,
+  Save,
+  X
 } from 'lucide-react';
 import BankLogoModal from './BankLogoModal';
 import AppInstallPrompt from './AppInstallPrompt';
+import EthiopianNameAutocomplete, { EthiopianThreePartNameInput } from './EthiopianNameAutocomplete';
 
 interface ProfileProps {
   currentUser: UserProfile;
@@ -50,6 +58,24 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
   const [smsAlerts, setSmsAlerts] = useState(true);
   const [emailStatements, setEmailStatements] = useState(false);
 
+  // Edit Profile / Account Form States
+  const [showEditProfileModal, setShowEditProfileModal] = useState(false);
+  const [editName, setEditName] = useState(currentUser.name);
+  const [editAccount, setEditAccount] = useState(currentUser.accountNumber);
+  const [editPhone, setEditPhone] = useState(currentUser.phone);
+  const [editEmail, setEditEmail] = useState(currentUser.email);
+  const [editAccountType, setEditAccountType] = useState<UserProfile['accountType']>(currentUser.accountType || 'savings');
+
+  // Account Switcher / Multi-Account Registration Modal
+  const [showAccountsModal, setShowAccountsModal] = useState(false);
+  const [showNewAccountForm, setShowNewAccountForm] = useState(false);
+  const [newAccName, setNewAccName] = useState('');
+  const [newAccNumber, setNewAccNumber] = useState(() => '1000' + Math.floor(100000000 + Math.random() * 900000000).toString());
+  const [newAccPhone, setNewAccPhone] = useState('+2519');
+  const [newAccEmail, setNewAccEmail] = useState('');
+  const [newAccType, setNewAccType] = useState<'savings' | 'checking' | 'wadiah' | 'cbe_birr'>('savings');
+  const [newAccInitialBalance, setNewAccInitialBalance] = useState('10000000000.00');
+
   // Forms
   const [showPinForm, setShowPinForm] = useState(false);
   const [oldPin, setOldPin] = useState('');
@@ -63,6 +89,114 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
 
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+
+  const generateRandomCbeAccount = () => {
+    return '1000' + Math.floor(100000000 + Math.random() * 900000000).toString();
+  };
+
+  const handleOpenEditProfile = () => {
+    setEditName(currentUser.name);
+    setEditAccount(currentUser.accountNumber);
+    setEditPhone(currentUser.phone);
+    setEditEmail(currentUser.email);
+    setEditAccountType(currentUser.accountType || 'savings');
+    setShowEditProfileModal(true);
+  };
+
+  const handleSaveProfile = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    if (!editName.trim()) {
+      setErrorMsg('Full Name cannot be empty.');
+      return;
+    }
+    if (!editAccount.trim() || editAccount.trim().length < 6) {
+      setErrorMsg('Please enter a valid Account Number (at least 6 digits, e.g. 1000...).');
+      return;
+    }
+
+    const updated = LocalDb.updateUserProfile(currentUser.id, {
+      name: editName.trim(),
+      accountNumber: editAccount.trim(),
+      phone: editPhone.trim(),
+      email: editEmail.trim(),
+      accountType: editAccountType
+    });
+
+    if (updated) {
+      onUpdateUser(updated);
+      setSuccessMsg('Name and Account Number updated successfully!');
+      setShowEditProfileModal(false);
+      setTimeout(() => setSuccessMsg(''), 4000);
+    } else {
+      setErrorMsg('Failed to update user profile.');
+    }
+  };
+
+  const handleSwitchAccount = (targetUser: UserProfile) => {
+    if (targetUser.id === currentUser.id) {
+      setShowAccountsModal(false);
+      return;
+    }
+    LocalDb.addAuditLog(targetUser.id, targetUser.email, 'USER_SWITCH_ACCOUNT', `Switched active session from ${currentUser.name} to ${targetUser.name} (A/C: ${targetUser.accountNumber}).`);
+    localStorage.setItem('tana_active_user_id', targetUser.id);
+    onUpdateUser(targetUser);
+    setShowAccountsModal(false);
+    setSuccessMsg(`Switched to account: ${targetUser.name} (A/C: ${targetUser.accountNumber})`);
+    setTimeout(() => setSuccessMsg(''), 4000);
+  };
+
+  const handleRegisterNewAccount = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg('');
+
+    if (!newAccName.trim()) {
+      setErrorMsg('Account holder name is required.');
+      return;
+    }
+    if (!newAccNumber.trim()) {
+      setErrorMsg('Account number is required.');
+      return;
+    }
+
+    const users = LocalDb.getUsers();
+    const formattedPhone = newAccPhone.trim().startsWith('+251') 
+      ? newAccPhone.trim() 
+      : '+251' + newAccPhone.trim().replace(/^0/, '');
+
+    const parsedBalance = parseFloat(newAccInitialBalance) || 10000000000.00;
+
+    const newUser: UserProfile = {
+      id: 'user_' + Math.random().toString(36).substring(2, 9),
+      name: newAccName.trim(),
+      phone: formattedPhone || '+2519' + Math.floor(10000000 + Math.random() * 90000000).toString(),
+      email: newAccEmail.trim() || `${newAccName.toLowerCase().replace(/\s+/g, '')}@tana.demo`,
+      role: 'user',
+      status: 'active',
+      createdAt: new Date().toISOString(),
+      accountNumber: newAccNumber.trim(),
+      accountType: newAccType,
+      balance: parsedBalance,
+      availableBalance: parsedBalance,
+      biometricEnabled: false
+    };
+
+    users.push(newUser);
+    LocalDb.setUsers(users);
+
+    LocalDb.addAuditLog(newUser.id, newUser.email, 'USER_REGISTER_EXTRA', `Registered new account ${newUser.name} with A/C ${newUser.accountNumber}.`);
+    LocalDb.addNotification(newUser.id, 'Welcome to Tana Digital Bank!', `Account created with balance ETB ${parsedBalance.toLocaleString()}.`, 'success');
+
+    // Switch to newly created account
+    localStorage.setItem('tana_active_user_id', newUser.id);
+    onUpdateUser(newUser);
+    setShowNewAccountForm(false);
+    setShowAccountsModal(false);
+    setSuccessMsg(`New account for "${newUser.name}" (A/C: ${newUser.accountNumber}) created and activated!`);
+    setTimeout(() => setSuccessMsg(''), 5000);
+  };
 
   const handleToggleBiometrics = () => {
     const nextVal = !biometrics;
@@ -131,7 +265,7 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
     <div id="profile-screen" className="max-w-md mx-auto bg-gray-50 min-h-screen pb-28 font-sans">
       
       {/* Profile Header */}
-      <div className="bg-[#61167e] text-white px-5 pt-7 pb-8 rounded-b-[2rem] shadow-md text-center space-y-3">
+      <div className="bg-[#61167e] text-white px-5 pt-7 pb-8 rounded-b-[2rem] shadow-md text-center space-y-3 relative">
         <div className="w-20 h-20 rounded-full bg-white/15 border-2 border-[#deb356] mx-auto flex items-center justify-center font-black text-[#deb356] text-3xl shadow-lg relative">
           {currentUser.name.split(' ').map(n => n[0]).join('')}
           <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#61167e] border border-white/20 rounded-full flex items-center justify-center">
@@ -142,6 +276,26 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
           <h2 className="text-lg font-extrabold text-white">{currentUser.name}</h2>
           <p className="text-xs text-purple-200 font-mono mt-0.5">A/C: {currentUser.accountNumber}</p>
           <p className="text-[10px] text-purple-300/80 font-mono">{currentUser.email}</p>
+        </div>
+
+        {/* Header Action Badges */}
+        <div className="flex items-center justify-center gap-2 pt-1">
+          <button
+            id="btn-open-edit-profile-header"
+            onClick={handleOpenEditProfile}
+            className="bg-white/15 hover:bg-white/25 text-amber-300 text-xs font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 border border-amber-400/30 cursor-pointer shadow-sm"
+          >
+            <Edit3 className="w-3.5 h-3.5 text-amber-300" />
+            <span>Edit Name &amp; A/C</span>
+          </button>
+          <button
+            id="btn-open-accounts-modal"
+            onClick={() => setShowAccountsModal(true)}
+            className="bg-amber-400 hover:bg-amber-300 text-purple-950 text-xs font-extrabold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>Accounts</span>
+          </button>
         </div>
       </div>
 
@@ -159,6 +313,86 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
             <span>{successMsg}</span>
           </div>
         )}
+
+        {/* 1. Account Details & Edit Card */}
+        <div className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 bg-purple-50 text-[#61167e] rounded-xl">
+                <CreditCard className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-xs font-extrabold text-gray-900 uppercase tracking-wider">Account &amp; Personal Info</h3>
+                <p className="text-[11px] text-gray-500">Edit your name or banking account number</p>
+              </div>
+            </div>
+            <button
+              id="btn-edit-profile-action"
+              onClick={handleOpenEditProfile}
+              className="bg-[#61167e] hover:bg-[#7b1fa2] text-white text-xs font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1 cursor-pointer shadow-sm"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+              <span>Edit</span>
+            </button>
+          </div>
+
+          <div className="bg-gray-50/80 rounded-2xl p-3.5 border border-gray-100 space-y-2.5">
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-gray-500 font-medium">Account Name</span>
+              <span className="font-bold text-gray-800">{currentUser.name}</span>
+            </div>
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-gray-500 font-medium">CBE Account No.</span>
+              <span className="font-mono font-bold text-purple-900 bg-purple-100/60 px-2 py-0.5 rounded-md">{currentUser.accountNumber}</span>
+            </div>
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-gray-500 font-medium">Account Type</span>
+              <span className="capitalize font-semibold text-gray-700">{currentUser.accountType || 'CBE Savings'}</span>
+            </div>
+            <div className="flex justify-between items-center text-xs">
+              <span className="text-gray-500 font-medium">Registered Phone</span>
+              <span className="font-mono text-gray-700">{currentUser.phone}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 2. Multi-Account Management & Switcher Card */}
+        <div className="bg-gradient-to-r from-amber-50 to-purple-50 rounded-3xl p-5 shadow-sm border border-amber-200/60 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 bg-amber-400/20 text-purple-950 rounded-xl">
+                <Users className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-xs font-extrabold text-purple-950 uppercase tracking-wider">Multi-Account Hub</h4>
+                <p className="text-[11px] text-purple-900/70">Register or switch to another CBE account</p>
+              </div>
+            </div>
+            <button
+              id="btn-register-another-account"
+              onClick={() => {
+                setShowNewAccountForm(true);
+                setShowAccountsModal(true);
+              }}
+              className="bg-amber-400 hover:bg-amber-300 text-purple-950 text-xs font-extrabold px-3 py-1.5 rounded-xl transition flex items-center gap-1 cursor-pointer shadow-sm"
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              <span>+ New Account</span>
+            </button>
+          </div>
+          
+          <button
+            id="btn-view-all-accounts"
+            onClick={() => {
+              setShowNewAccountForm(false);
+              setShowAccountsModal(true);
+            }}
+            className="w-full bg-white hover:bg-gray-50 text-[#61167e] text-xs font-bold py-2.5 px-3 rounded-2xl border border-purple-150 transition flex items-center justify-between cursor-pointer"
+          >
+            <span>View All Registered Accounts ({LocalDb.getUsers().length})</span>
+            <ChevronRight className="w-4 h-4 text-purple-400" />
+          </button>
+        </div>
 
         {/* Admin Quick Jump & Bank Logo Settings */}
         {isAdmin && (
@@ -455,6 +689,327 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
             >
               I Accept &amp; Understand
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ================= EDIT PROFILE & ACCOUNT NUMBER MODAL ================= */}
+      {showEditProfileModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-gray-100 relative animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-purple-50 text-[#61167e] rounded-xl">
+                  <Edit3 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-gray-900">Edit Name &amp; Account</h3>
+                  <p className="text-[11px] text-gray-500">Update account holder &amp; CBE number</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowEditProfileModal(false)}
+                className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveProfile} className="mt-4 space-y-4">
+              {/* Full Name input with Ethiopian Name Autocomplete */}
+              <div className="space-y-1">
+                <EthiopianNameAutocomplete
+                  id="input-edit-name"
+                  label="Account Holder Name"
+                  placeholder="e.g. Abebe, Selamawit, Dawit..."
+                  value={editName}
+                  onChange={setEditName}
+                  required
+                  theme="cbe"
+                  helperText="Supports Ethiopian names with intelligent auto-suggestion & manual entry"
+                />
+              </div>
+
+              {/* Account Number input with Generate button */}
+              <div className="space-y-1">
+                <div className="flex justify-between items-center">
+                  <label className="text-xs font-bold text-gray-700">CBE Account Number</label>
+                  <button
+                    type="button"
+                    onClick={() => setEditAccount(generateRandomCbeAccount())}
+                    className="text-[11px] text-[#61167e] hover:text-[#7b1fa2] font-extrabold flex items-center gap-1 cursor-pointer"
+                  >
+                    <Shuffle className="w-3 h-3" />
+                    <span>Generate A/C</span>
+                  </button>
+                </div>
+                <div className="relative">
+                  <CreditCard className="absolute left-3.5 top-3 w-4 h-4 text-purple-600" />
+                  <input
+                    id="input-edit-account"
+                    type="text"
+                    value={editAccount}
+                    onChange={(e) => setEditAccount(e.target.value.replace(/\s+/g, ''))}
+                    placeholder="1000..."
+                    className="w-full bg-gray-50 border border-gray-200 focus:border-[#61167e] focus:bg-white rounded-xl py-2.5 pl-10 pr-3 text-xs font-mono font-bold text-gray-900 focus:outline-none transition tracking-wide"
+                    required
+                  />
+                </div>
+                <p className="text-[10px] text-gray-400">Standard CBE format starts with 1000 (13 digits)</p>
+              </div>
+
+              {/* Account Type Selector */}
+              <div className="space-y-1">
+                <label className="text-xs font-bold text-gray-700">Account Type</label>
+                <select
+                  value={editAccountType}
+                  onChange={(e) => setEditAccountType(e.target.value as any)}
+                  className="w-full bg-gray-50 border border-gray-200 focus:border-[#61167e] focus:bg-white rounded-xl py-2.5 px-3 text-xs font-semibold text-gray-900 focus:outline-none transition"
+                >
+                  <option value="savings">CBE Regular Savings</option>
+                  <option value="wadiah">CBE Noor (Wadiah / Non-Interest)</option>
+                  <option value="checking">Checking Current Account</option>
+                  <option value="cbe_birr">CBE Birr Digital Wallet</option>
+                </select>
+              </div>
+
+              {/* Phone & Email (Optional edits) */}
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-gray-500">Phone</label>
+                  <input
+                    type="tel"
+                    value={editPhone}
+                    onChange={(e) => setEditPhone(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-2.5 text-[11px] font-mono text-gray-800 focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-gray-500">Email</label>
+                  <input
+                    type="email"
+                    value={editEmail}
+                    onChange={(e) => setEditEmail(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-2.5 text-[11px] text-gray-800 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowEditProfileModal(false)}
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 rounded-xl text-xs transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  id="btn-save-profile-modal"
+                  type="submit"
+                  className="flex-1 bg-[#61167e] hover:bg-[#7b1fa2] text-white font-extrabold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-md"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span>Save Changes</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ================= MULTI-ACCOUNT SWITCHER & NEW ACCOUNT REGISTRATION MODAL ================= */}
+      {showAccountsModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-gray-100 max-h-[85vh] overflow-y-auto relative animate-in zoom-in-95 duration-200">
+            
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100 sticky top-0 bg-white z-10">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-amber-100 text-purple-950 rounded-xl">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-gray-900">
+                    {showNewAccountForm ? 'Register New Account' : 'All Registered Accounts'}
+                  </h3>
+                  <p className="text-[11px] text-gray-500">
+                    {showNewAccountForm ? 'Create a profile with custom name & A/C' : 'Switch active user or register a new one'}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowAccountsModal(false);
+                  setShowNewAccountForm(false);
+                }}
+                className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* View 1: List Accounts */}
+            {!showNewAccountForm && (
+              <div className="mt-4 space-y-3">
+                <div className="space-y-2 max-h-[42vh] overflow-y-auto pr-1">
+                  {LocalDb.getUsers().map((u) => {
+                    const isCurrent = u.id === currentUser.id;
+                    return (
+                      <div
+                        key={u.id}
+                        onClick={() => handleSwitchAccount(u)}
+                        className={`p-3.5 rounded-2xl border transition cursor-pointer flex items-center justify-between ${
+                          isCurrent
+                            ? 'bg-purple-50/80 border-[#61167e] shadow-sm'
+                            : 'bg-gray-50 hover:bg-purple-50/40 border-gray-200'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0 ${
+                            isCurrent ? 'bg-[#61167e] text-amber-300' : 'bg-gray-200 text-gray-700'
+                          }`}>
+                            {u.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-xs font-bold text-gray-900 truncate">{u.name}</p>
+                              {isCurrent && (
+                                <span className="bg-[#61167e] text-white text-[9px] font-bold px-1.5 py-0.2 rounded-md">
+                                  Active
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11px] font-mono text-purple-900 font-semibold truncate">A/C: {u.accountNumber}</p>
+                            <p className="text-[10px] text-gray-500 font-mono">ETB {u.balance.toLocaleString()}</p>
+                          </div>
+                        </div>
+
+                        {!isCurrent && (
+                          <span className="text-xs text-[#61167e] font-extrabold bg-white px-2.5 py-1 rounded-xl border border-purple-200 shadow-2xs hover:bg-purple-100 flex-shrink-0">
+                            Switch
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="pt-2 border-t border-gray-100">
+                  <button
+                    id="btn-show-new-acc-form"
+                    type="button"
+                    onClick={() => {
+                      setNewAccName('');
+                      setNewAccNumber(generateRandomCbeAccount());
+                      setShowNewAccountForm(true);
+                    }}
+                    className="w-full bg-gradient-to-r from-amber-400 to-amber-300 hover:brightness-105 text-purple-950 font-extrabold py-3 rounded-2xl text-xs transition flex items-center justify-center gap-1.5 shadow-md cursor-pointer"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    <span>+ Register Different Account / Name</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* View 2: Register New Account Form */}
+            {showNewAccountForm && (
+              <form onSubmit={handleRegisterNewAccount} className="mt-4 space-y-3.5">
+                <div className="space-y-1">
+                  <EthiopianNameAutocomplete
+                    id="input-new-acc-name"
+                    label="Account Holder Name"
+                    placeholder="e.g. Almaz Ayana, Abebe Bikila..."
+                    value={newAccName}
+                    onChange={setNewAccName}
+                    required
+                    theme="cbe"
+                    helperText="Select from Ethiopian names or manually enter custom name"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex justify-between items-center">
+                    <label className="text-xs font-bold text-gray-700">Account Number</label>
+                    <button
+                      type="button"
+                      onClick={() => setNewAccNumber(generateRandomCbeAccount())}
+                      className="text-[11px] text-[#61167e] hover:text-[#7b1fa2] font-extrabold flex items-center gap-1 cursor-pointer"
+                    >
+                      <Shuffle className="w-3 h-3" />
+                      <span>Randomize</span>
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <CreditCard className="absolute left-3.5 top-3 w-4 h-4 text-amber-600" />
+                    <input
+                      id="input-new-acc-number"
+                      type="text"
+                      placeholder="1000..."
+                      value={newAccNumber}
+                      onChange={(e) => setNewAccNumber(e.target.value.replace(/\s+/g, ''))}
+                      className="w-full bg-gray-50 border border-gray-200 focus:border-[#61167e] focus:bg-white rounded-xl py-2.5 pl-10 pr-3 text-xs font-mono font-bold text-gray-900 focus:outline-none transition"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-bold text-gray-700">Account Type</label>
+                  <select
+                    value={newAccType}
+                    onChange={(e) => setNewAccType(e.target.value as any)}
+                    className="w-full bg-gray-50 border border-gray-200 focus:border-[#61167e] focus:bg-white rounded-xl py-2.5 px-3 text-xs font-semibold text-gray-900 focus:outline-none transition"
+                  >
+                    <option value="savings">CBE Regular Savings</option>
+                    <option value="wadiah">CBE Noor (Wadiah / Non-Interest)</option>
+                    <option value="checking">Checking Current Account</option>
+                    <option value="cbe_birr">CBE Birr Digital Wallet</option>
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-gray-500">Phone</label>
+                    <input
+                      type="tel"
+                      value={newAccPhone}
+                      onChange={(e) => setNewAccPhone(e.target.value)}
+                      placeholder="+2519..."
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-2.5 text-[11px] font-mono text-gray-800 focus:outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-gray-500">Starting Balance</label>
+                    <input
+                      type="number"
+                      value={newAccInitialBalance}
+                      onChange={(e) => setNewAccInitialBalance(e.target.value)}
+                      placeholder="10000000000.00"
+                      className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-2.5 text-[11px] font-mono text-gray-800 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowNewAccountForm(false)}
+                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2.5 rounded-xl text-xs transition"
+                  >
+                    Back to Accounts
+                  </button>
+                  <button
+                    id="btn-create-account-submit"
+                    type="submit"
+                    className="flex-1 bg-[#61167e] hover:bg-[#7b1fa2] text-white font-extrabold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-1.5 shadow-md"
+                  >
+                    <UserPlus className="w-3.5 h-3.5" />
+                    <span>Create &amp; Activate</span>
+                  </button>
+                </div>
+              </form>
+            )}
+
           </div>
         </div>
       )}

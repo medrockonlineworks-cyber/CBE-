@@ -12,7 +12,10 @@ import {
   CheckCircle2, 
   AlertCircle,
   KeyRound,
-  Fingerprint
+  Fingerprint,
+  CreditCard,
+  Shuffle,
+  Users
 } from 'lucide-react';
 import AppInstallPrompt from './AppInstallPrompt';
 
@@ -27,9 +30,11 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
   
   // Registration States
   const [regName, setRegName] = useState('');
+  const [regAccountNumber, setRegAccountNumber] = useState(() => '1000' + Math.floor(100000000 + Math.random() * 900000000).toString());
   const [regPhone, setRegPhone] = useState('');
   const [regEmail, setRegEmail] = useState('');
   const [regPass, setRegPass] = useState('');
+  const [regAccountType, setRegAccountType] = useState<UserProfile['accountType']>('savings');
 
   // Login States
   const [loginPhone, setLoginPhone] = useState('');
@@ -45,6 +50,10 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
   const [successMsg, setSuccessMsg] = useState('');
   const [simulatedSmsToast, setSimulatedSmsToast] = useState<string | null>(null);
   const [customBankLogo, setCustomBankLogo] = useState<string | null>(() => LocalDb.getCustomBankLogo());
+
+  const generateRandomCbeAccount = () => {
+    return '1000' + Math.floor(100000000 + Math.random() * 900000000).toString();
+  };
 
   useEffect(() => {
     const handleUpdate = () => setCustomBankLogo(LocalDb.getCustomBankLogo());
@@ -67,13 +76,19 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
     setSuccessMsg('');
 
     const users = LocalDb.getUsers();
-    // find user by phone or email
+    const query = loginPhone.trim().toLowerCase();
+    
+    // find user by phone, email, or account number
     const match = users.find(u => 
-      (u.phone === loginPhone || u.phone === '+251' + loginPhone || u.email.toLowerCase() === loginPhone.toLowerCase())
+      u.phone === loginPhone.trim() || 
+      u.phone === '+251' + loginPhone.trim().replace(/^0/, '') || 
+      u.email.toLowerCase() === query ||
+      u.accountNumber === loginPhone.trim() ||
+      u.name.toLowerCase() === query
     );
 
     if (!match) {
-      setErrorMsg('No account found with this phone number or email.');
+      setErrorMsg('No account found with this phone number, email, or account number.');
       return;
     }
 
@@ -97,25 +112,24 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
     setErrorMsg('');
     setSuccessMsg('');
 
-    if (!regName || !regPhone || !regPass) {
+    if (!regName.trim() || !regPhone.trim() || !regPass.trim()) {
       setErrorMsg('Please fill in all required fields.');
       return;
     }
 
-    const formattedPhone = regPhone.startsWith('+251') ? regPhone : '+251' + regPhone.replace(/^0/, '');
-    const users = LocalDb.getUsers();
-    const phoneExists = users.some(u => u.phone === formattedPhone);
-
-    if (phoneExists) {
-      setErrorMsg('An account with this phone number already exists.');
-      return;
-    }
+    const formattedPhone = regPhone.trim().startsWith('+251') 
+      ? regPhone.trim() 
+      : '+251' + regPhone.trim().replace(/^0/, '');
+    
+    const accountNumToUse = regAccountNumber.trim() || generateRandomCbeAccount();
 
     // Create intermediate pending profile
     const pendingProfile = {
-      name: regName,
+      name: regName.trim(),
+      accountNumber: accountNumToUse,
+      accountType: regAccountType || 'savings',
       phone: formattedPhone,
-      email: regEmail || `${regName.toLowerCase().replace(/\s+/g, '')}@tana.demo`,
+      email: regEmail.trim() || `${regName.trim().toLowerCase().replace(/\s+/g, '')}@tana.demo`,
       password: regPass
     };
 
@@ -174,8 +188,8 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
     const pr = JSON.parse(pendingRegStr);
     const users = LocalDb.getUsers();
     
-    // Generate secure account number starting with 1000
-    const newAccountNumber = '1000' + Math.floor(100000000 + Math.random() * 900000000).toString();
+    // Use user-specified account number or generate 13-digit CBE account
+    const newAccountNumber = pr.accountNumber || ('1000' + Math.floor(100000000 + Math.random() * 900000000).toString());
 
     const newUser: UserProfile = {
       id: 'user_' + Math.random().toString(36).substring(2, 9),
@@ -186,6 +200,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
       status: 'active',
       createdAt: new Date().toISOString(),
       accountNumber: newAccountNumber,
+      accountType: pr.accountType || 'savings',
       balance: 10000000000.00, // Welcome funds of 10 Billion ETB
       availableBalance: 10000000000.00,
       biometricEnabled: false
@@ -200,10 +215,15 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
     LocalDb.addAuditLog(newUser.id, newUser.email, 'USER_REGISTER', `Created new digital banking profile ${newUser.name}. Account A/C ${newUser.accountNumber} provisioned.`);
     LocalDb.addNotification(newUser.id, 'Welcome to Tana Digital Bank!', 'We have credited your new wallet with ETB 10,000,000,000.00 as welcome funds!', 'success');
 
-    setSuccessMsg('Account created! Welcome funds of ETB 10,000,000,000.00 credited.');
+    setSuccessMsg(`Account created for ${newUser.name}! A/C: ${newUser.accountNumber}.`);
     setTimeout(() => {
       onLoginSuccess(newUser);
-    }, 1500);
+    }, 1200);
+  };
+
+  const handleQuickLoginUser = (user: UserProfile) => {
+    LocalDb.addAuditLog(user.id, user.email, 'QUICK_LOGIN', `User ${user.name} logged in.`);
+    onLoginSuccess(user);
   };
 
   const loadAbebeDemoUser = () => {
@@ -295,13 +315,13 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
         {screen === 'login' && (
           <form id="form-login" onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-1">
-              <label className="text-xs text-emerald-300 font-semibold">Phone Number or Email</label>
+              <label className="text-xs text-emerald-300 font-semibold">Phone, Email or CBE Account Number</label>
               <div className="relative">
                 <Smartphone className="absolute left-4 top-3.5 w-5 h-5 text-emerald-400/70" />
                 <input 
                   id="input-login-phone"
                   type="text" 
-                  placeholder="09... or email@example.com"
+                  placeholder="09... or 1000... or email@demo"
                   value={loginPhone}
                   onChange={(e) => setLoginPhone(e.target.value)}
                   className="w-full bg-white/5 border border-emerald-500/20 rounded-2xl py-3.5 pl-12 pr-4 text-sm text-white placeholder-emerald-300/40 focus:outline-none focus:border-amber-400/50 focus:bg-white/10 transition"
@@ -354,7 +374,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
                   onClick={() => setScreen('register')}
                   className="text-amber-400 font-extrabold hover:underline"
                 >
-                  Register Phone
+                  Register New Account
                 </button>
               </p>
             </div>
@@ -363,15 +383,15 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
 
         {/* 2. REGISTRATION SCREEN */}
         {screen === 'register' && (
-          <form id="form-register" onSubmit={handleRegister} className="space-y-4">
+          <form id="form-register" onSubmit={handleRegister} className="space-y-3.5">
             <div className="space-y-1">
-              <label className="text-xs text-emerald-300 font-semibold">Full Name (as in ID)</label>
+              <label className="text-xs text-emerald-300 font-semibold">Account Holder Name (Full Name)</label>
               <div className="relative">
                 <User className="absolute left-4 top-3.5 w-5 h-5 text-emerald-400/70" />
                 <input 
                   id="input-reg-name"
                   type="text" 
-                  placeholder="Enter full name"
+                  placeholder="e.g. Almaz Ayana, Abebe Kebede..."
                   value={regName}
                   onChange={(e) => setRegName(e.target.value)}
                   className="w-full bg-white/5 border border-emerald-500/20 rounded-2xl py-3.5 pl-12 pr-4 text-sm text-white placeholder-emerald-300/40 focus:outline-none focus:border-amber-400/50 focus:bg-white/10 transition"
@@ -381,18 +401,61 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs text-emerald-300 font-semibold">Ethiopian Phone Number</label>
+              <div className="flex justify-between items-center">
+                <label className="text-xs text-emerald-300 font-semibold">CBE Account Number</label>
+                <button
+                  type="button"
+                  onClick={() => setRegAccountNumber(generateRandomCbeAccount())}
+                  className="text-[11px] text-amber-300 hover:text-amber-200 font-bold flex items-center gap-1 cursor-pointer"
+                >
+                  <Shuffle className="w-3 h-3" />
+                  <span>Generate New Number</span>
+                </button>
+              </div>
               <div className="relative">
-                <span className="absolute left-4 top-[14px] text-sm font-bold text-emerald-400/70 font-mono">+251</span>
+                <CreditCard className="absolute left-4 top-3.5 w-5 h-5 text-emerald-400/70" />
                 <input 
-                  id="input-reg-phone"
-                  type="tel" 
-                  placeholder="911223344"
-                  value={regPhone}
-                  onChange={(e) => setRegPhone(e.target.value)}
-                  className="w-full bg-white/5 border border-emerald-500/20 rounded-2xl py-3.5 pl-16 pr-4 text-sm text-white placeholder-emerald-300/40 focus:outline-none focus:border-amber-400/50 focus:bg-white/10 transition font-mono"
+                  id="input-reg-account"
+                  type="text" 
+                  placeholder="1000123456789"
+                  value={regAccountNumber}
+                  onChange={(e) => setRegAccountNumber(e.target.value.replace(/\s+/g, ''))}
+                  className="w-full bg-white/5 border border-emerald-500/20 rounded-2xl py-3.5 pl-12 pr-4 text-sm font-mono font-bold text-amber-300 placeholder-emerald-300/40 focus:outline-none focus:border-amber-400/50 focus:bg-white/10 transition"
                   required
                 />
+              </div>
+              <p className="text-[10px] text-emerald-200/50">Custom or 13-digit standard CBE Account number.</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <label className="text-xs text-emerald-300 font-semibold">Ethiopian Phone</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-[13px] text-xs font-bold text-emerald-400/70 font-mono">+251</span>
+                  <input 
+                    id="input-reg-phone"
+                    type="tel" 
+                    placeholder="911223344"
+                    value={regPhone}
+                    onChange={(e) => setRegPhone(e.target.value)}
+                    className="w-full bg-white/5 border border-emerald-500/20 rounded-2xl py-3 pl-13 pr-3 text-xs text-white placeholder-emerald-300/40 focus:outline-none focus:border-amber-400/50 focus:bg-white/10 transition font-mono"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <label className="text-xs text-emerald-300 font-semibold">Account Type</label>
+                <select
+                  id="select-reg-type"
+                  value={regAccountType}
+                  onChange={(e) => setRegAccountType(e.target.value as any)}
+                  className="w-full bg-slate-900 border border-emerald-500/20 rounded-2xl py-3 px-3 text-xs text-white focus:outline-none focus:border-amber-400/50 transition font-medium"
+                >
+                  <option value="savings">CBE Savings</option>
+                  <option value="checking">Current/Checking</option>
+                  <option value="wadiah">Wadiah Interest-Free</option>
+                  <option value="cbe_birr">CBE Birr Wallet</option>
+                </select>
               </div>
             </div>
 
@@ -622,28 +685,53 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
         )}
       </div>
 
-      {/* Quick Launch Demo Accounts */}
+      {/* Quick Launch Registered Accounts */}
       {screen === 'login' && (
         <div className="border-t border-white/10 pt-6 relative z-10 text-center space-y-5">
           <div>
-            <p className="text-[10px] uppercase tracking-widest font-bold text-amber-400/70 mb-3">Quick Sandbox Login For Testing</p>
-            <div className="grid grid-cols-2 gap-2.5">
+            <div className="flex items-center justify-between mb-3 px-1">
+              <p className="text-[10px] uppercase tracking-widest font-bold text-amber-400/80 flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-amber-400" />
+                <span>Available Accounts (One-Tap Login)</span>
+              </p>
               <button
-                id="btn-demo-user"
-                onClick={loadAbebeDemoUser}
-                className="bg-white/5 hover:bg-white/10 text-emerald-200 border border-white/5 p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer touch-manipulation"
+                type="button"
+                onClick={() => setScreen('register')}
+                className="text-[10px] text-amber-300 hover:underline font-bold"
               >
-                <User className="w-4 h-4 text-amber-400" />
-                <span>Demo User (Abebe)</span>
+                + New Account
               </button>
-              <button
-                id="btn-demo-admin"
-                onClick={loadAdminDemoUser}
-                className="bg-white/5 hover:bg-white/10 text-emerald-200 border border-white/5 p-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer touch-manipulation"
-              >
-                <Fingerprint className="w-4 h-4 text-amber-400" />
-                <span>Demo Admin (Leykun)</span>
-              </button>
+            </div>
+            
+            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+              {LocalDb.getUsers().map((u) => (
+                <button
+                  key={u.id}
+                  id={`btn-login-user-${u.id}`}
+                  onClick={() => handleQuickLoginUser(u)}
+                  className="w-full bg-white/5 hover:bg-white/10 text-emerald-100 border border-white/10 p-2.5 rounded-2xl text-xs font-semibold transition flex items-center justify-between cursor-pointer touch-manipulation group"
+                >
+                  <div className="flex items-center gap-2.5 text-left min-w-0">
+                    <div className="w-8 h-8 rounded-full bg-[#61167e] border border-amber-400/40 flex items-center justify-center font-bold text-amber-300 text-xs flex-shrink-0">
+                      {u.name.split(' ').map(n => n[0]).join('')}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-white text-xs truncate">{u.name}</span>
+                        {u.role === 'admin' && (
+                          <span className="text-[9px] bg-amber-400 text-purple-950 px-1.5 py-0.2 rounded font-extrabold flex-shrink-0">
+                            Admin
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10px] font-mono text-emerald-300/70 truncate">A/C: {u.accountNumber}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 pl-2 flex-shrink-0">
+                    <span className="text-[10px] text-amber-300 group-hover:underline font-bold">Login &rarr;</span>
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
 

@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import html2canvas from 'html2canvas';
+import QRCode from 'qrcode';
 import { Transaction } from '../types';
 import { LocalDb, DEFAULT_CBE_LOGO, formatTo12CharTxId } from '../lib/mockData';
 import { calculateCbeFee } from '../lib/cbeTariff';
@@ -131,21 +132,17 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
   // Dynamic customized feedback assets
   const [customBankLogo, setCustomBankLogo] = useState<string | null>(null);
-  const [customQrCode, setCustomQrCode] = useState<string | null>(null);
+  const [qrDataUrl, setQrDataUrl] = useState<string>('');
 
   useEffect(() => {
     setCustomBankLogo(LocalDb.getCustomBankLogo());
-    setCustomQrCode(LocalDb.getCustomQrCode());
 
     const handleUpdate = () => {
       setCustomBankLogo(LocalDb.getCustomBankLogo());
-      setCustomQrCode(LocalDb.getCustomQrCode());
     };
     window.addEventListener('cbe_logo_updated', handleUpdate);
-    window.addEventListener('cbe_qr_updated', handleUpdate);
     return () => {
       window.removeEventListener('cbe_logo_updated', handleUpdate);
-      window.removeEventListener('cbe_qr_updated', handleUpdate);
     };
   }, []);
 
@@ -206,6 +203,22 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   const txId = formatTo12CharTxId(transaction.id);
 
   const reason = transaction.description || 'Mobile Banking Transfer';
+
+  // Generate dynamic authentic CBE QR code
+  useEffect(() => {
+    const payload = `https://apps.cbe.com.et/verify?tx=${txId}&amt=${amount.toFixed(2)}&dt=${encodeURIComponent(formattedDate)}`;
+    QRCode.toDataURL(payload, {
+      width: 400,
+      margin: 0,
+      errorCorrectionLevel: 'M',
+      color: {
+        dark: '#000000',
+        light: '#00000000'
+      }
+    })
+      .then(url => setQrDataUrl(url))
+      .catch(err => console.error('QR code generation failed:', err));
+  }, [txId, amount, formattedDate]);
 
   // Memoized 33x33 High-Density QR Matrix
   const qrMatrix = useMemo(() => {
@@ -476,21 +489,34 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     const qrSize = 250;
     const qrX = (width - qrSize) / 2;
     const qrY = boxY + 360;
-    const activeQrUrl = customQrCode || LocalDb.getCustomQrCode();
 
     let qrImageLoaded = false;
+    const activeQrUrl = qrDataUrl || (await (async () => {
+      try {
+        const payload = `https://apps.cbe.com.et/verify?tx=${txId}&amt=${amount.toFixed(2)}&dt=${encodeURIComponent(formattedDate)}`;
+        return await QRCode.toDataURL(payload, {
+          width: 400,
+          margin: 0,
+          errorCorrectionLevel: 'M',
+          color: { dark: '#000000', light: '#00000000' }
+        });
+      } catch {
+        return null;
+      }
+    })());
+
     if (activeQrUrl) {
       try {
         const qrImg = await loadImageAsync(activeQrUrl);
         ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
         qrImageLoaded = true;
       } catch (err) {
-        console.warn('Custom QR image load failed for canvas, rendering default matrix:', err);
+        console.warn('QR image load failed for canvas, rendering fallback matrix:', err);
       }
     }
 
     if (!qrImageLoaded) {
-      // Draw High-Density 33x33 QR Code Modules
+      // Draw High-Density QR Code Modules
       const matrix = getDenseQrMatrix(txId, `${amount}|${rawRecipientAccount}|${rawSenderAccount}`);
       const gridSize = matrix.length; // 33
       const cellSize = qrSize / gridSize;
@@ -781,14 +807,14 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             {/* High-Density Realistic QR Code Centered */}
             <div className="flex justify-center py-1">
               <div className="w-32 h-32 sm:w-36 sm:h-36 bg-transparent flex items-center justify-center p-0.5">
-                {customQrCode ? (
+                {qrDataUrl ? (
                   <img 
-                    src={customQrCode} 
+                    src={qrDataUrl} 
                     alt="Transaction QR Code" 
                     className="w-full h-full object-contain"
                   />
                 ) : (
-                  /* High-fidelity 33x33 Dense QR Matrix (1,089 crisp modules) */
+                  /* High-fidelity 33x33 Dense QR Matrix fallback */
                   <div 
                     className="grid gap-[1px] w-full h-full"
                     style={{ gridTemplateColumns: `repeat(${qrMatrix.length}, minmax(0, 1fr))` }}

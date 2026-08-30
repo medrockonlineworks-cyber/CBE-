@@ -4,6 +4,7 @@ import { UserProfile, Transaction, AuditLog } from '../types';
 import { CbeLogo } from './CbeLogo';
 import { compressImageFile } from '../lib/imageUtils';
 import BankLogoModal from './BankLogoModal';
+import AdminEthiopianNames from '../pages/AdminEthiopianNames';
 import { 
   Users, 
   TrendingUp, 
@@ -32,7 +33,7 @@ interface AdminPanelProps {
 }
 
 export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
-  const [activeTab, setActiveTab] = useState<'users' | 'transactions' | 'audit' | 'reports' | 'feedback_settings'>('users');
+  const [activeTab, setActiveTab] = useState<'users' | 'transactions' | 'audit' | 'reports' | 'feedback_settings' | 'ethiopian_names'>('users');
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
@@ -228,6 +229,16 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
           }`}
         >
           Feedback Assets Customization
+        </button>
+        <button 
+          id="tab-admin-ethiopian-names"
+          onClick={() => setActiveTab('ethiopian_names')}
+          className={`px-5 py-3 text-sm font-bold border-b-2 transition whitespace-nowrap flex items-center gap-1.5 ${
+            activeTab === 'ethiopian_names' ? 'border-amber-400 text-amber-400' : 'border-transparent text-slate-400 hover:text-slate-200'
+          }`}
+        >
+          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+          <span>Ethiopian Names Database</span>
         </button>
       </div>
 
@@ -545,6 +556,12 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {activeTab === 'ethiopian_names' && (
+        <div className="pt-2">
+          <AdminEthiopianNames />
         </div>
       )}
 

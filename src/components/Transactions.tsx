@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { UserProfile, Transaction, Beneficiary } from '../types';
 import { LocalDb } from '../lib/mockData';
 import { calculateCbeFee } from '../lib/cbeTariff';
+import EthiopianNameAutocomplete from './EthiopianNameAutocomplete';
 import { 
   Send, 
   ArrowLeftRight, 
@@ -592,24 +593,15 @@ export default function Transactions({ currentUser, onTransactionComplete, initi
 
               {/* Recipient Name / Account Holder Name Input */}
               <div className="space-y-1">
-                <div className="flex justify-between items-center">
-                  <label className="text-xs text-gray-500 font-bold">Account Holder Name</label>
-                  <span className="text-[10px] text-emerald-700 font-bold">Recipient Name</span>
-                </div>
-                <div className="relative">
-                  <div className="absolute left-3.5 top-[11px] text-gray-400">
-                    <User className="w-4 h-4 text-emerald-700/70" />
-                  </div>
-                  <input 
-                    id="input-send-recipient-name"
-                    type="text" 
-                    placeholder="Enter recipient's full name (e.g. Selamawit Tekle)"
-                    value={sendRecipientName}
-                    onChange={(e) => setSendRecipientName(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 pl-10 text-sm focus:outline-none focus:border-emerald-800 focus:bg-white transition font-medium"
-                    required
-                  />
-                </div>
+                <EthiopianNameAutocomplete
+                  id="input-send-recipient-name"
+                  label="Account Holder Name"
+                  placeholder="Enter Ethiopian recipient name (e.g. Abebe, Selam, Dawit...)"
+                  value={sendRecipientName}
+                  onChange={setSendRecipientName}
+                  required
+                  theme="cbe"
+                />
               </div>
 
               {/* Quick Beneficiaries Select */}
@@ -709,20 +701,21 @@ export default function Transactions({ currentUser, onTransactionComplete, initi
 
               {showAddBen && (
                 <form onSubmit={handleAddBeneficiary} className="space-y-3 pt-3 mt-3 border-t border-gray-50">
-                  <input
-                    type="text"
-                    placeholder="Beneficiary Full Name"
+                  <EthiopianNameAutocomplete
+                    id="input-new-ben-name"
+                    label="Beneficiary Full Name"
+                    placeholder="e.g. Abebe Kebede, Meron Tesfaye..."
                     value={newBenName}
-                    onChange={(e) => setNewBenName(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-100 rounded-xl px-3.5 py-2 text-xs focus:outline-none"
+                    onChange={setNewBenName}
                     required
+                    theme="cbe"
                   />
                   <input
                     type="text"
                     placeholder="Account Number"
                     value={newBenAcc}
                     onChange={(e) => setNewBenAcc(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-100 rounded-xl px-3.5 py-2 text-xs font-mono"
+                    className="w-full bg-gray-50 border border-gray-100 rounded-xl px-3.5 py-2.5 text-xs font-mono"
                     required
                   />
                   <select
@@ -875,21 +868,15 @@ export default function Transactions({ currentUser, onTransactionComplete, initi
                 {/* ACCOUNT HOLDER NAME (Other Account Only) */}
                 {transferSubTab === 'other' && (
                   <div className="space-y-1">
-                    <label className="text-xs text-gray-500 font-bold">Account Holder Name</label>
-                    <div className="relative">
-                      <div className="absolute left-3.5 top-[13px] text-gray-400">
-                        <User className="w-4 h-4" />
-                      </div>
-                      <input 
-                        id="input-transfer-recipient"
-                        type="text" 
-                        placeholder="Enter recipient's full name"
-                        value={transferRecipientName}
-                        onChange={(e) => setTransferRecipientName(e.target.value)}
-                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3 pl-10 text-sm focus:outline-none focus:border-emerald-800 focus:bg-white transition font-semibold"
-                        required
-                      />
-                    </div>
+                    <EthiopianNameAutocomplete
+                      id="input-transfer-recipient"
+                      label="Account Holder Name"
+                      placeholder="Enter recipient's full Ethiopian name"
+                      value={transferRecipientName}
+                      onChange={setTransferRecipientName}
+                      required
+                      theme="cbe"
+                    />
                   </div>
                 )}
 

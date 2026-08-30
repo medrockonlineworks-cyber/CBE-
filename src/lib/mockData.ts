@@ -516,6 +516,73 @@ export class LocalDb {
     }
   }
 
+  static updateUserProfile(
+    userId: string, 
+    updates: { 
+      name?: string; 
+      accountNumber?: string; 
+      email?: string; 
+      phone?: string; 
+      accountType?: 'savings' | 'checking' | 'wadiah' | 'cbe_birr';
+      balance?: number;
+    }
+  ): UserProfile | null {
+    const users = this.getUsers();
+    const index = users.findIndex(u => u.id === userId);
+    if (index === -1) return null;
+
+    const oldUser = { ...users[index] };
+    const updatedUser: UserProfile = {
+      ...users[index],
+      ...updates
+    };
+
+    if (updates.balance !== undefined) {
+      updatedUser.availableBalance = updates.balance;
+    }
+
+    users[index] = updatedUser;
+    this.setUsers(users);
+
+    // If name or account number changed, update historical transactions to reflect the updated identity
+    if (updates.name || updates.accountNumber) {
+      const txs = this.getTransactions();
+      let txsChanged = false;
+      for (const tx of txs) {
+        if (tx.senderId === userId) {
+          if (updates.name) tx.senderName = updates.name;
+          if (updates.accountNumber) tx.senderAccount = updates.accountNumber;
+          txsChanged = true;
+        }
+        if (tx.recipientId === userId) {
+          if (updates.name) tx.recipientName = updates.name;
+          if (updates.accountNumber) tx.recipientAccount = updates.accountNumber;
+          txsChanged = true;
+        }
+      }
+      if (txsChanged) {
+        this.setTransactions(txs);
+      }
+    }
+
+    this.addAuditLog(
+      userId, 
+      updatedUser.email, 
+      'USER_PROFILE_UPDATE', 
+      `Profile updated: Name was "${oldUser.name}" -> "${updatedUser.name}", Account was "${oldUser.accountNumber}" -> "${updatedUser.accountNumber}".`
+    );
+
+    this.addNotification(
+      userId, 
+      'Account Profile Updated', 
+      `Your profile details have been saved: ${updatedUser.name} (A/C: ${updatedUser.accountNumber}).`, 
+      'info'
+    );
+
+    window.dispatchEvent(new CustomEvent('cbe_user_updated', { detail: { user: updatedUser } }));
+    return updatedUser;
+  }
+
   static getCustomBankLogo(): string | null {
     try {
       const val = localStorage.getItem('tana_custom_bank_logo');
