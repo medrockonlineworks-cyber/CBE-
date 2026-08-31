@@ -28,7 +28,8 @@ import {
   X,
   RotateCcw,
   User,
-  ExternalLink
+  ExternalLink,
+  Zap
 } from 'lucide-react';
 
 /**
@@ -174,6 +175,45 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       setStatusTime(`${hours}:${mins}`);
     }, 10000);
     return () => clearInterval(timer);
+  }, []);
+
+  // Real device phone power & battery condition detection (Battery Status API with smart fallback)
+  const [batteryLevel, setBatteryLevel] = useState<number>(92);
+  const [isPhoneCharging, setIsPhoneCharging] = useState<boolean>(false);
+
+  useEffect(() => {
+    let batteryManager: any = null;
+
+    const handleBatteryUpdate = (battery: any) => {
+      if (battery && typeof battery.level === 'number') {
+        const levelPct = Math.round(battery.level * 100);
+        setBatteryLevel(Math.max(1, Math.min(100, levelPct)));
+        setIsPhoneCharging(Boolean(battery.charging));
+      }
+    };
+
+    if (typeof navigator !== 'undefined' && 'getBattery' in navigator) {
+      (navigator as any).getBattery().then((battery: any) => {
+        batteryManager = battery;
+        handleBatteryUpdate(battery);
+
+        battery.addEventListener('levelchange', () => handleBatteryUpdate(battery));
+        battery.addEventListener('chargingchange', () => handleBatteryUpdate(battery));
+      }).catch(() => {
+        // Fallback gracefully
+      });
+    }
+
+    return () => {
+      if (batteryManager) {
+        try {
+          batteryManager.removeEventListener('levelchange', () => handleBatteryUpdate(batteryManager));
+          batteryManager.removeEventListener('chargingchange', () => handleBatteryUpdate(batteryManager));
+        } catch {
+          // Ignore cleanup error
+        }
+      }
+    };
   }, []);
 
   // Dynamic customized feedback assets
@@ -378,30 +418,48 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     ctx.arc(wifiX, wifiY - 0.5, 1.5, 0, Math.PI * 2);
     ctx.fill();
 
-    // iOS Battery Icon (Rounded body + positive terminal knob + battery fill)
-    const battX = width - 78;
+    // iOS Battery Icon (Dynamic Real Device Battery Fill + Charging condition)
+    const battX = width - 82;
     const battY = 28;
-    const battW = 28;
+    const battW = 30;
     const battH = 15;
     
     // Battery Outer Border
-    ctx.strokeStyle = '#ffffff';
+    ctx.strokeStyle = isPhoneCharging ? '#4ade80' : '#ffffff';
     ctx.lineWidth = 1.8;
     ctx.beginPath();
     ctx.roundRect(battX, battY, battW, battH, 4);
     ctx.stroke();
 
     // Battery Positive Terminal Knob on Right
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = isPhoneCharging ? '#4ade80' : '#ffffff';
     ctx.beginPath();
     ctx.roundRect(battX + battW + 1.5, battY + 4, 2, 7, 1);
     ctx.fill();
 
-    // Battery Inner Charge Level (White iOS style fill)
-    ctx.fillStyle = '#ffffff';
+    // Battery Inner Charge Level (Dynamically computed from actual device battery level)
+    const fillMaxW = battW - 5;
+    const fillW = Math.max(3, (fillMaxW * Math.min(100, Math.max(4, batteryLevel))) / 100);
+    ctx.fillStyle = isPhoneCharging ? '#4ade80' : (batteryLevel <= 20 ? '#ef4444' : '#ffffff');
     ctx.beginPath();
-    ctx.roundRect(battX + 2.5, battY + 2.5, battW - 7, battH - 5, 2.5);
+    ctx.roundRect(battX + 2.5, battY + 2.5, fillW, battH - 5, 2.5);
     ctx.fill();
+
+    // If device is currently plugged in & charging, draw iOS lightning bolt in canvas
+    if (isPhoneCharging) {
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      const zX = battX + battW / 2;
+      const zY = battY + battH / 2;
+      ctx.moveTo(zX + 1, zY - 5);
+      ctx.lineTo(zX - 3.5, zY);
+      ctx.lineTo(zX, zY);
+      ctx.lineTo(zX - 1, zY + 5);
+      ctx.lineTo(zX + 3.5, zY);
+      ctx.lineTo(zX, zY);
+      ctx.closePath();
+      ctx.fill();
+    }
 
     // 2. Top Purple Header: "Thank you / Success" & Top Scan Button
     // White Shield with Purple Checkmark
@@ -1000,12 +1058,42 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             <Wifi className="w-3.5 h-3.5 text-white stroke-[2.4]" />
           </span>
 
-          {/* iOS Battery with Terminal Knob (Crisp White) */}
-          <div className="flex items-center gap-[1.5px]" title="Battery: 90% Charged">
-            <div className="w-5.5 h-3 rounded-[3.5px] border-[1.5px] border-white p-[1px] flex items-center bg-black/15">
-              <div className="h-full w-[88%] bg-white rounded-[1px]" />
+          {/* iOS Battery with Real Phone Battery Percentage & Charging State */}
+          <div 
+            className="flex items-center gap-[2px]" 
+            title={`Phone Battery: ${batteryLevel}% ${isPhoneCharging ? '(Charging ⚡)' : ''}`}
+          >
+            {/* Battery Body with Dynamic Real Phone Power Fill */}
+            <div className={`h-3 rounded-[3.5px] border-[1.5px] p-[1px] flex items-center relative transition-colors ${
+              isPhoneCharging 
+                ? 'border-emerald-400 bg-emerald-950/40' 
+                : (batteryLevel <= 20 ? 'border-red-400 bg-red-950/30' : 'border-white bg-black/15')
+            } ${batteryLevel === 100 ? 'w-6' : 'w-5.5'}`}>
+              <div 
+                className={`h-full rounded-[1px] transition-all duration-500 ${
+                  isPhoneCharging 
+                    ? 'bg-emerald-400' 
+                    : (batteryLevel <= 20 ? 'bg-red-400' : 'bg-white')
+                }`}
+                style={{ width: `${Math.max(8, Math.min(100, batteryLevel))}%` }}
+              />
+              {isPhoneCharging && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <Zap className="w-2.5 h-2.5 text-white fill-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" />
+                </div>
+              )}
             </div>
-            <div className="w-[1.5px] h-1.5 bg-white rounded-r-[1px]" />
+            {/* Battery Terminal Knob */}
+            <div className={`w-[1.5px] h-1.5 rounded-r-[1px] ${
+              isPhoneCharging 
+                ? 'bg-emerald-400' 
+                : (batteryLevel <= 20 ? 'bg-red-400' : 'bg-white')
+            }`} />
+
+            {/* Battery Percentage Number */}
+            <span className="text-[10px] font-bold text-white leading-none ml-0.5 tracking-tight select-none">
+              {batteryLevel}%
+            </span>
           </div>
         </div>
       </div>
