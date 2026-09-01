@@ -260,24 +260,27 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   const disasterRecoveryStr = disasterRecoveryFormatted;
 
   // Formatting Sender & Recipient names & account suffixes
+  const isCredit = transaction.type === 'receive' || transaction.senderName === 'Deposit';
   const senderName = transaction.senderName || "Leykun Jemaneh Ylma";
   const rawSenderAccount = transaction.senderAccount || "4747";
   const senderSuffix = rawSenderAccount.length >= 4 
     ? `ETB-${rawSenderAccount.slice(-4)}` 
     : `ETB-4747`;
 
-  const cbeSenderFullName = transaction.senderName || "Leykun Jemaneh Ylma";
-  const cbeAmountStr = transaction.amount !== undefined ? transaction.amount.toFixed(1) : "10.0";
-  const cbeAccountMasked = rawSenderAccount.length >= 4
-    ? `1********${rawSenderAccount.slice(-4)}`
-    : "1********4747";
-  const cbeSmsText = `Dear ${cbeSenderFullName} A debit transaction of ETB ${cbeAmountStr}. has occurred on your account ${cbeAccountMasked}. Service`;
-
   const recipientName = transaction.recipientName || "Addisu Abebe Mengistu";
   const rawRecipientAccount = transaction.recipientAccount || "6547";
   const recipientSuffix = rawRecipientAccount.length >= 4 && !rawRecipientAccount.includes('+251')
     ? `ETB-${rawRecipientAccount.slice(-4)}` 
     : `ETB-6547`;
+
+  const cbeSenderFullName = transaction.senderName || "Leykun Jemaneh Ylma";
+  const cbeAmountStr = transaction.amount !== undefined ? transaction.amount.toFixed(1) : "10.0";
+  const cbeAccountMasked = rawSenderAccount.length >= 4
+    ? `1********${rawSenderAccount.slice(-4)}`
+    : "1********4747";
+  const cbeSmsText = isCredit
+    ? `Dear ${recipientName} A credit transaction of ETB ${cbeAmountStr}. has occurred on your account ${cbeAccountMasked}. Service`
+    : `Dear ${cbeSenderFullName} A debit transaction of ETB ${cbeAmountStr}. has occurred on your account ${cbeAccountMasked}. Service`;
 
   // Date formatting: e.g. "Aug 21, 2026 05:56 PM"
   const formatSummaryDate = (dateInput: any) => {
@@ -1172,11 +1175,17 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             <p className="text-gray-400 font-bold text-[11px]">Transaction Summary</p>
 
             {/* Paragraph Text with bold highlights matching CBE reference */}
-            <p className="text-[12px] sm:text-[13px] leading-[1.65] text-gray-900 font-normal select-text">
-              ETB <span className="font-bold text-black">{amountFormatted}</span> has been debited from <span className="font-bold text-black">{senderName}</span> {senderSuffix} for <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason}
-              <br className="my-0.5" />
-              Total Amount Debited: {totalDebitedFormatted} ETB with Service Charge of ETB{serviceChargeFormatted}, VAT (15%) of ETB{vatFormatted} and Disaster Recovery (5%) of ETB{disasterRecoveryFormatted}.
-            </p>
+            {isCredit ? (
+              <p className="text-[12px] sm:text-[13px] leading-[1.65] text-gray-900 font-normal select-text">
+                ETB <span className="font-bold text-black">{amountFormatted}</span> has been credited to <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} from <span className="font-bold text-black">{senderName}</span> {senderSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason}
+              </p>
+            ) : (
+              <p className="text-[12px] sm:text-[13px] leading-[1.65] text-gray-900 font-normal select-text">
+                ETB <span className="font-bold text-black">{amountFormatted}</span> has been debited from <span className="font-bold text-black">{senderName}</span> {senderSuffix} for <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason}
+                <br className="my-0.5" />
+                Total Amount Debited: {totalDebitedFormatted} ETB with Service Charge of ETB{serviceChargeFormatted}, VAT (15%) of ETB{vatFormatted} and Disaster Recovery (5%) of ETB{disasterRecoveryFormatted}.
+              </p>
+            )}
 
             {/* High-Density Realistic QR Code Centered */}
             <div className="flex justify-center py-1">

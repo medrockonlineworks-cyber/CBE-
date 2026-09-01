@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Phone, 
-  RefreshCw, 
+  ArrowLeftRight, 
   Wallet, 
   Receipt,
   Building2,
@@ -90,7 +90,7 @@ export const ServiceGrid: React.FC<ServiceGridProps> = ({
           id="other-transfers"
           title="Other Transfers"
           layout="vertical"
-          icon={<RefreshCw className="w-6 h-6 text-[#6b1284] stroke-[2.4]" />}
+          icon={<ArrowLeftRight className="w-6 h-6 text-[#6b1284] stroke-[2.4]" />}
           onClick={() => onServiceSelect?.('other-transfers')}
         />
 

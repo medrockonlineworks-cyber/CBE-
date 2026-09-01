@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { UserProfile, Transaction, Beneficiary } from '../types';
+import { UserProfile, Transaction, Beneficiary, BankAccount, RegisteredAccountInfo } from '../types';
 import { LocalDb } from '../lib/mockData';
 import { calculateCbeFee } from '../lib/cbeTariff';
 import EthiopianNameAutocomplete, { EthiopianThreePartNameInput } from './EthiopianNameAutocomplete';
 import AccountCard from './AccountCard';
+import TransactionDetailModal from './TransactionDetailModal';
+import ManageAccountsModal from './ManageAccountsModal';
 import { 
   Send, 
   ArrowLeftRight, 
@@ -35,13 +37,15 @@ import {
   SlidersHorizontal,
   RotateCw,
   Receipt as ReceiptIcon,
-  Plus
+  Plus,
+  Layers
 } from 'lucide-react';
 
 interface TransactionsProps {
   currentUser: UserProfile;
   onTransactionComplete: (tx: Transaction) => void;
   onSelectTransaction?: (tx: Transaction) => void;
+  onBack?: () => void;
   initialTab?: 'send' | 'transfer' | 'merchant' | 'receive' | 'airtime';
 }
 
@@ -59,9 +63,9 @@ const ETHIOPIAN_BANKS = [
   'Zemen Bank'
 ];
 
-export default function Transactions({ currentUser, onTransactionComplete, onSelectTransaction, initialTab }: TransactionsProps) {
+export default function Transactions({ currentUser, onTransactionComplete, onSelectTransaction, onBack, initialTab }: TransactionsProps) {
   // View mode: 'records' | 'transfer'
-  const [viewMode, setViewMode] = useState<'records' | 'transfer'>('records');
+  const [viewMode, setViewMode] = useState<'records' | 'transfer'>(initialTab ? 'transfer' : 'records');
   // Direct filter tabs requested by user: 'all' | 'credit' | 'debit'
   const [filterType, setFilterType] = useState<'all' | 'credit' | 'debit'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'success' | 'pending' | 'failed'>('all');
@@ -140,8 +144,27 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
 
   // Form Fields - CBE / Bank Transfer (Screenshot 2 Alignment)
   const [transferSubTab, setTransferSubTab] = useState<'other' | 'own'>('other');
-  const [selectedFromAccount, setSelectedFromAccount] = useState<'savings' | 'wadiah'>('savings');
+  
+  // User's Multiple Bank Accounts
+  const [userAccounts, setUserAccounts] = useState<BankAccount[]>(() => LocalDb.getUserAccounts(currentUser.id));
+  const [selectedFromAccId, setSelectedFromAccId] = useState<string>(() => {
+    const accs = LocalDb.getUserAccounts(currentUser.id);
+    const primary = accs.find(a => a.isPrimary) || accs[0];
+    return primary ? primary.id : '';
+  });
+  const [selectedToAccId, setSelectedToAccId] = useState<string>(() => {
+    const accs = LocalDb.getUserAccounts(currentUser.id);
+    const nonPrimary = accs.find(a => !a.isPrimary) || accs[1] || accs[0];
+    return nonPrimary ? nonPrimary.id : '';
+  });
+  const [showManageAccModal, setShowManageAccModal] = useState(false);
   const [showFromBalance, setShowFromBalance] = useState<boolean>(true);
+
+  // Recipient Search & Auto-Fill
+  const [searchRecipientQuery, setSearchRecipientQuery] = useState('');
+  const [selectedRegisteredRecipient, setSelectedRegisteredRecipient] = useState<RegisteredAccountInfo | null>(null);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+
   const [transferAccount, setTransferAccount] = useState('');
   const [transferRecipientName, setTransferRecipientName] = useState('');
   const [transferAmount, setTransferAmount] = useState('');
@@ -154,12 +177,50 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
   const [isAccountVerifying, setIsAccountVerifying] = useState(false);
   const [verifiedAccountName, setVerifiedAccountName] = useState('');
 
+  // Reload accounts when updated
+  const refreshAccounts = () => {
+    const updated = LocalDb.getUserAccounts(currentUser.id);
+    setUserAccounts(updated);
+    if (!updated.some(a => a.id === selectedFromAccId) && updated.length > 0) {
+      setSelectedFromAccId(updated[0].id);
+    }
+  };
+
+  const selectedFromAccountObj = userAccounts.find(a => a.id === selectedFromAccId) || userAccounts[0];
+  const selectedToAccountObj = userAccounts.find(a => a.id === selectedToAccId) || userAccounts.find(a => a.id !== selectedFromAccId) || userAccounts[1];
+
+  // Dynamic search results for registered recipients
+  const matchedRegisteredAccounts = React.useMemo(() => {
+    if (!searchRecipientQuery.trim()) return [];
+    return LocalDb.searchRegisteredAccounts(searchRecipientQuery).filter(
+      acc => acc.accountNumber !== selectedFromAccountObj?.accountNumber
+    );
+  }, [searchRecipientQuery, selectedFromAccountObj]);
+
   // Mock Recent Transfers list
   const [recentTransfers, setRecentTransfers] = useState([
-    { id: 'rt_1', name: 'Selamawit Tekle', accountNumber: '1000246810121', initial: 'ST', color: 'bg-purple-100 text-purple-700 border border-purple-200' },
-    { id: 'rt_2', name: 'Kidus Yohannes', accountNumber: '013204958100', initial: 'KY', color: 'bg-amber-100 text-amber-700 border border-amber-200' },
-    { id: 'rt_3', name: 'Desta Kassahun', accountNumber: '0234059681', initial: 'DK', color: 'bg-rose-100 text-rose-700 border border-rose-200' }
+    { id: 'rt_1', name: 'Selamawit Tekle Haile', accountNumber: '1000246810121', initial: 'ST', color: 'bg-purple-100 text-purple-700 border border-purple-200' },
+    { id: 'rt_2', name: 'Kidus Yohannes', accountNumber: '1000132049581', initial: 'KY', color: 'bg-amber-100 text-amber-700 border border-amber-200' },
+    { id: 'rt_3', name: 'Desta Kassahun', accountNumber: '1000234059681', initial: 'DK', color: 'bg-rose-100 text-rose-700 border border-rose-200' }
   ]);
+
+  // Select a registered recipient from search/recent
+  const handleSelectRecipient = (recip: RegisteredAccountInfo | { name?: string; accountName?: string; accountNumber: string; bankName?: string }) => {
+    const accName = ('accountName' in recip && recip.accountName) ? recip.accountName : ('name' in recip && recip.name) ? recip.name : 'Registered CBE Recipient';
+    const fullInfo: RegisteredAccountInfo = {
+      accountNumber: recip.accountNumber,
+      accountName: accName,
+      bankName: recip.bankName || 'Commercial Bank of Ethiopia (CBE)',
+      isVerified: true
+    };
+    setSelectedRegisteredRecipient(fullInfo);
+    setTransferAccount(fullInfo.accountNumber);
+    setTransferRecipientName(fullInfo.accountName);
+    setTransferBank(fullInfo.bankName);
+    setSearchRecipientQuery('');
+    setIsSearchFocused(false);
+    setErrorMsg('');
+  };
 
   // Form Fields - Pay Merchant (Screenshot 1 Alignment)
   const [merchantSubTab, setMerchantSubTab] = useState<'customer' | 'dynamic'>('customer');
@@ -180,26 +241,16 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
       setIsAccountVerifying(true);
       const timer = setTimeout(() => {
         setIsAccountVerifying(false);
-        // Match mock database profiles
-        if (cleanAcc === '1000246810121') {
-          setVerifiedAccountName('Selamawit Tekle');
-          if (!transferRecipientName || transferRecipientName === 'External Account') {
-            setTransferRecipientName('Selamawit Tekle');
-          }
-        } else if (cleanAcc === '1000132049581') {
-          setVerifiedAccountName('Kidus Yohannes');
-          if (!transferRecipientName || transferRecipientName === 'External Account') {
-            setTransferRecipientName('Kidus Yohannes');
-          }
-        } else if (cleanAcc === '1000234059681') {
-          setVerifiedAccountName('Desta Kassahun');
-          if (!transferRecipientName || transferRecipientName === 'External Account') {
-            setTransferRecipientName('Desta Kassahun');
-          }
+        const matched = LocalDb.findRegisteredAccount(cleanAcc);
+        if (matched) {
+          setVerifiedAccountName(matched.accountName);
+          setSelectedRegisteredRecipient(matched);
+          setTransferRecipientName(matched.accountName);
+          setTransferBank(matched.bankName);
         } else {
           setVerifiedAccountName('External CBE Account Holder');
         }
-      }, 500);
+      }, 350);
       return () => clearTimeout(timer);
     } else {
       setIsAccountVerifying(false);
@@ -301,15 +352,20 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
 
     const isOwn = transferSubTab === 'own';
     const cbeFee = calculateCbeFee(amountNum, 'transfer', isOwn);
-    const sourceBalance = selectedFromAccount === 'savings' ? currentUser.balance : 5420.00;
+    const sourceBalance = selectedFromAccountObj ? selectedFromAccountObj.balance : currentUser.balance;
     const totalCost = cbeFee.totalDebited;
 
     if (totalCost > sourceBalance) {
-      setErrorMsg(`Insufficient funds. Total amount with CBE Service Charge (ETB ${cbeFee.serviceCharge.toFixed(2)}), 15% VAT (ETB ${cbeFee.vat.toFixed(2)}) & 5% Disaster Recovery (ETB ${cbeFee.disasterRecovery.toFixed(2)}) is ETB ${totalCost.toLocaleString(undefined, { minimumFractionDigits: 2 })}. Current balance is ETB ${sourceBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}.`);
+      setErrorMsg(`Insufficient funds in ${selectedFromAccountObj?.accountName || 'selected account'}. Total required: ETB ${totalCost.toLocaleString(undefined, { minimumFractionDigits: 2 })} (Balance: ETB ${sourceBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}).`);
       return;
     }
 
-    if (transferSubTab === 'other') {
+    if (isOwn) {
+      if (!selectedToAccountObj || selectedToAccountObj.id === selectedFromAccountObj?.id) {
+        setErrorMsg('Please select a different destination account.');
+        return;
+      }
+    } else {
       const cleanAcc = transferAccount.replace(/\D/g, '');
       if (cleanAcc.length !== 13) {
         setErrorMsg(`Bank account number must be exactly 13 digits (currently entered ${cleanAcc.length} digits). It cannot be less than or greater than 13 digits.`);
@@ -320,52 +376,52 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
     requestPinAuthorize(() => {
       try {
         if (transferSubTab === 'own') {
-          // Own account transfer simulation
-          const targetName = selectedFromAccount === 'savings' ? 'Saving Account (Secondary)' : 'Saving Account (Primary)';
-          const targetAcc = selectedFromAccount === 'savings' ? '1000987654321' : currentUser.accountNumber;
-          
-          const tx = LocalDb.createTransaction(
-            'transfer',
+          // Own account transfer
+          const result = LocalDb.transferBetweenOwnAccounts(
             currentUser.id,
+            selectedFromAccountObj.id,
+            selectedToAccountObj.id,
             amountNum,
-            0,
-            targetName,
-            targetAcc,
-            'Commercial Bank of Ethiopia (CBE)',
-            remarkText || 'Transfer to Own Account',
-            true
+            remarkText || 'Transfer Between Own Accounts'
           );
           
-          onTransactionComplete(tx);
+          refreshAccounts();
+          onTransactionComplete(result.tx);
         } else {
           // Other account transfer
+          const finalRecipientName = selectedRegisteredRecipient?.accountName || transferRecipientName || 'CBE Recipient';
+          const finalRecipientAccount = selectedRegisteredRecipient?.accountNumber || transferAccount;
+          const finalRecipientBank = selectedRegisteredRecipient?.bankName || transferBank;
+
           const tx = LocalDb.createTransaction(
             'transfer',
             currentUser.id,
             amountNum,
             cbeFee.serviceCharge,
-            transferRecipientName || 'CBE Recipient',
-            transferAccount,
-            transferBank,
+            finalRecipientName,
+            finalRecipientAccount,
+            finalRecipientBank,
             remarkText || 'MB transfer',
-            false
+            false,
+            selectedFromAccountObj?.id
           );
 
           // Add to recent list dynamically if not already there
-          const exists = recentTransfers.some(rt => rt.accountNumber === transferAccount);
+          const exists = recentTransfers.some(rt => rt.accountNumber === finalRecipientAccount);
           if (!exists) {
-            const initials = (transferRecipientName || 'CBE Recipient')
+            const initials = finalRecipientName
               .split(' ')
               .map(n => n[0])
               .join('')
               .toUpperCase()
               .slice(0, 2);
             setRecentTransfers(prev => [
-              { id: 'rt_' + Date.now(), name: transferRecipientName || 'CBE Recipient', accountNumber: transferAccount, initial: initials || 'AC', color: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
+              { id: 'rt_' + Date.now(), name: finalRecipientName, accountNumber: finalRecipientAccount, initial: initials || 'AC', color: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
               ...prev
             ]);
           }
 
+          refreshAccounts();
           onTransactionComplete(tx);
         }
       } catch (err: any) {
@@ -853,11 +909,7 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
                           key={tx.id}
                           id={`tx-card-${tx.id}`}
                           onClick={() => {
-                            if (onSelectTransaction) {
-                              onSelectTransaction(tx);
-                            } else {
-                              setSelectedTxDetail(tx);
-                            }
+                            setSelectedTxDetail(tx);
                           }}
                           className="bg-white hover:bg-purple-50/20 active:scale-[0.99] p-3.5 rounded-2xl border border-gray-100 shadow-sm transition-all cursor-pointer flex items-center justify-between gap-3 group"
                         >
@@ -1237,17 +1289,30 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
               
               {/* FROM ACCOUNT SELECTOR CARD */}
               <div className="bg-gradient-to-br from-emerald-950 to-emerald-850 text-white rounded-3xl p-5 shadow-md border border-emerald-800/20 relative overflow-hidden">
-                <p className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">From Account</p>
+                <div className="flex justify-between items-center">
+                  <p className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">From Account</p>
+                  <button
+                    type="button"
+                    onClick={() => setShowManageAccModal(true)}
+                    className="text-[10px] bg-white/10 hover:bg-white/20 text-amber-300 px-2 py-0.5 rounded-full font-bold flex items-center gap-1 transition cursor-pointer"
+                  >
+                    <Plus className="w-3 h-3" /> Open / Manage ({userAccounts.length})
+                  </button>
+                </div>
                 
                 <div className="mt-2.5 flex justify-between items-center">
                   <div className="flex-1">
                     <select
-                      value={selectedFromAccount}
-                      onChange={(e) => setSelectedFromAccount(e.target.value as 'savings' | 'wadiah')}
-                      className="bg-transparent text-sm font-black border-none p-0 pr-6 text-white focus:ring-0 focus:outline-none cursor-pointer font-sans"
+                      id="select-from-bank-account"
+                      value={selectedFromAccId}
+                      onChange={(e) => setSelectedFromAccId(e.target.value)}
+                      className="w-full bg-transparent text-sm font-black border-none p-0 pr-6 text-white focus:ring-0 focus:outline-none cursor-pointer font-sans"
                     >
-                      <option value="savings" className="bg-emerald-950 text-white">Saving Account - {currentUser.accountNumber.slice(0, 4)}••••{currentUser.accountNumber.slice(-4)}</option>
-                      <option value="wadiah" className="bg-emerald-950 text-white">Saving Account 2 - 1000888888888</option>
+                      {userAccounts.map(acc => (
+                        <option key={acc.id} value={acc.id} className="bg-emerald-950 text-white font-medium">
+                          {acc.accountName} ({acc.accountType}) - {acc.accountNumber.slice(0, 4)}••••{acc.accountNumber.slice(-4)}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <ChevronRight className="w-4 h-4 text-emerald-200 pointer-events-none rotate-90" />
@@ -1258,7 +1323,7 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
                     <span className="text-xs text-emerald-300 font-bold">Balance</span>
                     <p className="text-xl font-black font-mono mt-0.5">
                       ETB {showFromBalance 
-                        ? (selectedFromAccount === 'savings' ? currentUser.balance : 5420.00).toLocaleString(undefined, { minimumFractionDigits: 2 })
+                        ? (selectedFromAccountObj?.balance ?? currentUser.balance).toLocaleString(undefined, { minimumFractionDigits: 2 })
                         : '••••••••'
                       }
                     </p>
@@ -1276,128 +1341,300 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
               {/* FIELDS AREA */}
               <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 space-y-4">
                 
-                {/* ACCOUNT NUMBER (Other Account Only) */}
-                {transferSubTab === 'other' && (
-                  <div className="space-y-1">
+                {/* OWN ACCOUNT: TO ACCOUNT SELECTOR */}
+                {transferSubTab === 'own' && (
+                  <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <label className="text-xs text-gray-500 font-bold">Account Number</label>
-                      <span className={`text-[10px] font-mono font-bold ${
-                        transferAccount.length === 13 
-                          ? 'text-emerald-700 font-extrabold' 
-                          : transferAccount.length > 0 
-                            ? 'text-amber-600' 
-                            : 'text-gray-400'
-                      }`}>
-                        {transferAccount.length}/13 digits
-                      </span>
-                    </div>
-                    <div className="relative">
-                      <div className="absolute left-3.5 top-[13px] text-gray-400">
-                        <Building className="w-4 h-4" />
-                      </div>
-                      <input 
-                        id="input-transfer-acc"
-                        type="text" 
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        maxLength={13}
-                        placeholder="Enter exactly 13-digit CBE account"
-                        value={transferAccount}
-                        onChange={(e) => setTransferAccount(e.target.value.replace(/\D/g, '').slice(0, 13))}
-                        className={`w-full bg-gray-50 border rounded-2xl px-4 py-3 pl-10 pr-10 text-sm focus:outline-none focus:bg-white transition font-mono font-semibold ${
-                          transferAccount.length === 13
-                            ? 'border-emerald-500 focus:border-emerald-700 ring-1 ring-emerald-500/20'
-                            : transferAccount.length > 0
-                              ? 'border-amber-400 focus:border-amber-500'
-                              : 'border-gray-100 focus:border-emerald-800'
-                        }`}
-                        required
-                      />
+                      <label className="text-xs text-gray-500 font-bold">To Destination Account</label>
                       <button
                         type="button"
-                        onClick={() => {
-                          setTransferAccount('1000246810121'); // Prefill Selamawit (13 digits)
-                          setSuccessMsg('Scanned Selamawit Account QR Code!');
-                        }}
-                        className="absolute right-3 top-[11px] p-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-emerald-800 transition cursor-pointer"
-                        title="Simulate Account Scan"
+                        onClick={() => setShowManageAccModal(true)}
+                        className="text-[10px] text-[#70189F] hover:underline font-bold flex items-center gap-0.5 cursor-pointer"
                       >
-                        <Scan className="w-4 h-4" />
+                        <Plus className="w-3 h-3" /> Add Account
                       </button>
                     </div>
 
-                    {/* Account length helper */}
-                    {transferAccount.length > 0 && transferAccount.length < 13 && (
-                      <p className="text-[11px] text-amber-600 font-medium pl-1">
-                        ⚠️ CBE Account must be exactly 13 digits ({13 - transferAccount.length} more needed)
-                      </p>
-                    )}
-
-                    {/* Account lookup loader / verification display */}
-                    {isAccountVerifying && (
-                      <p className="text-[11px] text-amber-600 font-bold animate-pulse pl-1">Verifying Account Title...</p>
-                    )}
-                    {verifiedAccountName && !isAccountVerifying && (
-                      <div className="mt-1 flex items-center gap-1 bg-emerald-50 text-emerald-800 text-[11px] py-1 px-2.5 rounded-lg border border-emerald-100/40">
-                        <Check className="w-3 h-3 text-emerald-600" />
-                        <span>Verified Name: <strong>{verifiedAccountName}</strong></span>
+                    {userAccounts.length <= 1 ? (
+                      <div className="p-3.5 bg-amber-50 rounded-2xl border border-amber-200 text-xs text-amber-900 space-y-2">
+                        <p className="font-bold">You currently have only 1 registered account.</p>
+                        <p className="text-[11px] text-amber-800">Open a second CBE account (Savings, Wadiah, Checking, or Digital Wallet) to transfer funds between your own accounts instantly without fees.</p>
+                        <button
+                          type="button"
+                          onClick={() => setShowManageAccModal(true)}
+                          className="bg-[#70189F] hover:bg-[#8322b7] text-white font-bold text-xs px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition cursor-pointer"
+                        >
+                          <Plus className="w-3.5 h-3.5" /> Open Another Account Now
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-1.5">
+                        <select
+                          id="select-to-bank-account"
+                          value={selectedToAccId}
+                          onChange={(e) => setSelectedToAccId(e.target.value)}
+                          className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-800 font-semibold text-gray-800 cursor-pointer"
+                        >
+                          {userAccounts
+                            .filter(a => a.id !== selectedFromAccId)
+                            .map(acc => (
+                              <option key={acc.id} value={acc.id}>
+                                {acc.accountName} ({acc.accountType}) - {acc.accountNumber} (Bal: ETB {acc.balance.toLocaleString()})
+                              </option>
+                            ))}
+                        </select>
+                        {selectedToAccountObj && (
+                          <div className="flex items-center justify-between text-[11px] px-1 text-gray-500 font-mono">
+                            <span>Current Destination Balance:</span>
+                            <span className="font-bold text-emerald-800">ETB {selectedToAccountObj.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
                 )}
 
-                {/* ACCOUNT HOLDER NAME (Other Account Only - Self, Father, Grandfather with Multiple Input Methods) */}
+                {/* OTHER ACCOUNT: SEARCHABLE REGISTERED RECIPIENT & AUTO-POPULATION */}
                 {transferSubTab === 'other' && (
-                  <div className="space-y-1">
-                    {(() => {
-                      const parts = transferRecipientName.trim().split(/\s+/);
-                      return (
-                        <EthiopianThreePartNameInput
-                          idPrefix="transfer-recipient"
-                          firstName={parts[0] || ''}
-                          fathersName={parts[1] || ''}
-                          grandfathersName={parts.slice(2).join(' ') || ''}
-                          onChange={({ fullName }) => setTransferRecipientName(fullName)}
-                          required
-                          theme="cbe"
-                        />
-                      );
-                    })()}
-                  </div>
-                )}
+                  <div className="space-y-3">
+                    
+                    {/* If a registered recipient is already selected / locked in */}
+                    {selectedRegisteredRecipient ? (
+                      <div className="bg-emerald-50/90 border border-emerald-300/80 rounded-2xl p-4 relative animate-in fade-in">
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-11 h-11 rounded-full bg-emerald-800 text-white flex items-center justify-center font-extrabold text-sm shadow-xs flex-shrink-0">
+                              {selectedRegisteredRecipient.accountName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <h4 className="font-extrabold text-sm text-gray-900 leading-tight">
+                                  {selectedRegisteredRecipient.accountName}
+                                </h4>
+                                <span className="text-[9px] font-black bg-emerald-200 text-emerald-900 px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
+                                  <Check className="w-2.5 h-2.5" /> Registered
+                                </span>
+                              </div>
+                              <p className="text-xs font-mono text-emerald-950 font-bold mt-0.5">
+                                {selectedRegisteredRecipient.accountNumber}
+                              </p>
+                              <p className="text-[10px] text-gray-500 mt-0.5">
+                                {selectedRegisteredRecipient.bankName}
+                              </p>
+                            </div>
+                          </div>
 
-                {/* TO ACCOUNT (Own Account Only) */}
-                {transferSubTab === 'own' && (
-                  <div className="space-y-1">
-                    <label className="text-xs text-gray-500 font-bold">To Account</label>
-                    <select
-                      value={selectedFromAccount === 'savings' ? 'wadiah' : 'savings'}
-                      disabled
-                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3 text-sm focus:outline-none font-semibold text-gray-700"
-                    >
-                      {selectedFromAccount === 'savings' ? (
-                        <option>Saving Account 2 - 1000888888888</option>
-                      ) : (
-                        <option>Saving Account - {currentUser.accountNumber}</option>
-                      )}
-                    </select>
-                  </div>
-                )}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedRegisteredRecipient(null);
+                              setTransferAccount('');
+                              setTransferRecipientName('');
+                              setSearchRecipientQuery('');
+                            }}
+                            className="text-xs font-bold text-emerald-800 hover:text-emerald-950 underline px-2 py-1 cursor-pointer"
+                          >
+                            Change
+                          </button>
+                        </div>
 
-                {/* DESTINATION BANK SELECTOR (Other Account Only) */}
-                {transferSubTab === 'other' && (
-                  <div className="space-y-1">
-                    <label className="text-xs text-gray-500 font-bold">Destination Bank</label>
-                    <select 
-                      id="select-transfer-bank"
-                      value={transferBank}
-                      onChange={(e) => setTransferBank(e.target.value)}
-                      className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-800 focus:bg-white font-semibold cursor-pointer"
-                    >
-                      {ETHIOPIAN_BANKS.map((bank) => (
-                        <option key={bank} value={bank}>{bank}</option>
-                      ))}
-                    </select>
+                        <div className="mt-2.5 pt-2 border-t border-emerald-200/60 flex items-center gap-1.5 text-[11px] text-emerald-900 font-medium">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 flex-shrink-0" />
+                          <span>Recipient confirmed! No need to write name again. Just enter amount below.</span>
+                        </div>
+                      </div>
+                    ) : (
+                      /* SEARCH BAR TO FIND REGISTERED RECIPIENTS BY NAME OR ACCOUNT NUMBER */
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <label className="text-xs text-gray-700 font-bold">Search Recipient (Name or Account Number)</label>
+                          <span className="text-[10px] text-emerald-800 font-bold">Instant Auto-fill</span>
+                        </div>
+
+                        <div className="relative">
+                          <div className="absolute left-3.5 top-[13px] text-gray-400">
+                            <Search className="w-4 h-4 text-emerald-800" />
+                          </div>
+                          <input
+                            id="input-search-registered-recipient"
+                            type="text"
+                            placeholder="Type recipient name (e.g. Selamawit) or 13-digit A/C..."
+                            value={searchRecipientQuery}
+                            onFocus={() => setIsSearchFocused(true)}
+                            onChange={(e) => {
+                              setSearchRecipientQuery(e.target.value);
+                              setIsSearchFocused(true);
+                            }}
+                            className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-4 py-3 pl-10 pr-10 text-xs focus:outline-none focus:border-emerald-800 focus:bg-white transition font-medium"
+                          />
+                          {searchRecipientQuery && (
+                            <button
+                              type="button"
+                              onClick={() => setSearchRecipientQuery('')}
+                              className="absolute right-3.5 top-[13px] text-gray-400 hover:text-gray-600"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Search Results Dropdown */}
+                        {searchRecipientQuery.trim().length > 0 && (
+                          <div className="bg-white border border-gray-200 rounded-2xl shadow-lg max-h-56 overflow-y-auto divide-y divide-gray-100 animate-in fade-in z-20 relative">
+                            {matchedRegisteredAccounts.length > 0 ? (
+                              matchedRegisteredAccounts.map((acc, idx) => (
+                                <button
+                                  key={idx}
+                                  type="button"
+                                  onClick={() => handleSelectRecipient(acc)}
+                                  className="w-full p-3 text-left hover:bg-emerald-50/70 transition flex items-center justify-between group cursor-pointer"
+                                >
+                                  <div className="flex items-center gap-2.5 min-w-0">
+                                    <div className="w-8 h-8 rounded-full bg-purple-100 text-[#70189F] font-bold text-xs flex items-center justify-center flex-shrink-0">
+                                      {acc.accountName.slice(0, 2).toUpperCase()}
+                                    </div>
+                                    <div className="min-w-0">
+                                      <p className="text-xs font-bold text-gray-900 group-hover:text-emerald-900 truncate">
+                                        {acc.accountName}
+                                      </p>
+                                      <p className="text-[11px] font-mono text-gray-500">
+                                        {acc.accountNumber} • {acc.bankName}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md flex-shrink-0">
+                                    Select
+                                  </span>
+                                </button>
+                              ))
+                            ) : (
+                              <div className="p-3 text-center text-xs text-gray-500">
+                                No registered account matching "{searchRecipientQuery}".
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Quick Directory Chips */}
+                        {!searchRecipientQuery && (
+                          <div className="pt-1">
+                            <p className="text-[10px] text-gray-400 font-bold uppercase mb-1.5 tracking-wider">
+                              Verified Directory Contacts:
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {LocalDb.searchRegisteredAccounts('').slice(0, 4).map((rec, i) => (
+                                <button
+                                  key={i}
+                                  type="button"
+                                  onClick={() => handleSelectRecipient(rec)}
+                                  className="bg-gray-50 hover:bg-emerald-50 border border-gray-200 hover:border-emerald-300 text-gray-700 hover:text-emerald-900 text-[11px] font-bold px-2.5 py-1 rounded-xl transition cursor-pointer flex items-center gap-1.5"
+                                >
+                                  <span className="w-2 h-2 rounded-full bg-emerald-600" />
+                                  <span>{rec.accountName.split(' ')[0]} ({rec.accountNumber.slice(-4)})</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Manual / Direct 13-digit Input fallback */}
+                        <div className="pt-2 border-t border-gray-100">
+                          <div className="flex justify-between items-center mb-1">
+                            <label className="text-xs text-gray-500 font-bold">Or Enter Account Number Directly</label>
+                            <span className={`text-[10px] font-mono font-bold ${
+                              transferAccount.length === 13 ? 'text-emerald-700 font-extrabold' : 'text-gray-400'
+                            }`}>
+                              {transferAccount.length}/13 digits
+                            </span>
+                          </div>
+
+                          <div className="relative">
+                            <div className="absolute left-3.5 top-[13px] text-gray-400">
+                              <Building className="w-4 h-4" />
+                            </div>
+                            <input 
+                              id="input-transfer-acc"
+                              type="text" 
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              maxLength={13}
+                              placeholder="1000XXXXXXXXX (13 digits)"
+                              value={transferAccount}
+                              onChange={(e) => setTransferAccount(e.target.value.replace(/\D/g, '').slice(0, 13))}
+                              className={`w-full bg-gray-50 border rounded-2xl px-4 py-3 pl-10 pr-10 text-sm focus:outline-none focus:bg-white transition font-mono font-semibold ${
+                                transferAccount.length === 13
+                                  ? 'border-emerald-500 focus:border-emerald-700 ring-1 ring-emerald-500/20'
+                                  : transferAccount.length > 0
+                                    ? 'border-amber-400 focus:border-amber-500'
+                                    : 'border-gray-100 focus:border-emerald-800'
+                              }`}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleSelectRecipient({
+                                  name: 'Selamawit Tekle Haile',
+                                  accountNumber: '1000246810121',
+                                  bankName: 'Commercial Bank of Ethiopia (CBE)'
+                                });
+                                setSuccessMsg('Scanned & selected Selamawit Tekle Haile!');
+                              }}
+                              className="absolute right-3 top-[11px] p-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-emerald-800 transition cursor-pointer"
+                              title="Simulate Scan"
+                            >
+                              <Scan className="w-4 h-4" />
+                            </button>
+                          </div>
+
+                          {/* Account verification indicator */}
+                          {isAccountVerifying && (
+                            <p className="text-[11px] text-amber-600 font-bold animate-pulse mt-1 pl-1">Verifying registered account title...</p>
+                          )}
+                          {verifiedAccountName && !isAccountVerifying && (
+                            <div className="mt-1 flex items-center gap-1 bg-emerald-50 text-emerald-800 text-[11px] py-1 px-2.5 rounded-lg border border-emerald-100/40 font-semibold">
+                              <Check className="w-3 h-3 text-emerald-600" />
+                              <span>Registered Name: <strong>{verifiedAccountName}</strong></span>
+                            </div>
+                          )}
+
+                          {/* Recipient name input only if not verified from directory */}
+                          {!selectedRegisteredRecipient && (
+                            <div className="mt-3 space-y-1">
+                              <label className="text-xs text-gray-500 font-bold">Recipient Name</label>
+                              {(() => {
+                                const parts = transferRecipientName.trim().split(/\s+/);
+                                return (
+                                  <EthiopianThreePartNameInput
+                                    idPrefix="transfer-recipient"
+                                    firstName={parts[0] || ''}
+                                    fathersName={parts[1] || ''}
+                                    grandfathersName={parts.slice(2).join(' ') || ''}
+                                    onChange={({ fullName }) => setTransferRecipientName(fullName)}
+                                    required
+                                    theme="cbe"
+                                  />
+                                );
+                              })()}
+                            </div>
+                          )}
+
+                          {/* Destination Bank Selector */}
+                          <div className="mt-3 space-y-1">
+                            <label className="text-xs text-gray-500 font-bold">Destination Bank</label>
+                            <select 
+                              id="select-transfer-bank"
+                              value={transferBank}
+                              onChange={(e) => setTransferBank(e.target.value)}
+                              className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-emerald-800 focus:bg-white font-semibold cursor-pointer"
+                            >
+                              {ETHIOPIAN_BANKS.map((bank) => (
+                                <option key={bank} value={bank}>{bank}</option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -2178,6 +2415,39 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
             </form>
           </div>
         </div>
+      )}
+
+      {/* ================= TRANSACTION DETAIL MODAL ================= */}
+      {selectedTxDetail && (
+        <TransactionDetailModal
+          transaction={selectedTxDetail}
+          onClose={() => setSelectedTxDetail(null)}
+          onViewReceipt={(tx) => {
+            setSelectedTxDetail(null);
+            if (onSelectTransaction) {
+              onSelectTransaction(tx);
+            }
+          }}
+          currentUserId={currentUser.id}
+          currentUserAccount={currentUser.accountNumber}
+        />
+      )}
+
+      {/* ================= MANAGE ACCOUNTS MODAL ================= */}
+      {showManageAccModal && (
+        <ManageAccountsModal
+          currentUser={currentUser}
+          accounts={userAccounts}
+          selectedAccountId={selectedFromAccId}
+          onClose={() => setShowManageAccModal(false)}
+          onSelectAccount={(acc) => {
+            setSelectedFromAccId(acc.id);
+            setShowManageAccModal(false);
+          }}
+          onAccountsUpdated={() => {
+            refreshAccounts();
+          }}
+        />
       )}
 
     </div>

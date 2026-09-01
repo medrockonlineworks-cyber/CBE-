@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { RotateCw, Search, ChevronDown, Check } from 'lucide-react';
+import { RotateCw, Search, ChevronDown, Check, LayoutGrid } from 'lucide-react';
 
 interface HeaderProps {
   userName?: string;
@@ -12,7 +12,7 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({
-  userName = 'Abdurahman',
+  userName = 'Leykun',
   onOpenMenu,
   onRefresh,
   onOpenSearch,
@@ -40,30 +40,31 @@ export const Header: React.FC<HeaderProps> = ({
   ];
 
   return (
-    <header className="relative z-30 pt-4 px-4 pb-2 max-w-md mx-auto w-full flex items-center justify-between text-white select-none">
-      {/* Left Section: 2x2 Grid Menu Button & User Greeting */}
+    <header className="relative z-30 pt-3 px-4 pb-2 max-w-md mx-auto w-full flex items-center justify-between text-white select-none">
+      {/* Left Section: 4-circle Grid Menu Button & User Greeting */}
       <div className="flex items-center gap-2.5">
         {/* Circular Menu Button */}
         <button
           id="btn-header-menu"
           aria-label="Open App Menu"
           onClick={onOpenMenu}
-          className="w-9 h-9 rounded-2xl bg-white/20 hover:bg-white/30 active:scale-95 transition-all flex items-center justify-center flex-shrink-0 cursor-pointer border border-white/25 backdrop-blur-xs shadow-xs"
+          className="w-10 h-10 rounded-2xl bg-white/15 hover:bg-white/25 active:scale-95 transition-all flex items-center justify-center flex-shrink-0 cursor-pointer border border-white/20 backdrop-blur-xs shadow-xs"
         >
+          {/* Authentic 4-circle 2x2 grid icon */}
           <div className="grid grid-cols-2 gap-1 p-0.5">
-            <div className="w-1.5 h-1.5 rounded-full border border-white/90 bg-white/40" />
-            <div className="w-1.5 h-1.5 rounded-full border border-white/90 bg-white/40" />
-            <div className="w-1.5 h-1.5 rounded-full border border-white/90 bg-white/40" />
-            <div className="w-1.5 h-1.5 rounded-full border border-white/90 bg-white/40" />
+            <div className="w-2 h-2 rounded-full border-[1.8px] border-white bg-transparent" />
+            <div className="w-2 h-2 rounded-full border-[1.8px] border-white bg-transparent" />
+            <div className="w-2 h-2 rounded-full border-[1.8px] border-white bg-transparent" />
+            <div className="w-2 h-2 rounded-full border-[1.8px] border-white bg-transparent" />
           </div>
         </button>
 
         {/* Greeting Text */}
-        <div>
-          <p className="text-[11px] text-white/80 font-normal leading-none">
+        <div className="flex flex-col justify-center">
+          <p className="text-[12px] text-white/80 font-normal leading-tight">
             Hello,
           </p>
-          <h2 className="text-base font-extrabold text-white tracking-tight leading-tight mt-0.5">
+          <h2 className="text-[17px] font-bold text-white tracking-tight leading-none mt-0.5">
             {userName}
           </h2>
         </div>
@@ -77,7 +78,7 @@ export const Header: React.FC<HeaderProps> = ({
             id="btn-language-selector"
             aria-label="Select Language"
             onClick={() => setLangDropdownOpen(!langDropdownOpen)}
-            className="bg-white/20 hover:bg-white/30 border border-white/25 px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1 text-white transition cursor-pointer backdrop-blur-xs active:scale-95"
+            className="bg-white/15 hover:bg-white/25 border border-white/20 px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 text-white transition cursor-pointer backdrop-blur-xs active:scale-95"
           >
             <span>{selectedLanguage}</span>
             <ChevronDown className={`w-3.5 h-3.5 opacity-90 transition-transform duration-200 ${langDropdownOpen ? 'rotate-180' : ''}`} />
@@ -105,17 +106,17 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </div>
 
-        {/* Refresh Button */}
+        {/* Refresh / Sync Button */}
         <button
           id="btn-header-refresh"
           aria-label="Refresh Balance"
           onClick={onRefresh}
-          className={`w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 border border-white/25 flex items-center justify-center text-white transition cursor-pointer backdrop-blur-xs active:scale-95 ${
+          className={`w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 border border-white/20 flex items-center justify-center text-white transition cursor-pointer backdrop-blur-xs active:scale-95 ${
             isRefreshing ? 'animate-spin' : ''
           }`}
           title="Refresh Balance"
         >
-          <RotateCw className="w-4 h-4 stroke-[2.4]" />
+          <RotateCw className="w-4.5 h-4.5 stroke-[2.2]" />
         </button>
 
         {/* Search Button */}
@@ -123,10 +124,10 @@ export const Header: React.FC<HeaderProps> = ({
           id="btn-header-search"
           aria-label="Search Transactions & Services"
           onClick={onOpenSearch}
-          className="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 border border-white/25 flex items-center justify-center text-white transition cursor-pointer backdrop-blur-xs active:scale-95"
+          className="w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 border border-white/20 flex items-center justify-center text-white transition cursor-pointer backdrop-blur-xs active:scale-95"
           title="Search"
         >
-          <Search className="w-4 h-4 stroke-[2.4]" />
+          <Search className="w-4.5 h-4.5 stroke-[2.2]" />
         </button>
       </div>
     </header>

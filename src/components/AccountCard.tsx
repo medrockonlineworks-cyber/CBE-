@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Copy, Check } from 'lucide-react';
+import { Eye, EyeOff, Copy, Check, ChevronDown, Layers } from 'lucide-react';
 import DottedWorldMap from './DottedWorldMap';
 import { CbeGoldenEmblemSvg } from './CbeLogo';
+import { BankAccount } from '../types';
 
 interface AccountCardProps {
   bankName?: string;
@@ -15,6 +16,10 @@ interface AccountCardProps {
   onToggleBalance?: () => void;
   customLogoUrl?: string | null;
   className?: string;
+  accounts?: BankAccount[];
+  selectedAccountId?: string;
+  onSelectAccount?: (acc: BankAccount) => void;
+  onOpenManageAccounts?: () => void;
 }
 
 export const AccountCard: React.FC<AccountCardProps> = ({
@@ -29,6 +34,10 @@ export const AccountCard: React.FC<AccountCardProps> = ({
   onToggleBalance,
   customLogoUrl = null,
   className = '',
+  accounts = [],
+  selectedAccountId,
+  onSelectAccount,
+  onOpenManageAccounts
 }) => {
   const [showBalance, setShowBalance] = useState(showBalanceDefault);
   const [copied, setCopied] = useState(false);
@@ -39,9 +48,11 @@ export const AccountCard: React.FC<AccountCardProps> = ({
   };
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(accountNumber);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    if (accountNumber) {
+      navigator.clipboard.writeText(accountNumber);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
   };
 
   // Format account string like: "Saving Account 1 **** 8657"
@@ -79,30 +90,47 @@ export const AccountCard: React.FC<AccountCardProps> = ({
         <DottedWorldMap />
         <div className="absolute -right-10 -bottom-10 w-36 h-36 bg-[#deb356]/10 rounded-full blur-2xl pointer-events-none" />
 
-        {/* TOP SECTION: Bank Emblem & Bank Titles */}
-        <div className="relative z-10 flex items-center gap-2.5 min-w-0">
-          {/* Bank Golden Coin Emblem or Custom Logo */}
-          <div className="w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0 flex items-center justify-center">
-            {customLogoUrl ? (
-              <img 
-                src={customLogoUrl} 
-                alt="Bank Logo" 
-                className="w-8 h-8 object-contain rounded-full"
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              <CbeGoldenEmblemSvg className="w-8 h-8 sm:w-9 sm:h-9" />
-            )}
+        {/* TOP SECTION: Bank Emblem & Bank Titles & Multi-Account Switcher */}
+        <div className="relative z-10 flex items-center justify-between gap-2 min-w-0">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            {/* Bank Golden Coin Emblem or Custom Logo */}
+            <div className="w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0 flex items-center justify-center">
+              {customLogoUrl ? (
+                <img 
+                  src={customLogoUrl} 
+                  alt="Bank Logo" 
+                  className="w-8 h-8 object-contain rounded-full"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <CbeGoldenEmblemSvg className="w-8 h-8 sm:w-9 sm:h-9" />
+              )}
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <h3 className="text-[#deb356] font-extrabold text-xs sm:text-[13px] tracking-wide leading-none whitespace-nowrap overflow-hidden text-ellipsis">
+                {bankName}
+              </h3>
+              <p className="text-[#deb356]/80 text-[9px] sm:text-[10px] font-medium tracking-tight mt-1 whitespace-nowrap overflow-hidden text-ellipsis">
+                {slogan}
+              </p>
+            </div>
           </div>
 
-          <div className="min-w-0 flex-1">
-            <h3 className="text-[#deb356] font-extrabold text-xs sm:text-[13px] tracking-wide leading-none whitespace-nowrap overflow-hidden text-ellipsis">
-              {bankName}
-            </h3>
-            <p className="text-[#deb356]/80 text-[9px] sm:text-[10px] font-medium tracking-tight mt-1 whitespace-nowrap overflow-hidden text-ellipsis">
-              {slogan}
-            </p>
-          </div>
+          {/* Account switcher pill if multiple accounts or manage handler available */}
+          {onOpenManageAccounts && (
+            <button
+              id="btn-card-switch-account"
+              type="button"
+              onClick={onOpenManageAccounts}
+              className="flex-shrink-0 bg-[#deb356]/15 hover:bg-[#deb356]/25 border border-[#deb356]/30 text-[#deb356] text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 transition cursor-pointer active:scale-95 shadow-xs"
+              title="Manage multiple CBE accounts"
+            >
+              <Layers className="w-3 h-3 text-[#deb356]" />
+              <span>{accounts.length > 1 ? `${accounts.length} Accounts` : 'Accounts'}</span>
+              <ChevronDown className="w-2.5 h-2.5 opacity-80" />
+            </button>
+          )}
         </div>
 
         {/* MIDDLE SECTION: Horizontally Centered Balance & Right Eye Toggle */}
@@ -159,16 +187,6 @@ export const AccountCard: React.FC<AccountCardProps> = ({
         <div className="mt-3 text-center text-[10px] text-gray-400/90 font-mono tracking-wide">
           {dateTimeString}
         </div>
-      </div>
-
-      {/* CARD CAROUSEL INDICATOR PILLS (Below Card) */}
-      <div className="flex justify-center items-center gap-1.5 mt-3">
-        {/* Active Pill: 24px x 6px */}
-        <div className="w-6 h-1.5 bg-[#deb356] rounded-full transition-all shadow-xs" />
-        {/* Inactive Circle 1 */}
-        <div className="w-1.5 h-1.5 bg-[#deb356]/70 rounded-full transition-all" />
-        {/* Inactive Circle 2 */}
-        <div className="w-1.5 h-1.5 bg-[#deb356]/70 rounded-full transition-all" />
       </div>
     </div>
   );

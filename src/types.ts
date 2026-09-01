@@ -1,6 +1,8 @@
 export type UserRole = 'user' | 'admin';
 export type UserStatus = 'active' | 'suspended';
 
+export type BankAccountType = 'savings' | 'checking' | 'wadiah' | 'cbe_birr' | 'fixed_deposit' | 'youth_savings' | 'women_special';
+
 export interface UserProfile {
   id: string;
   name: string;
@@ -21,12 +23,25 @@ export interface UserProfile {
 export interface BankAccount {
   id: string;
   userId: string;
+  accountName: string;
   accountNumber: string;
-  accountType: 'savings' | 'checking';
+  accountType: BankAccountType;
   balance: number;
   availableBalance: number;
   status: 'active' | 'frozen';
-  currency: 'ETB';
+  currency: 'ETB' | string;
+  isPrimary?: boolean;
+  createdAt: string;
+}
+
+export interface RegisteredAccountInfo {
+  accountNumber: string;
+  accountName: string;
+  bankName: string;
+  userId?: string;
+  phone?: string;
+  isVerified: boolean;
+  accountType?: string;
 }
 
 export type TransactionType = 'send' | 'receive' | 'transfer' | 'bill' | 'airtime';
@@ -52,6 +67,7 @@ export interface Transaction {
   status: TransactionStatus;
   reference: string;
   createdAt: string;
+  category?: string;
 }
 
 export interface Beneficiary {

@@ -20,14 +20,14 @@ export class FirebaseService {
    * Checks if Firebase is active and connected
    */
   isConfigured(): boolean {
-    return isFirebaseConfigured;
+    return isFirebaseConfigured && Boolean(db);
   }
 
   /**
    * Syncs user profile document to Firestore
    */
   async syncUserProfile(user: UserProfile): Promise<void> {
-    if (!this.isConfigured()) return;
+    if (!this.isConfigured() || !db) return;
     try {
       const userRef = doc(db, 'users', user.id);
       await setDoc(userRef, {
@@ -52,7 +52,7 @@ export class FirebaseService {
    * Syncs a new or updated transaction to Firestore
    */
   async syncTransaction(tx: Transaction): Promise<void> {
-    if (!this.isConfigured()) return;
+    if (!this.isConfigured() || !db) return;
     try {
       const txRef = doc(db, 'transactions', tx.id);
       await setDoc(txRef, {
@@ -68,7 +68,7 @@ export class FirebaseService {
    * Syncs an Ethiopian name record to Firestore
    */
   async syncEthiopianName(nameItem: EthiopianName): Promise<void> {
-    if (!this.isConfigured()) return;
+    if (!this.isConfigured() || !db) return;
     try {
       const nameRef = doc(db, 'ethiopianNames', nameItem.id);
       await setDoc(nameRef, {
@@ -91,7 +91,7 @@ export class FirebaseService {
    * Fetches Ethiopian names from Firestore if available
    */
   async fetchEthiopianNamesFromFirestore(): Promise<EthiopianName[] | null> {
-    if (!this.isConfigured()) return null;
+    if (!this.isConfigured() || !db) return null;
     try {
       const colRef = collection(db, 'ethiopianNames');
       const snap = await getDocs(colRef);
@@ -123,7 +123,7 @@ export class FirebaseService {
    * Syncs an audit log entry to Firestore
    */
   async syncAuditLog(log: AuditLog): Promise<void> {
-    if (!this.isConfigured()) return;
+    if (!this.isConfigured() || !db) return;
     try {
       const logRef = doc(db, 'auditLogs', log.id);
       await setDoc(logRef, {

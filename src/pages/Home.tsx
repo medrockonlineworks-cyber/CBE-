@@ -5,6 +5,8 @@ import QuickActions from '../components/QuickActions';
 import ServiceGrid from '../components/ServiceGrid';
 import QRButton from '../components/QRButton';
 import BottomNavigation, { NavTabId } from '../components/BottomNavigation';
+import TransactionDetailModal from '../components/TransactionDetailModal';
+import ManageAccountsModal from '../components/ManageAccountsModal';
 import { 
   X, 
   Check, 
@@ -24,11 +26,12 @@ import {
   ChevronRight,
   ExternalLink
 } from 'lucide-react';
-import { UserProfile, Transaction } from '../types';
+import { UserProfile, Transaction, BankAccount } from '../types';
 import { LocalDb } from '../lib/mockData';
 
 interface HomeProps {
   currentUser?: UserProfile | null;
+  initialNavTab?: 'home' | 'history';
   onNavigateToTab?: (tab: 'home' | 'transfer' | 'payments' | 'history' | 'profile', subTab?: string) => void;
   onSelectTransaction?: (tx: Transaction) => void;
   onOpenAdmin?: () => void;
@@ -36,6 +39,7 @@ interface HomeProps {
 
 export const Home: React.FC<HomeProps> = ({
   currentUser: propUser,
+  initialNavTab = 'home',
   onNavigateToTab,
   onSelectTransaction,
   onOpenAdmin,
@@ -43,8 +47,8 @@ export const Home: React.FC<HomeProps> = ({
   // Fallback demo user if none passed in
   const currentUser: UserProfile = propUser || {
     id: 'demo-user-1',
-    name: 'Abdurahman',
-    email: 'abdurahman@cbe.et',
+    name: 'Leykun Jemaneh',
+    email: 'leykunjemaneh3@gmail.com',
     phone: '+251911234567',
     accountNumber: '1000284758657',
     accountType: 'wadiah',
@@ -56,20 +60,40 @@ export const Home: React.FC<HomeProps> = ({
     createdAt: new Date().toISOString(),
   };
 
-  const [activeNavTab, setActiveNavTab] = useState<NavTabId>('home');
+  const [activeNavTab, setActiveNavTab] = useState<NavTabId>(initialNavTab);
   const [selectedLanguage, setSelectedLanguage] = useState('English');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [currentDateTime, setCurrentDateTime] = useState('01 Jul 2026 • 10:14 AM');
   const [customLogoUrl, setCustomLogoUrl] = useState<string | null>(null);
 
+  // User Accounts (Multi-Account support)
+  const [userAccounts, setUserAccounts] = useState<BankAccount[]>(() => LocalDb.getUserAccounts(currentUser.id));
+  const [selectedAccountId, setSelectedAccountId] = useState<string>(() => {
+    const accs = LocalDb.getUserAccounts(currentUser.id);
+    const primary = accs.find(a => a.isPrimary) || accs[0];
+    return primary ? primary.id : '';
+  });
+  const [showManageAccountsModal, setShowManageAccountsModal] = useState(false);
+
+  // Transaction history filter state
+  const [historyFilter, setHistoryFilter] = useState<'all' | 'debited' | 'credited'>('all');
+  const [isHistorySearchOpen, setIsHistorySearchOpen] = useState(false);
+  const [historySearchText, setHistorySearchText] = useState('');
+  const [selectedDetailTx, setSelectedDetailTx] = useState<Transaction | null>(null);
+
   // Active Interactive Modal state
   const [activeModal, setActiveModal] = useState<
-    'qr' | 'search' | 'menu' | 'cashout' | 'ministatement' | 'cards' | 'billshare' | 'cbe-transfer' | 'receive' | 'airtime' | 'other-transfers' | 'cbebirr' | 'bills-utilities' | 'banking' | 'government-services' | 'pay-merchant' | 'travel' | 'shopping' | 'entertainment' | 'tax-payment' | null
+    'qr' | 'search' | 'menu' | 'cashout' | 'ministatement' | 'cards' | 'billshare' | 'schedules' | 'cbe-transfer' | 'receive' | 'airtime' | 'other-transfers' | 'cbebirr' | 'bills-utilities' | 'banking' | 'government-services' | 'pay-merchant' | 'travel' | 'shopping' | 'entertainment' | 'tax-payment' | null
   >(null);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [qrScanSuccess, setQrScanSuccess] = useState(false);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
+  const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
+
+  useEffect(() => {
+    setActiveNavTab(initialNavTab);
+  }, [initialNavTab]);
 
   useEffect(() => {
     setCustomLogoUrl(LocalDb.getCustomBankLogo());
@@ -95,7 +119,10 @@ export const Home: React.FC<HomeProps> = ({
 
   const loadTransactions = () => {
     const txs = LocalDb.getTransactions();
+    setAllTransactions(txs);
     setRecentTransactions(txs.slice(0, 6));
+    const accs = LocalDb.getUserAccounts(currentUser.id);
+    setUserAccounts(accs);
   };
 
   const handleRefresh = () => {
@@ -106,18 +133,19 @@ export const Home: React.FC<HomeProps> = ({
     }, 650);
   };
 
-  // Nav handler for 5-element bottom bar
+  // Nav handler for bottom bar
   const handleNavTabChange = (tab: NavTabId) => {
-    setActiveNavTab(tab);
     if (tab === 'home') {
       setActiveNavTab('home');
+      onNavigateToTab?.('home');
+    } else if (tab === 'history' || tab === 'transactions') {
+      setActiveNavTab('history');
+      onNavigateToTab?.('history');
     } else if (tab === 'transfer') {
       onNavigateToTab?.('transfer');
     } else if (tab === 'payments') {
       onNavigateToTab?.('payments');
-    } else if (tab === 'history') {
-      onNavigateToTab?.('history');
-    } else if (tab === 'profile') {
+    } else if (tab === 'profile' || tab === 'settings') {
       onNavigateToTab?.('profile');
     }
   };
@@ -136,12 +164,58 @@ export const Home: React.FC<HomeProps> = ({
   };
 
   // Quick action handler
-  const handleQuickAction = (actionId: 'cashout' | 'ministatement' | 'cards' | 'billshare') => {
+  const handleQuickAction = (actionId: 'ministatement' | 'cards' | 'billshare' | 'schedules') => {
     setActiveModal(actionId);
   };
 
+  // Format date helper for CBE transaction history
+  const formatCbeHistoryDate = (isoOrStr: string): string => {
+    try {
+      const d = new Date(isoOrStr);
+      if (isNaN(d.getTime())) return isoOrStr;
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const day = d.getDate().toString().padStart(2, '0');
+      const mon = months[d.getMonth()];
+      const yr = d.getFullYear().toString().slice(-2);
+      let hours = d.getHours();
+      const minutes = d.getMinutes().toString().padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      return `${day}-${mon}-${yr} ${hours}:${minutes} ${ampm}`;
+    } catch {
+      return isoOrStr;
+    }
+  };
+
+  // Category helper
+  const getCbeCategory = (tx: Transaction): string => {
+    if (tx.category) return tx.category;
+    if (tx.type === 'airtime') return 'AIRTIME PURCHASE';
+    if (tx.type === 'bill') return 'UTILITY PAYMENT';
+    if (tx.senderName === 'Deposit' || tx.description?.toLowerCase().includes('deposit')) return 'MOBILE MONEY TXN';
+    return 'ACCOUNT TO ACCOUNT';
+  };
+
+  // Filtered transactions for the History view
+  const filteredHistoryTransactions = allTransactions.filter((tx) => {
+    const isCredit = tx.type === 'receive' || tx.senderName === 'Deposit';
+    if (historyFilter === 'debited' && isCredit) return false;
+    if (historyFilter === 'credited' && !isCredit) return false;
+
+    if (historySearchText.trim()) {
+      const query = historySearchText.toLowerCase();
+      const matchName = (tx.recipientName || '').toLowerCase().includes(query) || (tx.senderName || '').toLowerCase().includes(query);
+      const matchRef = (tx.reference || tx.id || '').toLowerCase().includes(query);
+      const matchDesc = (tx.description || '').toLowerCase().includes(query);
+      const matchAcc = (tx.recipientAccount || tx.senderAccount || '').toLowerCase().includes(query);
+      if (!matchName && !matchRef && !matchDesc && !matchAcc) return false;
+    }
+    return true;
+  });
+
   // Extract first name for greeting
-  const firstName = currentUser.name.split(' ')[0] || 'Abdurahman';
+  const firstName = currentUser.name.split(' ')[0] || 'Leykun';
 
   return (
     <div className="min-h-full w-full bg-[#F7F7F7] font-sans relative flex flex-col justify-between overflow-x-hidden text-gray-900 pb-28 select-none">
@@ -192,23 +266,190 @@ export const Home: React.FC<HomeProps> = ({
 
         {/* 2. BLACK ACCOUNT CARD (Floating & Overlapping Curve) */}
         <main className="w-full mt-2 sm:mt-3 flex flex-col">
-          <AccountCard
-            bankName="Commercial Bank of Ethiopia"
-            slogan="The bank you can always rely on!"
-            balance={currentUser.balance}
-            currency={currentUser.currency || 'ETB'}
-            accountType="Saving Account"
-            accountNumber={currentUser.accountNumber}
-            dateTimeString={currentDateTime}
-            showBalanceDefault={false}
-            customLogoUrl={customLogoUrl}
-          />
+          {(() => {
+            const activeAcc = userAccounts.find(a => a.id === selectedAccountId) || userAccounts[0];
+            return (
+              <AccountCard
+                bankName="Commercial Bank of Ethiopia"
+                slogan="The bank you can always rely on!"
+                balance={activeAcc ? activeAcc.balance : currentUser.balance}
+                currency={activeAcc?.currency || currentUser.currency || 'ETB'}
+                accountType={activeAcc ? `${activeAcc.accountName} (${activeAcc.accountType})` : 'Saving Account'}
+                accountNumber={activeAcc ? activeAcc.accountNumber : currentUser.accountNumber}
+                dateTimeString={currentDateTime}
+                showBalanceDefault={false}
+                customLogoUrl={customLogoUrl}
+                accounts={userAccounts}
+                selectedAccountId={selectedAccountId}
+                onSelectAccount={(acc) => setSelectedAccountId(acc.id)}
+                onOpenManageAccounts={() => setShowManageAccountsModal(true)}
+              />
+            );
+          })()}
 
-          {/* 3. FOUR CIRCULAR QUICK ACTION BUTTONS */}
-          <QuickActions onActionClick={handleQuickAction} />
+          {/* DYNAMIC CONTENT UNDER CARD BASED ON ACTIVE TAB */}
+          {activeNavTab === 'history' ? (
+            /* ========================================================
+               TRANSACTION HISTORY SECTION (Matching Authentic CBE Layout)
+               ======================================================== */
+            <div className="w-full max-w-md mx-auto bg-white rounded-t-3xl shadow-xs border border-gray-100/90 min-h-[460px] px-4 pt-2.5 pb-8 mt-2.5 flex flex-col animate-in fade-in duration-200">
+              {/* Gold drag handle indicator pill */}
+              <div className="w-11 h-1 bg-[#d4af37]/80 rounded-full mx-auto mb-2.5" />
 
-          {/* 4. MAIN TWO-COLUMN SERVICE GRID */}
-          <ServiceGrid onServiceSelect={handleServiceSelect} />
+              {/* Filter Tabs & Search Icon Row */}
+              <div className="flex items-center justify-between border-b border-gray-100 pb-1 mb-2 px-1">
+                <div className="flex items-center gap-7">
+                  <button
+                    id="tab-history-all"
+                    type="button"
+                    onClick={() => setHistoryFilter('all')}
+                    className={`text-[13px] tracking-tight transition-all cursor-pointer ${
+                      historyFilter === 'all'
+                        ? 'text-[#6b1284] font-black border-b-2 border-[#6b1284] pb-2'
+                        : 'text-gray-400 font-semibold pb-2 hover:text-[#6b1284]'
+                    }`}
+                  >
+                    All
+                  </button>
+                  <button
+                    id="tab-history-debited"
+                    type="button"
+                    onClick={() => setHistoryFilter('debited')}
+                    className={`text-[13px] tracking-tight transition-all cursor-pointer ${
+                      historyFilter === 'debited'
+                        ? 'text-[#6b1284] font-black border-b-2 border-[#6b1284] pb-2'
+                        : 'text-gray-400 font-semibold pb-2 hover:text-[#6b1284]'
+                    }`}
+                  >
+                    Debited
+                  </button>
+                  <button
+                    id="tab-history-credited"
+                    type="button"
+                    onClick={() => setHistoryFilter('credited')}
+                    className={`text-[13px] tracking-tight transition-all cursor-pointer ${
+                      historyFilter === 'credited'
+                        ? 'text-[#6b1284] font-black border-b-2 border-[#6b1284] pb-2'
+                        : 'text-gray-400 font-semibold pb-2 hover:text-[#6b1284]'
+                    }`}
+                  >
+                    Credited
+                  </button>
+                </div>
+
+                {/* Search toggle button icon */}
+                <button
+                  id="btn-history-search-toggle"
+                  type="button"
+                  aria-label="Toggle Search"
+                  onClick={() => setIsHistorySearchOpen(!isHistorySearchOpen)}
+                  className={`p-1.5 rounded-full transition-colors cursor-pointer ${
+                    isHistorySearchOpen ? 'bg-purple-100 text-[#6b1284]' : 'text-gray-400 hover:text-[#6b1284]'
+                  }`}
+                >
+                  <Search className="w-4 h-4 stroke-[2.4]" />
+                </button>
+              </div>
+
+              {/* Optional Search bar */}
+              {isHistorySearchOpen && (
+                <div className="mb-3 relative animate-in fade-in slide-in-from-top-1 duration-150">
+                  <input
+                    type="text"
+                    placeholder="Search by name, account, or ref..."
+                    value={historySearchText}
+                    onChange={(e) => setHistorySearchText(e.target.value)}
+                    autoFocus
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#6b1284] focus:bg-white"
+                  />
+                  {historySearchText && (
+                    <button
+                      type="button"
+                      onClick={() => setHistorySearchText('')}
+                      className="absolute right-2.5 top-2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Transaction list */}
+              <div className="flex flex-col divide-y divide-gray-100/80">
+                {filteredHistoryTransactions.length === 0 ? (
+                  <div className="py-12 text-center text-xs text-gray-400">
+                    No transactions found.
+                  </div>
+                ) : (
+                  filteredHistoryTransactions.map((tx) => {
+                    const isCredit = tx.type === 'receive' || tx.senderName === 'Deposit';
+                    const displayName = isCredit 
+                      ? (tx.senderName || 'Deposit') 
+                      : (tx.recipientName || 'CBE Transfer');
+                    const categoryTag = getCbeCategory(tx);
+                    const formattedDate = formatCbeHistoryDate(tx.createdAt);
+
+                    return (
+                      <div
+                        key={tx.id}
+                        id={`tx-item-${tx.id}`}
+                        onClick={() => setSelectedDetailTx(tx)}
+                        className="py-3 px-1 flex items-center justify-between hover:bg-purple-50/40 active:scale-[0.99] transition-all rounded-xl cursor-pointer select-none group"
+                      >
+                        {/* Left: Direction Circular Badge + Title + Timestamp */}
+                        <div className="flex items-center gap-3">
+                          {/* Directional Circular Icon */}
+                          <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${
+                            isCredit ? 'bg-[#e6f7ef] text-[#22c55e]' : 'bg-[#fbeeed] text-[#eb4d4b]'
+                          }`}>
+                            {isCredit ? (
+                              <ArrowDownLeft className="w-4.5 h-4.5 stroke-[2.8]" />
+                            ) : (
+                              <ArrowUpRight className="w-4.5 h-4.5 stroke-[2.8]" />
+                            )}
+                          </div>
+
+                          {/* Title and Date */}
+                          <div className="flex flex-col">
+                            <span className="font-bold text-gray-900 text-[13px] leading-tight group-hover:text-[#6b1284] transition-colors">
+                              {displayName}
+                            </span>
+                            <span className="text-[11px] text-gray-400 font-medium mt-0.5">
+                              {formattedDate}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Right: Amount + Category Pill Badge */}
+                        <div className="flex flex-col items-end">
+                          <span className={`text-[13px] font-bold tracking-tight ${
+                            isCredit ? 'text-[#16a34a]' : 'text-gray-900'
+                          }`}>
+                            {isCredit ? '+' : '-'}{tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
+                          </span>
+
+                          <span className="bg-[#f2e6f7] text-[#6b1284] px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wide mt-1">
+                            {categoryTag}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+          ) : (
+            /* ========================================================
+               HOME MAIN SERVICE BUTTONS & QUICK ACTIONS
+               ======================================================== */
+            <>
+              {/* 3. FOUR CIRCULAR QUICK ACTION BUTTONS */}
+              <QuickActions onActionClick={handleQuickAction} />
+
+              {/* 4. MAIN TWO-COLUMN SERVICE GRID */}
+              <ServiceGrid onServiceSelect={handleServiceSelect} />
+            </>
+          )}
         </main>
       </div>
 
@@ -219,6 +460,7 @@ export const Home: React.FC<HomeProps> = ({
         activeTab={activeNavTab}
         onChangeTab={handleNavTabChange}
         onOpenScanQr={() => setActiveModal('qr')}
+        showScanQr={activeNavTab === 'home' && !selectedDetailTx && !activeModal}
       />
 
       {/* ========================================================
@@ -435,7 +677,7 @@ export const Home: React.FC<HomeProps> = ({
                     key={tx.id} 
                     onClick={() => {
                       setActiveModal(null);
-                      onSelectTransaction?.(tx);
+                      setSelectedDetailTx(tx);
                     }}
                     className="py-2.5 px-1 flex items-center justify-between hover:bg-gray-50 rounded-xl transition cursor-pointer"
                   >
@@ -583,6 +825,56 @@ export const Home: React.FC<HomeProps> = ({
                 Create Split Request
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* SCHEDULES MODAL */}
+      {activeModal === 'schedules' && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
+          <div className="bg-white rounded-3xl p-5 max-w-sm w-full shadow-2xl relative max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <div>
+                <h3 className="font-bold text-sm text-gray-900">Scheduled Payments</h3>
+                <p className="text-[11px] text-gray-500">Automated recurring transfers & standing orders</p>
+              </div>
+              <button onClick={() => setActiveModal(null)} className="text-gray-400 hover:text-gray-700">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-2.5 my-3">
+              {[
+                { title: 'Monthly House Rent', recipient: 'Kasahun Yematawork (1000345678901)', amount: '15,000.00 ETB', freq: 'Monthly on 1st', active: true },
+                { title: 'Fiber Internet Fee', recipient: 'Ethio Telecom (B-894102)', amount: '1,200.00 ETB', freq: 'Monthly on 25th', active: true },
+                { title: 'Water & Utility Bill', recipient: 'Addis Ababa Water Board', amount: '450.00 ETB', freq: 'Monthly on 15th', active: true }
+              ].map((item, idx) => (
+                <div key={idx} className="p-3 bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-bold text-gray-900">{item.title}</p>
+                    <p className="text-[10px] text-gray-500 mt-0.5">{item.recipient}</p>
+                    <span className="text-[9px] bg-purple-100 text-[#6b1284] font-extrabold px-1.5 py-0.5 rounded-md mt-1 inline-block">
+                      {item.freq}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs font-extrabold text-gray-900">{item.amount}</p>
+                    <span className="text-[9px] text-emerald-600 font-bold">Active</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => {
+                alert('Scheduled payment creator opened.');
+                setActiveModal(null);
+                onNavigateToTab?.('transfer', 'send');
+              }}
+              className="w-full bg-[#711A9F] text-white text-xs font-bold py-2.5 rounded-xl hover:bg-[#8A24B6] transition cursor-pointer"
+            >
+              + Create New Scheduled Payment
+            </button>
           </div>
         </div>
       )}
@@ -891,6 +1183,41 @@ export const Home: React.FC<HomeProps> = ({
             </div>
           </div>
         </div>
+      )}
+
+      {/* TRANSACTION DETAIL MODAL (Matching Authentic CBE Layout from reference) */}
+      {selectedDetailTx && (
+        <TransactionDetailModal
+          transaction={selectedDetailTx}
+          onClose={() => setSelectedDetailTx(null)}
+          onViewReceipt={(tx) => {
+            setSelectedDetailTx(null);
+            onSelectTransaction?.(tx);
+          }}
+          currentUserId={currentUser.id}
+          currentUserAccount={currentUser.accountNumber}
+        />
+      )}
+
+      {/* MANAGE ACCOUNTS MODAL */}
+      {showManageAccountsModal && (
+        <ManageAccountsModal
+          currentUser={currentUser}
+          accounts={userAccounts}
+          selectedAccountId={selectedAccountId}
+          onClose={() => setShowManageAccountsModal(false)}
+          onSelectAccount={(acc) => {
+            setSelectedAccountId(acc.id);
+            setShowManageAccountsModal(false);
+          }}
+          onAccountsUpdated={() => {
+            loadTransactions();
+          }}
+          onOpenTransferBetweenOwn={(fromId, toId) => {
+            setShowManageAccountsModal(false);
+            onNavigateToTab?.('transfer');
+          }}
+        />
       )}
 
     </div>

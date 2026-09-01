@@ -177,6 +177,7 @@ export default function App() {
             currentUser={activeUser}
             onTransactionComplete={handleTransactionComplete}
             onSelectTransaction={handleSelectTransaction}
+            onBack={() => setActiveTab('home')}
             initialTab={initialTxTab}
           />
         );
@@ -189,9 +190,20 @@ export default function App() {
         );
       case 'history':
         return (
-          <History 
+          <Home 
             currentUser={activeUser}
+            initialNavTab="history"
+            onNavigateToTab={(tab, subTab) => {
+              setActiveTab(tab);
+              if (tab === 'transfer' && subTab) {
+                setInitialTxTab(subTab as any);
+              }
+              try {
+                window.history.pushState({ view: 'main', tab }, '', window.location.pathname);
+              } catch {}
+            }}
             onSelectTransaction={handleSelectTransaction}
+            onOpenAdmin={() => navigateTo('admin', 'profile')}
           />
         );
       case 'profile':
@@ -243,7 +255,7 @@ export default function App() {
               {renderTabContent()}
               
               {/* Floating bottom navigation for secondary sub-tabs */}
-              {activeTab !== 'home' && (
+              {activeTab !== 'home' && activeTab !== 'history' && (
                 <Navigation 
                   activeTab={activeTab}
                   onChangeTab={(tab) => {
@@ -262,6 +274,7 @@ export default function App() {
                   }}
                   currentUser={currentUser || undefined}
                   onOpenAdmin={() => navigateTo('admin', 'profile')}
+                  showScanQr={false}
                 />
               )}
             </div>

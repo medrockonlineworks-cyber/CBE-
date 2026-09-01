@@ -6,7 +6,10 @@ import {
   AirtimePurchase, 
   SystemNotification, 
   AuditLog,
-  TransactionType
+  TransactionType,
+  BankAccount,
+  BankAccountType,
+  RegisteredAccountInfo
 } from '../types';
 import { calculateCbeFee } from './cbeTariff';
 import { firebaseService } from '../services/firebaseService';
@@ -57,6 +60,197 @@ const INITIAL_USERS: UserProfile[] = [
   }
 ];
 
+export const INITIAL_ACCOUNTS: BankAccount[] = [
+  {
+    id: 'acc_admin_main',
+    userId: 'user_admin',
+    accountName: 'Main Savings Account',
+    accountNumber: '1000999999999',
+    accountType: 'savings',
+    balance: 10000000000.00,
+    availableBalance: 10000000000.00,
+    status: 'active',
+    currency: 'ETB',
+    isPrimary: true,
+    createdAt: '2026-01-01T08:00:00Z'
+  },
+  {
+    id: 'acc_admin_wadiah',
+    userId: 'user_admin',
+    accountName: 'Wadiah Interest-Free Savings',
+    accountNumber: '1000888888888',
+    accountType: 'wadiah',
+    balance: 250000.00,
+    availableBalance: 250000.00,
+    status: 'active',
+    currency: 'ETB',
+    isPrimary: false,
+    createdAt: '2026-02-10T11:00:00Z'
+  },
+  {
+    id: 'acc_admin_cbebirr',
+    userId: 'user_admin',
+    accountName: 'CBE Birr Digital Wallet',
+    accountNumber: '1000777777777',
+    accountType: 'cbe_birr',
+    balance: 45000.00,
+    availableBalance: 45000.00,
+    status: 'active',
+    currency: 'ETB',
+    isPrimary: false,
+    createdAt: '2026-03-01T14:30:00Z'
+  },
+  {
+    id: 'acc_user1_main',
+    userId: 'user_1',
+    accountName: 'Main Savings Account',
+    accountNumber: '1000123456789',
+    accountType: 'savings',
+    balance: 10000000000.00,
+    availableBalance: 10000000000.00,
+    status: 'active',
+    currency: 'ETB',
+    isPrimary: true,
+    createdAt: '2026-01-10T10:30:00Z'
+  },
+  {
+    id: 'acc_user1_biz',
+    userId: 'user_1',
+    accountName: 'Business Checking Account',
+    accountNumber: '1000112233445',
+    accountType: 'checking',
+    balance: 850000.00,
+    availableBalance: 850000.00,
+    status: 'active',
+    currency: 'ETB',
+    isPrimary: false,
+    createdAt: '2026-02-15T09:00:00Z'
+  },
+  {
+    id: 'acc_user2_main',
+    userId: 'user_2',
+    accountName: 'Primary Savings Account',
+    accountNumber: '1000246810121',
+    accountType: 'savings',
+    balance: 10000000000.00,
+    availableBalance: 10000000000.00,
+    status: 'active',
+    currency: 'ETB',
+    isPrimary: true,
+    createdAt: '2026-03-15T14:20:00Z'
+  }
+];
+
+export const VERIFIED_DIRECTORY_ACCOUNTS: RegisteredAccountInfo[] = [
+  {
+    accountNumber: '1000246810121',
+    accountName: 'Selamawit Tekle Haile',
+    bankName: 'Commercial Bank of Ethiopia',
+    userId: 'user_2',
+    phone: '+251912345678',
+    isVerified: true,
+    accountType: 'Savings Account'
+  },
+  {
+    accountNumber: '1000123456789',
+    accountName: 'Abebe Kebede Wolde',
+    bankName: 'Commercial Bank of Ethiopia',
+    userId: 'user_1',
+    phone: '+251911223344',
+    isVerified: true,
+    accountType: 'Savings Account'
+  },
+  {
+    accountNumber: '1000999999999',
+    accountName: 'Leykun Jemaneh',
+    bankName: 'Commercial Bank of Ethiopia',
+    userId: 'user_admin',
+    phone: '+251900112233',
+    isVerified: true,
+    accountType: 'Wadiah Savings'
+  },
+  {
+    accountNumber: '1000888888888',
+    accountName: 'Leykun Jemaneh (Wadiah)',
+    bankName: 'Commercial Bank of Ethiopia',
+    userId: 'user_admin',
+    isVerified: true,
+    accountType: 'Wadiah Interest-Free'
+  },
+  {
+    accountNumber: '1000777777777',
+    accountName: 'Leykun Jemaneh (CBE Birr)',
+    bankName: 'Commercial Bank of Ethiopia',
+    userId: 'user_admin',
+    isVerified: true,
+    accountType: 'CBE Birr Wallet'
+  },
+  {
+    accountNumber: '1000345678901',
+    accountName: 'Kasahun Yematawork Desta',
+    bankName: 'Commercial Bank of Ethiopia',
+    phone: '+251911998877',
+    isVerified: true,
+    accountType: 'Savings Account'
+  },
+  {
+    accountNumber: '1000567890123',
+    accountName: 'Tesfahun Abebe Girma',
+    bankName: 'Commercial Bank of Ethiopia',
+    phone: '+251912233445',
+    isVerified: true,
+    accountType: 'Savings Account'
+  },
+  {
+    accountNumber: '1000789012345',
+    accountName: 'Ashenafi Alemu Mengistu',
+    bankName: 'Commercial Bank of Ethiopia',
+    phone: '+251913344556',
+    isVerified: true,
+    accountType: 'Checking Account'
+  },
+  {
+    accountNumber: '1000987654321',
+    accountName: 'Bethlehem Tadesse Zewdu',
+    bankName: 'Commercial Bank of Ethiopia',
+    phone: '+251914455667',
+    isVerified: true,
+    accountType: 'Women Special Savings'
+  },
+  {
+    accountNumber: '1000654321098',
+    accountName: 'Henok Girma Worku',
+    bankName: 'Commercial Bank of Ethiopia',
+    phone: '+251915566778',
+    isVerified: true,
+    accountType: 'Savings Account'
+  },
+  {
+    accountNumber: '1000432109876',
+    accountName: 'Genet Molla Negash',
+    bankName: 'Commercial Bank of Ethiopia',
+    phone: '+251916677889',
+    isVerified: true,
+    accountType: 'Youth Savings'
+  },
+  {
+    accountNumber: '1000321098765',
+    accountName: 'Yohannes Haile Fikre',
+    bankName: 'Commercial Bank of Ethiopia',
+    phone: '+251917788990',
+    isVerified: true,
+    accountType: 'Savings Account'
+  },
+  {
+    accountNumber: '1000210987654',
+    accountName: 'Almaz Bekele Tafese',
+    bankName: 'Commercial Bank of Ethiopia',
+    phone: '+251918899001',
+    isVerified: true,
+    accountType: 'Savings Account'
+  }
+];
+
 const now = Date.now();
 const hour = 3600 * 1000;
 const day = 24 * hour;
@@ -99,68 +293,123 @@ export function formatTo12CharTxId(rawId?: string): string {
 
 const INITIAL_TRANSACTIONS: Transaction[] = [
   {
-    id: 'FT268923AB01',
+    id: 'FT262429AA81',
     type: 'receive',
     recipientId: 'user_1',
-    recipientName: 'Abebe Kebede',
+    recipientName: 'Leykun Jemaneh',
     recipientAccount: '1000123456789',
-    recipientBank: 'Tana Digital Bank',
-    senderName: 'Selamawit Tekle',
-    senderAccount: '1000246810121',
-    amount: 1500.00,
+    recipientBank: 'Commercial Bank of Ethiopia',
+    senderName: 'Deposit',
+    senderAccount: '1000998877665',
+    amount: 2000.00,
     fee: 0.00,
-    description: 'Rent reimbursement - Demo',
+    description: 'Cash Deposit at Branch / ATM',
     status: 'success',
-    reference: 'REF-SEL-58902',
-    createdAt: new Date(now - 3 * hour).toISOString()
+    reference: 'REF-DEP-24291',
+    category: 'MOBILE MONEY TXN',
+    createdAt: '2026-08-29T00:00:00.000Z'
   },
   {
-    id: 'FT261049CD42',
-    type: 'transfer',
-    senderId: 'user_1',
-    senderName: 'Abebe Kebede',
-    senderAccount: '1000123456789',
-    recipientName: 'Kidus Yohannes',
-    recipientAccount: '013204958100',
-    recipientBank: 'Awash International Bank',
-    amount: 4500.00,
-    fee: 15.00,
-    description: 'School fees payment - Demo',
+    id: 'FT262331BC12',
+    type: 'receive',
+    recipientId: 'user_1',
+    recipientName: 'Leykun Jemaneh',
+    recipientAccount: '1000123456789',
+    recipientBank: 'Commercial Bank of Ethiopia',
+    senderName: 'Kasahun Yematawork',
+    senderAccount: '1000345678901',
+    amount: 50.00,
+    fee: 0.00,
+    description: 'CBE Mobile Transfer',
     status: 'success',
-    reference: 'REF-AW-09412',
-    createdAt: new Date(now - 1 * day - 4 * hour).toISOString()
+    reference: 'REF-KAS-23312',
+    category: 'ACCOUNT TO ACCOUNT',
+    createdAt: '2026-08-21T18:55:00.000Z'
   },
   {
-    id: 'FT263948EF15',
-    type: 'bill',
-    senderId: 'user_1',
-    senderName: 'Abebe Kebede',
-    senderAccount: '1000123456789',
-    recipientName: 'Ethio Telecom',
-    recipientAccount: 'B-894102',
-    recipientBank: 'Ethio Telecom',
-    amount: 350.00,
-    fee: 2.00,
-    description: 'Monthly Fiber Internet Bill - Demo',
+    id: 'FT262294DE99',
+    type: 'receive',
+    recipientId: 'user_1',
+    recipientName: 'Leykun Jemaneh',
+    recipientAccount: '1000123456789',
+    recipientBank: 'Commercial Bank of Ethiopia',
+    senderName: 'Tesfahun Abebe',
+    senderAccount: '1000567890123',
+    amount: 10832.00,
+    fee: 0.00,
+    description: 'Project Milestones Settlement',
     status: 'success',
-    reference: 'REF-ET-39485',
-    createdAt: new Date(now - 3 * day).toISOString()
+    reference: 'REF-TES-22949',
+    category: 'ACCOUNT TO ACCOUNT',
+    createdAt: '2026-08-18T15:15:00.000Z'
   },
   {
-    id: 'FT264918GH77',
+    id: 'FT262241FG44',
+    type: 'receive',
+    recipientId: 'user_1',
+    recipientName: 'Leykun Jemaneh',
+    recipientAccount: '1000123456789',
+    recipientBank: 'Commercial Bank of Ethiopia',
+    senderName: 'Ashenafi Alemu',
+    senderAccount: '1000789012345',
+    amount: 150.00,
+    fee: 0.00,
+    description: 'Reimbursement',
+    status: 'success',
+    reference: 'REF-ASH-22414',
+    category: 'ACCOUNT TO ACCOUNT',
+    createdAt: '2026-08-14T11:20:00.000Z'
+  },
+  {
+    id: 'FT262198HJ33',
     type: 'airtime',
     senderId: 'user_1',
-    senderName: 'Abebe Kebede',
+    senderName: 'Leykun Jemaneh',
     senderAccount: '1000123456789',
-    recipientName: 'Safaricom Airtime',
-    recipientAccount: '+251711223344',
-    recipientBank: 'Safaricom Ethiopia',
-    amount: 100.00,
+    recipientName: 'Ethio Telecom Airtime',
+    recipientAccount: '+251911223344',
+    recipientBank: 'Ethio Telecom',
+    amount: 50.00,
     fee: 0.00,
-    description: 'Airtime Recharge - Demo',
+    description: 'Airtime Purchase - Top Up',
     status: 'success',
-    reference: 'REF-SAF-49182',
-    createdAt: new Date(now - 5 * day).toISOString()
+    reference: 'REF-ETH-21983',
+    category: 'AIRTIME PURCHASE',
+    createdAt: '2026-08-12T09:30:00.000Z'
+  },
+  {
+    id: 'FT262045KL22',
+    type: 'bill',
+    senderId: 'user_1',
+    senderName: 'Leykun Jemaneh',
+    senderAccount: '1000123456789',
+    recipientName: 'DSTV Subscription',
+    recipientAccount: 'B-DSTV-894102',
+    recipientBank: 'MultiChoice Ethiopia',
+    amount: 950.00,
+    fee: 3.50,
+    description: 'Monthly Entertainment Package',
+    status: 'success',
+    reference: 'REF-DSTV-20452',
+    category: 'UTILITY PAYMENT',
+    createdAt: '2026-08-05T16:10:00.000Z'
+  },
+  {
+    id: 'FT261988MN11',
+    type: 'transfer',
+    senderId: 'user_1',
+    senderName: 'Leykun Jemaneh',
+    senderAccount: '1000123456789',
+    recipientName: 'Selamawit Tekle',
+    recipientAccount: '1000246810121',
+    recipientBank: 'Commercial Bank of Ethiopia',
+    amount: 1500.00,
+    fee: 10.00,
+    description: 'Family Support Transfer',
+    status: 'success',
+    reference: 'REF-SEL-19881',
+    category: 'ACCOUNT TO ACCOUNT',
+    createdAt: '2026-08-01T14:00:00.000Z'
   }
 ];
 
@@ -382,6 +631,308 @@ export class LocalDb {
     saveData('tana_notifications', updated);
   }
 
+  static getAllAccounts(): BankAccount[] {
+    return loadData<BankAccount[]>('tana_accounts', INITIAL_ACCOUNTS);
+  }
+
+  static setAccounts(accounts: BankAccount[]): void {
+    saveData('tana_accounts', accounts);
+    window.dispatchEvent(new CustomEvent('cbe_accounts_updated', { detail: { accounts } }));
+  }
+
+  static getUserAccounts(userId: string): BankAccount[] {
+    let accounts = this.getAllAccounts().filter(a => a.userId === userId);
+    if (accounts.length === 0) {
+      // Find user to seed initial account
+      const user = this.getUsers().find(u => u.id === userId);
+      const initialAcc: BankAccount = {
+        id: 'acc_' + generateId(),
+        userId,
+        accountName: 'Primary Saving Account',
+        accountNumber: user?.accountNumber || '1000' + Math.floor(100000000 + Math.random() * 900000000),
+        accountType: (user?.accountType as BankAccountType) || 'savings',
+        balance: user?.balance || 25000.00,
+        availableBalance: user?.balance || 25000.00,
+        status: 'active',
+        currency: 'ETB',
+        isPrimary: true,
+        createdAt: new Date().toISOString()
+      };
+      
+      const allAccs = this.getAllAccounts();
+      allAccs.push(initialAcc);
+      this.setAccounts(allAccs);
+      accounts = [initialAcc];
+    }
+    return accounts;
+  }
+
+  static createAccount(
+    userId: string,
+    data: {
+      accountName: string;
+      accountType: BankAccountType;
+      initialBalance?: number;
+      customAccountNumber?: string;
+      isPrimary?: boolean;
+    }
+  ): BankAccount {
+    const allAccs = this.getAllAccounts();
+    const users = this.getUsers();
+    const user = users.find(u => u.id === userId);
+
+    // Generate guaranteed 13-digit CBE account starting with 1000
+    let cleanAccNum = (data.customAccountNumber || '').replace(/\D/g, '');
+    if (cleanAccNum.length !== 13) {
+      const rand9 = Math.floor(100000000 + Math.random() * 900000000).toString();
+      cleanAccNum = `1000${rand9}`;
+    }
+
+    const initBal = Math.max(0, Number(data.initialBalance || 0));
+    
+    // If setting as primary, demote other accounts of this user
+    if (data.isPrimary) {
+      allAccs.forEach(a => {
+        if (a.userId === userId) a.isPrimary = false;
+      });
+    }
+
+    const newAcc: BankAccount = {
+      id: 'acc_' + generateId(),
+      userId,
+      accountName: data.accountName.trim() || 'CBE Account',
+      accountNumber: cleanAccNum,
+      accountType: data.accountType || 'savings',
+      balance: initBal,
+      availableBalance: initBal,
+      status: 'active',
+      currency: 'ETB',
+      isPrimary: data.isPrimary || (allAccs.filter(a => a.userId === userId).length === 0),
+      createdAt: new Date().toISOString()
+    };
+
+    allAccs.push(newAcc);
+    this.setAccounts(allAccs);
+
+    this.addAuditLog(
+      userId,
+      user?.email || 'user@example.com',
+      'ACCOUNT_CREATED',
+      `Created new ${newAcc.accountType} account "${newAcc.accountName}" (A/C: ${newAcc.accountNumber}) with initial deposit ETB ${initBal.toLocaleString()}.`
+    );
+
+    this.addNotification(
+      userId,
+      'New Account Created',
+      `Your new ${newAcc.accountName} (${newAcc.accountNumber}) is active with ETB ${initBal.toLocaleString()}.`,
+      'success'
+    );
+
+    return newAcc;
+  }
+
+  static updateAccount(accountId: string, updates: Partial<BankAccount>): BankAccount | null {
+    const allAccs = this.getAllAccounts();
+    const idx = allAccs.findIndex(a => a.id === accountId);
+    if (idx === -1) return null;
+
+    const updated = { ...allAccs[idx], ...updates };
+    allAccs[idx] = updated;
+    this.setAccounts(allAccs);
+    return updated;
+  }
+
+  static deleteAccount(accountId: string): boolean {
+    const allAccs = this.getAllAccounts();
+    const acc = allAccs.find(a => a.id === accountId);
+    if (!acc || acc.isPrimary) return false; // cannot delete primary account
+
+    const filtered = allAccs.filter(a => a.id !== accountId);
+    this.setAccounts(filtered);
+    return true;
+  }
+
+  static transferBetweenOwnAccounts(
+    userId: string,
+    fromAccountId: string,
+    toAccountId: string,
+    amount: number,
+    remark?: string
+  ): { tx: Transaction; fromAccount: BankAccount; toAccount: BankAccount } {
+    if (fromAccountId === toAccountId) {
+      throw new Error('Source and destination accounts must be different.');
+    }
+    if (amount <= 0) {
+      throw new Error('Transfer amount must be greater than zero.');
+    }
+
+    const allAccs = this.getAllAccounts();
+    const fromIdx = allAccs.findIndex(a => a.id === fromAccountId && a.userId === userId);
+    const toIdx = allAccs.findIndex(a => a.id === toAccountId && a.userId === userId);
+
+    if (fromIdx === -1) throw new Error('Source account not found.');
+    if (toIdx === -1) throw new Error('Destination account not found.');
+
+    const fromAcc = allAccs[fromIdx];
+    const toAcc = allAccs[toIdx];
+
+    if (fromAcc.balance < amount) {
+      throw new Error(`Insufficient funds in ${fromAcc.accountName}. Available: ETB ${fromAcc.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}.`);
+    }
+
+    // Process internal own-account transfer (Zero CBE Tariff fee for own account)
+    fromAcc.balance = Number((fromAcc.balance - amount).toFixed(2));
+    fromAcc.availableBalance = fromAcc.balance;
+
+    toAcc.balance = Number((toAcc.balance + amount).toFixed(2));
+    toAcc.availableBalance = toAcc.balance;
+
+    allAccs[fromIdx] = fromAcc;
+    allAccs[toIdx] = toAcc;
+    this.setAccounts(allAccs);
+
+    // Sync primary user balance if either account is primary
+    const users = this.getUsers();
+    const uIdx = users.findIndex(u => u.id === userId);
+    if (uIdx !== -1) {
+      const user = users[uIdx];
+      if (fromAcc.isPrimary) {
+        user.balance = fromAcc.balance;
+        user.availableBalance = fromAcc.balance;
+      } else if (toAcc.isPrimary) {
+        user.balance = toAcc.balance;
+        user.availableBalance = toAcc.balance;
+      }
+      users[uIdx] = user;
+      this.setUsers(users);
+      firebaseService.syncUserProfile(user).catch(() => {});
+    }
+
+    // Create transaction record
+    const cbeTxId = generateCbeTxId();
+    const txs = this.getTransactions();
+    const tx: Transaction = {
+      id: cbeTxId,
+      type: 'transfer',
+      senderId: userId,
+      senderName: `${fromAcc.accountName} (${fromAcc.accountNumber.slice(-4)})`,
+      senderAccount: fromAcc.accountNumber,
+      recipientId: userId,
+      recipientName: `${toAcc.accountName} (${toAcc.accountNumber.slice(-4)})`,
+      recipientAccount: toAcc.accountNumber,
+      recipientBank: 'Commercial Bank of Ethiopia',
+      amount,
+      fee: 0,
+      serviceCharge: 0,
+      vat: 0,
+      disasterRecovery: 0,
+      totalDebited: amount,
+      description: remark?.trim() || `Internal transfer: ${fromAcc.accountName} ➔ ${toAcc.accountName}`,
+      status: 'success',
+      reference: 'REF-' + generateId(),
+      createdAt: new Date().toISOString()
+    };
+
+    txs.push(tx);
+    this.setTransactions(txs);
+
+    this.addNotification(
+      userId,
+      'Internal Transfer Completed',
+      `Transferred ETB ${amount.toLocaleString()} from ${fromAcc.accountName} to ${toAcc.accountName}. (Ref: ${tx.id})`,
+      'success'
+    );
+
+    this.addAuditLog(
+      userId,
+      users[uIdx]?.email || 'user@example.com',
+      'OWN_ACCOUNT_TRANSFER',
+      `Transferred ETB ${amount} between own accounts (${fromAcc.accountNumber} -> ${toAcc.accountNumber}). Ref: ${cbeTxId}.`
+    );
+
+    firebaseService.syncTransaction(tx).catch(() => {});
+
+    return { tx, fromAccount: fromAcc, toAccount: toAcc };
+  }
+
+  // Universal Registered Accounts Directory & Smart Search
+  static getAllRegisteredAccounts(): RegisteredAccountInfo[] {
+    const list: RegisteredAccountInfo[] = [...VERIFIED_DIRECTORY_ACCOUNTS];
+    const seenAccs = new Set<string>(list.map(a => a.accountNumber));
+
+    // Add all registered users
+    const users = this.getUsers();
+    users.forEach(u => {
+      if (u.accountNumber && !seenAccs.has(u.accountNumber)) {
+        list.push({
+          accountNumber: u.accountNumber,
+          accountName: u.name,
+          bankName: 'Commercial Bank of Ethiopia',
+          userId: u.id,
+          phone: u.phone,
+          isVerified: true,
+          accountType: u.accountType === 'wadiah' ? 'Wadiah Interest-Free' : 'Saving Account'
+        });
+        seenAccs.add(u.accountNumber);
+      }
+    });
+
+    // Add all user bank accounts
+    const allAccs = this.getAllAccounts();
+    allAccs.forEach(a => {
+      if (a.accountNumber && !seenAccs.has(a.accountNumber)) {
+        const owner = users.find(u => u.id === a.userId);
+        list.push({
+          accountNumber: a.accountNumber,
+          accountName: owner ? `${owner.name} (${a.accountName})` : a.accountName,
+          bankName: 'Commercial Bank of Ethiopia',
+          userId: a.userId,
+          phone: owner?.phone,
+          isVerified: true,
+          accountType: a.accountType === 'wadiah' ? 'Wadiah Interest-Free' : a.accountType === 'cbe_birr' ? 'CBE Birr Wallet' : 'Saving Account'
+        });
+        seenAccs.add(a.accountNumber);
+      }
+    });
+
+    return list;
+  }
+
+  static searchRegisteredAccounts(queryStr: string): RegisteredAccountInfo[] {
+    if (!queryStr || !queryStr.trim()) {
+      return this.getAllRegisteredAccounts().slice(0, 8);
+    }
+    const term = queryStr.trim().toLowerCase();
+    const cleanDigits = queryStr.replace(/\D/g, '');
+    const all = this.getAllRegisteredAccounts();
+
+    return all.filter(item => {
+      const matchName = item.accountName.toLowerCase().includes(term);
+      const matchAcc = cleanDigits.length > 0 && item.accountNumber.includes(cleanDigits);
+      const matchPhone = item.phone && cleanDigits.length > 3 && item.phone.includes(cleanDigits);
+      return matchName || matchAcc || matchPhone;
+    });
+  }
+
+  static findRegisteredAccount(queryStr: string): RegisteredAccountInfo | null {
+    if (!queryStr || !queryStr.trim()) return null;
+    const cleanDigits = queryStr.replace(/\D/g, '');
+    const all = this.getAllRegisteredAccounts();
+
+    // Exact account number match
+    if (cleanDigits.length >= 10) {
+      const byAcc = all.find(a => a.accountNumber === cleanDigits || a.accountNumber.endsWith(cleanDigits));
+      if (byAcc) return byAcc;
+    }
+
+    // Exact or close name match
+    const term = queryStr.trim().toLowerCase();
+    const byName = all.find(a => a.accountName.toLowerCase() === term || a.accountName.toLowerCase().startsWith(term));
+    if (byName) return byName;
+
+    return null;
+  }
+
   static getAuditLogs(): AuditLog[] {
     return loadData('tana_audit_logs', INITIAL_AUDIT_LOGS).sort((a,b) => b.createdAt.localeCompare(a.createdAt));
   }
@@ -411,13 +962,18 @@ export class LocalDb {
     recipientAccount: string,
     recipientBank: string,
     description: string,
-    isOwnAccount: boolean = false
+    isOwnAccount: boolean = false,
+    fromAccountId?: string
   ): Transaction {
     const users = this.getUsers();
     const userIndex = users.findIndex(u => u.id === userId);
     
     if (userIndex === -1) throw new Error('User not found');
     const user = users[userIndex];
+
+    const allAccs = this.getAllAccounts();
+    const userAccs = allAccs.filter(a => a.userId === userId);
+    let fromAcc = fromAccountId ? allAccs.find(a => a.id === fromAccountId && a.userId === userId) : (userAccs.find(a => a.isPrimary) || userAccs[0]);
 
     // Compute standard CBE Tariff, 15% VAT, and 5% Disaster Recovery
     const cbeFees = calculateCbeFee(amount, type, isOwnAccount);
@@ -427,21 +983,76 @@ export class LocalDb {
     const totalAdditionalFees = Number((serviceCharge + vat + disasterRecovery).toFixed(2));
     const totalCost = Number((amount + totalAdditionalFees).toFixed(2));
 
-    if (user.balance < totalCost && type !== 'receive') {
-      throw new Error(`Insufficient balance. Transaction requires ETB ${totalCost.toLocaleString()} including CBE Service Charge (ETB ${serviceCharge.toFixed(2)}), 15% VAT (ETB ${vat.toFixed(2)}), and 5% Disaster Recovery (ETB ${disasterRecovery.toFixed(2)}).`);
+    const currentBal = fromAcc ? fromAcc.balance : user.balance;
+    if (currentBal < totalCost && type !== 'receive') {
+      throw new Error(`Insufficient balance in ${fromAcc?.accountName || 'account'}. Transaction requires ETB ${totalCost.toLocaleString()} including CBE Service Charge (ETB ${serviceCharge.toFixed(2)}), 15% VAT (ETB ${vat.toFixed(2)}), and 5% Disaster Recovery (ETB ${disasterRecovery.toFixed(2)}).`);
     }
 
-    // Deduct/Credit balance
+    // Deduct/Credit sender balance
     if (type !== 'receive') {
-      user.balance = Number((user.balance - totalCost).toFixed(2));
-      user.availableBalance = user.balance;
+      if (fromAcc) {
+        fromAcc.balance = Number((fromAcc.balance - totalCost).toFixed(2));
+        fromAcc.availableBalance = fromAcc.balance;
+        const accIdx = allAccs.findIndex(a => a.id === fromAcc!.id);
+        if (accIdx !== -1) allAccs[accIdx] = fromAcc;
+        this.setAccounts(allAccs);
+        if (fromAcc.isPrimary) {
+          user.balance = fromAcc.balance;
+          user.availableBalance = fromAcc.balance;
+        }
+      } else {
+        user.balance = Number((user.balance - totalCost).toFixed(2));
+        user.availableBalance = user.balance;
+      }
     } else {
-      user.balance = Number((user.balance + amount).toFixed(2));
-      user.availableBalance = user.balance;
+      if (fromAcc) {
+        fromAcc.balance = Number((fromAcc.balance + amount).toFixed(2));
+        fromAcc.availableBalance = fromAcc.balance;
+        const accIdx = allAccs.findIndex(a => a.id === fromAcc!.id);
+        if (accIdx !== -1) allAccs[accIdx] = fromAcc;
+        this.setAccounts(allAccs);
+        if (fromAcc.isPrimary) {
+          user.balance = fromAcc.balance;
+          user.availableBalance = fromAcc.balance;
+        }
+      } else {
+        user.balance = Number((user.balance + amount).toFixed(2));
+        user.availableBalance = user.balance;
+      }
     }
 
     users[userIndex] = user;
     this.setUsers(users);
+
+    // If recipient is a registered account in our system, credit them in real-time
+    const cleanRecipAcc = (recipientAccount || '').replace(/\D/g, '');
+    const matchedRecipAcc = allAccs.find(a => a.accountNumber === cleanRecipAcc);
+    if (matchedRecipAcc && type !== 'receive') {
+      matchedRecipAcc.balance = Number((matchedRecipAcc.balance + amount).toFixed(2));
+      matchedRecipAcc.availableBalance = matchedRecipAcc.balance;
+      const recAccIdx = allAccs.findIndex(a => a.id === matchedRecipAcc.id);
+      if (recAccIdx !== -1) allAccs[recAccIdx] = matchedRecipAcc;
+      this.setAccounts(allAccs);
+
+      // Sync recipient user profile
+      const recUserIdx = users.findIndex(u => u.id === matchedRecipAcc.userId);
+      if (recUserIdx !== -1) {
+        const recUser = users[recUserIdx];
+        if (matchedRecipAcc.isPrimary) {
+          recUser.balance = matchedRecipAcc.balance;
+          recUser.availableBalance = matchedRecipAcc.balance;
+        }
+        users[recUserIdx] = recUser;
+        this.setUsers(users);
+        firebaseService.syncUserProfile(recUser).catch(() => {});
+        this.addNotification(
+          recUser.id,
+          'Account Credited',
+          `Received ETB ${amount.toLocaleString()} from ${user.name}. (A/C: ${matchedRecipAcc.accountNumber})`,
+          'success'
+        );
+      }
+    }
 
     // Realistic CBE Transaction ID format: 12 characters exactly (e.g. FT263211VK07)
     const cbeTxId = generateCbeTxId();
@@ -453,8 +1064,8 @@ export class LocalDb {
       type,
       senderId: type !== 'receive' ? userId : undefined,
       senderName: type !== 'receive' ? user.name : recipientName,
-      senderAccount: type !== 'receive' ? user.accountNumber : recipientAccount,
-      recipientId: type === 'receive' ? userId : undefined,
+      senderAccount: type !== 'receive' ? (fromAcc?.accountNumber || user.accountNumber) : recipientAccount,
+      recipientId: type === 'receive' ? userId : (matchedRecipAcc?.userId),
       recipientName,
       recipientAccount,
       recipientBank,

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { UserProfile, Transaction, TransactionType } from '../types';
 import { LocalDb } from '../lib/mockData';
+import TransactionDetailModal from './TransactionDetailModal';
 import { 
   Search, 
   TrendingUp, 
@@ -23,6 +24,7 @@ export default function History({ currentUser, onSelectTransaction }: HistoryPro
   const [creditDebitFilter, setCreditDebitFilter] = useState<'all' | 'credit' | 'debit'>('all');
   const [typeFilter, setTypeFilter] = useState<'all' | TransactionType>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'success' | 'pending' | 'failed'>('all');
+  const [selectedDetailTx, setSelectedDetailTx] = useState<Transaction | null>(null);
 
   useEffect(() => {
     // Load latest transaction ledger
@@ -204,7 +206,7 @@ export default function History({ currentUser, onSelectTransaction }: HistoryPro
                 <button
                   id={`btn-history-tx-${tx.id}`}
                   key={tx.id}
-                  onClick={() => onSelectTransaction(tx)}
+                  onClick={() => setSelectedDetailTx(tx)}
                   className="w-full bg-white hover:bg-emerald-50/5 border border-gray-100 p-4 rounded-3xl flex justify-between items-center transition shadow-sm text-left cursor-pointer hover:scale-[1.01]"
                 >
                   <div className="flex items-center gap-3">
@@ -254,6 +256,20 @@ export default function History({ currentUser, onSelectTransaction }: HistoryPro
         </div>
 
       </div>
+
+      {/* TRANSACTION DETAIL MODAL */}
+      {selectedDetailTx && (
+        <TransactionDetailModal
+          transaction={selectedDetailTx}
+          onClose={() => setSelectedDetailTx(null)}
+          onViewReceipt={(tx) => {
+            setSelectedDetailTx(null);
+            onSelectTransaction(tx);
+          }}
+          currentUserId={currentUser.id}
+          currentUserAccount={currentUser.accountNumber}
+        />
+      )}
     </div>
   );
 }
