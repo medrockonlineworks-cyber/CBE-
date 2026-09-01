@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { RotateCw, Search, ChevronDown, Check, LayoutGrid } from 'lucide-react';
+import { ChevronDown, Check } from 'lucide-react';
+import { AppsGridIcon, RefreshIcon, CbeLoadingStatusIcon } from './CbeCustomIcons';
 
 interface HeaderProps {
   userName?: string;
   onOpenMenu?: () => void;
   onRefresh?: () => void;
   onOpenSearch?: () => void;
+  onOpenProfile?: () => void;
   selectedLanguage?: string;
   onChangeLanguage?: (lang: string) => void;
   isRefreshing?: boolean;
@@ -16,6 +18,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenMenu,
   onRefresh,
   onOpenSearch,
+  onOpenProfile,
   selectedLanguage = 'English',
   onChangeLanguage,
   isRefreshing = false,
@@ -41,22 +44,17 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className="relative z-30 pt-3 px-4 pb-2 max-w-md mx-auto w-full flex items-center justify-between text-white select-none">
-      {/* Left Section: 4-circle Grid Menu Button & User Greeting */}
+      {/* Left Section: 2x2 Rounded Squares Apps Grid Menu Button & User Greeting */}
       <div className="flex items-center gap-2.5">
-        {/* Circular Menu Button */}
+        {/* Apps Grid Menu Button */}
         <button
           id="btn-header-menu"
           aria-label="Open App Menu"
           onClick={onOpenMenu}
           className="w-10 h-10 rounded-2xl bg-white/15 hover:bg-white/25 active:scale-95 transition-all flex items-center justify-center flex-shrink-0 cursor-pointer border border-white/20 backdrop-blur-xs shadow-xs"
         >
-          {/* Authentic 4-circle 2x2 grid icon */}
-          <div className="grid grid-cols-2 gap-1 p-0.5">
-            <div className="w-2 h-2 rounded-full border-[1.8px] border-white bg-transparent" />
-            <div className="w-2 h-2 rounded-full border-[1.8px] border-white bg-transparent" />
-            <div className="w-2 h-2 rounded-full border-[1.8px] border-white bg-transparent" />
-            <div className="w-2 h-2 rounded-full border-[1.8px] border-white bg-transparent" />
-          </div>
+          {/* 1. Apps Grid Icon: 2x2 grid of 4 rounded-square outlines */}
+          <AppsGridIcon size={20} className="text-white" strokeWidth={2.2} />
         </button>
 
         {/* Greeting Text */}
@@ -70,7 +68,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* Right Controls: Language Selector & Action Circles */}
+      {/* Right Controls: Language Selector, Refresh Icon, Processing/Status Icon */}
       <div className="flex items-center gap-2">
         {/* Language Selector Pill */}
         <div className="relative" ref={dropdownRef}>
@@ -106,7 +104,7 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </div>
 
-        {/* Refresh / Sync Button */}
+        {/* 1. Refresh / Reload Icon Button (Broken circle arrow, upper-left arrowhead) */}
         <button
           id="btn-header-refresh"
           aria-label="Refresh Balance"
@@ -114,20 +112,20 @@ export const Header: React.FC<HeaderProps> = ({
           className={`w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 border border-white/20 flex items-center justify-center text-white transition cursor-pointer backdrop-blur-xs active:scale-95 ${
             isRefreshing ? 'animate-spin' : ''
           }`}
-          title="Refresh Balance"
+          title="Refresh / Reload"
         >
-          <RotateCw className="w-4.5 h-4.5 stroke-[2.2]" />
+          <RefreshIcon size={19} className="text-white drop-shadow-[0_0_4px_rgba(255,255,255,0.4)]" strokeWidth={2.4} />
         </button>
 
-        {/* Search Button */}
+        {/* 2. Loading / Processing / Status Icon Button (Circular stroke with terminal dot) */}
         <button
-          id="btn-header-search"
-          aria-label="Search Transactions & Services"
-          onClick={onOpenSearch}
+          id="btn-header-status"
+          aria-label="Account Status / Profile"
+          onClick={onOpenProfile || onOpenSearch}
           className="w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 border border-white/20 flex items-center justify-center text-white transition cursor-pointer backdrop-blur-xs active:scale-95"
-          title="Search"
+          title="Account Status & Settings"
         >
-          <Search className="w-4.5 h-4.5 stroke-[2.2]" />
+          <CbeLoadingStatusIcon size={19} className="text-white drop-shadow-[0_0_4px_rgba(255,255,255,0.4)]" strokeWidth={2.4} />
         </button>
       </div>
     </header>
@@ -135,3 +133,4 @@ export const Header: React.FC<HeaderProps> = ({
 };
 
 export default Header;
+

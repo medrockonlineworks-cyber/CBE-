@@ -582,10 +582,19 @@ export class LocalDb {
 
   static getTransactions(): Transaction[] {
     const txs = loadData<Transaction[]>('tana_transactions', INITIAL_TRANSACTIONS);
-    return txs.map(t => ({
-      ...t,
-      id: formatTo12CharTxId(t.id)
-    }));
+    return txs
+      .map(t => ({
+        ...t,
+        id: formatTo12CharTxId(t.id)
+      }))
+      .sort((a, b) => {
+        const timeA = new Date(a.createdAt).getTime();
+        const timeB = new Date(b.createdAt).getTime();
+        if (isNaN(timeA) || isNaN(timeB)) {
+          return (b.createdAt || '').localeCompare(a.createdAt || '');
+        }
+        return timeB - timeA;
+      });
   }
 
   static setTransactions(txs: Transaction[]): void {
@@ -833,7 +842,7 @@ export class LocalDb {
       createdAt: new Date().toISOString()
     };
 
-    txs.push(tx);
+    txs.unshift(tx);
     this.setTransactions(txs);
 
     this.addNotification(
@@ -1081,7 +1090,7 @@ export class LocalDb {
       createdAt: new Date().toISOString()
     };
 
-    txs.push(newTx);
+    txs.unshift(newTx);
     this.setTransactions(txs);
 
     // Add notification

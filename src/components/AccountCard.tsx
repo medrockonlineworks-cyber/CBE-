@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Copy, Check, ChevronDown, Layers } from 'lucide-react';
+import { Check } from 'lucide-react';
 import DottedWorldMap from './DottedWorldMap';
 import { CbeGoldenEmblemSvg } from './CbeLogo';
-import { BankAccount } from '../types';
+import { EyeOffIcon, EyeOpenIcon, CopyIcon } from './CbeCustomIcons';
 
 interface AccountCardProps {
   bankName?: string;
@@ -16,10 +16,6 @@ interface AccountCardProps {
   onToggleBalance?: () => void;
   customLogoUrl?: string | null;
   className?: string;
-  accounts?: BankAccount[];
-  selectedAccountId?: string;
-  onSelectAccount?: (acc: BankAccount) => void;
-  onOpenManageAccounts?: () => void;
 }
 
 export const AccountCard: React.FC<AccountCardProps> = ({
@@ -34,10 +30,6 @@ export const AccountCard: React.FC<AccountCardProps> = ({
   onToggleBalance,
   customLogoUrl = null,
   className = '',
-  accounts = [],
-  selectedAccountId,
-  onSelectAccount,
-  onOpenManageAccounts
 }) => {
   const [showBalance, setShowBalance] = useState(showBalanceDefault);
   const [copied, setCopied] = useState(false);
@@ -116,21 +108,6 @@ export const AccountCard: React.FC<AccountCardProps> = ({
               </p>
             </div>
           </div>
-
-          {/* Account switcher pill if multiple accounts or manage handler available */}
-          {onOpenManageAccounts && (
-            <button
-              id="btn-card-switch-account"
-              type="button"
-              onClick={onOpenManageAccounts}
-              className="flex-shrink-0 bg-[#deb356]/15 hover:bg-[#deb356]/25 border border-[#deb356]/30 text-[#deb356] text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 transition cursor-pointer active:scale-95 shadow-xs"
-              title="Manage multiple CBE accounts"
-            >
-              <Layers className="w-3 h-3 text-[#deb356]" />
-              <span>{accounts.length > 1 ? `${accounts.length} Accounts` : 'Accounts'}</span>
-              <ChevronDown className="w-2.5 h-2.5 opacity-80" />
-            </button>
-          )}
         </div>
 
         {/* MIDDLE SECTION: Horizontally Centered Balance & Right Eye Toggle */}
@@ -155,16 +132,16 @@ export const AccountCard: React.FC<AccountCardProps> = ({
             title={showBalance ? "Hide Balance & Account" : "Show Balance & Account"}
           >
             {showBalance ? (
-              <Eye className="w-5 h-5 text-gray-300 stroke-[1.8]" />
+              <EyeOpenIcon size={20} className="text-gray-300" strokeWidth={2} />
             ) : (
-              <EyeOff className="w-5 h-5 text-gray-400 stroke-[1.8]" />
+              <EyeOffIcon size={20} className="text-gray-400" strokeWidth={2} />
             )}
           </button>
         </div>
 
-        {/* BOTTOM SECTION: Account Type/Number & Date */}
-        <div className="flex justify-between items-center text-xs text-[#deb356] relative z-10 font-mono">
-          <span className="font-bold tracking-wide text-[#deb356]">
+        {/* BOTTOM SECTION: Account Type/Number & Copy Icon (Centered together) */}
+        <div className="flex items-center justify-center text-xs sm:text-[13px] text-[#deb356] relative z-10 font-mono">
+          <span className="font-medium tracking-wide text-[#deb356] select-text">
             {formattedAccountDisplay}
           </span>
           <button
@@ -172,13 +149,13 @@ export const AccountCard: React.FC<AccountCardProps> = ({
             type="button"
             aria-label="Copy Account Number"
             onClick={handleCopy}
-            className="hover:text-amber-400 text-gray-400 p-1 transition cursor-pointer flex items-center gap-1"
+            className="ml-2 hover:text-white text-gray-300 p-0.5 transition cursor-pointer flex items-center active:scale-95"
             title="Copy Account Number"
           >
             {copied ? (
               <Check className="w-3.5 h-3.5 text-emerald-400 stroke-[2.5]" />
             ) : (
-              <Copy className="w-3.5 h-3.5" />
+              <CopyIcon size={15} className="text-gray-300 hover:text-white" strokeWidth={1.6} />
             )}
           </button>
         </div>

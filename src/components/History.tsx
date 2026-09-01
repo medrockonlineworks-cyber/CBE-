@@ -33,8 +33,17 @@ export default function History({ currentUser, onSelectTransaction }: HistoryPro
     const userList = list.filter(t => 
       t.senderId === currentUser.id || t.recipientId === currentUser.id || t.senderAccount === currentUser.accountNumber || t.recipientAccount === currentUser.accountNumber
     );
-    // Sort reverse chronological
-    setTransactions(userList.sort((a,b) => b.createdAt.localeCompare(a.createdAt)));
+    // Sort reverse chronological (newest first)
+    setTransactions(
+      userList.sort((a, b) => {
+        const timeA = new Date(a.createdAt).getTime();
+        const timeB = new Date(b.createdAt).getTime();
+        if (isNaN(timeA) || isNaN(timeB)) {
+          return (b.createdAt || '').localeCompare(a.createdAt || '');
+        }
+        return timeB - timeA;
+      })
+    );
   }, [currentUser]);
 
   const isCreditTx = (t: Transaction) => {

@@ -241,14 +241,14 @@ export default function App() {
         <OfflineBanner />
 
         {/* Dynamic View Panel Router */}
-        <main className="flex-1 overflow-y-auto bg-gray-50 flex flex-col scrollbar-none">
+        <main className={`flex-1 flex flex-col scrollbar-none ${activeTab === 'home' || activeTab === 'history' ? 'overflow-hidden h-full' : 'overflow-y-auto bg-gray-50'}`}>
           
           {activeView === 'auth' && (
             <Auth onLoginSuccess={handleLoginSuccess} />
           )}
 
           {activeView === 'main' && (
-            <div className="flex-1 flex flex-col relative pb-28">
+            <div className={`flex-1 flex flex-col relative ${activeTab === 'home' || activeTab === 'history' ? 'h-full overflow-hidden' : 'pb-28'}`}>
               {/* Optional Top PWA Banner when installable */}
               <AppInstallPrompt mode="banner" />
 

@@ -6,7 +6,7 @@ import ServiceGrid from '../components/ServiceGrid';
 import QRButton from '../components/QRButton';
 import BottomNavigation, { NavTabId } from '../components/BottomNavigation';
 import TransactionDetailModal from '../components/TransactionDetailModal';
-import ManageAccountsModal from '../components/ManageAccountsModal';
+import { CardsIcon, CopyIcon } from '../components/CbeCustomIcons';
 import { 
   X, 
   Check, 
@@ -26,7 +26,7 @@ import {
   ChevronRight,
   ExternalLink
 } from 'lucide-react';
-import { UserProfile, Transaction, BankAccount } from '../types';
+import { UserProfile, Transaction } from '../types';
 import { LocalDb } from '../lib/mockData';
 
 interface HomeProps {
@@ -65,15 +65,6 @@ export const Home: React.FC<HomeProps> = ({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [currentDateTime, setCurrentDateTime] = useState('01 Jul 2026 • 10:14 AM');
   const [customLogoUrl, setCustomLogoUrl] = useState<string | null>(null);
-
-  // User Accounts (Multi-Account support)
-  const [userAccounts, setUserAccounts] = useState<BankAccount[]>(() => LocalDb.getUserAccounts(currentUser.id));
-  const [selectedAccountId, setSelectedAccountId] = useState<string>(() => {
-    const accs = LocalDb.getUserAccounts(currentUser.id);
-    const primary = accs.find(a => a.isPrimary) || accs[0];
-    return primary ? primary.id : '';
-  });
-  const [showManageAccountsModal, setShowManageAccountsModal] = useState(false);
 
   // Transaction history filter state
   const [historyFilter, setHistoryFilter] = useState<'all' | 'debited' | 'credited'>('all');
@@ -121,8 +112,6 @@ export const Home: React.FC<HomeProps> = ({
     const txs = LocalDb.getTransactions();
     setAllTransactions(txs);
     setRecentTransactions(txs.slice(0, 6));
-    const accs = LocalDb.getUserAccounts(currentUser.id);
-    setUserAccounts(accs);
   };
 
   const handleRefresh = () => {
@@ -218,240 +207,240 @@ export const Home: React.FC<HomeProps> = ({
   const firstName = currentUser.name.split(' ')[0] || 'Leykun';
 
   return (
-    <div className="min-h-full w-full bg-[#F7F7F7] font-sans relative flex flex-col justify-between overflow-x-hidden text-gray-900 pb-28 select-none">
+    <div className="h-full w-full bg-[#F7F7F7] font-sans relative flex flex-col overflow-hidden text-gray-900 select-none">
       
       {/* ========================================================
-          HERO BACKGROUND WITH SMOOTH CURVED WAVE TRANSITION
-          Layer 0: Purple Gradient Container
-          Layer 1: Smooth SVG Wave curving down and into white
-          Layer 2: Content Area (White background)
-          Layer 10: Black Account Card floating over the transition
+          STATIC / UNSCROLLABLE TOP SECTION (Above Yellow Line)
+          Includes Purple Hero Background, Top Header, and Black Account Card
           ======================================================== */}
-      <div 
-        className="hero-background absolute top-0 left-0 right-0 h-[280px] sm:h-[300px] pointer-events-none z-0 overflow-hidden"
-        style={{
-          background: 'linear-gradient(135deg, #70189F 0%, #8420AE 55%, #8E29B9 100%)',
-        }}
-      >
-        {/* Soft Ambient Glow Elements */}
-        <div className="absolute -top-16 -left-16 w-64 h-64 rounded-full bg-white/10 blur-3xl pointer-events-none" />
-        <div className="absolute top-20 -right-20 w-80 h-80 rounded-full bg-[#8E29B9]/30 blur-3xl pointer-events-none" />
-
-        {/* SVG Smooth Curved Transition Wave (Purple to #F7F7F7 Page Background) */}
-        <svg
-          className="hero-curve absolute bottom-0 left-0 w-full h-[140px] sm:h-[160px] text-[#F7F7F7]"
-          viewBox="0 0 1440 320"
-          preserveAspectRatio="none"
-          fill="currentColor"
+      <div className="flex-shrink-0 w-full relative z-20">
+        {/* HERO BACKGROUND WITH SMOOTH CURVED WAVE TRANSITION */}
+        <div 
+          className="hero-background absolute top-0 left-0 right-0 h-[280px] sm:h-[300px] pointer-events-none z-0 overflow-hidden"
+          style={{
+            background: 'linear-gradient(135deg, #70189F 0%, #8420AE 55%, #8E29B9 100%)',
+          }}
         >
-          {/* Asymmetric organic wave sloping gently from left to right as in the reference */}
-          <path d="M0,192L48,181.3C96,171,192,149,288,160C384,171,480,213,576,224C672,235,768,213,864,186.7C960,160,1056,128,1152,122.7C1248,117,1344,139,1392,149.3L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z" />
-        </svg>
+          {/* Soft Ambient Glow Elements */}
+          <div className="absolute -top-16 -left-16 w-64 h-64 rounded-full bg-white/10 blur-3xl pointer-events-none" />
+          <div className="absolute top-20 -right-20 w-80 h-80 rounded-full bg-[#8E29B9]/30 blur-3xl pointer-events-none" />
+
+          {/* SVG Smooth Curved Transition Wave (Purple to #F7F7F7 Page Background) */}
+          <svg
+            className="hero-curve absolute bottom-0 left-0 w-full h-[140px] sm:h-[160px] text-[#F7F7F7]"
+            viewBox="0 0 1440 320"
+            preserveAspectRatio="none"
+            fill="currentColor"
+          >
+            {/* Preserves the organic curve on the left while leveling into a clean straight horizontal line on the right */}
+            <path d="M 0,192 C 140,150 260,155 380,180 C 500,205 600,230 740,220 C 880,210 980,160 1100,160 L 1440,160 L 1440,320 L 0,320 Z" />
+          </svg>
+        </div>
+
+        {/* 1. TOP HEADER (Inside Purple Hero Section) */}
+        <div className="relative z-10 flex flex-col w-full">
+          <Header
+            userName={firstName}
+            onOpenMenu={() => setActiveModal('menu')}
+            onRefresh={handleRefresh}
+            onOpenSearch={() => setActiveModal('search')}
+            onOpenProfile={() => onNavigateToTab?.('profile')}
+            selectedLanguage={selectedLanguage}
+            onChangeLanguage={(lang) => setSelectedLanguage(lang)}
+            isRefreshing={isRefreshing}
+          />
+
+          {/* 2. BLACK ACCOUNT CARD (Floating & Overlapping Curve) */}
+          <div className="w-full mt-2 sm:mt-3">
+            <AccountCard
+              bankName="Commercial Bank of Ethiopia"
+              slogan="The bank you can always rely on!"
+              balance={currentUser.balance}
+              currency={currentUser.currency || 'ETB'}
+              accountType="Saving Account"
+              accountNumber={currentUser.accountNumber}
+              dateTimeString={currentDateTime}
+              showBalanceDefault={false}
+              customLogoUrl={customLogoUrl}
+            />
+          </div>
+
+          {/* 3. STATIC GOLD / YELLOW INDICATOR LINE (Permanently visible & unscrollable) */}
+          <div className="w-full flex justify-center items-center py-2 relative z-20">
+            <div 
+              id="static-gold-indicator-line"
+              className="w-12 h-1.5 bg-gradient-to-r from-[#d4af37] via-[#f59e0b] to-[#d4af37] rounded-full shadow-[0_1px_3px_rgba(212,175,55,0.3)] transition-all" 
+              title="CBE Section Indicator"
+            />
+          </div>
+        </div>
       </div>
 
       {/* ========================================================
-          MAIN SCREEN CONTENT
+          SCROLLABLE CONTENT AREA (From Yellow Line Downwards)
           ======================================================== */}
-      <div className="relative z-10 flex flex-col w-full">
-        {/* 1. TOP HEADER (Inside Purple Hero Section) */}
-        <Header
-          userName={firstName}
-          onOpenMenu={() => setActiveModal('menu')}
-          onRefresh={handleRefresh}
-          onOpenSearch={() => setActiveModal('search')}
-          selectedLanguage={selectedLanguage}
-          onChangeLanguage={(lang) => setSelectedLanguage(lang)}
-          isRefreshing={isRefreshing}
-        />
-
-        {/* 2. BLACK ACCOUNT CARD (Floating & Overlapping Curve) */}
-        <main className="w-full mt-2 sm:mt-3 flex flex-col">
-          {(() => {
-            const activeAcc = userAccounts.find(a => a.id === selectedAccountId) || userAccounts[0];
-            return (
-              <AccountCard
-                bankName="Commercial Bank of Ethiopia"
-                slogan="The bank you can always rely on!"
-                balance={activeAcc ? activeAcc.balance : currentUser.balance}
-                currency={activeAcc?.currency || currentUser.currency || 'ETB'}
-                accountType={activeAcc ? `${activeAcc.accountName} (${activeAcc.accountType})` : 'Saving Account'}
-                accountNumber={activeAcc ? activeAcc.accountNumber : currentUser.accountNumber}
-                dateTimeString={currentDateTime}
-                showBalanceDefault={false}
-                customLogoUrl={customLogoUrl}
-                accounts={userAccounts}
-                selectedAccountId={selectedAccountId}
-                onSelectAccount={(acc) => setSelectedAccountId(acc.id)}
-                onOpenManageAccounts={() => setShowManageAccountsModal(true)}
-              />
-            );
-          })()}
-
-          {/* DYNAMIC CONTENT UNDER CARD BASED ON ACTIVE TAB */}
-          {activeNavTab === 'history' ? (
-            /* ========================================================
-               TRANSACTION HISTORY SECTION (Matching Authentic CBE Layout)
-               ======================================================== */
-            <div className="w-full max-w-md mx-auto bg-white rounded-t-3xl shadow-xs border border-gray-100/90 min-h-[460px] px-4 pt-2.5 pb-8 mt-2.5 flex flex-col animate-in fade-in duration-200">
-              {/* Gold drag handle indicator pill */}
-              <div className="w-11 h-1 bg-[#d4af37]/80 rounded-full mx-auto mb-2.5" />
-
-              {/* Filter Tabs & Search Icon Row */}
-              <div className="flex items-center justify-between border-b border-gray-100 pb-1 mb-2 px-1">
-                <div className="flex items-center gap-7">
-                  <button
-                    id="tab-history-all"
-                    type="button"
-                    onClick={() => setHistoryFilter('all')}
-                    className={`text-[13px] tracking-tight transition-all cursor-pointer ${
-                      historyFilter === 'all'
-                        ? 'text-[#6b1284] font-black border-b-2 border-[#6b1284] pb-2'
-                        : 'text-gray-400 font-semibold pb-2 hover:text-[#6b1284]'
-                    }`}
-                  >
-                    All
-                  </button>
-                  <button
-                    id="tab-history-debited"
-                    type="button"
-                    onClick={() => setHistoryFilter('debited')}
-                    className={`text-[13px] tracking-tight transition-all cursor-pointer ${
-                      historyFilter === 'debited'
-                        ? 'text-[#6b1284] font-black border-b-2 border-[#6b1284] pb-2'
-                        : 'text-gray-400 font-semibold pb-2 hover:text-[#6b1284]'
-                    }`}
-                  >
-                    Debited
-                  </button>
-                  <button
-                    id="tab-history-credited"
-                    type="button"
-                    onClick={() => setHistoryFilter('credited')}
-                    className={`text-[13px] tracking-tight transition-all cursor-pointer ${
-                      historyFilter === 'credited'
-                        ? 'text-[#6b1284] font-black border-b-2 border-[#6b1284] pb-2'
-                        : 'text-gray-400 font-semibold pb-2 hover:text-[#6b1284]'
-                    }`}
-                  >
-                    Credited
-                  </button>
-                </div>
-
-                {/* Search toggle button icon */}
+      <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scrollbar-none relative z-10 w-full pb-32">
+        {/* DYNAMIC CONTENT UNDER CARD BASED ON ACTIVE TAB */}
+        {activeNavTab === 'history' ? (
+          /* ========================================================
+             TRANSACTION HISTORY SECTION (Matching Authentic CBE Layout)
+             ======================================================== */
+          <div className="w-full max-w-md mx-auto bg-white rounded-t-3xl shadow-xs border border-gray-100/90 min-h-[460px] px-4 pt-2.5 pb-8 mt-1 flex flex-col animate-in fade-in duration-200">
+            {/* Filter Tabs & Search Icon Row */}
+            <div className="flex items-center justify-between border-b border-gray-100 pb-1 mb-2 px-1">
+              <div className="flex items-center gap-7">
                 <button
-                  id="btn-history-search-toggle"
+                  id="tab-history-all"
                   type="button"
-                  aria-label="Toggle Search"
-                  onClick={() => setIsHistorySearchOpen(!isHistorySearchOpen)}
-                  className={`p-1.5 rounded-full transition-colors cursor-pointer ${
-                    isHistorySearchOpen ? 'bg-purple-100 text-[#6b1284]' : 'text-gray-400 hover:text-[#6b1284]'
+                  onClick={() => setHistoryFilter('all')}
+                  className={`text-[13px] tracking-tight transition-all cursor-pointer ${
+                    historyFilter === 'all'
+                      ? 'text-[#6b1284] font-black border-b-2 border-[#6b1284] pb-2'
+                      : 'text-gray-400 font-semibold pb-2 hover:text-[#6b1284]'
                   }`}
                 >
-                  <Search className="w-4 h-4 stroke-[2.4]" />
+                  All
+                </button>
+                <button
+                  id="tab-history-debited"
+                  type="button"
+                  onClick={() => setHistoryFilter('debited')}
+                  className={`text-[13px] tracking-tight transition-all cursor-pointer ${
+                    historyFilter === 'debited'
+                      ? 'text-[#6b1284] font-black border-b-2 border-[#6b1284] pb-2'
+                      : 'text-gray-400 font-semibold pb-2 hover:text-[#6b1284]'
+                  }`}
+                >
+                  Debited
+                </button>
+                <button
+                  id="tab-history-credited"
+                  type="button"
+                  onClick={() => setHistoryFilter('credited')}
+                  className={`text-[13px] tracking-tight transition-all cursor-pointer ${
+                    historyFilter === 'credited'
+                      ? 'text-[#6b1284] font-black border-b-2 border-[#6b1284] pb-2'
+                      : 'text-gray-400 font-semibold pb-2 hover:text-[#6b1284]'
+                  }`}
+                >
+                  Credited
                 </button>
               </div>
 
-              {/* Optional Search bar */}
-              {isHistorySearchOpen && (
-                <div className="mb-3 relative animate-in fade-in slide-in-from-top-1 duration-150">
-                  <input
-                    type="text"
-                    placeholder="Search by name, account, or ref..."
-                    value={historySearchText}
-                    onChange={(e) => setHistorySearchText(e.target.value)}
-                    autoFocus
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#6b1284] focus:bg-white"
-                  />
-                  {historySearchText && (
-                    <button
-                      type="button"
-                      onClick={() => setHistorySearchText('')}
-                      className="absolute right-2.5 top-2 text-gray-400 hover:text-gray-600 cursor-pointer"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  )}
+              {/* Search toggle button icon */}
+              <button
+                id="btn-history-search-toggle"
+                type="button"
+                aria-label="Toggle Search"
+                onClick={() => setIsHistorySearchOpen(!isHistorySearchOpen)}
+                className={`p-1.5 rounded-full transition-colors cursor-pointer ${
+                  isHistorySearchOpen ? 'bg-purple-100 text-[#6b1284]' : 'text-gray-400 hover:text-[#6b1284]'
+                }`}
+              >
+                <Search className="w-4 h-4 stroke-[2.4]" />
+              </button>
+            </div>
+
+            {/* Optional Search bar */}
+            {isHistorySearchOpen && (
+              <div className="mb-3 relative animate-in fade-in slide-in-from-top-1 duration-150">
+                <input
+                  type="text"
+                  placeholder="Search by name, account, or ref..."
+                  value={historySearchText}
+                  onChange={(e) => setHistorySearchText(e.target.value)}
+                  autoFocus
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#6b1284] focus:bg-white"
+                />
+                {historySearchText && (
+                  <button
+                    type="button"
+                    onClick={() => setHistorySearchText('')}
+                    className="absolute right-2.5 top-2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Transaction list */}
+            <div className="flex flex-col divide-y divide-gray-100/80">
+              {filteredHistoryTransactions.length === 0 ? (
+                <div className="py-12 text-center text-xs text-gray-400">
+                  No transactions found.
                 </div>
-              )}
+              ) : (
+                filteredHistoryTransactions.map((tx) => {
+                  const isCredit = tx.type === 'receive' || tx.senderName === 'Deposit';
+                  const displayName = isCredit 
+                    ? (tx.senderName || 'Deposit') 
+                    : (tx.recipientName || 'CBE Transfer');
+                  const categoryTag = getCbeCategory(tx);
+                  const formattedDate = formatCbeHistoryDate(tx.createdAt);
 
-              {/* Transaction list */}
-              <div className="flex flex-col divide-y divide-gray-100/80">
-                {filteredHistoryTransactions.length === 0 ? (
-                  <div className="py-12 text-center text-xs text-gray-400">
-                    No transactions found.
-                  </div>
-                ) : (
-                  filteredHistoryTransactions.map((tx) => {
-                    const isCredit = tx.type === 'receive' || tx.senderName === 'Deposit';
-                    const displayName = isCredit 
-                      ? (tx.senderName || 'Deposit') 
-                      : (tx.recipientName || 'CBE Transfer');
-                    const categoryTag = getCbeCategory(tx);
-                    const formattedDate = formatCbeHistoryDate(tx.createdAt);
-
-                    return (
-                      <div
-                        key={tx.id}
-                        id={`tx-item-${tx.id}`}
-                        onClick={() => setSelectedDetailTx(tx)}
-                        className="py-3 px-1 flex items-center justify-between hover:bg-purple-50/40 active:scale-[0.99] transition-all rounded-xl cursor-pointer select-none group"
-                      >
-                        {/* Left: Direction Circular Badge + Title + Timestamp */}
-                        <div className="flex items-center gap-3">
-                          {/* Directional Circular Icon */}
-                          <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${
-                            isCredit ? 'bg-[#e6f7ef] text-[#22c55e]' : 'bg-[#fbeeed] text-[#eb4d4b]'
-                          }`}>
-                            {isCredit ? (
-                              <ArrowDownLeft className="w-4.5 h-4.5 stroke-[2.8]" />
-                            ) : (
-                              <ArrowUpRight className="w-4.5 h-4.5 stroke-[2.8]" />
-                            )}
-                          </div>
-
-                          {/* Title and Date */}
-                          <div className="flex flex-col">
-                            <span className="font-bold text-gray-900 text-[13px] leading-tight group-hover:text-[#6b1284] transition-colors">
-                              {displayName}
-                            </span>
-                            <span className="text-[11px] text-gray-400 font-medium mt-0.5">
-                              {formattedDate}
-                            </span>
-                          </div>
+                  return (
+                    <div
+                      key={tx.id}
+                      id={`tx-item-${tx.id}`}
+                      onClick={() => setSelectedDetailTx(tx)}
+                      className="py-3 px-1 flex items-center justify-between hover:bg-purple-50/40 active:scale-[0.99] transition-all rounded-xl cursor-pointer select-none group"
+                    >
+                      {/* Left: Direction Circular Badge + Title + Timestamp */}
+                      <div className="flex items-center gap-3">
+                        {/* Directional Circular Icon */}
+                        <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          isCredit ? 'bg-[#e6f7ef] text-[#22c55e]' : 'bg-[#fbeeed] text-[#eb4d4b]'
+                        }`}>
+                          {isCredit ? (
+                            <ArrowDownLeft className="w-4.5 h-4.5 stroke-[2.8]" />
+                          ) : (
+                            <ArrowUpRight className="w-4.5 h-4.5 stroke-[2.8]" />
+                          )}
                         </div>
 
-                        {/* Right: Amount + Category Pill Badge */}
-                        <div className="flex flex-col items-end">
-                          <span className={`text-[13px] font-bold tracking-tight ${
-                            isCredit ? 'text-[#16a34a]' : 'text-gray-900'
-                          }`}>
-                            {isCredit ? '+' : '-'}{tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
+                        {/* Title and Date */}
+                        <div className="flex flex-col">
+                          <span className="font-bold text-gray-900 text-[13px] leading-tight group-hover:text-[#6b1284] transition-colors">
+                            {displayName}
                           </span>
-
-                          <span className="bg-[#f2e6f7] text-[#6b1284] px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wide mt-1">
-                            {categoryTag}
+                          <span className="text-[11px] text-gray-400 font-medium mt-0.5">
+                            {formattedDate}
                           </span>
                         </div>
                       </div>
-                    );
-                  })
-                )}
-              </div>
-            </div>
-          ) : (
-            /* ========================================================
-               HOME MAIN SERVICE BUTTONS & QUICK ACTIONS
-               ======================================================== */
-            <>
-              {/* 3. FOUR CIRCULAR QUICK ACTION BUTTONS */}
-              <QuickActions onActionClick={handleQuickAction} />
 
-              {/* 4. MAIN TWO-COLUMN SERVICE GRID */}
-              <ServiceGrid onServiceSelect={handleServiceSelect} />
-            </>
-          )}
-        </main>
-      </div>
+                      {/* Right: Amount + Category Pill Badge */}
+                      <div className="flex flex-col items-end">
+                        <span className={`text-[13px] font-bold tracking-tight ${
+                          isCredit ? 'text-[#16a34a]' : 'text-gray-900'
+                        }`}>
+                          {isCredit ? '+' : '-'}{tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
+                        </span>
+
+                        <span className="bg-[#f2e6f7] text-[#6b1284] px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wide mt-1">
+                          {categoryTag}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        ) : (
+          /* ========================================================
+             HOME MAIN SERVICE BUTTONS & QUICK ACTIONS
+             ======================================================== */
+          <>
+            {/* 3. FOUR CIRCULAR QUICK ACTION BUTTONS */}
+            <QuickActions onActionClick={handleQuickAction} />
+
+            {/* 4. MAIN TWO-COLUMN SERVICE GRID */}
+            <ServiceGrid onServiceSelect={handleServiceSelect} />
+          </>
+        )}
+      </main>
 
       {/* ========================================================
           5. FIXED BOTTOM NAVIGATION BAR (Scan QR floating + Home, Transaction, Setting)
@@ -617,7 +606,7 @@ export const Home: React.FC<HomeProps> = ({
                 }}
                 className="p-3 bg-gray-50 hover:bg-purple-50 rounded-2xl text-left transition cursor-pointer"
               >
-                <CreditCard className="w-5 h-5 text-[#711A9F] mb-1.5" />
+                <CardsIcon size={20} className="text-[#711A9F] mb-1.5" />
                 <p className="text-xs font-bold text-gray-900">My Cards</p>
                 <p className="text-[10px] text-gray-500">Debit &amp; ATM</p>
               </button>
@@ -910,7 +899,7 @@ export const Home: React.FC<HomeProps> = ({
               }}
               className="w-full mt-4 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition cursor-pointer"
             >
-              <Copy className="w-3.5 h-3.5" />
+              <CopyIcon size={16} />
               <span>Copy Account Details</span>
             </button>
           </div>
@@ -1196,27 +1185,6 @@ export const Home: React.FC<HomeProps> = ({
           }}
           currentUserId={currentUser.id}
           currentUserAccount={currentUser.accountNumber}
-        />
-      )}
-
-      {/* MANAGE ACCOUNTS MODAL */}
-      {showManageAccountsModal && (
-        <ManageAccountsModal
-          currentUser={currentUser}
-          accounts={userAccounts}
-          selectedAccountId={selectedAccountId}
-          onClose={() => setShowManageAccountsModal(false)}
-          onSelectAccount={(acc) => {
-            setSelectedAccountId(acc.id);
-            setShowManageAccountsModal(false);
-          }}
-          onAccountsUpdated={() => {
-            loadTransactions();
-          }}
-          onOpenTransferBetweenOwn={(fromId, toId) => {
-            setShowManageAccountsModal(false);
-            onNavigateToTab?.('transfer');
-          }}
         />
       )}
 

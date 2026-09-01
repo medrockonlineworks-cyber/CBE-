@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { UserProfile, Transaction, SystemNotification } from '../types';
 import { LocalDb, DEFAULT_CBE_LOGO } from '../lib/mockData';
 import { CbeLogo as CbeGoldenLogo } from './CbeLogo';
+import { BillShareIcon, CardsIcon, MiniStatementIcon, CopyIcon, RefreshIcon } from './CbeCustomIcons';
 import { 
   Eye, 
   EyeOff, 
@@ -92,7 +93,16 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
     const filteredTxs = txs.filter(t => 
       t.senderId === currentUser.id || t.recipientId === currentUser.id || t.senderAccount === currentUser.accountNumber || t.recipientAccount === currentUser.accountNumber
     );
-    setRecentTransactions(filteredTxs.sort((a,b) => b.createdAt.localeCompare(a.createdAt)));
+    setRecentTransactions(
+      filteredTxs.sort((a, b) => {
+        const timeA = new Date(a.createdAt).getTime();
+        const timeB = new Date(b.createdAt).getTime();
+        if (isNaN(timeA) || isNaN(timeB)) {
+          return (b.createdAt || '').localeCompare(a.createdAt || '');
+        }
+        return timeB - timeA;
+      })
+    );
   };
 
   const handleRefresh = () => {
@@ -206,7 +216,7 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
               className={`w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 border border-white/25 flex items-center justify-center text-white transition cursor-pointer backdrop-blur-xs ${refreshing ? 'animate-spin' : ''}`}
               title="Refresh Balance"
             >
-              <RotateCw className="w-4 h-4 stroke-[2.4]" />
+              <RefreshIcon size={19} />
             </button>
 
             {/* Search Button */}
@@ -271,7 +281,7 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
                 className="hover:text-amber-400 text-gray-400 p-1 transition cursor-pointer flex items-center gap-1"
                 title="Copy Account Number"
               >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <CopyIcon size={15} />}
               </button>
             </div>
 
@@ -318,10 +328,10 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
             className="flex flex-col items-center flex-1 group cursor-pointer"
           >
             <div className="w-13 h-13 rounded-full bg-white border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex items-center justify-center text-[#68137e] transition group-hover:scale-105 group-active:scale-95">
-              <FileText className="w-6 h-6 stroke-[2.5]" />
+              <MiniStatementIcon size={24} color="#68137e" />
             </div>
             <span className="text-[11px] font-extrabold text-[#68137e] mt-2 text-center leading-tight">
-              Mini Satement
+              Mini Statement
             </span>
           </button>
 
@@ -331,7 +341,7 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
             className="flex flex-col items-center flex-1 group cursor-pointer"
           >
             <div className="w-13 h-13 rounded-full bg-white border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex items-center justify-center text-[#68137e] transition group-hover:scale-105 group-active:scale-95">
-              <CreditCard className="w-6 h-6 stroke-[2.5]" />
+              <CardsIcon size={24} color="#68137e" />
             </div>
             <span className="text-[11px] font-extrabold text-[#68137e] mt-2 text-center leading-tight">
               Cards
@@ -344,7 +354,7 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
             className="flex flex-col items-center flex-1 group cursor-pointer"
           >
             <div className="w-13 h-13 rounded-full bg-white border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex items-center justify-center text-[#68137e] transition group-hover:scale-105 group-active:scale-95">
-              <GitFork className="w-6 h-6 stroke-[2.5]" />
+              <BillShareIcon size={24} color="#68137e" />
             </div>
             <span className="text-[11px] font-extrabold text-[#68137e] mt-2 text-center leading-tight">
               Bill Share
@@ -630,7 +640,7 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
                 onClick={copyAccountNum}
                 className="flex-1 bg-purple-50 text-[#68137e] hover:bg-purple-100 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition"
               >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <CopyIcon size={16} color="#68137e" />}
                 <span>{copied ? 'Copied' : 'Copy Account'}</span>
               </button>
               <button 

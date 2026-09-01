@@ -5,7 +5,7 @@ import { calculateCbeFee } from '../lib/cbeTariff';
 import EthiopianNameAutocomplete, { EthiopianThreePartNameInput } from './EthiopianNameAutocomplete';
 import AccountCard from './AccountCard';
 import TransactionDetailModal from './TransactionDetailModal';
-import ManageAccountsModal from './ManageAccountsModal';
+import { RefreshIcon } from './CbeCustomIcons';
 import { 
   Send, 
   ArrowLeftRight, 
@@ -118,7 +118,16 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
 
   const loadTransactions = () => {
     const list = LocalDb.getTransactions();
-    setTransactionsList(list.sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
+    setTransactionsList(
+      list.sort((a, b) => {
+        const timeA = new Date(a.createdAt).getTime();
+        const timeB = new Date(b.createdAt).getTime();
+        if (isNaN(timeA) || isNaN(timeB)) {
+          return (b.createdAt || '').localeCompare(a.createdAt || '');
+        }
+        return timeB - timeA;
+      })
+    );
   };
 
   const handleRefresh = () => {
@@ -157,7 +166,6 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
     const nonPrimary = accs.find(a => !a.isPrimary) || accs[1] || accs[0];
     return nonPrimary ? nonPrimary.id : '';
   });
-  const [showManageAccModal, setShowManageAccModal] = useState(false);
   const [showFromBalance, setShowFromBalance] = useState<boolean>(true);
 
   // Recipient Search & Auto-Fill
@@ -707,7 +715,7 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
               className={`p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition active:scale-95 cursor-pointer ${isRefreshing ? 'animate-spin' : ''}`}
               title="Refresh ledger"
             >
-              <RotateCw className="w-4 h-4" />
+              <RefreshIcon size={18} />
             </button>
             <button
               id="btn-toggle-viewmode"
@@ -1287,35 +1295,34 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
             {/* CBE Transfer Main Card Form */}
             <form id="form-bank-transfer" onSubmit={handleCbeTransferSubmit} className="space-y-4">
               
-              {/* FROM ACCOUNT SELECTOR CARD */}
+              {/* FROM ACCOUNT CARD */}
               <div className="bg-gradient-to-br from-emerald-950 to-emerald-850 text-white rounded-3xl p-5 shadow-md border border-emerald-800/20 relative overflow-hidden">
-                <div className="flex justify-between items-center">
-                  <p className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">From Account</p>
-                  <button
-                    type="button"
-                    onClick={() => setShowManageAccModal(true)}
-                    className="text-[10px] bg-white/10 hover:bg-white/20 text-amber-300 px-2 py-0.5 rounded-full font-bold flex items-center gap-1 transition cursor-pointer"
-                  >
-                    <Plus className="w-3 h-3" /> Open / Manage ({userAccounts.length})
-                  </button>
-                </div>
+                <p className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">From Account</p>
                 
                 <div className="mt-2.5 flex justify-between items-center">
                   <div className="flex-1">
-                    <select
-                      id="select-from-bank-account"
-                      value={selectedFromAccId}
-                      onChange={(e) => setSelectedFromAccId(e.target.value)}
-                      className="w-full bg-transparent text-sm font-black border-none p-0 pr-6 text-white focus:ring-0 focus:outline-none cursor-pointer font-sans"
-                    >
-                      {userAccounts.map(acc => (
-                        <option key={acc.id} value={acc.id} className="bg-emerald-950 text-white font-medium">
-                          {acc.accountName} ({acc.accountType}) - {acc.accountNumber.slice(0, 4)}••••{acc.accountNumber.slice(-4)}
-                        </option>
-                      ))}
-                    </select>
+                    {userAccounts.length > 1 ? (
+                      <select
+                        id="select-from-bank-account"
+                        value={selectedFromAccId}
+                        onChange={(e) => setSelectedFromAccId(e.target.value)}
+                        className="w-full bg-transparent text-sm font-black border-none p-0 pr-6 text-white focus:ring-0 focus:outline-none cursor-pointer font-sans"
+                      >
+                        {userAccounts.map(acc => (
+                          <option key={acc.id} value={acc.id} className="bg-emerald-950 text-white font-medium">
+                            {acc.accountName} - {acc.accountNumber.slice(0, 4)}••••{acc.accountNumber.slice(-4)}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <p className="text-sm font-black text-white font-sans">
+                        Saving Account - {currentUser.accountNumber.slice(0, 4)}••••{currentUser.accountNumber.slice(-4)}
+                      </p>
+                    )}
                   </div>
-                  <ChevronRight className="w-4 h-4 text-emerald-200 pointer-events-none rotate-90" />
+                  {userAccounts.length > 1 && (
+                    <ChevronRight className="w-4 h-4 text-emerald-200 pointer-events-none rotate-90" />
+                  )}
                 </div>
 
                 <div className="mt-3.5 flex justify-between items-center pt-3 border-t border-white/5">
@@ -1344,28 +1351,12 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
                 {/* OWN ACCOUNT: TO ACCOUNT SELECTOR */}
                 {transferSubTab === 'own' && (
                   <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <label className="text-xs text-gray-500 font-bold">To Destination Account</label>
-                      <button
-                        type="button"
-                        onClick={() => setShowManageAccModal(true)}
-                        className="text-[10px] text-[#70189F] hover:underline font-bold flex items-center gap-0.5 cursor-pointer"
-                      >
-                        <Plus className="w-3 h-3" /> Add Account
-                      </button>
-                    </div>
+                    <label className="text-xs text-gray-500 font-bold">To Destination Account</label>
 
                     {userAccounts.length <= 1 ? (
-                      <div className="p-3.5 bg-amber-50 rounded-2xl border border-amber-200 text-xs text-amber-900 space-y-2">
-                        <p className="font-bold">You currently have only 1 registered account.</p>
-                        <p className="text-[11px] text-amber-800">Open a second CBE account (Savings, Wadiah, Checking, or Digital Wallet) to transfer funds between your own accounts instantly without fees.</p>
-                        <button
-                          type="button"
-                          onClick={() => setShowManageAccModal(true)}
-                          className="bg-[#70189F] hover:bg-[#8322b7] text-white font-bold text-xs px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition cursor-pointer"
-                        >
-                          <Plus className="w-3.5 h-3.5" /> Open Another Account Now
-                        </button>
+                      <div className="p-3.5 bg-gray-50 rounded-2xl border border-gray-200 text-xs text-gray-700 space-y-1.5">
+                        <p className="font-bold text-gray-900">Single Account Active</p>
+                        <p className="text-[11px] text-gray-600">You currently have one active CBE account registered. To switch or add accounts, please visit the Settings page.</p>
                       </div>
                     ) : (
                       <div className="space-y-1.5">
@@ -2430,23 +2421,6 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
           }}
           currentUserId={currentUser.id}
           currentUserAccount={currentUser.accountNumber}
-        />
-      )}
-
-      {/* ================= MANAGE ACCOUNTS MODAL ================= */}
-      {showManageAccModal && (
-        <ManageAccountsModal
-          currentUser={currentUser}
-          accounts={userAccounts}
-          selectedAccountId={selectedFromAccId}
-          onClose={() => setShowManageAccModal(false)}
-          onSelectAccount={(acc) => {
-            setSelectedFromAccId(acc.id);
-            setShowManageAccModal(false);
-          }}
-          onAccountsUpdated={() => {
-            refreshAccounts();
-          }}
         />
       )}
 

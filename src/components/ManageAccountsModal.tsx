@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { BankAccount, BankAccountType, UserProfile } from '../types';
 import { LocalDb } from '../lib/mockData';
+import { CopyIcon } from './CbeCustomIcons';
 
 interface ManageAccountsModalProps {
   currentUser: UserProfile;
@@ -200,7 +201,7 @@ export default function ManageAccountsModal({
                           {copiedId === acc.id ? (
                             <Check className="w-3.5 h-3.5 text-emerald-600" />
                           ) : (
-                            <Copy className="w-3.5 h-3.5" />
+                            <CopyIcon size={14} />
                           )}
                         </button>
                       </div>
