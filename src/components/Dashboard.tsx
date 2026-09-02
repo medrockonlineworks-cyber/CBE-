@@ -166,10 +166,10 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
   );
 
   return (
-    <div id="cbe-dashboard-screen" className="max-w-md mx-auto bg-[#f6f7fb] min-h-screen pb-24 relative font-sans select-none">
+    <div id="cbe-dashboard-screen" className="max-w-md w-full h-full mx-auto bg-[#f6f7fb] relative font-sans flex flex-col overflow-hidden select-none">
       
-      {/* 1. TOP CBE VIVID ROYAL PURPLE HEADER CONTAINER */}
-      <header className="bg-[#68137e] text-white pt-5 pb-16 px-4 relative shadow-md">
+      {/* 1. TOP CBE VIVID ROYAL PURPLE HEADER CONTAINER (STATIC / UNSCROLLABLE) */}
+      <header className="bg-[#68137e] text-white pt-5 pb-10 px-4 relative shadow-md flex-shrink-0 z-20 touch-none overscroll-none select-none">
         
         {/* Top App Bar Row */}
         <div className="flex items-center justify-between gap-2">
@@ -303,8 +303,8 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
 
       </header>
 
-      {/* 3. MAIN WHITE CURVED SHEET */}
-      <main className="bg-[#f6f7fb] -mt-8 rounded-t-[36px] pt-6 px-4 pb-12 shadow-md relative z-20 space-y-5">
+      {/* 3. MAIN WHITE CURVED SHEET (SCROLLABLE INDEPENDENTLY) */}
+      <main className="bg-[#f6f7fb] -mt-8 rounded-t-[36px] pt-6 px-4 pb-32 shadow-md relative z-20 space-y-5 flex-1 min-h-0 overflow-y-auto overscroll-contain scrollbar-none">
         
         {/* ROW 1: 4 Circular Quick Action Buttons */}
         <div className="flex items-start justify-between gap-1 px-1">

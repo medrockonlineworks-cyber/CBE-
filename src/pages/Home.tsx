@@ -13,6 +13,8 @@ import {
   Copy, 
   ArrowUpRight, 
   ArrowDownLeft, 
+  ArrowDown,
+  ArrowUp,
   CreditCard, 
   ShieldCheck, 
   Scan, 
@@ -92,15 +94,17 @@ export const Home: React.FC<HomeProps> = ({
 
     const updateTime = () => {
       const now = new Date();
-      const options: Intl.DateTimeFormatOptions = {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true,
-      };
-      setCurrentDateTime(now.toLocaleDateString('en-GB', options).replace(',', ' •'));
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const day = now.getDate().toString().padStart(2, '0');
+      const mon = months[now.getMonth()];
+      const yr = now.getFullYear();
+      let hours = now.getHours();
+      const minutes = now.getMinutes().toString().padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+      const hourStr = hours.toString().padStart(2, '0');
+      setCurrentDateTime(`${day} ${mon} ${yr} • ${hourStr}:${minutes} ${ampm}`);
     };
 
     updateTime();
@@ -211,12 +215,16 @@ export const Home: React.FC<HomeProps> = ({
       
       {/* ========================================================
           STATIC / UNSCROLLABLE TOP SECTION (Above Yellow Line)
-          Includes Purple Hero Background, Top Header, and Black Account Card
+          Includes Purple Hero Background, Top Header, Black Account Card, and Gold Line
           ======================================================== */}
-      <div className="flex-shrink-0 w-full relative z-20">
+      <div className="flex-shrink-0 w-full relative z-20 touch-none overscroll-none select-none">
         {/* HERO BACKGROUND WITH SMOOTH CURVED WAVE TRANSITION */}
         <div 
-          className="hero-background absolute top-0 left-0 right-0 h-[280px] sm:h-[300px] pointer-events-none z-0 overflow-hidden"
+          className={`hero-background absolute top-0 left-0 right-0 pointer-events-none z-0 overflow-hidden transition-all duration-200 ${
+            activeNavTab === 'history' 
+              ? 'h-[140px] sm:h-[150px]' 
+              : 'h-[280px] sm:h-[300px]'
+          }`}
           style={{
             background: 'linear-gradient(135deg, #70189F 0%, #8420AE 55%, #8E29B9 100%)',
           }}
@@ -225,16 +233,18 @@ export const Home: React.FC<HomeProps> = ({
           <div className="absolute -top-16 -left-16 w-64 h-64 rounded-full bg-white/10 blur-3xl pointer-events-none" />
           <div className="absolute top-20 -right-20 w-80 h-80 rounded-full bg-[#8E29B9]/30 blur-3xl pointer-events-none" />
 
-          {/* SVG Smooth Curved Transition Wave (Purple to #F7F7F7 Page Background) */}
-          <svg
-            className="hero-curve absolute bottom-0 left-0 w-full h-[140px] sm:h-[160px] text-[#F7F7F7]"
-            viewBox="0 0 1440 320"
-            preserveAspectRatio="none"
-            fill="currentColor"
-          >
-            {/* Preserves the organic curve on the left while leveling into a clean straight horizontal line on the right */}
-            <path d="M 0,192 C 140,150 260,155 380,180 C 500,205 600,230 740,220 C 880,210 980,160 1100,160 L 1440,160 L 1440,320 L 0,320 Z" />
-          </svg>
+          {/* SVG Smooth Curved Transition Wave (Purple to #F7F7F7 Page Background) for Home View */}
+          {activeNavTab !== 'history' && (
+            <svg
+              className="hero-curve absolute bottom-0 left-0 w-full h-[140px] sm:h-[160px] text-[#F7F7F7]"
+              viewBox="0 0 1440 320"
+              preserveAspectRatio="none"
+              fill="currentColor"
+            >
+              {/* Preserves the organic curve on the left while leveling into a clean straight horizontal line on the right */}
+              <path d="M 0,192 C 140,150 260,155 380,180 C 500,205 600,230 740,220 C 880,210 980,160 1100,160 L 1440,160 L 1440,320 L 0,320 Z" />
+            </svg>
+          )}
         </div>
 
         {/* 1. TOP HEADER (Inside Purple Hero Section) */}
@@ -248,30 +258,42 @@ export const Home: React.FC<HomeProps> = ({
             selectedLanguage={selectedLanguage}
             onChangeLanguage={(lang) => setSelectedLanguage(lang)}
             isRefreshing={isRefreshing}
+            showProfileIcon={activeNavTab !== 'history'}
           />
 
-          {/* 2. BLACK ACCOUNT CARD (Floating & Overlapping Curve) */}
-          <div className="w-full mt-2 sm:mt-3">
-            <AccountCard
-              bankName="Commercial Bank of Ethiopia"
-              slogan="The bank you can always rely on!"
-              balance={currentUser.balance}
-              currency={currentUser.currency || 'ETB'}
-              accountType="Saving Account"
-              accountNumber={currentUser.accountNumber}
-              dateTimeString={currentDateTime}
-              showBalanceDefault={false}
-              customLogoUrl={customLogoUrl}
-            />
-          </div>
+          {/* 2. WHITE CONTAINER WITH SYMMETRICAL TOP CURVES ON BOTH SIDES IN TRANSACTION VIEW */}
+          <div className={`w-full transition-all duration-200 ${
+            activeNavTab === 'history'
+              ? 'bg-[#F7F7F7] rounded-t-[28px] sm:rounded-t-[32px] pt-3 sm:pt-3.5 shadow-[-0_-2px_10px_rgba(0,0,0,0.03)] mt-2'
+              : 'mt-2 sm:mt-3'
+          }`}>
+            {/* BLACK ACCOUNT CARD (Floating & Overlapping Curve) */}
+            <div className="w-full">
+              <AccountCard
+                bankName="Commercial Bank of Ethiopia"
+                slogan="The bank you can always rely on!"
+                balance={currentUser.balance}
+                currency={currentUser.currency || 'ETB'}
+                accountType="Saving Account"
+                accountNumber={currentUser.accountNumber}
+                dateTimeString={currentDateTime}
+                showBalanceDefault={false}
+                customLogoUrl={customLogoUrl}
+              />
+            </div>
 
-          {/* 3. STATIC GOLD / YELLOW INDICATOR LINE (Permanently visible & unscrollable) */}
-          <div className="w-full flex justify-center items-center py-2 relative z-20">
-            <div 
-              id="static-gold-indicator-line"
-              className="w-12 h-1.5 bg-gradient-to-r from-[#d4af37] via-[#f59e0b] to-[#d4af37] rounded-full shadow-[0_1px_3px_rgba(212,175,55,0.3)] transition-all" 
-              title="CBE Section Indicator"
-            />
+            {/* 3. STATIC GOLD / YELLOW INDICATOR (Line on Home, Circular Dot on Transactions) */}
+            <div className="w-full flex justify-center items-center pt-1.5 pb-2 relative z-20">
+              <div 
+                id="static-gold-indicator-line"
+                className={`bg-gradient-to-r from-[#d4af37] via-[#f59e0b] to-[#deb356] rounded-full shadow-[0_1px_2px_rgba(212,175,55,0.3)] transition-all duration-300 ${
+                  activeNavTab === 'history'
+                    ? 'w-2 h-2 rounded-full'
+                    : 'w-6 h-1 rounded-full'
+                }`} 
+                title="CBE Section Indicator"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -279,84 +301,114 @@ export const Home: React.FC<HomeProps> = ({
       {/* ========================================================
           SCROLLABLE CONTENT AREA (From Yellow Line Downwards)
           ======================================================== */}
-      <main className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scrollbar-none relative z-10 w-full pb-32">
+      <main className="flex-1 min-h-0 overflow-y-auto overscroll-contain overflow-x-hidden scrollbar-none relative z-10 w-full pb-32">
         {/* DYNAMIC CONTENT UNDER CARD BASED ON ACTIVE TAB */}
         {activeNavTab === 'history' ? (
           /* ========================================================
-             TRANSACTION HISTORY SECTION (Matching Authentic CBE Layout)
+             TRANSACTION HISTORY SECTION (Matching Exact CBE Layout from Screenshot)
              ======================================================== */
-          <div className="w-full max-w-md mx-auto bg-white rounded-t-3xl shadow-xs border border-gray-100/90 min-h-[460px] px-4 pt-2.5 pb-8 mt-1 flex flex-col animate-in fade-in duration-200">
-            {/* Filter Tabs & Search Icon Row */}
-            <div className="flex items-center justify-between border-b border-gray-100 pb-1 mb-2 px-1">
-              <div className="flex items-center gap-7">
+          <div className="w-full max-w-md mx-auto min-h-[460px] pb-8 flex flex-col animate-in fade-in duration-200">
+            {/* Sticky Filter Tabs & Search Icon Row with perfectly equal spacing across all 4 items */}
+            <div className="sticky top-0 z-20 bg-[#F7F7F7] w-full px-2 sm:px-3 pt-3.5 pb-2 border-b border-gray-200/40">
+              <div className="grid grid-cols-4 items-center">
+                {/* 1. All */}
                 <button
                   id="tab-history-all"
                   type="button"
                   onClick={() => setHistoryFilter('all')}
-                  className={`text-[13px] tracking-tight transition-all cursor-pointer ${
-                    historyFilter === 'all'
-                      ? 'text-[#6b1284] font-black border-b-2 border-[#6b1284] pb-2'
-                      : 'text-gray-400 font-semibold pb-2 hover:text-[#6b1284]'
-                  }`}
+                  className="flex flex-col items-center justify-center cursor-pointer group focus:outline-none select-none w-full"
                 >
-                  All
+                  <span className={`text-[13.5px] transition-colors ${
+                    historyFilter === 'all'
+                      ? 'text-[#70189f] font-bold'
+                      : 'text-[#64748b] font-medium hover:text-[#70189f]'
+                  }`}>
+                    All
+                  </span>
+                  {historyFilter === 'all' ? (
+                    <div className="w-7 h-[3px] bg-[#70189f] rounded-full mt-1 animate-in fade-in duration-150" />
+                  ) : (
+                    <div className="w-7 h-[3px] bg-transparent mt-1" />
+                  )}
                 </button>
+
+                {/* 2. Debited */}
                 <button
                   id="tab-history-debited"
                   type="button"
                   onClick={() => setHistoryFilter('debited')}
-                  className={`text-[13px] tracking-tight transition-all cursor-pointer ${
-                    historyFilter === 'debited'
-                      ? 'text-[#6b1284] font-black border-b-2 border-[#6b1284] pb-2'
-                      : 'text-gray-400 font-semibold pb-2 hover:text-[#6b1284]'
-                  }`}
+                  className="flex flex-col items-center justify-center cursor-pointer group focus:outline-none select-none w-full"
                 >
-                  Debited
+                  <span className={`text-[13.5px] transition-colors ${
+                    historyFilter === 'debited'
+                      ? 'text-[#70189f] font-bold'
+                      : 'text-[#64748b] font-medium hover:text-[#70189f]'
+                  }`}>
+                    Debited
+                  </span>
+                  {historyFilter === 'debited' ? (
+                    <div className="w-14 h-[3px] bg-[#70189f] rounded-full mt-1 animate-in fade-in duration-150" />
+                  ) : (
+                    <div className="w-14 h-[3px] bg-transparent mt-1" />
+                  )}
                 </button>
+
+                {/* 3. Credited */}
                 <button
                   id="tab-history-credited"
                   type="button"
                   onClick={() => setHistoryFilter('credited')}
-                  className={`text-[13px] tracking-tight transition-all cursor-pointer ${
-                    historyFilter === 'credited'
-                      ? 'text-[#6b1284] font-black border-b-2 border-[#6b1284] pb-2'
-                      : 'text-gray-400 font-semibold pb-2 hover:text-[#6b1284]'
-                  }`}
+                  className="flex flex-col items-center justify-center cursor-pointer group focus:outline-none select-none w-full"
                 >
-                  Credited
+                  <span className={`text-[13.5px] transition-colors ${
+                    historyFilter === 'credited'
+                      ? 'text-[#70189f] font-bold'
+                      : 'text-[#64748b] font-medium hover:text-[#70189f]'
+                  }`}>
+                    Credited
+                  </span>
+                  {historyFilter === 'credited' ? (
+                    <div className="w-14 h-[3px] bg-[#70189f] rounded-full mt-1 animate-in fade-in duration-150" />
+                  ) : (
+                    <div className="w-14 h-[3px] bg-transparent mt-1" />
+                  )}
                 </button>
-              </div>
 
-              {/* Search toggle button icon */}
-              <button
-                id="btn-history-search-toggle"
-                type="button"
-                aria-label="Toggle Search"
-                onClick={() => setIsHistorySearchOpen(!isHistorySearchOpen)}
-                className={`p-1.5 rounded-full transition-colors cursor-pointer ${
-                  isHistorySearchOpen ? 'bg-purple-100 text-[#6b1284]' : 'text-gray-400 hover:text-[#6b1284]'
-                }`}
-              >
-                <Search className="w-4 h-4 stroke-[2.4]" />
-              </button>
+                {/* 4. Search Icon */}
+                <div className="flex flex-col items-center justify-center w-full">
+                  <button
+                    id="btn-history-search-toggle"
+                    type="button"
+                    aria-label="Toggle Search"
+                    onClick={() => setIsHistorySearchOpen(!isHistorySearchOpen)}
+                    className={`p-1.5 rounded-full transition-colors cursor-pointer select-none focus:outline-none ${
+                      isHistorySearchOpen ? 'bg-purple-100 text-[#70189f]' : 'text-[#70189f] hover:bg-purple-50'
+                    }`}
+                  >
+                    <Search className="w-4.5 h-4.5 stroke-[2.4]" />
+                  </button>
+                  {/* Invisible spacer to maintain identical vertical rhythm with the tab indicator underlines */}
+                  <div className="h-[3px] mt-1" />
+                </div>
+              </div>
             </div>
 
             {/* Optional Search bar */}
             {isHistorySearchOpen && (
-              <div className="mb-3 relative animate-in fade-in slide-in-from-top-1 duration-150">
+              <div className="px-4 mt-2.5 mb-2 relative animate-in fade-in slide-in-from-top-1 duration-150">
                 <input
                   type="text"
                   placeholder="Search by name, account, or ref..."
                   value={historySearchText}
                   onChange={(e) => setHistorySearchText(e.target.value)}
                   autoFocus
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#6b1284] focus:bg-white"
+                  className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#70189f] shadow-xs"
                 />
                 {historySearchText && (
                   <button
                     type="button"
                     onClick={() => setHistorySearchText('')}
-                    className="absolute right-2.5 top-2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                    className="absolute right-6 top-2.5 text-gray-400 hover:text-gray-600 cursor-pointer"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -364,10 +416,10 @@ export const Home: React.FC<HomeProps> = ({
               </div>
             )}
 
-            {/* Transaction list */}
-            <div className="flex flex-col divide-y divide-gray-100/80">
+            {/* Discrete Transaction Cards List */}
+            <div className="px-4 pt-2.5 flex flex-col space-y-2.5">
               {filteredHistoryTransactions.length === 0 ? (
-                <div className="py-12 text-center text-xs text-gray-400">
+                <div className="py-14 text-center text-xs text-gray-400 bg-white rounded-2xl border border-gray-100 p-6 shadow-xs">
                   No transactions found.
                 </div>
               ) : (
@@ -384,41 +436,41 @@ export const Home: React.FC<HomeProps> = ({
                       key={tx.id}
                       id={`tx-item-${tx.id}`}
                       onClick={() => setSelectedDetailTx(tx)}
-                      className="py-3 px-1 flex items-center justify-between hover:bg-purple-50/40 active:scale-[0.99] transition-all rounded-xl cursor-pointer select-none group"
+                      className="bg-white rounded-2xl p-3 sm:p-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.03)] border border-gray-100/90 flex items-center justify-between hover:border-purple-200 active:scale-[0.99] transition-all cursor-pointer select-none group"
                     >
                       {/* Left: Direction Circular Badge + Title + Timestamp */}
-                      <div className="flex items-center gap-3">
-                        {/* Directional Circular Icon */}
-                        <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          isCredit ? 'bg-[#e6f7ef] text-[#22c55e]' : 'bg-[#fbeeed] text-[#eb4d4b]'
+                      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1 mr-2">
+                        {/* Directional Circular Icon (Green arrow down for credit, Red arrow up for debit) */}
+                        <div className={`w-9 h-9 sm:w-9.5 sm:h-9.5 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          isCredit ? 'bg-[#e8f7ee] text-[#16a34a]' : 'bg-[#feecee] text-[#ef4444]'
                         }`}>
                           {isCredit ? (
-                            <ArrowDownLeft className="w-4.5 h-4.5 stroke-[2.8]" />
+                            <ArrowDown className="w-4.5 h-4.5 stroke-[2.5]" />
                           ) : (
-                            <ArrowUpRight className="w-4.5 h-4.5 stroke-[2.8]" />
+                            <ArrowUp className="w-4.5 h-4.5 stroke-[2.5]" />
                           )}
                         </div>
 
                         {/* Title and Date */}
-                        <div className="flex flex-col">
-                          <span className="font-bold text-gray-900 text-[13px] leading-tight group-hover:text-[#6b1284] transition-colors">
+                        <div className="flex flex-col min-w-0">
+                          <span className="font-bold text-[#2d0938] text-[12.5px] sm:text-[13px] leading-snug truncate group-hover:text-[#70189f] transition-colors">
                             {displayName}
                           </span>
-                          <span className="text-[11px] text-gray-400 font-medium mt-0.5">
+                          <span className="text-[10px] sm:text-[10.5px] text-gray-400 font-normal leading-tight mt-0.5">
                             {formattedDate}
                           </span>
                         </div>
                       </div>
 
                       {/* Right: Amount + Category Pill Badge */}
-                      <div className="flex flex-col items-end">
-                        <span className={`text-[13px] font-bold tracking-tight ${
+                      <div className="flex flex-col items-end flex-shrink-0">
+                        <span className={`text-[12.5px] sm:text-[13px] font-bold tracking-tight text-right ${
                           isCredit ? 'text-[#16a34a]' : 'text-gray-900'
                         }`}>
                           {isCredit ? '+' : '-'}{tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
                         </span>
 
-                        <span className="bg-[#f2e6f7] text-[#6b1284] px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wide mt-1">
+                        <span className="bg-[#f5eef8] text-[#70189f] px-2 py-0.5 rounded-full text-[8px] sm:text-[8.5px] font-bold uppercase tracking-wider mt-1 text-right inline-block whitespace-nowrap">
                           {categoryTag}
                         </span>
                       </div>

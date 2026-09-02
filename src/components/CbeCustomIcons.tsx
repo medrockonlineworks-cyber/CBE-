@@ -42,10 +42,10 @@ export const AppsGridIcon: React.FC<IconProps> = ({
 );
 
 /**
- * 2. Refresh / Reload Icon (Uses Material Symbols 'rotate_left')
+ * 2. Refresh / Reload Icon (Uses Material Symbols 'rotate_left' with thin line weight)
  */
 export const RefreshIcon: React.FC<ReceiptIconProps> = ({
-  size = 24,
+  size = 20,
   className = '',
   color = 'currentColor',
   style,
@@ -55,6 +55,8 @@ export const RefreshIcon: React.FC<ReceiptIconProps> = ({
     className={`material-symbols-outlined select-none inline-flex items-center justify-center leading-none ${className}`}
     style={{
       fontSize: typeof size === 'number' ? `${size}px` : size,
+      fontWeight: 200,
+      fontVariationSettings: "'wght' 200, 'opsz' 20",
       color,
       display: 'inline-flex',
       ...style,
@@ -217,28 +219,33 @@ export const CopyIcon: React.FC<ReceiptIconProps> = ({
 
 /**
  * 6. Mini Statement / Receipt Icon
- * Uses Material Symbols Outlined 'receipt'
+ * Exact CBE receipt icon with zigzag serrated edges on both top and bottom,
+ * filled with signature purple and 3 crisp white horizontal lines inside.
  */
-export const MiniStatementIcon: React.FC<ReceiptIconProps> = ({
+export const MiniStatementIcon: React.FC<IconProps> = ({
   size = 24,
   className = '',
   color = '#70189F',
-  style,
   ...props
 }) => (
-  <span
-    className={`material-symbols-outlined select-none inline-flex items-center justify-center leading-none text-[#70189F] ${className}`}
-    style={{
-      fontSize: typeof size === 'number' ? `${size}px` : size,
-      color: color === 'currentColor' ? undefined : (color || '#70189F'),
-      display: 'inline-flex',
-      ...style,
-    }}
-    aria-hidden="true"
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    className={className}
     {...props}
   >
-    receipt
-  </span>
+    {/* Purple Receipt Shape Body with exactly 4 Zigzags on Both Top & Bottom */}
+    <path
+      d="M4 22l2-2 2 2 2-2 2 2 2-2 2 2 2-2 2 2V2l-2 2-2-2-2 2-2-2-2 2-2-2-2 2-2-2v20z"
+      fill={color || '#70189F'}
+    />
+    {/* 3 Horizontal White Lines */}
+    <rect x="6.5" y="7" width="11" height="1.8" rx="0.9" fill="#FFFFFF" />
+    <rect x="6.5" y="11.1" width="11" height="1.8" rx="0.9" fill="#FFFFFF" />
+    <rect x="6.5" y="15.2" width="11" height="1.8" rx="0.9" fill="#FFFFFF" />
+  </svg>
 );
 
 /**

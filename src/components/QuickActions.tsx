@@ -17,70 +17,71 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
   className = '',
 }) => {
   return (
-    <div className={`w-full max-w-md mx-auto px-4 mt-2 mb-3 relative select-none ${className}`}>
-      {/* Authentic Gold Horizontal Drag Indicator Bar as in the reference image */}
-      <div className="w-12 h-1.5 bg-[#deb356] rounded-full mx-auto mb-3.5 shadow-xs opacity-90" />
-
-      <div className="flex items-start justify-between relative px-0.5">
-        {/* 6. MINI STATEMENT */}
+    <div className={`w-full max-w-md mx-auto px-3 sm:px-4 pt-3.5 sm:pt-4 pb-3 relative select-none ${className}`}>
+      <div className="grid grid-cols-4 gap-1.5 sm:gap-2 relative items-start">
+        {/* 1. MINI STATEMENT */}
         <button
           id="quick-action-ministatement"
+          type="button"
           onClick={() => onActionClick?.('ministatement')}
-          className="flex flex-col items-center flex-1 group cursor-pointer active:scale-95 transition-transform"
+          className="flex flex-col items-center justify-start group cursor-pointer active:scale-95 transition-transform w-full focus:outline-none"
         >
-          <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-[0_3px_10px_rgba(0,0,0,0.06)] border border-gray-100/90 group-hover:scale-105 group-active:scale-95 transition-all">
+          <div className="w-[50px] h-[50px] sm:w-[54px] sm:h-[54px] rounded-full bg-white flex items-center justify-center shadow-[0_2px_8px_rgba(0,0,0,0.06)] border border-gray-100/90 group-hover:scale-105 group-active:scale-95 transition-all flex-shrink-0">
             <MiniStatementIcon size={24} className="text-[#70189F]" strokeWidth={2.2} />
           </div>
-          <span className="text-[11.5px] font-bold text-[#6b1284] mt-2 text-center leading-tight whitespace-pre-line">
+          <span className="text-[11px] sm:text-[11.5px] font-bold text-[#6b1284] mt-2 text-center leading-tight whitespace-pre-line min-h-[28px] flex items-center justify-center">
             {'Mini\nStatement'}
           </span>
         </button>
 
-        {/* 7. CARDS */}
+        {/* 2. CARDS */}
         <button
           id="quick-action-cards"
+          type="button"
           onClick={() => onActionClick?.('cards')}
-          className="flex flex-col items-center flex-1 group cursor-pointer active:scale-95 transition-transform"
+          className="flex flex-col items-center justify-start group cursor-pointer active:scale-95 transition-transform w-full focus:outline-none"
         >
-          <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-[0_3px_10px_rgba(0,0,0,0.06)] border border-gray-100/90 group-hover:scale-105 group-active:scale-95 transition-all">
+          <div className="w-[50px] h-[50px] sm:w-[54px] sm:h-[54px] rounded-full bg-white flex items-center justify-center shadow-[0_2px_8px_rgba(0,0,0,0.06)] border border-gray-100/90 group-hover:scale-105 group-active:scale-95 transition-all flex-shrink-0">
             <CardsIcon size={24} className="text-[#70189F]" strokeWidth={2.2} />
           </div>
-          <span className="text-[11.5px] font-bold text-[#6b1284] mt-2 text-center leading-tight">
+          <span className="text-[11px] sm:text-[11.5px] font-bold text-[#6b1284] mt-2 text-center leading-tight min-h-[28px] flex items-center justify-center">
             Cards
           </span>
         </button>
 
-        {/* 8. BILL SHARE */}
+        {/* 3. BILL SHARE */}
         <button
           id="quick-action-billshare"
+          type="button"
           onClick={() => onActionClick?.('billshare')}
-          className="flex flex-col items-center flex-1 group cursor-pointer active:scale-95 transition-transform"
+          className="flex flex-col items-center justify-start group cursor-pointer active:scale-95 transition-transform w-full focus:outline-none"
         >
-          <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-[0_3px_10px_rgba(0,0,0,0.06)] border border-gray-100/90 group-hover:scale-105 group-active:scale-95 transition-all">
+          <div className="w-[50px] h-[50px] sm:w-[54px] sm:h-[54px] rounded-full bg-white flex items-center justify-center shadow-[0_2px_8px_rgba(0,0,0,0.06)] border border-gray-100/90 group-hover:scale-105 group-active:scale-95 transition-all flex-shrink-0">
             <BillShareIcon size={24} className="text-[#70189F]" strokeWidth={2.3} />
           </div>
-          <span className="text-[11.5px] font-bold text-[#6b1284] mt-2 text-center leading-tight">
+          <span className="text-[11px] sm:text-[11.5px] font-bold text-[#6b1284] mt-2 text-center leading-tight min-h-[28px] flex items-center justify-center">
             Bill Share
           </span>
         </button>
 
-        {/* 9. SCHEDULES */}
+        {/* 4. SCHEDULES */}
         <button
           id="quick-action-schedules"
+          type="button"
           onClick={() => onActionClick?.('schedules')}
-          className="flex flex-col items-center flex-1 group cursor-pointer active:scale-95 transition-transform"
+          className="flex flex-col items-center justify-start group cursor-pointer active:scale-95 transition-transform w-full focus:outline-none"
         >
-          <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-[0_3px_10px_rgba(0,0,0,0.06)] border border-gray-100/90 group-hover:scale-105 group-active:scale-95 transition-all">
+          <div className="w-[50px] h-[50px] sm:w-[54px] sm:h-[54px] rounded-full bg-white flex items-center justify-center shadow-[0_2px_8px_rgba(0,0,0,0.06)] border border-gray-100/90 group-hover:scale-105 group-active:scale-95 transition-all flex-shrink-0">
             <SchedulesClockIcon size={24} className="text-[#70189F]" strokeWidth={2.2} />
           </div>
-          <span className="text-[11.5px] font-bold text-[#6b1284] mt-2 text-center leading-tight">
+          <span className="text-[11px] sm:text-[11.5px] font-bold text-[#6b1284] mt-2 text-center leading-tight min-h-[28px] flex items-center justify-center">
             Schedules
           </span>
         </button>
 
-        {/* 10. RIGHT ARROW / CHEVRON INDICATOR */}
-        <div className="absolute -right-1 top-4 w-5 h-5 rounded-full bg-white shadow-[0_2px_6px_rgba(0,0,0,0.1)] border border-gray-100 flex items-center justify-center text-[#6b1284] pointer-events-none opacity-90">
-          <RightChevronIcon size={14} className="text-[#6b1284]" strokeWidth={2.6} />
+        {/* 5. RIGHT ARROW / CHEVRON INDICATOR */}
+        <div className="absolute -right-1 top-3 sm:top-3.5 w-5 h-5 rounded-full bg-white shadow-[0_2px_6px_rgba(0,0,0,0.12)] border border-gray-100 flex items-center justify-center text-[#6b1284] pointer-events-none opacity-85 z-10">
+          <RightChevronIcon size={13} className="text-[#6b1284]" strokeWidth={2.6} />
         </div>
       </div>
     </div>

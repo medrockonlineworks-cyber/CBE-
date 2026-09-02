@@ -55,9 +55,11 @@
   --sar: env(safe-area-inset-right, 0px);
 }
 
-html, body {
+html, body, #root {
   height: 100%;
   width: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
   overscroll-behavior-y: none;
   -webkit-tap-highlight-color: transparent;
 }

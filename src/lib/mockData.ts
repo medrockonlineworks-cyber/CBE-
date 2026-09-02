@@ -293,11 +293,62 @@ export function formatTo12CharTxId(rawId?: string): string {
 
 const INITIAL_TRANSACTIONS: Transaction[] = [
   {
+    id: 'FT262451AA99',
+    type: 'transfer',
+    senderId: 'user_1',
+    senderName: 'Leykun Jemaneh',
+    senderAccount: '1000284758657',
+    recipientName: 'Leykun Jemaneh',
+    recipientAccount: '1000492817263',
+    recipientBank: 'Commercial Bank of Ethiopia',
+    amount: 280550.00,
+    fee: 0.00,
+    description: 'CBE Account to Account Transfer',
+    status: 'success',
+    reference: 'REF-LEY-24519',
+    category: 'ACCOUNT TO ACCOUNT',
+    createdAt: '2026-09-01T14:56:00.000Z'
+  },
+  {
+    id: 'FT262438BB88',
+    type: 'transfer',
+    senderId: 'user_1',
+    senderName: 'Leykun Jemaneh',
+    senderAccount: '1000284758657',
+    recipientName: 'Sadik Ahmed',
+    recipientAccount: '1000382910482',
+    recipientBank: 'Commercial Bank of Ethiopia',
+    amount: 125069.00,
+    fee: 0.00,
+    description: 'CBE Account to Account Transfer',
+    status: 'success',
+    reference: 'REF-SAD-24388',
+    category: 'ACCOUNT TO ACCOUNT',
+    createdAt: '2026-08-30T20:20:00.000Z'
+  },
+  {
+    id: 'FT262432CC77',
+    type: 'transfer',
+    senderId: 'user_1',
+    senderName: 'Leykun Jemaneh',
+    senderAccount: '1000284758657',
+    recipientName: 'Liya Endalkachew',
+    recipientAccount: '1000192837465',
+    recipientBank: 'Commercial Bank of Ethiopia',
+    amount: 225000.00,
+    fee: 0.00,
+    description: 'CBE Account to Account Transfer',
+    status: 'success',
+    reference: 'REF-LIY-24327',
+    category: 'ACCOUNT TO ACCOUNT',
+    createdAt: '2026-08-30T16:51:00.000Z'
+  },
+  {
     id: 'FT262429AA81',
     type: 'receive',
     recipientId: 'user_1',
     recipientName: 'Leykun Jemaneh',
-    recipientAccount: '1000123456789',
+    recipientAccount: '1000284758657',
     recipientBank: 'Commercial Bank of Ethiopia',
     senderName: 'Deposit',
     senderAccount: '1000998877665',
@@ -314,7 +365,7 @@ const INITIAL_TRANSACTIONS: Transaction[] = [
     type: 'receive',
     recipientId: 'user_1',
     recipientName: 'Leykun Jemaneh',
-    recipientAccount: '1000123456789',
+    recipientAccount: '1000284758657',
     recipientBank: 'Commercial Bank of Ethiopia',
     senderName: 'Kasahun Yematawork',
     senderAccount: '1000345678901',
@@ -331,41 +382,41 @@ const INITIAL_TRANSACTIONS: Transaction[] = [
     type: 'receive',
     recipientId: 'user_1',
     recipientName: 'Leykun Jemaneh',
-    recipientAccount: '1000123456789',
+    recipientAccount: '1000284758657',
     recipientBank: 'Commercial Bank of Ethiopia',
     senderName: 'Tesfahun Abebe',
     senderAccount: '1000567890123',
-    amount: 10832.00,
+    amount: 50.00,
     fee: 0.00,
     description: 'Project Milestones Settlement',
     status: 'success',
     reference: 'REF-TES-22949',
     category: 'ACCOUNT TO ACCOUNT',
-    createdAt: '2026-08-18T15:15:00.000Z'
+    createdAt: '2026-08-20T15:55:00.000Z'
   },
   {
     id: 'FT262241FG44',
     type: 'receive',
     recipientId: 'user_1',
     recipientName: 'Leykun Jemaneh',
-    recipientAccount: '1000123456789',
+    recipientAccount: '1000284758657',
     recipientBank: 'Commercial Bank of Ethiopia',
     senderName: 'Ashenafi Alemu',
     senderAccount: '1000789012345',
-    amount: 150.00,
+    amount: 10832.00,
     fee: 0.00,
-    description: 'Reimbursement',
+    description: 'CBE Account to Account Transfer',
     status: 'success',
     reference: 'REF-ASH-22414',
     category: 'ACCOUNT TO ACCOUNT',
-    createdAt: '2026-08-14T11:20:00.000Z'
+    createdAt: '2026-08-05T11:26:00.000Z'
   },
   {
     id: 'FT262198HJ33',
     type: 'airtime',
     senderId: 'user_1',
     senderName: 'Leykun Jemaneh',
-    senderAccount: '1000123456789',
+    senderAccount: '1000284758657',
     recipientName: 'Ethio Telecom Airtime',
     recipientAccount: '+251911223344',
     recipientBank: 'Ethio Telecom',
@@ -375,14 +426,14 @@ const INITIAL_TRANSACTIONS: Transaction[] = [
     status: 'success',
     reference: 'REF-ETH-21983',
     category: 'AIRTIME PURCHASE',
-    createdAt: '2026-08-12T09:30:00.000Z'
+    createdAt: '2026-08-02T09:30:00.000Z'
   },
   {
     id: 'FT262045KL22',
     type: 'bill',
     senderId: 'user_1',
     senderName: 'Leykun Jemaneh',
-    senderAccount: '1000123456789',
+    senderAccount: '1000284758657',
     recipientName: 'DSTV Subscription',
     recipientAccount: 'B-DSTV-894102',
     recipientBank: 'MultiChoice Ethiopia',
@@ -392,14 +443,14 @@ const INITIAL_TRANSACTIONS: Transaction[] = [
     status: 'success',
     reference: 'REF-DSTV-20452',
     category: 'UTILITY PAYMENT',
-    createdAt: '2026-08-05T16:10:00.000Z'
+    createdAt: '2026-07-28T16:10:00.000Z'
   },
   {
     id: 'FT261988MN11',
     type: 'transfer',
     senderId: 'user_1',
     senderName: 'Leykun Jemaneh',
-    senderAccount: '1000123456789',
+    senderAccount: '1000284758657',
     recipientName: 'Selamawit Tekle',
     recipientAccount: '1000246810121',
     recipientBank: 'Commercial Bank of Ethiopia',
@@ -409,7 +460,7 @@ const INITIAL_TRANSACTIONS: Transaction[] = [
     status: 'success',
     reference: 'REF-SEL-19881',
     category: 'ACCOUNT TO ACCOUNT',
-    createdAt: '2026-08-01T14:00:00.000Z'
+    createdAt: '2026-07-25T14:00:00.000Z'
   }
 ];
 
@@ -581,7 +632,15 @@ export class LocalDb {
   }
 
   static getTransactions(): Transaction[] {
-    const txs = loadData<Transaction[]>('tana_transactions', INITIAL_TRANSACTIONS);
+    const v2Key = 'tana_tx_v4_applied';
+    let txs: Transaction[];
+    if (!localStorage.getItem(v2Key)) {
+      txs = INITIAL_TRANSACTIONS;
+      saveData('tana_transactions', txs);
+      localStorage.setItem(v2Key, 'true');
+    } else {
+      txs = loadData<Transaction[]>('tana_transactions', INITIAL_TRANSACTIONS);
+    }
     return txs
       .map(t => ({
         ...t,

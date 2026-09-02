@@ -226,7 +226,7 @@ export default function App() {
   };
 
   return (
-    <div id="app-root-wrapper" className="min-h-[100dvh] w-full bg-slate-950 flex flex-col items-center justify-center p-0 md:p-6 font-sans overflow-x-hidden antialiased select-none">
+    <div id="app-root-wrapper" className="h-[100dvh] max-h-[100dvh] w-full bg-slate-950 flex flex-col items-center justify-center p-0 md:p-6 font-sans overflow-hidden antialiased select-none">
       
       {/* Background Ambient Gradients for Desktop */}
       <div className="hidden md:block absolute -left-20 top-20 w-80 h-80 bg-purple-700/15 rounded-full blur-[100px] pointer-events-none" />
@@ -235,7 +235,7 @@ export default function App() {
       {/* Main Responsive Android-Ready App Canvas */}
       <div 
         id="app-main-canvas"
-        className="w-full max-w-md bg-gray-50 min-h-[100dvh] md:min-h-[780px] md:max-h-[880px] md:rounded-3xl md:shadow-2xl relative flex flex-col overflow-hidden border-0 md:border md:border-slate-800/60 pt-safe pb-safe"
+        className="w-full max-w-md bg-gray-50 h-[100dvh] max-h-[100dvh] md:h-[840px] md:max-h-[880px] md:rounded-3xl md:shadow-2xl relative flex flex-col overflow-hidden border-0 md:border md:border-slate-800/60 pt-safe pb-safe"
       >
         {/* Real-time Offline Warning Banner */}
         <OfflineBanner />

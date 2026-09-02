@@ -11,6 +11,7 @@ interface HeaderProps {
   selectedLanguage?: string;
   onChangeLanguage?: (lang: string) => void;
   isRefreshing?: boolean;
+  showProfileIcon?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -22,6 +23,7 @@ export const Header: React.FC<HeaderProps> = ({
   selectedLanguage = 'English',
   onChangeLanguage,
   isRefreshing = false,
+  showProfileIcon = true,
 }) => {
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -114,19 +116,21 @@ export const Header: React.FC<HeaderProps> = ({
           }`}
           title="Refresh / Reload"
         >
-          <RefreshIcon size={19} className="text-white drop-shadow-[0_0_4px_rgba(255,255,255,0.4)]" strokeWidth={2.4} />
+          <RefreshIcon size={19} className="text-white" />
         </button>
 
-        {/* 2. Loading / Processing / Status Icon Button (Circular stroke with terminal dot) */}
-        <button
-          id="btn-header-status"
-          aria-label="Account Status / Profile"
-          onClick={onOpenProfile || onOpenSearch}
-          className="w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 border border-white/20 flex items-center justify-center text-white transition cursor-pointer backdrop-blur-xs active:scale-95"
-          title="Account Status & Settings"
-        >
-          <CbeLoadingStatusIcon size={19} className="text-white drop-shadow-[0_0_4px_rgba(255,255,255,0.4)]" strokeWidth={2.4} />
-        </button>
+        {/* 2. Loading / Processing / Status / Profile Icon Button */}
+        {showProfileIcon && (
+          <button
+            id="btn-header-status"
+            aria-label="Account Status / Profile"
+            onClick={onOpenProfile || onOpenSearch}
+            className="w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 border border-white/20 flex items-center justify-center text-white transition cursor-pointer backdrop-blur-xs active:scale-95"
+            title="Account Status & Settings"
+          >
+            <CbeLoadingStatusIcon size={18} className="text-white" strokeWidth={1.4} />
+          </button>
+        )}
       </div>
     </header>
   );
