@@ -3,7 +3,6 @@ import {
   Phone, 
   ArrowLeftRight, 
   Wallet, 
-  Receipt,
   Building2,
   ShieldCheck,
   Store,
@@ -12,6 +11,7 @@ import {
   Film,
   FileSpreadsheet
 } from 'lucide-react';
+import { MiniStatementIcon } from './CbeCustomIcons';
 import ServiceCard from './ServiceCard';
 
 interface ServiceGridProps {
@@ -37,11 +37,11 @@ export const ServiceGrid: React.FC<ServiceGridProps> = ({
           iconBgColor="bg-[#fbeeed]"
           icon={
             <svg 
-              className="w-5 h-5 text-[#eb4d4b]" 
+              className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#eb4d4b]" 
               viewBox="0 0 24 24" 
               fill="none" 
               stroke="currentColor" 
-              strokeWidth="2.8" 
+              strokeWidth="2.5" 
               strokeLinecap="round" 
               strokeLinejoin="round"
             >
@@ -61,11 +61,11 @@ export const ServiceGrid: React.FC<ServiceGridProps> = ({
           iconBgColor="bg-[#e6f7ef]"
           icon={
             <svg 
-              className="w-5 h-5 text-[#22c55e]" 
+              className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-[#22c55e]" 
               viewBox="0 0 24 24" 
               fill="none" 
               stroke="currentColor" 
-              strokeWidth="2.8" 
+              strokeWidth="2.5" 
               strokeLinecap="round" 
               strokeLinejoin="round"
             >
@@ -81,7 +81,7 @@ export const ServiceGrid: React.FC<ServiceGridProps> = ({
           id="airtime"
           title="Airtime"
           layout="vertical"
-          icon={<Phone className="w-6 h-6 text-[#6b1284] fill-[#6b1284]/15 stroke-[2.2]" />}
+          icon={<Phone className="w-6 h-6 text-[#70189F] fill-[#70189F] stroke-[2.2]" />}
           onClick={() => onServiceSelect?.('airtime')}
         />
 
@@ -99,7 +99,7 @@ export const ServiceGrid: React.FC<ServiceGridProps> = ({
           id="cbebirr"
           title="CBEBirr"
           layout="vertical"
-          icon={<Wallet className="w-6 h-6 text-[#6b1284] fill-[#6b1284]/15 stroke-[2.2]" />}
+          icon={<Wallet className="w-6 h-6 text-[#70189F] fill-[#70189F] stroke-[2.2]" />}
           onClick={() => onServiceSelect?.('cbebirr')}
         />
 
@@ -108,7 +108,7 @@ export const ServiceGrid: React.FC<ServiceGridProps> = ({
           id="bills-utilities"
           title="Bills & Utilities"
           layout="vertical"
-          icon={<Receipt className="w-6 h-6 text-[#6b1284] fill-[#6b1284]/15 stroke-[2.2]" />}
+          icon={<MiniStatementIcon size={26} color="#70189F" />}
           onClick={() => onServiceSelect?.('bills-utilities')}
         />
 
