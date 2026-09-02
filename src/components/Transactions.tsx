@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { UserProfile, Transaction, Beneficiary, BankAccount, RegisteredAccountInfo } from '../types';
 import { LocalDb } from '../lib/mockData';
-import { calculateCbeFee } from '../lib/cbeTariff';
+import { calculateCbeFee, CBE_TO_CBE_SERVICE_CHARGES } from '../lib/cbeTariff';
 import EthiopianNameAutocomplete, { EthiopianThreePartNameInput } from './EthiopianNameAutocomplete';
 import AccountCard from './AccountCard';
 import TransactionDetailModal from './TransactionDetailModal';
@@ -82,6 +82,7 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
 
   // Pin Verification State
   const [showPinModal, setShowPinModal] = useState(false);
+  const [showTariffModal, setShowTariffModal] = useState(false);
   const [enteredPin, setEnteredPin] = useState('');
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
@@ -1159,8 +1160,25 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
                 return (
                   <div className="bg-emerald-50/50 border border-emerald-100/50 p-3.5 rounded-2xl space-y-1.5 text-xs">
                     <div className="flex justify-between items-center text-gray-500 font-semibold">
-                      <span>CBE Service Charge</span>
-                      <span className="font-mono text-gray-800">ETB {sendCbeFee.serviceCharge.toFixed(2)}</span>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span>CBE Service Charge</span>
+                        {sendCbeFee.tierLabel && sendAmtNum > 0 && (
+                          <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded">
+                            {sendCbeFee.tierLabel}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-mono text-gray-800">ETB {sendCbeFee.serviceCharge.toFixed(2)}</span>
+                        <button
+                          type="button"
+                          onClick={() => setShowTariffModal(true)}
+                          className="text-[10px] text-emerald-750 hover:underline font-bold cursor-pointer"
+                          title="View CBE Service Charges"
+                        >
+                          Tariff
+                        </button>
+                      </div>
                     </div>
                     <div className="flex justify-between items-center text-gray-500 font-semibold">
                       <span>VAT (15%)</span>
@@ -1683,8 +1701,27 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
                   return (
                     <div className="bg-gray-50 p-3.5 rounded-2xl space-y-1.5 text-xs border border-gray-100">
                       <div className="flex justify-between items-center text-gray-500 font-semibold">
-                        <span>CBE Service Charge</span>
-                        <span className="font-mono text-gray-700">ETB {cbeFee.serviceCharge.toFixed(2)}</span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span>CBE Service Charge</span>
+                          {cbeFee.tierLabel && amtNum > 0 && transferSubTab !== 'own' && (
+                            <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded">
+                              {cbeFee.tierLabel}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono text-gray-700">ETB {cbeFee.serviceCharge.toFixed(2)}</span>
+                          {transferSubTab !== 'own' && (
+                            <button
+                              type="button"
+                              onClick={() => setShowTariffModal(true)}
+                              className="text-[10px] text-emerald-750 hover:underline font-bold cursor-pointer"
+                              title="View CBE Service Charges Table"
+                            >
+                              Tariff
+                            </button>
+                          )}
+                        </div>
                       </div>
                       <div className="flex justify-between items-center text-gray-500 font-semibold">
                         <span>VAT (15%)</span>
@@ -2422,6 +2459,75 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
           currentUserId={currentUser.id}
           currentUserAccount={currentUser.accountNumber}
         />
+      )}
+
+      {/* ================= CBE SERVICE CHARGES TARIFF MODAL ================= */}
+      {showTariffModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-sm rounded-3xl p-5 shadow-2xl border border-gray-100 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-800 font-extrabold text-xs">
+                  CBE
+                </div>
+                <div>
+                  <h3 className="text-sm font-extrabold text-gray-900 leading-tight">CBE → CBE Service Charges</h3>
+                  <p className="text-[10px] text-gray-400 font-medium">Standard Transfer Tariff Schedule</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowTariffModal(false)}
+                className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition cursor-pointer"
+                aria-label="Close"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="divide-y divide-gray-50 max-h-[60vh] overflow-y-auto pr-1">
+              {CBE_TO_CBE_SERVICE_CHARGES.map((tier, idx) => {
+                const curAmt = parseFloat(transferAmount) || parseFloat(sendAmount) || 0;
+                const isCurrent = curAmt >= tier.min && curAmt <= tier.max;
+                return (
+                  <div
+                    key={idx}
+                    className={`py-2 px-3 rounded-xl flex items-center justify-between text-xs transition my-0.5 ${
+                      isCurrent
+                        ? 'bg-emerald-50 text-emerald-950 font-bold border border-emerald-200'
+                        : 'text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      {isCurrent ? (
+                        <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse" />
+                      ) : (
+                        <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
+                      )}
+                      <span className="font-medium">{tier.label}</span>
+                    </div>
+                    <span className={`font-mono ${isCurrent ? 'text-emerald-800 font-extrabold' : 'text-gray-900 font-bold'}`}>
+                      {tier.charge.toFixed(2)} ETB
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-3.5 pt-3 border-t border-gray-100 text-[11px] text-gray-500 space-y-1">
+              <p>• Transfers between own CBE accounts are free (0.00 ETB).</p>
+              <p>• 15% VAT and 5% Disaster Recovery apply to the service charge.</p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowTariffModal(false)}
+              className="mt-4 w-full bg-emerald-800 hover:bg-emerald-850 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-sm cursor-pointer"
+            >
+              Close
+            </button>
+          </div>
+        </div>
       )}
 
     </div>
