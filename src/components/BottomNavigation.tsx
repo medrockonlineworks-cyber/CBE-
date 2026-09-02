@@ -46,39 +46,71 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
                 onChangeTab?.('transfer');
               }
             }}
-            className="bg-[#6b1284] hover:bg-[#5a0e70] active:scale-95 text-white px-5 py-2 rounded-full flex items-center justify-center gap-2 shadow-[0_6px_20px_rgba(107,18,132,0.45)] transition-all cursor-pointer border border-purple-300/20"
+            className="relative bg-[#7d17a3] hover:bg-[#6c128e] active:scale-95 text-white h-[38px] px-8 rounded-full flex items-center justify-center shadow-[0_4px_16px_rgba(125,23,163,0.45)] transition-all cursor-pointer border border-white/20 select-none group"
           >
-            {/* Left Viewfinder bracket with center dot */}
+            {/* Top-Left Corner Scanner Reticle */}
             <svg 
-              className="w-3.5 h-3.5 text-purple-200" 
+              className="absolute left-2.5 top-1.5 w-3.5 h-3.5 text-white/90" 
               viewBox="0 0 16 16" 
               fill="none" 
               stroke="currentColor" 
-              strokeWidth="2.2" 
+              strokeWidth="2" 
               strokeLinecap="round" 
               strokeLinejoin="round"
             >
-              <path d="M5 2H3a1 1 0 0 0-1 1v2" />
-              <path d="M2 11v2a1 1 0 0 0 1 1h2" />
-              <rect x="5" y="7" width="2" height="2" fill="currentColor" stroke="none" rx="0.5" />
+              <path d="M1 7V4a3 3 0 0 1 3-3h3" />
+              <rect x="4" y="4" width="4" height="4" rx="1" strokeWidth="1.6" fill="currentColor" fillOpacity="0.2" />
+              <circle cx="6" cy="6" r="0.75" fill="currentColor" stroke="none" />
             </svg>
 
-            {/* Text */}
-            <span className="text-[13px] font-bold tracking-tight text-white">Scan QR</span>
-
-            {/* Right Viewfinder bracket with center dot */}
+            {/* Bottom-Left Corner Scanner Reticle */}
             <svg 
-              className="w-3.5 h-3.5 text-purple-200" 
+              className="absolute left-2.5 bottom-1.5 w-3.5 h-3.5 text-white/90" 
               viewBox="0 0 16 16" 
               fill="none" 
               stroke="currentColor" 
-              strokeWidth="2.2" 
+              strokeWidth="2" 
               strokeLinecap="round" 
               strokeLinejoin="round"
             >
-              <path d="M11 2h2a1 1 0 0 1 1 1v2" />
-              <path d="M14 11v2a1 1 0 0 1-1 1h-2" />
-              <rect x="9" y="7" width="2" height="2" fill="currentColor" stroke="none" rx="0.5" />
+              <path d="M1 9v3a3 3 0 0 0 3 3h3" />
+              <rect x="4" y="8" width="4" height="4" rx="1" strokeWidth="1.6" fill="currentColor" fillOpacity="0.2" />
+              <circle cx="6" cy="10" r="0.75" fill="currentColor" stroke="none" />
+            </svg>
+
+            {/* Centered Text */}
+            <span className="text-[13px] font-bold tracking-tight text-white whitespace-nowrap px-1">
+              Scan QR
+            </span>
+
+            {/* Top-Right Corner Scanner Reticle */}
+            <svg 
+              className="absolute right-2.5 top-1.5 w-3.5 h-3.5 text-white/90" 
+              viewBox="0 0 16 16" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <path d="M15 7V4a3 3 0 0 0-3-3H9" />
+              <rect x="8" y="4" width="4" height="4" rx="1" strokeWidth="1.6" fill="currentColor" fillOpacity="0.2" />
+              <circle cx="10" cy="6" r="0.75" fill="currentColor" stroke="none" />
+            </svg>
+
+            {/* Bottom-Right Corner Scanner Reticle */}
+            <svg 
+              className="absolute right-2.5 bottom-1.5 w-3.5 h-3.5 text-white/90" 
+              viewBox="0 0 16 16" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            >
+              <path d="M15 9v3a3 3 0 0 1-3 3H9" />
+              <rect x="8" y="8" width="4" height="4" rx="1" strokeWidth="1.6" fill="currentColor" fillOpacity="0.2" />
+              <circle cx="10" cy="10" r="0.75" fill="currentColor" stroke="none" />
             </svg>
           </button>
         </div>
