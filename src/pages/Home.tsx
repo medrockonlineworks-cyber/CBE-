@@ -288,8 +288,8 @@ export const Home: React.FC<HomeProps> = ({
                 id="static-gold-indicator-line"
                 className={`bg-gradient-to-r from-[#d4af37] via-[#f59e0b] to-[#deb356] rounded-full shadow-[0_1px_2px_rgba(212,175,55,0.3)] transition-all duration-300 ${
                   activeNavTab === 'history'
-                    ? 'w-2 h-2 rounded-full'
-                    : 'w-6 h-1 rounded-full'
+                    ? 'w-2.5 h-2.5 rounded-full'
+                    : 'w-7 h-2 rounded-full'
                 }`} 
                 title="CBE Section Indicator"
               />

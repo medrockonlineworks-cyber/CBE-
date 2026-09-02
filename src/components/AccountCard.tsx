@@ -140,8 +140,8 @@ export const AccountCard: React.FC<AccountCardProps> = ({
         </div>
 
         {/* BOTTOM SECTION: Account Type/Number & Copy Icon (Centered together) */}
-        <div className="flex items-center justify-center text-xs sm:text-[13px] text-[#deb356] relative z-10 font-mono">
-          <span className="font-medium tracking-wide text-[#deb356] select-text">
+        <div className="flex items-center justify-center text-xs sm:text-[13px] text-[#EDE49E] relative z-10 font-mono">
+          <span className="font-medium tracking-wide text-[#EDE49E] select-text">
             {formattedAccountDisplay}
           </span>
           <button

@@ -563,5 +563,44 @@ export const BottomNavSettingsIcon: React.FC<IconProps> = ({
   </svg>
 );
 
+/**
+ * 16. CBEBirr Wallet Icon
+ * Exact match to CBE reference:
+ * - Solid purple bi-fold wallet with continuous left spine fold
+ * - Distinct top flap with a thin horizontal slit opening to the right
+ * - Rounded rectangular lower wallet body
+ * - Crisp white circular snap fastener dot on the right
+ */
+export const CbeBirrIcon: React.FC<IconProps> = ({
+  size = 24,
+  className = '',
+  color = '#70189F',
+  ...props
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    className={className}
+    {...props}
+  >
+    {/* Continuous Solid Wallet with Spine Fold and Thin Slit */}
+    <path
+      d="M6.2 3.5H18C19.2 3.5 20 4.3 20 5.3C20 6.3 19.2 7.1 18 7.1H6.5C5.3 7.1 4.6 7.7 4.6 8.35C4.6 9.0 5.3 9.6 6.5 9.6H18.5C19.9 9.6 21 10.7 21 12.1V17.5C21 19.4 19.4 21 17.5 21H6.2C4.4 21 3 19.6 3 17.8V6.7C3 4.9 4.4 3.5 6.2 3.5Z"
+      fill={color || '#70189F'}
+    />
+
+    {/* White Snap Fastener Clasp on lower-right */}
+    <circle
+      cx="16"
+      cy="15.2"
+      r="1.5"
+      fill="#FFFFFF"
+    />
+  </svg>
+);
+
+
 
 

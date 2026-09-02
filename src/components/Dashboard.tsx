@@ -272,8 +272,8 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
             </div>
 
             {/* Card Bottom: Account Type & Masked/Unmasked Number with Copy Button */}
-            <div className="flex justify-between items-center text-xs text-gray-300 relative z-10 font-mono">
-              <span className="font-semibold tracking-wide text-gray-200">
+            <div className="flex justify-between items-center text-xs text-[#EDE49E] relative z-10 font-mono">
+              <span className="font-semibold tracking-wide text-[#EDE49E]">
                 {formatCardAccount()}
               </span>
               <button 
@@ -294,9 +294,9 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
 
           {/* Carousel Indicator Dots */}
           <div className="flex justify-center items-center gap-1.5 mt-3">
-            <div className="w-6 h-1.5 bg-[#deb356] rounded-full" />
-            <div className="w-1.5 h-1.5 bg-[#deb356]/70 rounded-full" />
-            <div className="w-1.5 h-1.5 bg-[#deb356]/70 rounded-full" />
+            <div className="w-7 h-2 bg-[#deb356] rounded-full" />
+            <div className="w-2 h-2 bg-[#deb356]/70 rounded-full" />
+            <div className="w-2 h-2 bg-[#deb356]/70 rounded-full" />
           </div>
 
         </div>

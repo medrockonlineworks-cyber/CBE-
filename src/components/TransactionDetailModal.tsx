@@ -118,131 +118,134 @@ export default function TransactionDetailModal({
   return (
     <div 
       id="transaction-detail-modal-overlay"
-      className="fixed inset-0 z-40 bg-black/25 flex items-end justify-center p-0 pb-[62px] sm:pb-[66px] animate-in fade-in duration-200 select-none"
+      className="fixed inset-0 z-40 bg-black/40 flex items-end justify-center p-0 pb-[62px] sm:pb-[66px] animate-in fade-in duration-200 select-none"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div 
         id="transaction-detail-sheet"
-        className="w-full max-w-md bg-white rounded-t-[32px] sm:rounded-b-[24px] shadow-2xl p-5 pb-6 flex flex-col relative animate-in slide-in-from-bottom-5 duration-250 select-none border-t border-gray-100 max-h-[82vh] overflow-y-auto"
+        className="w-full max-w-md bg-white rounded-t-[32px] sm:rounded-b-[24px] shadow-2xl p-5 pt-5 pb-6 flex flex-col justify-between relative animate-in slide-in-from-bottom-8 duration-300 select-none border-t border-gray-100 h-[88vh] min-h-[88vh] max-h-[92vh] overflow-y-auto"
       >
         {/* Top Drag Indicator */}
         <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-2" />
 
-        {/* Top Title Bar with Close Button */}
-        <div className="flex items-center justify-between relative mb-2">
-          <div className="w-7" /> {/* Balance spacer */}
-          <h2 className="text-[11px] sm:text-xs font-bold text-gray-500 tracking-wider uppercase text-center flex-1">
-            TRANSACTION DETAIL
-          </h2>
-          <button
-            id="btn-close-tx-detail"
-            type="button"
-            onClick={onClose}
-            className="w-7 h-7 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition cursor-pointer"
-            aria-label="Close"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Status Pill Badge: Completed */}
-        <div className="flex justify-center mt-1">
-          <div className="bg-[#eaf8f0] text-[#16a34a] px-3.5 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5 shadow-2xs">
-            <span className="w-3.5 h-3.5 rounded-full bg-[#16a34a] text-white flex items-center justify-center text-[9px] font-bold">
-              ✓
-            </span>
-            <span>Completed</span>
-          </div>
-        </div>
-
-        {/* Transaction Amount */}
-        <div className="text-center mt-3">
-          <h3 className="text-2xl sm:text-3xl font-extrabold text-[#0f172a] tracking-tight font-sans">
-            {isCredit ? '+' : '-'}{transaction.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
-          </h3>
-          <p className="text-xs text-gray-400 font-medium mt-1">
-            {isCredit ? 'from' : 'to'} {isCredit ? (transaction.senderName || 'CBE Customer') : (transaction.recipientName || 'CBE Customer')}
-          </p>
-        </div>
-
-        {/* Key-Value Details List */}
-        <div className="mt-6 space-y-3.5 px-1 text-xs">
-          {/* Date & Time */}
-          <div className="flex items-center justify-between">
-            <span className="text-gray-400 font-medium">Date &amp; Time</span>
-            <span className="font-bold text-gray-900">{formattedDate}</span>
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col justify-start">
+          {/* Top Title Bar with Close Button */}
+          <div className="flex items-center justify-between relative mb-3">
+            <div className="w-7" /> {/* Balance spacer */}
+            <h2 className="text-[11px] sm:text-xs font-bold text-gray-500 tracking-wider uppercase text-center flex-1">
+              TRANSACTION DETAIL
+            </h2>
+            <button
+              id="btn-close-tx-detail"
+              type="button"
+              onClick={onClose}
+              className="w-7 h-7 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition cursor-pointer"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
-          {/* Type */}
-          <div className="flex items-center justify-between">
-            <span className="text-gray-400 font-medium">Type</span>
-            <span className="font-bold text-gray-900">{typeLabel}</span>
-          </div>
-
-          {/* Transaction ID */}
-          <div className="flex items-center justify-between">
-            <span className="text-gray-400 font-medium">Transaction ID</span>
-            <div className="flex items-center gap-1.5">
-              <span className="font-bold font-mono text-gray-900">{txId}</span>
-              <button
-                id="btn-copy-txid"
-                type="button"
-                onClick={() => handleCopy(txId, 'txid')}
-                className="p-1 text-gray-400 hover:text-[#70189F] transition cursor-pointer"
-                title="Copy Transaction ID"
-              >
-                {copiedField === 'txid' ? (
-                  <CheckCheck className="w-3.5 h-3.5 text-emerald-600" />
-                ) : (
-                  <Copy className="w-3.5 h-3.5" />
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Receipt ID */}
-          <div className="flex items-center justify-between">
-            <span className="text-gray-400 font-medium">Receipt ID</span>
-            <div className="flex items-center gap-1.5">
-              <span className="font-bold font-mono text-gray-900 truncate max-w-[190px] sm:max-w-[220px]">
-                {receiptId}
+          {/* Status Pill Badge: Completed */}
+          <div className="flex justify-center mt-1 mb-2">
+            <div className="bg-[#eaf8f0] text-[#16a34a] px-4 py-1.2 rounded-full text-xs font-bold inline-flex items-center gap-1.5 shadow-2xs">
+              <span className="w-3.5 h-3.5 rounded-full bg-[#16a34a] text-white flex items-center justify-center text-[9px] font-bold">
+                ✓
               </span>
-              <button
-                id="btn-copy-receiptid"
-                type="button"
-                onClick={() => handleCopy(receiptId, 'receiptid')}
-                className="p-1 text-gray-400 hover:text-[#70189F] transition cursor-pointer"
-                title="Copy Receipt ID"
-              >
-                {copiedField === 'receiptid' ? (
-                  <CheckCheck className="w-3.5 h-3.5 text-emerald-600" />
-                ) : (
-                  <Copy className="w-3.5 h-3.5" />
-                )}
-              </button>
+              <span>Completed</span>
             </div>
           </div>
 
-          {/* Remark */}
-          <div className="flex items-center justify-between">
-            <span className="text-gray-400 font-medium">Remark</span>
-            <span className="font-bold text-gray-900 truncate max-w-[200px] text-right">
-              {remark}
-            </span>
+          {/* Transaction Amount */}
+          <div className="text-center mt-2 mb-4">
+            <h3 className="text-3xl font-extrabold text-[#0f172a] tracking-tight font-sans">
+              {isCredit ? '+' : '-'}{transaction.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
+            </h3>
+            <p className="text-xs text-gray-400 font-medium mt-1">
+              {isCredit ? 'from' : 'to'} {isCredit ? (transaction.senderName || 'CBE Customer') : (transaction.recipientName || 'CBE Customer')}
+            </p>
           </div>
-        </div>
 
-        {/* Copied Notification Toast */}
-        {copiedField && (
-          <div className="my-2 py-1 px-3 bg-gray-900 text-white text-[11px] font-semibold rounded-lg text-center animate-in fade-in duration-150">
-            {copiedField === 'txid' ? 'Transaction ID' : 'Receipt ID'} copied to clipboard
+          {/* Key-Value Details List */}
+          <div className="mt-4 space-y-4 px-1 text-xs">
+            {/* Date & Time */}
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400 font-medium">Date &amp; Time</span>
+              <span className="font-bold text-gray-900">{formattedDate}</span>
+            </div>
+
+            {/* Type */}
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400 font-medium">Type</span>
+              <span className="font-bold text-gray-900">{typeLabel}</span>
+            </div>
+
+            {/* Transaction ID */}
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400 font-medium">Transaction ID</span>
+              <div className="flex items-center gap-1.5">
+                <span className="font-bold font-mono text-gray-900">{txId}</span>
+                <button
+                  id="btn-copy-txid"
+                  type="button"
+                  onClick={() => handleCopy(txId, 'txid')}
+                  className="p-1 text-gray-400 hover:text-[#70189F] transition cursor-pointer"
+                  title="Copy Transaction ID"
+                >
+                  {copiedField === 'txid' ? (
+                    <CheckCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Receipt ID */}
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400 font-medium">Receipt ID</span>
+              <div className="flex items-center gap-1.5">
+                <span className="font-bold font-mono text-gray-900 truncate max-w-[190px] sm:max-w-[220px]">
+                  {receiptId}
+                </span>
+                <button
+                  id="btn-copy-receiptid"
+                  type="button"
+                  onClick={() => handleCopy(receiptId, 'receiptid')}
+                  className="p-1 text-gray-400 hover:text-[#70189F] transition cursor-pointer"
+                  title="Copy Receipt ID"
+                >
+                  {copiedField === 'receiptid' ? (
+                    <CheckCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Remark */}
+            <div className="flex items-center justify-between">
+              <span className="text-gray-400 font-medium">Remark</span>
+              <span className="font-bold text-gray-900 truncate max-w-[200px] text-right">
+                {remark}
+              </span>
+            </div>
           </div>
-        )}
+
+          {/* Copied Notification Toast */}
+          {copiedField && (
+            <div className="my-2 py-1 px-3 bg-gray-900 text-white text-[11px] font-semibold rounded-lg text-center animate-in fade-in duration-150">
+              {copiedField === 'txid' ? 'Transaction ID' : 'Receipt ID'} copied to clipboard
+            </div>
+          )}
+        </div>
 
         {/* Centered Purple VIEW RECEIPT Action Button (Compact size & length) */}
-        <div className="mt-7 mb-2 flex justify-center">
+        <div className="mt-8 mb-2 flex justify-center">
           <button
             id="btn-view-full-receipt"
             type="button"

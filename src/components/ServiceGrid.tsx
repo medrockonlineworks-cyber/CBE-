@@ -10,7 +10,7 @@ import {
   Film,
   FileSpreadsheet
 } from 'lucide-react';
-import { MiniStatementIcon, OtherTransfersIcon } from './CbeCustomIcons';
+import { MiniStatementIcon, OtherTransfersIcon, CbeBirrIcon } from './CbeCustomIcons';
 import ServiceCard from './ServiceCard';
 
 interface ServiceGridProps {
@@ -98,7 +98,7 @@ export const ServiceGrid: React.FC<ServiceGridProps> = ({
           id="cbebirr"
           title="CBEBirr"
           layout="vertical"
-          icon={<Wallet className="w-6 h-6 text-[#70189F] fill-[#70189F] stroke-[2.2]" />}
+          icon={<CbeBirrIcon size={26} color="#70189F" />}
           onClick={() => onServiceSelect?.('cbebirr')}
         />
 
