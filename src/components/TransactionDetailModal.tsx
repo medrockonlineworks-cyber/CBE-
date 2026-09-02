@@ -131,13 +131,13 @@ export default function TransactionDetailModal({
         <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-1.5" />
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col justify-between">
+        <div className="flex-1 flex flex-col justify-between py-1">
           {/* Top Header Group */}
           <div>
             {/* Top Title Bar with Close Button */}
             <div className="flex items-center justify-between relative mb-2">
               <div className="w-7" /> {/* Balance spacer */}
-              <h2 className="text-[12px] font-bold text-gray-500 tracking-wider uppercase text-center flex-1">
+              <h2 className="text-xs sm:text-[13px] font-bold text-gray-500 tracking-wider uppercase text-center flex-1">
                 TRANSACTION DETAIL
               </h2>
               <button
@@ -153,7 +153,7 @@ export default function TransactionDetailModal({
 
             {/* Status Pill Badge: Completed */}
             <div className="flex justify-center my-1.5">
-              <div className="bg-[#eaf8f0] text-[#16a34a] px-3.5 py-1 rounded-full text-[11.5px] font-bold inline-flex items-center gap-1.5 shadow-2xs">
+              <div className="bg-[#eaf8f0] text-[#16a34a] px-4 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5 shadow-2xs">
                 <span className="w-3.5 h-3.5 rounded-full bg-[#16a34a] text-white flex items-center justify-center text-[9px] font-bold">
                   ✓
                 </span>
@@ -162,35 +162,35 @@ export default function TransactionDetailModal({
             </div>
 
             {/* Transaction Amount */}
-            <div className="text-center my-3">
-              <h3 className="text-3xl sm:text-[32px] font-extrabold text-[#0f172a] tracking-tight font-sans">
+            <div className="text-center my-3 sm:my-3.5">
+              <h3 className="text-3xl sm:text-4xl font-extrabold text-[#0f172a] tracking-tight font-sans">
                 {isCredit ? '+' : '-'}{transaction.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
               </h3>
-              <p className="text-xs text-gray-400 font-medium mt-1">
+              <p className="text-xs sm:text-sm text-gray-400 font-medium mt-1">
                 {isCredit ? 'from' : 'to'} {isCredit ? (transaction.senderName || 'CBE Customer') : (transaction.recipientName || 'CBE Customer')}
               </p>
             </div>
           </div>
 
-          {/* Key-Value Details List - Fitted with balanced spacing */}
-          <div className="my-auto space-y-3.5 sm:space-y-4 px-0.5 text-xs sm:text-[13px]">
+          {/* Key-Value Details List - Increased text size & clear hierarchy */}
+          <div className="my-auto space-y-4 sm:space-y-4.5 px-0.5 text-sm sm:text-[15px]">
             {/* Date & Time */}
             <div className="flex items-center justify-between gap-3">
-              <span className="text-gray-400 font-medium whitespace-nowrap">Date &amp; Time</span>
-              <span className="font-bold text-gray-900 text-right">{formattedDate}</span>
+              <span className="text-gray-400 font-medium whitespace-nowrap text-[13px] sm:text-sm">Date &amp; Time</span>
+              <span className="font-bold text-gray-900 text-right text-[13px] sm:text-sm">{formattedDate}</span>
             </div>
 
             {/* Type */}
             <div className="flex items-center justify-between gap-3">
-              <span className="text-gray-400 font-medium whitespace-nowrap">Type</span>
-              <span className="font-bold text-gray-900 text-right">{typeLabel}</span>
+              <span className="text-gray-400 font-medium whitespace-nowrap text-[13px] sm:text-sm">Type</span>
+              <span className="font-bold text-gray-900 text-right text-[13px] sm:text-sm">{typeLabel}</span>
             </div>
 
             {/* Transaction ID */}
             <div className="flex items-center justify-between gap-3">
-              <span className="text-gray-400 font-medium whitespace-nowrap">Transaction ID</span>
+              <span className="text-gray-400 font-medium whitespace-nowrap text-[13px] sm:text-sm">Transaction ID</span>
               <div className="flex items-center gap-1.5">
-                <span className="font-bold font-mono text-gray-900">{txId}</span>
+                <span className="font-bold font-mono text-gray-900 text-[13px] sm:text-sm">{txId}</span>
                 <button
                   id="btn-copy-txid"
                   type="button"
@@ -199,9 +199,9 @@ export default function TransactionDetailModal({
                   title="Copy Transaction ID"
                 >
                   {copiedField === 'txid' ? (
-                    <CheckCheck className="w-3.5 h-3.5 text-emerald-600" />
+                    <CheckCheck className="w-4 h-4 text-emerald-600" />
                   ) : (
-                    <Copy className="w-3.5 h-3.5" />
+                    <Copy className="w-4 h-4" />
                   )}
                 </button>
               </div>
@@ -209,9 +209,9 @@ export default function TransactionDetailModal({
 
             {/* Receipt ID */}
             <div className="flex items-center justify-between gap-3">
-              <span className="text-gray-400 font-medium whitespace-nowrap">Receipt ID</span>
+              <span className="text-gray-400 font-medium whitespace-nowrap text-[13px] sm:text-sm">Receipt ID</span>
               <div className="flex items-center gap-1.5">
-                <span className="font-bold font-mono text-gray-900 text-right break-all sm:break-normal max-w-[210px] sm:max-w-[250px]">
+                <span className="font-bold font-mono text-gray-900 text-right break-all sm:break-normal max-w-[210px] sm:max-w-[250px] text-[12.5px] sm:text-[13.5px]">
                   {receiptId}
                 </span>
                 <button
@@ -222,9 +222,9 @@ export default function TransactionDetailModal({
                   title="Copy Receipt ID"
                 >
                   {copiedField === 'receiptid' ? (
-                    <CheckCheck className="w-3.5 h-3.5 text-emerald-600" />
+                    <CheckCheck className="w-4 h-4 text-emerald-600" />
                   ) : (
-                    <Copy className="w-3.5 h-3.5" />
+                    <Copy className="w-4 h-4" />
                   )}
                 </button>
               </div>
@@ -232,8 +232,8 @@ export default function TransactionDetailModal({
 
             {/* Remark */}
             <div className="flex items-start justify-between gap-3">
-              <span className="text-gray-400 font-medium whitespace-nowrap mt-0.5">Remark</span>
-              <span className="font-bold text-gray-900 text-right max-w-[220px] leading-snug">
+              <span className="text-gray-400 font-medium whitespace-nowrap mt-0.5 text-[13px] sm:text-sm">Remark</span>
+              <span className="font-bold text-gray-900 text-right max-w-[220px] sm:max-w-[240px] leading-snug text-[13px] sm:text-sm">
                 {remark}
               </span>
             </div>
