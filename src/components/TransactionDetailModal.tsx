@@ -125,7 +125,7 @@ export default function TransactionDetailModal({
     >
       <div 
         id="transaction-detail-sheet"
-        className="w-full max-w-md bg-white rounded-t-[32px] sm:rounded-b-[24px] shadow-2xl p-5 pt-3.5 pb-5 flex flex-col justify-between relative animate-in slide-in-from-bottom-6 duration-250 select-none border-t border-gray-100 max-h-[69vh] sm:max-h-[72vh] overflow-y-auto"
+        className="w-full max-w-md bg-white rounded-t-[32px] sm:rounded-b-[24px] shadow-2xl p-5 pt-3 pb-4 flex flex-col justify-between relative animate-in slide-in-from-bottom-6 duration-250 select-none border-t border-gray-100 h-[73.5vh] max-h-[75vh] overflow-y-auto"
       >
         {/* Top Drag Indicator */}
         <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-2" />
@@ -133,7 +133,7 @@ export default function TransactionDetailModal({
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col justify-start">
           {/* Top Title Bar with Close Button */}
-          <div className="flex items-center justify-between relative mb-1.5">
+          <div className="flex items-center justify-between relative mb-2">
             <div className="w-7" /> {/* Balance spacer */}
             <h2 className="text-[11px] sm:text-xs font-bold text-gray-500 tracking-wider uppercase text-center flex-1">
               TRANSACTION DETAIL
@@ -150,8 +150,8 @@ export default function TransactionDetailModal({
           </div>
 
           {/* Status Pill Badge: Completed */}
-          <div className="flex justify-center my-1">
-            <div className="bg-[#eaf8f0] text-[#16a34a] px-3.5 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5 shadow-2xs">
+          <div className="flex justify-center my-1.5">
+            <div className="bg-[#eaf8f0] text-[#16a34a] px-4 py-1.2 rounded-full text-xs font-bold inline-flex items-center gap-1.5 shadow-2xs">
               <span className="w-3.5 h-3.5 rounded-full bg-[#16a34a] text-white flex items-center justify-center text-[9px] font-bold">
                 ✓
               </span>
@@ -160,17 +160,17 @@ export default function TransactionDetailModal({
           </div>
 
           {/* Transaction Amount */}
-          <div className="text-center my-2">
+          <div className="text-center my-2.5">
             <h3 className="text-2xl sm:text-3xl font-extrabold text-[#0f172a] tracking-tight font-sans">
               {isCredit ? '+' : '-'}{transaction.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
             </h3>
-            <p className="text-xs text-gray-400 font-medium mt-0.5">
+            <p className="text-xs text-gray-400 font-medium mt-1">
               {isCredit ? 'from' : 'to'} {isCredit ? (transaction.senderName || 'CBE Customer') : (transaction.recipientName || 'CBE Customer')}
             </p>
           </div>
 
           {/* Key-Value Details List */}
-          <div className="mt-3.5 space-y-3 px-1 text-xs">
+          <div className="mt-5 space-y-4 px-1 text-xs sm:text-[13px]">
             {/* Date & Time */}
             <div className="flex items-center justify-between">
               <span className="text-gray-400 font-medium">Date &amp; Time</span>
@@ -244,16 +244,16 @@ export default function TransactionDetailModal({
           )}
         </div>
 
-        {/* Centered Purple VIEW RECEIPT Action Button (Compact size & length) */}
-        <div className="mt-5 mb-1 flex justify-center">
+        {/* Centered Purple VIEW RECEIPT Action Button (Matching reference) */}
+        <div className="mt-6 mb-1 flex justify-center">
           <button
             id="btn-view-full-receipt"
             type="button"
             onClick={() => onViewReceipt(transaction)}
-            className="w-auto min-w-[160px] max-w-[210px] bg-[#70189F] hover:bg-[#5e1385] active:scale-[0.98] text-white py-2.5 px-5 rounded-full font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_3px_12px_rgba(112,24,159,0.22)] transition-all cursor-pointer"
+            className="w-auto min-w-[180px] max-w-[230px] bg-[#70189F] hover:bg-[#5e1385] active:scale-[0.98] text-white py-3 px-6 rounded-full font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_3px_12px_rgba(112,24,159,0.22)] transition-all cursor-pointer"
           >
             <ViewReceiptIcon size={18} className="text-white" strokeWidth={1.8} />
-            <span className="font-bold tracking-wider text-[11.5px] whitespace-nowrap">VIEW RECEIPT</span>
+            <span className="font-bold tracking-wider text-[12px] whitespace-nowrap">VIEW RECEIPT</span>
           </button>
         </div>
       </div>
