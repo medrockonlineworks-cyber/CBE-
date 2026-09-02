@@ -1,7 +1,6 @@
 import React from 'react';
 import { 
   Phone, 
-  ArrowLeftRight, 
   Wallet, 
   Building2,
   ShieldCheck,
@@ -11,7 +10,7 @@ import {
   Film,
   FileSpreadsheet
 } from 'lucide-react';
-import { MiniStatementIcon } from './CbeCustomIcons';
+import { MiniStatementIcon, OtherTransfersIcon } from './CbeCustomIcons';
 import ServiceCard from './ServiceCard';
 
 interface ServiceGridProps {
@@ -90,7 +89,7 @@ export const ServiceGrid: React.FC<ServiceGridProps> = ({
           id="other-transfers"
           title="Other Transfers"
           layout="vertical"
-          icon={<ArrowLeftRight className="w-6 h-6 text-[#6b1284] stroke-[2.4]" />}
+          icon={<OtherTransfersIcon size={25} color="#70189F" strokeWidth={2.4} />}
           onClick={() => onServiceSelect?.('other-transfers')}
         />
 

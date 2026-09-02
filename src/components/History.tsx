@@ -216,41 +216,41 @@ export default function History({ currentUser, onSelectTransaction }: HistoryPro
                   id={`btn-history-tx-${tx.id}`}
                   key={tx.id}
                   onClick={() => setSelectedDetailTx(tx)}
-                  className="w-full bg-white hover:bg-emerald-50/5 border border-gray-100 p-4 rounded-3xl flex justify-between items-center transition shadow-sm text-left cursor-pointer hover:scale-[1.01]"
+                  className="w-full bg-white hover:bg-emerald-50/5 border border-gray-100 p-3 sm:p-3.5 rounded-2xl flex justify-between items-center transition shadow-sm text-left cursor-pointer hover:scale-[1.01]"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                  <div className="flex items-center gap-2.5 sm:gap-3">
+                    <div className={`w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full flex items-center justify-center ${
                       isCredit ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-600'
                     }`}>
-                      {isCredit ? <TrendingUp className="w-5 h-5" /> : <TrendingDown className="w-5 h-5" />}
+                      {isCredit ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
                     </div>
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <span className={`text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded ${
+                        <span className={`text-[7.5px] font-extrabold uppercase px-1.5 py-0.5 rounded ${
                           isCredit ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
                         }`}>
                           {isCredit ? 'Credit' : 'Debit'}
                         </span>
-                        <p className="text-sm font-extrabold text-gray-900 leading-none">
+                        <p className="text-xs font-bold text-gray-900 leading-none">
                           {isCredit ? tx.senderName || 'Cash Deposit' : tx.recipientName}
                         </p>
                       </div>
-                      <p className="text-[10px] text-gray-400 font-medium mt-1 font-mono">
+                      <p className="text-[9px] text-gray-400 font-medium mt-0.5 font-mono">
                         {new Date(tx.createdAt).toLocaleString()}
                       </p>
-                      <p className="text-[9px] text-emerald-850 font-bold font-mono mt-0.5 uppercase tracking-wide">
+                      <p className="text-[8px] text-emerald-850 font-bold font-mono mt-0.5 uppercase tracking-wide">
                         Ref: {tx.id}
                       </p>
                     </div>
                   </div>
 
                   <div className="text-right">
-                    <p className={`text-sm font-black font-mono leading-none ${
+                    <p className={`text-xs font-bold font-mono leading-none ${
                       isCredit ? 'text-emerald-700' : 'text-gray-900'
                     }`}>
                       {isCredit ? '+' : '-'}ETB {tx.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </p>
-                    <span className={`inline-block mt-1 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                    <span className={`inline-block mt-0.5 text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
                       tx.status === 'success' ? 'bg-emerald-100 text-emerald-800' :
                       tx.status === 'failed' ? 'bg-rose-100 text-rose-800' :
                       'bg-amber-100 text-amber-800'

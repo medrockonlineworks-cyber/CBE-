@@ -32,7 +32,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   return (
     <div className={`fixed bottom-0 left-0 right-0 max-w-md mx-auto z-50 pointer-events-none ${className}`}>
       
-      {/* 1. Floating Center "Scan QR" Pill Button (Only shown on Home tab when no detail/modal is open) */}
+      {/* 1. Floating Center "Scan QR" Pill Button (Decreased length, split qr_code_scanner icon with 4 square corners and center circle dot) */}
       {shouldRenderScanQr && (
         <div className="flex justify-center items-center pb-2 pointer-events-auto select-none">
           <button
@@ -46,39 +46,39 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
                 onChangeTab?.('transfer');
               }
             }}
-            className="bg-[#6b1284] hover:bg-[#5a0e70] active:scale-95 text-white px-5 py-2 rounded-full flex items-center justify-center gap-2 shadow-[0_6px_20px_rgba(107,18,132,0.45)] transition-all cursor-pointer border border-purple-300/20"
+            className="bg-[#6b1284] hover:bg-[#5a0e70] active:scale-95 text-white px-3.5 py-1.5 rounded-full flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(107,18,132,0.4)] transition-all cursor-pointer border border-purple-300/20"
           >
-            {/* Left Viewfinder bracket with center dot */}
+            {/* Left half: 2 square corner brackets with center circle dot */}
             <svg 
-              className="w-3.5 h-3.5 text-purple-200" 
+              className="w-3.5 h-3.5 text-purple-200 flex-shrink-0" 
               viewBox="0 0 16 16" 
               fill="none" 
               stroke="currentColor" 
-              strokeWidth="2.2" 
+              strokeWidth="2" 
               strokeLinecap="round" 
               strokeLinejoin="round"
             >
-              <path d="M5 2H3a1 1 0 0 0-1 1v2" />
-              <path d="M2 11v2a1 1 0 0 0 1 1h2" />
-              <rect x="5" y="7" width="2" height="2" fill="currentColor" stroke="none" rx="0.5" />
+              <path d="M6 2.5H2.5v3.5" />
+              <path d="M2.5 10v3.5H6" />
+              <circle cx="5" cy="8" r="1.3" fill="currentColor" stroke="none" />
             </svg>
 
-            {/* Text */}
-            <span className="text-[13px] font-bold tracking-tight text-white">Scan QR</span>
+            {/* Text with clear space around */}
+            <span className="text-[11.5px] sm:text-xs font-bold tracking-tight text-white whitespace-nowrap">Scan QR</span>
 
-            {/* Right Viewfinder bracket with center dot */}
+            {/* Right half: 2 square corner brackets with center circle dot */}
             <svg 
-              className="w-3.5 h-3.5 text-purple-200" 
+              className="w-3.5 h-3.5 text-purple-200 flex-shrink-0" 
               viewBox="0 0 16 16" 
               fill="none" 
               stroke="currentColor" 
-              strokeWidth="2.2" 
+              strokeWidth="2" 
               strokeLinecap="round" 
               strokeLinejoin="round"
             >
-              <path d="M11 2h2a1 1 0 0 1 1 1v2" />
-              <path d="M14 11v2a1 1 0 0 1-1 1h-2" />
-              <rect x="9" y="7" width="2" height="2" fill="currentColor" stroke="none" rx="0.5" />
+              <path d="M10 2.5h3.5v3.5" />
+              <path d="M13.5 10v3.5H10" />
+              <circle cx="11" cy="8" r="1.3" fill="currentColor" stroke="none" />
             </svg>
           </button>
         </div>

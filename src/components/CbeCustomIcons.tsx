@@ -386,3 +386,40 @@ export const ViewReceiptIcon: React.FC<ReceiptIconProps> = ({
   </span>
 );
 
+/**
+ * 12. Other Transfers Icon
+ * Two opposing transfer arrows with generous space between them,
+ * where the tail of each arrow curves smoothly towards the other arrow.
+ * - Top arrow: points right (->), tail curves downward on the left towards the bottom arrow.
+ * - Bottom arrow: points left (<-), tail curves upward on the right towards the top arrow.
+ */
+export const OtherTransfersIcon: React.FC<IconProps> = ({
+  size = 24,
+  className = '',
+  strokeWidth = 2.2,
+  color = '#70189F',
+  ...props
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color || '#70189F'}
+    strokeWidth={strokeWidth}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    {...props}
+  >
+    {/* Top arrow: generous spacing, tail curves down on left, shaft goes right */}
+    <path d="M5 10.5C5 7.5 7.5 5.5 11.5 5.5H19" />
+    <polyline points="15.5 2.5 19 5.5 15.5 8.5" />
+
+    {/* Bottom arrow: generous spacing, tail curves up on right, shaft goes left */}
+    <path d="M19 13.5C19 16.5 16.5 18.5 12.5 18.5H5" />
+    <polyline points="8.5 15.5 5 18.5 8.5 21.5" />
+  </svg>
+);
+
+

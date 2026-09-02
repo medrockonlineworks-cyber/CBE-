@@ -241,16 +241,16 @@ export default function TransactionDetailModal({
           </div>
         )}
 
-        {/* Centered Purple VIEW RECEIPT Action Button */}
-        <div className="mt-8 mb-2 flex justify-center">
+        {/* Centered Purple VIEW RECEIPT Action Button (Compact size & length) */}
+        <div className="mt-7 mb-2 flex justify-center">
           <button
             id="btn-view-full-receipt"
             type="button"
             onClick={() => onViewReceipt(transaction)}
-            className="w-[82%] max-w-[280px] bg-[#70189F] hover:bg-[#5e1385] active:scale-[0.98] text-white py-3 px-5 rounded-full font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2.5 shadow-[0_4px_14px_rgba(112,24,159,0.28)] transition-all cursor-pointer"
+            className="w-auto min-w-[160px] max-w-[210px] bg-[#70189F] hover:bg-[#5e1385] active:scale-[0.98] text-white py-2.5 px-5 rounded-full font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_3px_12px_rgba(112,24,159,0.22)] transition-all cursor-pointer"
           >
-            <ViewReceiptIcon size={20} className="text-white" strokeWidth={1.8} />
-            <span className="font-bold tracking-wider text-[12.5px]">VIEW RECEIPT</span>
+            <ViewReceiptIcon size={18} className="text-white" strokeWidth={1.8} />
+            <span className="font-bold tracking-wider text-[11.5px] whitespace-nowrap">VIEW RECEIPT</span>
           </button>
         </div>
       </div>

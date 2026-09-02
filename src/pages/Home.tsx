@@ -436,27 +436,27 @@ export const Home: React.FC<HomeProps> = ({
                       key={tx.id}
                       id={`tx-item-${tx.id}`}
                       onClick={() => setSelectedDetailTx(tx)}
-                      className="bg-white rounded-2xl p-3 sm:p-3.5 shadow-[0_1px_3px_rgba(0,0,0,0.03)] border border-gray-100/90 flex items-center justify-between hover:border-purple-200 active:scale-[0.99] transition-all cursor-pointer select-none group"
+                      className="bg-white rounded-2xl p-2.5 sm:p-3 shadow-[0_1px_3px_rgba(0,0,0,0.03)] border border-gray-100/90 flex items-center justify-between hover:border-purple-200 active:scale-[0.99] transition-all cursor-pointer select-none group"
                     >
                       {/* Left: Direction Circular Badge + Title + Timestamp */}
-                      <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1 mr-2">
+                      <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1 mr-2">
                         {/* Directional Circular Icon (Green arrow down for credit, Red arrow up for debit) */}
-                        <div className={`w-9 h-9 sm:w-9.5 sm:h-9.5 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        <div className={`w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full flex items-center justify-center flex-shrink-0 ${
                           isCredit ? 'bg-[#e8f7ee] text-[#16a34a]' : 'bg-[#feecee] text-[#ef4444]'
                         }`}>
                           {isCredit ? (
-                            <ArrowDown className="w-4.5 h-4.5 stroke-[2.5]" />
+                            <ArrowDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5]" />
                           ) : (
-                            <ArrowUp className="w-4.5 h-4.5 stroke-[2.5]" />
+                            <ArrowUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5]" />
                           )}
                         </div>
 
                         {/* Title and Date */}
                         <div className="flex flex-col min-w-0">
-                          <span className="font-bold text-[#2d0938] text-[12.5px] sm:text-[13px] leading-snug truncate group-hover:text-[#70189f] transition-colors">
+                          <span className="font-bold text-[#2d0938] text-[11px] sm:text-[11.5px] leading-snug truncate group-hover:text-[#70189f] transition-colors">
                             {displayName}
                           </span>
-                          <span className="text-[10px] sm:text-[10.5px] text-gray-400 font-normal leading-tight mt-0.5">
+                          <span className="text-[9px] sm:text-[9.5px] text-gray-400 font-normal leading-tight mt-0.5">
                             {formattedDate}
                           </span>
                         </div>
@@ -464,13 +464,13 @@ export const Home: React.FC<HomeProps> = ({
 
                       {/* Right: Amount + Category Pill Badge */}
                       <div className="flex flex-col items-end flex-shrink-0">
-                        <span className={`text-[12.5px] sm:text-[13px] font-bold tracking-tight text-right ${
+                        <span className={`text-[11px] sm:text-[11.5px] font-bold tracking-tight text-right ${
                           isCredit ? 'text-[#16a34a]' : 'text-gray-900'
                         }`}>
                           {isCredit ? '+' : '-'}{tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
                         </span>
 
-                        <span className="bg-[#f5eef8] text-[#70189f] px-2 py-0.5 rounded-full text-[8px] sm:text-[8.5px] font-bold uppercase tracking-wider mt-1 text-right inline-block whitespace-nowrap">
+                        <span className="bg-[#f5eef8] text-[#70189f] px-1.5 py-0.5 rounded-full text-[7.5px] sm:text-[8px] font-bold uppercase tracking-wider mt-0.5 text-right inline-block whitespace-nowrap">
                           {categoryTag}
                         </span>
                       </div>
