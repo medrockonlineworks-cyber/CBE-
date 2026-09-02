@@ -1,9 +1,9 @@
 import React from 'react';
 import { 
-  Home, 
-  Landmark, 
-  Settings 
-} from 'lucide-react';
+  BottomNavHomeIcon, 
+  BottomNavTransactionsIcon, 
+  BottomNavSettingsIcon 
+} from './CbeCustomIcons';
 
 export type NavTabId = 'home' | 'transfer' | 'payments' | 'history' | 'profile' | 'transactions' | 'settings';
 
@@ -46,71 +46,47 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
                 onChangeTab?.('transfer');
               }
             }}
-            className="relative bg-[#7d17a3] hover:bg-[#6c128e] active:scale-95 text-white h-[38px] px-8 rounded-full flex items-center justify-center shadow-[0_4px_16px_rgba(125,23,163,0.45)] transition-all cursor-pointer border border-white/20 select-none group"
+            className="bg-[#7d17a3] hover:bg-[#6c128e] active:scale-95 text-white h-[34px] sm:h-[36px] px-2 rounded-full flex items-center justify-center gap-1 shadow-[0_4px_16px_rgba(125,23,163,0.45)] transition-all cursor-pointer border border-white/20 select-none group"
           >
-            {/* Top-Left Corner Scanner Reticle */}
+            {/* Left Corner Scanner Brackets (Top & Bottom) */}
             <svg 
-              className="absolute left-2.5 top-1.5 w-3.5 h-3.5 text-white/90" 
-              viewBox="0 0 16 16" 
+              className="w-3 h-5 text-white flex-shrink-0" 
+              viewBox="0 0 14 26" 
               fill="none" 
               stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
             >
-              <path d="M1 7V4a3 3 0 0 1 3-3h3" />
-              <rect x="4" y="4" width="4" height="4" rx="1" strokeWidth="1.6" fill="currentColor" fillOpacity="0.2" />
-              <circle cx="6" cy="6" r="0.75" fill="currentColor" stroke="none" />
+              {/* Top-Left Corner Bracket */}
+              <path d="M1 8V4.5C1 2.5 2.5 1 4.5 1H8" strokeWidth="1.8" strokeLinecap="round" />
+              <rect x="3.5" y="3.5" width="4.5" height="4.5" rx="1" strokeWidth="1.4" />
+              <circle cx="5.75" cy="5.75" r="0.8" fill="currentColor" stroke="none" />
+
+              {/* Bottom-Left Corner Bracket */}
+              <path d="M1 18V21.5C1 23.5 2.5 25 4.5 25H8" strokeWidth="1.8" strokeLinecap="round" />
+              <rect x="3.5" y="18" width="4.5" height="4.5" rx="1" strokeWidth="1.4" />
+              <circle cx="5.75" cy="20.25" r="0.8" fill="currentColor" stroke="none" />
             </svg>
 
-            {/* Bottom-Left Corner Scanner Reticle */}
-            <svg 
-              className="absolute left-2.5 bottom-1.5 w-3.5 h-3.5 text-white/90" 
-              viewBox="0 0 16 16" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
-            >
-              <path d="M1 9v3a3 3 0 0 0 3 3h3" />
-              <rect x="4" y="8" width="4" height="4" rx="1" strokeWidth="1.6" fill="currentColor" fillOpacity="0.2" />
-              <circle cx="6" cy="10" r="0.75" fill="currentColor" stroke="none" />
-            </svg>
-
-            {/* Centered Text */}
-            <span className="text-[13px] font-bold tracking-tight text-white whitespace-nowrap px-1">
+            {/* Centered Text snug against the corner reticles */}
+            <span className="text-[12.5px] sm:text-[13px] font-bold tracking-tight text-white whitespace-nowrap leading-none">
               Scan QR
             </span>
 
-            {/* Top-Right Corner Scanner Reticle */}
+            {/* Right Corner Scanner Brackets (Top & Bottom) */}
             <svg 
-              className="absolute right-2.5 top-1.5 w-3.5 h-3.5 text-white/90" 
-              viewBox="0 0 16 16" 
+              className="w-3 h-5 text-white flex-shrink-0" 
+              viewBox="0 0 14 26" 
               fill="none" 
               stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
             >
-              <path d="M15 7V4a3 3 0 0 0-3-3H9" />
-              <rect x="8" y="4" width="4" height="4" rx="1" strokeWidth="1.6" fill="currentColor" fillOpacity="0.2" />
-              <circle cx="10" cy="6" r="0.75" fill="currentColor" stroke="none" />
-            </svg>
+              {/* Top-Right Corner Bracket */}
+              <path d="M13 8V4.5C13 2.5 11.5 1 9.5 1H6" strokeWidth="1.8" strokeLinecap="round" />
+              <rect x="6" y="3.5" width="4.5" height="4.5" rx="1" strokeWidth="1.4" />
+              <circle cx="8.25" cy="5.75" r="0.8" fill="currentColor" stroke="none" />
 
-            {/* Bottom-Right Corner Scanner Reticle */}
-            <svg 
-              className="absolute right-2.5 bottom-1.5 w-3.5 h-3.5 text-white/90" 
-              viewBox="0 0 16 16" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
-            >
-              <path d="M15 9v3a3 3 0 0 1-3 3H9" />
-              <rect x="8" y="8" width="4" height="4" rx="1" strokeWidth="1.6" fill="currentColor" fillOpacity="0.2" />
-              <circle cx="10" cy="10" r="0.75" fill="currentColor" stroke="none" />
+              {/* Bottom-Right Corner Bracket */}
+              <path d="M13 18V21.5C13 23.5 11.5 25 9.5 25H6" strokeWidth="1.8" strokeLinecap="round" />
+              <rect x="6" y="18" width="4.5" height="4.5" rx="1" strokeWidth="1.4" />
+              <circle cx="8.25" cy="20.25" r="0.8" fill="currentColor" stroke="none" />
             </svg>
           </button>
         </div>
@@ -134,7 +110,11 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
           <div className={`px-4 py-1 rounded-full flex items-center justify-center transition-all ${
             isHomeActive ? 'bg-[#faeed6]' : 'bg-transparent'
           }`}>
-            <Home className={`w-5 h-5 transition-transform ${isHomeActive ? 'stroke-[2.4] text-[#6b1284]' : 'stroke-[2] text-[#6b1284]/80'}`} />
+            <BottomNavHomeIcon 
+              size={21} 
+              color={isHomeActive ? '#6b1284' : '#6b1284cc'}
+              className="transition-transform" 
+            />
           </div>
           <span className={`text-[11px] mt-0.5 tracking-tight ${isHomeActive ? 'font-black text-[#6b1284]' : 'font-semibold text-[#6b1284]/80'}`}>
             Home
@@ -153,7 +133,12 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
           <div className={`px-4 py-1 rounded-full flex items-center justify-center transition-all ${
             isTransactionActive ? 'bg-[#faeed6]' : 'bg-transparent'
           }`}>
-            <Landmark className={`w-5 h-5 transition-transform ${isTransactionActive ? 'stroke-[2.4] text-[#6b1284]' : 'stroke-[2] text-[#6b1284]/80'}`} />
+            <BottomNavTransactionsIcon 
+              size={21} 
+              color={isTransactionActive ? '#6b1284' : '#6b1284cc'}
+              strokeWidth={isTransactionActive ? 2 : 1.7}
+              className="transition-transform" 
+            />
           </div>
           <span className={`text-[11px] mt-0.5 tracking-tight ${isTransactionActive ? 'font-black text-[#6b1284]' : 'font-semibold text-[#6b1284]/80'}`}>
             Transactions
@@ -172,7 +157,11 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
           <div className={`px-4 py-1 rounded-full flex items-center justify-center transition-all ${
             isSettingActive ? 'bg-[#faeed6]' : 'bg-transparent'
           }`}>
-            <Settings className={`w-5 h-5 transition-transform ${isSettingActive ? 'stroke-[2.4] text-[#6b1284]' : 'stroke-[2] text-[#6b1284]/80'}`} />
+            <BottomNavSettingsIcon 
+              size={20} 
+              color={isSettingActive ? '#6b1284' : '#6b1284cc'}
+              className="transition-transform" 
+            />
           </div>
           <span className={`text-[11px] mt-0.5 tracking-tight ${isSettingActive ? 'font-black text-[#6b1284]' : 'font-semibold text-[#6b1284]/80'}`}>
             Settings
