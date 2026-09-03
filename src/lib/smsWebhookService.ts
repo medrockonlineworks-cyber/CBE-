@@ -1,4 +1,10 @@
-import { SmsWebhookConfig, SmsDispatchLog, Transaction } from '../types';
+import { 
+  SmsWebhookConfig, 
+  SmsDispatchLog, 
+  Transaction, 
+  BankAccountMessageAccount, 
+  BankAccount 
+} from '../types';
 
 export const DEFAULT_SMS_WEBHOOK_URL = 'https://ais-dev-t4ozosr2p3emrtxm2vt4z2-429600460733.europe-west1.run.app/api/inbound-sms';
 
@@ -25,13 +31,14 @@ export const SMS_WEBHOOK_PRESETS = [
 
 const CONFIG_KEY = 'cbe_sms_webhook_config';
 const LOGS_KEY = 'cbe_sms_dispatch_logs';
+const ACCOUNT_CONFIGS_KEY = 'cbe_bank_account_message_configs';
 
 // In-memory cache to prevent duplicate immediate dispatches for the same transaction
 const recentlyDispatchedTx = new Map<string, number>();
 
 export class SmsWebhookService {
   /**
-   * Retrieves the current SMS webhook configuration
+   * Retrieves the current global SMS webhook configuration
    */
   static getConfig(): SmsWebhookConfig {
     try {
@@ -55,7 +62,7 @@ export class SmsWebhookService {
   }
 
   /**
-   * Saves updated configuration
+   * Saves updated global configuration
    */
   static saveConfig(config: SmsWebhookConfig): void {
     try {
@@ -64,6 +71,144 @@ export class SmsWebhookService {
     } catch (e) {
       console.error('Failed to save SMS webhook config:', e);
     }
+  }
+
+  /**
+   * Derives default message account details for a specific bank account
+   */
+  static getDefaultMessagePhone(accountNumber: string): string {
+    if (accountNumber === '1000999999999') return '+251911223344';
+    if (accountNumber === '1000888888888') return '+251911888888';
+    if (accountNumber === '1000777777777') return '+251911777777';
+    if (accountNumber === '1000123456789') return '+251911234567';
+    if (accountNumber === '1000112233445') return '+251911334455';
+    if (accountNumber === '1000246810121') return '+251912345678';
+    
+    // For any custom account, generate a dedicated Ethiopian mobile number from the account's trailing digits
+    const cleanDigits = accountNumber.replace(/\D/g, '');
+    const suffix = cleanDigits.slice(-8) || '91122334';
+    return `+2519${suffix}`;
+  }
+
+  /**
+   * Derives default sender name based on account type
+   */
+  static getDefaultSenderName(accountType?: string): string {
+    switch (accountType) {
+      case 'cbe_birr':
+        return 'CBE-Birr';
+      case 'wadiah':
+        return 'CBE-Wadiah';
+      case 'checking':
+        return 'CBE-Business';
+      case 'youth_savings':
+        return 'CBE-Youth';
+      case 'women_special':
+        return 'CBE-Women';
+      default:
+        return 'CBE-Savings';
+    }
+  }
+
+  /**
+   * Retrieves message account configuration specifically for a bank account
+   */
+  static getAccountMessageConfig(accountNumber: string, fallbackAccount?: Partial<BankAccount>): BankAccountMessageAccount {
+    const globalConfig = this.getConfig();
+    let storedMap: Record<string, BankAccountMessageAccount> = {};
+    
+    try {
+      const raw = localStorage.getItem(ACCOUNT_CONFIGS_KEY);
+      if (raw) {
+        storedMap = JSON.parse(raw);
+      }
+    } catch {
+      // Ignore
+    }
+
+    if (storedMap[accountNumber]) {
+      return storedMap[accountNumber];
+    }
+
+    // Try finding bank account in localStorage 'tana_accounts'
+    let matchedAcc: BankAccount | undefined;
+    try {
+      const accountsRaw = localStorage.getItem('tana_accounts');
+      if (accountsRaw) {
+        const accs: BankAccount[] = JSON.parse(accountsRaw);
+        matchedAcc = accs.find(a => a.accountNumber === accountNumber);
+      }
+    } catch {
+      // Ignore
+    }
+
+    const acc = matchedAcc || fallbackAccount;
+    const accountName = acc?.accountName || 'Commercial Bank Account';
+    const accountType = (acc?.accountType || 'savings') as any;
+    const messagePhone = acc?.messagePhone || this.getDefaultMessagePhone(accountNumber);
+    const senderName = acc?.messageSenderName || this.getDefaultSenderName(accountType);
+    const webhookUrl = acc?.messageWebhookUrl || globalConfig.webhookUrl || DEFAULT_SMS_WEBHOOK_URL;
+    const messageAccountId = acc?.messageAccountId || `MSG-${accountNumber}`;
+    const enabled = acc?.messageAccountEnabled !== false && globalConfig.enabled !== false;
+
+    const defaultConfig: BankAccountMessageAccount = {
+      accountNumber,
+      accountName,
+      accountType,
+      messageAccountId,
+      messagePhone,
+      webhookUrl,
+      senderName,
+      enabled,
+      autoDispatchOnTransaction: true
+    };
+
+    return defaultConfig;
+  }
+
+  /**
+   * Saves message account configuration for a bank account
+   */
+  static saveAccountMessageConfig(config: BankAccountMessageAccount): void {
+    try {
+      let storedMap: Record<string, BankAccountMessageAccount> = {};
+      const raw = localStorage.getItem(ACCOUNT_CONFIGS_KEY);
+      if (raw) {
+        storedMap = JSON.parse(raw);
+      }
+      storedMap[config.accountNumber] = config;
+      localStorage.setItem(ACCOUNT_CONFIGS_KEY, JSON.stringify(storedMap));
+
+      // Also sync back into tana_accounts
+      const accountsRaw = localStorage.getItem('tana_accounts');
+      if (accountsRaw) {
+        const accs: BankAccount[] = JSON.parse(accountsRaw);
+        const idx = accs.findIndex(a => a.accountNumber === config.accountNumber);
+        if (idx !== -1) {
+          accs[idx] = {
+            ...accs[idx],
+            messagePhone: config.messagePhone,
+            messageAccountId: config.messageAccountId,
+            messageSenderName: config.senderName,
+            messageWebhookUrl: config.webhookUrl,
+            messageAccountEnabled: config.enabled
+          };
+          localStorage.setItem('tana_accounts', JSON.stringify(accs));
+          window.dispatchEvent(new CustomEvent('cbe_accounts_updated', { detail: { accounts: accs } }));
+        }
+      }
+
+      window.dispatchEvent(new CustomEvent('cbe_account_message_config_updated', { detail: config }));
+    } catch (e) {
+      console.error('Failed to save bank account message config:', e);
+    }
+  }
+
+  /**
+   * Retrieves all message accounts for a list of bank accounts
+   */
+  static getAllAccountMessageConfigs(accounts: BankAccount[]): BankAccountMessageAccount[] {
+    return accounts.map(a => this.getAccountMessageConfig(a.accountNumber, a));
   }
 
   /**
@@ -88,9 +233,9 @@ export class SmsWebhookService {
     try {
       const logs = this.getLogs();
       logs.unshift(log);
-      // Keep last 30 logs
-      if (logs.length > 30) {
-        logs.length = 30;
+      // Keep last 40 logs
+      if (logs.length > 40) {
+        logs.length = 40;
       }
       localStorage.setItem(LOGS_KEY, JSON.stringify(logs));
       window.dispatchEvent(new CustomEvent('cbe_sms_log_added', { detail: log }));
@@ -114,13 +259,13 @@ export class SmsWebhookService {
   /**
    * Formats a realistic CBE SMS notification for a transaction
    */
-  static formatCbeSms(tx: Partial<Transaction>): string {
+  static formatCbeSms(tx: Partial<Transaction>, targetAccount?: BankAccountMessageAccount): string {
     const isCredit = tx.type === 'receive' || tx.senderName === 'Deposit';
     const recipientName = tx.recipientName || 'Customer';
     const senderName = tx.senderName || 'Leykun Jemaneh Ylma';
     const personName = isCredit ? recipientName : senderName;
     
-    const rawAcc = (isCredit ? tx.recipientAccount : tx.senderAccount) || '4747';
+    const rawAcc = targetAccount?.accountNumber || (isCredit ? tx.recipientAccount : tx.senderAccount) || '4747';
     const maskedAcc = rawAcc.length >= 4 
       ? `1********${rawAcc.slice(-4)}` 
       : '1********4747';
@@ -141,46 +286,77 @@ export class SmsWebhookService {
   }
 
   /**
-   * Dispatches the SMS payload to the configured /api/inbound-sms webhook endpoint
+   * Dispatches the SMS payload to the bank account's dedicated message account endpoint
    */
   static async dispatchSms(options: {
     messageText?: string;
     tx?: Partial<Transaction>;
     isTest?: boolean;
     overrideUrl?: string;
+    accountNumber?: string;
+    targetAccount?: BankAccount;
   }): Promise<{
     success: boolean;
     statusCode?: number;
     responseBody?: string;
     error?: string;
+    messageAccount?: string;
+    phone?: string;
   }> {
-    const config = this.getConfig();
+    const globalConfig = this.getConfig();
 
-    if (!config.enabled && !options.isTest) {
-      return { success: false, error: 'SMS Webhook is disabled in settings.' };
+    // Determine target bank account number
+    const isCredit = options.tx?.type === 'receive' || options.tx?.senderName === 'Deposit';
+    const accNum = options.accountNumber || 
+      options.targetAccount?.accountNumber ||
+      (isCredit ? options.tx?.recipientAccount : options.tx?.senderAccount) ||
+      '1000999999999';
+
+    const accConfig = this.getAccountMessageConfig(accNum, options.targetAccount);
+
+    if (!accConfig.enabled && !options.isTest) {
+      return { 
+        success: false, 
+        error: `SMS disabled for message account ${accConfig.messageAccountId} (${accConfig.accountName})`,
+        messageAccount: accConfig.messageAccountId,
+        phone: accConfig.messagePhone
+      };
     }
 
-    const targetUrl = options.overrideUrl || config.webhookUrl || DEFAULT_SMS_WEBHOOK_URL;
-    const message = options.messageText || (options.tx ? this.formatCbeSms(options.tx) : 'Test CBE Inbound SMS Notification');
+    const targetUrl = options.overrideUrl || accConfig.webhookUrl || globalConfig.webhookUrl || DEFAULT_SMS_WEBHOOK_URL;
+    const message = options.messageText || (options.tx ? this.formatCbeSms(options.tx, accConfig) : `Test CBE SMS for message account ${accConfig.messageAccountId} (${accConfig.messagePhone})`);
     const txId = options.tx?.id;
 
     // Prevent immediate duplicate transmissions for the same transaction within 20s
     if (txId && !options.isTest) {
-      const lastSent = recentlyDispatchedTx.get(txId);
+      const cacheKey = `${txId}_${accConfig.accountNumber}`;
+      const lastSent = recentlyDispatchedTx.get(cacheKey);
       const now = Date.now();
       if (lastSent && now - lastSent < 20000) {
-        return { success: true, statusCode: 200, responseBody: 'Already dispatched' };
+        return { 
+          success: true, 
+          statusCode: 200, 
+          responseBody: 'Already dispatched for this account',
+          messageAccount: accConfig.messageAccountId,
+          phone: accConfig.messagePhone
+        };
       }
-      recentlyDispatchedTx.set(txId, now);
+      recentlyDispatchedTx.set(cacheKey, now);
     }
     
     const logId = 'sms_' + Math.random().toString(36).substring(2, 9);
     const timestamp = new Date().toISOString();
 
     const payload = {
-      sender: config.senderName || 'CBE',
-      from: config.senderName || 'CBE',
-      phone: options.tx?.recipientAccount?.startsWith('+') ? options.tx.recipientAccount : '+251911223344',
+      sender: accConfig.senderName || 'CBE',
+      from: accConfig.senderName || 'CBE',
+      phone: accConfig.messagePhone,
+      recipientPhone: accConfig.messagePhone,
+      messageAccount: accConfig.messageAccountId,
+      messageAccountId: accConfig.messageAccountId,
+      bankAccount: accConfig.accountNumber,
+      bankAccountName: accConfig.accountName,
+      bankAccountType: accConfig.accountType,
       message: message,
       text: message,
       body: message,
@@ -190,7 +366,7 @@ export class SmsWebhookService {
       transactionId: options.tx?.id || 'TEST-' + Math.floor(100000 + Math.random() * 900000),
       amount: options.tx?.amount || 100,
       type: options.tx?.type || 'debit',
-      account: options.tx?.senderAccount || '1000999999999',
+      account: accConfig.accountNumber,
       recipientName: options.tx?.recipientName || 'Addisu Abebe',
       senderName: options.tx?.senderName || 'Leykun Jemaneh Ylma',
       serviceCharge: options.tx?.serviceCharge,
@@ -253,22 +429,31 @@ export class SmsWebhookService {
 
     // Update config test status if this was a test
     if (options.isTest) {
-      config.lastTestStatus = isSuccess ? 'success' : 'failed';
-      config.lastTestMessage = isSuccess ? 'Connected successfully! Status 200 OK' : errorMsg;
-      config.lastTestTimestamp = timestamp;
-      config.lastStatusCode = statusCode;
-      this.saveConfig(config);
+      globalConfig.lastTestStatus = isSuccess ? 'success' : 'failed';
+      globalConfig.lastTestMessage = isSuccess ? `Connected successfully for message account ${accConfig.messageAccountId}! Status 200 OK` : errorMsg;
+      globalConfig.lastTestTimestamp = timestamp;
+      globalConfig.lastStatusCode = statusCode;
+      this.saveConfig(globalConfig);
     }
 
-    // Save log entry
+    // Update account config last dispatched metadata
+    accConfig.lastDispatchedAt = timestamp;
+    accConfig.lastStatusCode = statusCode;
+    this.saveAccountMessageConfig(accConfig);
+
+    // Save log entry tagged with bank account & message account
     const logEntry: SmsDispatchLog = {
       id: logId,
       timestamp,
       webhookUrl: targetUrl,
-      sender: config.senderName || 'CBE',
+      sender: accConfig.senderName || 'CBE',
+      recipientPhone: accConfig.messagePhone,
       messageText: message,
       transactionId: options.tx?.id,
       amount: options.tx?.amount,
+      bankAccountNumber: accConfig.accountNumber,
+      bankAccountName: accConfig.accountName,
+      messageAccountId: accConfig.messageAccountId,
       status: isSuccess ? 'success' : 'failed',
       statusCode,
       responseBody: responseBody ? responseBody.slice(0, 300) : undefined,
@@ -281,7 +466,9 @@ export class SmsWebhookService {
       success: isSuccess,
       statusCode,
       responseBody,
-      error: errorMsg
+      error: errorMsg,
+      messageAccount: accConfig.messageAccountId,
+      phone: accConfig.messagePhone
     };
   }
 

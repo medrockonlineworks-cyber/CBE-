@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UserProfile } from '../types';
+import { UserProfile, BankAccount } from '../types';
 import { LocalDb, DEFAULT_CBE_LOGO } from '../lib/mockData';
 import { CbeLogo } from './CbeLogo';
 import { 
@@ -61,16 +61,25 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
   const [smsAlerts, setSmsAlerts] = useState(true);
   const [emailStatements, setEmailStatements] = useState(false);
   const [showMessageAppModal, setShowMessageAppModal] = useState(false);
+  const [selectedMsgAccountNum, setSelectedMsgAccountNum] = useState<string | undefined>(undefined);
+  const [userBankAccounts, setUserBankAccounts] = useState<BankAccount[]>(() => LocalDb.getUserAccounts(currentUser.id));
   const [smsWebhookConfig, setSmsWebhookConfig] = useState(() => SmsWebhookService.getConfig());
 
-  // Listen to SMS config changes
+  // Listen to SMS config and account changes
   React.useEffect(() => {
     const handleConfigChange = () => {
       setSmsWebhookConfig(SmsWebhookService.getConfig());
+      setUserBankAccounts(LocalDb.getUserAccounts(currentUser.id));
     };
     window.addEventListener('cbe_sms_config_updated', handleConfigChange);
-    return () => window.removeEventListener('cbe_sms_config_updated', handleConfigChange);
-  }, []);
+    window.addEventListener('cbe_account_message_config_updated', handleConfigChange);
+    window.addEventListener('cbe_accounts_updated', handleConfigChange);
+    return () => {
+      window.removeEventListener('cbe_sms_config_updated', handleConfigChange);
+      window.removeEventListener('cbe_account_message_config_updated', handleConfigChange);
+      window.removeEventListener('cbe_accounts_updated', handleConfigChange);
+    };
+  }, [currentUser.id]);
 
   // Edit Profile / Account Form States
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
@@ -630,35 +639,71 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
             </button>
           </div>
 
-          {/* Connect Message App (Inbound SMS Webhook) */}
-          <div className="flex justify-between items-center border-t border-gray-50 pt-3">
-            <div className="flex items-center gap-3 min-w-0 pr-2">
-              <div className="p-2 bg-purple-50 text-purple-800 rounded-xl flex-shrink-0">
-                <MessageSquare className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <p className="text-sm font-bold text-gray-800">Connect Message App</p>
-                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-1 ${
-                    smsWebhookConfig.enabled ? 'bg-emerald-100 text-emerald-850' : 'bg-gray-100 text-gray-500'
-                  }`}>
-                    <span className={`w-1 h-1 rounded-full ${smsWebhookConfig.enabled ? 'bg-emerald-600 animate-pulse' : 'bg-gray-400'}`} />
-                    {smsWebhookConfig.enabled ? 'Active' : 'Off'}
-                  </span>
+          {/* Bank Account Message Accounts (Per-account SMS Webhook) */}
+          <div className="border-t border-gray-50 pt-3 space-y-2.5">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-3 min-w-0 pr-2">
+                <div className="p-2 bg-emerald-50 text-emerald-800 rounded-xl flex-shrink-0">
+                  <MessageSquare className="w-5 h-5" />
                 </div>
-                <p className="text-[10px] text-gray-400 truncate max-w-[170px] sm:max-w-xs font-mono mt-0.5">
-                  {smsWebhookConfig.webhookUrl}
-                </p>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <p className="text-sm font-bold text-gray-800">Bank Account Message Accounts</p>
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-850 flex items-center gap-1">
+                      <span className="w-1 h-1 rounded-full bg-emerald-600 animate-pulse" />
+                      {userBankAccounts.length} Connected
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-gray-400 mt-0.5">
+                    Each bank account has its own dedicated message account &amp; phone
+                  </p>
+                </div>
               </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedMsgAccountNum(undefined);
+                  setShowMessageAppModal(true);
+                }}
+                className="px-3 py-1.5 bg-emerald-800 hover:bg-emerald-850 text-white rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 shadow-xs flex-shrink-0"
+              >
+                <span>Manage</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={() => setShowMessageAppModal(true)}
-              className="px-3 py-1.5 bg-emerald-800 hover:bg-emerald-850 text-white rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 shadow-xs flex-shrink-0"
-            >
-              <span>Manage</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
+
+            {/* Micro list of accounts with their message account SIMs */}
+            <div className="bg-gray-50/80 rounded-2xl p-2.5 space-y-1.5 border border-gray-150">
+              {userBankAccounts.map((acc) => {
+                const msgCfg = SmsWebhookService.getAccountMessageConfig(acc.accountNumber, acc);
+                return (
+                  <div 
+                    key={acc.id}
+                    onClick={() => {
+                      setSelectedMsgAccountNum(acc.accountNumber);
+                      setShowMessageAppModal(true);
+                    }}
+                    className="flex items-center justify-between p-2 rounded-xl bg-white border border-gray-100 hover:border-emerald-300 transition cursor-pointer text-xs"
+                  >
+                    <div className="min-w-0 pr-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-gray-900 truncate text-[11px]">{acc.accountName}</span>
+                        <span className="text-[9px] font-mono text-gray-400">*{acc.accountNumber.slice(-4)}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[10px] font-mono text-emerald-900 mt-0.5">
+                        <span className="font-semibold">SIM: {msgCfg.messagePhone}</span>
+                        <span className="text-gray-300">•</span>
+                        <span className="text-gray-600">ID: {msgCfg.senderName}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      <span className={`w-1.5 h-1.5 rounded-full ${msgCfg.enabled ? 'bg-emerald-500' : 'bg-gray-400'}`} />
+                      <span className="text-[10px] font-bold text-emerald-800 hover:underline">Config</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
 
@@ -1074,6 +1119,7 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
         isOpen={showMessageAppModal}
         onClose={() => setShowMessageAppModal(false)}
         currentUser={currentUser}
+        initialSelectedAccountNumber={selectedMsgAccountNum}
       />
 
     </div>

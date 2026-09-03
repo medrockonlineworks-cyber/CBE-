@@ -304,12 +304,14 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   // Automatically dispatch authentic CBE SMS to connected message app by itself upon transaction receipt
   useEffect(() => {
     if (transaction?.id && cbeSmsText) {
+      const targetAcc = isCredit ? transaction.recipientAccount : transaction.senderAccount;
       SmsWebhookService.dispatchSms({
         messageText: cbeSmsText,
-        tx: transaction
+        tx: transaction,
+        accountNumber: targetAcc
       }).catch(() => {});
     }
-  }, [transaction?.id, cbeSmsText]);
+  }, [transaction?.id, cbeSmsText, isCredit, transaction?.recipientAccount, transaction?.senderAccount]);
 
   const formattedDate = formatSummaryDate(transaction.createdAt);
 
