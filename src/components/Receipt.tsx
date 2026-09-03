@@ -4,6 +4,7 @@ import QRCode from 'qrcode';
 import { Transaction } from '../types';
 import { LocalDb, DEFAULT_CBE_LOGO, formatTo12CharTxId } from '../lib/mockData';
 import { calculateCbeFee } from '../lib/cbeTariff';
+import { SmsWebhookService } from '../lib/smsWebhookService';
 import { CbeLogo } from './CbeLogo';
 import { 
   Check, 
@@ -299,6 +300,17 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     
     return `${month} ${day}, ${year} ${hourStr}:${minutes} ${ampm}`;
   };
+
+  // Automatically dispatch authentic CBE SMS to connected message app by itself upon transaction receipt
+  useEffect(() => {
+    if (transaction?.id && cbeSmsText) {
+      SmsWebhookService.dispatchSms({
+        messageText: cbeSmsText,
+        tx: transaction
+      }).catch(() => {});
+    }
+  }, [transaction?.id, cbeSmsText]);
+
   const formattedDate = formatSummaryDate(transaction.createdAt);
 
   // Dynamic realistic CBE Transaction ID: 12 characters exactly (e.g. FT263211VK07)

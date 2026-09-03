@@ -13,6 +13,7 @@ import {
 } from '../types';
 import { calculateCbeFee } from './cbeTariff';
 import { firebaseService } from '../services/firebaseService';
+import { SmsWebhookService } from './smsWebhookService';
 
 // Helper to generate IDs
 const generateId = () => Math.random().toString(36).substring(2, 11).toUpperCase();
@@ -1163,6 +1164,16 @@ export class LocalDb {
     // Sync transaction and updated user balance to Firebase Firestore
     firebaseService.syncTransaction(newTx).catch(() => {});
     firebaseService.syncUserProfile(user).catch(() => {});
+
+    // Automatically forward authentic CBE SMS alert to connected Message App webhook
+    try {
+      const smsConfig = SmsWebhookService.getConfig();
+      if (smsConfig.enabled && smsConfig.autoDispatchOnTransaction) {
+        SmsWebhookService.dispatchSms({ tx: newTx }).catch(() => {});
+      }
+    } catch {
+      // Non-blocking
+    }
 
     return newTx;
   }

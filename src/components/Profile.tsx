@@ -26,9 +26,12 @@ import {
   Users,
   UserPlus,
   Save,
-  X
+  X,
+  MessageSquare
 } from 'lucide-react';
 import BankLogoModal from './BankLogoModal';
+import MessageAppModal from './MessageAppModal';
+import { SmsWebhookService } from '../lib/smsWebhookService';
 import AppInstallPrompt from './AppInstallPrompt';
 import EthiopianNameAutocomplete, { EthiopianThreePartNameInput } from './EthiopianNameAutocomplete';
 
@@ -57,6 +60,17 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
   const [biometrics, setBiometrics] = useState(currentUser.biometricEnabled || false);
   const [smsAlerts, setSmsAlerts] = useState(true);
   const [emailStatements, setEmailStatements] = useState(false);
+  const [showMessageAppModal, setShowMessageAppModal] = useState(false);
+  const [smsWebhookConfig, setSmsWebhookConfig] = useState(() => SmsWebhookService.getConfig());
+
+  // Listen to SMS config changes
+  React.useEffect(() => {
+    const handleConfigChange = () => {
+      setSmsWebhookConfig(SmsWebhookService.getConfig());
+    };
+    window.addEventListener('cbe_sms_config_updated', handleConfigChange);
+    return () => window.removeEventListener('cbe_sms_config_updated', handleConfigChange);
+  }, []);
 
   // Edit Profile / Account Form States
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
@@ -615,6 +629,37 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
               }`} />
             </button>
           </div>
+
+          {/* Connect Message App (Inbound SMS Webhook) */}
+          <div className="flex justify-between items-center border-t border-gray-50 pt-3">
+            <div className="flex items-center gap-3 min-w-0 pr-2">
+              <div className="p-2 bg-purple-50 text-purple-800 rounded-xl flex-shrink-0">
+                <MessageSquare className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <p className="text-sm font-bold text-gray-800">Connect Message App</p>
+                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full flex items-center gap-1 ${
+                    smsWebhookConfig.enabled ? 'bg-emerald-100 text-emerald-850' : 'bg-gray-100 text-gray-500'
+                  }`}>
+                    <span className={`w-1 h-1 rounded-full ${smsWebhookConfig.enabled ? 'bg-emerald-600 animate-pulse' : 'bg-gray-400'}`} />
+                    {smsWebhookConfig.enabled ? 'Active' : 'Off'}
+                  </span>
+                </div>
+                <p className="text-[10px] text-gray-400 truncate max-w-[170px] sm:max-w-xs font-mono mt-0.5">
+                  {smsWebhookConfig.webhookUrl}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowMessageAppModal(true)}
+              className="px-3 py-1.5 bg-emerald-800 hover:bg-emerald-850 text-white rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 shadow-xs flex-shrink-0"
+            >
+              <span>Manage</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
 
         {/* Help & Terms Section */}
@@ -1022,6 +1067,13 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
         onClose={() => setShowLogoModal(false)}
         currentUser={currentUser}
         onLogoUpdated={(logo) => setCustomBankLogo(logo)}
+      />
+
+      {/* Message App Connection Modal */}
+      <MessageAppModal
+        isOpen={showMessageAppModal}
+        onClose={() => setShowMessageAppModal(false)}
+        currentUser={currentUser}
       />
 
     </div>

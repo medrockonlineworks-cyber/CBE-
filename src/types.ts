@@ -123,3 +123,30 @@ export interface AuditLog {
   details: string;
   createdAt: string;
 }
+
+export interface SmsWebhookConfig {
+  enabled: boolean;
+  webhookUrl: string;
+  senderName: string;
+  autoDispatchOnTransaction: boolean;
+  includeJsonPayload: boolean;
+  lastTestStatus?: 'success' | 'failed' | 'pending' | 'idle';
+  lastTestMessage?: string;
+  lastTestTimestamp?: string;
+  lastStatusCode?: number;
+}
+
+export interface SmsDispatchLog {
+  id: string;
+  timestamp: string;
+  webhookUrl: string;
+  sender: string;
+  recipientPhone?: string;
+  messageText: string;
+  transactionId?: string;
+  amount?: number;
+  status: 'success' | 'failed' | 'pending';
+  statusCode?: number;
+  responseBody?: string;
+  errorMessage?: string;
+}
