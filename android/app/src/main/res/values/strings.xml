@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Tana Digital Bank</string>
+    <string name="title_activity_main">Tana Digital Bank</string>
+    <string name="package_name">et.cbe.tanadigitalbank</string>
+    <string name="custom_url_scheme">et.cbe.tanadigitalbank</string>
+</resources>

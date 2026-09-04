@@ -13,7 +13,7 @@ import {
 } from '../types';
 import { calculateCbeFee } from './cbeTariff';
 import { firebaseService } from '../services/firebaseService';
-import { SmsWebhookService, DEFAULT_SMS_WEBHOOK_URL } from './smsWebhookService';
+import { SmsService } from '../services/smsService';
 
 // Helper to generate IDs
 const generateId = () => Math.random().toString(36).substring(2, 11).toUpperCase();
@@ -22,26 +22,26 @@ const generateId = () => Math.random().toString(36).substring(2, 11).toUpperCase
 const INITIAL_USERS: UserProfile[] = [
   {
     id: 'user_1',
-    name: 'Abebe Kebede',
-    phone: '+251911223344',
-    email: 'abebe@example.com',
+    name: 'Leykun Jemaneh Ylma',
+    phone: '+251900112233',
+    email: 'leykunjemaneh3@gmail.com',
     role: 'user',
     status: 'active',
     createdAt: '2026-01-10T10:30:00Z',
-    accountNumber: '1000123456789',
+    accountNumber: '1000419524747',
     balance: 10000000000.00,
     availableBalance: 10000000000.00,
     biometricEnabled: true
   },
   {
     id: 'user_admin',
-    name: 'Leykun Jemaneh (Admin)',
+    name: 'Leykun Jemaneh Ylma (Admin)',
     phone: '+251900112233',
     email: 'leykunjemaneh3@gmail.com', // Bootstrapped admin
     role: 'admin',
     status: 'active',
     createdAt: '2026-01-01T08:00:00Z',
-    accountNumber: '1000999999999',
+    accountNumber: '1000419524747',
     balance: 10000000000.00,
     availableBalance: 10000000000.00,
     biometricEnabled: false
@@ -72,13 +72,8 @@ export const INITIAL_ACCOUNTS: BankAccount[] = [
     availableBalance: 10000000000.00,
     status: 'active',
     currency: 'ETB',
-    isPrimary: true,
-    createdAt: '2026-01-01T08:00:00Z',
-    messageAccountId: 'MSG-1000999999999',
-    messagePhone: '+251911223344',
-    messageSenderName: 'CBE-Savings',
-    messageWebhookUrl: DEFAULT_SMS_WEBHOOK_URL,
-    messageAccountEnabled: true
+    isPrimary: false,
+    createdAt: '2026-01-01T08:00:00Z'
   },
   {
     id: 'acc_admin_wadiah',
@@ -91,12 +86,7 @@ export const INITIAL_ACCOUNTS: BankAccount[] = [
     status: 'active',
     currency: 'ETB',
     isPrimary: false,
-    createdAt: '2026-02-10T11:00:00Z',
-    messageAccountId: 'MSG-1000888888888',
-    messagePhone: '+251911888888',
-    messageSenderName: 'CBE-Wadiah',
-    messageWebhookUrl: DEFAULT_SMS_WEBHOOK_URL,
-    messageAccountEnabled: true
+    createdAt: '2026-02-10T11:00:00Z'
   },
   {
     id: 'acc_admin_cbebirr',
@@ -109,12 +99,7 @@ export const INITIAL_ACCOUNTS: BankAccount[] = [
     status: 'active',
     currency: 'ETB',
     isPrimary: false,
-    createdAt: '2026-03-01T14:30:00Z',
-    messageAccountId: 'MSG-1000777777777',
-    messagePhone: '+251911777777',
-    messageSenderName: 'CBE-Birr',
-    messageWebhookUrl: DEFAULT_SMS_WEBHOOK_URL,
-    messageAccountEnabled: true
+    createdAt: '2026-03-01T14:30:00Z'
   },
   {
     id: 'acc_user1_main',
@@ -126,13 +111,8 @@ export const INITIAL_ACCOUNTS: BankAccount[] = [
     availableBalance: 10000000000.00,
     status: 'active',
     currency: 'ETB',
-    isPrimary: true,
-    createdAt: '2026-01-10T10:30:00Z',
-    messageAccountId: 'MSG-1000123456789',
-    messagePhone: '+251911234567',
-    messageSenderName: 'CBE-Savings',
-    messageWebhookUrl: DEFAULT_SMS_WEBHOOK_URL,
-    messageAccountEnabled: true
+    isPrimary: false,
+    createdAt: '2026-01-10T10:30:00Z'
   },
   {
     id: 'acc_user1_biz',
@@ -145,12 +125,7 @@ export const INITIAL_ACCOUNTS: BankAccount[] = [
     status: 'active',
     currency: 'ETB',
     isPrimary: false,
-    createdAt: '2026-02-15T09:00:00Z',
-    messageAccountId: 'MSG-1000112233445',
-    messagePhone: '+251911334455',
-    messageSenderName: 'CBE-Business',
-    messageWebhookUrl: DEFAULT_SMS_WEBHOOK_URL,
-    messageAccountEnabled: true
+    createdAt: '2026-02-15T09:00:00Z'
   },
   {
     id: 'acc_user2_main',
@@ -163,16 +138,46 @@ export const INITIAL_ACCOUNTS: BankAccount[] = [
     status: 'active',
     currency: 'ETB',
     isPrimary: true,
-    createdAt: '2026-03-15T14:20:00Z',
-    messageAccountId: 'MSG-1000246810121',
-    messagePhone: '+251912345678',
-    messageSenderName: 'CBE-Savings',
-    messageWebhookUrl: DEFAULT_SMS_WEBHOOK_URL,
-    messageAccountEnabled: true
+    createdAt: '2026-03-15T14:20:00Z'
+  },
+  {
+    id: 'acc_leykun_4747',
+    userId: 'user_admin',
+    accountName: 'Leykun CBE Account',
+    accountNumber: '1000419524747',
+    accountType: 'savings',
+    balance: 10000000000.00,
+    availableBalance: 10000000000.00,
+    status: 'active',
+    currency: 'ETB',
+    isPrimary: true,
+    createdAt: '2026-01-01T08:00:00Z'
+  },
+  {
+    id: 'acc_user1_leykun_4747',
+    userId: 'user_1',
+    accountName: 'Leykun CBE Account',
+    accountNumber: '1000419524747',
+    accountType: 'savings',
+    balance: 10000000000.00,
+    availableBalance: 10000000000.00,
+    status: 'active',
+    currency: 'ETB',
+    isPrimary: true,
+    createdAt: '2026-01-01T08:00:00Z'
   }
 ];
 
 export const VERIFIED_DIRECTORY_ACCOUNTS: RegisteredAccountInfo[] = [
+  {
+    accountNumber: '1000419524747',
+    accountName: 'Leykun Jemaneh Ylma',
+    bankName: 'Commercial Bank of Ethiopia',
+    userId: 'user_admin',
+    phone: '+251900112233',
+    isVerified: true,
+    accountType: 'Savings Account'
+  },
   {
     accountNumber: '1000246810121',
     accountName: 'Selamawit Tekle Haile',
@@ -616,44 +621,52 @@ export const DEFAULT_CBE_LOGO = `data:image/svg+xml;utf8,${encodeURIComponent(`
 export class LocalDb {
   static getUsers(): UserProfile[] {
     let users = loadData<UserProfile[]>('tana_users', INITIAL_USERS);
+    let modified = false;
+
+    // Ensure Leykun Jemaneh Ylma has primary account 1000419524747
+    const u1 = users.find(u => u.id === 'user_1');
+    if (u1 && (u1.accountNumber !== '1000419524747' || u1.name !== 'Leykun Jemaneh Ylma')) {
+      u1.accountNumber = '1000419524747';
+      u1.name = 'Leykun Jemaneh Ylma';
+      u1.email = 'leykunjemaneh3@gmail.com';
+      u1.balance = 10000000000.00;
+      u1.availableBalance = 10000000000.00;
+      modified = true;
+    }
     
     // Ensure leykunjemaneh3@gmail.com is guaranteed admin access
     const adminIndex = users.findIndex(u => u.email.toLowerCase() === 'leykunjemaneh3@gmail.com');
     if (adminIndex !== -1) {
-      if (users[adminIndex].role !== 'admin') {
+      if (users[adminIndex].role !== 'admin' || users[adminIndex].accountNumber !== '1000419524747') {
         users[adminIndex].role = 'admin';
         users[adminIndex].status = 'active';
-        saveData('tana_users', users);
+        users[adminIndex].accountNumber = '1000419524747';
+        users[adminIndex].balance = 10000000000.00;
+        users[adminIndex].availableBalance = 10000000000.00;
+        modified = true;
       }
     } else {
       // Add Leykun Jemaneh as admin if not present
       const adminUser: UserProfile = {
         id: 'user_admin',
-        name: 'Leykun Jemaneh (Admin)',
+        name: 'Leykun Jemaneh Ylma (Admin)',
         phone: '+251900112233',
         email: 'leykunjemaneh3@gmail.com',
         role: 'admin',
         status: 'active',
         createdAt: '2026-01-01T08:00:00Z',
-        accountNumber: '1000999999999',
+        accountNumber: '1000419524747',
         accountType: 'wadiah',
         balance: 10000000000.00,
         availableBalance: 10000000000.00,
         biometricEnabled: true
       };
       users.push(adminUser);
-      saveData('tana_users', users);
+      modified = true;
     }
 
-    const balanceKey = 'tana_balance_10billion_applied';
-    if (!localStorage.getItem(balanceKey)) {
-      users = users.map(u => ({
-        ...u,
-        balance: 10000000000.00,
-        availableBalance: 10000000000.00
-      }));
+    if (modified) {
       saveData('tana_users', users);
-      localStorage.setItem(balanceKey, 'true');
     }
     return users;
   }
@@ -731,7 +744,42 @@ export class LocalDb {
   }
 
   static getAllAccounts(): BankAccount[] {
-    return loadData<BankAccount[]>('tana_accounts', INITIAL_ACCOUNTS);
+    const accounts = loadData<BankAccount[]>('tana_accounts', INITIAL_ACCOUNTS);
+    let modified = false;
+
+    // Ensure account 1000419524747 exists, is primary, and has sufficient funds
+    const acc4747 = accounts.find(a => a.accountNumber === '1000419524747');
+    if (!acc4747) {
+      accounts.unshift({
+        id: 'acc_leykun_4747',
+        userId: 'user_1',
+        accountName: 'Leykun CBE Account',
+        accountNumber: '1000419524747',
+        accountType: 'savings',
+        balance: 10000000000.00,
+        availableBalance: 10000000000.00,
+        status: 'active',
+        currency: 'ETB',
+        isPrimary: true,
+        createdAt: '2026-01-01T08:00:00Z'
+      });
+      modified = true;
+    } else {
+      if (acc4747.balance < 1000000) {
+        acc4747.balance = 10000000000.00;
+        acc4747.availableBalance = 10000000000.00;
+        modified = true;
+      }
+      if (!acc4747.isPrimary) {
+        acc4747.isPrimary = true;
+        modified = true;
+      }
+    }
+
+    if (modified) {
+      saveData('tana_accounts', accounts);
+    }
+    return accounts;
   }
 
   static setAccounts(accounts: BankAccount[]): void {
@@ -740,58 +788,28 @@ export class LocalDb {
   }
 
   static getUserAccounts(userId: string): BankAccount[] {
-    let allAccs = this.getAllAccounts();
-    let accounts = allAccs.filter(a => a.userId === userId);
+    let accounts = this.getAllAccounts().filter(a => a.userId === userId);
     if (accounts.length === 0) {
       // Find user to seed initial account
       const user = this.getUsers().find(u => u.id === userId);
-      const accNum = user?.accountNumber || '1000' + Math.floor(100000000 + Math.random() * 900000000);
       const initialAcc: BankAccount = {
         id: 'acc_' + generateId(),
         userId,
         accountName: 'Primary Saving Account',
-        accountNumber: accNum,
+        accountNumber: user?.accountNumber || '1000' + Math.floor(100000000 + Math.random() * 900000000),
         accountType: (user?.accountType as BankAccountType) || 'savings',
         balance: user?.balance || 25000.00,
         availableBalance: user?.balance || 25000.00,
         status: 'active',
         currency: 'ETB',
         isPrimary: true,
-        createdAt: new Date().toISOString(),
-        messageAccountId: 'MSG-' + accNum,
-        messagePhone: SmsWebhookService.getDefaultMessagePhone(accNum),
-        messageSenderName: 'CBE-Savings',
-        messageWebhookUrl: DEFAULT_SMS_WEBHOOK_URL,
-        messageAccountEnabled: true
+        createdAt: new Date().toISOString()
       };
       
+      const allAccs = this.getAllAccounts();
       allAccs.push(initialAcc);
       this.setAccounts(allAccs);
       accounts = [initialAcc];
-    } else {
-      // Ensure all accounts have their own message account properties
-      let hasChanges = false;
-      accounts = accounts.map(a => {
-        if (!a.messageAccountId || !a.messagePhone) {
-          hasChanges = true;
-          return {
-            ...a,
-            messageAccountId: a.messageAccountId || `MSG-${a.accountNumber}`,
-            messagePhone: a.messagePhone || SmsWebhookService.getDefaultMessagePhone(a.accountNumber),
-            messageSenderName: a.messageSenderName || SmsWebhookService.getDefaultSenderName(a.accountType),
-            messageWebhookUrl: a.messageWebhookUrl || DEFAULT_SMS_WEBHOOK_URL,
-            messageAccountEnabled: a.messageAccountEnabled !== false
-          };
-        }
-        return a;
-      });
-      if (hasChanges) {
-        allAccs = allAccs.map(a => {
-          const updated = accounts.find(u => u.id === a.id);
-          return updated || a;
-        });
-        this.setAccounts(allAccs);
-      }
     }
     return accounts;
   }
@@ -804,9 +822,6 @@ export class LocalDb {
       initialBalance?: number;
       customAccountNumber?: string;
       isPrimary?: boolean;
-      messagePhone?: string;
-      messageSenderName?: string;
-      messageWebhookUrl?: string;
     }
   ): BankAccount {
     const allAccs = this.getAllAccounts();
@@ -829,9 +844,6 @@ export class LocalDb {
       });
     }
 
-    const msgPhone = data.messagePhone?.trim() || SmsWebhookService.getDefaultMessagePhone(cleanAccNum);
-    const msgSender = data.messageSenderName?.trim() || SmsWebhookService.getDefaultSenderName(data.accountType);
-
     const newAcc: BankAccount = {
       id: 'acc_' + generateId(),
       userId,
@@ -843,12 +855,7 @@ export class LocalDb {
       status: 'active',
       currency: 'ETB',
       isPrimary: data.isPrimary || (allAccs.filter(a => a.userId === userId).length === 0),
-      createdAt: new Date().toISOString(),
-      messageAccountId: 'MSG-' + cleanAccNum,
-      messagePhone: msgPhone,
-      messageSenderName: msgSender,
-      messageWebhookUrl: data.messageWebhookUrl || DEFAULT_SMS_WEBHOOK_URL,
-      messageAccountEnabled: true
+      createdAt: new Date().toISOString()
     };
 
     allAccs.push(newAcc);
@@ -992,32 +999,11 @@ export class LocalDb {
 
     firebaseService.syncTransaction(tx).catch(() => {});
 
-    // Automatically dispatch SMS alerts to each bank account's own dedicated message account
+    // Automatically generate simulated SMS for successful internal transfer
     try {
-      // 1. Debit alert for source account
-      SmsWebhookService.dispatchSms({
-        tx: { ...tx, type: 'transfer', senderAccount: fromAcc.accountNumber, recipientAccount: toAcc.accountNumber },
-        accountNumber: fromAcc.accountNumber,
-        targetAccount: fromAcc
-      }).catch(() => {});
-
-      // 2. Credit alert for destination account
-      const creditSms = SmsWebhookService.formatCbeSms({
-        ...tx,
-        type: 'receive',
-        recipientName: toAcc.accountName,
-        recipientAccount: toAcc.accountNumber,
-        senderName: fromAcc.accountName
-      }, SmsWebhookService.getAccountMessageConfig(toAcc.accountNumber, toAcc));
-
-      SmsWebhookService.dispatchSms({
-        messageText: creditSms,
-        tx: { ...tx, type: 'receive', recipientAccount: toAcc.accountNumber, senderAccount: fromAcc.accountNumber },
-        accountNumber: toAcc.accountNumber,
-        targetAccount: toAcc
-      }).catch(() => {});
-    } catch {
-      // Non-blocking
+      SmsService.createSmsFromTransaction(tx, fromAcc.balance, fromAcc.id, toAcc.balance);
+    } catch (smsErr) {
+      console.error('[SmsService] Non-blocking own account transfer SMS error:', smsErr);
     }
 
     return { tx, fromAccount: fromAcc, toAccount: toAcc };
@@ -1264,18 +1250,12 @@ export class LocalDb {
     firebaseService.syncTransaction(newTx).catch(() => {});
     firebaseService.syncUserProfile(user).catch(() => {});
 
-    // Automatically forward authentic CBE SMS alert to connected bank account's message account
+    // Automatically generate simulated SMS for successful banking transaction
     try {
-      const targetAccNum = type === 'receive' 
-        ? (recipientAccount || user.accountNumber) 
-        : (newTx.senderAccount || fromAcc?.accountNumber || user.accountNumber);
-      SmsWebhookService.dispatchSms({ 
-        tx: newTx,
-        accountNumber: targetAccNum,
-        targetAccount: fromAcc
-      }).catch(() => {});
-    } catch {
-      // Non-blocking
+      const finalBal = fromAcc ? fromAcc.balance : user.balance;
+      SmsService.createSmsFromTransaction(newTx, finalBal, fromAcc?.id, matchedRecipAcc?.balance);
+    } catch (smsErr) {
+      console.error('[SmsService] Failed to auto-generate transaction SMS:', smsErr);
     }
 
     return newTx;

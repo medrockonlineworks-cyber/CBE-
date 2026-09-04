@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { UserProfile, BankAccount } from '../types';
+import React, { useState, useEffect } from 'react';
+import { UserProfile } from '../types';
 import { LocalDb, DEFAULT_CBE_LOGO } from '../lib/mockData';
+import { SmsService } from '../services/smsService';
 import { CbeLogo } from './CbeLogo';
 import { 
   User, 
@@ -30,8 +31,6 @@ import {
   MessageSquare
 } from 'lucide-react';
 import BankLogoModal from './BankLogoModal';
-import MessageAppModal from './MessageAppModal';
-import { SmsWebhookService } from '../lib/smsWebhookService';
 import AppInstallPrompt from './AppInstallPrompt';
 import EthiopianNameAutocomplete, { EthiopianThreePartNameInput } from './EthiopianNameAutocomplete';
 
@@ -40,6 +39,7 @@ interface ProfileProps {
   onLogout: () => void;
   onUpdateUser: (user: UserProfile) => void;
   onOpenAdmin: () => void;
+  onOpenSmsSimulator?: () => void;
 }
 
 const LANGUAGES = [
@@ -49,10 +49,23 @@ const LANGUAGES = [
   { code: 'ti', label: 'Tigrinya (ትግርኛ)' }
 ];
 
-export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdmin }: ProfileProps) {
+export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdmin, onOpenSmsSimulator }: ProfileProps) {
   const [activeLang, setActiveLang] = useState('en');
   const [showLogoModal, setShowLogoModal] = useState(false);
   const [customBankLogo, setCustomBankLogo] = useState<string | null>(() => LocalDb.getCustomBankLogo());
+  const [unreadSmsCount, setUnreadSmsCount] = useState<number>(() => SmsService.getUnreadSmsCount());
+
+  useEffect(() => {
+    const handleSmsCountUpdate = () => {
+      setUnreadSmsCount(SmsService.getUnreadSmsCount());
+    };
+    window.addEventListener('sms-created', handleSmsCountUpdate);
+    window.addEventListener('sms-updated', handleSmsCountUpdate);
+    return () => {
+      window.removeEventListener('sms-created', handleSmsCountUpdate);
+      window.removeEventListener('sms-updated', handleSmsCountUpdate);
+    };
+  }, []);
   
   const isAdmin = currentUser.role === 'admin' || currentUser.email === 'leykunjemaneh3@gmail.com';
   
@@ -60,26 +73,6 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
   const [biometrics, setBiometrics] = useState(currentUser.biometricEnabled || false);
   const [smsAlerts, setSmsAlerts] = useState(true);
   const [emailStatements, setEmailStatements] = useState(false);
-  const [showMessageAppModal, setShowMessageAppModal] = useState(false);
-  const [selectedMsgAccountNum, setSelectedMsgAccountNum] = useState<string | undefined>(undefined);
-  const [userBankAccounts, setUserBankAccounts] = useState<BankAccount[]>(() => LocalDb.getUserAccounts(currentUser.id));
-  const [smsWebhookConfig, setSmsWebhookConfig] = useState(() => SmsWebhookService.getConfig());
-
-  // Listen to SMS config and account changes
-  React.useEffect(() => {
-    const handleConfigChange = () => {
-      setSmsWebhookConfig(SmsWebhookService.getConfig());
-      setUserBankAccounts(LocalDb.getUserAccounts(currentUser.id));
-    };
-    window.addEventListener('cbe_sms_config_updated', handleConfigChange);
-    window.addEventListener('cbe_account_message_config_updated', handleConfigChange);
-    window.addEventListener('cbe_accounts_updated', handleConfigChange);
-    return () => {
-      window.removeEventListener('cbe_sms_config_updated', handleConfigChange);
-      window.removeEventListener('cbe_account_message_config_updated', handleConfigChange);
-      window.removeEventListener('cbe_accounts_updated', handleConfigChange);
-    };
-  }, [currentUser.id]);
 
   // Edit Profile / Account Form States
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
@@ -639,71 +632,44 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
             </button>
           </div>
 
-          {/* Bank Account Message Accounts (Per-account SMS Webhook) */}
-          <div className="border-t border-gray-50 pt-3 space-y-2.5">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-3 min-w-0 pr-2">
-                <div className="p-2 bg-emerald-50 text-emerald-800 rounded-xl flex-shrink-0">
-                  <MessageSquare className="w-5 h-5" />
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <p className="text-sm font-bold text-gray-800">Bank Account Message Accounts</p>
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-850 flex items-center gap-1">
-                      <span className="w-1 h-1 rounded-full bg-emerald-600 animate-pulse" />
-                      {userBankAccounts.length} Connected
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-gray-400 mt-0.5">
-                    Each bank account has its own dedicated message account &amp; phone
-                  </p>
-                </div>
+          {/* SMS Simulator Settings Item */}
+          <div className="flex justify-between items-center border-t border-gray-50 pt-3">
+            <div className="flex items-center gap-3 min-w-0 pr-2">
+              <div className="p-2 bg-purple-50 text-purple-900 rounded-xl flex-shrink-0">
+                <MessageSquare className="w-5 h-5" />
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedMsgAccountNum(undefined);
-                  setShowMessageAppModal(true);
-                }}
-                className="px-3 py-1.5 bg-emerald-800 hover:bg-emerald-850 text-white rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 shadow-xs flex-shrink-0"
-              >
-                <span>Manage</span>
-                <ChevronRight className="w-3.5 h-3.5" />
-              </button>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-bold text-gray-800">SMS Simulator</p>
+                  {unreadSmsCount > 0 && (
+                    <span className="text-[10px] font-extrabold bg-amber-400 text-purple-950 px-2 py-0.2 rounded-full shadow-2xs">
+                      {unreadSmsCount > 99 ? '99+' : unreadSmsCount}
+                    </span>
+                  )}
+                </div>
+                <p className="text-[10px] text-gray-400 truncate max-w-[200px] sm:max-w-xs">
+                  View simulated bank messages
+                </p>
+              </div>
             </div>
-
-            {/* Micro list of accounts with their message account SIMs */}
-            <div className="bg-gray-50/80 rounded-2xl p-2.5 space-y-1.5 border border-gray-150">
-              {userBankAccounts.map((acc) => {
-                const msgCfg = SmsWebhookService.getAccountMessageConfig(acc.accountNumber, acc);
-                return (
-                  <div 
-                    key={acc.id}
-                    onClick={() => {
-                      setSelectedMsgAccountNum(acc.accountNumber);
-                      setShowMessageAppModal(true);
-                    }}
-                    className="flex items-center justify-between p-2 rounded-xl bg-white border border-gray-100 hover:border-emerald-300 transition cursor-pointer text-xs"
-                  >
-                    <div className="min-w-0 pr-2">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-bold text-gray-900 truncate text-[11px]">{acc.accountName}</span>
-                        <span className="text-[9px] font-mono text-gray-400">*{acc.accountNumber.slice(-4)}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-[10px] font-mono text-emerald-900 mt-0.5">
-                        <span className="font-semibold">SIM: {msgCfg.messagePhone}</span>
-                        <span className="text-gray-300">•</span>
-                        <span className="text-gray-600">ID: {msgCfg.senderName}</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1 flex-shrink-0">
-                      <span className={`w-1.5 h-1.5 rounded-full ${msgCfg.enabled ? 'bg-emerald-500' : 'bg-gray-400'}`} />
-                      <span className="text-[10px] font-bold text-emerald-800 hover:underline">Config</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            <button
+              type="button"
+              id="settings-sms-simulator-btn"
+              onClick={() => {
+                if (onOpenSmsSimulator) {
+                  onOpenSmsSimulator();
+                } else {
+                  try {
+                    window.history.pushState({ view: 'sms' }, '', '/sms');
+                    window.dispatchEvent(new PopStateEvent('popstate', { state: { view: 'sms' } }));
+                  } catch {}
+                }
+              }}
+              className="px-3 py-1.5 bg-purple-900 hover:bg-purple-850 active:scale-95 text-white rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 shadow-xs flex-shrink-0"
+            >
+              <span>Open</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
 
@@ -1112,14 +1078,6 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
         onClose={() => setShowLogoModal(false)}
         currentUser={currentUser}
         onLogoUpdated={(logo) => setCustomBankLogo(logo)}
-      />
-
-      {/* Message App Connection Modal */}
-      <MessageAppModal
-        isOpen={showMessageAppModal}
-        onClose={() => setShowMessageAppModal(false)}
-        currentUser={currentUser}
-        initialSelectedAccountNumber={selectedMsgAccountNum}
       />
 
     </div>

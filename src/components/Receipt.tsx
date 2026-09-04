@@ -4,7 +4,6 @@ import QRCode from 'qrcode';
 import { Transaction } from '../types';
 import { LocalDb, DEFAULT_CBE_LOGO, formatTo12CharTxId } from '../lib/mockData';
 import { calculateCbeFee } from '../lib/cbeTariff';
-import { SmsWebhookService } from '../lib/smsWebhookService';
 import { CbeLogo } from './CbeLogo';
 import { 
   Check, 
@@ -300,18 +299,6 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     
     return `${month} ${day}, ${year} ${hourStr}:${minutes} ${ampm}`;
   };
-
-  // Automatically dispatch authentic CBE SMS to connected message app by itself upon transaction receipt
-  useEffect(() => {
-    if (transaction?.id && cbeSmsText) {
-      const targetAcc = isCredit ? transaction.recipientAccount : transaction.senderAccount;
-      SmsWebhookService.dispatchSms({
-        messageText: cbeSmsText,
-        tx: transaction,
-        accountNumber: targetAcc
-      }).catch(() => {});
-    }
-  }, [transaction?.id, cbeSmsText, isCredit, transaction?.recipientAccount, transaction?.senderAccount]);
 
   const formattedDate = formatSummaryDate(transaction.createdAt);
 

@@ -13,12 +13,10 @@ import {
   AlertCircle, 
   ChevronRight,
   TrendingUp,
-  CheckCircle2,
-  MessageSquare
+  CheckCircle2
 } from 'lucide-react';
 import { BankAccount, BankAccountType, UserProfile } from '../types';
 import { LocalDb } from '../lib/mockData';
-import { SmsWebhookService } from '../lib/smsWebhookService';
 import { CopyIcon } from './CbeCustomIcons';
 
 interface ManageAccountsModalProps {
@@ -211,18 +209,6 @@ export default function ManageAccountsModal({
                       <p className="mt-1.5 text-sm font-black font-mono text-[#70189F]">
                         ETB {acc.balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
-
-                      {/* Dedicated Message Account Tag */}
-                      <div className="mt-2 pt-1.5 border-t border-gray-200/60 flex items-center gap-2 text-[10.5px]">
-                        <div className="flex items-center gap-1 text-emerald-800 font-mono font-bold">
-                          <MessageSquare className="w-3 h-3 text-emerald-600 flex-shrink-0" />
-                          <span>SIM: {acc.messagePhone || SmsWebhookService.getDefaultMessagePhone(acc.accountNumber)}</span>
-                        </div>
-                        <span className="text-gray-300">•</span>
-                        <span className="text-[9.5px] font-mono font-bold bg-emerald-100 text-emerald-900 px-1.5 py-0.2 rounded">
-                          {acc.messageAccountId || `MSG-${acc.accountNumber.slice(-4)}`}
-                        </span>
-                      </div>
                     </div>
 
                     <div className="flex flex-col items-end gap-1.5 flex-shrink-0">

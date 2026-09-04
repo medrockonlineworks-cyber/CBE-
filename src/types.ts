@@ -32,11 +32,6 @@ export interface BankAccount {
   currency: 'ETB' | string;
   isPrimary?: boolean;
   createdAt: string;
-  messageAccountId?: string;
-  messagePhone?: string;
-  messageWebhookUrl?: string;
-  messageSenderName?: string;
-  messageAccountEnabled?: boolean;
 }
 
 export interface RegisteredAccountInfo {
@@ -129,46 +124,4 @@ export interface AuditLog {
   createdAt: string;
 }
 
-export interface SmsWebhookConfig {
-  enabled: boolean;
-  webhookUrl: string;
-  senderName: string;
-  autoDispatchOnTransaction: boolean;
-  includeJsonPayload: boolean;
-  lastTestStatus?: 'success' | 'failed' | 'pending' | 'idle';
-  lastTestMessage?: string;
-  lastTestTimestamp?: string;
-  lastStatusCode?: number;
-}
-
-export interface BankAccountMessageAccount {
-  accountNumber: string;
-  accountName: string;
-  accountType: BankAccountType;
-  messageAccountId: string;
-  messagePhone: string;
-  webhookUrl: string;
-  senderName: string;
-  enabled: boolean;
-  autoDispatchOnTransaction: boolean;
-  lastDispatchedAt?: string;
-  lastStatusCode?: number;
-}
-
-export interface SmsDispatchLog {
-  id: string;
-  timestamp: string;
-  webhookUrl: string;
-  sender: string;
-  recipientPhone?: string;
-  messageText: string;
-  transactionId?: string;
-  amount?: number;
-  bankAccountNumber?: string;
-  bankAccountName?: string;
-  messageAccountId?: string;
-  status: 'success' | 'failed' | 'pending';
-  statusCode?: number;
-  responseBody?: string;
-  errorMessage?: string;
-}
+export * from './types/sms';

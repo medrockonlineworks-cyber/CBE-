@@ -10,6 +10,8 @@ import History from './components/History';
 import Profile from './components/Profile';
 import Receipt from './components/Receipt';
 import AdminPanel from './components/AdminPanel';
+import SmsPage from './pages/SmsPage';
+import { SmsService } from './services/smsService';
 import Navigation, { TabType } from './components/Navigation';
 import OfflineBanner from './components/OfflineBanner';
 import AppInstallPrompt from './components/AppInstallPrompt';
@@ -29,7 +31,12 @@ export default function App() {
       return null;
     }
   });
-  const [activeView, setActiveView] = useState<'auth' | 'main' | 'receipt' | 'admin'>('main');
+  const [activeView, setActiveView] = useState<'auth' | 'main' | 'receipt' | 'admin' | 'sms'>(() => {
+    if (typeof window !== 'undefined' && window.location.pathname === '/sms') {
+      return 'sms';
+    }
+    return 'main';
+  });
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [initialTxTab, setInitialTxTab] = useState<'send' | 'transfer' | 'merchant' | 'receive' | 'airtime'>('send');
@@ -38,13 +45,14 @@ export default function App() {
   const navHistoryRef = useRef<{ view: string; tab: string }[]>([]);
 
   // Navigation pusher that keeps browser history in sync with Android back-button
-  const navigateTo = useCallback((view: 'auth' | 'main' | 'receipt' | 'admin', tab: TabType = activeTab) => {
+  const navigateTo = useCallback((view: 'auth' | 'main' | 'receipt' | 'admin' | 'sms', tab: TabType = activeTab) => {
     setActiveView(view);
     setActiveTab(tab);
     
     try {
       const stateObj = { view, tab };
-      window.history.pushState(stateObj, '', window.location.pathname);
+      const targetPath = view === 'sms' ? '/sms' : (window.location.pathname === '/sms' ? '/' : window.location.pathname);
+      window.history.pushState(stateObj, '', targetPath);
       navHistoryRef.current.push(stateObj);
     } catch {
       // Ignore if history state fails in sandboxed iframe
@@ -55,12 +63,16 @@ export default function App() {
   useEffect(() => {
     // Push initial entry
     try {
-      window.history.replaceState({ view: activeView, tab: activeTab }, '', window.location.pathname);
+      const initialPath = window.location.pathname;
+      window.history.replaceState({ view: activeView, tab: activeTab }, '', initialPath);
     } catch {}
 
     const handlePopState = (e: PopStateEvent) => {
-      // If user pressed back button
-      if (activeView === 'receipt') {
+      // If user was on SMS view or URL is not /sms anymore
+      if (activeView === 'sms') {
+        setActiveView('main');
+        setActiveTab('profile');
+      } else if (activeView === 'receipt') {
         setActiveView('main');
       } else if (activeView === 'admin') {
         setActiveView('main');
@@ -133,6 +145,13 @@ export default function App() {
         setCurrentUser(match);
       }
     }
+
+    // Ensure simulated SMS is generated (idempotent duplicate prevention in SmsService)
+    try {
+      SmsService.createSmsFromTransaction(tx, currentUser?.balance);
+    } catch (smsErr) {
+      console.error('[SmsService] Non-blocking completion SMS error:', smsErr);
+    }
   };
 
   // View Router Render Picker
@@ -204,6 +223,7 @@ export default function App() {
             }}
             onSelectTransaction={handleSelectTransaction}
             onOpenAdmin={() => navigateTo('admin', 'profile')}
+            onOpenSmsSimulator={() => navigateTo('sms', 'profile')}
           />
         );
       case 'profile':
@@ -213,6 +233,7 @@ export default function App() {
             onLogout={handleLogout}
             onUpdateUser={handleUpdateUserProfile}
             onOpenAdmin={() => navigateTo('admin', 'profile')}
+            onOpenSmsSimulator={() => navigateTo('sms', 'profile')}
           />
         );
       default:
@@ -220,6 +241,7 @@ export default function App() {
           <Home 
             currentUser={activeUser}
             onNavigateToTab={(tab) => setActiveTab(tab)}
+            onOpenSmsSimulator={() => navigateTo('sms', 'profile')}
           />
         );
     }
@@ -241,7 +263,13 @@ export default function App() {
         <OfflineBanner />
 
         {/* Dynamic View Panel Router */}
-        <main className={`flex-1 flex flex-col scrollbar-none ${activeTab === 'home' || activeTab === 'history' ? 'overflow-hidden h-full' : 'overflow-y-auto bg-gray-50'}`}>
+        <main className={`flex-1 flex flex-col scrollbar-none ${
+          activeView === 'sms' 
+            ? 'h-full overflow-hidden bg-[#121212]' 
+            : activeTab === 'home' || activeTab === 'history' 
+              ? 'overflow-hidden h-full' 
+              : 'overflow-y-auto bg-gray-50'
+        }`}>
           
           {activeView === 'auth' && (
             <Auth onLoginSuccess={handleLoginSuccess} />
@@ -301,6 +329,14 @@ export default function App() {
                 }
                 setActiveView('main');
                 setActiveTab('profile');
+              }}
+            />
+          )}
+
+          {activeView === 'sms' && (
+            <SmsPage 
+              onBack={() => {
+                navigateTo('main', 'profile');
               }}
             />
           )}

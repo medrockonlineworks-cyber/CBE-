@@ -26,7 +26,8 @@ import {
   Search,
   Sparkles,
   ChevronRight,
-  ExternalLink
+  ExternalLink,
+  MessageSquare
 } from 'lucide-react';
 import { UserProfile, Transaction } from '../types';
 import { LocalDb } from '../lib/mockData';
@@ -37,6 +38,7 @@ interface HomeProps {
   onNavigateToTab?: (tab: 'home' | 'transfer' | 'payments' | 'history' | 'profile', subTab?: string) => void;
   onSelectTransaction?: (tx: Transaction) => void;
   onOpenAdmin?: () => void;
+  onOpenSmsSimulator?: () => void;
 }
 
 export const Home: React.FC<HomeProps> = ({
@@ -45,6 +47,7 @@ export const Home: React.FC<HomeProps> = ({
   onNavigateToTab,
   onSelectTransaction,
   onOpenAdmin,
+  onOpenSmsSimulator,
 }) => {
   // Fallback demo user if none passed in
   const currentUser: UserProfile = propUser || {
@@ -673,6 +676,22 @@ export const Home: React.FC<HomeProps> = ({
                 <ShieldCheck className="w-5 h-5 text-[#711A9F] mb-1.5" />
                 <p className="text-xs font-bold text-gray-900">Security</p>
                 <p className="text-[10px] text-gray-500">PIN &amp; Profile</p>
+              </button>
+
+              <button
+                onClick={() => {
+                  setActiveModal(null);
+                  if (onOpenSmsSimulator) {
+                    onOpenSmsSimulator();
+                  } else {
+                    onNavigateToTab?.('profile');
+                  }
+                }}
+                className="p-3 bg-purple-50 hover:bg-purple-100/80 rounded-2xl text-left transition cursor-pointer border border-purple-100"
+              >
+                <MessageSquare className="w-5 h-5 text-[#711A9F] mb-1.5" />
+                <p className="text-xs font-bold text-purple-950">SMS Simulator</p>
+                <p className="text-[10px] text-purple-700">CBE Alert Messages</p>
               </button>
 
               {onOpenAdmin && (
