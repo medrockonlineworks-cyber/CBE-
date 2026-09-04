@@ -40,6 +40,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [initialTxTab, setInitialTxTab] = useState<'send' | 'transfer' | 'merchant' | 'receive' | 'airtime'>('send');
+  const [smsActiveAccountId, setSmsActiveAccountId] = useState<string | undefined>(undefined);
 
   // Track navigation state to manage Android / browser history correctly
   const navHistoryRef = useRef<{ view: string; tab: string }[]>([]);
@@ -135,6 +136,8 @@ export default function App() {
   // Callback after completing any Send, Transfer, Bill or Airtime payment
   const handleTransactionComplete = (tx: Transaction) => {
     setSelectedTransaction(tx);
+    const cleanSender = tx.senderAccount ? tx.senderAccount.replace(/\D/g, '') : '1000419524747';
+    setSmsActiveAccountId(cleanSender);
     navigateTo('receipt', activeTab);
     
     // Refresh current user balance from database
@@ -335,6 +338,7 @@ export default function App() {
 
           {activeView === 'sms' && (
             <SmsPage 
+              accountId={smsActiveAccountId}
               onBack={() => {
                 navigateTo('main', 'profile');
               }}

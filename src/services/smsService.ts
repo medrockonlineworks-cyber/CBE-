@@ -2,9 +2,25 @@ import { SmsMessage, SmsType, SmsAccount } from '../types/sms';
 import { Transaction } from '../types';
 import { calculateCbeFee } from '../lib/cbeTariff';
 
-const STORAGE_MESSAGES_KEY = 'bank_sms_messages';
-const STORAGE_ACCOUNTS_KEY = 'bank_sms_accounts';
+const STORAGE_MESSAGES_KEY = 'bank_sms_messages_v6';
+const STORAGE_ACCOUNTS_KEY = 'bank_sms_accounts_v6';
 const STORAGE_ACTIVE_ACC_KEY = 'bank_sms_active_account';
+
+export interface AccountTimeMeta {
+  account: SmsAccount;
+  latestTimestamp: string | null;
+  timeLabel: string;
+  isNow: boolean;
+  groupKey: 'recent' | 'yesterday' | 'last_week' | 'last_month' | 'older';
+  groupTitle: string;
+  unreadCount: number;
+}
+
+export interface AccountGroupSection {
+  key: 'recent' | 'yesterday' | 'last_week' | 'last_month' | 'older';
+  title: string;
+  accounts: AccountTimeMeta[];
+}
 
 export function maskAccountNumber(acc: string): string {
   const clean = (acc || '').replace(/\s+/g, '');
@@ -20,7 +36,86 @@ export function maskAccountNumber(acc: string): string {
 export const DEFAULT_FEEDBACK_URL = 'https://forms.gle/kGNGQpG3mQCCk3iD6';
 
 /**
+ * Formats message timestamp header according to user specifications:
+ * - If today: "Today • [time]"
+ * - If yesterday: "Yesterday • [time]"
+ * - After yesterday (within 2-7 days): "Sunday • [time]" or other days (e.g. "Wednesday • [time]")
+ * - After 7 days: Months name like "This year, April 14 • [time]" or "This year, August 21 • [time]"
+ * - More than 12 months: "Last year, April 14 • [time]"
+ */
+export function formatSmsThreadTime(timestamp: string): string {
+  try {
+    const date = new Date(timestamp);
+    if (isNaN(date.getTime())) return 'Today • 12:54 PM';
+
+    const now = new Date();
+
+    // Calculate calendar day difference by comparing midnight local dates
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const startOfTarget = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+    const diffDays = Math.round((startOfToday - startOfTarget) / (1000 * 60 * 60 * 24));
+
+    const timeStr = date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+
+    const monthName = date.toLocaleDateString('en-US', { month: 'long' });
+    const day = date.getDate();
+
+    const monthDiff = (now.getFullYear() - date.getFullYear()) * 12 + (now.getMonth() - date.getMonth());
+    const yearDiff = now.getFullYear() - date.getFullYear();
+
+    if (diffDays <= 0) {
+      // If it is today say today
+      return `Today • ${timeStr}`;
+    } else if (diffDays === 1) {
+      // If it is yesterday say yesterday
+      return `Yesterday • ${timeStr}`;
+    } else if (diffDays > 1 && diffDays <= 7) {
+      // After yesterday write if it is Sunday say Sunday or other days
+      const weekday = date.toLocaleDateString('en-US', { weekday: 'long' });
+      return `${weekday} • ${timeStr}`;
+    } else if (monthDiff >= 12 || yearDiff > 1) {
+      // If the message is more than 12 month say last year
+      return `Last year, ${monthName} ${day} • ${timeStr}`;
+    } else if (yearDiff === 1) {
+      return `Last year, ${monthName} ${day} • ${timeStr}`;
+    } else {
+      // After 7 days say months name like April or other months (This year)
+      return `This year, ${monthName} ${day} • ${timeStr}`;
+    }
+  } catch {
+    return 'Today • 12:54 PM';
+  }
+}
+
+/**
+ * Formats time for below the message bubble, matching Screenshot 1:
+ * e.g. "12:54 PM • Ethio telecom"
+ */
+export function formatBubbleTime(timestamp: string): string {
+  try {
+    const date = new Date(timestamp);
+    if (isNaN(date.getTime())) return '12:54 PM • Ethio telecom';
+    const timeStr = date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+    return `${timeStr} • Ethio telecom`;
+  } catch {
+    return '12:54 PM • Ethio telecom';
+  }
+}
+
+/**
  * Formats the exact official CBE debit alert text matching authentic CBE SMS notifications.
+ * Matching Screenshot 2:
+ * "Dear Leykun Jemaneh Ylma A debit transaction of ETB 1000.0. has occurred on your account 1*********4747. Service charge of ETB 10.00 and VAT(15%) of ETB1.50 and Disaster Recovery(5%) of 0.50 with total of ETB1012.00 .Your current balance is ETB1,755.47. Thanks for Banking with CBE.
+ * https://mreciept.cbe.com.et/v2-hfHCxGw3DOVOH4eFL6dD for feedback:
+ * https://forms.gle/kGNGQpG3mQCCk3iD6"
  */
 export function formatCbeDebitMessage(params: {
   senderName: string;
@@ -34,29 +129,80 @@ export function formatCbeDebitMessage(params: {
   receiptUrl: string;
   feedbackUrl?: string;
 }): string {
-  const formattedAmt = params.amount.toLocaleString('en-US', {
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 2,
-  });
+  const cleanSenderName = params.senderName.replace(/\s*\(Admin\)/i, '').replace(/\s*\(\d{4}\)/, '').trim() || 'Leykun Jemaneh Ylma';
+  // Format amount with trailing dot as in screenshot: "ETB 1000.0. has occurred" or "ETB 200.0. has occurred"
+  const formattedAmt = params.amount % 1 === 0 
+    ? `${params.amount.toFixed(1)}.` 
+    : `${params.amount.toFixed(2)}.`;
   const maskedSenderAcc = maskAccountNumber(params.senderAccountNumber);
   const formattedSc = params.serviceCharge.toFixed(2);
   const formattedVat = params.vat.toFixed(2);
   const formattedDr = params.disasterRecovery.toFixed(2);
-  const formattedTotal = params.totalDebited.toLocaleString('en-US', {
+  const formattedTotal = params.totalDebited.toFixed(2);
+  const formattedBal = params.balance !== undefined
+    ? params.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    : '1,755.47';
+  const fbUrl = params.feedbackUrl || DEFAULT_FEEDBACK_URL;
+
+  return `Dear ${cleanSenderName} A debit transaction of ETB ${formattedAmt} has occurred on your account ${maskedSenderAcc}. Service charge of ETB ${formattedSc} and VAT(15%) of ETB${formattedVat} and Disaster Recovery(5%) of ${formattedDr} with total of ETB${formattedTotal} .Your current balance is ETB${formattedBal}. Thanks for Banking with CBE.\n${params.receiptUrl} for feedback:\n${fbUrl}`;
+}
+
+/**
+ * Formats the exact official CBE credit alert text matching authentic CBE SMS notifications.
+ * Matching Screenshot 1:
+ * "Dear Leykun Jemaneh Ylma You have received ETB 50.00 from account 1*********8925 (Kasahun Yematawork Lema) to your account 1*********4747. Your current balance is ETB1,805.47. Thanks for Banking with CBE.
+ * https://mreciept.cbe.com.et/v2-hfHCxGwmcij7q3ExbiWb for feedback:
+ * https://forms.gle/kGNGQpG3mQCCk3iD6"
+ */
+export function formatCbeCreditMessage(params: {
+  receiverName: string;
+  amount: number;
+  senderAccountNumber: string;
+  senderName: string;
+  receiverAccountNumber: string;
+  balance?: number;
+  receiptUrl: string;
+  feedbackUrl?: string;
+}): string {
+  const cleanReceiverName = params.receiverName.replace(/\s*\(Admin\)/i, '').replace(/\s*\(\d{4}\)/, '').trim() || 'Leykun Jemaneh Ylma';
+  const cleanSenderName = params.senderName.replace(/\s*\(Admin\)/i, '').replace(/\s*\(\d{4}\)/, '').trim() || 'Kasahun Yematawork Lema';
+  const formattedAmt = params.amount.toLocaleString('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
+  const maskedSenderAcc = maskAccountNumber(params.senderAccountNumber);
+  const maskedReceiverAcc = maskAccountNumber(params.receiverAccountNumber);
   const formattedBal = params.balance !== undefined
     ? params.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    : '9,999,499,976.00';
+    : '1,805.47';
   const fbUrl = params.feedbackUrl || DEFAULT_FEEDBACK_URL;
 
-  return `Dear ${params.senderName} A debit transaction of ETB ${formattedAmt}. has occurred on your account ${maskedSenderAcc}. Service charge of ETB ${formattedSc} and VAT(15%) of ETB${formattedVat} and Disaster Recovery(5%) of ${formattedDr} with total of ETB${formattedTotal} .Your current balance is ETB${formattedBal}. Thanks for Banking with CBE.\n${params.receiptUrl} for feedback:\n${fbUrl}`;
+  return `Dear ${cleanReceiverName} You have received ETB ${formattedAmt} from account ${maskedSenderAcc} (${cleanSenderName}) to your account ${maskedReceiverAcc}. Your current balance is ETB${formattedBal}. Thanks for Banking with CBE.\n${params.receiptUrl} for feedback:\n${fbUrl}`;
 }
 
 function generateReceiptUrl(refId?: string): string {
-  const code = refId ? `v2-${refId}` : `v2-hfHCxGJ3bdgLIaquJSwK`;
-  return `https://mreciept.cbe.com.et/${code}`;
+  if (refId && refId.startsWith('v2-')) {
+    return `https://mreciept.cbe.com.et/${refId}`;
+  }
+  if (refId) {
+    const cleanRef = refId.replace(/[^a-zA-Z0-9]/g, '');
+    return `https://mreciept.cbe.com.et/v2-hfHCxG${cleanRef}`;
+  }
+  return `https://mreciept.cbe.com.et/v2-hfHCxGw3DOVOH4eFL6dD`;
+}
+
+// Helper to generate ISO dates relative to current execution time
+function getRelativeDate(daysAgo: number, hours: number, minutes: number, yearOffset: number = 0, monthOverride?: number): string {
+  const d = new Date();
+  if (yearOffset !== 0) {
+    d.setFullYear(d.getFullYear() - yearOffset);
+  }
+  if (monthOverride !== undefined) {
+    d.setMonth(monthOverride);
+  }
+  d.setDate(d.getDate() - daysAgo);
+  d.setHours(hours, minutes, 0, 0);
+  return d.toISOString();
 }
 
 const INITIAL_DEMO_ACCOUNTS: SmsAccount[] = [
@@ -64,51 +210,36 @@ const INITIAL_DEMO_ACCOUNTS: SmsAccount[] = [
     accountNumber: '1000419524747',
     accountName: 'Leykun Jemaneh Ylma',
     bankName: 'Commercial Bank of Ethiopia',
-    balance: 9999499976.0,
-    lastUpdated: '2026-09-02T15:28:41Z',
+    balance: 298.54,
+    lastUpdated: getRelativeDate(0, 12, 54), // Today at 12:54 PM (Recent / Now)
   },
   {
-    accountNumber: '1000999999999',
-    accountName: 'Leykun Jemaneh (Admin)',
+    accountNumber: '1000246810121',
+    accountName: 'Selamawit Tekle Haile',
     bankName: 'Commercial Bank of Ethiopia',
-    balance: 10000000000.0,
-    lastUpdated: new Date().toISOString(),
+    balance: 4850.0,
+    lastUpdated: getRelativeDate(1, 16, 20), // Yesterday at 4:20 PM
+  },
+  {
+    accountNumber: '1000482918925',
+    accountName: 'Kasahun Yematawork Lema',
+    bankName: 'Commercial Bank of Ethiopia',
+    balance: 12450.0,
+    lastUpdated: getRelativeDate(4, 11, 30), // 4 days ago (Last week)
   },
   {
     accountNumber: '1000284758657',
     accountName: 'Dawit Haile',
     bankName: 'Commercial Bank of Ethiopia',
-    balance: 25430.0,
-    lastUpdated: new Date().toISOString(),
+    balance: 25440.0,
+    lastUpdated: getRelativeDate(18, 10, 15), // 18 days ago (Last month)
   },
 ];
 
 const INITIAL_DEMO_MESSAGES: SmsMessage[] = [
   {
-    id: 'sms-cbe-seed-500k',
-    transactionId: 'FT262451AA99',
-    accountNumber: '1000419524747',
-    accountName: 'Leykun Jemaneh Ylma',
-    role: 'sender',
-    bankName: 'CBE',
-    sender: 'CBE',
-    recipient: '1000382910482',
-    type: 'DEBIT',
-    amount: 500000.0,
-    serviceCharge: 20.0,
-    vat: 3.0,
-    disasterRecovery: 1.0,
-    totalDebited: 500024.0,
-    balance: 9999499976.0,
-    message: `Dear Leykun Jemaneh Ylma A debit transaction of ETB 500,000.0. has occurred on your account 1*********4747. Service charge of ETB 20.00 and VAT(15%) of ETB3.00 and Disaster Recovery(5%) of 1.00 with total of ETB500,024.00 .Your current balance is ETB9,999,499,976.00. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxGJ3bdgLIaquJSwK for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
-    receiptUrl: 'https://mreciept.cbe.com.et/v2-hfHCxGJ3bdgLIaquJSwK',
-    feedbackUrl: DEFAULT_FEEDBACK_URL,
-    timestamp: '2026-09-01T14:56:00Z',
-    read: false,
-  },
-  {
     id: 'sms-cbe-seed-1',
-    transactionId: 'FT263211VK07',
+    transactionId: 'FT25104MK01',
     accountNumber: '1000419524747',
     accountName: 'Leykun Jemaneh Ylma',
     role: 'sender',
@@ -116,43 +247,160 @@ const INITIAL_DEMO_MESSAGES: SmsMessage[] = [
     sender: 'CBE',
     recipient: '1000284758657',
     type: 'DEBIT',
-    amount: 10.0,
+    amount: 1000.0,
     serviceCharge: 10.0,
     vat: 1.5,
     disasterRecovery: 0.5,
-    totalDebited: 22.0,
-    balance: 1859.47,
-    message: `Dear Leykun Jemaneh Ylma A debit transaction of ETB 10.0. has occurred on your account 1*********4747. Service charge of ETB 10.00 and VAT(15%) of ETB1.50 and Disaster Recovery(5%) of 0.50 with total of ETB22.00 .Your current balance is ETB1,859.47. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxGJ3bdgLIaquJSwK for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
-    receiptUrl: 'https://mreciept.cbe.com.et/v2-hfHCxGJ3bdgLIaquJSwK',
+    totalDebited: 1012.0,
+    balance: 1755.47,
+    message: `Dear Leykun Jemaneh Ylma A debit transaction of ETB 1000.0. has occurred on your account 1*********4747. Service charge of ETB 10.00 and VAT(15%) of ETB1.50 and Disaster Recovery(5%) of 0.50 with total of ETB1012.00 .Your current balance is ETB1,755.47. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxGw3DOVOH4eFL6dD for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
+    receiptUrl: 'https://mreciept.cbe.com.et/v2-hfHCxGw3DOVOH4eFL6dD',
     feedbackUrl: DEFAULT_FEEDBACK_URL,
-    timestamp: '2026-08-30T15:12:00Z', // Sunday 3:12 PM as in image
+    timestamp: getRelativeDate(0, 14, 30, 1, 3), // > 12 months ago (April last year)
     read: true,
   },
   {
     id: 'sms-cbe-seed-2',
-    transactionId: 'FT263212VK08',
+    transactionId: 'FT26245M0JG4',
+    accountNumber: '1000419524747',
+    accountName: 'Leykun Jemaneh Ylma',
+    role: 'receiver',
+    bankName: 'CBE',
+    sender: 'CBE',
+    recipient: '1000419524747',
+    type: 'CREDIT',
+    amount: 50.0,
+    balance: 1805.47,
+    message: `Dear Leykun Jemaneh Ylma You have received ETB 50.00 from account 1*********8925 (Kasahun Yematawork Lema) to your account 1*********4747. Your current balance is ETB1,805.47. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxGwmcij7q3ExbiWb for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
+    receiptUrl: 'https://mreciept.cbe.com.et/v2-hfHCxGwmcij7q3ExbiWb',
+    feedbackUrl: DEFAULT_FEEDBACK_URL,
+    timestamp: getRelativeDate(14, 18, 51), // > 7 days ago (This year, month name)
+    read: true,
+  },
+  {
+    id: 'sms-cbe-seed-3',
+    transactionId: 'FT26245M0JG5',
+    accountNumber: '1000419524747',
+    accountName: 'Leykun Jemaneh Ylma',
+    role: 'receiver',
+    bankName: 'CBE',
+    sender: 'CBE',
+    recipient: '1000419524747',
+    type: 'CREDIT',
+    amount: 100.0,
+    balance: 318.54,
+    message: `Dear Mr Leykun your Account 1*********4747 has been credited with ETB 100. Your Current Balance is ETB 318.54. Thank you for Banking with CBE! for Reciept\nhttps://apps.cbe.com.et:100/BranchReceipt/FT26245M0JG4&19524747`,
+    receiptUrl: 'https://apps.cbe.com.et:100/BranchReceipt/FT26245M0JG4&19524747',
+    feedbackUrl: DEFAULT_FEEDBACK_URL,
+    timestamp: getRelativeDate(3, 15, 45), // 3 days ago (Weekday name, e.g. Wednesday)
+    read: true,
+  },
+  {
+    id: 'sms-cbe-seed-4',
+    transactionId: 'FT263212VK04',
     accountNumber: '1000419524747',
     accountName: 'Leykun Jemaneh Ylma',
     role: 'sender',
     bankName: 'CBE',
     sender: 'CBE',
-    recipient: '1000246810121',
+    recipient: '1000284758657',
     type: 'DEBIT',
-    amount: 10.0,
+    amount: 200.0,
     serviceCharge: 10.0,
     vat: 1.5,
     disasterRecovery: 0.5,
-    totalDebited: 22.0,
-    balance: 1859.47,
-    message: `Dear Leykun Jemaneh Ylma A debit transaction of ETB 10.0. has occurred on your account 1*********4747. Service charge of ETB 10.00 and VAT(15%) of ETB1.50 and Disaster Recovery(5%) of 0.50 with total of ETB22.00 .Your current balance is ETB1,859.47. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxGJ3bdgLIaquJSwK for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
-    receiptUrl: 'https://mreciept.cbe.com.et/v2-hfHCxGJ3bdgLIaquJSwK',
+    totalDebited: 212.0,
+    balance: 318.54,
+    message: `Dear Leykun Jemaneh Ylma A debit transaction of ETB 200.0. has occurred on your account 1*********4747. Service charge of ETB 10.00 and VAT(15%) of ETB1.50 and Disaster Recovery(5%) of 0.50 with total of ETB212.00 .Your current balance is ETB318.54. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxGw3DOVOH4eFL6dD for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
+    receiptUrl: 'https://mreciept.cbe.com.et/v2-hfHCxGw3DOVOH4eFL6dD',
     feedbackUrl: DEFAULT_FEEDBACK_URL,
-    timestamp: '2026-08-30T15:15:00Z',
-    read: false,
+    timestamp: getRelativeDate(1, 16, 20), // 1 day ago (Yesterday)
+    read: true,
   },
   {
-    id: 'sms-cbe-seed-3',
-    transactionId: 'FT263211VK07',
+    id: 'sms-cbe-seed-5',
+    transactionId: 'FT263213VK05',
+    accountNumber: '1000419524747',
+    accountName: 'Leykun Jemaneh Ylma',
+    role: 'sender',
+    bankName: 'CBE',
+    sender: 'CBE',
+    recipient: '1000419524747',
+    type: 'DEBIT',
+    amount: 0,
+    serviceCharge: 0,
+    vat: 0,
+    disasterRecovery: 0,
+    totalDebited: 0,
+    balance: 318.54,
+    message: `EKSIIPOO FI FEESTIVAALA CBE ADEY 2019\n*************\nGiddugala Konveenshinii Addis Internaashinaaliitti Hagayya 23, 2018 irraa eegalee hanga Qaammee 5tti Eksipoo fi Feestivaala qophaa'e irratti hirmaadhaa!\nBittaa fi gurgurtaa ayyaanaaf raawwattan hundaaf, kaffaltii keessan karaa filannoowwan dijitaalaa Baankii Daldalaa Itoophiyaatiin salphaatti xumuraa!\n\nBaankii Daldalaa Itoophiyaa\nBaankii Yoomiyyuu Itti Of Abdatan!`,
+    timestamp: getRelativeDate(0, 8, 41), // Today morning at 8:41 AM
+    read: true,
+  },
+  {
+    id: 'sms-cbe-seed-6',
+    transactionId: 'FT263214VK06',
+    accountNumber: '1000419524747',
+    accountName: 'Leykun Jemaneh Ylma',
+    role: 'sender',
+    bankName: 'CBE',
+    sender: 'CBE',
+    recipient: '1000284758657',
+    type: 'DEBIT',
+    amount: 20.0,
+    serviceCharge: 0.0,
+    vat: 0.0,
+    disasterRecovery: 0.0,
+    totalDebited: 20.0,
+    balance: 298.54,
+    message: `Dear Leykun Jemaneh Ylma A debit transaction of ETB 20.0. has occurred on your account 1*********4747. Service charge of ETB 0.00 and VAT(15%) of 0.0 and Disaster Recovery(5%) of 0.00 with total of ETB20.00 .Your current balance is ETB298.54. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxGKNY8V0W9qoyCPX for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
+    receiptUrl: 'https://mreciept.cbe.com.et/v2-hfHCxGKNY8V0W9qoyCPX',
+    feedbackUrl: DEFAULT_FEEDBACK_URL,
+    timestamp: getRelativeDate(0, 12, 54), // Today at 12:54 PM (Recent / Now)
+    read: false,
+  },
+  // Seed message for Selamawit Tekle Haile (1000246810121) - Yesterday (with unread alert matching screenshot pink dot)
+  {
+    id: 'sms-cbe-seed-selamawit-1',
+    transactionId: 'FT263200SL01',
+    accountNumber: '1000246810121',
+    accountName: 'Selamawit Tekle Haile',
+    role: 'receiver',
+    bankName: 'CBE',
+    sender: 'CBE',
+    recipient: '1000246810121',
+    type: 'CREDIT',
+    amount: 450.0,
+    balance: 4850.0,
+    message: `Dear Selamawit Tekle Haile You have received ETB 450.00 from account 1*********4747 (Leykun Jemaneh Ylma) to your account 1*********0121. Your current balance is ETB4,850.00. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxGselam2026 for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
+    receiptUrl: 'https://mreciept.cbe.com.et/v2-hfHCxGselam2026',
+    feedbackUrl: DEFAULT_FEEDBACK_URL,
+    timestamp: getRelativeDate(1, 16, 20), // Yesterday at 4:20 PM
+    read: false, // Unread alert pink dot
+  },
+  // Seed message for Kasahun Yematawork Lema (1000482918925) - Last week (4 days ago)
+  {
+    id: 'sms-cbe-seed-kasahun-1',
+    transactionId: 'FT263150KS02',
+    accountNumber: '1000482918925',
+    accountName: 'Kasahun Yematawork Lema',
+    role: 'receiver',
+    bankName: 'CBE',
+    sender: 'CBE',
+    recipient: '1000482918925',
+    type: 'CREDIT',
+    amount: 1200.0,
+    balance: 12450.0,
+    message: `Dear Kasahun Yematawork Lema You have received ETB 1200.00 from account 1*********4747 (Leykun Jemaneh Ylma) to your account 1*********8925. Your current balance is ETB12,450.00. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxGkasahun2026 for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
+    receiptUrl: 'https://mreciept.cbe.com.et/v2-hfHCxGkasahun2026',
+    feedbackUrl: DEFAULT_FEEDBACK_URL,
+    timestamp: getRelativeDate(4, 11, 30), // 4 days ago (Last week)
+    read: true,
+  },
+  // Seed message for Dawit Haile (1000284758657) - Last month (18 days ago)
+  {
+    id: 'sms-cbe-seed-dawit-1',
+    transactionId: 'FT263020DW03',
     accountNumber: '1000284758657',
     accountName: 'Dawit Haile',
     role: 'receiver',
@@ -160,14 +408,14 @@ const INITIAL_DEMO_MESSAGES: SmsMessage[] = [
     sender: 'CBE',
     recipient: '1000284758657',
     type: 'CREDIT',
-    amount: 10.0,
+    amount: 2500.0,
     balance: 25440.0,
-    message: `Dear Dawit Haile A credit transaction of ETB 10.0. has occurred on your account 1*********8657. Credited from Leykun Jemaneh Ylma. Your current balance is ETB25,440.00. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxGJ3bdgLIaquJSwK for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
-    receiptUrl: 'https://mreciept.cbe.com.et/v2-hfHCxGJ3bdgLIaquJSwK',
+    message: `Dear Dawit Haile You have received ETB 2500.00 from account 1*********4747 (Leykun Jemaneh Ylma) to your account 1*********8657. Your current balance is ETB25,440.00. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxGdawit2026 for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
+    receiptUrl: 'https://mreciept.cbe.com.et/v2-hfHCxGdawit2026',
     feedbackUrl: DEFAULT_FEEDBACK_URL,
-    timestamp: '2026-08-30T15:12:05Z',
-    read: false,
-  }
+    timestamp: getRelativeDate(18, 10, 15), // 18 days ago (Last month)
+    read: true,
+  },
 ];
 
 export class SmsService {
@@ -294,18 +542,6 @@ export class SmsService {
             );
             list.unshift(...seedSenders);
             localStorage.setItem(STORAGE_MESSAGES_KEY, JSON.stringify(list));
-          } else {
-            // Guarantee 500,000 ETB debit message is present
-            const has500k = list.some(
-              m => m.accountNumber === '1000419524747' && m.amount === 500000
-            );
-            if (!has500k) {
-              const seed500k = INITIAL_DEMO_MESSAGES.find(m => m.id === 'sms-cbe-seed-500k');
-              if (seed500k) {
-                list.push({ ...seed500k });
-                localStorage.setItem(STORAGE_MESSAGES_KEY, JSON.stringify(list));
-              }
-            }
           }
         }
       }
@@ -421,10 +657,14 @@ export class SmsService {
 
       // 1. SENDER SIDE (Debit SMS) - ALWAYS CREATED!
       const senderAccNum = (tx.senderAccount || '1000419524747').replace(/\D/g, '') || '1000419524747';
-      const senderName = tx.senderName || 'Leykun Jemaneh Ylma';
+      const rawName = tx.senderName || 'Leykun Jemaneh Ylma';
+      const senderName = rawName.replace(/\s*\(Admin\)/i, '').replace(/\s*\(\d{4}\)/, '').trim() || 'Leykun Jemaneh Ylma';
 
       // Ensure sender account is registered
       this.ensureAccount(senderAccNum, senderName, senderBalance);
+
+      // Automatically switch active SMS conversation to the sender's account
+      this.setActiveAccountNumber(senderAccNum);
 
       // Calculate CBE service fees matching the official layout
       const feeInfo = calculateCbeFee(tx.amount || 0, tx.type);
@@ -468,8 +708,13 @@ export class SmsService {
         read: false,
       });
 
-      // If sender account was not 1000419524747, also ensure 1000419524747 has a synchronized copy
-      if (senderAccNum !== '1000419524747') {
+      // 2. RECEIVER SIDE (Credit SMS)
+      // Automatically creates independent message account for receiver!
+      const receiverAccNum = (tx.recipientAccount || '').replace(/\D/g, '');
+      const receiverName = tx.recipientName || 'Beneficiary Customer';
+
+      // If sender account was not 1000419524747 and receiver is not 1000419524747, sync debit copy for default primary user
+      if (senderAccNum !== '1000419524747' && receiverAccNum !== '1000419524747') {
         this.createSms({
           transactionId: tx.id,
           accountNumber: '1000419524747',
@@ -504,22 +749,20 @@ export class SmsService {
         });
       }
 
-      // 2. RECEIVER SIDE (Credit SMS)
-      // Automatically creates independent message account for receiver!
-      const receiverAccNum = (tx.recipientAccount || '').replace(/\D/g, '');
-      const receiverName = tx.recipientName || 'Beneficiary Customer';
-
       if (receiverAccNum) {
         // Ensure receiver account exists independently
         this.ensureAccount(receiverAccNum, receiverName, receiverBalance);
 
-        const formattedAmt = (tx.amount ?? 0).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 2 });
-        const maskedReceiverAcc = maskAccountNumber(receiverAccNum);
-        const formattedBal = receiverBalance !== undefined
-          ? receiverBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-          : '25,440.00';
-
-        const creditBody = `Dear ${receiverName} A credit transaction of ETB ${formattedAmt}. has occurred on your account ${maskedReceiverAcc}. Credited by ${senderName}. Your current balance is ETB${formattedBal}. Thanks for Banking with CBE.\n${receiptUrl} for feedback:\n${feedbackUrl}`;
+        const creditBody = formatCbeCreditMessage({
+          receiverName,
+          amount: tx.amount,
+          senderAccountNumber: senderAccNum,
+          senderName,
+          receiverAccountNumber: receiverAccNum,
+          balance: receiverBalance,
+          receiptUrl,
+          feedbackUrl,
+        });
 
         receiverSms = this.createSms({
           transactionId: tx.id,
@@ -640,6 +883,135 @@ export class SmsService {
     if (remaining.length !== messages.length) {
       this.saveMessages(remaining);
     }
+  }
+
+  /**
+   * Returns accounts grouped according to the days transactions occurred:
+   * 1. The account with the most recent transaction is first and displays "Now".
+   * 2. Other accounts display their transaction time.
+   * 3. Grouped by days: Recent, Yesterday, Last week, Last month, Older.
+   */
+  static getGroupedAccounts(): AccountGroupSection[] {
+    const accounts = this.getAccounts();
+    const allMessages = this.getSmsMessages();
+
+    // Map each account to its latest message timestamp
+    const accountMetas: AccountTimeMeta[] = accounts.map(acc => {
+      const cleanAcc = acc.accountNumber.replace(/\D/g, '');
+      const accMessages = allMessages.filter(
+        m => m.accountNumber.replace(/\D/g, '') === cleanAcc
+      );
+      const sortedMessages = [...accMessages].sort(
+        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+      const latestTimestamp = sortedMessages[0]?.timestamp || acc.lastUpdated || null;
+      const unreadCount = accMessages.filter(m => !m.read).length;
+
+      return {
+        account: acc,
+        latestTimestamp,
+        timeLabel: '',
+        isNow: false,
+        groupKey: 'older',
+        groupTitle: 'Older',
+        unreadCount,
+      };
+    });
+
+    // Sort all accounts descending: the account with the most recent transaction is FIRST!
+    accountMetas.sort((a, b) => {
+      const timeA = a.latestTimestamp ? new Date(a.latestTimestamp).getTime() : 0;
+      const timeB = b.latestTimestamp ? new Date(b.latestTimestamp).getTime() : 0;
+      return timeB - timeA;
+    });
+
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
+    accountMetas.forEach((item, index) => {
+      if (!item.latestTimestamp) {
+        item.timeLabel = 'No activity';
+        item.isNow = false;
+        item.groupKey = 'older';
+        item.groupTitle = 'Older';
+        return;
+      }
+
+      const date = new Date(item.latestTimestamp);
+      if (isNaN(date.getTime())) {
+        item.timeLabel = 'No activity';
+        item.isNow = false;
+        item.groupKey = 'older';
+        item.groupTitle = 'Older';
+        return;
+      }
+
+      const startOfTarget = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+      const diffDays = Math.round((startOfToday - startOfTarget) / (1000 * 60 * 60 * 24));
+      const diffMinutes = Math.floor(Math.max(0, now.getTime() - date.getTime()) / (1000 * 60));
+
+      // The top recent transaction account is "Now", or if within 30 minutes
+      const isNow = index === 0 || diffMinutes <= 30;
+
+      const timeStr = date.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      });
+
+      if (diffDays <= 0) {
+        item.groupKey = 'recent';
+        item.groupTitle = 'Recent';
+        item.isNow = isNow;
+        item.timeLabel = isNow ? 'Now' : timeStr;
+      } else if (diffDays === 1) {
+        item.groupKey = 'yesterday';
+        item.groupTitle = 'Yesterday';
+        item.isNow = false;
+        item.timeLabel = 'Yesterday';
+      } else if (diffDays > 1 && diffDays <= 7) {
+        const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
+        item.groupKey = 'last_week';
+        item.groupTitle = 'Last week';
+        item.isNow = false;
+        item.timeLabel = weekday;
+      } else if (diffDays > 7 && diffDays <= 31) {
+        const monthDay = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        item.groupKey = 'last_month';
+        item.groupTitle = 'Last month';
+        item.isNow = false;
+        item.timeLabel = monthDay;
+      } else {
+        const monthDay = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        item.groupKey = 'older';
+        item.groupTitle = 'Older';
+        item.isNow = false;
+        item.timeLabel = monthDay;
+      }
+    });
+
+    // Group into structured sections in order
+    const groupOrder: Array<{ key: AccountTimeMeta['groupKey']; title: string }> = [
+      { key: 'recent', title: 'Recent' },
+      { key: 'yesterday', title: 'Yesterday' },
+      { key: 'last_week', title: 'Last week' },
+      { key: 'last_month', title: 'Last month' },
+      { key: 'older', title: 'Older' },
+    ];
+
+    const sections: AccountGroupSection[] = [];
+    for (const grp of groupOrder) {
+      const matching = accountMetas.filter(m => m.groupKey === grp.key);
+      if (matching.length > 0) {
+        sections.push({
+          key: grp.key,
+          title: grp.title,
+          accounts: matching,
+        });
+      }
+    }
+
+    return sections;
   }
 }
 

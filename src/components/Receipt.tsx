@@ -31,6 +31,7 @@ import {
   ExternalLink,
   Zap
 } from 'lucide-react';
+import { maskAccountNumber } from '../services/smsService';
 
 /**
  * Generates an authentic, high-density 33x33 QR matrix with Finder patterns,
@@ -150,22 +151,12 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   const [isCapturing, setIsCapturing] = useState(false);
   const [flashAnimation, setFlashAnimation] = useState(false);
   const [islandExpanded, setIslandExpanded] = useState(false);
-  const [showSmsBanner, setShowSmsBanner] = useState(true);
   const [statusTime, setStatusTime] = useState<string>(() => {
     const now = new Date();
     const hours = now.getHours() % 12 || 12;
     const mins = now.getMinutes().toString().padStart(2, '0');
     return `${hours}:${mins}`;
   });
-
-  // Automatically pop down CBE SMS message on opening receipt for 1 minute (60s)
-  useEffect(() => {
-    setShowSmsBanner(true);
-    const timer = setTimeout(() => {
-      setShowSmsBanner(false);
-    }, 60000);
-    return () => clearTimeout(timer);
-  }, [transaction.id]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -274,13 +265,24 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     : `ETB-6547`;
 
   const cbeSenderFullName = transaction.senderName || "Leykun Jemaneh Ylma";
-  const cbeAmountStr = transaction.amount !== undefined ? transaction.amount.toFixed(1) : "10.0";
-  const cbeAccountMasked = rawSenderAccount.length >= 4
-    ? `1********${rawSenderAccount.slice(-4)}`
-    : "1********4747";
-  const cbeSmsText = isCredit
-    ? `Dear ${recipientName} A credit transaction of ETB ${cbeAmountStr}. has occurred on your account ${cbeAccountMasked}. Service`
-    : `Dear ${cbeSenderFullName} A debit transaction of ETB ${cbeAmountStr}. has occurred on your account ${cbeAccountMasked}. Service`;
+  const rawSenderClean = rawSenderAccount.replace(/\D/g, '') || '1000419524747';
+  const maskedSenderAcc = maskAccountNumber(rawSenderClean);
+  const rawRecipientClean = rawRecipientAccount.replace(/\D/g, '') || '1000284758657';
+  const maskedRecipientAcc = maskAccountNumber(rawRecipientClean);
+
+  const formattedAmt = (transaction.amount ?? 0).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 2 });
+  const senderBalanceNum = transaction.senderAccount
+    ? (LocalDb.getAllAccounts().find(a => a.accountNumber === transaction.senderAccount)?.balance ?? 9999499976.0)
+    : 9999499976.0;
+  const formattedBal = senderBalanceNum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  // Dynamic realistic CBE Transaction ID: 12 characters exactly (e.g. FT263211VK07)
+  const txId = formatTo12CharTxId(transaction.id);
+
+  const receiptUrl = `https://mreciept.cbe.com.et/v2-${txId}`;
+  const feedbackUrl = 'https://forms.gle/kGNGQpG3mQCCk3iD6';
+
+  const cleanSenderDisplayName = cbeSenderFullName.replace(/\s*\(Admin\)/i, '').replace(/\s*\(\d{4}\)/, '').trim() || 'Leykun Jemaneh Ylma';
 
   // Date formatting: e.g. "Aug 21, 2026 05:56 PM"
   const formatSummaryDate = (dateInput: any) => {
@@ -301,9 +303,6 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   };
 
   const formattedDate = formatSummaryDate(transaction.createdAt);
-
-  // Dynamic realistic CBE Transaction ID: 12 characters exactly (e.g. FT263211VK07)
-  const txId = formatTo12CharTxId(transaction.id);
 
   const reason = transaction.description || 'Mobile Banking Transfer';
 
@@ -947,53 +946,6 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           <span>{copiedToast}</span>
         </div>
       )}
-
-      {/* 0. Pop Down CBE SMS Message Notification (iPhone iOS Messages Banner) */}
-      <div 
-        className={`fixed top-3 left-3 right-3 max-w-sm sm:max-w-md mx-auto z-50 transition-all duration-500 cubic-bezier(0.32, 0.72, 0, 1) transform ${
-          showSmsBanner 
-            ? 'translate-y-0 opacity-100 scale-100 pointer-events-auto shadow-2xl' 
-            : '-translate-y-28 opacity-0 scale-95 pointer-events-none'
-        }`}
-      >
-        <div 
-          onClick={() => setShowSmsBanner(false)}
-          className="bg-[#1c1c1e]/95 backdrop-blur-[36px] -webkit-backdrop-blur-[36px] text-white rounded-[22px] border border-white/20 p-3.5 px-4 shadow-[0_18px_50px_rgba(0,0,0,0.65)] relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all select-none"
-        >
-          {/* iOS App Header Row */}
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-1.5">
-              {/* iOS Green Messages App Icon */}
-              <div className="w-[18px] h-[18px] rounded-[4.5px] bg-gradient-to-b from-[#34c759] to-[#30d158] flex items-center justify-center shadow-xs">
-                <MessageSquare className="w-2.5 h-2.5 text-white fill-white" />
-              </div>
-              <span className="text-[11px] font-semibold tracking-wider text-white/80 uppercase">Messages</span>
-            </div>
-            <span className="text-[11.5px] text-white/60 font-medium">now</span>
-          </div>
-
-          {/* iOS Message Content Row */}
-          <div className="flex gap-3 items-start pl-0.5">
-            {/* Sender Contact Avatar */}
-            <div className="w-9 h-9 rounded-full bg-[#8e24aa] flex items-center justify-center text-white font-bold text-xs flex-shrink-0 shadow-md border border-white/20 mt-0.5">
-              <span className="tracking-tight">CBE</span>
-            </div>
-
-            {/* Sender Name & Text Preview */}
-            <div className="flex-1 min-w-0 pr-1">
-              <h4 className="font-bold text-[14px] text-white leading-tight">CBE</h4>
-              <p className="text-[13px] text-[#f2f2f7] leading-[1.38] mt-0.5 font-normal line-clamp-2 select-text font-sans">
-                {cbeSmsText}
-              </p>
-            </div>
-          </div>
-
-          {/* iOS Subtle Bottom Dismiss Drag Handle */}
-          <div className="pt-2.5 flex justify-center">
-            <div className="w-9 h-[3.5px] bg-white/30 rounded-full" />
-          </div>
-        </div>
-      </div>
 
       {/* 1. iPhone Top Status Bar (Time, Dynamic Island, Cellular, Wi-Fi, Battery) */}
       <div className="w-full pt-2.5 pb-1 px-5 flex items-center justify-between text-white select-none z-20 flex-shrink-0">
