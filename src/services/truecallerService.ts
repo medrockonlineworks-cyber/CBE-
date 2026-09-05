@@ -1,31 +1,62 @@
-import { TruecallerBankAccount, TruecallerAlert, TruecallerRole, TruecallerBankKey } from '../types/truecaller';
+import { 
+  TruecallerBankAccount, 
+  TruecallerAlert, 
+  TruecallerRole, 
+  TruecallerBankKey,
+  TruecallerBackgroundApp
+} from '../types/truecaller';
+import { Transaction } from '../types';
 
-const STORAGE_TC_ACCOUNTS_KEY = 'tc_sim_accounts_v1';
-const STORAGE_TC_ALERTS_KEY = 'tc_sim_alerts_v1';
+const STORAGE_TC_ACCOUNTS_KEY = 'tc_sim_accounts_v2';
+const STORAGE_TC_ALERTS_KEY = 'tc_sim_alerts_v2';
 const STORAGE_TC_ACTIVE_ACC_KEY = 'tc_sim_active_account_id';
 
-export const BANK_PRESETS: { key: TruecallerBankKey; name: string; shortName: string; color: string; defaultPrefix: string; accLength: number }[] = [
-  { key: 'cbe', name: 'Cbe Bank', shortName: 'CBE', color: '#5e1887', defaultPrefix: '1000', accLength: 13 },
-  { key: 'telebirr', name: 'telebirr', shortName: 'Telebirr', color: '#0085ca', defaultPrefix: '09', accLength: 10 },
-  { key: 'abyssinia', name: 'Abyssinia Bank', shortName: 'BOA', color: '#f59e0b', defaultPrefix: '112', accLength: 10 },
-  { key: 'awash', name: 'Awash Bank', shortName: 'Awash', color: '#ea580c', defaultPrefix: '013', accLength: 14 },
-  { key: 'dashen', name: 'Dashen Bank', shortName: 'Dashen', color: '#1e3a8a', defaultPrefix: '524', accLength: 13 },
-  { key: 'oromia', name: 'Oromia Bank', shortName: 'Oromia', color: '#b91c1c', defaultPrefix: '142', accLength: 11 },
-  { key: 'coop', name: 'Coop Bank', shortName: 'Coop', color: '#0284c7', defaultPrefix: '102', accLength: 11 },
-  { key: 'hibret', name: 'Hibret Bank', shortName: 'Hibret', color: '#4338ca', defaultPrefix: '110', accLength: 11 },
-  { key: 'nib', name: 'Nib Bank', shortName: 'Nib', color: '#0d9488', defaultPrefix: '700', accLength: 10 },
-  { key: 'wegagen', name: 'Wegagen Bank', shortName: 'Wegagen', color: '#d97706', defaultPrefix: '081', accLength: 12 },
-  { key: 'zemen', name: 'Zemen Bank', shortName: 'Zemen', color: '#dc2626', defaultPrefix: '201', accLength: 12 },
-  { key: 'custom', name: 'Other Bank', shortName: 'Custom', color: '#4b5563', defaultPrefix: '100', accLength: 10 },
+export const BANK_PRESETS: { key: TruecallerBankKey; name: string; shortName: string; color: string; defaultPrefix: string; accLength: number; defaultApp: TruecallerBackgroundApp }[] = [
+  { key: 'cbe', name: 'Cbe Bank', shortName: 'CBE', color: '#5e1887', defaultPrefix: '1000', accLength: 13, defaultApp: 'tiktok' },
+  { key: 'telebirr', name: 'telebirr', shortName: 'Telebirr', color: '#0085ca', defaultPrefix: '09', accLength: 10, defaultApp: 'telegram' },
+  { key: 'abyssinia', name: 'Abyssinia Bank', shortName: 'BOA', color: '#f59e0b', defaultPrefix: '112', accLength: 10, defaultApp: 'youtube' },
+  { key: 'awash', name: 'Awash Bank', shortName: 'Awash', color: '#ea580c', defaultPrefix: '013', accLength: 14, defaultApp: 'instagram' },
+  { key: 'dashen', name: 'Dashen Bank', shortName: 'Dashen', color: '#1e3a8a', defaultPrefix: '524', accLength: 13, defaultApp: 'tiktok' },
+  { key: 'oromia', name: 'Oromia Bank', shortName: 'Oromia', color: '#b91c1c', defaultPrefix: '142', accLength: 11, defaultApp: 'telegram' },
+  { key: 'coop', name: 'Coop Bank', shortName: 'Coop', color: '#0284c7', defaultPrefix: '102', accLength: 11, defaultApp: 'youtube' },
+  { key: 'hibret', name: 'Hibret Bank', shortName: 'Hibret', color: '#4338ca', defaultPrefix: '110', accLength: 11, defaultApp: 'instagram' },
+  { key: 'nib', name: 'Nib Bank', shortName: 'Nib', color: '#0d9488', defaultPrefix: '700', accLength: 10, defaultApp: 'tiktok' },
+  { key: 'wegagen', name: 'Wegagen Bank', shortName: 'Wegagen', color: '#d97706', defaultPrefix: '081', accLength: 12, defaultApp: 'telegram' },
+  { key: 'zemen', name: 'Zemen Bank', shortName: 'Zemen', color: '#dc2626', defaultPrefix: '201', accLength: 12, defaultApp: 'youtube' },
+  { key: 'custom', name: 'Other Bank', shortName: 'Custom', color: '#4b5563', defaultPrefix: '100', accLength: 10, defaultApp: 'tiktok' },
 ];
+
+export function getBankKeyFromName(nameOrKey?: string): TruecallerBankKey {
+  if (!nameOrKey) return 'cbe';
+  const lower = nameOrKey.toLowerCase();
+  if (lower.includes('telebirr') || lower.includes('ethio telecom')) return 'telebirr';
+  if (lower.includes('abyssinia') || lower.includes('boa')) return 'abyssinia';
+  if (lower.includes('awash')) return 'awash';
+  if (lower.includes('dashen')) return 'dashen';
+  if (lower.includes('oromia')) return 'oromia';
+  if (lower.includes('coop')) return 'coop';
+  if (lower.includes('hibret')) return 'hibret';
+  if (lower.includes('nib')) return 'nib';
+  if (lower.includes('wegagen')) return 'wegagen';
+  if (lower.includes('zemen')) return 'zemen';
+  if (lower.includes('cbe') || lower.includes('commercial')) return 'cbe';
+  return 'custom';
+}
+
+export function getDefaultBackgroundApp(bankKey: TruecallerBankKey): TruecallerBackgroundApp {
+  const match = BANK_PRESETS.find(p => p.key === bankKey);
+  return match?.defaultApp || 'tiktok';
+}
 
 export function maskTruecallerAccount(acc: string): string {
   const clean = (acc || '').replace(/\s+/g, '');
-  if (clean.length <= 5) return clean || '1XXXXXXXX9165';
+  if (!clean) return '1********0913';
+  if (clean.includes('*') || clean.includes('X')) return clean;
+  if (clean.length <= 5) return clean;
   const first = clean.charAt(0);
   const last = clean.slice(-4);
-  // Truecaller style matches user reference IMG_20260905_115947_509.jpg: "1XXXXXXXX9165" (first char + 8 X's + last 4 chars)
-  return `${first}${'X'.repeat(8)}${last}`;
+  // Truecaller style matches reference photo IMG_20260905_131647_440.jpg: "1********0913"
+  return `${first}${'*'.repeat(8)}${last}`;
 }
 
 export function formatCurrentTimeString(): string {
@@ -34,9 +65,26 @@ export function formatCurrentTimeString(): string {
   const minutes = d.getMinutes();
   const ampm = hours >= 12 ? 'PM' : 'AM';
   hours = hours % 12;
-  hours = hours ? hours : 12; // 0 becomes 12
+  hours = hours ? hours : 12;
   const minutesStr = minutes < 10 ? '0' + minutes : minutes;
   return `${hours}:${minutesStr} ${ampm}`;
+}
+
+export function formatTimeFromIso(isoString?: string): string {
+  if (!isoString) return formatCurrentTimeString();
+  try {
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return formatCurrentTimeString();
+    let hours = d.getHours();
+    const minutes = d.getMinutes();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const minutesStr = minutes < 10 ? '0' + minutes : minutes;
+    return `${hours}:${minutesStr} ${ampm}`;
+  } catch {
+    return formatCurrentTimeString();
+  }
 }
 
 const DEFAULT_ACCOUNTS: TruecallerBankAccount[] = [
@@ -50,17 +98,8 @@ const DEFAULT_ACCOUNTS: TruecallerBankAccount[] = [
     accountType: 'Savings Account',
     phone: '+251 91 104 9165',
     balance: 5420.50,
-  },
-  {
-    id: 'tc-acc-cbe-2',
-    bankKey: 'cbe',
-    bankName: 'Cbe Bank',
-    accountNumber: '1000419524747',
-    maskedAccount: '1XXXXXXXX4747',
-    holderName: 'Leykun Jemaneh Ylma',
-    accountType: 'Checking Account',
-    phone: '+251 91 104 4747',
-    balance: 1805.47,
+    backgroundApp: 'tiktok',
+    lastTransactionAt: '2026-09-05T11:58:00Z'
   },
   {
     id: 'tc-acc-telebirr',
@@ -72,6 +111,8 @@ const DEFAULT_ACCOUNTS: TruecallerBankAccount[] = [
     accountType: 'Mobile Wallet',
     phone: '+251 91 104 9165',
     balance: 3250.00,
+    backgroundApp: 'telegram',
+    lastTransactionAt: '2026-09-05T10:45:00Z'
   },
   {
     id: 'tc-acc-boa',
@@ -83,6 +124,8 @@ const DEFAULT_ACCOUNTS: TruecallerBankAccount[] = [
     accountType: 'Salary Account',
     phone: '+251 92 345 6789',
     balance: 14850.00,
+    backgroundApp: 'youtube',
+    lastTransactionAt: '2026-09-05T09:30:00Z'
   },
   {
     id: 'tc-acc-awash',
@@ -94,6 +137,8 @@ const DEFAULT_ACCOUNTS: TruecallerBankAccount[] = [
     accountType: 'Business Account',
     phone: '+251 93 456 7890',
     balance: 28400.00,
+    backgroundApp: 'instagram',
+    lastTransactionAt: '2026-09-05T08:15:00Z'
   },
   {
     id: 'tc-acc-dashen',
@@ -105,6 +150,8 @@ const DEFAULT_ACCOUNTS: TruecallerBankAccount[] = [
     accountType: 'Personal Savings',
     phone: '+251 94 567 8901',
     balance: 19300.00,
+    backgroundApp: 'tiktok',
+    lastTransactionAt: '2026-09-04T16:20:00Z'
   },
 ];
 
@@ -126,27 +173,10 @@ const DEFAULT_ALERTS: TruecallerAlert[] = [
     summaryText: 'Account 1XXXXXXXX9165 credited with ETB 450.00.',
     txId: 'FT25104MK9165',
     read: false,
+    backgroundApp: 'tiktok',
   },
   {
     id: 'tc-alert-seed-2',
-    accountId: 'tc-acc-cbe-2',
-    bankKey: 'cbe',
-    bankName: 'Cbe Bank',
-    role: 'sender',
-    amount: 250.00,
-    maskedAccount: '1XXXXXXXX4747',
-    fullAccount: '1000419524747',
-    holderName: 'Leykun Jemaneh Ylma',
-    counterpartyName: 'Ethio Telecom Airtime',
-    balanceAfter: 1555.47,
-    timeString: '10:30 AM',
-    timestamp: new Date(Date.now() - 3600000).toISOString(),
-    summaryText: 'Account 1XXXXXXXX4747 debited with ETB 250.00.',
-    txId: 'FT25104MK4747',
-    read: true,
-  },
-  {
-    id: 'tc-alert-seed-3',
     accountId: 'tc-acc-telebirr',
     bankKey: 'telebirr',
     bankName: 'telebirr',
@@ -157,11 +187,50 @@ const DEFAULT_ALERTS: TruecallerAlert[] = [
     holderName: 'Leykun Jemaneh',
     counterpartyName: 'Yared Negash',
     balanceAfter: 3250.00,
-    timeString: '09:15 AM',
-    timestamp: new Date(Date.now() - 7200000).toISOString(),
+    timeString: '10:45 AM',
+    timestamp: new Date(Date.now() - 3600000).toISOString(),
     summaryText: 'Account 0XXXXXXXX9165 credited with ETB 1,200.00.',
     txId: 'TB94829104',
     read: true,
+    backgroundApp: 'telegram',
+  },
+  {
+    id: 'tc-alert-seed-3',
+    accountId: 'tc-acc-boa',
+    bankKey: 'abyssinia',
+    bankName: 'Abyssinia Bank',
+    role: 'receiver',
+    amount: 2500.00,
+    maskedAccount: '1XXXXXXXX2910',
+    fullAccount: '1128472910',
+    holderName: 'Selamawit Tekle Haile',
+    counterpartyName: 'Addis Tech Solutions',
+    balanceAfter: 14850.00,
+    timeString: '09:30 AM',
+    timestamp: new Date(Date.now() - 7200000).toISOString(),
+    summaryText: 'Account 1XXXXXXXX2910 credited with ETB 2,500.00.',
+    txId: 'BOA8472910',
+    read: true,
+    backgroundApp: 'youtube',
+  },
+  {
+    id: 'tc-alert-seed-4',
+    accountId: 'tc-acc-awash',
+    bankKey: 'awash',
+    bankName: 'Awash Bank',
+    role: 'sender',
+    amount: 3400.00,
+    maskedAccount: '0XXXXXXXX2300',
+    fullAccount: '01304859182300',
+    holderName: 'Kasahun Yematawork',
+    counterpartyName: 'Bole Plaza Electronics',
+    balanceAfter: 28400.00,
+    timeString: '08:15 AM',
+    timestamp: new Date(Date.now() - 10800000).toISOString(),
+    summaryText: 'Account 0XXXXXXXX2300 debited with ETB 3,400.00.',
+    txId: 'AW84920412',
+    read: true,
+    backgroundApp: 'instagram',
   },
 ];
 
@@ -288,12 +357,106 @@ export const TruecallerService = {
       summaryText: summary,
       txId: generatedTxId,
       read: false,
+      backgroundApp: account.backgroundApp || getDefaultBackgroundApp(account.bankKey),
     };
 
     const alerts = this.getAlerts();
     const updated = [newAlert, ...alerts];
     this.saveAlerts(updated);
+    window.dispatchEvent(new CustomEvent('tc_alerts_updated', { detail: { alert: newAlert, account } }));
     return newAlert;
+  },
+
+  syncTransactionToTruecaller(tx: Transaction, userBalance?: number): TruecallerAlert {
+    const isReceive = tx.type === 'receive';
+    const role: TruecallerRole = isReceive ? 'receiver' : 'sender';
+    const bankKey = getBankKeyFromName(tx.recipientBank || (isReceive ? 'cbe' : 'cbe'));
+    const targetAccountNum = isReceive ? (tx.recipientAccount || '1000419529165') : (tx.senderAccount || '1000419524747');
+    const targetHolder = isReceive ? (tx.recipientName || 'Leykun Jemaneh Ylma') : (tx.senderName || 'Leykun Jemaneh Ylma');
+    const counterparty = isReceive ? (tx.senderName || 'Abebe Bikila') : (tx.recipientName || 'Commercial Bank of Ethiopia');
+    
+    const accounts = this.getAccounts();
+    const preset = BANK_PRESETS.find(p => p.key === bankKey) || BANK_PRESETS[0];
+    
+    // Find or create account inside Truecaller SMS simulator
+    let account = accounts.find(a => a.accountNumber === targetAccountNum || a.bankKey === bankKey);
+    let updatedAccounts = [...accounts];
+    
+    if (account) {
+      // Update account with latest transaction time and balance
+      account = {
+        ...account,
+        lastTransactionAt: tx.createdAt || new Date().toISOString(),
+        balance: userBalance ?? account.balance,
+      };
+      // Move this account to the very top so recent transactions appear at the top
+      updatedAccounts = [account, ...updatedAccounts.filter(a => a.id !== account!.id)];
+    } else {
+      // Create new bank account entry inside Truecaller SMS simulator
+      const masked = maskTruecallerAccount(targetAccountNum);
+      account = {
+        id: `tc-acc-${bankKey}-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        bankKey,
+        bankName: preset.name,
+        accountNumber: targetAccountNum,
+        maskedAccount: masked,
+        holderName: targetHolder,
+        accountType: tx.type === 'transfer' ? 'Current Account' : 'Savings Account',
+        balance: userBalance ?? 10000,
+        backgroundApp: getDefaultBackgroundApp(bankKey),
+        lastTransactionAt: tx.createdAt || new Date().toISOString(),
+      };
+      // Put at the very top
+      updatedAccounts = [account, ...updatedAccounts];
+    }
+    this.saveAccounts(updatedAccounts);
+    this.setActiveAccountId(account.id);
+    
+    // Format message matching user's exact specification
+    const masked = account.maskedAccount || maskTruecallerAccount(account.accountNumber);
+    const formattedAmount = tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const actionWord = role === 'receiver' ? 'credited with' : 'debited with';
+    const summary = `Account ${masked} ${actionWord} ETB ${formattedAmount}.`;
+    const timeStr = formatTimeFromIso(tx.createdAt);
+    
+    const newAlert: TruecallerAlert = {
+      id: `tc-alert-tx-${tx.id || Date.now()}`,
+      accountId: account.id,
+      bankKey: account.bankKey,
+      bankName: account.bankName,
+      role,
+      amount: tx.amount,
+      maskedAccount: masked,
+      fullAccount: account.accountNumber,
+      holderName: account.holderName,
+      counterpartyName: counterparty,
+      counterpartyAccount: isReceive ? tx.senderAccount : tx.recipientAccount,
+      balanceAfter: userBalance ?? (account.balance || 5000),
+      timeString: timeStr,
+      timestamp: tx.createdAt || new Date().toISOString(),
+      summaryText: summary,
+      txId: tx.id,
+      read: false,
+      backgroundApp: account.backgroundApp || getDefaultBackgroundApp(account.bankKey),
+    };
+    
+    const existingAlerts = this.getAlerts();
+    // Avoid duplicates if txId matches
+    const filteredAlerts = existingAlerts.filter(a => a.txId !== tx.id);
+    const updatedAlerts = [newAlert, ...filteredAlerts];
+    this.saveAlerts(updatedAlerts);
+    
+    window.dispatchEvent(new CustomEvent('tc_alerts_updated', { detail: { alert: newAlert, account } }));
+    return newAlert;
+  },
+
+  syncAllExistingTransactions(transactions: Transaction[]): void {
+    if (!transactions || transactions.length === 0) return;
+    // Process from oldest to newest so newest ends up at the very top
+    const chronological = [...transactions].reverse();
+    for (const tx of chronological) {
+      this.syncTransactionToTruecaller(tx);
+    }
   },
 
   markAlertAsRead(id: string): void {

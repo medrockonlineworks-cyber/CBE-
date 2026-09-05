@@ -14,6 +14,7 @@ import {
 import { calculateCbeFee } from './cbeTariff';
 import { firebaseService } from '../services/firebaseService';
 import { SmsService } from '../services/smsService';
+import { TruecallerService } from '../services/truecallerService';
 
 // Helper to generate IDs
 const generateId = () => Math.random().toString(36).substring(2, 11).toUpperCase();
@@ -1096,6 +1097,13 @@ export class LocalDb {
       console.error('[SmsService] Non-blocking own account transfer SMS error:', smsErr);
     }
 
+    // Automatically sync to Truecaller SMS simulator
+    try {
+      TruecallerService.syncTransactionToTruecaller(tx, fromAcc.balance);
+    } catch (tcErr) {
+      console.error('[TruecallerService] Non-blocking own account transfer Truecaller alert error:', tcErr);
+    }
+
     return { tx, fromAccount: fromAcc, toAccount: toAcc };
   }
 
@@ -1346,6 +1354,14 @@ export class LocalDb {
       SmsService.createSmsFromTransaction(newTx, finalBal, fromAcc?.id, matchedRecipAcc?.balance);
     } catch (smsErr) {
       console.error('[SmsService] Failed to auto-generate transaction SMS:', smsErr);
+    }
+
+    // Automatically create/update account and alert in Truecaller SMS simulator
+    try {
+      const finalBal = fromAcc ? fromAcc.balance : user.balance;
+      TruecallerService.syncTransactionToTruecaller(newTx, finalBal);
+    } catch (tcErr) {
+      console.error('[TruecallerService] Failed to auto-generate Truecaller alert:', tcErr);
     }
 
     return newTx;

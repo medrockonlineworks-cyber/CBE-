@@ -16,7 +16,8 @@ import {
   ShieldCheck,
   X,
   Sun,
-  Moon
+  Moon,
+  Smartphone
 } from 'lucide-react';
 import { SmsMessage, SmsAccount } from '../types/sms';
 import { 
@@ -409,6 +410,31 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
                       : 'bg-neutral-100 text-neutral-700 border border-neutral-200'
                   }`}>
                     {isDarkMode ? 'Dark' : 'Light'}
+                  </span>
+                </button>
+
+                {/* Truecaller Simulator Option inside 3-dot */}
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    try {
+                      window.history.pushState({ view: 'truecaller' }, '', '/truecaller');
+                      window.dispatchEvent(new PopStateEvent('popstate', { state: { view: 'truecaller' } }));
+                    } catch {}
+                  }}
+                  className={`w-full px-4 py-2.5 text-left text-sm flex items-center justify-between transition-colors border-b ${
+                    isDarkMode 
+                      ? 'border-neutral-800/80 text-neutral-200 hover:bg-neutral-800/70' 
+                      : 'border-neutral-100 text-neutral-800 hover:bg-neutral-50'
+                  }`}
+                  title="Open Truecaller SMS Simulator"
+                >
+                  <div className="flex items-center space-x-2.5">
+                    <Smartphone className="w-4 h-4 text-[#0066FF]" />
+                    <span className="font-medium">Truecaller Pop-down Simulator</span>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-[#0066FF] text-white">
+                    Pop-down
                   </span>
                 </button>
 

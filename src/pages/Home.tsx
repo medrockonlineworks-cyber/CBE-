@@ -27,7 +27,8 @@ import {
   Sparkles,
   ChevronRight,
   ExternalLink,
-  MessageSquare
+  MessageSquare,
+  Smartphone
 } from 'lucide-react';
 import { UserProfile, Transaction } from '../types';
 import { LocalDb } from '../lib/mockData';
@@ -39,6 +40,7 @@ interface HomeProps {
   onSelectTransaction?: (tx: Transaction) => void;
   onOpenAdmin?: () => void;
   onOpenSmsSimulator?: () => void;
+  onOpenTruecallerSimulator?: () => void;
 }
 
 export const Home: React.FC<HomeProps> = ({
@@ -48,6 +50,7 @@ export const Home: React.FC<HomeProps> = ({
   onSelectTransaction,
   onOpenAdmin,
   onOpenSmsSimulator,
+  onOpenTruecallerSimulator,
 }) => {
   // Fallback demo user if none passed in
   const currentUser: UserProfile = propUser || {
@@ -692,6 +695,22 @@ export const Home: React.FC<HomeProps> = ({
                 <MessageSquare className="w-5 h-5 text-[#711A9F] mb-1.5" />
                 <p className="text-xs font-bold text-purple-950">SMS Simulator</p>
                 <p className="text-[10px] text-purple-700">CBE Alert Messages</p>
+              </button>
+
+              <button
+                onClick={() => {
+                  setActiveModal(null);
+                  if (onOpenTruecallerSimulator) {
+                    onOpenTruecallerSimulator();
+                  } else {
+                    onNavigateToTab?.('profile');
+                  }
+                }}
+                className="p-3 bg-blue-50 hover:bg-blue-100/80 rounded-2xl text-left transition cursor-pointer border border-blue-100"
+              >
+                <Smartphone className="w-5 h-5 text-[#0066FF] mb-1.5" />
+                <p className="text-xs font-bold text-blue-950">Truecaller Alert</p>
+                <p className="text-[10px] text-blue-700">Screen Takeover</p>
               </button>
 
               {onOpenAdmin && (

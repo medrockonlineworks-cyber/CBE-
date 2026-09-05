@@ -248,6 +248,7 @@ export default function App() {
             currentUser={activeUser}
             onNavigateToTab={(tab) => setActiveTab(tab)}
             onOpenSmsSimulator={() => navigateTo('sms', 'profile')}
+            onOpenTruecallerSimulator={() => navigateTo('truecaller', 'profile')}
           />
         );
     }

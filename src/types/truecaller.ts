@@ -12,6 +12,10 @@ export type TruecallerBankKey =
   | 'wegagen' 
   | 'custom';
 
+export type TruecallerBackgroundApp = 'tiktok' | 'youtube' | 'telegram' | 'instagram' | 'whatsapp' | 'lockscreen';
+
+export type TruecallerPhoneType = 'tecno' | 'iphone' | 'samsung' | 'pixel';
+
 export interface TruecallerBankAccount {
   id: string;
   bankKey: TruecallerBankKey;
@@ -23,6 +27,9 @@ export interface TruecallerBankAccount {
   phone?: string;
   balance?: number;
   isCustom?: boolean;
+  backgroundApp?: TruecallerBackgroundApp; // 'tiktok' | 'youtube' | 'telegram' | 'instagram' | 'whatsapp' | 'lockscreen'
+  phoneType?: TruecallerPhoneType; // 'tecno' | 'iphone' | 'samsung' | 'pixel'
+  lastTransactionAt?: string;
 }
 
 export type TruecallerRole = 'receiver' | 'sender'; // receiver = credited, sender = debited
@@ -46,4 +53,6 @@ export interface TruecallerAlert {
   fullSmsText?: string;
   txId?: string;
   read: boolean;
+  backgroundApp?: TruecallerBackgroundApp;
+  phoneType?: TruecallerPhoneType;
 }
