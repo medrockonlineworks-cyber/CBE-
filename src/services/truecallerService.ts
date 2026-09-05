@@ -51,7 +51,8 @@ export function getDefaultBackgroundApp(bankKey: TruecallerBankKey): TruecallerB
 export function maskTruecallerAccount(acc: string): string {
   const clean = (acc || '').replace(/\s+/g, '');
   if (!clean) return '1********0913';
-  if (clean.includes('*') || clean.includes('X')) return clean;
+  const withStars = clean.replace(/X/g, '*');
+  if (withStars.includes('*')) return withStars;
   if (clean.length <= 5) return clean;
   const first = clean.charAt(0);
   const last = clean.slice(-4);

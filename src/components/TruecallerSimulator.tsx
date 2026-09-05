@@ -233,6 +233,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
   // Modal: Choose Phone Screen & Phone Type
   const [showPickerModal, setShowPickerModal] = useState<boolean>(false);
   const [selectedTxForPicker, setSelectedTxForPicker] = useState<{
+    id?: string;
     amount: number;
     accountNumber: string;
     maskedAccount: string;
@@ -241,10 +242,12 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
     bankName: string;
     bankKey: TruecallerBankKey;
     timeString: string;
+    timestamp?: string;
     counterpartyName?: string;
     balanceAfter?: number;
     txId?: string;
     fullMessageText?: string;
+    isNow?: boolean;
   } | null>(null);
 
   // Picker selection states
@@ -253,8 +256,27 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
   const [pickerRole, setPickerRole] = useState<TruecallerRole>('receiver');
   const [pickerAmount, setPickerAmount] = useState<string>('450.00');
 
-  // Takeover & Popdown Alert State
-  const [currentAlert, setCurrentAlert] = useState<TruecallerAlert | null>(null);
+  // Takeover & Popdown Alert State (Default initialized to match reference photo IMG_20260905_131647_440.jpg)
+  const [currentAlert, setCurrentAlert] = useState<TruecallerAlert | null>(() => ({
+    id: 'tc-alert-seed-featured',
+    accountId: 'tc-acc-cbe',
+    bankKey: 'cbe',
+    bankName: 'CBE',
+    role: 'receiver',
+    amount: 244600.00,
+    maskedAccount: '1********0913',
+    fullAccount: '1000419520913',
+    holderName: 'Leykun Jemaneh Ylma',
+    counterpartyName: 'Commercial Bank of Ethiopia',
+    balanceAfter: 289450.75,
+    timeString: '2:35 PM',
+    timestamp: new Date().toISOString(),
+    summaryText: 'Account 1********0913 credited with ETB 244600.00.',
+    txId: 'FT26248MK0913',
+    read: false,
+    backgroundApp: 'tiktok',
+    phoneType: 'tecno',
+  }));
   const [isPopdownVisible, setIsPopdownVisible] = useState<boolean>(true);
   const [isPopdownAnimating, setIsPopdownAnimating] = useState<boolean>(false);
   const [showAiBreakdown, setShowAiBreakdown] = useState<boolean>(false);
@@ -353,6 +375,22 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
         fullMessageText: `Dear Leykun Jemaneh Ylma,\nYour Account 1000419520913 has been Credited with ETB 244,600.00 on 05/09/2026 02:35 PM.\nAvailable Balance is ETB 289,450.75.\nTxn Ref: FT26248MK0913.\nThank you for banking with CBE.\nhttps://cbe.com.et/mbreceipt/FT26248MK0913`
       },
       {
+        id: 'tx-cbe-seed-debit-current',
+        amount: 90000000.00,
+        accountNumber: '1000419529165',
+        maskedAccount: '1********9165',
+        holderName: 'Leykun Jemaneh Ylma',
+        role: 'sender' as TruecallerRole,
+        bankName: 'CBE',
+        bankKey: 'cbe' as TruecallerBankKey,
+        timeString: '1:18 PM',
+        timestamp: new Date(Date.now() - 300000).toISOString(),
+        counterpartyName: 'Commercial Bank of Ethiopia',
+        balanceAfter: 9897531463.00,
+        txId: 'FT269446FP77',
+        fullMessageText: `Dear Leykun Jemaneh Ylma,\nA debit transaction of ETB 90000000.00 has occurred on your Account 1000419529165 on 1:18 PM.\nAvailable Balance: ETB 9897531463.00.\nTxn Ref: FT269446FP77.\nThank you for banking with Cbe Bank.`
+      },
+      {
         id: 'tx-cbe-seed-1',
         amount: 450.00,
         accountNumber: '1000419529165',
@@ -372,7 +410,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
         id: 'tx-cbe-seed-2',
         amount: 250.00,
         accountNumber: '1000419524747',
-        maskedAccount: '1XXXXXXXX4747',
+        maskedAccount: '1********4747',
         holderName: 'Leykun Jemaneh Ylma',
         role: 'sender' as TruecallerRole,
         bankName: 'Commercial Bank of Ethiopia',
@@ -388,7 +426,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
         id: 'tx-cbe-seed-3',
         amount: 1200.00,
         accountNumber: '1000419529165',
-        maskedAccount: '1XXXXXXXX9165',
+        maskedAccount: '1********9165',
         holderName: 'Leykun Jemaneh Ylma',
         role: 'receiver' as TruecallerRole,
         bankName: 'Commercial Bank of Ethiopia',
@@ -407,32 +445,46 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
       id: a.id,
       amount: a.amount,
       accountNumber: a.fullAccount || '1000419529165',
-      maskedAccount: a.maskedAccount,
-      holderName: a.holderName,
+      maskedAccount: a.maskedAccount || maskTruecallerAccount(a.fullAccount || '1000419529165'),
+      holderName: a.holderName || 'Leykun Jemaneh Ylma',
       role: a.role,
       bankName: a.bankName,
       bankKey: a.bankKey,
-      timeString: a.timeString,
+      timeString: a.timeString || 'Now',
       timestamp: a.timestamp,
       counterpartyName: a.counterpartyName,
       balanceAfter: a.balanceAfter,
       txId: a.txId,
       fullMessageText: a.fullSmsText || (
         a.role === 'receiver'
-          ? `Dear ${a.holderName},\nYour Account ${a.fullAccount} has been Credited with ETB ${a.amount.toFixed(2)} on ${a.timeString} by ${a.counterpartyName || 'Abebe Bikila'}.\nAvailable Balance is ETB ${(a.balanceAfter || 5420.50).toFixed(2)}.\nTxn Ref: ${a.txId || 'FT25104MK'}.\nThank you for banking with ${a.bankName}.`
-          : `Dear ${a.holderName},\nA debit transaction of ETB ${a.amount.toFixed(2)} has occurred on your Account ${a.fullAccount} on ${a.timeString}.\nAvailable Balance: ETB ${(a.balanceAfter || 1555.47).toFixed(2)}.\nTxn Ref: ${a.txId || 'FT250918'}.\nThank you for banking with ${a.bankName}.`
+          ? `Dear ${a.holderName || 'Leykun Jemaneh Ylma'},\nYour Account ${a.fullAccount || '1000419520913'} has been Credited with ETB ${a.amount.toFixed(2)} on ${a.timeString || 'Now'}${a.counterpartyName ? ` by ${a.counterpartyName}` : ''}.\nAvailable Balance is ETB ${(a.balanceAfter || 289450.75).toFixed(2)}.\nTxn Ref: ${a.txId || 'FT26248MK0913'}.\nThank you for banking with ${a.bankName}.`
+          : `Dear ${a.holderName || 'Leykun Jemaneh Ylma'},\nA debit transaction of ETB ${a.amount.toFixed(2)} has occurred on your Account ${a.fullAccount || '1000419529165'} on ${a.timeString || 'Now'}.\nAvailable Balance: ETB ${(a.balanceAfter || 9897531463.00).toFixed(2)}.\nTxn Ref: ${a.txId || 'FT269446FP77'}.\nThank you for banking with ${a.bankName}.`
       )
     }));
 
-    // Combine and deduplicate
-    const combined = [...alertItems];
+    // Combine all and deduplicate by txId
+    const allItems = [...alertItems];
     for (const seed of seededCbeList) {
-      if (!combined.some(c => c.txId === seed.txId)) {
-        combined.push(seed);
+      if (!allItems.some(c => c.txId === seed.txId)) {
+        allItems.push(seed);
       }
     }
 
-    return combined;
+    // Identify current RECEIVE (credit) and current SEND (debit) transactions to place at the top with "Now" badge
+    const topCredit = allItems.find(item => item.role === 'receiver') || seededCbeList[0];
+    const topDebit = allItems.find(item => item.role === 'sender') || seededCbeList[1];
+
+    const currentTopList: (typeof seededCbeList[0] & { isNow: boolean })[] = [
+      { ...topCredit, isNow: true },
+      { ...topDebit, isNow: true }
+    ];
+
+    // Filter out top items from remaining list so there are no duplicates
+    const remainingItems = allItems
+      .filter(item => item.id !== topCredit.id && item.id !== topDebit.id && item.txId !== topCredit.txId && item.txId !== topDebit.txId)
+      .map(item => ({ ...item, isNow: false }));
+
+    return [...currentTopList, ...remainingItems];
   }, [activeBankKey, alerts]);
 
   // Click on a thread in Google Messages Inbox
@@ -456,7 +508,23 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
 
   // Click on a transaction bank account in the transaction list:
   // "when we click the transaction bank account it will make us choose the phone screen and phone type"
-  const handleOpenPickerForTx = (tx: typeof bankTransactions[0]) => {
+  const handleOpenPickerForTx = (tx: {
+    id?: string;
+    amount: number;
+    accountNumber: string;
+    maskedAccount: string;
+    holderName: string;
+    role: TruecallerRole;
+    bankName: string;
+    bankKey: TruecallerBankKey;
+    timeString: string;
+    timestamp?: string;
+    counterpartyName?: string;
+    balanceAfter?: number;
+    txId?: string;
+    fullMessageText?: string;
+    isNow?: boolean;
+  }) => {
     setSelectedTxForPicker(tx);
     setPickerAmount(tx.amount.toFixed(2));
     setPickerRole(tx.role);
@@ -1121,7 +1189,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
       default:
         // EXACT match to user's uploaded IMG_20260905_131647_440.jpg
         return (
-          <div className="w-full px-4 pt-2.5 pb-2 flex items-center justify-between text-xs text-white z-40 relative bg-gradient-to-b from-[#092233] to-[#0c2a3e] border-b border-white/10 select-none">
+          <div className="w-full px-4 pt-2.5 pb-2 flex items-center justify-between text-xs text-white z-40 relative bg-gradient-to-b from-[#092233] to-[#0c2a3e] select-none">
             {/* Left side: Time + ⊕ + Snapchat + Chat bubble + Facebook (f) + dot */}
             <div className="flex items-center space-x-2">
               <span className="font-bold text-[14px] tracking-tight text-white">{displayTime}</span>
@@ -1822,11 +1890,15 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                 <div
                   key={tx.id}
                   onClick={() => handleOpenPickerForTx(tx)}
-                  className="w-full max-w-md mx-auto bg-[#1f2023] hover:bg-[#25282d] border-2 border-neutral-800 hover:border-[#0066FF] rounded-2xl p-4 transition-all duration-150 cursor-pointer shadow-lg group relative active:scale-[0.99]"
+                  className={`w-full max-w-md mx-auto bg-[#1f2023] hover:bg-[#25282d] border-2 ${
+                    tx.isNow 
+                      ? 'border-[#0066FF]/60 shadow-[0_4px_25px_rgba(0,102,255,0.18)]' 
+                      : 'border-neutral-800'
+                  } hover:border-[#0066FF] rounded-2xl p-4 transition-all duration-150 cursor-pointer shadow-lg group relative active:scale-[0.99]`}
                 >
-                  {/* Card Header: Credit/Debit status & Time */}
+                  {/* Card Header: Credit/Debit status, Now Badge & Time */}
                   <div className="flex items-center justify-between pb-2 mb-2 border-b border-neutral-800">
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 flex-wrap gap-y-1">
                       <span className={`px-2 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wide flex items-center space-x-1 ${
                         isCredit 
                           ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
@@ -1836,14 +1908,30 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                         <span>{isCredit ? 'Credited' : 'Debited'}</span>
                       </span>
 
-                      <span className="text-xs font-mono font-bold text-neutral-300">
+                      {/* Prominent "Now" Badge */}
+                      {tx.isNow && (
+                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-[#0066FF] text-white shadow-sm flex items-center space-x-1 border border-blue-400/50 animate-pulse">
+                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-200 mr-0.5" />
+                          <span>Now</span>
+                        </span>
+                      )}
+
+                      <span className="text-xs font-mono font-bold text-neutral-200">
                         ETB {tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </span>
                     </div>
 
-                    <span className="text-xs text-neutral-400">
-                      {tx.timeString}
-                    </span>
+                    <div className="flex items-center space-x-1.5 text-xs text-neutral-400 font-medium">
+                      {tx.isNow ? (
+                        <span className="text-cyan-400 font-semibold text-[11.5px] flex items-center space-x-1">
+                          <span>Now</span>
+                          <span className="text-neutral-500">•</span>
+                          <span className="text-neutral-300 font-normal">{tx.timeString}</span>
+                        </span>
+                      ) : (
+                        <span>{tx.timeString}</span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Message Body */}
@@ -2021,62 +2109,6 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
         </div>
       )}
 
-      {/* Floating Top Control Bar to toggle screens or go back */}
-      <div className="absolute top-2 inset-x-0 z-40 px-4 flex items-center justify-between pointer-events-none">
-        <button
-          type="button"
-          onClick={() => setView('bank_thread')}
-          className="pointer-events-auto px-3 py-1.5 rounded-full bg-black/70 hover:bg-black text-white text-xs font-bold backdrop-blur-md border border-white/20 shadow-xl transition flex items-center space-x-1.5 cursor-pointer"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>CBE Transactions</span>
-        </button>
-
-        <div className="flex items-center space-x-2 pointer-events-auto">
-          {/* Change phone / screen button */}
-          <button
-            type="button"
-            onClick={() => {
-              if (currentAlert) {
-                handleOpenPickerForTx({
-                  id: currentAlert.id,
-                  amount: currentAlert.amount,
-                  accountNumber: currentAlert.fullAccount,
-                  maskedAccount: currentAlert.maskedAccount,
-                  holderName: currentAlert.holderName,
-                  role: currentAlert.role,
-                  bankName: currentAlert.bankName,
-                  bankKey: currentAlert.bankKey,
-                  timeString: currentAlert.timeString,
-                  timestamp: currentAlert.timestamp,
-                  counterpartyName: currentAlert.counterpartyName,
-                  balanceAfter: currentAlert.balanceAfter,
-                  txId: currentAlert.txId,
-                  fullMessageText: currentAlert.summaryText,
-                });
-              } else {
-                setShowPickerModal(true);
-              }
-            }}
-            className="px-3 py-1.5 rounded-full bg-black/70 hover:bg-black text-amber-300 text-xs font-bold backdrop-blur-md border border-amber-400/40 shadow-xl transition flex items-center space-x-1.5 cursor-pointer"
-          >
-            <Smartphone className="w-3.5 h-3.5 text-amber-400" />
-            <span>Change Phone/Screen</span>
-          </button>
-
-          {/* Re-pop alert button */}
-          <button
-            type="button"
-            onClick={handleRetriggerAlert}
-            className="px-3 py-1.5 rounded-full bg-[#0066FF] hover:bg-blue-600 text-white text-xs font-extrabold shadow-xl transition flex items-center space-x-1 cursor-pointer"
-            title="Re-pop Truecaller Alert"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span>Pop Alert</span>
-          </button>
-        </div>
-      </div>
-
       {/* PHONE DEVICE FRAME CONTAINER */}
       <div className="relative w-full h-full max-w-[440px] max-h-[920px] bg-black sm:rounded-[38px] overflow-hidden sm:border-[5px] sm:border-neutral-800 shadow-[0_25px_70px_rgba(0,0,0,0.8)] flex flex-col">
         
@@ -2089,23 +2121,23 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
 
           {/* =============================================================== */}
           {/* TRUECALLER SMS NOTIFICATION POP-DOWN OVERLAY                    */}
-          {/* Smooth slide-down animation from top matching reference photo   */}
+          {/* Zero vertical gap with status bar, matching IMG_20260905_131647_440.jpg */}
           {/* =============================================================== */}
           {isPopdownVisible && currentAlert && (
             <div 
-              className={`absolute top-2.5 inset-x-0 z-50 px-3.5 sm:px-4 pointer-events-auto transition-all duration-300 transform ${
+              className={`absolute top-0 inset-x-0 z-50 px-2 sm:px-2.5 pointer-events-auto transition-all duration-300 transform ${
                 isPopdownAnimating 
                   ? '-translate-y-full opacity-0 scale-95' 
                   : 'translate-y-0 opacity-100 scale-100'
               }`}
             >
               <div 
-                className="w-full rounded-[25px] overflow-hidden bg-[#0066FF] p-[3.5px] shadow-[0_20px_60px_rgba(0,0,0,0.85)] border border-[#0066FF] transition-all"
+                className="w-full rounded-[24px] overflow-hidden bg-[#0066FF] p-[3px] shadow-[0_20px_60px_rgba(0,0,0,0.85)] border border-[#0066FF] transition-all"
               >
                 {/* Signature Royal Blue Truecaller Header Bar */}
-                <div className="bg-[#0066FF] px-4 pt-2.5 pb-2 flex items-center justify-between text-white select-none">
+                <div className="bg-[#0066FF] px-3.5 pt-2 pb-1.5 flex items-center justify-between text-white select-none">
                   <div className="flex items-center space-x-2">
-                    <span className="font-extrabold text-[17px] tracking-tight lowercase text-white">
+                    <span className="font-extrabold text-[16.5px] tracking-tight lowercase text-white">
                       truecaller
                     </span>
                   </div>
@@ -2129,37 +2161,36 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                 <div className="bg-white rounded-[21px] overflow-hidden text-slate-900">
                   
                   {/* Top content area with avatar, text, and AI summary */}
-                  <div className="p-4 pt-3.5 space-y-2.5">
+                  <div className="px-4 pt-3.5 pb-3 space-y-2.5">
                     {/* Bank Avatar & Name Header */}
                     <div className="flex items-center space-x-2.5">
                       <div className="w-9 h-9 rounded-full bg-[#dbe8ff] text-[#0066FF] flex items-center justify-center flex-shrink-0">
-                        <Building2 className="w-5 h-5 text-[#1e293b]" />
+                        <Building2 className="w-5 h-5 text-[#2c3e50]" />
                       </div>
                       <div>
-                        <h2 className="font-extrabold text-[17px] text-slate-900 tracking-tight leading-none">
+                        <h2 className="font-extrabold text-[17.5px] text-slate-900 tracking-tight leading-none">
                           {currentAlert.bankKey === 'cbe' ? 'CBE' : currentAlert.bankName}
                         </h2>
                       </div>
                     </div>
 
-                    {/* Main Transaction Message Text (Matches layout in reference photo) */}
-                    <div className="text-[16px] sm:text-[16.5px] leading-[1.35] text-slate-900 font-bold tracking-tight pt-0.5">
-                      Account {currentAlert.maskedAccount} {currentAlert.role === 'receiver' ? 'credited with ETB' : 'debited with ETB'}
-                      <div className="font-extrabold text-slate-950 text-[21px] sm:text-[22px] tracking-tight mt-0.5">
-                        {currentAlert.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.
+                    {/* Main Transaction Message Text (Matches exact layout in reference photo IMG_20260905_131647_440.jpg) */}
+                    <div className="text-[15.5px] sm:text-[16px] leading-snug text-slate-900 font-bold tracking-tight pt-0.5">
+                      Account {(currentAlert.maskedAccount || '1********0913').replace(/X/g, '*')} {currentAlert.role === 'receiver' ? 'credited with ETB' : 'debited with ETB'}
+                      <div className="font-extrabold text-slate-950 text-[22px] sm:text-[23px] tracking-tight mt-0.5 leading-none">
+                        {currentAlert.amount.toFixed(2)}.
                       </div>
                     </div>
 
-                    {/* AI Summary Expandable Tag */}
+                    {/* AI Summary Tag matching reference photo IMG_20260905_131647_440.jpg */}
                     <div className="pt-0.5">
                       <button
                         type="button"
                         onClick={() => setShowAiBreakdown(!showAiBreakdown)}
-                        className="inline-flex items-center space-x-1.5 text-slate-500 hover:text-[#0066FF] text-[13.5px] font-medium transition cursor-pointer"
+                        className="inline-flex items-center space-x-1.5 text-slate-600 hover:text-[#0066FF] text-[14px] font-medium transition cursor-pointer"
                       >
                         <Sparkles className="w-4 h-4 text-[#0066FF] fill-[#0066FF]" />
-                        <span className="font-medium text-slate-600">Al summary</span>
-                        <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${showAiBreakdown ? 'rotate-180' : ''}`} />
+                        <span className="font-medium text-slate-600">AI summary</span>
                       </button>
 
                       {/* Expandable AI Breakdown Details */}
@@ -2194,12 +2225,12 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                     </div>
                   </div>
 
-                  {/* Bottom Soft Blue Action Strip matching reference image */}
-                  <div className="bg-[#ebf3fe] px-4 py-2.5 text-center border-t border-[#d8e5fa]/70 rounded-b-[21px]">
+                  {/* Bottom Soft Blue Action Strip matching reference image IMG_20260905_131647_440.jpg */}
+                  <div className="bg-[#ebf3fe] px-4 py-3 text-center border-t border-[#d8e5fa]/60 rounded-b-[21px]">
                     <button
                       type="button"
                       onClick={handleMarkAsRead}
-                      className={`w-full py-0.5 text-center font-bold text-[16px] transition cursor-pointer flex items-center justify-center space-x-1.5 ${
+                      className={`w-full py-0.5 text-center font-bold text-[17px] transition cursor-pointer flex items-center justify-center space-x-1.5 ${
                         currentAlert.read 
                           ? 'text-emerald-600' 
                           : 'text-[#0066FF] hover:text-[#0052cc] active:scale-98'
@@ -2221,19 +2252,67 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
             </div>
           )}
 
-          {/* If dismissed, tap prompt */}
-          {!isPopdownVisible && (
-            <div className="absolute inset-0 z-30 flex items-center justify-center p-4 bg-black/30 pointer-events-none">
+          {/* =============================================================== */}
+          {/* ONE-LINE GRID CONTROLS: Back, Reload / Simulate Again, Choose  */}
+          {/* Sits behind the popdown message (z-20 layer vs popdown z-50)   */}
+          {/* =============================================================== */}
+          <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 z-20 px-3 sm:px-4 flex items-center justify-center pointer-events-auto select-none">
+            <div className="grid grid-cols-3 gap-2 w-full max-w-[400px] p-2 bg-neutral-950/85 backdrop-blur-md rounded-2xl border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
+              {/* 1. Back Button */}
+              <button
+                type="button"
+                onClick={() => setView('bank_thread')}
+                className="flex items-center justify-center space-x-1.5 py-2.5 px-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition active:scale-95 border border-white/10 cursor-pointer"
+                title="Back to CBE Transactions"
+              >
+                <ArrowLeft className="w-4 h-4 text-neutral-300 flex-shrink-0" />
+                <span className="truncate">Back</span>
+              </button>
+
+              {/* 2. Reloading or Simulate Again Button */}
               <button
                 type="button"
                 onClick={handleRetriggerAlert}
-                className="pointer-events-auto px-5 py-2.5 bg-[#0066FF] hover:bg-blue-600 text-white font-bold text-sm rounded-full shadow-2xl transition cursor-pointer flex items-center space-x-2 border border-white/20 active:scale-95"
+                className="flex items-center justify-center space-x-1.5 py-2.5 px-2 rounded-xl bg-[#0066FF] hover:bg-blue-600 text-white text-xs font-extrabold transition active:scale-95 shadow-lg border border-blue-400/40 cursor-pointer"
+                title="Simulate or Reload Truecaller Pop-down Alert"
               >
-                <RefreshCw className="w-4 h-4" />
-                <span>Tap to Show Truecaller Pop-down Alert</span>
+                <RefreshCw className="w-4 h-4 flex-shrink-0" />
+                <span className="truncate">Simulate Again</span>
+              </button>
+
+              {/* 3. Choose Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (currentAlert) {
+                    handleOpenPickerForTx({
+                      id: currentAlert.id,
+                      amount: currentAlert.amount,
+                      accountNumber: currentAlert.fullAccount,
+                      maskedAccount: currentAlert.maskedAccount,
+                      holderName: currentAlert.holderName,
+                      role: currentAlert.role,
+                      bankName: currentAlert.bankName,
+                      bankKey: currentAlert.bankKey,
+                      timeString: currentAlert.timeString,
+                      timestamp: currentAlert.timestamp,
+                      counterpartyName: currentAlert.counterpartyName,
+                      balanceAfter: currentAlert.balanceAfter,
+                      txId: currentAlert.txId,
+                      fullMessageText: currentAlert.summaryText,
+                    });
+                  } else {
+                    setShowPickerModal(true);
+                  }
+                }}
+                className="flex items-center justify-center space-x-1.5 py-2.5 px-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-amber-300 text-xs font-bold transition active:scale-95 border border-amber-400/35 cursor-pointer"
+                title="Choose Phone Model, Background Screen, or Bank Transaction"
+              >
+                <Smartphone className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                <span className="truncate">Choose</span>
               </button>
             </div>
-          )}
+          </div>
 
         </div>
 
