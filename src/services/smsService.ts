@@ -182,13 +182,13 @@ export function formatCbeCreditMessage(params: {
 
 function generateReceiptUrl(refId?: string): string {
   if (refId && refId.startsWith('v2-')) {
-    return `https://mreciept.cbe.com.et/${refId}`;
+    return `https://mbreceipt.cbe.com.et/${refId}`;
   }
   if (refId) {
     const cleanRef = refId.replace(/[^a-zA-Z0-9]/g, '');
-    return `https://mreciept.cbe.com.et/v2-hfHCxG${cleanRef}`;
+    return `https://mbreceipt.cbe.com.et/v2-hfHCxG${cleanRef}`;
   }
-  return `https://mreciept.cbe.com.et/v2-hfHCxGw3DOVOH4eFL6dD`;
+  return `https://mbreceipt.cbe.com.et/v2-hfHCxGw3DOVOH4eFL6dD`;
 }
 
 // Helper to generate ISO dates relative to current execution time
@@ -253,8 +253,8 @@ const INITIAL_DEMO_MESSAGES: SmsMessage[] = [
     disasterRecovery: 0.5,
     totalDebited: 1012.0,
     balance: 1755.47,
-    message: `Dear Leykun Jemaneh Ylma A debit transaction of ETB 1000.0. has occurred on your account 1*********4747. Service charge of ETB 10.00 and VAT(15%) of ETB1.50 and Disaster Recovery(5%) of 0.50 with total of ETB1012.00 .Your current balance is ETB1,755.47. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxGw3DOVOH4eFL6dD for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
-    receiptUrl: 'https://mreciept.cbe.com.et/v2-hfHCxGw3DOVOH4eFL6dD',
+    message: `Dear Leykun Jemaneh Ylma A debit transaction of ETB 1000.0. has occurred on your account 1*********4747. Service charge of ETB 10.00 and VAT(15%) of ETB1.50 and Disaster Recovery(5%) of 0.50 with total of ETB1012.00 .Your current balance is ETB1,755.47. Thanks for Banking with CBE.\nhttps://mbreceipt.cbe.com.et/v2-hfHCxGw3DOVOH4eFL6dD for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
+    receiptUrl: 'https://mbreceipt.cbe.com.et/v2-hfHCxGw3DOVOH4eFL6dD',
     feedbackUrl: DEFAULT_FEEDBACK_URL,
     timestamp: getRelativeDate(0, 14, 30, 1, 3), // > 12 months ago (April last year)
     read: true,
@@ -271,8 +271,8 @@ const INITIAL_DEMO_MESSAGES: SmsMessage[] = [
     type: 'CREDIT',
     amount: 50.0,
     balance: 1805.47,
-    message: `Dear Leykun Jemaneh Ylma You have received ETB 50.00 from account 1*********8925 (Kasahun Yematawork Lema) to your account 1*********4747. Your current balance is ETB1,805.47. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxGwmcij7q3ExbiWb for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
-    receiptUrl: 'https://mreciept.cbe.com.et/v2-hfHCxGwmcij7q3ExbiWb',
+    message: `Dear Leykun Jemaneh Ylma You have received ETB 50.00 from account 1*********8925 (Kasahun Yematawork Lema) to your account 1*********4747. Your current balance is ETB1,805.47. Thanks for Banking with CBE.\nhttps://mbreceipt.cbe.com.et/v2-hfHCxGwmcij7q3ExbiWb for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
+    receiptUrl: 'https://mbreceipt.cbe.com.et/v2-hfHCxGwmcij7q3ExbiWb',
     feedbackUrl: DEFAULT_FEEDBACK_URL,
     timestamp: getRelativeDate(14, 18, 51), // > 7 days ago (This year, month name)
     read: true,
@@ -311,8 +311,8 @@ const INITIAL_DEMO_MESSAGES: SmsMessage[] = [
     disasterRecovery: 0.5,
     totalDebited: 212.0,
     balance: 318.54,
-    message: `Dear Leykun Jemaneh Ylma A debit transaction of ETB 200.0. has occurred on your account 1*********4747. Service charge of ETB 10.00 and VAT(15%) of ETB1.50 and Disaster Recovery(5%) of 0.50 with total of ETB212.00 .Your current balance is ETB318.54. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxGw3DOVOH4eFL6dD for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
-    receiptUrl: 'https://mreciept.cbe.com.et/v2-hfHCxGw3DOVOH4eFL6dD',
+    message: `Dear Leykun Jemaneh Ylma A debit transaction of ETB 200.0. has occurred on your account 1*********4747. Service charge of ETB 10.00 and VAT(15%) of ETB1.50 and Disaster Recovery(5%) of 0.50 with total of ETB212.00 .Your current balance is ETB318.54. Thanks for Banking with CBE.\nhttps://mbreceipt.cbe.com.et/v2-hfHCxGw3DOVOH4eFL6dD for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
+    receiptUrl: 'https://mbreceipt.cbe.com.et/v2-hfHCxGw3DOVOH4eFL6dD',
     feedbackUrl: DEFAULT_FEEDBACK_URL,
     timestamp: getRelativeDate(1, 16, 20), // 1 day ago (Yesterday)
     read: true,
@@ -353,8 +353,8 @@ const INITIAL_DEMO_MESSAGES: SmsMessage[] = [
     disasterRecovery: 0.0,
     totalDebited: 20.0,
     balance: 298.54,
-    message: `Dear Leykun Jemaneh Ylma A debit transaction of ETB 20.0. has occurred on your account 1*********4747. Service charge of ETB 0.00 and VAT(15%) of 0.0 and Disaster Recovery(5%) of 0.00 with total of ETB20.00 .Your current balance is ETB298.54. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxGKNY8V0W9qoyCPX for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
-    receiptUrl: 'https://mreciept.cbe.com.et/v2-hfHCxGKNY8V0W9qoyCPX',
+    message: `Dear Leykun Jemaneh Ylma A debit transaction of ETB 20.0. has occurred on your account 1*********4747. Service charge of ETB 0.00 and VAT(15%) of 0.0 and Disaster Recovery(5%) of 0.00 with total of ETB20.00 .Your current balance is ETB298.54. Thanks for Banking with CBE.\nhttps://mbreceipt.cbe.com.et/v2-hfHCxGKNY8V0W9qoyCPX for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
+    receiptUrl: 'https://mbreceipt.cbe.com.et/v2-hfHCxGKNY8V0W9qoyCPX',
     feedbackUrl: DEFAULT_FEEDBACK_URL,
     timestamp: getRelativeDate(0, 12, 54), // Today at 12:54 PM (Recent / Now)
     read: false,
@@ -372,8 +372,8 @@ const INITIAL_DEMO_MESSAGES: SmsMessage[] = [
     type: 'CREDIT',
     amount: 450.0,
     balance: 4850.0,
-    message: `Dear Selamawit Tekle Haile You have received ETB 450.00 from account 1*********4747 (Leykun Jemaneh Ylma) to your account 1*********0121. Your current balance is ETB4,850.00. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxGselam2026 for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
-    receiptUrl: 'https://mreciept.cbe.com.et/v2-hfHCxGselam2026',
+    message: `Dear Selamawit Tekle Haile You have received ETB 450.00 from account 1*********4747 (Leykun Jemaneh Ylma) to your account 1*********0121. Your current balance is ETB4,850.00. Thanks for Banking with CBE.\nhttps://mbreceipt.cbe.com.et/v2-hfHCxGselam2026 for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
+    receiptUrl: 'https://mbreceipt.cbe.com.et/v2-hfHCxGselam2026',
     feedbackUrl: DEFAULT_FEEDBACK_URL,
     timestamp: getRelativeDate(1, 16, 20), // Yesterday at 4:20 PM
     read: false, // Unread alert pink dot
@@ -391,8 +391,8 @@ const INITIAL_DEMO_MESSAGES: SmsMessage[] = [
     type: 'CREDIT',
     amount: 1200.0,
     balance: 12450.0,
-    message: `Dear Kasahun Yematawork Lema You have received ETB 1200.00 from account 1*********4747 (Leykun Jemaneh Ylma) to your account 1*********8925. Your current balance is ETB12,450.00. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxGkasahun2026 for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
-    receiptUrl: 'https://mreciept.cbe.com.et/v2-hfHCxGkasahun2026',
+    message: `Dear Kasahun Yematawork Lema You have received ETB 1200.00 from account 1*********4747 (Leykun Jemaneh Ylma) to your account 1*********8925. Your current balance is ETB12,450.00. Thanks for Banking with CBE.\nhttps://mbreceipt.cbe.com.et/v2-hfHCxGkasahun2026 for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
+    receiptUrl: 'https://mbreceipt.cbe.com.et/v2-hfHCxGkasahun2026',
     feedbackUrl: DEFAULT_FEEDBACK_URL,
     timestamp: getRelativeDate(4, 11, 30), // 4 days ago (Last week)
     read: true,
@@ -410,8 +410,8 @@ const INITIAL_DEMO_MESSAGES: SmsMessage[] = [
     type: 'CREDIT',
     amount: 2500.0,
     balance: 25440.0,
-    message: `Dear Dawit Haile You have received ETB 2500.00 from account 1*********4747 (Leykun Jemaneh Ylma) to your account 1*********8657. Your current balance is ETB25,440.00. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxGdawit2026 for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
-    receiptUrl: 'https://mreciept.cbe.com.et/v2-hfHCxGdawit2026',
+    message: `Dear Dawit Haile You have received ETB 2500.00 from account 1*********4747 (Leykun Jemaneh Ylma) to your account 1*********8657. Your current balance is ETB25,440.00. Thanks for Banking with CBE.\nhttps://mbreceipt.cbe.com.et/v2-hfHCxGdawit2026 for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
+    receiptUrl: 'https://mbreceipt.cbe.com.et/v2-hfHCxGdawit2026',
     feedbackUrl: DEFAULT_FEEDBACK_URL,
     timestamp: getRelativeDate(18, 10, 15), // 18 days ago (Last month)
     read: true,
@@ -541,6 +541,22 @@ export class SmsService {
               m => m.accountNumber === '1000419524747' && m.role === 'sender'
             );
             list.unshift(...seedSenders);
+            localStorage.setItem(STORAGE_MESSAGES_KEY, JSON.stringify(list));
+          }
+
+          // Migrate any existing messages that contain mreciept.cbe.com.et to mbreceipt.cbe.com.et
+          let listNeedsResave = false;
+          list.forEach(m => {
+            if (m.receiptUrl && (m.receiptUrl.includes('mreciept.cbe.com.et') || m.receiptUrl.includes('mbreciept.cbe.com.et'))) {
+              m.receiptUrl = m.receiptUrl.replace(/m(?:b)?reciept\.cbe\.com\.et/g, 'mbreceipt.cbe.com.et');
+              listNeedsResave = true;
+            }
+            if (m.message && (m.message.includes('mreciept.cbe.com.et') || m.message.includes('mbreciept.cbe.com.et'))) {
+              m.message = m.message.replace(/m(?:b)?reciept\.cbe\.com\.et/g, 'mbreceipt.cbe.com.et');
+              listNeedsResave = true;
+            }
+          });
+          if (listNeedsResave) {
             localStorage.setItem(STORAGE_MESSAGES_KEY, JSON.stringify(list));
           }
         }
@@ -918,8 +934,97 @@ export class SmsService {
       };
     });
 
-    // Sort all accounts descending: the account with the most recent transaction is FIRST!
+    // Identify the sender and receiver of the most recent transaction (strictly max 2 accounts)
+    const nowAccountCleanSet = new Set<string>();
+
+    // 1. Check local transactions
+    try {
+      if (typeof window !== 'undefined') {
+        const storedTxRaw = localStorage.getItem('cbe_transactions');
+        if (storedTxRaw) {
+          const txList = JSON.parse(storedTxRaw);
+          if (Array.isArray(txList) && txList.length > 0) {
+            const sortedTx = [...txList].sort(
+              (a: any, b: any) => new Date(b.createdAt || b.date || b.timestamp || 0).getTime() - new Date(a.createdAt || a.date || a.timestamp || 0).getTime()
+            );
+            const latestTx = sortedTx[0];
+            if (latestTx) {
+              if (latestTx.senderAccount) {
+                nowAccountCleanSet.add(String(latestTx.senderAccount).replace(/\D/g, ''));
+              }
+              if (latestTx.recipientAccount) {
+                nowAccountCleanSet.add(String(latestTx.recipientAccount).replace(/\D/g, ''));
+              }
+            }
+          }
+        }
+      }
+    } catch {
+      // Non-blocking fallback
+    }
+
+    // 2. Check SMS messages for the latest transaction sender and receiver
+    const sortedAllMessages = [...allMessages].sort(
+      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+
+    if (nowAccountCleanSet.size < 2 && sortedAllMessages.length > 0) {
+      const topMsg = sortedAllMessages[0];
+      const topTxId = topMsg.transactionId;
+
+      if (topMsg.accountNumber) {
+        nowAccountCleanSet.add(topMsg.accountNumber.replace(/\D/g, ''));
+      }
+
+      if (topTxId) {
+        const matchingTxMsgs = sortedAllMessages.filter(m => m.transactionId === topTxId);
+        for (const m of matchingTxMsgs) {
+          if (m.accountNumber) {
+            nowAccountCleanSet.add(m.accountNumber.replace(/\D/g, ''));
+          }
+          if (nowAccountCleanSet.size >= 2) break;
+        }
+      }
+
+      if (nowAccountCleanSet.size < 2) {
+        const otherParty = topMsg.role === 'sender' ? topMsg.recipient : topMsg.sender;
+        if (otherParty) {
+          const cleanOther = otherParty.replace(/\D/g, '');
+          const matchedAcc = accounts.find(a => {
+            const cleanA = a.accountNumber.replace(/\D/g, '');
+            return cleanA === cleanOther || (cleanOther.length >= 4 && cleanA.endsWith(cleanOther.slice(-4)));
+          });
+          if (matchedAcc) {
+            nowAccountCleanSet.add(matchedAcc.accountNumber.replace(/\D/g, ''));
+          }
+        }
+      }
+    }
+
+    // If still need counterpart, pick the next highest activity account
+    if (nowAccountCleanSet.size < 2 && accountMetas.length > 0) {
+      for (const meta of accountMetas) {
+        const cleanAcc = meta.account.accountNumber.replace(/\D/g, '');
+        nowAccountCleanSet.add(cleanAcc);
+        if (nowAccountCleanSet.size >= 2) break;
+      }
+    }
+
+    // Fulfills: "the now badge is only should have two accounts ok. the receiver and sender."
+    const finalNowAccounts = new Set(Array.from(nowAccountCleanSet).slice(0, 2));
+
+    // Sort all accounts:
+    // 1. The two "Now" accounts (sender and receiver of latest transaction) are FIRST
+    // 2. The other accounts are sorted by their timestamp descending
     accountMetas.sort((a, b) => {
+      const aClean = a.account.accountNumber.replace(/\D/g, '');
+      const bClean = b.account.accountNumber.replace(/\D/g, '');
+      const aIsNow = finalNowAccounts.has(aClean);
+      const bIsNow = finalNowAccounts.has(bClean);
+
+      if (aIsNow && !bIsNow) return -1;
+      if (!aIsNow && bIsNow) return 1;
+
       const timeA = a.latestTimestamp ? new Date(a.latestTimestamp).getTime() : 0;
       const timeB = b.latestTimestamp ? new Date(b.latestTimestamp).getTime() : 0;
       return timeB - timeA;
@@ -927,8 +1032,12 @@ export class SmsService {
 
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    let nonNowRecentIndex = 0;
 
-    accountMetas.forEach((item, index) => {
+    accountMetas.forEach((item) => {
+      const cleanAcc = item.account.accountNumber.replace(/\D/g, '');
+      const isSenderOrReceiver = finalNowAccounts.has(cleanAcc);
+
       if (!item.latestTimestamp) {
         item.timeLabel = 'No activity';
         item.isNow = false;
@@ -948,22 +1057,28 @@ export class SmsService {
 
       const startOfTarget = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
       const diffDays = Math.round((startOfToday - startOfTarget) / (1000 * 60 * 60 * 24));
-      const diffMinutes = Math.floor(Math.max(0, now.getTime() - date.getTime()) / (1000 * 60));
-
-      // The top recent transaction account is "Now", or if within 30 minutes
-      const isNow = index === 0 || diffMinutes <= 30;
-
-      const timeStr = date.toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true,
-      });
 
       if (diffDays <= 0) {
         item.groupKey = 'recent';
         item.groupTitle = 'Recent';
-        item.isNow = isNow;
-        item.timeLabel = isNow ? 'Now' : timeStr;
+
+        // Only the receiver and sender have the "Now" badge!
+        if (isSenderOrReceiver) {
+          item.isNow = true;
+          item.timeLabel = 'Now';
+        } else {
+          // All other accounts in the recent list display their timestamp
+          item.isNow = false;
+          nonNowRecentIndex++;
+          // Stagger if timestamps are identical so each shows a realistic, distinct time
+          const staggeredDate = new Date(date.getTime() - (nonNowRecentIndex * 15 * 60 * 1000));
+          const displayDate = staggeredDate.getDate() === date.getDate() ? staggeredDate : date;
+          item.timeLabel = displayDate.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true,
+          });
+        }
       } else if (diffDays === 1) {
         item.groupKey = 'yesterday';
         item.groupTitle = 'Yesterday';

@@ -28,6 +28,11 @@ import {
   AccountTimeMeta
 } from '../services/smsService';
 import { LocalDb } from '../lib/mockData';
+import GoogleMessagesInbox from '../components/GoogleMessagesInbox';
+import GoogleMessagesThread from '../components/GoogleMessagesThread';
+import { MessageThread } from '../types/messages';
+import { GoogleMessagesService } from '../services/googleMessagesData';
+import { CbeWebReceiptModal } from '../components/CbeWebReceiptModal';
 
 interface SmsPageProps {
   onBack: () => void;
@@ -35,6 +40,15 @@ interface SmsPageProps {
 }
 
 export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPageProps) {
+  // Navigation View State: 'inbox' (Google Messages list) | 'cbe' | 'generic_thread'
+  const [pageView, setPageView] = useState<'inbox' | 'cbe' | 'generic_thread'>('inbox');
+  const [selectedGenericThread, setSelectedGenericThread] = useState<MessageThread | null>(null);
+  const [threads, setThreads] = useState<MessageThread[]>(() => GoogleMessagesService.getThreads());
+
+  const refreshThreads = () => {
+    setThreads(GoogleMessagesService.getThreads());
+  };
+
   // Accounts and active account state
   const [accounts, setAccounts] = useState<SmsAccount[]>(() => SmsService.getAccounts());
   const [activeAccountNum, setActiveAccountNum] = useState<string>(() => {
@@ -110,19 +124,39 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
     }
   }, [initialAccountId]);
 
+  // Selection and chat handlers for Google Messages
+  const handleSelectThread = (thread: MessageThread) => {
+    if (thread.isCbe) {
+      setPageView('cbe');
+    } else {
+      setSelectedGenericThread(thread);
+      setPageView('generic_thread');
+    }
+  };
+
+  const handleStartChat = (recipient: string, message: string) => {
+    const newThread = GoogleMessagesService.startNewThread(recipient, message);
+    refreshThreads();
+    setSelectedGenericThread(newThread);
+    setPageView('generic_thread');
+  };
+
   useEffect(() => {
     refreshAccounts();
     reloadMessages(activeAccountNum);
+    refreshThreads();
 
     const handleSmsUpdated = () => {
       reloadMessages(activeAccountNum);
       setAccounts(SmsService.getAccounts());
+      refreshThreads();
     };
 
     const handleActiveAccChanged = (e: CustomEvent<string>) => {
       if (e.detail) {
         setActiveAccountNum(e.detail);
         reloadMessages(e.detail);
+        refreshThreads();
       }
     };
 
@@ -220,7 +254,7 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
       <div className={`whitespace-pre-line text-[14px] leading-relaxed ${isDarkMode ? 'text-[#e8eaed]' : 'text-[#1f2328]'} font-normal break-words`}>
         {parts.map((part, index) => {
           if (part.match(urlRegex)) {
-            const isReceipt = part.includes('mreciept.cbe.com.et');
+            const isReceipt = part.includes('mbreceipt') || part.includes('receipt') || part.includes('mreciept') || part.includes('cbe.com.et');
             return (
               <a
                 key={index}
@@ -250,6 +284,36 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
     return messages.findIndex(m => !m.read);
   }, [messages]);
 
+  // Main Google Messages Inbox View (Matches user's screenshot)
+  if (pageView === 'inbox') {
+    return (
+      <GoogleMessagesInbox
+        threads={threads}
+        onSelectThread={handleSelectThread}
+        onBackToApp={onBack}
+        isDarkMode={isDarkMode}
+        onToggleTheme={handleToggleTheme}
+        onStartChat={handleStartChat}
+        onRefresh={refreshThreads}
+      />
+    );
+  }
+
+  // Non-CBE Message Thread (e.g. 131, ethio tel, Safaricom, etc.)
+  if (pageView === 'generic_thread' && selectedGenericThread) {
+    return (
+      <GoogleMessagesThread
+        thread={selectedGenericThread}
+        onBack={() => {
+          refreshThreads();
+          setPageView('inbox');
+        }}
+        isDarkMode={isDarkMode}
+        onThreadUpdated={refreshThreads}
+      />
+    );
+  }
+
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-[#121212] text-[#e3e3e3]' : 'bg-[#f4f5f7] text-[#1f2328]'} flex flex-col font-sans select-text antialiased transition-colors duration-150`}>
       
@@ -272,12 +336,15 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
       {/* 2. Google Messages CBE Header Bar (Matching screenshot) */}
       <header className={`w-full ${isDarkMode ? 'bg-[#121212] border-neutral-900/80 text-white' : 'bg-white border-neutral-200 text-neutral-900 shadow-sm'} border-b px-2 py-2 flex items-center justify-between relative z-40`}>
         <div className="flex items-center space-x-3">
-          {/* Back button */}
+          {/* Back button returning to Google Messages inbox */}
           <button
             id="btn-sms-back"
-            onClick={onBack}
+            onClick={() => {
+              refreshThreads();
+              setPageView('inbox');
+            }}
             className={`p-2 rounded-full ${isDarkMode ? 'hover:bg-neutral-800 text-white' : 'hover:bg-neutral-100 text-neutral-800'} transition-colors active:scale-95`}
-            title="Back"
+            title="Back to Messages"
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
@@ -411,9 +478,9 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
                                 </div>
 
                                 <div className="flex items-center space-x-2 flex-shrink-0 ml-1">
-                                  {/* "Now" badge or formatted transaction time */}
+                                  {/* "Now" badge (restricted strictly to receiver and sender) or formatted transaction time */}
                                   {meta.isNow ? (
-                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 tracking-tight">
+                                    <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-purple-900/50 text-purple-300 border border-purple-700/40 tracking-tight">
                                       Now
                                     </span>
                                   ) : (
@@ -603,24 +670,33 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
       <div className={`w-full ${
         isDarkMode ? 'bg-[#121212] border-neutral-900' : 'bg-[#f4f5f7] border-neutral-200'
       } py-2 px-8 flex items-center justify-around select-none border-t`}>
-        {/* Recents Icon */}
+        {/* Recents Icon -> Back to Messages Inbox */}
         <button 
-          onClick={onBack}
+          onClick={() => {
+            refreshThreads();
+            setPageView('inbox');
+          }}
           className={`p-2 ${isDarkMode ? 'text-neutral-500 hover:text-neutral-300' : 'text-neutral-400 hover:text-neutral-600'} active:scale-90 transition-transform`}
+          title="Overview"
         >
           <div className={`w-3.5 h-3.5 border-2 ${isDarkMode ? 'border-neutral-500' : 'border-neutral-400'} rounded-sm`}></div>
         </button>
-        {/* Home Icon */}
+        {/* Home Icon -> Back to Banking App */}
         <button 
           onClick={onBack}
           className={`p-2 ${isDarkMode ? 'text-neutral-500 hover:text-neutral-300' : 'text-neutral-400 hover:text-neutral-600'} active:scale-90 transition-transform`}
+          title="Home"
         >
           <div className={`w-3.5 h-3.5 border-2 ${isDarkMode ? 'border-neutral-500' : 'border-neutral-400'} rounded-full`}></div>
         </button>
-        {/* Back Icon */}
+        {/* Back Icon -> Back to Messages Inbox */}
         <button 
-          onClick={onBack}
+          onClick={() => {
+            refreshThreads();
+            setPageView('inbox');
+          }}
           className={`p-2 ${isDarkMode ? 'text-neutral-500 hover:text-neutral-300' : 'text-neutral-400 hover:text-neutral-600'} active:scale-90 transition-transform`}
+          title="Back"
         >
           <div className={`w-0 h-0 border-y-[6px] border-y-transparent border-r-[10px] ${isDarkMode ? 'border-r-neutral-500' : 'border-r-neutral-400'}`}></div>
         </button>
@@ -687,7 +763,7 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
                                     </span>
                                   )}
                                   {meta.isNow ? (
-                                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                                    <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-purple-900/50 text-purple-300 border border-purple-700/40">
                                       Now
                                     </span>
                                   ) : (
@@ -763,99 +839,12 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
         </div>
       )}
 
-      {/* 7. Official CBE Receipt Modal (when clicking mreciept link) */}
+      {/* 7. Official CBE Receipt Modal (when clicking mbreceipt link) */}
       {showReceiptModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className={`${isDarkMode ? 'bg-[#1c1d21] border-neutral-800 text-white' : 'bg-white border-neutral-200 text-neutral-900'} border rounded-2xl w-full max-w-md overflow-hidden shadow-2xl`}>
-            
-            <div className="bg-purple-900/40 border-b border-purple-800/50 p-4 flex items-center justify-between">
-              <div className="flex items-center space-x-2.5">
-                <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                <div>
-                  <h3 className={`font-semibold text-sm ${isDarkMode ? 'text-white' : 'text-purple-950'}`}>Commercial Bank of Ethiopia</h3>
-                  <p className={`text-[11px] ${isDarkMode ? 'text-neutral-300' : 'text-purple-900'}`}>Official Electronic Receipt</p>
-                </div>
-              </div>
-              <button 
-                onClick={() => setShowReceiptModal(null)}
-                className={`p-1 rounded-full ${isDarkMode ? 'text-neutral-400 hover:text-white' : 'text-neutral-500 hover:text-neutral-900'}`}
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="p-5 space-y-3.5 text-sm">
-              <div className={`text-center py-2 border-b ${isDarkMode ? 'border-neutral-800' : 'border-neutral-200'}`}>
-                <span className={`text-xs ${isDarkMode ? 'text-neutral-400' : 'text-neutral-500'} uppercase tracking-wider`}>Transaction Amount</span>
-                <p className="text-2xl font-bold font-mono text-emerald-600 mt-0.5">
-                  ETB {showReceiptModal.amount?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '10.00'}
-                </p>
-                <span className="text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 font-mono mt-1 inline-block">
-                  SUCCESSFUL
-                </span>
-              </div>
-
-              <div className="space-y-2 text-xs">
-                <div className={`flex justify-between ${isDarkMode ? 'text-neutral-400' : 'text-neutral-600'}`}>
-                  <span>Reference / Ref:</span>
-                  <span className={`font-mono ${isDarkMode ? 'text-white' : 'text-neutral-900'}`}>{showReceiptModal.transactionId || 'FT263211VK07'}</span>
-                </div>
-                <div className={`flex justify-between ${isDarkMode ? 'text-neutral-400' : 'text-neutral-600'}`}>
-                  <span>Account Number:</span>
-                  <span className={`font-mono ${isDarkMode ? 'text-white' : 'text-neutral-900'}`}>{maskAccountNumber(showReceiptModal.accountNumber)}</span>
-                </div>
-                <div className={`flex justify-between ${isDarkMode ? 'text-neutral-400' : 'text-neutral-600'}`}>
-                  <span>Account Holder:</span>
-                  <span className={isDarkMode ? 'text-white' : 'text-neutral-900'}>{showReceiptModal.accountName || 'Leykun Jemaneh Ylma'}</span>
-                </div>
-                {showReceiptModal.serviceCharge !== undefined && (
-                  <div className={`flex justify-between ${isDarkMode ? 'text-neutral-400' : 'text-neutral-600'}`}>
-                    <span>Service Charge:</span>
-                    <span className={`font-mono ${isDarkMode ? 'text-white' : 'text-neutral-900'}`}>ETB {showReceiptModal.serviceCharge.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                  </div>
-                )}
-                {showReceiptModal.vat !== undefined && (
-                  <div className={`flex justify-between ${isDarkMode ? 'text-neutral-400' : 'text-neutral-600'}`}>
-                    <span>VAT (15%):</span>
-                    <span className={`font-mono ${isDarkMode ? 'text-white' : 'text-neutral-900'}`}>ETB {showReceiptModal.vat.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                  </div>
-                )}
-                {showReceiptModal.disasterRecovery !== undefined && (
-                  <div className={`flex justify-between ${isDarkMode ? 'text-neutral-400' : 'text-neutral-600'}`}>
-                    <span>Disaster Recovery (5%):</span>
-                    <span className={`font-mono ${isDarkMode ? 'text-white' : 'text-neutral-900'}`}>ETB {showReceiptModal.disasterRecovery.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                  </div>
-                )}
-                {showReceiptModal.totalDebited !== undefined && (
-                  <div className={`flex justify-between ${isDarkMode ? 'text-neutral-400 border-neutral-800' : 'text-neutral-600 border-neutral-200'} font-semibold border-t pt-1.5`}>
-                    <span>Total Debited:</span>
-                    <span className={`font-mono ${isDarkMode ? 'text-white' : 'text-neutral-900'}`}>ETB {showReceiptModal.totalDebited.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                  </div>
-                )}
-                <div className={`flex justify-between ${isDarkMode ? 'text-neutral-400' : 'text-neutral-600'}`}>
-                  <span>Remaining Balance:</span>
-                  <span className="font-mono text-emerald-600 font-semibold">
-                    ETB {showReceiptModal.balance?.toLocaleString(undefined, { minimumFractionDigits: 2 }) || '1,859.47'}
-                  </span>
-                </div>
-                <div className={`flex justify-between ${isDarkMode ? 'text-neutral-400' : 'text-neutral-600'}`}>
-                  <span>Date & Time:</span>
-                  <span className={isDarkMode ? 'text-white' : 'text-neutral-900'}>{new Date(showReceiptModal.timestamp).toLocaleString()}</span>
-                </div>
-              </div>
-
-              <div className={`pt-3 border-t ${isDarkMode ? 'border-neutral-800' : 'border-neutral-200'}`}>
-                <button
-                  onClick={() => setShowReceiptModal(null)}
-                  className={`w-full py-2 ${isDarkMode ? 'bg-neutral-800 hover:bg-neutral-700 text-white' : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-800'} rounded-xl text-xs font-medium transition-colors`}
-                >
-                  Close Receipt
-                </button>
-              </div>
-            </div>
-
-          </div>
-        </div>
+        <CbeWebReceiptModal 
+          smsMessage={showReceiptModal} 
+          onClose={() => setShowReceiptModal(null)} 
+        />
       )}
 
     </div>

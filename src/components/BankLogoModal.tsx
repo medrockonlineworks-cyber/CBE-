@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LocalDb, DEFAULT_CBE_LOGO } from '../lib/mockData';
+import { LocalDb, DEFAULT_CBE_LOGO, OFFICIAL_CBE_STAMP_LOGO, OFFICIAL_CBE_PURPLE_LOGO } from '../lib/mockData';
 import { UserProfile } from '../types';
 import { CbeLogo } from './CbeLogo';
 import { compressImageFile } from '../lib/imageUtils';
@@ -25,9 +25,19 @@ interface BankLogoModalProps {
 
 const PRESET_LOGOS = [
   {
-    name: 'Official CBE Emblem (Default)',
+    name: 'Official CBE Purple Logo (White Symbol)',
+    url: OFFICIAL_CBE_PURPLE_LOGO,
+    description: 'Authentic CBE brand purple disc with pure white CBE monument emblem'
+  },
+  {
+    name: 'Official CBE Rubber Stamp (Purple)',
+    url: OFFICIAL_CBE_STAMP_LOGO,
+    description: 'Authentic circular purple rubber stamp with Amharic & English arcs'
+  },
+  {
+    name: 'Official CBE Golden Emblem',
     url: DEFAULT_CBE_LOGO,
-    description: 'Official Commercial Bank of Ethiopia golden emblem'
+    description: 'Commercial Bank of Ethiopia traditional golden coin emblem'
   },
   {
     name: 'CBE Birr Vector Emblem',

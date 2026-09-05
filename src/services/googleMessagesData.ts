@@ -1,7 +1,9 @@
 import { MessageThread } from '../types/messages';
 import { SmsService } from './smsService';
 
-export const INITIAL_THREADS: MessageThread[] = [
+const STORAGE_KEY = 'google_messages_custom_threads';
+
+export const DEFAULT_THREADS: MessageThread[] = [
   {
     id: '131',
     sender: '131',
@@ -164,6 +166,29 @@ export const INITIAL_THREADS: MessageThread[] = [
 
 export class GoogleMessagesService {
   /**
+   * Loads custom threads and combines with defaults
+   */
+  private static getStoredThreads(): MessageThread[] {
+    try {
+      const data = localStorage.getItem(STORAGE_KEY);
+      if (data) {
+        return JSON.parse(data);
+      }
+    } catch {
+      // ignore
+    }
+    return DEFAULT_THREADS;
+  }
+
+  private static saveStoredThreads(threads: MessageThread[]) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(threads));
+    } catch {
+      // ignore
+    }
+  }
+
+  /**
    * Retrieves all threads, dynamically synchronizing the CBE thread
    * with real banking transactions from SmsService.
    */
@@ -176,7 +201,9 @@ export class GoogleMessagesService {
     const latestCbeMsg = sortedCbe[0];
     const unreadCbeCount = cbeMessages.filter(m => !m.read).length;
 
-    return INITIAL_THREADS.map(thread => {
+    const threads = this.getStoredThreads();
+
+    return threads.map(thread => {
       if (thread.isCbe) {
         let snippet = thread.snippet;
         let timeLabel = thread.timeLabel;
@@ -218,5 +245,95 @@ export class GoogleMessagesService {
 
       return thread;
     });
+  }
+
+  /**
+   * Mark a thread as read
+   */
+  static markThreadRead(threadId: string) {
+    if (threadId === 'CBE') {
+      SmsService.markAllAsRead(SmsService.getActiveAccountNumber());
+    } else {
+      const threads = this.getStoredThreads();
+      const updated = threads.map(t => {
+        if (t.id === threadId) {
+          return { ...t, unreadCount: 0 };
+        }
+        return t;
+      });
+      this.saveStoredThreads(updated);
+    }
+  }
+
+  /**
+   * Add a message to a thread
+   */
+  static sendMessage(threadId: string, text: string): MessageThread | null {
+    const threads = this.getStoredThreads();
+    const target = threads.find(t => t.id === threadId);
+    if (!target) return null;
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+    const newMsg = {
+      id: `msg-${Date.now()}`,
+      text,
+      timestamp: timeStr,
+      sender: 'Me',
+      isSender: true
+    };
+
+    const updatedMessages = [...(target.messages || []), newMsg];
+    const updatedThread: MessageThread = {
+      ...target,
+      messages: updatedMessages,
+      snippet: text.length > 55 ? text.slice(0, 52) + '...' : text,
+      timestamp: now.toISOString(),
+      timeLabel: 'Now',
+    };
+
+    const newThreads = [
+      updatedThread,
+      ...threads.filter(t => t.id !== threadId)
+    ];
+
+    this.saveStoredThreads(newThreads);
+    return updatedThread;
+  }
+
+  /**
+   * Create a new conversation thread
+   */
+  static startNewThread(recipient: string, initialMessage: string): MessageThread {
+    const threads = this.getStoredThreads();
+    const id = `thread-${Date.now()}`;
+    const colors = ['#0ea5e9', '#9333ea', '#eab308', '#f97316', '#16a34a', '#ef4444', '#ec4899'];
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+
+    const newThread: MessageThread = {
+      id,
+      sender: recipient,
+      avatarColor: randomColor,
+      snippet: initialMessage.length > 55 ? initialMessage.slice(0, 52) + '...' : initialMessage,
+      timestamp: now.toISOString(),
+      timeLabel: 'Now',
+      unreadCount: 0,
+      messages: [
+        {
+          id: `msg-${Date.now()}`,
+          text: initialMessage,
+          timestamp: timeStr,
+          sender: 'Me',
+          isSender: true
+        }
+      ]
+    };
+
+    this.saveStoredThreads([newThread, ...threads]);
+    return newThread;
   }
 }

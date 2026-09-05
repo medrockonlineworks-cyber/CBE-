@@ -5,6 +5,7 @@ import { Transaction } from '../types';
 import { LocalDb, DEFAULT_CBE_LOGO, formatTo12CharTxId } from '../lib/mockData';
 import { calculateCbeFee } from '../lib/cbeTariff';
 import { CbeLogo } from './CbeLogo';
+import { CbeWebReceiptModal } from './CbeWebReceiptModal';
 import { 
   Check, 
   Share2, 
@@ -279,7 +280,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   // Dynamic realistic CBE Transaction ID: 12 characters exactly (e.g. FT263211VK07)
   const txId = formatTo12CharTxId(transaction.id);
 
-  const receiptUrl = `https://mreciept.cbe.com.et/v2-${txId}`;
+  const receiptUrl = `https://mbreceipt.cbe.com.et/v2-${txId}`;
   const feedbackUrl = 'https://forms.gle/kGNGQpG3mQCCk3iD6';
 
   const cleanSenderDisplayName = cbeSenderFullName.replace(/\s*\(Admin\)/i, '').replace(/\s*\(\d{4}\)/, '').trim() || 'Leykun Jemaneh Ylma';
@@ -541,28 +542,38 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     ctx.roundRect(0, cardTop, width, height - cardTop - 60, [36, 36, 0, 0]);
     ctx.fill();
 
-    // 4. Overlapping Large Success Checkmark Circle
+    // 4. Overlapping Large Success Checkmark Circle (Sharp edge, white half-circle on top only, no bottom circle, no shadow)
     const badgeX = width / 2;
     const badgeY = cardTop;
-    const badgeR = 66;
+    const badgeR = 60;
+    const archWidth = 10;
     ctx.save();
+    
+    // Solid purple base circle
     ctx.fillStyle = '#68137e';
     ctx.beginPath();
     ctx.arc(badgeX, badgeY, badgeR, 0, Math.PI * 2);
     ctx.fill();
-    ctx.lineWidth = 8;
-    ctx.strokeStyle = '#ffffff';
-    ctx.stroke();
 
-    // Big Bold Checkmark
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 10;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
+    // Top-half white semi-circle arch ONLY (flat base on cardTop, sharp corner with card edge)
+    ctx.fillStyle = '#ffffff';
     ctx.beginPath();
-    ctx.moveTo(badgeX - 27, badgeY + 3);
-    ctx.lineTo(badgeX - 7, badgeY + 25);
-    ctx.lineTo(badgeX + 29, badgeY - 19);
+    ctx.arc(badgeX, badgeY, badgeR + archWidth, Math.PI, 2 * Math.PI, false);
+    ctx.lineTo(badgeX + badgeR, badgeY);
+    ctx.arc(badgeX, badgeY, badgeR, 2 * Math.PI, Math.PI, true);
+    ctx.closePath();
+    ctx.fill();
+
+    // Big Bold Crisp White Checkmark with sharp ends and miter elbow
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 11;
+    ctx.lineCap = 'butt';
+    ctx.lineJoin = 'miter';
+    ctx.miterLimit = 4;
+    ctx.beginPath();
+    ctx.moveTo(badgeX - 27, badgeY);
+    ctx.lineTo(badgeX - 7, badgeY + 20);
+    ctx.lineTo(badgeX + 29, badgeY - 16);
     ctx.stroke();
     ctx.restore();
 
@@ -1095,24 +1106,46 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       </div>
 
       {/* Main White Sheet Container */}
-      <div className="bg-white rounded-t-[32px] sm:rounded-t-[36px] flex-1 px-4 sm:px-5 pt-0 pb-5 flex flex-col justify-between shadow-2xl relative">
+      <div className="bg-white rounded-t-[32px] sm:rounded-t-[36px] flex-1 px-4 sm:px-5 pt-0 pb-5 flex flex-col justify-between shadow-none relative">
         
-        {/* Overlapping Large Success Checkmark Badge */}
-        <div className="flex justify-center -mt-10 sm:-mt-11 mb-2.5 flex-shrink-0">
-          <div className="w-[82px] h-[82px] sm:w-[92px] sm:h-[92px] rounded-full bg-[#68137e] border-[5.5px] sm:border-[6.5px] border-white shadow-[0_4px_18px_rgba(0,0,0,0.15)] flex items-center justify-center">
+        {/* Overlapping Large Success Checkmark Badge (Sharp edge, white half-circle on top only, no bottom circle, no shadow) */}
+        <div className="relative flex justify-center flex-shrink-0">
+          <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 top-0 w-[90px] h-[90px] sm:w-[98px] sm:h-[98px] pointer-events-none select-none z-10">
             <svg 
-              className="w-11 h-11 sm:w-12 sm:h-12 text-white" 
-              viewBox="0 0 24 24" 
+              viewBox="0 0 90 90" 
+              className="w-full h-full block" 
               fill="none" 
-              stroke="currentColor" 
-              strokeWidth="3.8" 
-              strokeLinecap="round" 
-              strokeLinejoin="round"
+              xmlns="http://www.w3.org/2000/svg"
             >
-              <polyline points="20 6 9 17 4 12" />
+              {/* 1. Purple Base Circle (radius 38, centered at 45, 45) */}
+              <circle cx="45" cy="45" r="38" fill="#68137e" />
+
+              {/* 2. Top-Half White Semi-Circle Arch Only:
+                  Outer radius = 45 (touches horizontal line at x=0 and x=90, y=45)
+                  Inner radius = 38 (touches purple circle)
+                  Only on top (y <= 45). Flat base at y=45 forms sharp 90-degree corners with the white card edge!
+              */}
+              <path 
+                d="M 0,45 A 45,45 0 0,1 90,45 L 83,45 A 38,38 0 0,0 7,45 Z" 
+                fill="#ffffff" 
+              />
+
+              {/* 3. Bold Crisp White Checkmark with sharp ends and miter elbow matching reference image */}
+              <path
+                d="M 27 45 L 40 58 L 64 34"
+                fill="none"
+                stroke="#ffffff"
+                strokeWidth="7.5"
+                strokeLinecap="butt"
+                strokeLinejoin="miter"
+                strokeMiterlimit="4"
+              />
             </svg>
           </div>
         </div>
+
+        {/* Spacer for the overlapping badge */}
+        <div className="h-12 sm:h-13 flex-shrink-0" />
 
         <div className="space-y-3 flex-1 flex flex-col justify-center">
           {/* Headline (Normal weight as requested) */}
@@ -1256,67 +1289,12 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
       </div>
 
-      {/* Detailed Modal Breakdown if User Clicks 'Receipt' */}
+      {/* Official CBE Customer Receipt Web Page when User Clicks 'Receipt' */}
       {showDetailedModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-3xl max-w-sm w-full p-6 space-y-4 shadow-2xl animate-fade-in border border-gray-100">
-            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-              <div className="flex items-center gap-2">
-                <CbeLogo className="w-7 h-7" src={customBankLogo} />
-                <h3 className="font-extrabold text-sm text-gray-900">Official Receipt Details</h3>
-              </div>
-              <button 
-                onClick={() => setShowDetailedModal(false)}
-                className="text-gray-400 hover:text-gray-700 text-xs font-bold px-2 py-1 rounded-lg bg-gray-100"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="space-y-3 text-xs">
-              <div className="flex justify-between">
-                <span className="text-gray-400 font-medium">Transaction ID</span>
-                <span className="font-mono font-bold text-gray-900">{txId}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400 font-medium">Principal Amount</span>
-                <span className="font-mono font-bold text-gray-900">ETB {amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400 font-medium">Service Charge</span>
-                <span className="font-mono font-bold text-gray-900">ETB {serviceChargeStr}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400 font-medium">VAT (15%)</span>
-                <span className="font-mono font-bold text-gray-900">ETB {vatStr}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400 font-medium">Disaster Recovery (5%)</span>
-                <span className="font-mono font-bold text-gray-900">ETB {disasterRecoveryStr}</span>
-              </div>
-              <div className="border-t border-gray-100 pt-2 flex justify-between text-sm font-black">
-                <span className="text-gray-900">Total Debited</span>
-                <span className="text-purple-900 font-mono">ETB {totalDebitedStr}</span>
-              </div>
-            </div>
-
-            <div className="pt-2 flex gap-2">
-              <button 
-                onClick={handlePrint}
-                className="flex-1 bg-[#68137e] hover:bg-[#530d66] text-white py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer"
-              >
-                <Printer className="w-3.5 h-3.5" />
-                <span>Print Official PDF</span>
-              </button>
-              <button 
-                onClick={() => setShowDetailedModal(false)}
-                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-xl font-bold text-xs transition cursor-pointer"
-              >
-                Done
-              </button>
-            </div>
-          </div>
-        </div>
+        <CbeWebReceiptModal 
+          transaction={transaction} 
+          onClose={() => setShowDetailedModal(false)} 
+        />
       )}
 
     </div>
