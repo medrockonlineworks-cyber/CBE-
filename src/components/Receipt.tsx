@@ -23,7 +23,6 @@ import {
   Loader2,
   Image as ImageIcon,
   Wifi,
-  Lock,
   Sparkles,
   MessageSquare,
   X,
@@ -151,7 +150,6 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   const [copiedToast, setCopiedToast] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [flashAnimation, setFlashAnimation] = useState(false);
-  const [islandExpanded, setIslandExpanded] = useState(false);
   const [statusTime, setStatusTime] = useState<string>(() => {
     const now = new Date();
     const hours = now.getHours() % 12 || 12;
@@ -356,41 +354,13 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     const statusMinutes = now.getMinutes().toString().padStart(2, '0');
     const statusTimeStr = `${statusHours % 12 || 12}:${statusMinutes}`;
 
-    // 1A. iOS Status Bar - Left: Time in SF Pro / iOS Typography
+    // 1A. Status Bar - Left: Time
     ctx.fillStyle = '#ffffff';
     ctx.font = '600 18px -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif';
     ctx.textAlign = 'left';
     ctx.fillText(statusTimeStr, 44, 42);
 
-    // 1B. Center: iPhone 17 Dynamic Island Pill (Slimmer 2026 Micro-Sensor Architecture)
-    const islandW = 160;
-    const islandH = 30;
-    const islandX = (width - islandW) / 2;
-    const islandY = 16;
-    
-    // iPhone 17 Dynamic Island Shadow & Precision Opaque Glass Body
-    ctx.fillStyle = '#000000';
-    ctx.beginPath();
-    ctx.roundRect(islandX, islandY, islandW, islandH, 15);
-    ctx.fill();
-
-    // iPhone 17 Under-display TrueDepth Lens & Integrated Front Camera
-    ctx.fillStyle = '#0f172a';
-    ctx.beginPath();
-    ctx.arc(islandX + islandW - 20, islandY + islandH / 2, 4.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#1e293b';
-    ctx.beginPath();
-    ctx.arc(islandX + islandW - 20, islandY + islandH / 2, 1.8, 0, Math.PI * 2);
-    ctx.fill();
-
-    // iPhone 17 Micro Sensor Dot on Left of Island
-    ctx.fillStyle = '#0f172a';
-    ctx.beginPath();
-    ctx.arc(islandX + 18, islandY + islandH / 2, 3, 0, Math.PI * 2);
-    ctx.fill();
-
-    // 1C. iOS Status Bar - Right: Cellular 4-Bars, Wi-Fi, and iOS Battery
+    // 1B. Status Bar - Right: Cellular 4-Bars, Wi-Fi, and iOS Battery
     // 4 Cellular Bars (iOS Stepped Rounded Bars)
     const cellX = width - 136;
     for (let b = 0; b < 4; b++) {
@@ -958,59 +928,16 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         </div>
       )}
 
-      {/* 1. iPhone Top Status Bar (Time, Dynamic Island, Cellular, Wi-Fi, Battery) */}
+      {/* 1. Phone Top Status Bar (Time, Cellular, Wi-Fi, Battery) */}
       <div className="w-full pt-2.5 pb-1 px-5 flex items-center justify-between text-white select-none z-20 flex-shrink-0">
-        {/* Left: iOS Time */}
-        <div className="w-16 sm:w-20 text-left">
+        {/* Left: Time */}
+        <div className="text-left">
           <span className="font-semibold text-[13px] sm:text-[14px] tracking-tight font-sans text-white/95 drop-shadow-xs">
             {statusTime}
           </span>
         </div>
 
-        {/* Center: iPhone 17 Dynamic Island Pill with Interactive Expansion */}
-        <div className="flex-1 flex justify-center">
-          <button
-            type="button"
-            onClick={() => setIslandExpanded(!islandExpanded)}
-            className={`bg-black text-white rounded-full transition-all duration-300 ease-out flex items-center justify-between shadow-2xl border border-white/10 ${
-              islandExpanded 
-                ? 'px-3 py-1 w-56 gap-2 scale-105 ring-2 ring-purple-500/30' 
-                : 'h-5.5 w-22 px-2 hover:w-26 cursor-pointer hover:border-white/20'
-            }`}
-            title="iPhone 17 Dynamic Island"
-          >
-            {islandExpanded ? (
-              <>
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-ping flex-shrink-0" />
-                  <div className="flex flex-col text-left">
-                    <span className="text-[10px] font-black tracking-tight text-white leading-tight">iPhone 17 Pro</span>
-                    <span className="text-[8px] text-emerald-400 font-bold uppercase tracking-wider">CBE Verified</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 text-[10px] text-purple-300 font-medium flex-shrink-0 bg-white/10 px-1.5 py-0.5 rounded-full">
-                  <Lock className="w-2.5 h-2.5 text-purple-200" />
-                  <span className="text-[9px]">FaceID Active</span>
-                </div>
-              </>
-            ) : (
-              <>
-                {/* Left Micro-TrueDepth Sensor */}
-                <div className="w-1.5 h-1.5 rounded-full bg-[#111827] border border-gray-700/60 flex items-center justify-center">
-                  <div className="w-0.5 h-0.5 rounded-full bg-blue-900/60" />
-                </div>
-                {/* Center subtle CBE green pulse indicator */}
-                <div className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
-                {/* Right Camera Lens Dot with optical coating */}
-                <div className="w-2 h-2 rounded-full bg-[#0a0f1d] border border-gray-700/60 flex items-center justify-center">
-                  <div className="w-0.5 h-0.5 rounded-full bg-purple-900/80" />
-                </div>
-              </>
-            )}
-          </button>
-        </div>
-
-        {/* Right: iOS Cellular 4-Bars, Wi-Fi, and iOS Battery Indicator */}
+        {/* Right: Cellular 4-Bars, Wi-Fi, and Battery Indicator */}
         <div className="w-16 sm:w-20 flex items-center justify-end gap-1.5 text-white">
           {/* Cellular 4-Bars */}
           <div className="flex items-end gap-[1.5px] h-3" title="Cellular Full Signal">
