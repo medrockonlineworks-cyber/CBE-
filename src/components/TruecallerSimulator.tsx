@@ -48,7 +48,8 @@ import {
   Sun,
   Moon,
   ArrowDown,
-  ArrowUp
+  ArrowUp,
+  Users
 } from 'lucide-react';
 import { 
   TruecallerBankAccount, 
@@ -285,8 +286,13 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
 
   // Quick simulate transaction modal
   const [showQuickSimModal, setShowQuickSimModal] = useState<boolean>(false);
+  const [simMode, setSimMode] = useState<'transfer' | 'single'>('transfer');
+  const [simSenderName, setSimSenderName] = useState<string>('User X (Leykun Jemaneh)');
+  const [simSenderAccount, setSimSenderAccount] = useState<string>('1000419529165');
+  const [simReceiverName, setSimReceiverName] = useState<string>('User Y (Abebe Bikila)');
+  const [simReceiverAccount, setSimReceiverAccount] = useState<string>('1000419520913');
+  const [simAmount, setSimAmount] = useState<string>('4500.00');
   const [simRole, setSimRole] = useState<TruecallerRole>('receiver');
-  const [simAmount, setSimAmount] = useState<string>('450.00');
   const [simAccNumber, setSimAccNumber] = useState<string>('1000419529165');
   const [simHolderName, setSimHolderName] = useState<string>('Leykun Jemaneh Ylma');
   const [simCounterparty, setSimCounterparty] = useState<string>('Abebe Bikila');
@@ -580,6 +586,44 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
     if (isNaN(amt) || amt <= 0) return;
 
     const preset = BANK_PRESETS.find(p => p.key === activeBankKey) || BANK_PRESETS[0];
+
+    if (simMode === 'transfer') {
+      const result = TruecallerService.simulateUserTransfer({
+        senderName: simSenderName.trim() || 'User X (Leykun Jemaneh)',
+        senderAccount: simSenderAccount.trim() || '1000419529165',
+        recipientName: simReceiverName.trim() || 'User Y (Abebe Bikila)',
+        recipientAccount: simReceiverAccount.trim() || '1000419520913',
+        amount: amt,
+        bankKey: activeBankKey,
+        timeString: 'Now'
+      });
+
+      setAccounts(TruecallerService.getAccounts());
+      setAlerts(TruecallerService.getAlerts());
+      setShowQuickSimModal(false);
+      showToast(`Transfer of ETB ${amt.toLocaleString('en-US', { minimumFractionDigits: 2 })} created: User X (Send) & User Y (Receive) accounts added to Truecaller SMS!`);
+
+      // Automatically open picker for this newly simulated transaction (focusing on receive/credited alert)
+      handleOpenPickerForTx({
+        id: result.receiveAlert.id,
+        amount: result.receiveAlert.amount,
+        accountNumber: result.receiverAccount.accountNumber,
+        maskedAccount: result.receiveAlert.maskedAccount,
+        holderName: result.receiverAccount.holderName,
+        role: result.receiveAlert.role,
+        bankName: result.receiverAccount.bankName,
+        bankKey: result.receiverAccount.bankKey,
+        timeString: result.receiveAlert.timeString,
+        timestamp: result.receiveAlert.timestamp,
+        counterpartyName: result.receiveAlert.counterpartyName,
+        balanceAfter: result.receiveAlert.balanceAfter,
+        txId: result.receiveAlert.txId,
+        fullMessageText: result.receiveAlert.summaryText,
+        isNow: true,
+      });
+      return;
+    }
+
     const newAcc: TruecallerBankAccount = {
       id: `tc-acc-${activeBankKey}-${Date.now()}`,
       bankKey: activeBankKey,
@@ -600,6 +644,8 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
       counterpartyName: simCounterparty.trim() || (simRole === 'receiver' ? 'Abebe Bikila' : 'Supermarket Payment'),
     });
 
+    setAccounts(TruecallerService.getAccounts());
+    setAlerts(TruecallerService.getAlerts());
     setShowQuickSimModal(false);
     showToast(`Transaction of ETB ${amt.toFixed(2)} simulated for ${preset.name}!`);
 
@@ -618,7 +664,8 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
       counterpartyName: newAlert.counterpartyName,
       balanceAfter: newAlert.balanceAfter,
       txId: newAlert.txId,
-      fullMessageText: newAlert.summaryText
+      fullMessageText: newAlert.summaryText,
+      isNow: true,
     });
   };
 
@@ -1877,6 +1924,38 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
           </div>
         </div>
 
+        {/* Auto-Created Accounts in Truecaller SMS status bar */}
+        <div className="bg-[#18191c] border-b border-neutral-800 px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-neutral-300">
+          <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+            <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 font-bold flex items-center space-x-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mr-0.5" />
+              <span>Truecaller SMS Accounts:</span>
+            </span>
+            <span className="text-neutral-400 font-mono text-[10.5px]">
+              <strong className="text-neutral-200">Sender (User X):</strong> 1000419529165 • <strong className="text-neutral-200">Receiver (User Y):</strong> 1000419520913
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              TruecallerService.simulateUserTransfer({
+                senderName: 'User X (Leykun Jemaneh)',
+                senderAccount: '1000419529165',
+                recipientName: 'User Y (Abebe Bikila)',
+                recipientAccount: '1000419520913',
+                amount: 4500,
+                bankKey: 'cbe'
+              });
+              setAccounts(TruecallerService.getAccounts());
+              setAlerts(TruecallerService.getAlerts());
+              showToast('Transfer of ETB 4,500.00 created: User X (Send) & User Y (Receive) accounts added to Truecaller SMS!');
+            }}
+            className="px-2.5 py-1 rounded-md bg-purple-600/30 hover:bg-purple-600/50 border border-purple-500/40 text-purple-200 font-bold text-[10.5px] flex items-center space-x-1 transition active:scale-95 cursor-pointer"
+          >
+            <span>Simulate User X → User Y (4,500) ⚡</span>
+          </button>
+        </div>
+
         {/* Transaction Messages Stream */}
         <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-28">
           {bankTransactions.length === 0 ? (
@@ -1905,7 +1984,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                           : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
                       }`}>
                         {isCredit ? <ArrowDown className="w-3 h-3" /> : <ArrowUp className="w-3 h-3" />}
-                        <span>{isCredit ? 'Credited' : 'Debited'}</span>
+                        <span>{isCredit ? 'Credited (Receive)' : 'Debited (Send)'}</span>
                       </span>
 
                       {/* Prominent "Now" Badge */}
@@ -1932,6 +2011,24 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                         <span>{tx.timeString}</span>
                       )}
                     </div>
+                  </div>
+
+                  {/* Participant sub-header for User X / User Y */}
+                  <div className="text-[11px] mb-2 px-2 py-1 rounded-lg bg-neutral-900/60 border border-neutral-800/80 flex items-center justify-between text-neutral-300">
+                    <span className="font-medium">
+                      {isCredit ? (
+                        <span className="text-emerald-400">
+                          <strong>Receiver (User Y):</strong> {tx.holderName}
+                        </span>
+                      ) : (
+                        <span className="text-rose-400">
+                          <strong>Sender (User X):</strong> {tx.holderName}
+                        </span>
+                      )}
+                    </span>
+                    <span className="font-mono text-[10px] text-neutral-400">
+                      Acc: {tx.accountNumber}
+                    </span>
                   </div>
 
                   {/* Message Body */}
@@ -1992,13 +2089,16 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
         {/* Modal: Quick Simulate Custom Transaction */}
         {showQuickSimModal && (
           <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-            <div className="w-full max-w-sm bg-[#1f2023] border border-neutral-700 rounded-3xl p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
+            <div className="w-full max-w-md bg-[#1f2023] border border-neutral-700 rounded-3xl p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-150">
               <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
                 <div className="flex items-center space-x-2">
                   <div className="w-8 h-8 rounded-full bg-purple-700 flex items-center justify-center font-bold text-xs text-white">
                     CBE
                   </div>
-                  <h3 className="font-extrabold text-sm text-white">Simulate CBE Transaction</h3>
+                  <div>
+                    <h3 className="font-extrabold text-sm text-white">Simulate CBE Transaction</h3>
+                    <p className="text-[10.5px] text-neutral-400">Auto-creates accounts &amp; alerts in Truecaller SMS</p>
+                  </div>
                 </div>
                 <button 
                   type="button"
@@ -2009,77 +2109,185 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                 </button>
               </div>
 
+              {/* Mode Selector Tabs */}
+              <div className="grid grid-cols-2 gap-1.5 p-1 bg-neutral-900 rounded-xl border border-neutral-800 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setSimMode('transfer')}
+                  className={`py-1.5 rounded-lg font-bold transition flex items-center justify-center space-x-1 ${
+                    simMode === 'transfer'
+                      ? 'bg-purple-700 text-white shadow'
+                      : 'text-neutral-400 hover:text-white'
+                  }`}
+                >
+                  <Users className="w-3.5 h-3.5" />
+                  <span>Transfer (X → Y 4500)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSimMode('single')}
+                  className={`py-1.5 rounded-lg font-bold transition flex items-center justify-center space-x-1 ${
+                    simMode === 'single'
+                      ? 'bg-purple-700 text-white shadow'
+                      : 'text-neutral-400 hover:text-white'
+                  }`}
+                >
+                  <CreditCard className="w-3.5 h-3.5" />
+                  <span>Single Alert</span>
+                </button>
+              </div>
+
               <form onSubmit={handleQuickSimulateSubmit} className="space-y-3 text-xs">
-                <div>
-                  <label className="text-neutral-400 font-semibold mb-1 block">Transaction Type</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setSimRole('receiver')}
-                      className={`py-2 rounded-xl font-bold transition flex items-center justify-center space-x-1.5 ${
-                        simRole === 'receiver' 
-                          ? 'bg-emerald-600 text-white shadow-md' 
-                          : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'
-                      }`}
-                    >
-                      <ArrowDown className="w-3.5 h-3.5" />
-                      <span>Credited (Receive)</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setSimRole('sender')}
-                      className={`py-2 rounded-xl font-bold transition flex items-center justify-center space-x-1.5 ${
-                        simRole === 'sender' 
-                          ? 'bg-rose-600 text-white shadow-md' 
-                          : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'
-                      }`}
-                    >
-                      <ArrowUp className="w-3.5 h-3.5" />
-                      <span>Debited (Send)</span>
-                    </button>
-                  </div>
-                </div>
+                {simMode === 'transfer' ? (
+                  <>
+                    <div className="p-2.5 rounded-xl bg-purple-950/40 border border-purple-800/40 text-[11px] text-purple-200 leading-relaxed">
+                      💡 <strong>Bidirectional Sync:</strong> Automatically creates <strong>both Sender (User X)</strong> and <strong>Receiver (User Y)</strong> accounts inside Truecaller SMS. Both the debit alert (User X sends 4500) and credit alert (User Y receives 4500) will show in the list with the <strong>Now</strong> badge.
+                    </div>
 
-                <div>
-                  <label className="text-neutral-400 font-semibold mb-1 block">Amount (ETB)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={simAmount}
-                    onChange={(e) => setSimAmount(e.target.value)}
-                    className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-3 py-2 text-white font-mono font-bold text-sm focus:border-purple-500 focus:outline-none"
-                    required
-                  />
-                </div>
+                    <div>
+                      <label className="text-neutral-400 font-semibold mb-1 block">Transfer Amount (ETB)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={simAmount}
+                        onChange={(e) => setSimAmount(e.target.value)}
+                        className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-3 py-2 text-white font-mono font-bold text-sm focus:border-purple-500 focus:outline-none"
+                        required
+                      />
+                    </div>
 
-                <div>
-                  <label className="text-neutral-400 font-semibold mb-1 block">CBE Account Number</label>
-                  <input
-                    type="text"
-                    value={simAccNumber}
-                    onChange={(e) => setSimAccNumber(e.target.value)}
-                    className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-3 py-2 text-white font-mono text-xs focus:border-purple-500 focus:outline-none"
-                    required
-                  />
-                </div>
+                    {/* Sender Section */}
+                    <div className="p-2.5 rounded-xl bg-rose-950/20 border border-rose-900/30 space-y-2">
+                      <span className="text-rose-400 font-bold uppercase tracking-wider text-[10px] block">
+                        Sender (User X) • Will be Debited &amp; Added to Truecaller Accounts
+                      </span>
+                      <div>
+                        <label className="text-neutral-400 text-[10.5px] block mb-0.5">Sender Name</label>
+                        <input
+                          type="text"
+                          value={simSenderName}
+                          onChange={(e) => setSimSenderName(e.target.value)}
+                          className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-2.5 py-1.5 text-white text-xs focus:border-purple-500 focus:outline-none"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="text-neutral-400 text-[10.5px] block mb-0.5">Sender CBE Account</label>
+                        <input
+                          type="text"
+                          value={simSenderAccount}
+                          onChange={(e) => setSimSenderAccount(e.target.value)}
+                          className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-2.5 py-1.5 text-white font-mono text-xs focus:border-purple-500 focus:outline-none"
+                          required
+                        />
+                      </div>
+                    </div>
 
-                <div>
-                  <label className="text-neutral-400 font-semibold mb-1 block">Sender / Counterparty Name</label>
-                  <input
-                    type="text"
-                    value={simCounterparty}
-                    onChange={(e) => setSimCounterparty(e.target.value)}
-                    className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-3 py-2 text-white text-xs focus:border-purple-500 focus:outline-none"
-                    required
-                  />
-                </div>
+                    {/* Receiver Section */}
+                    <div className="p-2.5 rounded-xl bg-emerald-950/20 border border-emerald-900/30 space-y-2">
+                      <span className="text-emerald-400 font-bold uppercase tracking-wider text-[10px] block">
+                        Receiver (User Y) • Will be Credited &amp; Added to Truecaller Accounts
+                      </span>
+                      <div>
+                        <label className="text-neutral-400 text-[10.5px] block mb-0.5">Receiver Name</label>
+                        <input
+                          type="text"
+                          value={simReceiverName}
+                          onChange={(e) => setSimReceiverName(e.target.value)}
+                          className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-2.5 py-1.5 text-white text-xs focus:border-purple-500 focus:outline-none"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="text-neutral-400 text-[10.5px] block mb-0.5">Receiver CBE Account</label>
+                        <input
+                          type="text"
+                          value={simReceiverAccount}
+                          onChange={(e) => setSimReceiverAccount(e.target.value)}
+                          className="w-full bg-neutral-900 border border-neutral-700 rounded-lg px-2.5 py-1.5 text-white font-mono text-xs focus:border-purple-500 focus:outline-none"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <label className="text-neutral-400 font-semibold mb-1 block">Transaction Type</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setSimRole('receiver')}
+                          className={`py-2 rounded-xl font-bold transition flex items-center justify-center space-x-1.5 ${
+                            simRole === 'receiver' 
+                              ? 'bg-emerald-600 text-white shadow-md' 
+                              : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'
+                          }`}
+                        >
+                          <ArrowDown className="w-3.5 h-3.5" />
+                          <span>Credited (Receive)</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSimRole('sender')}
+                          className={`py-2 rounded-xl font-bold transition flex items-center justify-center space-x-1.5 ${
+                            simRole === 'sender' 
+                              ? 'bg-rose-600 text-white shadow-md' 
+                              : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'
+                          }`}
+                        >
+                          <ArrowUp className="w-3.5 h-3.5" />
+                          <span>Debited (Send)</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-neutral-400 font-semibold mb-1 block">Amount (ETB)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={simAmount}
+                        onChange={(e) => setSimAmount(e.target.value)}
+                        className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-3 py-2 text-white font-mono font-bold text-sm focus:border-purple-500 focus:outline-none"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-neutral-400 font-semibold mb-1 block">CBE Account Number</label>
+                      <input
+                        type="text"
+                        value={simAccNumber}
+                        onChange={(e) => setSimAccNumber(e.target.value)}
+                        className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-3 py-2 text-white font-mono text-xs focus:border-purple-500 focus:outline-none"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-neutral-400 font-semibold mb-1 block">Sender / Counterparty Name</label>
+                      <input
+                        type="text"
+                        value={simCounterparty}
+                        onChange={(e) => setSimCounterparty(e.target.value)}
+                        className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-3 py-2 text-white text-xs focus:border-purple-500 focus:outline-none"
+                        required
+                      />
+                    </div>
+                  </>
+                )}
 
                 <div className="pt-2">
                   <button
                     type="submit"
-                    className="w-full py-2.5 rounded-xl bg-purple-700 hover:bg-purple-600 active:scale-95 text-white font-extrabold text-xs shadow-lg transition cursor-pointer"
+                    className="w-full py-2.5 rounded-xl bg-purple-700 hover:bg-purple-600 active:scale-95 text-white font-extrabold text-xs shadow-lg transition cursor-pointer flex items-center justify-center space-x-1.5"
                   >
-                    Create &amp; Choose Phone Screen ⚡
+                    <span>
+                      {simMode === 'transfer' 
+                        ? 'Simulate Transfer (Create Both Accounts & 4,500 Alerts) ⚡' 
+                        : 'Create & Choose Phone Screen ⚡'}
+                    </span>
                   </button>
                 </div>
               </form>

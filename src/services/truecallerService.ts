@@ -90,17 +90,30 @@ export function formatTimeFromIso(isoString?: string): string {
 
 const DEFAULT_ACCOUNTS: TruecallerBankAccount[] = [
   {
-    id: 'tc-acc-cbe-1',
+    id: 'tc-acc-cbe-user-x',
     bankKey: 'cbe',
     bankName: 'Cbe Bank',
     accountNumber: '1000419529165',
     maskedAccount: '1XXXXXXXX9165',
-    holderName: 'Leykun Jemaneh Ylma',
+    holderName: 'User X (Leykun Jemaneh)',
     accountType: 'Savings Account',
     phone: '+251 91 104 9165',
     balance: 5420.50,
     backgroundApp: 'tiktok',
     lastTransactionAt: '2026-09-05T11:58:00Z'
+  },
+  {
+    id: 'tc-acc-cbe-user-y',
+    bankKey: 'cbe',
+    bankName: 'Cbe Bank',
+    accountNumber: '1000419520913',
+    maskedAccount: '1XXXXXXXX0913',
+    holderName: 'User Y (Abebe Bikila)',
+    accountType: 'Savings Account',
+    phone: '+251 92 104 0913',
+    balance: 244600.00,
+    backgroundApp: 'tiktok',
+    lastTransactionAt: '2026-09-05T14:35:00Z'
   },
   {
     id: 'tc-acc-telebirr',
@@ -158,8 +171,48 @@ const DEFAULT_ACCOUNTS: TruecallerBankAccount[] = [
 
 const DEFAULT_ALERTS: TruecallerAlert[] = [
   {
+    id: 'tc-alert-seed-receive-4500',
+    accountId: 'tc-acc-cbe-user-y',
+    bankKey: 'cbe',
+    bankName: 'Cbe Bank',
+    role: 'receiver',
+    amount: 4500.00,
+    maskedAccount: '1XXXXXXXX0913',
+    fullAccount: '1000419520913',
+    holderName: 'User Y (Abebe Bikila)',
+    counterpartyName: 'User X (Leykun Jemaneh)',
+    counterpartyAccount: '1000419529165',
+    balanceAfter: 249100.00,
+    timeString: 'Now',
+    timestamp: new Date().toISOString(),
+    summaryText: 'Account 1XXXXXXXX0913 credited with ETB 4,500.00.',
+    txId: 'FT264500RC913',
+    read: false,
+    backgroundApp: 'tiktok',
+  },
+  {
+    id: 'tc-alert-seed-send-4500',
+    accountId: 'tc-acc-cbe-user-x',
+    bankKey: 'cbe',
+    bankName: 'Cbe Bank',
+    role: 'sender',
+    amount: 4500.00,
+    maskedAccount: '1XXXXXXXX9165',
+    fullAccount: '1000419529165',
+    holderName: 'User X (Leykun Jemaneh)',
+    counterpartyName: 'User Y (Abebe Bikila)',
+    counterpartyAccount: '1000419520913',
+    balanceAfter: 920.50,
+    timeString: 'Now',
+    timestamp: new Date().toISOString(),
+    summaryText: 'Account 1XXXXXXXX9165 debited with ETB 4,500.00.',
+    txId: 'FT264500SD165',
+    read: false,
+    backgroundApp: 'tiktok',
+  },
+  {
     id: 'tc-alert-seed-1',
-    accountId: 'tc-acc-cbe-1',
+    accountId: 'tc-acc-cbe-user-x',
     bankKey: 'cbe',
     bankName: 'Cbe Bank',
     role: 'receiver',
@@ -170,7 +223,7 @@ const DEFAULT_ALERTS: TruecallerAlert[] = [
     counterpartyName: 'Abebe Bikila',
     balanceAfter: 5420.50,
     timeString: '11:58 AM',
-    timestamp: new Date().toISOString(),
+    timestamp: new Date(Date.now() - 1800000).toISOString(),
     summaryText: 'Account 1XXXXXXXX9165 credited with ETB 450.00.',
     txId: 'FT25104MK9165',
     read: false,
@@ -369,86 +422,261 @@ export const TruecallerService = {
   },
 
   syncTransactionToTruecaller(tx: Transaction, userBalance?: number): TruecallerAlert {
-    const isReceive = tx.type === 'receive';
-    const role: TruecallerRole = isReceive ? 'receiver' : 'sender';
-    const bankKey = getBankKeyFromName(tx.recipientBank || (isReceive ? 'cbe' : 'cbe'));
-    const targetAccountNum = isReceive ? (tx.recipientAccount || '1000419529165') : (tx.senderAccount || '1000419524747');
-    const targetHolder = isReceive ? (tx.recipientName || 'Leykun Jemaneh Ylma') : (tx.senderName || 'Leykun Jemaneh Ylma');
-    const counterparty = isReceive ? (tx.senderName || 'Abebe Bikila') : (tx.recipientName || 'Commercial Bank of Ethiopia');
-    
-    const accounts = this.getAccounts();
+    const bankKey = getBankKeyFromName(tx.recipientBank || 'cbe');
     const preset = BANK_PRESETS.find(p => p.key === bankKey) || BANK_PRESETS[0];
-    
-    // Find or create account inside Truecaller SMS simulator
-    let account = accounts.find(a => a.accountNumber === targetAccountNum || a.bankKey === bankKey);
+
+    const senderAccNum = tx.senderAccount || '1000419529165';
+    const senderHolder = tx.senderName || 'User X (Leykun Jemaneh)';
+    const recipientAccNum = tx.recipientAccount || '1000419520913';
+    const recipientHolder = tx.recipientName || 'User Y (Abebe Bikila)';
+
+    const accounts = this.getAccounts();
     let updatedAccounts = [...accounts];
-    
-    if (account) {
-      // Update account with latest transaction time and balance
-      account = {
-        ...account,
+
+    // 1. AUTOMATICALLY FIND OR CREATE SENDER ACCOUNT (User X)
+    let senderAcc = updatedAccounts.find(a => a.accountNumber === senderAccNum);
+    if (senderAcc) {
+      senderAcc = {
+        ...senderAcc,
         lastTransactionAt: tx.createdAt || new Date().toISOString(),
-        balance: userBalance ?? account.balance,
+        balance: userBalance ?? senderAcc.balance,
       };
-      // Move this account to the very top so recent transactions appear at the top
-      updatedAccounts = [account, ...updatedAccounts.filter(a => a.id !== account!.id)];
+      updatedAccounts = [senderAcc, ...updatedAccounts.filter(a => a.id !== senderAcc!.id)];
     } else {
-      // Create new bank account entry inside Truecaller SMS simulator
-      const masked = maskTruecallerAccount(targetAccountNum);
-      account = {
-        id: `tc-acc-${bankKey}-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      senderAcc = {
+        id: `tc-acc-sender-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
         bankKey,
         bankName: preset.name,
-        accountNumber: targetAccountNum,
-        maskedAccount: masked,
-        holderName: targetHolder,
-        accountType: tx.type === 'transfer' ? 'Current Account' : 'Savings Account',
-        balance: userBalance ?? 10000,
+        accountNumber: senderAccNum,
+        maskedAccount: maskTruecallerAccount(senderAccNum),
+        holderName: senderHolder,
+        accountType: 'Savings Account',
+        balance: userBalance ?? 5000,
         backgroundApp: getDefaultBackgroundApp(bankKey),
         lastTransactionAt: tx.createdAt || new Date().toISOString(),
       };
-      // Put at the very top
-      updatedAccounts = [account, ...updatedAccounts];
+      updatedAccounts = [senderAcc, ...updatedAccounts];
     }
+
+    // 2. AUTOMATICALLY FIND OR CREATE RECEIVER ACCOUNT (User Y)
+    let recipientAcc = updatedAccounts.find(a => a.accountNumber === recipientAccNum);
+    if (recipientAcc) {
+      recipientAcc = {
+        ...recipientAcc,
+        lastTransactionAt: tx.createdAt || new Date().toISOString(),
+        balance: (recipientAcc.balance || 244600) + tx.amount,
+      };
+      updatedAccounts = [recipientAcc, ...updatedAccounts.filter(a => a.id !== recipientAcc!.id)];
+    } else {
+      recipientAcc = {
+        id: `tc-acc-receiver-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        bankKey,
+        bankName: preset.name,
+        accountNumber: recipientAccNum,
+        maskedAccount: maskTruecallerAccount(recipientAccNum),
+        holderName: recipientHolder,
+        accountType: 'Savings Account',
+        balance: 244600 + tx.amount,
+        backgroundApp: getDefaultBackgroundApp(bankKey),
+        lastTransactionAt: tx.createdAt || new Date().toISOString(),
+      };
+      updatedAccounts = [recipientAcc, ...updatedAccounts];
+    }
+
     this.saveAccounts(updatedAccounts);
-    this.setActiveAccountId(account.id);
-    
-    // Format message matching user's exact specification
-    const masked = account.maskedAccount || maskTruecallerAccount(account.accountNumber);
+    this.setActiveAccountId(senderAcc.id);
+
     const formattedAmount = tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const actionWord = role === 'receiver' ? 'credited with' : 'debited with';
-    const summary = `Account ${masked} ${actionWord} ETB ${formattedAmount}.`;
-    const timeStr = formatTimeFromIso(tx.createdAt);
-    
-    const newAlert: TruecallerAlert = {
-      id: `tc-alert-tx-${tx.id || Date.now()}`,
-      accountId: account.id,
-      bankKey: account.bankKey,
-      bankName: account.bankName,
-      role,
+    const timeStr = 'Now';
+    const txRef = tx.id || `FT${Math.floor(10000000 + Math.random() * 90000000)}`;
+
+    // 3. CREATE SENDER ALERT (Debited ETB [amount])
+    const maskedSender = senderAcc.maskedAccount || maskTruecallerAccount(senderAcc.accountNumber);
+    const sendSummary = `Account ${maskedSender} debited with ETB ${formattedAmount}.`;
+    const sendAlert: TruecallerAlert = {
+      id: `tc-alert-send-${txRef}`,
+      accountId: senderAcc.id,
+      bankKey,
+      bankName: preset.name,
+      role: 'sender',
       amount: tx.amount,
-      maskedAccount: masked,
-      fullAccount: account.accountNumber,
-      holderName: account.holderName,
-      counterpartyName: counterparty,
-      counterpartyAccount: isReceive ? tx.senderAccount : tx.recipientAccount,
-      balanceAfter: userBalance ?? (account.balance || 5000),
+      maskedAccount: maskedSender,
+      fullAccount: senderAcc.accountNumber,
+      holderName: senderHolder,
+      counterpartyName: recipientHolder,
+      counterpartyAccount: recipientAcc.accountNumber,
+      balanceAfter: userBalance ?? 920.50,
       timeString: timeStr,
       timestamp: tx.createdAt || new Date().toISOString(),
-      summaryText: summary,
-      txId: tx.id,
+      summaryText: sendSummary,
+      txId: `${txRef}-SD`,
+      fullSmsText: `Dear ${senderHolder},\nA debit transaction of ETB ${formattedAmount} has occurred on your Account ${senderAcc.accountNumber} on ${timeStr} to ${recipientHolder}.\nAvailable Balance: ETB ${(userBalance ?? 920.50).toFixed(2)}.\nTxn Ref: ${txRef}.\nThank you for banking with ${preset.name}.`,
       read: false,
-      backgroundApp: account.backgroundApp || getDefaultBackgroundApp(account.bankKey),
+      backgroundApp: senderAcc.backgroundApp || getDefaultBackgroundApp(bankKey),
     };
-    
+
+    // 4. CREATE RECEIVER ALERT (Credited ETB [amount])
+    const maskedRecipient = recipientAcc.maskedAccount || maskTruecallerAccount(recipientAcc.accountNumber);
+    const receiveSummary = `Account ${maskedRecipient} credited with ETB ${formattedAmount}.`;
+    const receiveAlert: TruecallerAlert = {
+      id: `tc-alert-receive-${txRef}`,
+      accountId: recipientAcc.id,
+      bankKey,
+      bankName: preset.name,
+      role: 'receiver',
+      amount: tx.amount,
+      maskedAccount: maskedRecipient,
+      fullAccount: recipientAcc.accountNumber,
+      holderName: recipientHolder,
+      counterpartyName: senderHolder,
+      counterpartyAccount: senderAcc.accountNumber,
+      balanceAfter: (recipientAcc.balance || 249100.00),
+      timeString: timeStr,
+      timestamp: tx.createdAt || new Date().toISOString(),
+      summaryText: receiveSummary,
+      txId: `${txRef}-RC`,
+      fullSmsText: `Dear ${recipientHolder},\nYour Account ${recipientAcc.accountNumber} has been Credited with ETB ${formattedAmount} on ${timeStr} by ${senderHolder}.\nAvailable Balance is ETB ${(recipientAcc.balance || 249100.00).toFixed(2)}.\nTxn Ref: ${txRef}.\nThank you for banking with ${preset.name}.\nhttps://cbe.com.et/mbreceipt/${txRef}`,
+      read: false,
+      backgroundApp: recipientAcc.backgroundApp || getDefaultBackgroundApp(bankKey),
+    };
+
     const existingAlerts = this.getAlerts();
-    // Avoid duplicates if txId matches
-    const filteredAlerts = existingAlerts.filter(a => a.txId !== tx.id);
-    const updatedAlerts = [newAlert, ...filteredAlerts];
+    const filteredAlerts = existingAlerts.filter(a => a.txId !== sendAlert.txId && a.txId !== receiveAlert.txId);
+    // Put both at the top
+    const updatedAlerts = [receiveAlert, sendAlert, ...filteredAlerts];
     this.saveAlerts(updatedAlerts);
-    
-    window.dispatchEvent(new CustomEvent('tc_alerts_updated', { detail: { alert: newAlert, account } }));
-    return newAlert;
+
+    window.dispatchEvent(new CustomEvent('tc_alerts_updated', { detail: { alert: receiveAlert, sendAlert, account: senderAcc } }));
+    return tx.type === 'receive' ? receiveAlert : sendAlert;
+  },
+
+  // Direct helper: Simulate a transfer between User X and User Y:
+  // "if user x send to user y 4500 it will show in list.and receiver aslo shown is receive 4500"
+  simulateUserTransfer(params: {
+    senderName?: string;
+    senderAccount?: string;
+    recipientName?: string;
+    recipientAccount?: string;
+    amount: number;
+    bankKey?: TruecallerBankKey;
+    timeString?: string;
+  }): { sendAlert: TruecallerAlert; receiveAlert: TruecallerAlert; senderAccount: TruecallerBankAccount; receiverAccount: TruecallerBankAccount } {
+    const {
+      senderName = 'User X (Leykun Jemaneh)',
+      senderAccount = '1000419529165',
+      recipientName = 'User Y (Abebe Bikila)',
+      recipientAccount = '1000419520913',
+      amount = 4500,
+      bankKey = 'cbe',
+      timeString = 'Now'
+    } = params;
+
+    const preset = BANK_PRESETS.find(p => p.key === bankKey) || BANK_PRESETS[0];
+    const accounts = this.getAccounts();
+    let updatedAccounts = [...accounts];
+
+    // 1. Sender account
+    let senderAcc = updatedAccounts.find(a => a.accountNumber === senderAccount);
+    if (!senderAcc) {
+      senderAcc = {
+        id: `tc-acc-sender-${Date.now()}`,
+        bankKey,
+        bankName: preset.name,
+        accountNumber: senderAccount,
+        maskedAccount: maskTruecallerAccount(senderAccount),
+        holderName: senderName,
+        accountType: 'Savings Account',
+        balance: 5420.50 - amount,
+        backgroundApp: getDefaultBackgroundApp(bankKey),
+        lastTransactionAt: new Date().toISOString()
+      };
+      updatedAccounts = [senderAcc, ...updatedAccounts];
+    } else {
+      senderAcc = { ...senderAcc, balance: Math.max(0, (senderAcc.balance || 5420.50) - amount), lastTransactionAt: new Date().toISOString() };
+      updatedAccounts = [senderAcc, ...updatedAccounts.filter(a => a.id !== senderAcc!.id)];
+    }
+
+    // 2. Receiver account
+    let recipientAcc = updatedAccounts.find(a => a.accountNumber === recipientAccount);
+    if (!recipientAcc) {
+      recipientAcc = {
+        id: `tc-acc-receiver-${Date.now()}`,
+        bankKey,
+        bankName: preset.name,
+        accountNumber: recipientAccount,
+        maskedAccount: maskTruecallerAccount(recipientAccount),
+        holderName: recipientName,
+        accountType: 'Savings Account',
+        balance: 244600.00 + amount,
+        backgroundApp: getDefaultBackgroundApp(bankKey),
+        lastTransactionAt: new Date().toISOString()
+      };
+      updatedAccounts = [recipientAcc, ...updatedAccounts];
+    } else {
+      recipientAcc = { ...recipientAcc, balance: (recipientAcc.balance || 244600.00) + amount, lastTransactionAt: new Date().toISOString() };
+      updatedAccounts = [recipientAcc, ...updatedAccounts.filter(a => a.id !== recipientAcc!.id)];
+    }
+
+    this.saveAccounts(updatedAccounts);
+
+    const formattedAmount = amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const txRef = `FT26${Math.floor(1000000 + Math.random() * 9000000)}`;
+
+    const maskedSender = senderAcc.maskedAccount || maskTruecallerAccount(senderAccount);
+    const maskedRecipient = recipientAcc.maskedAccount || maskTruecallerAccount(recipientAccount);
+
+    // Send Alert (Debited)
+    const sendAlert: TruecallerAlert = {
+      id: `tc-alert-send-${Date.now()}`,
+      accountId: senderAcc.id,
+      bankKey,
+      bankName: preset.name,
+      role: 'sender',
+      amount,
+      maskedAccount: maskedSender,
+      fullAccount: senderAccount,
+      holderName: senderName,
+      counterpartyName: recipientName,
+      counterpartyAccount: recipientAccount,
+      balanceAfter: senderAcc.balance,
+      timeString,
+      timestamp: new Date().toISOString(),
+      summaryText: `Account ${maskedSender} debited with ETB ${formattedAmount}.`,
+      txId: `${txRef}-SD`,
+      fullSmsText: `Dear ${senderName},\nA debit transaction of ETB ${formattedAmount} has occurred on your Account ${senderAccount} on ${timeString} to ${recipientName}.\nAvailable Balance: ETB ${(senderAcc.balance || 920.50).toFixed(2)}.\nTxn Ref: ${txRef}.\nThank you for banking with ${preset.name}.`,
+      read: false,
+      backgroundApp: senderAcc.backgroundApp || getDefaultBackgroundApp(bankKey),
+    };
+
+    // Receive Alert (Credited)
+    const receiveAlert: TruecallerAlert = {
+      id: `tc-alert-receive-${Date.now()}`,
+      accountId: recipientAcc.id,
+      bankKey,
+      bankName: preset.name,
+      role: 'receiver',
+      amount,
+      maskedAccount: maskedRecipient,
+      fullAccount: recipientAccount,
+      holderName: recipientName,
+      counterpartyName: senderName,
+      counterpartyAccount: senderAccount,
+      balanceAfter: recipientAcc.balance,
+      timeString,
+      timestamp: new Date().toISOString(),
+      summaryText: `Account ${maskedRecipient} credited with ETB ${formattedAmount}.`,
+      txId: `${txRef}-RC`,
+      fullSmsText: `Dear ${recipientName},\nYour Account ${recipientAccount} has been Credited with ETB ${formattedAmount} on ${timeString} by ${senderName}.\nAvailable Balance is ETB ${(recipientAcc.balance || 249100.00).toFixed(2)}.\nTxn Ref: ${txRef}.\nThank you for banking with ${preset.name}.\nhttps://cbe.com.et/mbreceipt/${txRef}`,
+      read: false,
+      backgroundApp: recipientAcc.backgroundApp || getDefaultBackgroundApp(bankKey),
+    };
+
+    const existingAlerts = this.getAlerts();
+    const updatedAlerts = [receiveAlert, sendAlert, ...existingAlerts];
+    this.saveAlerts(updatedAlerts);
+
+    window.dispatchEvent(new CustomEvent('tc_alerts_updated', { detail: { alert: receiveAlert, sendAlert, senderAccount: senderAcc, receiverAccount: recipientAcc } }));
+    return { sendAlert, receiveAlert, senderAccount: senderAcc, receiverAccount: recipientAcc };
   },
 
   syncAllExistingTransactions(transactions: Transaction[]): void {
