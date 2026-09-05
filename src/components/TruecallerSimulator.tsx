@@ -298,6 +298,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
   const [simCounterparty, setSimCounterparty] = useState<string>('Abebe Bikila');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const touchStartY = useRef<number>(0);
 
   // Sync with banking transactions on mount
   useEffect(() => {
@@ -675,6 +676,9 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
       TruecallerService.markAlertAsRead(currentAlert.id);
       setCurrentAlert(prev => prev ? { ...prev, read: true } : null);
       showToast('Marked as read');
+      setTimeout(() => {
+        setIsPopdownVisible(false);
+      }, 600);
     }
   };
 
@@ -2333,6 +2337,15 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
           {/* =============================================================== */}
           {isPopdownVisible && currentAlert && (
             <div 
+              onTouchStart={(e) => {
+                touchStartY.current = e.touches[0].clientY;
+              }}
+              onTouchEnd={(e) => {
+                const diff = touchStartY.current - e.changedTouches[0].clientY;
+                if (diff > 45) {
+                  setIsPopdownVisible(false);
+                }
+              }}
               className={`absolute top-0 inset-x-0 z-50 px-2 sm:px-2.5 pointer-events-auto transition-all duration-300 transform ${
                 isPopdownAnimating 
                   ? '-translate-y-full opacity-0 scale-95' 
@@ -2462,9 +2475,16 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
 
           {/* =============================================================== */}
           {/* ONE-LINE GRID CONTROLS: Back, Reload / Simulate Again, Choose  */}
-          {/* Sits behind the popdown message (z-20 layer vs popdown z-50)   */}
+          {/* Sits at the top directly behind the popdown message.           */}
+          {/* MUST NOT BE SEEN while the popdown message is displayed.       */}
           {/* =============================================================== */}
-          <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 z-20 px-3 sm:px-4 flex items-center justify-center pointer-events-auto select-none">
+          <div 
+            className={`absolute inset-x-0 top-2.5 z-20 px-3 sm:px-4 flex items-center justify-center select-none transition-all duration-200 ${
+              isPopdownVisible 
+                ? 'opacity-0 pointer-events-none invisible' 
+                : 'opacity-100 pointer-events-auto visible'
+            }`}
+          >
             <div className="grid grid-cols-3 gap-2 w-full max-w-[400px] p-2 bg-neutral-950/85 backdrop-blur-md rounded-2xl border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
               {/* 1. Back Button */}
               <button
