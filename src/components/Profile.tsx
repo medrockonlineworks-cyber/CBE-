@@ -28,7 +28,8 @@ import {
   UserPlus,
   Save,
   X,
-  MessageSquare
+  MessageSquare,
+  Smartphone
 } from 'lucide-react';
 import BankLogoModal from './BankLogoModal';
 import AppInstallPrompt from './AppInstallPrompt';
@@ -40,6 +41,7 @@ interface ProfileProps {
   onUpdateUser: (user: UserProfile) => void;
   onOpenAdmin: () => void;
   onOpenSmsSimulator?: () => void;
+  onOpenTruecallerSimulator?: () => void;
 }
 
 const LANGUAGES = [
@@ -49,7 +51,7 @@ const LANGUAGES = [
   { code: 'ti', label: 'Tigrinya (ትግርኛ)' }
 ];
 
-export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdmin, onOpenSmsSimulator }: ProfileProps) {
+export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdmin, onOpenSmsSimulator, onOpenTruecallerSimulator }: ProfileProps) {
   const [activeLang, setActiveLang] = useState('en');
   const [showLogoModal, setShowLogoModal] = useState(false);
   const [customBankLogo, setCustomBankLogo] = useState<string | null>(() => LocalDb.getCustomBankLogo());
@@ -666,6 +668,44 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
                 }
               }}
               className="px-3 py-1.5 bg-purple-900 hover:bg-purple-850 active:scale-95 text-white rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 shadow-xs flex-shrink-0"
+            >
+              <span>Open</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Truecaller SMS Simulator Settings Item (Requested Below SMS Simulator) */}
+          <div className="flex justify-between items-center border-t border-gray-50 pt-3">
+            <div className="flex items-center gap-3 min-w-0 pr-2">
+              <div className="p-2 bg-blue-50 text-[#0066FF] rounded-xl flex-shrink-0">
+                <Smartphone className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-bold text-gray-800">Truecaller SMS Simulator</p>
+                  <span className="text-[9px] font-extrabold bg-[#0066FF] text-white px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    New
+                  </span>
+                </div>
+                <p className="text-[10px] text-gray-400 truncate max-w-[200px] sm:max-w-xs">
+                  Screen takeover alerts • Bank sender/receiver
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              id="settings-truecaller-simulator-btn"
+              onClick={() => {
+                if (onOpenTruecallerSimulator) {
+                  onOpenTruecallerSimulator();
+                } else {
+                  try {
+                    window.history.pushState({ view: 'truecaller' }, '', '/truecaller');
+                    window.dispatchEvent(new PopStateEvent('popstate', { state: { view: 'truecaller' } }));
+                  } catch {}
+                }
+              }}
+              className="px-3 py-1.5 bg-[#0066FF] hover:bg-blue-600 active:scale-95 text-white rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 shadow-xs flex-shrink-0"
             >
               <span>Open</span>
               <ChevronRight className="w-3.5 h-3.5" />

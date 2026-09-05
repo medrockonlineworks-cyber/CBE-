@@ -11,6 +11,7 @@ import Profile from './components/Profile';
 import Receipt from './components/Receipt';
 import AdminPanel from './components/AdminPanel';
 import SmsPage from './pages/SmsPage';
+import TruecallerSimulator from './components/TruecallerSimulator';
 import { SmsService } from './services/smsService';
 import Navigation, { TabType } from './components/Navigation';
 import OfflineBanner from './components/OfflineBanner';
@@ -31,9 +32,10 @@ export default function App() {
       return null;
     }
   });
-  const [activeView, setActiveView] = useState<'auth' | 'main' | 'receipt' | 'admin' | 'sms'>(() => {
-    if (typeof window !== 'undefined' && window.location.pathname === '/sms') {
-      return 'sms';
+  const [activeView, setActiveView] = useState<'auth' | 'main' | 'receipt' | 'admin' | 'sms' | 'truecaller'>(() => {
+    if (typeof window !== 'undefined') {
+      if (window.location.pathname === '/sms') return 'sms';
+      if (window.location.pathname === '/truecaller') return 'truecaller';
     }
     return 'main';
   });
@@ -46,13 +48,13 @@ export default function App() {
   const navHistoryRef = useRef<{ view: string; tab: string }[]>([]);
 
   // Navigation pusher that keeps browser history in sync with Android back-button
-  const navigateTo = useCallback((view: 'auth' | 'main' | 'receipt' | 'admin' | 'sms', tab: TabType = activeTab) => {
+  const navigateTo = useCallback((view: 'auth' | 'main' | 'receipt' | 'admin' | 'sms' | 'truecaller', tab: TabType = activeTab) => {
     setActiveView(view);
     setActiveTab(tab);
     
     try {
       const stateObj = { view, tab };
-      const targetPath = view === 'sms' ? '/sms' : (window.location.pathname === '/sms' ? '/' : window.location.pathname);
+      const targetPath = view === 'sms' ? '/sms' : (view === 'truecaller' ? '/truecaller' : (window.location.pathname === '/sms' || window.location.pathname === '/truecaller' ? '/' : window.location.pathname));
       window.history.pushState(stateObj, '', targetPath);
       navHistoryRef.current.push(stateObj);
     } catch {
@@ -69,8 +71,8 @@ export default function App() {
     } catch {}
 
     const handlePopState = (e: PopStateEvent) => {
-      // If user was on SMS view or URL is not /sms anymore
-      if (activeView === 'sms') {
+      // If user was on SMS or Truecaller view
+      if (activeView === 'sms' || activeView === 'truecaller') {
         setActiveView('main');
         setActiveTab('profile');
       } else if (activeView === 'receipt') {
@@ -237,6 +239,7 @@ export default function App() {
             onUpdateUser={handleUpdateUserProfile}
             onOpenAdmin={() => navigateTo('admin', 'profile')}
             onOpenSmsSimulator={() => navigateTo('sms', 'profile')}
+            onOpenTruecallerSimulator={() => navigateTo('truecaller', 'profile')}
           />
         );
       default:
@@ -269,9 +272,11 @@ export default function App() {
         <main className={`flex-1 flex flex-col scrollbar-none ${
           activeView === 'sms' 
             ? 'h-full overflow-hidden bg-[#121212]' 
-            : activeTab === 'home' || activeTab === 'history' 
-              ? 'overflow-hidden h-full' 
-              : 'overflow-y-auto bg-gray-50'
+            : activeView === 'truecaller'
+              ? 'h-full overflow-hidden bg-slate-950'
+              : activeTab === 'home' || activeTab === 'history' 
+                ? 'overflow-hidden h-full' 
+                : 'overflow-y-auto bg-gray-50'
         }`}>
           
           {activeView === 'auth' && (
@@ -339,6 +344,14 @@ export default function App() {
           {activeView === 'sms' && (
             <SmsPage 
               accountId={smsActiveAccountId}
+              onBack={() => {
+                navigateTo('main', 'profile');
+              }}
+            />
+          )}
+
+          {activeView === 'truecaller' && (
+            <TruecallerSimulator 
               onBack={() => {
                 navigateTo('main', 'profile');
               }}
