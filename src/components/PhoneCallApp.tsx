@@ -30,10 +30,13 @@ import {
   CheckCircle2,
   Calendar,
   Send,
-  MoreVertical
+  MoreVertical,
+  RotateCcw,
+  ArrowDownLeft,
+  ArrowUpRight
 } from 'lucide-react';
 import GboardKeyboard from './GboardKeyboard';
-import { PhoneCallService, CallLogItem, ContactItem } from '../services/phoneCallService';
+import { PhoneCallService, CallLogItem, ContactItem, CallerAccount } from '../services/phoneCallService';
 import { LocalDb } from '../lib/mockData';
 import { UserProfile, Transaction } from '../types';
 import { SmsService } from '../services/smsService';
@@ -49,9 +52,15 @@ type UssdStep =
   | 'running' 
   | 'cbe_login' 
   | 'cbe_menu' 
+  | 'cbe_menu_page2'
   | 'cbe_select_account' 
   | 'cbe_account_summary' 
+  | 'cbe_account_summary_page2'
   | 'cbe_tx_detail' 
+  | 'cbe_beneficiary'
+  | 'cbe_fast_loan'
+  | 'cbe_other_transfers'
+  | 'cbe_cbebirr'
   | 'cbe_transfer_acc' 
   | 'cbe_transfer_amount' 
   | 'cbe_transfer_reason' 
@@ -80,15 +89,30 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
   // Call Log Detail Modal (clicking (i))
   const [selectedCallDetail, setSelectedCallDetail] = useState<CallLogItem | null>(null);
 
-  // Active Calling Screen
+  // Caller Accounts State (Transaction-generated senders and receivers)
+  const [callerAccounts, setCallerAccounts] = useState<CallerAccount[]>(() => {
+    try {
+      PhoneCallService.syncAllTransactionsToCallerAccounts();
+    } catch {}
+    return PhoneCallService.getCallerAccounts();
+  });
+  const [activeCallerAccount, setActiveCallerAccount] = useState<CallerAccount>(() => 
+    PhoneCallService.getActiveCallerAccount()
+  );
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [accountFilter, setAccountFilter] = useState<'all' | 'sender' | 'receiver'>('all');
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Active Calling Screen (outgoing and incoming)
   const [activeCall, setActiveCall] = useState<{
     contactName: string;
     phoneNumber: string;
     simSlot: 1 | 2;
-    status: 'dialing' | 'connected' | 'ended';
+    status: 'dialing' | 'incoming' | 'connected' | 'ended';
     durationSeconds: number;
     isMuted: boolean;
     isSpeaker: boolean;
+    callerRole?: 'sender' | 'receiver' | 'user';
   } | null>(null);
 
   // USSD Session Engine
@@ -200,6 +224,81 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
     }
   }, [ussdStep]);
 
+  // Caller accounts listener & live sync
+  useEffect(() => {
+    const handleAccountsUpdate = () => {
+      setCallerAccounts(PhoneCallService.getCallerAccounts());
+      setActiveCallerAccount(PhoneCallService.getActiveCallerAccount());
+      setCallLogs(PhoneCallService.getCallLogs());
+      setContacts(PhoneCallService.getContacts());
+    };
+    window.addEventListener('caller_accounts_updated', handleAccountsUpdate);
+    window.addEventListener('caller_account_changed', handleAccountsUpdate);
+    window.addEventListener('storage', handleAccountsUpdate);
+    return () => {
+      window.removeEventListener('caller_accounts_updated', handleAccountsUpdate);
+      window.removeEventListener('caller_account_changed', handleAccountsUpdate);
+      window.removeEventListener('storage', handleAccountsUpdate);
+    };
+  }, []);
+
+  // Switch Active Caller Account
+  const handleSwitchCaller = (acc: CallerAccount) => {
+    PhoneCallService.setActiveCallerAccountId(acc.id);
+    setActiveCallerAccount(acc);
+    setToastMessage(`Active Caller set to: ${acc.name} (${acc.role === 'sender' ? 'Sender' : 'Receiver'})`);
+    setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  // Simulate an Incoming Call (Sender calling Receiver or Receiver calling Sender)
+  const handleSimulateIncomingCall = (acc: CallerAccount) => {
+    setIsSettingsOpen(false);
+    setActiveCall({
+      contactName: acc.name,
+      phoneNumber: acc.phoneNumber,
+      simSlot: acc.simSlot,
+      status: 'incoming',
+      durationSeconds: 0,
+      isMuted: false,
+      isSpeaker: false,
+      callerRole: acc.role
+    });
+    playTone(852);
+  };
+
+  // Accept Incoming Call
+  const handleAcceptIncomingCall = () => {
+    if (!activeCall) return;
+    setActiveCall(prev => prev ? { ...prev, status: 'connected' } : null);
+    PhoneCallService.addCallLog({
+      contactName: activeCall.contactName,
+      phoneNumber: activeCall.phoneNumber,
+      simSlot: activeCall.simSlot,
+      type: 'incoming',
+      timestamp: 'Just now',
+      duration: 'Connected',
+      hasWhatsApp: true
+    });
+    setCallLogs(PhoneCallService.getCallLogs());
+  };
+
+  // Decline Incoming Call
+  const handleDeclineIncomingCall = () => {
+    if (!activeCall) return;
+    PhoneCallService.addCallLog({
+      contactName: activeCall.contactName,
+      phoneNumber: activeCall.phoneNumber,
+      simSlot: activeCall.simSlot,
+      type: 'missed',
+      timestamp: 'Just now',
+      duration: 'Declined',
+      hasWhatsApp: true
+    });
+    setCallLogs(PhoneCallService.getCallLogs());
+    setActiveCall(prev => prev ? { ...prev, status: 'ended' } : null);
+    setTimeout(() => setActiveCall(null), 400);
+  };
+
   // Active call duration timer
   useEffect(() => {
     if (!activeCall || activeCall.status !== 'connected') return;
@@ -227,7 +326,7 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
   };
 
   // Trigger Outgoing Call
-  const handleInitiateCall = (numberOrName: string, simSlot: 1 | 2 = 1) => {
+  const handleInitiateCall = (numberOrName: string, simSlot?: 1 | 2) => {
     const cleanNumber = numberOrName.trim();
     if (!cleanNumber) return;
 
@@ -237,15 +336,18 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
       return;
     }
 
+    // Selected SIM slot: explicitly passed or defaults to active caller account SIM
+    const effectiveSimSlot = simSlot || activeCallerAccount?.simSlot || 1;
+
     // Normal Phone Call
     const contact = PhoneCallService.findContactByNumber(cleanNumber);
     const displayName = contact ? contact.name : cleanNumber;
 
     // Add to call log
-    const newLog = PhoneCallService.addCallLog({
+    PhoneCallService.addCallLog({
       contactName: displayName,
       phoneNumber: cleanNumber,
-      simSlot: simSlot,
+      simSlot: effectiveSimSlot,
       type: 'outgoing',
       timestamp: 'Just now',
       duration: 'Connecting...',
@@ -257,11 +359,12 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
     setActiveCall({
       contactName: displayName,
       phoneNumber: cleanNumber,
-      simSlot: simSlot,
+      simSlot: effectiveSimSlot,
       status: 'dialing',
       durationSeconds: 0,
       isMuted: false,
-      isSpeaker: false
+      isSpeaker: false,
+      callerRole: activeCallerAccount?.role || 'user'
     });
 
     // Simulate answering after 2.2 seconds
@@ -319,39 +422,87 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
 
     switch (ussdStep) {
       case 'cbe_login':
-        // User entered PIN (Screenshot 2 -> Screenshot 3)
-        // Any 4 digit pin or any input accepts
+        // User entered PIN
         setUssdStep('cbe_menu');
         setUssdInput('');
         break;
 
       case 'cbe_menu':
-        // Menu Options (Screenshot 3)
-        // 1: My Account
-        // 2: Transfer to CBE Account
-        // 6: Airtime
-        // 8: CBEBirr
+        // Menu Options matching Screenshot 2:
+        // 1:My Account
+        // 2:Transfer to CBE Account
+        // 3:Beneficiary
+        // 4:Own Account Transfer
+        // 5:CBE Fast Loan
+        // 6:Airtime
+        // 7:Other Transfers
+        // 8:CBEBirr
+        // 9:Next
         if (val === '1') {
           setUssdStep('cbe_select_account');
           setUssdInput('');
         } else if (val === '2') {
           setUssdStep('cbe_transfer_acc');
           setUssdInput('');
+        } else if (val === '3') {
+          setUssdStep('cbe_beneficiary');
+          setUssdInput('');
+        } else if (val === '4') {
+          setUssdStep('cbe_select_account');
+          setUssdInput('');
+        } else if (val === '5') {
+          setUssdStep('cbe_fast_loan');
+          setUssdInput('');
         } else if (val === '6') {
           setUssdStep('cbe_airtime_menu');
           setUssdInput('');
+        } else if (val === '7') {
+          setUssdStep('cbe_other_transfers');
+          setUssdInput('');
+        } else if (val === '8') {
+          setUssdStep('cbe_cbebirr');
+          setUssdInput('');
         } else if (val === '9') {
-          // Next page
-          handleCloseUssd('More options currently unavailable.');
+          setUssdStep('cbe_menu_page2');
+          setUssdInput('');
         } else {
-          // Default to My Account if invalid input
           setUssdStep('cbe_select_account');
           setUssdInput('');
         }
         break;
 
+      case 'cbe_menu_page2':
+        // Page 2 of Main Menu: 9:Back returns to cbe_menu
+        setUssdStep('cbe_menu');
+        setUssdInput('');
+        break;
+
+      case 'cbe_beneficiary':
+        // 1-3: details, 4:Back
+        setUssdStep('cbe_menu');
+        setUssdInput('');
+        break;
+
+      case 'cbe_fast_loan':
+        // 3:Back
+        setUssdStep('cbe_menu');
+        setUssdInput('');
+        break;
+
+      case 'cbe_other_transfers':
+        // 3:Back
+        setUssdStep('cbe_menu');
+        setUssdInput('');
+        break;
+
+      case 'cbe_cbebirr':
+        // 3:Back
+        setUssdStep('cbe_menu');
+        setUssdInput('');
+        break;
+
       case 'cbe_select_account':
-        // Select Account (Screenshot 4)
+        // Select Account
         // 1: Saving Account-4747
         // 2: Back
         if (val === '1') {
@@ -367,7 +518,7 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
         break;
 
       case 'cbe_account_summary':
-        // Account summary and transactions list (Screenshot 5)
+        // Account summary and transactions list (Screenshot 1)
         // 1-5: view transaction details
         // 6: Back
         // 7: Next
@@ -375,7 +526,8 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
           setUssdStep('cbe_select_account');
           setUssdInput('');
         } else if (val === '7') {
-          handleCloseUssd('End of transaction history');
+          setUssdStep('cbe_account_summary_page2');
+          setUssdInput('');
         } else {
           const idx = parseInt(val, 10);
           if (!isNaN(idx) && idx >= 1 && idx <= 5) {
@@ -390,10 +542,36 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
         }
         break;
 
+      case 'cbe_account_summary_page2':
+        // Page 2 of transactions
+        if (val === '6') {
+          setUssdStep('cbe_select_account');
+          setUssdInput('');
+        } else if (val === '7') {
+          setUssdStep('cbe_account_summary');
+          setUssdInput('');
+        } else {
+          const idx = parseInt(val, 10);
+          if (!isNaN(idx) && idx >= 1 && idx <= 5) {
+            setSelectedTxIndex(5 + (idx - 1));
+            setUssdStep('cbe_tx_detail');
+            setUssdInput('');
+          } else {
+            setSelectedTxIndex(5);
+            setUssdStep('cbe_tx_detail');
+            setUssdInput('');
+          }
+        }
+        break;
+
       case 'cbe_tx_detail':
-        // Transaction detail (Screenshot 6)
+        // Transaction detail (Screenshot 3)
         // 1: Back
-        setUssdStep('cbe_account_summary');
+        if (selectedTxIndex >= 5) {
+          setUssdStep('cbe_account_summary_page2');
+        } else {
+          setUssdStep('cbe_account_summary');
+        }
         setUssdInput('');
         break;
 
@@ -567,46 +745,30 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
 
   // Format account number for USSD display (e.g. "Saving Account-4747")
   const formattedAccountDisplay = useMemo(() => {
-    const raw = user.accountNumber || '1000419524747';
+    const raw = activeCallerAccount?.accountNumber || user.accountNumber || '1000419524747';
     const last4 = raw.slice(-4);
     return `Saving Account-${last4}`;
-  }, [user.accountNumber]);
+  }, [activeCallerAccount?.accountNumber, user.accountNumber]);
 
-  // Current user balance formatted
+  // Current active caller balance formatted
   const formattedBalance = useMemo(() => {
-    const bal = user.balance ?? 348.54;
+    const bal = activeCallerAccount ? activeCallerAccount.balance : (user.balance ?? 348.54);
     return bal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }, [user.balance]);
+  }, [activeCallerAccount, user.balance]);
 
-  // Dynamic transactions list for USSD Screenshot 5
+  // Dynamic transactions list for USSD
   const sampleTransactions = useMemo(() => {
-    if (userTransactions && userTransactions.length > 0) {
-      return userTransactions.slice(0, 5).map(tx => {
-        const sign = tx.type === 'receive' ? '+' : '-';
-        const d = new Date(tx.createdAt);
-        const day = d.getDate();
-        const month = d.getMonth() + 1;
-        return {
-          id: tx.id,
-          line: `${sign}${tx.amount.toFixed(1)} on ${day}/${month}`,
-          amount: `${sign}${tx.amount.toFixed(2)} ETB`,
-          paymentAbout: tx.description || 'Pay done via Mobile',
-          sender: tx.senderName || 'Dejene Buta Feye',
-          receiver: tx.recipientName || user.name || 'Leykun Jemaneh Ylma',
-          date: tx.createdAt ? tx.createdAt.replace('T', ' ').slice(0, 16) : '2026-09-05 13:41'
-        };
-      });
-    }
-
-    // Default matching Screenshot 5 & 6
-    return [
+    const isSender = activeCallerAccount?.role === 'sender';
+    
+    // Canonical transactions matching Screenshot 1 & 3
+    const canonicalTxs = [
       {
         id: 'tx-1',
-        line: '+50.0 on 4/9',
-        amount: '+50.00 ETB',
+        line: isSender ? '-50.0 on 4/9' : '+50.0 on 4/9',
+        amount: isSender ? '-50.00 ETB' : '+50.00 ETB',
         paymentAbout: 'Pay done via Mobile',
         sender: 'Dejene Buta Feye',
-        receiver: user.name || 'Leykun Jemaneh Ylma',
+        receiver: 'Leykun Jemaneh Ylma',
         date: '2026-09-05 13:41'
       },
       {
@@ -614,7 +776,7 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
         line: '-20.0 on 4/9',
         amount: '-20.00 ETB',
         paymentAbout: 'Pay done via Mobile',
-        sender: user.name || 'Leykun Jemaneh Ylma',
+        sender: activeCallerAccount?.name || user.name || 'Leykun Jemaneh Ylma',
         receiver: 'Kasahun Yematawork Lema',
         date: '2026-09-04 18:22'
       },
@@ -624,7 +786,7 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
         amount: '+100.00 ETB',
         paymentAbout: 'CBE Branch Deposit',
         sender: 'Addis Ababa Branch 001',
-        receiver: user.name || 'Leykun Jemaneh Ylma',
+        receiver: activeCallerAccount?.name || user.name || 'Leykun Jemaneh Ylma',
         date: '2026-09-01 10:15'
       },
       {
@@ -632,7 +794,7 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
         line: '-0.06 on 31/8',
         amount: '-0.06 ETB',
         paymentAbout: 'SMS Notification Charge',
-        sender: user.name || 'Leykun Jemaneh Ylma',
+        sender: activeCallerAccount?.name || user.name || 'Leykun Jemaneh Ylma',
         receiver: 'CBE System',
         date: '2026-08-31 23:59'
       },
@@ -641,14 +803,281 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
         line: '-100.0 on 30/8',
         amount: '-100.00 ETB',
         paymentAbout: 'Mobile Banking Transfer',
-        sender: user.name || 'Leykun Jemaneh Ylma',
+        sender: activeCallerAccount?.name || user.name || 'Leykun Jemaneh Ylma',
         receiver: 'Selamawit Tekle',
         date: '2026-08-30 14:02'
+      },
+      {
+        id: 'tx-6',
+        line: '-45.0 on 28/8',
+        amount: '-45.00 ETB',
+        paymentAbout: 'Ethio Telecom Airtime',
+        sender: activeCallerAccount?.name || user.name || 'Leykun Jemaneh Ylma',
+        receiver: 'Ethio Telecom',
+        date: '2026-08-28 11:20'
+      },
+      {
+        id: 'tx-7',
+        line: '+250.0 on 25/8',
+        amount: '+250.00 ETB',
+        paymentAbout: 'Salary Advance / Credit',
+        sender: 'Employer Payroll CBE',
+        receiver: activeCallerAccount?.name || user.name || 'Leykun Jemaneh Ylma',
+        date: '2026-08-25 09:00'
+      },
+      {
+        id: 'tx-8',
+        line: '-15.0 on 20/8',
+        amount: '-15.00 ETB',
+        paymentAbout: 'Utility Bill Payment',
+        sender: activeCallerAccount?.name || user.name || 'Leykun Jemaneh Ylma',
+        receiver: 'Addis Water Authority',
+        date: '2026-08-20 16:45'
+      },
+      {
+        id: 'tx-9',
+        line: '-0.06 on 31/7',
+        amount: '-0.06 ETB',
+        paymentAbout: 'SMS Notification Charge',
+        sender: activeCallerAccount?.name || user.name || 'Leykun Jemaneh Ylma',
+        receiver: 'CBE System',
+        date: '2026-07-31 23:59'
+      },
+      {
+        id: 'tx-10',
+        line: '+500.0 on 15/7',
+        amount: '+500.00 ETB',
+        paymentAbout: 'Remittance Transfer',
+        sender: 'International Money Transfer',
+        receiver: activeCallerAccount?.name || user.name || 'Leykun Jemaneh Ylma',
+        date: '2026-07-15 14:30'
       }
     ];
-  }, [userTransactions, user.name]);
+
+    if (userTransactions && userTransactions.length > 0) {
+      const realMapped = userTransactions.map(tx => {
+        const txIsSender = activeCallerAccount?.role === 'sender' || tx.senderName === activeCallerAccount?.name;
+        const sign = txIsSender ? '-' : '+';
+        const d = new Date(tx.createdAt);
+        const day = d.getDate();
+        const month = d.getMonth() + 1;
+        
+        let formattedAmt = '';
+        if (tx.amount < 1 && tx.amount > 0) {
+          formattedAmt = tx.amount.toFixed(2);
+        } else if (Number.isInteger(tx.amount)) {
+          formattedAmt = tx.amount.toFixed(1);
+        } else {
+          const dec = tx.amount.toString().split('.')[1] || '';
+          formattedAmt = dec.length === 1 ? tx.amount.toFixed(1) : tx.amount.toFixed(2);
+        }
+
+        return {
+          id: tx.id,
+          line: `${sign}${formattedAmt} on ${day}/${month}`,
+          amount: `${sign}${tx.amount.toFixed(2)} ETB`,
+          paymentAbout: tx.description || 'Pay done via Mobile',
+          sender: tx.senderName || (txIsSender ? (activeCallerAccount?.name || user.name) : 'Dejene Buta Feye'),
+          receiver: tx.recipientName || (txIsSender ? 'Dejene Buta Feye' : (activeCallerAccount?.name || user.name)),
+          date: tx.createdAt ? tx.createdAt.replace('T', ' ').slice(0, 16) : '2026-09-05 13:41'
+        };
+      });
+
+      const combined = [...realMapped];
+      for (const c of canonicalTxs) {
+        if (!combined.some(x => x.id === c.id)) {
+          combined.push(c);
+        }
+      }
+      return combined;
+    }
+
+    return canonicalTxs;
+  }, [userTransactions, user.name, activeCallerAccount]);
+
+  // Page 1 and Page 2 of Transactions
+  const page1Txs = useMemo(() => sampleTransactions.slice(0, 5), [sampleTransactions]);
+  const page2Txs = useMemo(() => sampleTransactions.slice(5, 10), [sampleTransactions]);
+
+  // Filter caller accounts by role tab
+  const filteredCallerAccounts = useMemo(() => {
+    if (accountFilter === 'sender') {
+      return callerAccounts.filter(a => a.role === 'sender');
+    }
+    if (accountFilter === 'receiver') {
+      return callerAccounts.filter(a => a.role === 'receiver');
+    }
+    return callerAccounts;
+  }, [callerAccounts, accountFilter]);
 
   const currentDetailTx = sampleTransactions[selectedTxIndex] || sampleTransactions[0];
+
+  // Exact USSD string content generator to ensure pristine formatting
+  const ussdContentText = useMemo(() => {
+    switch (ussdStep) {
+      case 'cbe_login':
+        return 'Welcome to CBE Mobile Banking.\nPlease enter your PIN to login:';
+
+      case 'cbe_menu':
+        return [
+          '1:My Account',
+          '2:Transfer to CBE Account',
+          '3:Beneficiary',
+          '4:Own Account Transfer',
+          '5:CBE Fast Loan',
+          '6:Airtime',
+          '7:Other Transfers',
+          '8:CBEBirr',
+          '9:Next'
+        ].join('\n');
+
+      case 'cbe_menu_page2':
+        return [
+          '1:Utility Payment',
+          '2:Change PIN',
+          '3:Language',
+          '4:Mini Statement',
+          '5:Manage Beneficiary',
+          '6:Cheque Services',
+          '7:Forex Rates',
+          '8:Help / Contact',
+          '9:Back'
+        ].join('\n');
+
+      case 'cbe_select_account':
+        return [
+          'Select Account',
+          `1:${formattedAccountDisplay}`,
+          '2:Back'
+        ].join('\n');
+
+      case 'cbe_account_summary':
+        return [
+          activeCallerAccount?.name || user.name || 'Leykun Jemaneh Ylma',
+          `Available Balance is ETB ${formattedBalance}`,
+          'Transactions',
+          ...page1Txs.map((tx, idx) => `${idx + 1}:${tx.line}`),
+          '6:Back',
+          '7:Next'
+        ].join('\n');
+
+      case 'cbe_account_summary_page2':
+        return [
+          activeCallerAccount?.name || user.name || 'Leykun Jemaneh Ylma',
+          `Available Balance is ETB ${formattedBalance}`,
+          'Transactions (Page 2)',
+          ...page2Txs.map((tx, idx) => `${idx + 1}:${tx.line}`),
+          '6:Back',
+          '7:Next'
+        ].join('\n');
+
+      case 'cbe_tx_detail':
+        return [
+          `Amount:${currentDetailTx.amount}`,
+          `About Payment: ${currentDetailTx.paymentAbout}`,
+          `From ${currentDetailTx.sender} to ${currentDetailTx.receiver}`,
+          `On Date:${currentDetailTx.date}`,
+          '1:Back'
+        ].join('\n');
+
+      case 'cbe_beneficiary':
+        return [
+          '1:Dejene Buta Feye',
+          '2:Kasahun Yematawork',
+          '3:Add Beneficiary',
+          '4:Back'
+        ].join('\n');
+
+      case 'cbe_fast_loan':
+        return [
+          'CBE Fast Loan',
+          '1:Check Eligibility',
+          '2:Apply Loan (Up to ETB 15,000)',
+          '3:Back'
+        ].join('\n');
+
+      case 'cbe_other_transfers':
+        return [
+          'Other Transfers',
+          '1:Transfer to Other Bank',
+          '2:Telebirr',
+          '3:Back'
+        ].join('\n');
+
+      case 'cbe_cbebirr':
+        return [
+          'CBEBirr',
+          '1:CBEBirr to CBE Account',
+          '2:CBE Account to CBEBirr',
+          '3:Back'
+        ].join('\n');
+
+      case 'cbe_transfer_acc':
+        return 'Enter Recipient CBE Account Number:\n(e.g. 1000...)';
+
+      case 'cbe_transfer_amount':
+        return `Transfer to: ${transferData.recipientName}\nEnter Amount (ETB):`;
+
+      case 'cbe_transfer_reason':
+        return 'Enter Reason / Remark:';
+
+      case 'cbe_transfer_confirm':
+        return [
+          'Confirm Transfer:',
+          `To: ${transferData.recipientName}`,
+          `Account: ${transferData.recipientAcc}`,
+          `Amount: ETB ${transferData.amount.toFixed(2)}`,
+          'Fee: ETB 0.00',
+          '1:Confirm',
+          '2:Cancel'
+        ].join('\n');
+
+      case 'cbe_transfer_done':
+        return [
+          'Transaction Successful!',
+          `ETB ${transferData.amount.toFixed(2)} transferred to ${transferData.recipientName}.`,
+          'SMS & Truecaller alert generated.',
+          '1:OK'
+        ].join('\n');
+
+      case 'cbe_airtime_menu':
+        return [
+          'Airtime Top-up',
+          `1:Self Recharge (${user.phone || '0968161314'})`,
+          '2:Other Phone',
+          '3:Back'
+        ].join('\n');
+
+      case 'cbe_airtime_amount':
+        return `Recharge for: ${airtimeData.phone}\nEnter Airtime Amount (ETB 5 - 1000):`;
+
+      case 'cbe_airtime_done':
+        return `Airtime Top-up of ETB ${airtimeData.amount} successful for ${airtimeData.phone}!\n1:OK`;
+
+      case 'ethio_telecom_balance':
+        return [
+          'Dear Customer, your main account balance is ETB 45.20.',
+          'Active Package: 1.5 GB Monthly (Valid till 2026-10-01).',
+          'Voice: 42 Mins.',
+          '1:OK'
+        ].join('\n');
+
+      default:
+        return '';
+    }
+  }, [
+    ussdStep, 
+    formattedAccountDisplay, 
+    activeCallerAccount?.name, 
+    user.name, 
+    formattedBalance, 
+    page1Txs, 
+    page2Txs, 
+    currentDetailTx, 
+    transferData, 
+    user.phone, 
+    airtimeData
+  ]);
 
   return (
     <div 
@@ -723,22 +1152,57 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
             <Search className="w-5 h-5 stroke-[1.8]" />
           </button>
 
-          {/* Settings Hexagon Icon from screenshot */}
+          {/* Settings Hexagon Icon from screenshot - opens Caller Accounts Drawer */}
           <button 
-            onClick={() => handleDialUssd('*889#')}
-            className="p-1 text-neutral-300 hover:text-white transition active:scale-95"
-            title="Dial *889# CBE Mobile Banking USSD"
+            id="btn-caller-accounts-settings"
+            onClick={() => setIsSettingsOpen(true)}
+            className="relative p-1 text-neutral-300 hover:text-white transition active:scale-95"
+            title="Caller Accounts & Settings"
           >
             <Hexagon className="w-5 h-5 stroke-[1.8]" />
+            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 ring-2 ring-black flex items-center justify-center text-[7.5px] font-bold text-black">
+              {callerAccounts.length}
+            </span>
           </button>
         </div>
       </div>
 
       {/* Big Title: Recents (Large bold display matching Screenshot 1) */}
-      <div className="px-4 pb-2 shrink-0 z-10">
+      <div className="px-4 pb-1 shrink-0 z-10">
         <h1 className="text-[32px] font-bold tracking-tight text-white leading-tight">
           {activeTab === 'recents' ? 'Recents' : 'Contacts'}
         </h1>
+      </div>
+
+      {/* Active Caller Profile Bar (Sender / Receiver switchable) */}
+      <div className="px-4 pb-2.5 flex items-center justify-between shrink-0 z-10">
+        <button 
+          id="btn-active-caller-chip"
+          onClick={() => setIsSettingsOpen(true)}
+          className="flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800 hover:border-neutral-700 transition active:scale-98 text-left group"
+          title="Click to switch caller account between sender and receiver"
+        >
+          <div className={`w-2 h-2 rounded-full ${activeCallerAccount?.role === 'sender' ? 'bg-amber-400' : 'bg-emerald-400'} animate-pulse`} />
+          <span className="text-[11.5px] text-neutral-300 font-medium">
+            Caller: <strong className="text-white font-semibold">{activeCallerAccount?.name || user.name}</strong>
+          </span>
+          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider ${
+            activeCallerAccount?.role === 'sender' 
+              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' 
+              : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+          }`}>
+            {activeCallerAccount?.role || 'receiver'}
+          </span>
+        </button>
+
+        <button 
+          id="btn-caller-accounts-toggle"
+          onClick={() => setIsSettingsOpen(true)}
+          className="text-[11px] text-[#1a73e8] hover:text-blue-400 font-semibold flex items-center gap-1 transition"
+          title="View all transaction caller accounts"
+        >
+          <span>{callerAccounts.length} Accounts</span>
+        </button>
       </div>
 
       {/* Search Input Bar (Expandable) */}
@@ -1164,12 +1628,12 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
       </div>
 
       {/* ------------------------------------------------------------- */}
-      {/* 8. USSD POPUP MODAL (Exact match for Screenshots 2, 3, 4, 5, 6) */}
+      {/* 8. USSD POPUP MODAL (Exact match for Screenshots) */}
       {/* ------------------------------------------------------------- */}
       {ussdStep !== 'idle' && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-[2px] flex flex-col justify-between animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-[1px] flex flex-col justify-between animate-in fade-in duration-150">
           
-          {/* Top Status Bar in USSD mode matching Screenshots 2, 3, 4 */}
+          {/* Top Status Bar in USSD mode matching Screenshots */}
           <div className="w-full px-4 pt-2.5 pb-1 flex items-center justify-between text-xs text-neutral-300 font-medium z-10 shrink-0">
             <div className="flex items-center gap-2">
               <span className="text-[13px] font-semibold text-white tracking-tight">11:34</span>
@@ -1198,13 +1662,13 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
           <div className="flex-1 flex flex-col items-center justify-center px-4 py-2">
             {/* Running Spinner */}
             {ussdStep === 'running' ? (
-              <div className="bg-[#2b2d30] text-white rounded-[24px] px-8 py-6 shadow-2xl flex flex-col items-center gap-3 border border-neutral-700/40">
+              <div className="bg-[#202227] text-white rounded-[24px] px-8 py-6 shadow-2xl flex flex-col items-center gap-3 border border-neutral-700/40">
                 <div className="w-8 h-8 rounded-full border-3 border-t-[#2979ff] border-neutral-600 animate-spin" />
                 <p className="text-[15px] font-medium text-neutral-200">USSD code running...</p>
               </div>
             ) : (
               /* USSD Dialog Card */
-              <div className="w-full max-w-[340px] bg-[#2b2d30] text-white rounded-[26px] p-5 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150 border border-neutral-700/30">
+              <div className="w-full max-w-[340px] bg-[#202227] text-white rounded-[26px] p-6 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150 border border-neutral-700/40">
                 
                 {/* Hidden input for physical keyboard entry */}
                 <input 
@@ -1224,157 +1688,20 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
                   autoFocus
                 />
 
-                {/* Dialog Content Text based on USSD Step */}
-                <div className="text-[14.5px] leading-[1.48] text-[#e3e5e8] font-sans whitespace-pre-line select-text mb-3 min-h-[50px]">
-                  {/* Step 1: Login PIN */}
-                  {ussdStep === 'cbe_login' && (
-                    <>
-                      Welcome to CBE Mobile Banking.
-                      Please enter your PIN to login:
-                    </>
-                  )}
-
-                  {/* Step 2: Main Menu (Screenshot 2 / Screenshot_20260906-113413.png) */}
-                  {ussdStep === 'cbe_menu' && (
-                    <>
-                      1:My Account
-                      2:Transfer to CBE Account
-                      3:Beneficiary
-                      4:Own Account Transfer
-                      5:CBE Fast Loan
-                      6:Airtime
-                      7:Other Transfers
-                      8:CBEBirr
-                      9:Next
-                    </>
-                  )}
-
-                  {/* Step 3: Select Account */}
-                  {ussdStep === 'cbe_select_account' && (
-                    <>
-                      Select Account
-                      1:{formattedAccountDisplay}
-                      2:Back
-                    </>
-                  )}
-
-                  {/* Step 4: Account Summary & Recent Transactions (Screenshot 4 / Screenshot_20260906-113432.png) */}
-                  {ussdStep === 'cbe_account_summary' && (
-                    <>
-                      {user.name || 'Leykun Jemaneh Ylma'}
-                      {'\n'}Available Balance is ETB {formattedBalance}
-                      {'\n'}Transactions
-                      {sampleTransactions.map((tx, idx) => (
-                        `\n${idx + 1}:${tx.line}`
-                      )).join('')}
-                      {'\n'}6:Back
-                      {'\n'}7:Next
-                    </>
-                  )}
-
-                  {/* Step 5: Transaction Detail (Screenshot 3 / Screenshot_20260906-113446.png) */}
-                  {ussdStep === 'cbe_tx_detail' && (
-                    <>
-                      Amount:{currentDetailTx.amount}
-                      {'\n'}About Payment: {currentDetailTx.paymentAbout}
-                      {'\n'}From {currentDetailTx.sender} to {currentDetailTx.receiver}
-                      {'\n'}On Date:{currentDetailTx.date}
-                      {'\n'}1:Back
-                    </>
-                  )}
-
-                  {/* Step 6: Transfer - Enter Account Number */}
-                  {ussdStep === 'cbe_transfer_acc' && (
-                    <>
-                      Enter Recipient CBE Account Number:
-                      {'\n'}(e.g. 1000...)
-                    </>
-                  )}
-
-                  {/* Step 7: Transfer - Enter Amount */}
-                  {ussdStep === 'cbe_transfer_amount' && (
-                    <>
-                      Transfer to: {transferData.recipientName}
-                      {'\n'}Enter Amount (ETB):
-                    </>
-                  )}
-
-                  {/* Step 8: Transfer - Enter Reason */}
-                  {ussdStep === 'cbe_transfer_reason' && (
-                    <>
-                      Enter Reason / Remark:
-                    </>
-                  )}
-
-                  {/* Step 9: Transfer - Confirmation */}
-                  {ussdStep === 'cbe_transfer_confirm' && (
-                    <>
-                      Confirm Transfer:
-                      {'\n'}To: {transferData.recipientName}
-                      {'\n'}Account: {transferData.recipientAcc}
-                      {'\n'}Amount: ETB {transferData.amount.toFixed(2)}
-                      {'\n'}Fee: ETB 0.00
-                      {'\n'}1:Confirm
-                      {'\n'}2:Cancel
-                    </>
-                  )}
-
-                  {/* Step 10: Transfer - Completed */}
-                  {ussdStep === 'cbe_transfer_done' && (
-                    <>
-                      Transaction Successful!
-                      {'\n'}ETB {transferData.amount.toFixed(2)} transferred to {transferData.recipientName}.
-                      {'\n'}SMS & Truecaller alert generated.
-                      {'\n'}1:OK
-                    </>
-                  )}
-
-                  {/* Airtime Menu */}
-                  {ussdStep === 'cbe_airtime_menu' && (
-                    <>
-                      Airtime Top-up
-                      {'\n'}1:Self Recharge ({user.phone || '0968161314'})
-                      {'\n'}2:Other Phone
-                      {'\n'}3:Back
-                    </>
-                  )}
-
-                  {/* Airtime Amount */}
-                  {ussdStep === 'cbe_airtime_amount' && (
-                    <>
-                      Recharge for: {airtimeData.phone}
-                      {'\n'}Enter Airtime Amount (ETB 5 - 1000):
-                    </>
-                  )}
-
-                  {/* Airtime Completed */}
-                  {ussdStep === 'cbe_airtime_done' && (
-                    <>
-                      Airtime Top-up of ETB {airtimeData.amount} successful for {airtimeData.phone}!
-                      {'\n'}1:OK
-                    </>
-                  )}
-
-                  {/* Ethio Telecom Balance */}
-                  {ussdStep === 'ethio_telecom_balance' && (
-                    <>
-                      Dear Customer, your main account balance is ETB 45.20.
-                      {'\n'}Active Package: 1.5 GB Monthly (Valid till 2026-10-01).
-                      {'\n'}Voice: 42 Mins.
-                      {'\n'}1:OK
-                    </>
-                  )}
+                {/* Dialog Content Text: rendered with exact linebreaks matching Screenshots */}
+                <div className="text-[15px] leading-[1.42] text-[#e2e4ea] font-sans whitespace-pre-line select-text mb-4 min-h-[50px] tracking-[0.01em]">
+                  {ussdContentText}
                 </div>
 
                 {/* Blue Underline Input Line with vertical blinking cursor matching screenshots */}
                 <div 
                   onClick={() => ussdInputRef.current?.focus()}
-                  className="relative mb-4 border-b-2 border-[#1a73e8] pb-1 min-h-[26px] flex items-center cursor-text"
+                  className="relative mb-4 border-b-[2px] border-[#1a73e8] pb-1 min-h-[26px] flex items-center cursor-text"
                 >
-                  <span className="text-[16px] text-white font-mono">
+                  <span className="text-[16px] text-white font-sans tracking-wide">
                     {ussdStep === 'cbe_login' ? '•'.repeat(ussdInput.length) : ussdInput}
                   </span>
-                  <span className="w-[2px] h-5 bg-[#2979ff] inline-block animate-pulse ml-0.5" />
+                  <span className="w-[2px] h-[20px] bg-[#2979ff] inline-block animate-pulse ml-0.5" />
                 </div>
 
                 {/* Action Buttons: Cancel | Send (Centered in 2 equal halves matching screenshots) */}
@@ -1382,17 +1709,17 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
                   <button 
                     type="button"
                     onClick={() => handleCloseUssd('USSD session ended.')}
-                    className="flex-1 text-center text-[15px] font-semibold text-[#2979ff] hover:text-[#5393ff] active:scale-95 transition py-1"
+                    className="flex-1 text-center text-[15.5px] font-semibold text-[#2979ff] hover:text-[#5393ff] active:scale-95 transition py-1"
                   >
                     Cancel
                   </button>
 
-                  <div className="w-[1px] h-4 bg-[#4a4d55]" />
+                  <div className="w-[1px] h-4 bg-[#3a3d45]" />
 
                   <button 
                     type="button"
                     onClick={() => handleUssdSubmit()}
-                    className="flex-1 text-center text-[15px] font-semibold text-[#2979ff] hover:text-[#5393ff] active:scale-95 transition py-1"
+                    className="flex-1 text-center text-[15.5px] font-semibold text-[#2979ff] hover:text-[#5393ff] active:scale-95 transition py-1"
                   >
                     Send
                   </button>
@@ -1431,66 +1758,108 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
               {activeCall.phoneNumber}
             </p>
 
-            <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold bg-emerald-950/60 border border-emerald-500/30 px-3 py-1 rounded-full">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>
-                {activeCall.status === 'dialing' 
-                  ? `Dialing via SIM ${activeCall.simSlot}...` 
-                  : activeCall.status === 'connected'
-                  ? formatDuration(activeCall.durationSeconds)
-                  : 'Call Ended'}
-              </span>
+            {/* Call State Pill */}
+            <div className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-full border">
+              {activeCall.status === 'incoming' ? (
+                <span className="text-blue-400 bg-blue-950/60 border-blue-500/30 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-blue-400 animate-ping" />
+                  <span>Incoming Call • SIM {activeCall.simSlot} ({activeCall.callerRole === 'sender' ? 'Sender' : 'Receiver'})</span>
+                </span>
+              ) : activeCall.status === 'dialing' ? (
+                <span className="text-emerald-400 bg-emerald-950/60 border-emerald-500/30 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>Dialing via SIM {activeCall.simSlot}...</span>
+                </span>
+              ) : activeCall.status === 'connected' ? (
+                <span className="text-emerald-400 bg-emerald-950/60 border-emerald-500/30 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>{formatDuration(activeCall.durationSeconds)}</span>
+                </span>
+              ) : (
+                <span className="text-red-400 bg-red-950/60 border-red-500/30">Call Ended</span>
+              )}
             </div>
           </div>
 
-          {/* Middle Call Actions Grid */}
-          <div className="grid grid-cols-3 gap-6 w-full max-w-[280px]">
-            {/* Mute */}
-            <button 
-              onClick={() => setActiveCall(p => p ? { ...p, isMuted: !p.isMuted } : null)}
-              className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl transition ${
-                activeCall.isMuted ? 'bg-white text-black' : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'
-              }`}
-            >
-              {activeCall.isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
-              <span className="text-[11px]">Mute</span>
-            </button>
-
-            {/* Keypad */}
-            <button 
-              onClick={() => setIsKeypadOpen(true)}
-              className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-neutral-800 text-neutral-300 hover:bg-neutral-700 transition"
-            >
-              <div className="grid grid-cols-3 gap-0.5 w-6 h-6 items-center justify-center">
-                {[...Array(9)].map((_, i) => (
-                  <div key={i} className="w-1 h-1 rounded-full bg-current" />
-                ))}
+          {/* Incoming Call Accept / Decline Controls OR Active Call Grid */}
+          {activeCall.status === 'incoming' ? (
+            <div className="flex items-center justify-center gap-16 pb-12 w-full max-w-[280px]">
+              {/* Decline Button */}
+              <div className="flex flex-col items-center gap-2">
+                <button 
+                  onClick={handleDeclineIncomingCall}
+                  className="w-16 h-16 rounded-full bg-red-600 hover:bg-red-500 flex items-center justify-center text-white shadow-2xl active:scale-95 transition"
+                  title="Decline Call"
+                >
+                  <Phone className="w-7 h-7 rotate-[135deg] fill-white" />
+                </button>
+                <span className="text-xs text-neutral-400 font-medium">Decline</span>
               </div>
-              <span className="text-[11px]">Keypad</span>
-            </button>
 
-            {/* Speaker */}
-            <button 
-              onClick={() => setActiveCall(p => p ? { ...p, isSpeaker: !p.isSpeaker } : null)}
-              className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl transition ${
-                activeCall.isSpeaker ? 'bg-white text-black' : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'
-              }`}
-            >
-              {activeCall.isSpeaker ? <Volume2 className="w-6 h-6" /> : <VolumeX className="w-6 h-6" />}
-              <span className="text-[11px]">Speaker</span>
-            </button>
-          </div>
+              {/* Accept Button */}
+              <div className="flex flex-col items-center gap-2">
+                <button 
+                  onClick={handleAcceptIncomingCall}
+                  className="w-16 h-16 rounded-full bg-emerald-600 hover:bg-emerald-500 flex items-center justify-center text-white shadow-2xl active:scale-95 transition animate-bounce"
+                  title="Accept Call"
+                >
+                  <Phone className="w-7 h-7 fill-white" />
+                </button>
+                <span className="text-xs text-emerald-400 font-bold">Accept</span>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Middle Call Actions Grid */}
+              <div className="grid grid-cols-3 gap-6 w-full max-w-[280px]">
+                {/* Mute */}
+                <button 
+                  onClick={() => setActiveCall(p => p ? { ...p, isMuted: !p.isMuted } : null)}
+                  className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl transition ${
+                    activeCall.isMuted ? 'bg-white text-black' : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'
+                  }`}
+                >
+                  {activeCall.isMuted ? <MicOff className="w-6 h-6" /> : <Mic className="w-6 h-6" />}
+                  <span className="text-[11px]">Mute</span>
+                </button>
 
-          {/* Bottom End Call Button */}
-          <div className="pb-10">
-            <button 
-              onClick={handleEndCall}
-              className="w-16 h-16 rounded-full bg-red-600 hover:bg-red-500 flex items-center justify-center text-white shadow-2xl active:scale-95 transition"
-              title="End Call"
-            >
-              <Phone className="w-7 h-7 rotate-[135deg] fill-white" />
-            </button>
-          </div>
+                {/* Keypad */}
+                <button 
+                  onClick={() => setIsKeypadOpen(true)}
+                  className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-neutral-800 text-neutral-300 hover:bg-neutral-700 transition"
+                >
+                  <div className="grid grid-cols-3 gap-0.5 w-6 h-6 items-center justify-center">
+                    {[...Array(9)].map((_, i) => (
+                      <div key={i} className="w-1 h-1 rounded-full bg-current" />
+                    ))}
+                  </div>
+                  <span className="text-[11px]">Keypad</span>
+                </button>
+
+                {/* Speaker */}
+                <button 
+                  onClick={() => setActiveCall(p => p ? { ...p, isSpeaker: !p.isSpeaker } : null)}
+                  className={`flex flex-col items-center gap-1.5 p-3 rounded-2xl transition ${
+                    activeCall.isSpeaker ? 'bg-white text-black' : 'bg-neutral-800 text-neutral-300 hover:bg-neutral-700'
+                  }`}
+                >
+                  {activeCall.isSpeaker ? <Volume2 className="w-6 h-6" /> : <VolumeX className="w-6 h-6" />}
+                  <span className="text-[11px]">Speaker</span>
+                </button>
+              </div>
+
+              {/* Bottom End Call Button */}
+              <div className="pb-10">
+                <button 
+                  onClick={handleEndCall}
+                  className="w-16 h-16 rounded-full bg-red-600 hover:bg-red-500 flex items-center justify-center text-white shadow-2xl active:scale-95 transition"
+                  title="End Call"
+                >
+                  <Phone className="w-7 h-7 rotate-[135deg] fill-white" />
+                </button>
+              </div>
+            </>
+          )}
         </div>
       )}
 
@@ -1602,10 +1971,241 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
         </div>
       )}
 
+      {/* 11. Caller Accounts & Settings Modal (Opened via Header Settings Icon) */}
+      {isSettingsOpen && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex flex-col justify-end animate-in fade-in">
+          <div className="bg-[#181a1f] text-white rounded-t-3xl max-h-[85vh] flex flex-col border-t border-neutral-700/80 shadow-2xl animate-in slide-in-from-bottom duration-200">
+            {/* Modal Header */}
+            <div className="p-4 border-b border-neutral-800/80 flex items-center justify-between shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-[#2979ff]">
+                  <Hexagon className="w-4 h-4 stroke-[2]" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white tracking-tight">Caller Accounts</h3>
+                  <p className="text-[11px] text-neutral-400">
+                    Each transaction creates caller accounts • Senders & Receivers can call
+                  </p>
+                </div>
+              </div>
+              <button 
+                id="btn-close-caller-settings"
+                onClick={() => setIsSettingsOpen(false)}
+                className="p-1.5 rounded-full bg-neutral-800/80 text-neutral-400 hover:text-white transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Active Caller Summary Pill & Controls */}
+            <div className="px-4 py-2.5 bg-neutral-900/80 border-b border-neutral-800 flex items-center justify-between gap-2 shrink-0">
+              <div className="flex items-center gap-2 text-xs">
+                <span className="text-neutral-400">Active Caller:</span>
+                <span className="font-semibold text-white truncate max-w-[150px]">
+                  {activeCallerAccount?.name}
+                </span>
+                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase ${
+                  activeCallerAccount?.role === 'sender' 
+                    ? 'bg-amber-500/20 text-amber-300' 
+                    : 'bg-emerald-500/20 text-emerald-300'
+                }`}>
+                  {activeCallerAccount?.role}
+                </span>
+              </div>
+
+              <button 
+                id="btn-sync-all-txs"
+                onClick={() => {
+                  PhoneCallService.syncAllTransactionsToCallerAccounts();
+                  setCallerAccounts(PhoneCallService.getCallerAccounts());
+                  setActiveCallerAccount(PhoneCallService.getActiveCallerAccount());
+                  setToastMessage('Caller accounts re-synced from transactions!');
+                  setTimeout(() => setToastMessage(null), 2500);
+                }}
+                className="flex items-center gap-1 text-[11px] text-blue-400 hover:text-blue-300 font-medium px-2 py-1 rounded-md bg-neutral-800 hover:bg-neutral-700 transition active:scale-95"
+                title="Sync caller accounts from all banking transactions"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Sync Txs</span>
+              </button>
+            </div>
+
+            {/* Filter Tabs: All, Senders, Receivers */}
+            <div className="px-4 pt-2.5 pb-1 flex items-center gap-2 shrink-0">
+              <button 
+                onClick={() => setAccountFilter('all')}
+                className={`flex-1 py-1.5 rounded-xl text-xs font-semibold transition ${
+                  accountFilter === 'all' 
+                    ? 'bg-white text-black shadow-sm' 
+                    : 'bg-neutral-800/80 text-neutral-400 hover:text-white'
+                }`}
+              >
+                All ({callerAccounts.length})
+              </button>
+              <button 
+                onClick={() => setAccountFilter('sender')}
+                className={`flex-1 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1 transition ${
+                  accountFilter === 'sender' 
+                    ? 'bg-amber-500 text-black font-bold shadow-sm' 
+                    : 'bg-neutral-800/80 text-neutral-400 hover:text-white'
+                }`}
+              >
+                <ArrowUpRight className="w-3 h-3" />
+                <span>Senders ({callerAccounts.filter(a => a.role === 'sender').length})</span>
+              </button>
+              <button 
+                onClick={() => setAccountFilter('receiver')}
+                className={`flex-1 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-center gap-1 transition ${
+                  accountFilter === 'receiver' 
+                    ? 'bg-emerald-500 text-black font-bold shadow-sm' 
+                    : 'bg-neutral-800/80 text-neutral-400 hover:text-white'
+                }`}
+              >
+                <ArrowDownLeft className="w-3 h-3" />
+                <span>Receivers ({callerAccounts.filter(a => a.role === 'receiver').length})</span>
+              </button>
+            </div>
+
+            {/* Scrollable Accounts List */}
+            <div className="p-4 space-y-2.5 overflow-y-auto flex-1 overscroll-contain">
+              {filteredCallerAccounts.length === 0 ? (
+                <div className="text-center py-8 text-neutral-500 text-xs">
+                  No accounts found for this filter.
+                </div>
+              ) : (
+                filteredCallerAccounts.map((acc) => {
+                  const isActive = activeCallerAccount?.id === acc.id;
+                  return (
+                    <div 
+                      key={acc.id}
+                      className={`p-3.5 rounded-2xl border transition ${
+                        isActive 
+                          ? 'bg-[#1e232d] border-[#2979ff]/60 shadow-lg' 
+                          : 'bg-[#15171b] border-neutral-800 hover:border-neutral-700'
+                      }`}
+                    >
+                      {/* Account Header */}
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div className="flex items-center gap-2.5">
+                          {/* Avatar */}
+                          <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shadow-inner ${
+                            acc.role === 'sender' 
+                              ? 'bg-gradient-to-br from-amber-500/30 to-amber-700/20 text-amber-300 border border-amber-500/40' 
+                              : 'bg-gradient-to-br from-emerald-500/30 to-emerald-700/20 text-emerald-300 border border-emerald-500/40'
+                          }`}>
+                            {acc.name.charAt(0).toUpperCase()}
+                          </div>
+
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[13px] font-bold text-white leading-tight">
+                                {acc.name}
+                              </span>
+                              {isActive && (
+                                <span className="text-[9px] font-bold text-blue-400 bg-blue-950/80 border border-blue-500/40 px-1.5 py-0.2 rounded-sm">
+                                  ACTIVE
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-[11px] text-neutral-400 font-mono flex items-center gap-2">
+                              <span>{acc.phoneNumber}</span>
+                              <span className="text-neutral-600">•</span>
+                              <span>Acc: {acc.accountNumber.slice(-6)}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Role Badge */}
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                          acc.role === 'sender' 
+                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' 
+                            : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                        }`}>
+                          {acc.role}
+                        </span>
+                      </div>
+
+                      {/* Details & Balance */}
+                      <div className="flex items-center justify-between text-[11px] text-neutral-400 bg-black/30 rounded-xl px-2.5 py-1.5 mb-2.5">
+                        <span>Balance: <strong className="text-neutral-200">ETB {acc.balance.toFixed(2)}</strong></span>
+                        {acc.lastTxAmount ? (
+                          <span>Tx: <span className={acc.role === 'sender' ? 'text-amber-400' : 'text-emerald-400'}>
+                            {acc.role === 'sender' ? '-' : '+'}{acc.lastTxAmount.toFixed(2)} ETB
+                          </span></span>
+                        ) : (
+                          <span className="text-neutral-500">SIM {acc.simSlot}</span>
+                        )}
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {/* 1. Set as Active */}
+                        <button 
+                          onClick={() => handleSwitchCaller(acc)}
+                          disabled={isActive}
+                          className={`py-1.5 px-2 rounded-xl text-[11px] font-semibold transition text-center ${
+                            isActive 
+                              ? 'bg-blue-600 text-white cursor-default' 
+                              : 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300 active:scale-95'
+                          }`}
+                        >
+                          {isActive ? 'Current' : 'Select'}
+                        </button>
+
+                        {/* 2. Call Out */}
+                        <button 
+                          onClick={() => {
+                            setIsSettingsOpen(false);
+                            handleInitiateCall(acc.phoneNumber, acc.simSlot);
+                          }}
+                          className="py-1.5 px-2 rounded-xl text-[11px] font-semibold bg-emerald-700/60 hover:bg-emerald-600 text-emerald-200 flex items-center justify-center gap-1 transition active:scale-95"
+                          title={`Call ${acc.name}`}
+                        >
+                          <Phone className="w-3 h-3 fill-current" />
+                          <span>Call</span>
+                        </button>
+
+                        {/* 3. Incoming Call (Party calls user) */}
+                        <button 
+                          onClick={() => handleSimulateIncomingCall(acc)}
+                          className="py-1.5 px-2 rounded-xl text-[11px] font-semibold bg-blue-700/60 hover:bg-blue-600 text-blue-200 flex items-center justify-center gap-1 transition active:scale-95"
+                          title={`Simulate incoming call from ${acc.name}`}
+                        >
+                          <PhoneIncoming className="w-3 h-3" />
+                          <span>Receive</span>
+                        </button>
+
+                        {/* 4. USSD *889# */}
+                        <button 
+                          onClick={() => {
+                            handleSwitchCaller(acc);
+                            setIsSettingsOpen(false);
+                            handleDialUssd('*889#');
+                          }}
+                          className="py-1.5 px-2 rounded-xl text-[11px] font-semibold bg-neutral-800 hover:bg-neutral-700 text-neutral-300 flex items-center justify-center gap-1 transition active:scale-95"
+                          title="Open CBE USSD Banking"
+                        >
+                          <span className="font-mono font-bold text-[10px]">*889#</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Drawer Footer info */}
+            <div className="p-3 bg-neutral-950 border-t border-neutral-800/80 text-center text-[10.5px] text-neutral-500">
+              Transactions made automatically register sender & receiver phone numbers.
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Floating Toast Notification */}
-      {ussdToast && (
+      {(ussdToast || toastMessage) && (
         <div className="absolute top-14 left-1/2 -translate-x-1/2 z-50 bg-[#2d2f34] text-white border border-neutral-700 px-4 py-2 rounded-full shadow-2xl text-xs font-medium animate-in fade-in slide-in-from-top-2">
-          {ussdToast}
+          {ussdToast || toastMessage}
         </div>
       )}
 

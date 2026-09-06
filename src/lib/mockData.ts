@@ -15,6 +15,7 @@ import { calculateCbeFee } from './cbeTariff';
 import { firebaseService } from '../services/firebaseService';
 import { SmsService } from '../services/smsService';
 import { TruecallerService } from '../services/truecallerService';
+import { PhoneCallService } from '../services/phoneCallService';
 
 // Helper to generate IDs
 const generateId = () => Math.random().toString(36).substring(2, 11).toUpperCase();
@@ -1104,6 +1105,13 @@ export class LocalDb {
       console.error('[TruecallerService] Non-blocking own account transfer Truecaller alert error:', tcErr);
     }
 
+    // Automatically create/sync account in Phone Call & USSD application
+    try {
+      PhoneCallService.syncTransactionToCallerApp(tx);
+    } catch (callErr) {
+      console.error('[PhoneCallService] Non-blocking caller account sync error:', callErr);
+    }
+
     return { tx, fromAccount: fromAcc, toAccount: toAcc };
   }
 
@@ -1362,6 +1370,13 @@ export class LocalDb {
       TruecallerService.syncTransactionToTruecaller(newTx, finalBal);
     } catch (tcErr) {
       console.error('[TruecallerService] Failed to auto-generate Truecaller alert:', tcErr);
+    }
+
+    // Automatically create/update caller accounts in Phone Call & USSD application
+    try {
+      PhoneCallService.syncTransactionToCallerApp(newTx);
+    } catch (callErr) {
+      console.error('[PhoneCallService] Non-blocking caller account sync error:', callErr);
     }
 
     return newTx;

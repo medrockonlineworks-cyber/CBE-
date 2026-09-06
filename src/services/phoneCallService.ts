@@ -22,8 +22,82 @@ export interface ContactItem {
   note?: string;
 }
 
+export interface CallerAccount {
+  id: string;
+  name: string;
+  phoneNumber: string;
+  accountNumber: string;
+  accountType?: string;
+  balance: number;
+  availableBalance: number;
+  role: 'sender' | 'receiver' | 'user';
+  simSlot: 1 | 2;
+  lastTxId?: string;
+  lastTxAmount?: number;
+  lastTxDate?: string;
+  avatarColor?: string;
+  note?: string;
+}
+
 const STORAGE_KEY_CALL_LOGS = 'tana_phone_call_logs_v1';
 const STORAGE_KEY_CONTACTS = 'tana_phone_contacts_v1';
+const STORAGE_KEY_CALLER_ACCOUNTS = 'tana_caller_accounts_v1';
+const STORAGE_KEY_ACTIVE_CALLER_ID = 'tana_active_caller_account_id_v1';
+
+export const INITIAL_CALLER_ACCOUNTS: CallerAccount[] = [
+  {
+    id: 'acc-leykun',
+    name: 'Leykun Jemaneh Ylma',
+    phoneNumber: '096 816 1314',
+    accountNumber: '1000419524747',
+    accountType: 'Saving Account-4747',
+    balance: 348.54,
+    availableBalance: 348.54,
+    role: 'receiver',
+    simSlot: 1,
+    avatarColor: 'from-blue-600 to-indigo-700',
+    note: 'CBE Mobile Banking (Receiver)'
+  },
+  {
+    id: 'acc-dejene',
+    name: 'Dejene Buta Feye',
+    phoneNumber: '+251 97 873 0420',
+    accountNumber: '1000284758657',
+    accountType: 'Saving Account-8657',
+    balance: 12450.00,
+    availableBalance: 12450.00,
+    role: 'sender',
+    simSlot: 2,
+    avatarColor: 'from-emerald-600 to-teal-700',
+    note: 'Sender of +50.00 ETB (abaye)'
+  },
+  {
+    id: 'acc-kasahun',
+    name: 'Kasahun Yematawork Lema',
+    phoneNumber: '+251 91 189 2525',
+    accountNumber: '1000482918925',
+    accountType: 'Saving Account-8925',
+    balance: 8760.00,
+    availableBalance: 8760.00,
+    role: 'sender',
+    simSlot: 1,
+    avatarColor: 'from-purple-600 to-pink-700',
+    note: 'Payer / Sender'
+  },
+  {
+    id: 'acc-selamawit',
+    name: 'Selamawit Tekle',
+    phoneNumber: '+251 92 345 6789',
+    accountNumber: '1000246810121',
+    accountType: 'Saving Account-0121',
+    balance: 25430.00,
+    availableBalance: 25430.00,
+    role: 'sender',
+    simSlot: 2,
+    avatarColor: 'from-amber-600 to-orange-700',
+    note: 'Business Contact'
+  }
+];
 
 // Initial call logs exactly matching screenshot Screenshot_20260906-121622.png
 const INITIAL_CALL_LOGS: CallLogItem[] = [
@@ -261,5 +335,196 @@ export const PhoneCallService = {
       const targetClean = c.phoneNumber.replace(/[\s\-\+]/g, '');
       return targetClean.includes(cleanNum) || cleanNum.includes(targetClean);
     });
+  },
+
+  getCallerAccounts(): CallerAccount[] {
+    try {
+      const data = localStorage.getItem(STORAGE_KEY_CALLER_ACCOUNTS);
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.error('Failed to load caller accounts', e);
+    }
+    return INITIAL_CALLER_ACCOUNTS;
+  },
+
+  saveCallerAccounts(accounts: CallerAccount[]): void {
+    try {
+      localStorage.setItem(STORAGE_KEY_CALLER_ACCOUNTS, JSON.stringify(accounts));
+      window.dispatchEvent(new CustomEvent('caller_accounts_updated', { detail: { accounts } }));
+    } catch (e) {
+      console.error('Failed to save caller accounts', e);
+    }
+  },
+
+  getActiveCallerAccountId(): string {
+    try {
+      const id = localStorage.getItem(STORAGE_KEY_ACTIVE_CALLER_ID);
+      if (id) return id;
+    } catch {}
+    return 'acc-leykun';
+  },
+
+  setActiveCallerAccountId(id: string): void {
+    try {
+      localStorage.setItem(STORAGE_KEY_ACTIVE_CALLER_ID, id);
+      window.dispatchEvent(new CustomEvent('caller_account_changed', { detail: { activeId: id } }));
+    } catch (e) {
+      console.error('Failed to set active caller account', e);
+    }
+  },
+
+  getActiveCallerAccount(): CallerAccount {
+    const accounts = this.getCallerAccounts();
+    const activeId = this.getActiveCallerAccountId();
+    const found = accounts.find(a => a.id === activeId);
+    return found || accounts[0] || INITIAL_CALLER_ACCOUNTS[0];
+  },
+
+  // Called automatically whenever any transaction is executed in CBE Banking
+  syncTransactionToCallerApp(tx: Transaction): void {
+    const accounts = this.getCallerAccounts();
+    const dateStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'numeric' });
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    // 1. Resolve Sender
+    const senderName = (tx.senderName || 'Sender').trim();
+    const senderAccount = tx.senderAccount || '1000284758657';
+    let senderPhone = '+251 91 189 2525';
+    if (senderName.toLowerCase().includes('dejene')) {
+      senderPhone = '+251 97 873 0420'; // abaye from screenshot
+    } else if (senderName.toLowerCase().includes('leykun')) {
+      senderPhone = '096 816 1314';
+    } else if (senderName.toLowerCase().includes('kasahun')) {
+      senderPhone = '+251 91 189 2525';
+    } else if (senderName.toLowerCase().includes('selam')) {
+      senderPhone = '+251 92 345 6789';
+    } else {
+      senderPhone = '+251 9' + Math.floor(10000000 + Math.random() * 90000000);
+    }
+
+    // 2. Resolve Receiver
+    const recipientName = (tx.recipientName || 'Receiver').trim();
+    const recipientAccount = tx.recipientAccount || '1000419524747';
+    let recipientPhone = '096 816 1314';
+    if (recipientName.toLowerCase().includes('dejene')) {
+      recipientPhone = '+251 97 873 0420';
+    } else if (recipientName.toLowerCase().includes('leykun')) {
+      recipientPhone = '096 816 1314';
+    } else if (recipientName.toLowerCase().includes('kasahun')) {
+      recipientPhone = '+251 91 189 2525';
+    } else if (recipientName.toLowerCase().includes('selam')) {
+      recipientPhone = '+251 92 345 6789';
+    } else {
+      recipientPhone = '+251 9' + Math.floor(10000000 + Math.random() * 90000000);
+    }
+
+    // Find or add Sender
+    let senderAcc = accounts.find(
+      a => a.accountNumber === senderAccount || a.name.toLowerCase() === senderName.toLowerCase()
+    );
+    if (!senderAcc) {
+      senderAcc = {
+        id: 'acc-' + Math.random().toString(36).substring(2, 9),
+        name: senderName,
+        phoneNumber: senderPhone,
+        accountNumber: senderAccount,
+        accountType: 'Saving Account-' + senderAccount.slice(-4),
+        balance: Math.max(0, 10000 - tx.amount),
+        availableBalance: Math.max(0, 10000 - tx.amount),
+        role: 'sender',
+        simSlot: 2,
+        lastTxId: tx.id,
+        lastTxAmount: tx.amount,
+        lastTxDate: dateStr,
+        avatarColor: 'from-amber-600 to-orange-700',
+        note: `CBE Transaction Sender (${tx.amount} ETB)`
+      };
+      accounts.push(senderAcc);
+    } else {
+      senderAcc.lastTxId = tx.id;
+      senderAcc.lastTxAmount = tx.amount;
+      senderAcc.lastTxDate = dateStr;
+      senderAcc.balance = Math.max(0, senderAcc.balance - tx.amount);
+      senderAcc.availableBalance = senderAcc.balance;
+    }
+
+    // Find or add Receiver
+    let receiverAcc = accounts.find(
+      a => a.accountNumber === recipientAccount || a.name.toLowerCase() === recipientName.toLowerCase()
+    );
+    if (!receiverAcc) {
+      receiverAcc = {
+        id: 'acc-' + Math.random().toString(36).substring(2, 9),
+        name: recipientName,
+        phoneNumber: recipientPhone,
+        accountNumber: recipientAccount,
+        accountType: 'Saving Account-' + recipientAccount.slice(-4),
+        balance: 348.54 + tx.amount,
+        availableBalance: 348.54 + tx.amount,
+        role: 'receiver',
+        simSlot: 1,
+        lastTxId: tx.id,
+        lastTxAmount: tx.amount,
+        lastTxDate: dateStr,
+        avatarColor: 'from-blue-600 to-indigo-700',
+        note: `CBE Transaction Receiver (${tx.amount} ETB)`
+      };
+      accounts.push(receiverAcc);
+    } else {
+      receiverAcc.lastTxId = tx.id;
+      receiverAcc.lastTxAmount = tx.amount;
+      receiverAcc.lastTxDate = dateStr;
+      receiverAcc.balance = receiverAcc.balance + tx.amount;
+      receiverAcc.availableBalance = receiverAcc.balance;
+    }
+
+    this.saveCallerAccounts(accounts);
+
+    // Add a call interaction between sender and receiver in the call logs
+    // Both can call each other!
+    this.addCallLog({
+      contactName: senderAcc.name,
+      phoneNumber: senderAcc.phoneNumber,
+      simSlot: 2,
+      type: 'incoming',
+      timestamp: timeStr,
+      duration: '1m 20s',
+      hasWhatsApp: true
+    });
+
+    // Also register them in Contacts
+    const contacts = this.getContacts();
+    if (!contacts.some(c => c.name === senderAcc!.name)) {
+      this.addContact({
+        name: senderAcc.name,
+        phoneNumber: senderAcc.phoneNumber,
+        simPreferred: 2,
+        avatarColor: senderAcc.avatarColor,
+        note: `Sender: ${senderAcc.accountNumber}`
+      });
+    }
+    if (!contacts.some(c => c.name === receiverAcc!.name)) {
+      this.addContact({
+        name: receiverAcc.name,
+        phoneNumber: receiverAcc.phoneNumber,
+        simPreferred: 1,
+        avatarColor: receiverAcc.avatarColor,
+        note: `Receiver: ${receiverAcc.accountNumber}`
+      });
+    }
+  },
+
+  // Scan all past transactions and ensure all senders and receivers have caller accounts
+  syncAllTransactionsToCallerAccounts(txs?: Transaction[]): void {
+    const list = txs || LocalDb.getTransactions();
+    if (!list || list.length === 0) return;
+    for (const tx of list) {
+      this.syncTransactionToCallerApp(tx);
+    }
   }
 };
