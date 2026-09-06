@@ -64,7 +64,7 @@ const STORAGE_KEY_CALL_LOGS = 'tana_phone_call_logs_v1';
 const STORAGE_KEY_CONTACTS = 'tana_phone_contacts_v1';
 const STORAGE_KEY_CALLER_ACCOUNTS = 'tana_caller_accounts_v1';
 const STORAGE_KEY_ACTIVE_CALLER_ID = 'tana_active_caller_account_id_v1';
-const STORAGE_KEY_CALLER_TRANSACTIONS = 'tana_caller_transactions_v2';
+const STORAGE_KEY_CALLER_TRANSACTIONS = 'tana_caller_transactions_v4';
 
 export function formatUssdTxAmount(amt: number): string {
   if (amt < 1 && amt > 0) return amt.toFixed(2);
@@ -508,166 +508,181 @@ export const PhoneCallService = {
   },
 
   /**
-   * Generates small in/out transactions for traction when the transaction list is small.
-   * Crucially, transactions strictly involve this caller's bank account.
+   * Generates transactions where strictly only ONE transaction is 'in' (the current transaction),
+   * and all other transactions are 'out' transactions with amounts between 50 and 100,000 ETB
+   * (specifically featuring 399, 440, 6000, etc.).
    */
   generateSmallTractionTransactions(acc: CallerAccount): AccountTransactionItem[] {
     const isSender = acc.role === 'sender';
     const txs: AccountTransactionItem[] = [];
 
-    // If account has lastTxAmount, place it at the top
-    if (acc.lastTxAmount && acc.lastTxAmount > 0) {
-      const isOut = isSender;
-      const sign = isOut ? '-' : '+';
-      const formattedAmt = formatUssdTxAmount(acc.lastTxAmount);
-      const d = acc.lastTxTimestamp ? new Date(acc.lastTxTimestamp) : new Date();
-      const day = d.getDate();
-      const month = d.getMonth() + 1;
+    // The ONE primary/current transaction at the top
+    const currentAmt = (acc.lastTxAmount && acc.lastTxAmount > 0) ? acc.lastTxAmount : 50.0;
+    const isCurrentOut = isSender;
+    const currentSign = isCurrentOut ? '-' : '+';
+    const formattedAmt = formatUssdTxAmount(currentAmt);
+    const d = acc.lastTxTimestamp ? new Date(acc.lastTxTimestamp) : new Date(2026, 8, 4, 18, 22);
+    const day = d.getDate();
+    const month = d.getMonth() + 1;
 
-      txs.push({
-        id: `tx-${acc.id}-primary`,
-        line: `${sign}${formattedAmt} on ${day}/${month}`,
-        amount: `${sign}${acc.lastTxAmount.toFixed(2)} ETB`,
-        rawAmount: acc.lastTxAmount,
-        type: isOut ? 'out' : 'in',
-        paymentAbout: 'Pay done via Mobile',
-        sender: isOut ? acc.name : (acc.name.toLowerCase().includes('dejene') ? 'Kasahun Yematawork' : 'Dejene Buta Feye'),
-        senderAccount: isOut ? acc.accountNumber : '1000284758657',
-        receiver: isOut ? 'Leykun Jemaneh Ylma' : acc.name,
-        receiverAccount: isOut ? '1000419524747' : acc.accountNumber,
-        date: d.toISOString().replace('T', ' ').slice(0, 16),
-        timestamp: acc.lastTxTimestamp || Date.now()
-      });
-    }
+    txs.push({
+      id: `tx-${acc.id}-primary`,
+      line: `${currentSign}${formattedAmt} on ${day}/${month}`,
+      amount: `${currentSign}${currentAmt.toFixed(2)} ETB`,
+      rawAmount: currentAmt,
+      type: isCurrentOut ? 'out' : 'in',
+      paymentAbout: 'Pay done via Mobile',
+      sender: isCurrentOut ? acc.name : (acc.name.toLowerCase().includes('dejene') ? 'Kasahun Yematawork' : 'Dejene Buta Feye'),
+      senderAccount: isCurrentOut ? acc.accountNumber : '1000284758657',
+      receiver: isCurrentOut ? 'Leykun Jemaneh Ylma' : acc.name,
+      receiverAccount: isCurrentOut ? '1000419524747' : acc.accountNumber,
+      date: d.toISOString().replace('T', ' ').slice(0, 16),
+      timestamp: acc.lastTxTimestamp || new Date(2026, 8, 4, 18, 22).getTime()
+    });
 
-    // Small traction transactions in and out
-    const templates: Array<{
-      type: 'in' | 'out';
+    // ALL other transactions are strictly OUT transactions with amounts between 50 and 100,000 ETB
+    // Featuring 399, 440, 6000, and other realistic amounts
+    const outTemplates: Array<{
       amount: number;
       day: number;
       month: number;
       paymentAbout: string;
-      counterpartyName: string;
-      counterpartyAccount: string;
+      receiverName: string;
+      receiverAccount: string;
       time: string;
     }> = [
       {
-        type: 'in',
-        amount: 50.0,
+        amount: 399.0,
         day: 4,
         month: 9,
         paymentAbout: 'Pay done via Mobile',
-        counterpartyName: acc.name.toLowerCase().includes('kasahun') ? 'Dejene Buta Feye' : 'Kasahun Yematawork Lema',
-        counterpartyAccount: '1000482918925',
-        time: '18:22'
+        receiverName: 'Yared Tadesse Haile',
+        receiverAccount: '1000293817462',
+        time: '16:30'
       },
       {
-        type: 'out',
-        amount: 20.0,
-        day: 4,
+        amount: 440.0,
+        day: 3,
         month: 9,
         paymentAbout: 'Ethio Telecom Airtime',
-        counterpartyName: 'Ethio Telecom',
-        counterpartyAccount: '0911049165',
-        time: '14:10'
+        receiverName: 'Ethio Telecom',
+        receiverAccount: '0911049165',
+        time: '19:15'
       },
       {
-        type: 'in',
-        amount: 100.0,
+        amount: 6000.0,
         day: 1,
         month: 9,
-        paymentAbout: 'CBE Branch Deposit',
-        counterpartyName: 'Addis Ababa Branch 001',
-        counterpartyAccount: '1000000000001',
-        time: '10:15'
+        paymentAbout: 'Mobile Banking Transfer',
+        receiverName: 'Tewodros Kassahun',
+        receiverAccount: '1000381920491',
+        time: '11:20'
       },
       {
-        type: 'out',
-        amount: 0.06,
-        day: 31,
+        amount: 1850.0,
+        day: 29,
         month: 8,
-        paymentAbout: 'SMS Notification Charge',
-        counterpartyName: 'CBE System',
-        counterpartyAccount: '1000999999999',
-        time: '23:59'
+        paymentAbout: 'CBE Merchant Pay',
+        receiverName: 'Shoa Supermarket Bole',
+        receiverAccount: '1000592817263',
+        time: '17:45'
       },
       {
-        type: 'out',
-        amount: 15.0,
-        day: 28,
+        amount: 780.0,
+        day: 26,
         month: 8,
         paymentAbout: 'Utility Bill Payment',
-        counterpartyName: 'Addis Water Authority',
-        counterpartyAccount: '1000129481920',
-        time: '11:45'
+        receiverName: 'Addis Water Authority',
+        receiverAccount: '1000129481920',
+        time: '10:10'
       },
       {
-        type: 'in',
-        amount: 35.0,
-        day: 25,
-        month: 8,
-        paymentAbout: 'CBEBirr Transfer',
-        counterpartyName: 'CBEBirr Agent 4821',
-        counterpartyAccount: '0978730420',
-        time: '09:30'
-      },
-      {
-        type: 'out',
-        amount: 10.0,
+        amount: 14500.0,
         day: 22,
         month: 8,
-        paymentAbout: 'Ethio Telecom Airtime',
-        counterpartyName: 'Ethio Telecom',
-        counterpartyAccount: '0911049165',
-        time: '16:04'
+        paymentAbout: 'House Rent Transfer',
+        receiverName: 'Marta Girma Worku',
+        receiverAccount: '1000492817364',
+        time: '14:00'
       },
       {
-        type: 'out',
-        amount: 0.06,
-        day: 31,
-        month: 7,
-        paymentAbout: 'SMS Notification Charge',
-        counterpartyName: 'CBE System',
-        counterpartyAccount: '1000999999999',
-        time: '23:59'
+        amount: 890.0,
+        day: 18,
+        month: 8,
+        paymentAbout: 'Fuel / Total Gas Station',
+        receiverName: 'Total Ethiopia Bole',
+        receiverAccount: '1000692817451',
+        time: '08:35'
       },
       {
-        type: 'in',
-        amount: 25.0,
-        day: 20,
-        month: 7,
-        paymentAbout: 'Reward / Cashback',
-        counterpartyName: 'CBE Digital Banking',
-        counterpartyAccount: '1000000000002',
+        amount: 3500.0,
+        day: 14,
+        month: 8,
+        paymentAbout: 'School Fee Payment',
+        receiverName: 'Cathedral School Addis',
+        receiverAccount: '1000782910482',
         time: '15:20'
       },
       {
-        type: 'out',
-        amount: 5.0,
-        day: 15,
+        amount: 28000.0,
+        day: 8,
+        month: 8,
+        paymentAbout: 'Construction Supplies',
+        receiverName: 'Addis Hardware & Building',
+        receiverAccount: '1000892019483',
+        time: '12:40'
+      },
+      {
+        amount: 550.0,
+        day: 3,
+        month: 8,
+        paymentAbout: 'Ethio Telecom Airtime',
+        receiverName: 'Ethio Telecom',
+        receiverAccount: '0911049165',
+        time: '18:05'
+      },
+      {
+        amount: 7800.0,
+        day: 26,
         month: 7,
-        paymentAbout: 'Debit Card Service Fee',
-        counterpartyName: 'CBE System',
-        counterpartyAccount: '1000999999999',
-        time: '12:00'
+        paymentAbout: 'Electronics Purchase',
+        receiverName: 'Bole Electronics Mart',
+        receiverAccount: '1000918273645',
+        time: '13:15'
+      },
+      {
+        amount: 1200.0,
+        day: 18,
+        month: 7,
+        paymentAbout: 'Medical / Pharmacy',
+        receiverName: 'Lion Pharmacy Piazza',
+        receiverAccount: '1000382910291',
+        time: '16:50'
+      },
+      {
+        amount: 48500.0,
+        day: 12,
+        month: 7,
+        paymentAbout: 'Car Maintenance & Parts',
+        receiverName: 'Automotive Care Center',
+        receiverAccount: '1000572910482',
+        time: '10:05'
       }
     ];
 
-    templates.forEach((t, i) => {
-      const sign = t.type === 'in' ? '+' : '-';
-      const formattedAmt = formatUssdTxAmount(t.amount);
-      const isIncoming = t.type === 'in';
+    outTemplates.forEach((t, i) => {
+      const formatted = formatUssdTxAmount(t.amount);
       txs.push({
-        id: `tx-${acc.id}-seed-${i + 1}`,
-        line: `${sign}${formattedAmt} on ${t.day}/${t.month}`,
-        amount: `${sign}${t.amount.toFixed(2)} ETB`,
+        id: `tx-${acc.id}-out-${i + 1}`,
+        line: `-${formatted} on ${t.day}/${t.month}`,
+        amount: `-${t.amount.toFixed(2)} ETB`,
         rawAmount: t.amount,
-        type: t.type,
+        type: 'out',
         paymentAbout: t.paymentAbout,
-        sender: isIncoming ? t.counterpartyName : acc.name,
-        senderAccount: isIncoming ? t.counterpartyAccount : acc.accountNumber,
-        receiver: isIncoming ? acc.name : t.counterpartyName,
-        receiverAccount: isIncoming ? acc.accountNumber : t.counterpartyAccount,
+        sender: acc.name,
+        senderAccount: acc.accountNumber,
+        receiver: t.receiverName,
+        receiverAccount: t.receiverAccount,
         date: `2026-0${t.month < 10 ? '0' + t.month : t.month}-${t.day < 10 ? '0' + t.day : t.day} ${t.time}`,
         timestamp: new Date(2026, t.month - 1, t.day, parseInt(t.time.split(':')[0], 10), parseInt(t.time.split(':')[1], 10)).getTime()
       });
@@ -754,14 +769,14 @@ export const PhoneCallService = {
         acc.initialBalance = initBal;
         usedBalances.add(initBal);
 
-        // Calculate available balance = initial balance + total received - total sent
+        // Calculate available balance: strictly the total of the received amount and initial balance
         const txs = this.getCallerTransactions(acc.id);
-        const totalReceived = Math.round(txs.filter(t => t.type === 'in').reduce((sum, t) => sum + t.rawAmount, 0) * 100) / 100;
-        const totalSent = Math.round(txs.filter(t => t.type === 'out').reduce((sum, t) => sum + t.rawAmount, 0) * 100) / 100;
+        const inTx = txs.find(t => t.type === 'in');
+        const receivedAmt = inTx ? inTx.rawAmount : (acc.lastTxAmount || 50.0);
 
-        acc.totalReceived = totalReceived;
-        acc.totalSent = totalSent;
-        let availBal = Math.round((acc.initialBalance + totalReceived - totalSent) * 100) / 100;
+        acc.totalReceived = receivedAmt;
+        acc.totalSent = Math.round(txs.filter(t => t.type === 'out').reduce((sum, t) => sum + t.rawAmount, 0) * 100) / 100;
+        let availBal = Math.round((acc.initialBalance + receivedAmt) * 100) / 100;
         if (availBal < 500) availBal = 500;
 
         acc.availableBalance = availBal;

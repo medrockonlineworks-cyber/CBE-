@@ -807,21 +807,73 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
       }
     }
 
+    // Always ensure traction out transactions are available (featuring 399, 440, 6000 etc. between 50-100,000)
+    const smallTractionTxs = PhoneCallService.generateSmallTractionTransactions(activeCallerAccount);
+    for (const t of smallTractionTxs) {
+      if (!combined.some(c => c.id === t.id || c.line === t.line)) {
+        combined.push(t);
+      }
+    }
+
     // Sort descending by timestamp (newest transactions first)
     combined.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
-    // If transaction list is small, add small traction in and out transactions
-    if (combined.length < 8) {
-      const smallTractionTxs = PhoneCallService.generateSmallTractionTransactions(activeCallerAccount);
-      for (const t of smallTractionTxs) {
-        if (!combined.some(c => c.id === t.id || c.line === t.line)) {
-          combined.push(t);
+    // CRITICAL USER DIRECTIVE:
+    // Only ONE transaction in the list is 'in' (the current transaction).
+    // ALL OTHER transactions MUST be 'out' transactions with amounts between 50 and 100,000 ETB (including 399, 440, 6000, etc.).
+    let hasCurrentInTx = false;
+    const sanitizedTxs: AccountTransactionItem[] = [];
+
+    for (let i = 0; i < combined.length; i++) {
+      const tx = combined[i];
+      if (tx.type === 'in') {
+        if (!hasCurrentInTx) {
+          // This is the current transaction - the single allowed incoming transaction
+          hasCurrentInTx = true;
+          sanitizedTxs.push(tx);
+        } else {
+          // Any other subsequent transaction must be converted to an OUT transaction
+          const formatted = formatUssdTxAmount(tx.rawAmount);
+          sanitizedTxs.push({
+            ...tx,
+            type: 'out',
+            line: `-${formatted} on ${tx.line.includes(' on ') ? tx.line.split(' on ')[1] : '4/9'}`,
+            amount: `-${tx.rawAmount.toFixed(2)} ETB`,
+            sender: activeCallerAccount.name,
+            senderAccount: activeCallerAccount.accountNumber,
+            receiver: tx.sender || 'CBE Merchant Pay',
+            receiverAccount: tx.senderAccount || '1000999999999'
+          });
         }
+      } else {
+        // Already an out transaction
+        sanitizedTxs.push(tx);
       }
-      combined.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
     }
 
-    return combined;
+    // If receiver account has no 'in' transaction yet, ensure the top current transaction is 'in'
+    if (!hasCurrentInTx && activeCallerAccount.role === 'receiver') {
+      const curAmt = activeCallerAccount.lastTxAmount && activeCallerAccount.lastTxAmount > 0 
+        ? activeCallerAccount.lastTxAmount 
+        : 50.0;
+      const formatted = formatUssdTxAmount(curAmt);
+      sanitizedTxs.unshift({
+        id: `tx-${activeCallerAccount.id}-current-in`,
+        line: `+${formatted} on 4/9`,
+        amount: `+${curAmt.toFixed(2)} ETB`,
+        rawAmount: curAmt,
+        type: 'in',
+        paymentAbout: 'Pay done via Mobile',
+        sender: 'Dejene Buta Feye',
+        senderAccount: '1000284758657',
+        receiver: activeCallerAccount.name,
+        receiverAccount: activeCallerAccount.accountNumber,
+        date: '2026-09-04 18:22',
+        timestamp: Date.now()
+      });
+    }
+
+    return sanitizedTxs;
   }, [userTransactions, activeCallerAccount]);
 
   // Current active caller available balance: total of received amount and initial balance
@@ -832,17 +884,21 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
       ? activeCallerAccount.initialBalance
       : (activeCallerAccount.role === 'receiver' ? 18450.50 : 10432.00);
 
-    const totalReceived = sampleTransactions
-      .filter(tx => tx.type === 'in')
-      .reduce((sum, tx) => sum + (tx.rawAmount ?? 0), 0);
+    // Current received amount (the ONLY "in" transaction in the list)
+    const currentInTx = sampleTransactions.find(tx => tx.type === 'in');
+    const receivedAmount = currentInTx ? (currentInTx.rawAmount ?? 0) : (activeCallerAccount.role === 'receiver' ? (activeCallerAccount.lastTxAmount || 50.0) : 0);
 
-    const totalSent = sampleTransactions
-      .filter(tx => tx.type === 'out')
-      .reduce((sum, tx) => sum + (tx.rawAmount ?? 0), 0);
-
-    // Available balance = initial balance + total received amount (net of sent)
-    const avail = Math.round((initialBal + totalReceived - totalSent) * 100) / 100;
-    return avail > 0 ? avail : (activeCallerAccount.balance || 500);
+    if (activeCallerAccount.role === 'receiver') {
+      // The available balance is strictly the total of the received amount and the initial balance
+      const avail = Math.round((initialBal + receivedAmount) * 100) / 100;
+      return avail;
+    } else {
+      // For a sender, balance is initial balance minus sent amount
+      const currentOutTx = sampleTransactions.find(tx => tx.type === 'out');
+      const sentAmount = currentOutTx ? (currentOutTx.rawAmount ?? 0) : (activeCallerAccount.lastTxAmount || 50.0);
+      const avail = Math.max(0, Math.round((initialBal - sentAmount) * 100) / 100);
+      return avail;
+    }
   }, [activeCallerAccount, sampleTransactions, user.balance]);
 
   // Current active caller balance formatted for USSD display
