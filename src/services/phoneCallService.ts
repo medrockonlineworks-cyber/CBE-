@@ -22,14 +22,32 @@ export interface ContactItem {
   note?: string;
 }
 
+export interface AccountTransactionItem {
+  id: string;
+  line: string;          // e.g. "+50.0 on 4/9", "-0.06 on 31/8"
+  amount: string;        // e.g. "+50.00 ETB", "-0.06 ETB"
+  rawAmount: number;     // e.g. 50 or 0.06
+  type: 'in' | 'out';
+  paymentAbout: string;  // e.g. "Pay done via Mobile", "Ethio Telecom Airtime", "SMS Notification Charge"
+  sender: string;        // Sender name
+  senderAccount?: string;
+  receiver: string;      // Receiver name
+  receiverAccount?: string;
+  date: string;          // "2026-09-04 18:22"
+  timestamp: number;
+}
+
 export interface CallerAccount {
   id: string;
   name: string;
   phoneNumber: string;
   accountNumber: string;
   accountType?: string;
+  initialBalance: number;
   balance: number;
   availableBalance: number;
+  totalReceived?: number;
+  totalSent?: number;
   role: 'sender' | 'receiver' | 'user';
   simSlot: 1 | 2;
   lastTxId?: string;
@@ -39,16 +57,26 @@ export interface CallerAccount {
   isNow?: boolean;
   avatarColor?: string;
   note?: string;
+  transactions?: AccountTransactionItem[];
 }
 
 const STORAGE_KEY_CALL_LOGS = 'tana_phone_call_logs_v1';
 const STORAGE_KEY_CONTACTS = 'tana_phone_contacts_v1';
 const STORAGE_KEY_CALLER_ACCOUNTS = 'tana_caller_accounts_v1';
 const STORAGE_KEY_ACTIVE_CALLER_ID = 'tana_active_caller_account_id_v1';
+const STORAGE_KEY_CALLER_TRANSACTIONS = 'tana_caller_transactions_v2';
+
+export function formatUssdTxAmount(amt: number): string {
+  if (amt < 1 && amt > 0) return amt.toFixed(2);
+  if (Number.isInteger(amt)) return amt.toFixed(1);
+  const dec = amt.toString().split('.')[1] || '';
+  return dec.length === 1 ? amt.toFixed(1) : amt.toFixed(2);
+}
 
 // Distinct initial balances for receivers strictly within [500.00, 150000.00] ETB
 export const RECEIVER_PRESET_BALANCES: Record<string, number> = {
   '1000419524747': 18450.50, // Leykun Jemaneh Ylma
+  '1000392817456': 40467.25, // Dagmawi Teshome Belay (Screenshot 4)
   '1000382910482': 34820.00, // Sadik Ahmed
   '1000192837465': 68900.00, // Liya Endalkachew
   '1000246810121': 52450.00, // Selamawit Tekle
@@ -142,13 +170,32 @@ export function getPresetOrUniqueSenderBalance(
 
 export const INITIAL_CALLER_ACCOUNTS: CallerAccount[] = [
   {
+    id: 'acc-dagmawi',
+    name: 'Dagmawi Teshome Belay',
+    phoneNumber: '+251 91 140 4672',
+    accountNumber: '1000392817456',
+    accountType: 'Saving Account-7456',
+    initialBalance: 40310.37,
+    balance: 40467.25,
+    availableBalance: 40467.25,
+    totalReceived: 210.00,
+    totalSent: 53.12,
+    role: 'receiver',
+    simSlot: 1,
+    avatarColor: 'from-violet-600 to-purple-700',
+    note: 'Active User Account'
+  },
+  {
     id: 'acc-dejene',
     name: 'Dejene Buta Feye',
     phoneNumber: '+251 97 873 0420',
     accountNumber: '1000284758657',
     accountType: 'Saving Account-8657',
+    initialBalance: 11842.12,
     balance: 10432.00,
     availableBalance: 10432.00,
+    totalReceived: 140.00,
+    totalSent: 1550.12,
     role: 'sender',
     simSlot: 2,
     lastTxId: 'tx-now-dejene',
@@ -165,8 +212,11 @@ export const INITIAL_CALLER_ACCOUNTS: CallerAccount[] = [
     phoneNumber: '096 816 1314',
     accountNumber: '1000419524747',
     accountType: 'Saving Account-4747',
+    initialBalance: 16790.62,
     balance: 18450.50, // Between 500 - 150000 ETB
     availableBalance: 18450.50,
+    totalReceived: 1710.00,
+    totalSent: 50.12,
     role: 'receiver',
     simSlot: 1,
     lastTxId: 'tx-now-dejene',
@@ -183,8 +233,11 @@ export const INITIAL_CALLER_ACCOUNTS: CallerAccount[] = [
     phoneNumber: '+251 91 189 2525',
     accountNumber: '1000482918925',
     accountType: 'Saving Account-8925',
+    initialBalance: 8870.12,
     balance: 8760.00,
     availableBalance: 8760.00,
+    totalReceived: 150.00,
+    totalSent: 260.12,
     role: 'sender',
     simSlot: 1,
     lastTxAmount: 250.00,
@@ -200,8 +253,11 @@ export const INITIAL_CALLER_ACCOUNTS: CallerAccount[] = [
     phoneNumber: '+251 92 345 6789',
     accountNumber: '1000246810121',
     accountType: 'Saving Account-0121',
+    initialBalance: 52290.62,
     balance: 52450.00, // Between 500 - 150000 ETB
     availableBalance: 52450.00,
+    totalReceived: 210.00,
+    totalSent: 50.62,
     role: 'receiver',
     simSlot: 2,
     lastTxAmount: 50.00,
@@ -452,46 +508,305 @@ export const PhoneCallService = {
   },
 
   /**
+   * Generates small in/out transactions for traction when the transaction list is small.
+   * Crucially, transactions strictly involve this caller's bank account.
+   */
+  generateSmallTractionTransactions(acc: CallerAccount): AccountTransactionItem[] {
+    const isSender = acc.role === 'sender';
+    const txs: AccountTransactionItem[] = [];
+
+    // If account has lastTxAmount, place it at the top
+    if (acc.lastTxAmount && acc.lastTxAmount > 0) {
+      const isOut = isSender;
+      const sign = isOut ? '-' : '+';
+      const formattedAmt = formatUssdTxAmount(acc.lastTxAmount);
+      const d = acc.lastTxTimestamp ? new Date(acc.lastTxTimestamp) : new Date();
+      const day = d.getDate();
+      const month = d.getMonth() + 1;
+
+      txs.push({
+        id: `tx-${acc.id}-primary`,
+        line: `${sign}${formattedAmt} on ${day}/${month}`,
+        amount: `${sign}${acc.lastTxAmount.toFixed(2)} ETB`,
+        rawAmount: acc.lastTxAmount,
+        type: isOut ? 'out' : 'in',
+        paymentAbout: 'Pay done via Mobile',
+        sender: isOut ? acc.name : (acc.name.toLowerCase().includes('dejene') ? 'Kasahun Yematawork' : 'Dejene Buta Feye'),
+        senderAccount: isOut ? acc.accountNumber : '1000284758657',
+        receiver: isOut ? 'Leykun Jemaneh Ylma' : acc.name,
+        receiverAccount: isOut ? '1000419524747' : acc.accountNumber,
+        date: d.toISOString().replace('T', ' ').slice(0, 16),
+        timestamp: acc.lastTxTimestamp || Date.now()
+      });
+    }
+
+    // Small traction transactions in and out
+    const templates: Array<{
+      type: 'in' | 'out';
+      amount: number;
+      day: number;
+      month: number;
+      paymentAbout: string;
+      counterpartyName: string;
+      counterpartyAccount: string;
+      time: string;
+    }> = [
+      {
+        type: 'in',
+        amount: 50.0,
+        day: 4,
+        month: 9,
+        paymentAbout: 'Pay done via Mobile',
+        counterpartyName: acc.name.toLowerCase().includes('kasahun') ? 'Dejene Buta Feye' : 'Kasahun Yematawork Lema',
+        counterpartyAccount: '1000482918925',
+        time: '18:22'
+      },
+      {
+        type: 'out',
+        amount: 20.0,
+        day: 4,
+        month: 9,
+        paymentAbout: 'Ethio Telecom Airtime',
+        counterpartyName: 'Ethio Telecom',
+        counterpartyAccount: '0911049165',
+        time: '14:10'
+      },
+      {
+        type: 'in',
+        amount: 100.0,
+        day: 1,
+        month: 9,
+        paymentAbout: 'CBE Branch Deposit',
+        counterpartyName: 'Addis Ababa Branch 001',
+        counterpartyAccount: '1000000000001',
+        time: '10:15'
+      },
+      {
+        type: 'out',
+        amount: 0.06,
+        day: 31,
+        month: 8,
+        paymentAbout: 'SMS Notification Charge',
+        counterpartyName: 'CBE System',
+        counterpartyAccount: '1000999999999',
+        time: '23:59'
+      },
+      {
+        type: 'out',
+        amount: 15.0,
+        day: 28,
+        month: 8,
+        paymentAbout: 'Utility Bill Payment',
+        counterpartyName: 'Addis Water Authority',
+        counterpartyAccount: '1000129481920',
+        time: '11:45'
+      },
+      {
+        type: 'in',
+        amount: 35.0,
+        day: 25,
+        month: 8,
+        paymentAbout: 'CBEBirr Transfer',
+        counterpartyName: 'CBEBirr Agent 4821',
+        counterpartyAccount: '0978730420',
+        time: '09:30'
+      },
+      {
+        type: 'out',
+        amount: 10.0,
+        day: 22,
+        month: 8,
+        paymentAbout: 'Ethio Telecom Airtime',
+        counterpartyName: 'Ethio Telecom',
+        counterpartyAccount: '0911049165',
+        time: '16:04'
+      },
+      {
+        type: 'out',
+        amount: 0.06,
+        day: 31,
+        month: 7,
+        paymentAbout: 'SMS Notification Charge',
+        counterpartyName: 'CBE System',
+        counterpartyAccount: '1000999999999',
+        time: '23:59'
+      },
+      {
+        type: 'in',
+        amount: 25.0,
+        day: 20,
+        month: 7,
+        paymentAbout: 'Reward / Cashback',
+        counterpartyName: 'CBE Digital Banking',
+        counterpartyAccount: '1000000000002',
+        time: '15:20'
+      },
+      {
+        type: 'out',
+        amount: 5.0,
+        day: 15,
+        month: 7,
+        paymentAbout: 'Debit Card Service Fee',
+        counterpartyName: 'CBE System',
+        counterpartyAccount: '1000999999999',
+        time: '12:00'
+      }
+    ];
+
+    templates.forEach((t, i) => {
+      const sign = t.type === 'in' ? '+' : '-';
+      const formattedAmt = formatUssdTxAmount(t.amount);
+      const isIncoming = t.type === 'in';
+      txs.push({
+        id: `tx-${acc.id}-seed-${i + 1}`,
+        line: `${sign}${formattedAmt} on ${t.day}/${t.month}`,
+        amount: `${sign}${t.amount.toFixed(2)} ETB`,
+        rawAmount: t.amount,
+        type: t.type,
+        paymentAbout: t.paymentAbout,
+        sender: isIncoming ? t.counterpartyName : acc.name,
+        senderAccount: isIncoming ? t.counterpartyAccount : acc.accountNumber,
+        receiver: isIncoming ? acc.name : t.counterpartyName,
+        receiverAccount: isIncoming ? acc.accountNumber : t.counterpartyAccount,
+        date: `2026-0${t.month < 10 ? '0' + t.month : t.month}-${t.day < 10 ? '0' + t.day : t.day} ${t.time}`,
+        timestamp: new Date(2026, t.month - 1, t.day, parseInt(t.time.split(':')[0], 10), parseInt(t.time.split(':')[1], 10)).getTime()
+      });
+    });
+
+    return txs;
+  },
+
+  getCallerTransactions(accountId: string): AccountTransactionItem[] {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY_CALLER_TRANSACTIONS);
+      let allMap: Record<string, AccountTransactionItem[]> = {};
+      if (stored) {
+        allMap = JSON.parse(stored);
+      }
+      if (allMap[accountId] && allMap[accountId].length >= 8) {
+        return allMap[accountId];
+      }
+
+      // Need to seed or top-up traction
+      const allAccounts = this.getCallerAccountsRaw();
+      const acc = allAccounts.find(a => a.id === accountId) || allAccounts[0];
+      if (!acc) return [];
+
+      const seeded = this.generateSmallTractionTransactions(acc);
+      allMap[accountId] = seeded;
+      try {
+        localStorage.setItem(STORAGE_KEY_CALLER_TRANSACTIONS, JSON.stringify(allMap));
+      } catch {}
+      return seeded;
+    } catch {
+      const allAccounts = this.getCallerAccountsRaw();
+      const acc = allAccounts.find(a => a.id === accountId) || allAccounts[0];
+      return acc ? this.generateSmallTractionTransactions(acc) : [];
+    }
+  },
+
+  saveCallerTransactions(accountId: string, txs: AccountTransactionItem[]): void {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY_CALLER_TRANSACTIONS);
+      let allMap: Record<string, AccountTransactionItem[]> = {};
+      if (stored) {
+        allMap = JSON.parse(stored);
+      }
+      allMap[accountId] = txs;
+      localStorage.setItem(STORAGE_KEY_CALLER_TRANSACTIONS, JSON.stringify(allMap));
+    } catch (e) {
+      console.error('Failed to save caller transactions', e);
+    }
+  },
+
+  getCallerAccountsRaw(): CallerAccount[] {
+    try {
+      const data = localStorage.getItem(STORAGE_KEY_CALLER_ACCOUNTS);
+      if (data) {
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {}
+    return [...INITIAL_CALLER_ACCOUNTS];
+  },
+
+  /**
    * Normalizes all accounts to strictly satisfy:
-   * 1. Every receiver bank account initial/current balance is in range [500.00 - 150000.00] ETB.
+   * 1. Every receiver bank account initial balance is in range [500.00 - 150000.00] ETB.
    * 2. Every single account in the system has a unique, different balance (no duplicates).
+   * 3. Available balance is strictly the total of received amount and initial balance (net of sent debits).
    */
   normalizeAccounts(accounts: CallerAccount[]): CallerAccount[] {
     const usedBalances = new Set<number>();
 
-    // Pass 1: Receivers (guarantee balance is in [500.00, 150000.00] and unique)
+    // Pass 1: Receivers (guarantee initial balance is in [500.00, 150000.00] and unique)
     for (const acc of accounts) {
       if (acc.role === 'receiver') {
-        let bal = typeof acc.balance === 'number' && !isNaN(acc.balance) 
-          ? Math.round(acc.balance * 100) / 100 
-          : 0;
+        let initBal = typeof acc.initialBalance === 'number' && !isNaN(acc.initialBalance) 
+          ? Math.round(acc.initialBalance * 100) / 100 
+          : (typeof acc.balance === 'number' && !isNaN(acc.balance) ? Math.round(acc.balance * 100) / 100 : 0);
 
         // If outside 500-150000 or duplicate of already used balance
-        if (bal < 500 || bal > 150000 || usedBalances.has(bal)) {
-          bal = getPresetOrUniqueReceiverBalance(acc.accountNumber, acc.name, usedBalances);
+        if (initBal < 500 || initBal > 150000 || usedBalances.has(initBal)) {
+          initBal = getPresetOrUniqueReceiverBalance(acc.accountNumber, acc.name, usedBalances);
         }
 
-        acc.balance = bal;
-        acc.availableBalance = bal;
-        usedBalances.add(bal);
+        acc.initialBalance = initBal;
+        usedBalances.add(initBal);
+
+        // Calculate available balance = initial balance + total received - total sent
+        const txs = this.getCallerTransactions(acc.id);
+        const totalReceived = Math.round(txs.filter(t => t.type === 'in').reduce((sum, t) => sum + t.rawAmount, 0) * 100) / 100;
+        const totalSent = Math.round(txs.filter(t => t.type === 'out').reduce((sum, t) => sum + t.rawAmount, 0) * 100) / 100;
+
+        acc.totalReceived = totalReceived;
+        acc.totalSent = totalSent;
+        let availBal = Math.round((acc.initialBalance + totalReceived - totalSent) * 100) / 100;
+        if (availBal < 500) availBal = 500;
+
+        acc.availableBalance = availBal;
+        acc.balance = availBal;
       }
     }
 
     // Pass 2: Senders & other accounts (guarantee unique distinct balance)
     for (const acc of accounts) {
       if (acc.role !== 'receiver') {
-        let bal = typeof acc.balance === 'number' && !isNaN(acc.balance) 
-          ? Math.round(acc.balance * 100) / 100 
-          : 0;
+        let initBal = typeof acc.initialBalance === 'number' && !isNaN(acc.initialBalance) 
+          ? Math.round(acc.initialBalance * 100) / 100 
+          : (typeof acc.balance === 'number' && !isNaN(acc.balance) ? Math.round(acc.balance * 100) / 100 : 0);
 
-        if (bal <= 0 || usedBalances.has(bal)) {
-          bal = getPresetOrUniqueSenderBalance(acc.accountNumber, acc.name, usedBalances);
+        if (initBal <= 0 || usedBalances.has(initBal)) {
+          initBal = getPresetOrUniqueSenderBalance(acc.accountNumber, acc.name, usedBalances);
         }
 
-        acc.balance = bal;
-        acc.availableBalance = bal;
-        usedBalances.add(bal);
+        acc.initialBalance = initBal;
+        usedBalances.add(initBal);
+
+        const txs = this.getCallerTransactions(acc.id);
+        const totalReceived = Math.round(txs.filter(t => t.type === 'in').reduce((sum, t) => sum + t.rawAmount, 0) * 100) / 100;
+        const totalSent = Math.round(txs.filter(t => t.type === 'out').reduce((sum, t) => sum + t.rawAmount, 0) * 100) / 100;
+
+        acc.totalReceived = totalReceived;
+        acc.totalSent = totalSent;
+        let availBal = Math.round((acc.initialBalance + totalReceived - totalSent) * 100) / 100;
+        if (availBal <= 0) availBal = 100;
+
+        acc.availableBalance = availBal;
+        acc.balance = availBal;
       }
+    }
+
+    // Pass 3: Ensure availableBalance is distinct across every single account
+    const usedAvail = new Set<number>();
+    for (const acc of accounts) {
+      let b = acc.availableBalance;
+      while (usedAvail.has(b)) {
+        b = Math.round((b + 0.25) * 100) / 100;
+      }
+      acc.availableBalance = b;
+      acc.balance = b;
+      usedAvail.add(b);
     }
 
     return accounts;
@@ -620,15 +935,15 @@ export const PhoneCallService = {
     );
     if (!senderAcc) {
       const initialBal = getPresetOrUniqueSenderBalance(senderAccount, senderName, currentBalances);
-      const remainingBal = Math.max(0, initialBal - tx.amount);
       senderAcc = {
         id: 'acc-' + Math.random().toString(36).substring(2, 9),
         name: senderName,
         phoneNumber: senderPhone,
         accountNumber: senderAccount,
         accountType: 'Saving Account-' + senderAccount.slice(-4),
-        balance: remainingBal,
-        availableBalance: remainingBal,
+        initialBalance: initialBal,
+        balance: initialBal,
+        availableBalance: initialBal,
         role: 'sender',
         simSlot: 2,
         lastTxId: tx.id,
@@ -646,8 +961,6 @@ export const PhoneCallService = {
       senderAcc.lastTxDate = dateStr;
       senderAcc.lastTxTimestamp = txTimestamp;
       senderAcc.isNow = true;
-      senderAcc.balance = Math.max(0, senderAcc.balance - tx.amount);
-      senderAcc.availableBalance = senderAcc.balance;
     }
 
     // Find or add Receiver
@@ -663,6 +976,7 @@ export const PhoneCallService = {
         phoneNumber: recipientPhone,
         accountNumber: recipientAccount,
         accountType: 'Saving Account-' + recipientAccount.slice(-4),
+        initialBalance: initialBal,
         balance: initialBal,
         availableBalance: initialBal,
         role: 'receiver',
@@ -682,16 +996,58 @@ export const PhoneCallService = {
       receiverAcc.lastTxDate = dateStr;
       receiverAcc.lastTxTimestamp = txTimestamp;
       receiverAcc.isNow = true;
-      // If current balance was below 500 or outside range, normalize it into [500, 150000]
-      if (receiverAcc.balance < 500 || receiverAcc.balance > 150000) {
-        receiverAcc.balance = getPresetOrUniqueReceiverBalance(receiverAcc.accountNumber, receiverAcc.name, currentBalances);
-      } else {
-        receiverAcc.balance = receiverAcc.balance + tx.amount;
-      }
-      receiverAcc.availableBalance = receiverAcc.balance;
     }
 
-    // Normalize and ensure all accounts have different balances and receivers are 500-150000
+    // Add in transaction to Receiver account
+    const d = new Date(txTimestamp);
+    const day = d.getDate();
+    const month = d.getMonth() + 1;
+    const isoDateStr = d.toISOString().replace('T', ' ').slice(0, 16);
+    const formattedAmt = formatUssdTxAmount(tx.amount);
+
+    const inTxItem: AccountTransactionItem = {
+      id: `tx-recv-${tx.id || Date.now()}`,
+      line: `+${formattedAmt} on ${day}/${month}`,
+      amount: `+${tx.amount.toFixed(2)} ETB`,
+      rawAmount: tx.amount,
+      type: 'in',
+      paymentAbout: tx.description || 'Pay done via Mobile',
+      sender: senderAcc.name,
+      senderAccount: senderAcc.accountNumber,
+      receiver: receiverAcc.name,
+      receiverAccount: receiverAcc.accountNumber,
+      date: isoDateStr,
+      timestamp: txTimestamp
+    };
+    const receiverTxs = this.getCallerTransactions(receiverAcc.id);
+    if (!receiverTxs.some(t => t.id === inTxItem.id)) {
+      receiverTxs.unshift(inTxItem);
+      this.saveCallerTransactions(receiverAcc.id, receiverTxs);
+    }
+
+    // Add out transaction to Sender account
+    const outTxItem: AccountTransactionItem = {
+      id: `tx-send-${tx.id || Date.now()}`,
+      line: `-${formattedAmt} on ${day}/${month}`,
+      amount: `-${tx.amount.toFixed(2)} ETB`,
+      rawAmount: tx.amount,
+      type: 'out',
+      paymentAbout: tx.description || 'Pay done via Mobile',
+      sender: senderAcc.name,
+      senderAccount: senderAcc.accountNumber,
+      receiver: receiverAcc.name,
+      receiverAccount: receiverAcc.accountNumber,
+      date: isoDateStr,
+      timestamp: txTimestamp
+    };
+    const senderTxs = this.getCallerTransactions(senderAcc.id);
+    if (!senderTxs.some(t => t.id === outTxItem.id)) {
+      senderTxs.unshift(outTxItem);
+      this.saveCallerTransactions(senderAcc.id, senderTxs);
+    }
+
+    // Normalize and ensure all accounts have different balances, receivers are 500-150000,
+    // and available balance is total of received amount and initial balance
     this.normalizeAccounts(accounts);
 
     // Sort accounts so that recent transactions are always at the top

@@ -36,7 +36,7 @@ import {
   ArrowUpRight
 } from 'lucide-react';
 import GboardKeyboard from './GboardKeyboard';
-import { PhoneCallService, CallLogItem, ContactItem, CallerAccount } from '../services/phoneCallService';
+import { PhoneCallService, CallLogItem, ContactItem, CallerAccount, AccountTransactionItem, formatUssdTxAmount } from '../services/phoneCallService';
 import { LocalDb } from '../lib/mockData';
 import { UserProfile, Transaction } from '../types';
 import { SmsService } from '../services/smsService';
@@ -756,150 +756,99 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
     return `Saving Account-${last4}`;
   }, [activeCallerAccount?.accountNumber, user.accountNumber]);
 
-  // Current active caller balance formatted
-  const formattedBalance = useMemo(() => {
-    const bal = activeCallerAccount ? activeCallerAccount.balance : (user.balance ?? 18450.50);
-    return bal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }, [activeCallerAccount, user.balance]);
-
-  // Dynamic transactions list for USSD
+  // Dynamic transactions list for USSD - strictly shows only the active caller's bank account transactions
   const sampleTransactions = useMemo(() => {
-    const isSender = activeCallerAccount?.role === 'sender';
-    
-    // Canonical transactions matching Screenshot 1 & 3
-    const canonicalTxs = [
-      {
-        id: 'tx-1',
-        line: isSender ? '-50.0 on 4/9' : '+50.0 on 4/9',
-        amount: isSender ? '-50.00 ETB' : '+50.00 ETB',
-        paymentAbout: 'Pay done via Mobile',
-        sender: 'Dejene Buta Feye',
-        receiver: 'Leykun Jemaneh Ylma',
-        date: '2026-09-05 13:41'
-      },
-      {
-        id: 'tx-2',
-        line: '-20.0 on 4/9',
-        amount: '-20.00 ETB',
-        paymentAbout: 'Pay done via Mobile',
-        sender: activeCallerAccount?.name || user.name || 'Leykun Jemaneh Ylma',
-        receiver: 'Kasahun Yematawork Lema',
-        date: '2026-09-04 18:22'
-      },
-      {
-        id: 'tx-3',
-        line: '+100.0 on 1/9',
-        amount: '+100.00 ETB',
-        paymentAbout: 'CBE Branch Deposit',
-        sender: 'Addis Ababa Branch 001',
-        receiver: activeCallerAccount?.name || user.name || 'Leykun Jemaneh Ylma',
-        date: '2026-09-01 10:15'
-      },
-      {
-        id: 'tx-4',
-        line: '-0.06 on 31/8',
-        amount: '-0.06 ETB',
-        paymentAbout: 'SMS Notification Charge',
-        sender: activeCallerAccount?.name || user.name || 'Leykun Jemaneh Ylma',
-        receiver: 'CBE System',
-        date: '2026-08-31 23:59'
-      },
-      {
-        id: 'tx-5',
-        line: '-100.0 on 30/8',
-        amount: '-100.00 ETB',
-        paymentAbout: 'Mobile Banking Transfer',
-        sender: activeCallerAccount?.name || user.name || 'Leykun Jemaneh Ylma',
-        receiver: 'Selamawit Tekle',
-        date: '2026-08-30 14:02'
-      },
-      {
-        id: 'tx-6',
-        line: '-45.0 on 28/8',
-        amount: '-45.00 ETB',
-        paymentAbout: 'Ethio Telecom Airtime',
-        sender: activeCallerAccount?.name || user.name || 'Leykun Jemaneh Ylma',
-        receiver: 'Ethio Telecom',
-        date: '2026-08-28 11:20'
-      },
-      {
-        id: 'tx-7',
-        line: '+250.0 on 25/8',
-        amount: '+250.00 ETB',
-        paymentAbout: 'Salary Advance / Credit',
-        sender: 'Employer Payroll CBE',
-        receiver: activeCallerAccount?.name || user.name || 'Leykun Jemaneh Ylma',
-        date: '2026-08-25 09:00'
-      },
-      {
-        id: 'tx-8',
-        line: '-15.0 on 20/8',
-        amount: '-15.00 ETB',
-        paymentAbout: 'Utility Bill Payment',
-        sender: activeCallerAccount?.name || user.name || 'Leykun Jemaneh Ylma',
-        receiver: 'Addis Water Authority',
-        date: '2026-08-20 16:45'
-      },
-      {
-        id: 'tx-9',
-        line: '-0.06 on 31/7',
-        amount: '-0.06 ETB',
-        paymentAbout: 'SMS Notification Charge',
-        sender: activeCallerAccount?.name || user.name || 'Leykun Jemaneh Ylma',
-        receiver: 'CBE System',
-        date: '2026-07-31 23:59'
-      },
-      {
-        id: 'tx-10',
-        line: '+500.0 on 15/7',
-        amount: '+500.00 ETB',
-        paymentAbout: 'Remittance Transfer',
-        sender: 'International Money Transfer',
-        receiver: activeCallerAccount?.name || user.name || 'Leykun Jemaneh Ylma',
-        date: '2026-07-15 14:30'
-      }
-    ];
+    if (!activeCallerAccount) return [];
 
-    if (userTransactions && userTransactions.length > 0) {
-      const realMapped = userTransactions.map(tx => {
-        const txIsSender = activeCallerAccount?.role === 'sender' || tx.senderName === activeCallerAccount?.name;
-        const sign = txIsSender ? '-' : '+';
+    const callerAccNum = activeCallerAccount.accountNumber;
+    const callerNameLower = activeCallerAccount.name.toLowerCase();
+
+    // 1. Get transactions stored or generated specifically for this caller's bank account
+    const callerStoredTxs: AccountTransactionItem[] = PhoneCallService.getCallerTransactions(activeCallerAccount.id);
+
+    // 2. Filter real user banking transactions that strictly involve this caller's bank account
+    const realMatchedTxs: AccountTransactionItem[] = (userTransactions || [])
+      .filter(tx => {
+        const sAcc = tx.senderAccount;
+        const rAcc = tx.recipientAccount;
+        const sName = (tx.senderName || '').toLowerCase();
+        const rName = (tx.recipientName || '').toLowerCase();
+        return sAcc === callerAccNum || rAcc === callerAccNum || sName === callerNameLower || rName === callerNameLower;
+      })
+      .map(tx => {
+        const isOut = tx.senderAccount === callerAccNum || (tx.senderName || '').toLowerCase() === callerNameLower;
+        const sign = isOut ? '-' : '+';
         const d = new Date(tx.createdAt);
         const day = d.getDate();
         const month = d.getMonth() + 1;
-        
-        let formattedAmt = '';
-        if (tx.amount < 1 && tx.amount > 0) {
-          formattedAmt = tx.amount.toFixed(2);
-        } else if (Number.isInteger(tx.amount)) {
-          formattedAmt = tx.amount.toFixed(1);
-        } else {
-          const dec = tx.amount.toString().split('.')[1] || '';
-          formattedAmt = dec.length === 1 ? tx.amount.toFixed(1) : tx.amount.toFixed(2);
-        }
+        const formattedAmt = formatUssdTxAmount(tx.amount);
 
         return {
           id: tx.id,
           line: `${sign}${formattedAmt} on ${day}/${month}`,
           amount: `${sign}${tx.amount.toFixed(2)} ETB`,
+          rawAmount: tx.amount,
+          type: (isOut ? 'out' : 'in') as 'in' | 'out',
           paymentAbout: tx.description || 'Pay done via Mobile',
-          sender: tx.senderName || (txIsSender ? (activeCallerAccount?.name || user.name) : 'Dejene Buta Feye'),
-          receiver: tx.recipientName || (txIsSender ? 'Dejene Buta Feye' : (activeCallerAccount?.name || user.name)),
-          date: tx.createdAt ? tx.createdAt.replace('T', ' ').slice(0, 16) : '2026-09-05 13:41'
+          sender: tx.senderName || (isOut ? activeCallerAccount.name : 'Dejene Buta Feye'),
+          senderAccount: tx.senderAccount,
+          receiver: tx.recipientName || (isOut ? 'Leykun Jemaneh Ylma' : activeCallerAccount.name),
+          receiverAccount: tx.recipientAccount,
+          date: tx.createdAt ? tx.createdAt.replace('T', ' ').slice(0, 16) : `${day}/${month}`,
+          timestamp: new Date(tx.createdAt).getTime()
         };
       });
 
-      const combined = [...realMapped];
-      for (const c of canonicalTxs) {
-        if (!combined.some(x => x.id === c.id)) {
-          combined.push(c);
-        }
+    // Merge: prioritize real matched transactions for this caller, followed by caller's account transactions
+    const combined: AccountTransactionItem[] = [...realMatchedTxs];
+    for (const tx of callerStoredTxs) {
+      if (!combined.some(c => c.id === tx.id)) {
+        combined.push(tx);
       }
-      return combined;
     }
 
-    return canonicalTxs;
-  }, [userTransactions, user.name, activeCallerAccount]);
+    // Sort descending by timestamp (newest transactions first)
+    combined.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+    // If transaction list is small, add small traction in and out transactions
+    if (combined.length < 8) {
+      const smallTractionTxs = PhoneCallService.generateSmallTractionTransactions(activeCallerAccount);
+      for (const t of smallTractionTxs) {
+        if (!combined.some(c => c.id === t.id || c.line === t.line)) {
+          combined.push(t);
+        }
+      }
+      combined.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    }
+
+    return combined;
+  }, [userTransactions, activeCallerAccount]);
+
+  // Current active caller available balance: total of received amount and initial balance
+  const computedBalance = useMemo(() => {
+    if (!activeCallerAccount) return user.balance ?? 18450.50;
+
+    const initialBal = typeof activeCallerAccount.initialBalance === 'number' && !isNaN(activeCallerAccount.initialBalance)
+      ? activeCallerAccount.initialBalance
+      : (activeCallerAccount.role === 'receiver' ? 18450.50 : 10432.00);
+
+    const totalReceived = sampleTransactions
+      .filter(tx => tx.type === 'in')
+      .reduce((sum, tx) => sum + (tx.rawAmount ?? 0), 0);
+
+    const totalSent = sampleTransactions
+      .filter(tx => tx.type === 'out')
+      .reduce((sum, tx) => sum + (tx.rawAmount ?? 0), 0);
+
+    // Available balance = initial balance + total received amount (net of sent)
+    const avail = Math.round((initialBal + totalReceived - totalSent) * 100) / 100;
+    return avail > 0 ? avail : (activeCallerAccount.balance || 500);
+  }, [activeCallerAccount, sampleTransactions, user.balance]);
+
+  // Current active caller balance formatted for USSD display
+  const formattedBalance = useMemo(() => {
+    return computedBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }, [computedBalance]);
 
   // Page 1 and Page 2 of Transactions
   const page1Txs = useMemo(() => sampleTransactions.slice(0, 5), [sampleTransactions]);
