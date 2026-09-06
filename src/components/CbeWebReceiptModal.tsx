@@ -5,7 +5,6 @@ import { Transaction } from '../types';
 import { SmsMessage } from '../types/sms';
 import { LocalDb, formatTo12CharTxId, DEFAULT_CBE_LOGO, OFFICIAL_CBE_PURPLE_LOGO, OFFICIAL_CBE_STAMP_LOGO } from '../lib/mockData';
 import { CbeLogo } from './CbeLogo';
-import { CbeOfficialStamp } from './CbeOfficialStamp';
 import { 
   ArrowLeft, 
   Home, 
@@ -137,18 +136,26 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
   const [downloadSuccess, setDownloadSuccess] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
 
-  // Retrieve admin uploaded logo from LocalDb and listen to updates
+  // Retrieve admin uploaded logo and stamp from LocalDb and listen to updates
   const [adminLogo, setAdminLogo] = useState<string | null>(() => LocalDb.getCustomBankLogo());
+  const [customStamp, setCustomStamp] = useState<string | null>(() => LocalDb.getCustomBankStamp());
 
   useEffect(() => {
     const handleSyncLogo = () => {
       setAdminLogo(LocalDb.getCustomBankLogo());
     };
+    const handleSyncStamp = () => {
+      setCustomStamp(LocalDb.getCustomBankStamp());
+    };
     window.addEventListener('cbe_logo_updated', handleSyncLogo);
+    window.addEventListener('cbe_stamp_updated', handleSyncStamp);
     window.addEventListener('storage', handleSyncLogo);
+    window.addEventListener('storage', handleSyncStamp);
     return () => {
       window.removeEventListener('cbe_logo_updated', handleSyncLogo);
+      window.removeEventListener('cbe_stamp_updated', handleSyncStamp);
       window.removeEventListener('storage', handleSyncLogo);
+      window.removeEventListener('storage', handleSyncStamp);
     };
   }, []);
 
@@ -669,35 +676,35 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                 </span>
               </div>
 
-              {/* Authentic Overlaid Official CBE Purple Ink Stamp matching Screenshot_20260904-124126.png and IMG_20260905_105826_969.png */}
-              <div 
-                className="absolute pointer-events-none select-none z-10 shrink-0"
-                style={{
-                  top: '53%',
-                  left: '43%',
-                  transform: 'translate(-50%, -50%)',
-                  width: '195px',
-                  height: '195px',
-                  minWidth: '195px',
-                  minHeight: '195px',
-                  maxWidth: '195px',
-                  maxHeight: '195px',
-                  aspectRatio: '1 / 1'
-                }}
-              >
-                <CbeOfficialStamp 
-                  size={195} 
-                  rotation={-13} 
-                  branchCode="9.1.6" 
-                  adminLogo={adminLogo}
-                  preferAdminUploaded={Boolean(
-                    adminLogo && 
-                    adminLogo !== DEFAULT_CBE_LOGO && 
-                    adminLogo !== OFFICIAL_CBE_PURPLE_LOGO && 
-                    adminLogo !== OFFICIAL_CBE_STAMP_LOGO
-                  )}
-                />
-              </div>
+              {/* Authentic Overlaid Stamp: Rendered ONLY if an admin has uploaded a stamp */}
+              {customStamp && (
+                <div 
+                  className="absolute pointer-events-none select-none z-10 shrink-0"
+                  style={{
+                    top: '53%',
+                    left: '43%',
+                    transform: 'translate(-50%, -50%)',
+                    width: '195px',
+                    height: '195px',
+                    minWidth: '195px',
+                    minHeight: '195px',
+                    maxWidth: '195px',
+                    maxHeight: '195px',
+                    aspectRatio: '1 / 1'
+                  }}
+                >
+                  <img
+                    src={customStamp}
+                    alt="Official Bank Stamp"
+                    className="w-full h-full object-contain pointer-events-none select-none"
+                    style={{
+                      mixBlendMode: 'multiply',
+                      filter: 'contrast(1.15)',
+                      transform: 'rotate(-13deg)'
+                    }}
+                  />
+                </div>
+              )}
 
             </div>
 

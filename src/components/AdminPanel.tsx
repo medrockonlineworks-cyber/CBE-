@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LocalDb, DEFAULT_CBE_LOGO } from '../lib/mockData';
+import { LocalDb, DEFAULT_CBE_LOGO, OFFICIAL_CBE_STAMP_LOGO } from '../lib/mockData';
 import { UserProfile, Transaction, AuditLog } from '../types';
 import { CbeLogo } from './CbeLogo';
 import { compressImageFile } from '../lib/imageUtils';
@@ -24,7 +24,9 @@ import {
   Loader2,
   Link as LinkIcon,
   Sparkles,
-  ExternalLink
+  ExternalLink,
+  Stamp,
+  CheckCircle2
 } from 'lucide-react';
 
 interface AdminPanelProps {
@@ -38,6 +40,9 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [customBankLogo, setCustomBankLogo] = useState<string | null>(null);
+  const [customBankStamp, setCustomBankStamp] = useState<string | null>(null);
+  const [stampProcessing, setStampProcessing] = useState(false);
+  const [stampUrlInput, setStampUrlInput] = useState('');
   const [showLogoModal, setShowLogoModal] = useState(false);
   
   // Search / Filters
@@ -55,10 +60,27 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
     setTransactions(LocalDb.getTransactions());
     setAuditLogs(LocalDb.getAuditLogs());
     setCustomBankLogo(LocalDb.getCustomBankLogo());
+    setCustomBankStamp(LocalDb.getCustomBankStamp());
   };
 
   useEffect(() => {
     refreshData();
+    const handleSyncLogo = () => {
+      setCustomBankLogo(LocalDb.getCustomBankLogo());
+    };
+    const handleSyncStamp = () => {
+      setCustomBankStamp(LocalDb.getCustomBankStamp());
+    };
+    window.addEventListener('cbe_logo_updated', handleSyncLogo);
+    window.addEventListener('cbe_stamp_updated', handleSyncStamp);
+    window.addEventListener('storage', handleSyncLogo);
+    window.addEventListener('storage', handleSyncStamp);
+    return () => {
+      window.removeEventListener('cbe_logo_updated', handleSyncLogo);
+      window.removeEventListener('cbe_stamp_updated', handleSyncStamp);
+      window.removeEventListener('storage', handleSyncLogo);
+      window.removeEventListener('storage', handleSyncStamp);
+    };
   }, []);
 
   // Handle balance adjust
@@ -107,6 +129,45 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
     LocalDb.setCustomBankLogo(null);
     setCustomBankLogo(null);
     LocalDb.addAuditLog(currentUser.id, currentUser.email, 'RESET_BANK_LOGO', 'Reset the bank logo to the official Commercial Bank of Ethiopia (CBE) SVG logo.');
+  };
+
+  const handleBankStampUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setStampProcessing(true);
+      const dataUrl = await compressImageFile(file, 500, 0.95);
+      LocalDb.setCustomBankStamp(dataUrl);
+      setCustomBankStamp(dataUrl);
+      LocalDb.addAuditLog(currentUser.id, currentUser.email, 'UPLOAD_BANK_STAMP', 'Uploaded a custom bank rubber stamp for web receipts.');
+    } catch (err) {
+      console.error('Failed to compress bank stamp:', err);
+      alert('Failed to process stamp image. Please try another image file.');
+    } finally {
+      setStampProcessing(false);
+    }
+  };
+
+  const handleApplyStampUrl = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!stampUrlInput.trim()) return;
+    LocalDb.setCustomBankStamp(stampUrlInput.trim());
+    setCustomBankStamp(stampUrlInput.trim());
+    setStampUrlInput('');
+    LocalDb.addAuditLog(currentUser.id, currentUser.email, 'UPLOAD_BANK_STAMP', 'Applied custom bank rubber stamp from URL.');
+  };
+
+  const handleApplyStampPreset = () => {
+    LocalDb.setCustomBankStamp(OFFICIAL_CBE_STAMP_LOGO);
+    setCustomBankStamp(OFFICIAL_CBE_STAMP_LOGO);
+    LocalDb.addAuditLog(currentUser.id, currentUser.email, 'APPLY_PRESET_STAMP', 'Applied official CBE circular purple rubber stamp preset.');
+  };
+
+  const handleResetBankStamp = () => {
+    LocalDb.setCustomBankStamp(null);
+    setCustomBankStamp(null);
+    LocalDb.addAuditLog(currentUser.id, currentUser.email, 'REMOVE_BANK_STAMP', 'Removed custom bank stamp. Web receipts will display without any stamp.');
   };
 
   // Metrics
@@ -490,12 +551,12 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Bank Logo Customizer */}
-            <div className="bg-slate-800/30 border border-slate-800 p-6 rounded-3xl space-y-6 flex flex-col justify-between">
-              <div className="space-y-4">
+          <div className="space-y-6">
+            {/* 1. Bank Logo Customizer */}
+            <div className="bg-slate-800/30 border border-slate-800 p-6 rounded-3xl space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-amber-400/10 text-amber-400 rounded-xl">
+                  <div className="p-2.5 bg-amber-400/10 text-amber-400 rounded-xl">
                     <ImageIcon className="w-5 h-5" />
                   </div>
                   <div>
@@ -504,6 +565,18 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
                   </div>
                 </div>
 
+                <button
+                  id="btn-open-logo-modal"
+                  type="button"
+                  onClick={() => setShowLogoModal(true)}
+                  className="flex items-center gap-2 self-start sm:self-center px-3.5 py-1.5 rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Presets &amp; Advanced Logo Manager</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Upload Field */}
                 <div className="space-y-2">
                   <label className="block text-xs font-mono uppercase text-slate-400 font-bold">Upload Custom Logo</label>
@@ -511,7 +584,7 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
                     <input 
                       id="input-bank-logo-upload"
                       type="file" 
-                      accept="image/*"
+                      accept="image/*" 
                       onChange={handleBankLogoUpload}
                       className="absolute inset-0 opacity-0 cursor-pointer"
                     />
@@ -520,39 +593,210 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
                     <p className="text-[10px] text-slate-500 mt-1 font-mono">PNG, JPG, SVG up to 2MB</p>
                   </div>
                 </div>
-              </div>
 
-              {/* Preview & Actions */}
-              <div className="border-t border-slate-800/80 pt-4 space-y-4">
-                <p className="text-xs font-mono uppercase text-slate-400 font-bold">Logo Preview</p>
-                <div className="flex items-center gap-4 bg-slate-950/30 p-3 rounded-2xl border border-slate-800">
-                  <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-md p-1.5 border border-[#dfa04c]/30 flex-shrink-0 overflow-hidden">
-                    <CbeLogo 
-                      src={customBankLogo} 
-                      className="w-full h-full object-contain"
-                    />
+                {/* Preview & Actions */}
+                <div className="space-y-3 flex flex-col justify-between">
+                  <div>
+                    <p className="text-xs font-mono uppercase text-slate-400 font-bold mb-2">Logo Preview</p>
+                    <div className="flex items-center gap-4 bg-slate-950/30 p-3 rounded-2xl border border-slate-800">
+                      <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center shadow-md p-1.5 border border-[#dfa04c]/30 flex-shrink-0 overflow-hidden">
+                        <CbeLogo 
+                          src={customBankLogo} 
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-white text-sm truncate">
+                          {customBankLogo ? 'Custom Uploaded Logo' : 'Official CBE Logo (Default)'}
+                        </p>
+                        <p className="text-[10px] text-slate-400 mt-0.5">
+                          {customBankLogo ? 'Stored as persistent base64 data' : 'Standard SVG vector path asset'}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-bold text-white text-sm truncate">
-                      {customBankLogo ? 'Custom Uploaded Logo' : 'Official CBE Logo (Default)'}
-                    </p>
-                    <p className="text-[10px] text-slate-400 mt-0.5">
-                      {customBankLogo ? 'Stored as persistent base64 data' : 'Standard SVG vector path asset'}
-                    </p>
+
+                  {customBankLogo && (
+                    <button
+                      id="btn-reset-bank-logo"
+                      type="button"
+                      onClick={handleResetBankLogo}
+                      className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl border border-slate-700 bg-slate-850 hover:bg-slate-750 text-xs font-bold text-slate-300 transition cursor-pointer"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Reset to Default CBE Logo</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Custom Bank Stamp Uploader (Placed directly below Logo upload) */}
+            <div className="bg-slate-800/30 border border-slate-800 p-6 rounded-3xl space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-purple-500/10 text-purple-400 rounded-xl">
+                    <Stamp className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-white text-base">Custom Bank Stamp</h4>
+                    <p className="text-slate-400 text-xs">Official circular rubber stamp overlaid onto the CBE Web Receipt</p>
                   </div>
                 </div>
 
-                {customBankLogo && (
-                  <button
-                    id="btn-reset-bank-logo"
-                    type="button"
-                    onClick={handleResetBankLogo}
-                    className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl border border-slate-700 bg-slate-850 hover:bg-slate-750 text-xs font-bold text-slate-300 transition cursor-pointer"
-                  >
-                    <RefreshCw className="w-3.5 h-3.5 text-slate-400" />
-                    <span>Reset to Default CBE Logo</span>
-                  </button>
-                )}
+                <div className="flex items-center gap-2">
+                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
+                    customBankStamp 
+                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                      : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                  }`}>
+                    {customBankStamp ? (
+                      <>
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Uploaded Stamp Active</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                        <span>No Stamp (Web receipt has no stamp)</span>
+                      </>
+                    )}
+                  </span>
+                </div>
+              </div>
+
+              {/* Policy Banner */}
+              <div className="bg-purple-950/30 border border-purple-800/40 rounded-2xl p-3.5 flex items-start gap-3 text-xs text-purple-200">
+                <Stamp className="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5" />
+                <p className="leading-relaxed">
+                  <strong className="text-purple-300">Web Receipt Policy:</strong> The CBE Web Receipt displays <span className="underline decoration-purple-400 font-bold">only uploaded stamps</span>. If no stamp is uploaded, web receipts will display without any stamp.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Upload & URL Field */}
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="block text-xs font-mono uppercase text-slate-400 font-bold">Upload Custom Stamp Image</label>
+                    <div className="relative border-2 border-dashed border-slate-700 hover:border-purple-400/50 rounded-2xl p-4 transition flex flex-col items-center justify-center text-center cursor-pointer bg-slate-950/40">
+                      <input 
+                        id="input-bank-stamp-upload"
+                        type="file" 
+                        accept="image/*" 
+                        onChange={handleBankStampUpload}
+                        disabled={stampProcessing}
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                      />
+                      {stampProcessing ? (
+                        <div className="flex flex-col items-center py-2">
+                          <Loader2 className="w-7 h-7 text-purple-400 animate-spin mb-1" />
+                          <p className="text-xs text-purple-300 font-semibold">Processing &amp; Optimizing Stamp...</p>
+                        </div>
+                      ) : (
+                        <>
+                          <Upload className="w-8 h-8 text-purple-400/70 mb-2" />
+                          <p className="text-xs text-slate-300 font-semibold">Click to browse or drag stamp image here</p>
+                          <p className="text-[10px] text-slate-500 mt-1 font-mono">PNG (transparent), SVG, or JPG up to 2MB</p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Or Enter Stamp URL */}
+                  <form onSubmit={handleApplyStampUrl} className="space-y-1.5">
+                    <label className="block text-[11px] font-mono uppercase text-slate-400 font-bold">Or Enter Stamp Image URL</label>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <LinkIcon className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
+                        <input
+                          id="input-bank-stamp-url"
+                          type="url"
+                          placeholder="https://.../cbe-stamp.png"
+                          value={stampUrlInput}
+                          onChange={(e) => setStampUrlInput(e.target.value)}
+                          className="w-full bg-slate-950/40 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-purple-400"
+                        />
+                      </div>
+                      <button
+                        id="btn-apply-stamp-url"
+                        type="submit"
+                        disabled={!stampUrlInput.trim()}
+                        className="bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer"
+                      >
+                        Apply
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                {/* Stamp Preview & Actions */}
+                <div className="space-y-4 flex flex-col justify-between">
+                  <div>
+                    <p className="text-xs font-mono uppercase text-slate-400 font-bold mb-2">Web Receipt Stamp Preview</p>
+                    <div className="flex items-center gap-4 bg-slate-950/40 p-3.5 rounded-2xl border border-slate-800">
+                      {/* Realistic paper simulation container with multiply blend preview */}
+                      <div className="w-20 h-20 rounded-2xl bg-white flex items-center justify-center shadow-inner border border-slate-200 flex-shrink-0 overflow-hidden relative">
+                        {/* Background faint lines simulating receipt paper */}
+                        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:6px_6px]" />
+                        
+                        {customBankStamp ? (
+                          <img 
+                            src={customBankStamp} 
+                            alt="Custom CBE Stamp Preview" 
+                            className="w-full h-full object-contain pointer-events-none select-none relative z-10 p-1"
+                            style={{
+                              mixBlendMode: 'multiply',
+                              filter: 'contrast(1.15)',
+                              transform: 'rotate(-13deg)'
+                            }}
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center justify-center text-slate-400 p-2 text-center">
+                            <Stamp className="w-6 h-6 stroke-1 text-slate-300 mb-0.5" />
+                            <span className="text-[9px] font-bold text-slate-400">No Stamp</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <p className="font-bold text-white text-sm truncate">
+                          {customBankStamp ? 'Custom Uploaded Stamp' : 'No Stamp Uploaded'}
+                        </p>
+                        <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
+                          {customBankStamp 
+                            ? 'Actively stamped on CBE Web Receipts' 
+                            : 'Web receipt will render cleanly with NO stamp.'
+                          }
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Stamp Actions */}
+                  <div className="space-y-2">
+                    {customBankStamp ? (
+                      <button
+                        id="btn-reset-bank-stamp"
+                        type="button"
+                        onClick={handleResetBankStamp}
+                        className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl border border-rose-900/50 bg-rose-950/30 hover:bg-rose-900/40 text-xs font-bold text-rose-300 transition cursor-pointer"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5 text-rose-400" />
+                        <span>Remove Uploaded Stamp (Clear Receipt Stamp)</span>
+                      </button>
+                    ) : (
+                      <button
+                        id="btn-apply-cbe-stamp-preset"
+                        type="button"
+                        onClick={handleApplyStampPreset}
+                        className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl border border-purple-800/60 bg-purple-950/40 hover:bg-purple-900/40 text-xs font-bold text-purple-300 transition cursor-pointer"
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                        <span>Apply Authentic CBE Purple Stamp Template</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>

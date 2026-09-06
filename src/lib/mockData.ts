@@ -1492,4 +1492,28 @@ export class LocalDb {
     // Broadcast across windows and local components
     window.dispatchEvent(new CustomEvent('cbe_logo_updated', { detail: { logo } }));
   }
+
+  static getCustomBankStamp(): string | null {
+    try {
+      const val = localStorage.getItem('tana_custom_bank_stamp');
+      return (val && val.trim().length > 0) ? val : null;
+    } catch {
+      return null;
+    }
+  }
+
+  static setCustomBankStamp(stamp: string | null): void {
+    try {
+      if (!stamp || stamp.trim().length === 0) {
+        localStorage.removeItem('tana_custom_bank_stamp');
+      } else {
+        localStorage.setItem('tana_custom_bank_stamp', stamp);
+      }
+    } catch (err) {
+      console.warn('[LocalDb] Failed writing custom stamp to localStorage:', err);
+    }
+    
+    // Broadcast across windows and local components
+    window.dispatchEvent(new CustomEvent('cbe_stamp_updated', { detail: { stamp } }));
+  }
 }
