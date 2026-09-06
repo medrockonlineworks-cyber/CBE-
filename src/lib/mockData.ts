@@ -57,8 +57,8 @@ const INITIAL_USERS: UserProfile[] = [
     status: 'active',
     createdAt: '2026-03-15T14:20:00Z',
     accountNumber: '1000246810121',
-    balance: 10000000000.00,
-    availableBalance: 10000000000.00,
+    balance: 52450.00,
+    availableBalance: 52450.00,
     biometricEnabled: false
   }
 ];
@@ -109,8 +109,8 @@ export const INITIAL_ACCOUNTS: BankAccount[] = [
     accountName: 'Main Savings Account',
     accountNumber: '1000123456789',
     accountType: 'savings',
-    balance: 10000000000.00,
-    availableBalance: 10000000000.00,
+    balance: 2500000.00,
+    availableBalance: 2500000.00,
     status: 'active',
     currency: 'ETB',
     isPrimary: false,
@@ -135,8 +135,8 @@ export const INITIAL_ACCOUNTS: BankAccount[] = [
     accountName: 'Primary Savings Account',
     accountNumber: '1000246810121',
     accountType: 'savings',
-    balance: 10000000000.00,
-    availableBalance: 10000000000.00,
+    balance: 52450.00,
+    availableBalance: 52450.00,
     status: 'active',
     currency: 'ETB',
     isPrimary: true,

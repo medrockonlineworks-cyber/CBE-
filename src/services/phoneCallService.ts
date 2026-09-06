@@ -46,6 +46,100 @@ const STORAGE_KEY_CONTACTS = 'tana_phone_contacts_v1';
 const STORAGE_KEY_CALLER_ACCOUNTS = 'tana_caller_accounts_v1';
 const STORAGE_KEY_ACTIVE_CALLER_ID = 'tana_active_caller_account_id_v1';
 
+// Distinct initial balances for receivers strictly within [500.00, 150000.00] ETB
+export const RECEIVER_PRESET_BALANCES: Record<string, number> = {
+  '1000419524747': 18450.50, // Leykun Jemaneh Ylma
+  '1000382910482': 34820.00, // Sadik Ahmed
+  '1000192837465': 68900.00, // Liya Endalkachew
+  '1000246810121': 52450.00, // Selamawit Tekle
+  '1000987654321': 84300.00, // Bethlehem Tadesse
+  '1000432109876': 9750.00,  // Genet Molla
+  '1000210987654': 112600.00, // Almaz Bekele
+  '1000123456789': 143200.00, // Abebe Kebede
+  '1000492817263': 132600.50, // Leykun Jemaneh Secondary
+  '1000419520913': 74600.00, // Abebe Bikila (User Y)
+  '0911049165': 3250.00,     // Telebirr Wallet
+  '1128472910': 14850.00,    // BOA Selamawit
+};
+
+// Distinct initial balances for senders (none duplicate receivers or each other)
+export const SENDER_PRESET_BALANCES: Record<string, number> = {
+  '1000284758657': 10432.00, // Dejene Buta Feye
+  '1000482918925': 8760.00,  // Kasahun Yematawork Lema
+  '1000345678901': 7200.00,  // Kasahun Yematawork
+  '1000567890123': 15300.00, // Tesfahun Abebe
+  '1000789012345': 22150.00, // Ashenafi Alemu
+  '1000654321098': 31400.00, // Henok Girma
+  '1000321098765': 41800.00, // Yohannes Haile
+  '1000998877665': 5000.00,  // Deposit
+  '01304859182300': 28400.00, // Awash Bank
+  '5249182019481': 19300.00,  // Dashen Bank
+  '1000419529165': 920.50,    // User X
+};
+
+/**
+ * Ensures all receiver bank accounts have initial balance from 500-150000,
+ * and every single account in the system has a distinct, different initial balance.
+ */
+export function getPresetOrUniqueReceiverBalance(
+  accountNumber: string,
+  name: string,
+  usedBalances: Set<number>
+): number {
+  const cleanAcc = (accountNumber || '').replace(/\D/g, '');
+  if (cleanAcc && RECEIVER_PRESET_BALANCES[cleanAcc] && !usedBalances.has(RECEIVER_PRESET_BALANCES[cleanAcc])) {
+    return RECEIVER_PRESET_BALANCES[cleanAcc];
+  }
+
+  // Generate deterministic balance strictly within 500 to 150000
+  let hash = 0;
+  const keyStr = (cleanAcc || accountNumber || '') + (name || '');
+  for (let i = 0; i < keyStr.length; i++) {
+    hash = (hash << 5) - hash + keyStr.charCodeAt(i);
+    hash |= 0;
+  }
+  const absHash = Math.abs(hash);
+  // Spread across 500.00 to 150000.00 with unique 2-decimal precision
+  let bal = 500 + (absHash % 148500) + ((absHash % 97) / 100);
+  bal = Math.round(bal * 100) / 100;
+  if (bal < 500) bal = 500;
+  if (bal > 150000) bal = 150000;
+
+  // Ensure no account shares this balance
+  while (usedBalances.has(bal)) {
+    bal = 500 + ((bal - 500 + 431.25) % 148500);
+    bal = Math.round(bal * 100) / 100;
+  }
+  return bal;
+}
+
+export function getPresetOrUniqueSenderBalance(
+  accountNumber: string,
+  name: string,
+  usedBalances: Set<number>
+): number {
+  const cleanAcc = (accountNumber || '').replace(/\D/g, '');
+  if (cleanAcc && SENDER_PRESET_BALANCES[cleanAcc] && !usedBalances.has(SENDER_PRESET_BALANCES[cleanAcc])) {
+    return SENDER_PRESET_BALANCES[cleanAcc];
+  }
+
+  let hash = 0;
+  const keyStr = (cleanAcc || accountNumber || '') + (name || '');
+  for (let i = 0; i < keyStr.length; i++) {
+    hash = (hash << 5) - hash + keyStr.charCodeAt(i);
+    hash |= 0;
+  }
+  const absHash = Math.abs(hash);
+  let bal = 3000 + (absHash % 85000) + ((absHash % 93) / 100);
+  bal = Math.round(bal * 100) / 100;
+
+  while (usedBalances.has(bal)) {
+    bal = 3000 + ((bal - 3000 + 517.50) % 90000);
+    bal = Math.round(bal * 100) / 100;
+  }
+  return bal;
+}
+
 export const INITIAL_CALLER_ACCOUNTS: CallerAccount[] = [
   {
     id: 'acc-dejene',
@@ -71,8 +165,8 @@ export const INITIAL_CALLER_ACCOUNTS: CallerAccount[] = [
     phoneNumber: '096 816 1314',
     accountNumber: '1000419524747',
     accountType: 'Saving Account-4747',
-    balance: 1848.54,
-    availableBalance: 1848.54,
+    balance: 18450.50, // Between 500 - 150000 ETB
+    availableBalance: 18450.50,
     role: 'receiver',
     simSlot: 1,
     lastTxId: 'tx-now-dejene',
@@ -106,9 +200,9 @@ export const INITIAL_CALLER_ACCOUNTS: CallerAccount[] = [
     phoneNumber: '+251 92 345 6789',
     accountNumber: '1000246810121',
     accountType: 'Saving Account-0121',
-    balance: 25430.00,
-    availableBalance: 25430.00,
-    role: 'sender',
+    balance: 52450.00, // Between 500 - 150000 ETB
+    availableBalance: 52450.00,
+    role: 'receiver',
     simSlot: 2,
     lastTxAmount: 50.00,
     lastTxDate: 'Sep 4',
@@ -357,14 +451,63 @@ export const PhoneCallService = {
     });
   },
 
+  /**
+   * Normalizes all accounts to strictly satisfy:
+   * 1. Every receiver bank account initial/current balance is in range [500.00 - 150000.00] ETB.
+   * 2. Every single account in the system has a unique, different balance (no duplicates).
+   */
+  normalizeAccounts(accounts: CallerAccount[]): CallerAccount[] {
+    const usedBalances = new Set<number>();
+
+    // Pass 1: Receivers (guarantee balance is in [500.00, 150000.00] and unique)
+    for (const acc of accounts) {
+      if (acc.role === 'receiver') {
+        let bal = typeof acc.balance === 'number' && !isNaN(acc.balance) 
+          ? Math.round(acc.balance * 100) / 100 
+          : 0;
+
+        // If outside 500-150000 or duplicate of already used balance
+        if (bal < 500 || bal > 150000 || usedBalances.has(bal)) {
+          bal = getPresetOrUniqueReceiverBalance(acc.accountNumber, acc.name, usedBalances);
+        }
+
+        acc.balance = bal;
+        acc.availableBalance = bal;
+        usedBalances.add(bal);
+      }
+    }
+
+    // Pass 2: Senders & other accounts (guarantee unique distinct balance)
+    for (const acc of accounts) {
+      if (acc.role !== 'receiver') {
+        let bal = typeof acc.balance === 'number' && !isNaN(acc.balance) 
+          ? Math.round(acc.balance * 100) / 100 
+          : 0;
+
+        if (bal <= 0 || usedBalances.has(bal)) {
+          bal = getPresetOrUniqueSenderBalance(acc.accountNumber, acc.name, usedBalances);
+        }
+
+        acc.balance = bal;
+        acc.availableBalance = bal;
+        usedBalances.add(bal);
+      }
+    }
+
+    return accounts;
+  },
+
   getCallerAccounts(): CallerAccount[] {
     try {
       const data = localStorage.getItem(STORAGE_KEY_CALLER_ACCOUNTS);
       if (data) {
         const parsed = JSON.parse(data);
         if (Array.isArray(parsed) && parsed.length > 0) {
+          // Normalize existing accounts to guarantee all receivers have 500-150000 and all accounts are distinct
+          const sanitized = this.normalizeAccounts(parsed);
+
           // Ensure recent transactions are sorted to the top
-          parsed.sort((a: CallerAccount, b: CallerAccount) => {
+          sanitized.sort((a: CallerAccount, b: CallerAccount) => {
             if (a.isNow && !b.isNow) return -1;
             if (!a.isNow && b.isNow) return 1;
             const tA = a.lastTxTimestamp || 0;
@@ -374,19 +517,28 @@ export const PhoneCallService = {
             if (!a.lastTxAmount && b.lastTxAmount) return 1;
             return 0;
           });
-          return parsed;
+
+          // Resave sanitized version so localStorage stays clean
+          try {
+            localStorage.setItem(STORAGE_KEY_CALLER_ACCOUNTS, JSON.stringify(sanitized));
+          } catch {}
+
+          return sanitized;
         }
       }
     } catch (e) {
       console.error('Failed to load caller accounts', e);
     }
-    return INITIAL_CALLER_ACCOUNTS;
+    const fresh = this.normalizeAccounts([...INITIAL_CALLER_ACCOUNTS]);
+    this.saveCallerAccounts(fresh);
+    return fresh;
   },
 
   saveCallerAccounts(accounts: CallerAccount[]): void {
     try {
-      localStorage.setItem(STORAGE_KEY_CALLER_ACCOUNTS, JSON.stringify(accounts));
-      window.dispatchEvent(new CustomEvent('caller_accounts_updated', { detail: { accounts } }));
+      const normalized = this.normalizeAccounts(accounts);
+      localStorage.setItem(STORAGE_KEY_CALLER_ACCOUNTS, JSON.stringify(normalized));
+      window.dispatchEvent(new CustomEvent('caller_accounts_updated', { detail: { accounts: normalized } }));
     } catch (e) {
       console.error('Failed to save caller accounts', e);
     }
@@ -460,19 +612,23 @@ export const PhoneCallService = {
       recipientPhone = '+251 9' + Math.floor(10000000 + Math.random() * 90000000);
     }
 
+    const currentBalances = new Set<number>(accounts.map(a => a.balance));
+
     // Find or add Sender
     let senderAcc = accounts.find(
       a => a.accountNumber === senderAccount || a.name.toLowerCase() === senderName.toLowerCase()
     );
     if (!senderAcc) {
+      const initialBal = getPresetOrUniqueSenderBalance(senderAccount, senderName, currentBalances);
+      const remainingBal = Math.max(0, initialBal - tx.amount);
       senderAcc = {
         id: 'acc-' + Math.random().toString(36).substring(2, 9),
         name: senderName,
         phoneNumber: senderPhone,
         accountNumber: senderAccount,
         accountType: 'Saving Account-' + senderAccount.slice(-4),
-        balance: Math.max(0, 10000 - tx.amount),
-        availableBalance: Math.max(0, 10000 - tx.amount),
+        balance: remainingBal,
+        availableBalance: remainingBal,
         role: 'sender',
         simSlot: 2,
         lastTxId: tx.id,
@@ -499,14 +655,16 @@ export const PhoneCallService = {
       a => a.accountNumber === recipientAccount || a.name.toLowerCase() === recipientName.toLowerCase()
     );
     if (!receiverAcc) {
+      // Receiver initial balance strictly between 500 and 150000 ETB
+      const initialBal = getPresetOrUniqueReceiverBalance(recipientAccount, recipientName, currentBalances);
       receiverAcc = {
         id: 'acc-' + Math.random().toString(36).substring(2, 9),
         name: recipientName,
         phoneNumber: recipientPhone,
         accountNumber: recipientAccount,
         accountType: 'Saving Account-' + recipientAccount.slice(-4),
-        balance: 348.54 + tx.amount,
-        availableBalance: 348.54 + tx.amount,
+        balance: initialBal,
+        availableBalance: initialBal,
         role: 'receiver',
         simSlot: 1,
         lastTxId: tx.id,
@@ -524,9 +682,17 @@ export const PhoneCallService = {
       receiverAcc.lastTxDate = dateStr;
       receiverAcc.lastTxTimestamp = txTimestamp;
       receiverAcc.isNow = true;
-      receiverAcc.balance = receiverAcc.balance + tx.amount;
+      // If current balance was below 500 or outside range, normalize it into [500, 150000]
+      if (receiverAcc.balance < 500 || receiverAcc.balance > 150000) {
+        receiverAcc.balance = getPresetOrUniqueReceiverBalance(receiverAcc.accountNumber, receiverAcc.name, currentBalances);
+      } else {
+        receiverAcc.balance = receiverAcc.balance + tx.amount;
+      }
       receiverAcc.availableBalance = receiverAcc.balance;
     }
+
+    // Normalize and ensure all accounts have different balances and receivers are 500-150000
+    this.normalizeAccounts(accounts);
 
     // Sort accounts so that recent transactions are always at the top
     accounts.sort((a, b) => {

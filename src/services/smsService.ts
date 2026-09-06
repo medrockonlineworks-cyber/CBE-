@@ -210,21 +210,21 @@ const INITIAL_DEMO_ACCOUNTS: SmsAccount[] = [
     accountNumber: '1000419524747',
     accountName: 'Leykun Jemaneh Ylma',
     bankName: 'Commercial Bank of Ethiopia',
-    balance: 298.54,
+    balance: 18450.50,
     lastUpdated: getRelativeDate(0, 12, 54), // Today at 12:54 PM (Recent / Now)
   },
   {
     accountNumber: '1000246810121',
     accountName: 'Selamawit Tekle Haile',
     bankName: 'Commercial Bank of Ethiopia',
-    balance: 4850.0,
+    balance: 52450.0,
     lastUpdated: getRelativeDate(1, 16, 20), // Yesterday at 4:20 PM
   },
   {
     accountNumber: '1000482918925',
     accountName: 'Kasahun Yematawork Lema',
     bankName: 'Commercial Bank of Ethiopia',
-    balance: 12450.0,
+    balance: 8760.0,
     lastUpdated: getRelativeDate(4, 11, 30), // 4 days ago (Last week)
   },
   {
@@ -352,8 +352,8 @@ const INITIAL_DEMO_MESSAGES: SmsMessage[] = [
     vat: 0.0,
     disasterRecovery: 0.0,
     totalDebited: 20.0,
-    balance: 298.54,
-    message: `Dear Leykun Jemaneh Ylma A debit transaction of ETB 20.0. has occurred on your account 1*********4747. Service charge of ETB 0.00 and VAT(15%) of 0.0 and Disaster Recovery(5%) of 0.00 with total of ETB20.00 .Your current balance is ETB298.54. Thanks for Banking with CBE.\nhttps://mbreceipt.cbe.com.et/v2-hfHCxGKNY8V0W9qoyCPX for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
+    balance: 18450.50,
+    message: `Dear Leykun Jemaneh Ylma A debit transaction of ETB 20.0. has occurred on your account 1*********4747. Service charge of ETB 0.00 and VAT(15%) of 0.0 and Disaster Recovery(5%) of 0.00 with total of ETB20.00 .Your current balance is ETB18,450.50. Thanks for Banking with CBE.\nhttps://mbreceipt.cbe.com.et/v2-hfHCxGKNY8V0W9qoyCPX for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
     receiptUrl: 'https://mbreceipt.cbe.com.et/v2-hfHCxGKNY8V0W9qoyCPX',
     feedbackUrl: DEFAULT_FEEDBACK_URL,
     timestamp: getRelativeDate(0, 12, 54), // Today at 12:54 PM (Recent / Now)

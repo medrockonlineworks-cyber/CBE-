@@ -111,7 +111,7 @@ const DEFAULT_ACCOUNTS: TruecallerBankAccount[] = [
     holderName: 'User Y (Abebe Bikila)',
     accountType: 'Savings Account',
     phone: '+251 92 104 0913',
-    balance: 244600.00,
+    balance: 74600.00,
     backgroundApp: 'tiktok',
     lastTransactionAt: '2026-09-05T14:35:00Z'
   },
@@ -182,7 +182,7 @@ const DEFAULT_ALERTS: TruecallerAlert[] = [
     holderName: 'User Y (Abebe Bikila)',
     counterpartyName: 'User X (Leykun Jemaneh)',
     counterpartyAccount: '1000419529165',
-    balanceAfter: 249100.00,
+    balanceAfter: 79100.00,
     timeString: 'Now',
     timestamp: new Date().toISOString(),
     summaryText: 'Account 1XXXXXXXX0913 credited with ETB 4,500.00.',

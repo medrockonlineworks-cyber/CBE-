@@ -179,8 +179,8 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
       role: 'admin' as const,
       status: 'active' as const,
       createdAt: '2026-01-01T08:00:00Z',
-      balance: 348.54,
-      availableBalance: 348.54
+      balance: 18450.50,
+      availableBalance: 18450.50
     };
   }, [currentUser]);
 
@@ -758,7 +758,7 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
 
   // Current active caller balance formatted
   const formattedBalance = useMemo(() => {
-    const bal = activeCallerAccount ? activeCallerAccount.balance : (user.balance ?? 348.54);
+    const bal = activeCallerAccount ? activeCallerAccount.balance : (user.balance ?? 18450.50);
     return bal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   }, [activeCallerAccount, user.balance]);
 
