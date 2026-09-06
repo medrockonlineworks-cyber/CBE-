@@ -12,6 +12,7 @@ import Receipt from './components/Receipt';
 import AdminPanel from './components/AdminPanel';
 import SmsPage from './pages/SmsPage';
 import TruecallerSimulator from './components/TruecallerSimulator';
+import PhoneCallApp from './components/PhoneCallApp';
 import { SmsService } from './services/smsService';
 import Navigation, { TabType } from './components/Navigation';
 import OfflineBanner from './components/OfflineBanner';
@@ -32,10 +33,11 @@ export default function App() {
       return null;
     }
   });
-  const [activeView, setActiveView] = useState<'auth' | 'main' | 'receipt' | 'admin' | 'sms' | 'truecaller'>(() => {
+  const [activeView, setActiveView] = useState<'auth' | 'main' | 'receipt' | 'admin' | 'sms' | 'truecaller' | 'phone'>(() => {
     if (typeof window !== 'undefined') {
       if (window.location.pathname === '/sms') return 'sms';
       if (window.location.pathname === '/truecaller') return 'truecaller';
+      if (window.location.pathname === '/phone') return 'phone';
     }
     return 'main';
   });
@@ -48,13 +50,13 @@ export default function App() {
   const navHistoryRef = useRef<{ view: string; tab: string }[]>([]);
 
   // Navigation pusher that keeps browser history in sync with Android back-button
-  const navigateTo = useCallback((view: 'auth' | 'main' | 'receipt' | 'admin' | 'sms' | 'truecaller', tab: TabType = activeTab) => {
+  const navigateTo = useCallback((view: 'auth' | 'main' | 'receipt' | 'admin' | 'sms' | 'truecaller' | 'phone', tab: TabType = activeTab) => {
     setActiveView(view);
     setActiveTab(tab);
     
     try {
       const stateObj = { view, tab };
-      const targetPath = view === 'sms' ? '/sms' : (view === 'truecaller' ? '/truecaller' : (window.location.pathname === '/sms' || window.location.pathname === '/truecaller' ? '/' : window.location.pathname));
+      const targetPath = view === 'sms' ? '/sms' : (view === 'truecaller' ? '/truecaller' : (view === 'phone' ? '/phone' : (window.location.pathname === '/sms' || window.location.pathname === '/truecaller' || window.location.pathname === '/phone' ? '/' : window.location.pathname)));
       window.history.pushState(stateObj, '', targetPath);
       navHistoryRef.current.push(stateObj);
     } catch {
@@ -71,8 +73,8 @@ export default function App() {
     } catch {}
 
     const handlePopState = (e: PopStateEvent) => {
-      // If user was on SMS or Truecaller view
-      if (activeView === 'sms' || activeView === 'truecaller') {
+      // If user was on SMS, Truecaller or Phone view
+      if (activeView === 'sms' || activeView === 'truecaller' || activeView === 'phone') {
         setActiveView('main');
         setActiveTab('profile');
       } else if (activeView === 'receipt') {
@@ -240,6 +242,7 @@ export default function App() {
             onOpenAdmin={() => navigateTo('admin', 'profile')}
             onOpenSmsSimulator={() => navigateTo('sms', 'profile')}
             onOpenTruecallerSimulator={() => navigateTo('truecaller', 'profile')}
+            onOpenPhoneApp={() => navigateTo('phone', 'profile')}
           />
         );
       default:
@@ -249,6 +252,7 @@ export default function App() {
             onNavigateToTab={(tab) => setActiveTab(tab)}
             onOpenSmsSimulator={() => navigateTo('sms', 'profile')}
             onOpenTruecallerSimulator={() => navigateTo('truecaller', 'profile')}
+            onOpenPhoneApp={() => navigateTo('phone', 'profile')}
           />
         );
     }
@@ -275,9 +279,11 @@ export default function App() {
             ? 'h-full overflow-hidden bg-[#121212]' 
             : activeView === 'truecaller'
               ? 'h-full overflow-hidden bg-slate-950'
-              : activeTab === 'home' || activeTab === 'history' 
-                ? 'overflow-hidden h-full' 
-                : 'overflow-y-auto bg-gray-50'
+              : activeView === 'phone'
+                ? 'h-full overflow-hidden bg-black'
+                : activeTab === 'home' || activeTab === 'history' 
+                  ? 'overflow-hidden h-full' 
+                  : 'overflow-y-auto bg-gray-50'
         }`}>
           
           {activeView === 'auth' && (
@@ -353,6 +359,15 @@ export default function App() {
 
           {activeView === 'truecaller' && (
             <TruecallerSimulator 
+              onBack={() => {
+                navigateTo('main', 'profile');
+              }}
+            />
+          )}
+
+          {activeView === 'phone' && (
+            <PhoneCallApp 
+              currentUser={currentUser}
               onBack={() => {
                 navigateTo('main', 'profile');
               }}

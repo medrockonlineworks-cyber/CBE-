@@ -29,7 +29,8 @@ import {
   Save,
   X,
   MessageSquare,
-  Smartphone
+  Smartphone,
+  PhoneCall
 } from 'lucide-react';
 import BankLogoModal from './BankLogoModal';
 import AppInstallPrompt from './AppInstallPrompt';
@@ -42,6 +43,7 @@ interface ProfileProps {
   onOpenAdmin: () => void;
   onOpenSmsSimulator?: () => void;
   onOpenTruecallerSimulator?: () => void;
+  onOpenPhoneApp?: () => void;
 }
 
 const LANGUAGES = [
@@ -51,7 +53,7 @@ const LANGUAGES = [
   { code: 'ti', label: 'Tigrinya (ትግርኛ)' }
 ];
 
-export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdmin, onOpenSmsSimulator, onOpenTruecallerSimulator }: ProfileProps) {
+export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdmin, onOpenSmsSimulator, onOpenTruecallerSimulator, onOpenPhoneApp }: ProfileProps) {
   const [activeLang, setActiveLang] = useState('en');
   const [showLogoModal, setShowLogoModal] = useState(false);
   const [customBankLogo, setCustomBankLogo] = useState<string | null>(() => LocalDb.getCustomBankLogo());
@@ -706,6 +708,44 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
                 }
               }}
               className="px-3 py-1.5 bg-[#0066FF] hover:bg-blue-600 active:scale-95 text-white rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 shadow-xs flex-shrink-0"
+            >
+              <span>Open</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Phone Call & USSD App (Requested Below Truecaller) */}
+          <div className="flex justify-between items-center border-t border-gray-50 pt-3">
+            <div className="flex items-center gap-3 min-w-0 pr-2">
+              <div className="p-2 bg-emerald-50 text-[#26d367] rounded-xl flex-shrink-0">
+                <PhoneCall className="w-5 h-5 text-emerald-600" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-bold text-gray-800">Phone Call &amp; USSD App</p>
+                  <span className="text-[9px] font-extrabold bg-[#26d367] text-white px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    New
+                  </span>
+                </div>
+                <p className="text-[10px] text-gray-400 truncate max-w-[200px] sm:max-w-xs">
+                  Recents dialer, contacts &amp; CBE *889# Mobile Banking
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              id="settings-phone-call-app-btn"
+              onClick={() => {
+                if (onOpenPhoneApp) {
+                  onOpenPhoneApp();
+                } else {
+                  try {
+                    window.history.pushState({ view: 'phone' }, '', '/phone');
+                    window.dispatchEvent(new PopStateEvent('popstate', { state: { view: 'phone' } }));
+                  } catch {}
+                }
+              }}
+              className="px-3 py-1.5 bg-[#26d367] hover:bg-[#20ba59] active:scale-95 text-white rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 shadow-xs flex-shrink-0"
             >
               <span>Open</span>
               <ChevronRight className="w-3.5 h-3.5" />

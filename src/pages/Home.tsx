@@ -28,7 +28,8 @@ import {
   ChevronRight,
   ExternalLink,
   MessageSquare,
-  Smartphone
+  Smartphone,
+  PhoneCall
 } from 'lucide-react';
 import { UserProfile, Transaction } from '../types';
 import { LocalDb } from '../lib/mockData';
@@ -41,6 +42,7 @@ interface HomeProps {
   onOpenAdmin?: () => void;
   onOpenSmsSimulator?: () => void;
   onOpenTruecallerSimulator?: () => void;
+  onOpenPhoneApp?: () => void;
 }
 
 export const Home: React.FC<HomeProps> = ({
@@ -51,6 +53,7 @@ export const Home: React.FC<HomeProps> = ({
   onOpenAdmin,
   onOpenSmsSimulator,
   onOpenTruecallerSimulator,
+  onOpenPhoneApp,
 }) => {
   // Fallback demo user if none passed in
   const currentUser: UserProfile = propUser || {
@@ -711,6 +714,22 @@ export const Home: React.FC<HomeProps> = ({
                 <Smartphone className="w-5 h-5 text-[#0066FF] mb-1.5" />
                 <p className="text-xs font-bold text-blue-950">Truecaller Alert</p>
                 <p className="text-[10px] text-blue-700">Screen Takeover</p>
+              </button>
+
+              <button
+                onClick={() => {
+                  setActiveModal(null);
+                  if (onOpenPhoneApp) {
+                    onOpenPhoneApp();
+                  } else {
+                    onNavigateToTab?.('profile');
+                  }
+                }}
+                className="p-3 bg-emerald-50 hover:bg-emerald-100/80 rounded-2xl text-left transition cursor-pointer border border-emerald-100"
+              >
+                <PhoneCall className="w-5 h-5 text-emerald-600 mb-1.5" />
+                <p className="text-xs font-bold text-emerald-950">Phone &amp; USSD</p>
+                <p className="text-[10px] text-emerald-700">*889# Mobile Banking</p>
               </button>
 
               {onOpenAdmin && (
