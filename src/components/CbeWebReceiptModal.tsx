@@ -139,6 +139,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
   // Retrieve admin uploaded logo and stamp from LocalDb and listen to updates
   const [adminLogo, setAdminLogo] = useState<string | null>(() => LocalDb.getCustomBankLogo());
   const [customStamp, setCustomStamp] = useState<string | null>(() => LocalDb.getCustomBankStamp());
+  const activeStamp = customStamp || OFFICIAL_CBE_STAMP_LOGO;
 
   useEffect(() => {
     const handleSyncLogo = () => {
@@ -306,7 +307,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
     };
   }, [transaction, smsMessage]);
 
-  const webReceiptUrl = `https://mbreceipt.cbe.com.et/v2-hfHCxG${receiptData.refId}`;
+  const webReceiptUrl = `https://receipt.cbe.com.et/v2-hfHCxG${receiptData.refId}`;
 
   // Generate QR Code for the web receipt
   useEffect(() => {
@@ -377,7 +378,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
           </button>
         </div>
 
-        {/* Address Bar Pill: mbreceipt.cbe.com.et with tune sliders & translate icon */}
+        {/* Address Bar Pill: receipt.cbe.com.et with tune sliders & translate icon */}
         <div 
           onClick={handleCopyLink}
           className="flex-1 max-w-[280px] sm:max-w-xs mx-1 bg-[#282a2d] hover:bg-[#323539] border border-[#3b3e44] rounded-full px-3 py-1 flex items-center justify-between cursor-pointer transition"
@@ -386,7 +387,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
           <div className="flex items-center gap-1.5 overflow-hidden">
             <SlidersHorizontal className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
             <span className="text-[14px] text-white font-sans tracking-tight truncate">
-              mbreceipt.cbe.com.et
+              receipt.cbe.com.et
             </span>
           </div>
           <div className="flex items-center gap-1.5 shrink-0 pl-1">
@@ -423,22 +424,22 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
           style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
         >
           
-          {/* Header Banner: Deep Royal CBE Purple (#781d77) with rounded top corners */}
-          <div className="bg-[#781d77] px-3.5 py-2.5 sm:px-4 sm:py-3 flex items-center gap-3 rounded-t-sm">
-            {/* Admin Uploaded Logo or Official Golden Emblem */}
-            <div className="w-12 h-12 shrink-0 flex items-center justify-center">
-              <CbeLogo className="w-12 h-12 object-contain" src={adminLogo} />
+          {/* Header Banner: Deep Royal CBE Purple (#781d77) with rounded top corners matching Screenshot_20260904-124119.png */}
+          <div className="bg-[#781d77] px-3 py-3 sm:px-3.5 sm:py-3.5 rounded-t-sm flex items-center">
+            {/* Admin Uploaded Logo or Official Golden Emblem positioned on left */}
+            <div className="w-11 h-11 sm:w-12 sm:h-12 shrink-0 flex items-center justify-center mr-1 sm:mr-2">
+              <CbeLogo className="w-11 h-11 sm:w-12 sm:h-12 object-contain" src={adminLogo} />
             </div>
 
-            {/* Header Text: Exact font styling and weights from Screenshot_20260904-124119.png */}
-            <div className="flex-1 min-w-0">
-              <h1 className="text-white font-bold text-[18px] sm:text-[20px] leading-tight tracking-tight">
+            {/* Header Text: Single line title, centered with respect to remaining header width */}
+            <div className="flex-1 min-w-0 text-center select-none">
+              <h1 className="text-white font-bold text-[15.5px] sm:text-[17.5px] leading-tight tracking-tight whitespace-nowrap">
                 Commercial Bank of Ethiopia
               </h1>
-              <p className="text-white text-[13.5px] sm:text-[14px] font-normal leading-tight mt-0.5">
+              <p className="text-white text-[13px] sm:text-[13.5px] font-normal leading-tight mt-1 whitespace-nowrap">
                 Customer Receipt
               </p>
-              <div className="text-[#38d368] font-extrabold text-[10.5px] sm:text-[11px] tracking-[0.16em] uppercase mt-0.5">
+              <div className="text-[#38d368] font-bold text-[10.5px] sm:text-[11px] tracking-[0.16em] uppercase mt-1 whitespace-nowrap">
                 Status: COMPLETED
               </div>
             </div>
@@ -676,25 +677,25 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                 </span>
               </div>
 
-              {/* Authentic Overlaid Stamp: Rendered ONLY if an admin has uploaded a stamp */}
-              {customStamp && (
+              {/* Authentic Overlaid Stamp: Defaults to official CBE purple stamp, or admin uploaded stamp */}
+              {activeStamp && (
                 <div 
                   className="absolute pointer-events-none select-none z-10 shrink-0"
                   style={{
-                    top: '53%',
-                    left: '43%',
+                    top: '52%',
+                    left: '47%',
                     transform: 'translate(-50%, -50%)',
-                    width: '195px',
-                    height: '195px',
-                    minWidth: '195px',
-                    minHeight: '195px',
-                    maxWidth: '195px',
-                    maxHeight: '195px',
+                    width: 'clamp(215px, 66%, 260px)',
+                    height: 'clamp(215px, 66%, 260px)',
+                    minWidth: '215px',
+                    minHeight: '215px',
+                    maxWidth: '260px',
+                    maxHeight: '260px',
                     aspectRatio: '1 / 1'
                   }}
                 >
                   <img
-                    src={customStamp}
+                    src={activeStamp}
                     alt="Official Bank Stamp"
                     className="w-full h-full object-contain pointer-events-none select-none"
                     style={{
