@@ -12,8 +12,23 @@ import {
   MoreVertical, 
   Check, 
   SlidersHorizontal,
-  Copy
+  Copy,
+  RotateCw,
+  Shield,
+  Star,
+  Download,
+  Upload,
+  X,
+  Smartphone,
+  Globe,
+  CheckCircle2,
+  Trash2,
+  Share2,
+  ExternalLink,
+  RefreshCw
 } from 'lucide-react';
+
+export type BrowserHeaderType = 'chrome' | 'phoenix' | 'opera' | 'samsung' | 'safari';
 
 interface CbeWebReceiptModalProps {
   transaction?: Transaction | null;
@@ -135,6 +150,17 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState(false);
+
+  // Browser bar customization state
+  const [browserType, setBrowserType] = useState<BrowserHeaderType>(() => {
+    return (localStorage.getItem('cbe_receipt_browser_type') as BrowserHeaderType) || 'chrome';
+  });
+  const [tabCount, setTabCount] = useState<string>(() => {
+    return localStorage.getItem('cbe_receipt_tab_count') || '80';
+  });
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const stampFileInputRef = useRef<HTMLInputElement>(null);
 
   // Retrieve admin uploaded logo and stamp from LocalDb and listen to updates
   const [adminLogo, setAdminLogo] = useState<string | null>(() => LocalDb.getCustomBankLogo());
@@ -353,93 +379,483 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
     setTimeout(() => setCopiedUrl(false), 2500);
   };
 
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    setTimeout(() => {
+      setIsRefreshing(false);
+    }, 500);
+  };
+
+  const handleSelectBrowser = (type: BrowserHeaderType) => {
+    setBrowserType(type);
+    localStorage.setItem('cbe_receipt_browser_type', type);
+  };
+
+  const handleSelectTabCount = (count: string) => {
+    const clean = count.replace(/[^0-9+]/g, '').slice(0, 4) || '1';
+    setTabCount(clean);
+    localStorage.setItem('cbe_receipt_tab_count', clean);
+  };
+
+  const handleUploadStampFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      if (dataUrl) {
+        LocalDb.setCustomBankStamp(dataUrl);
+        setCustomStamp(dataUrl);
+        setIsMenuOpen(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleResetStamp = () => {
+    LocalDb.setCustomBankStamp(null);
+    setCustomStamp(null);
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex flex-col items-center justify-start overflow-hidden animate-fade-in">
       
-      {/* 1. Mobile Browser Chrome Bar at Top (matches actual mobile browser screen Screenshot_20260904-124119.png) */}
-      <header className="w-full bg-[#121315] text-[#e3e3e3] border-b border-[#282a2e] px-3 py-2 flex items-center justify-between gap-2 shadow-md flex-shrink-0 z-10">
+      {/* Hidden file input for uploading bank stamp directly */}
+      <input 
+        ref={stampFileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleUploadStampFile}
+      />
+
+      {/* 1. Mobile Browser Top Bar (Configurable in 3-dot menu: Chrome, Phoenix, Opera, Samsung, Safari) */}
+      <header 
+        className={`w-full px-3 py-2 flex items-center justify-between gap-2 shadow-md flex-shrink-0 z-30 transition-colors ${
+          browserType === 'phoenix' 
+            ? 'bg-[#131720] text-[#e0e5ee] border-b border-[#202735]' 
+            : browserType === 'opera'
+            ? 'bg-[#161616] text-[#e5e5e5] border-b border-neutral-800'
+            : browserType === 'samsung'
+            ? 'bg-[#181920] text-[#e2e4ea] border-b border-neutral-800'
+            : browserType === 'safari'
+            ? 'bg-[#1c1c1e] text-[#f2f2f7] border-b border-neutral-800'
+            : 'bg-[#121315] text-[#e3e3e3] border-b border-[#282a2e]'
+        }`}
+      >
+        {/* Left Side Controls */}
         <div className="flex items-center gap-1.5">
-          {/* Back button to close modal */}
+          {/* Back button */}
           <button 
             onClick={onClose}
             aria-label="Back"
-            className="p-1.5 rounded-full hover:bg-neutral-800 text-neutral-300 hover:text-white transition active:scale-95"
+            className={`p-1.5 rounded-full transition active:scale-95 ${
+              browserType === 'safari' ? 'text-blue-400 hover:bg-neutral-800' : 'text-neutral-300 hover:text-white hover:bg-neutral-800'
+            }`}
             title="Return to App"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          {/* Home button */}
-          <button 
-            onClick={onClose}
-            aria-label="Home"
-            className="p-1.5 rounded-full hover:bg-neutral-800 text-neutral-300 hover:text-white transition"
-          >
-            <Home className="w-5 h-5" />
-          </button>
+
+          {/* Browser Specific Branding / Home Button */}
+          {browserType === 'phoenix' ? (
+            <div 
+              onClick={() => setIsMenuOpen(true)}
+              className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-400/60 flex items-center justify-center text-emerald-400 text-xs font-black select-none cursor-pointer shadow-xs"
+              title="Phoenix Browser (Phonex)"
+            >
+              P
+            </div>
+          ) : browserType === 'opera' ? (
+            <div 
+              onClick={() => setIsMenuOpen(true)}
+              className="w-5.5 h-5.5 rounded-full bg-[#ff1b2d] flex items-center justify-center text-white text-[11.5px] font-black shadow-sm select-none cursor-pointer"
+              title="Opera / Opera Mini"
+            >
+              O
+            </div>
+          ) : browserType === 'safari' ? (
+            null
+          ) : (
+            <button 
+              onClick={onClose}
+              aria-label="Home"
+              className="p-1.5 rounded-full hover:bg-neutral-800 text-neutral-300 hover:text-white transition"
+              title="Home"
+            >
+              <Home className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
-        {/* Address Bar Pill: receipt.cbe.com.et with tune sliders & translate icon */}
+        {/* Address Bar Pill */}
         <div 
           onClick={handleCopyLink}
-          className="flex-1 max-w-[280px] sm:max-w-xs mx-1 bg-[#282a2d] hover:bg-[#323539] border border-[#3b3e44] rounded-full px-3 py-1 flex items-center justify-between cursor-pointer transition"
+          className={`flex-1 max-w-[285px] sm:max-w-xs mx-1 px-3 py-1 flex items-center justify-between cursor-pointer transition select-none ${
+            browserType === 'phoenix'
+              ? 'bg-[#1c222c] hover:bg-[#242b37] border border-emerald-500/35 rounded-full'
+              : browserType === 'opera'
+              ? 'bg-[#252525] hover:bg-[#2f2f2f] border border-neutral-700 rounded-full'
+              : browserType === 'samsung'
+              ? 'bg-[#242632] hover:bg-[#2d303f] border border-neutral-700/60 rounded-full'
+              : browserType === 'safari'
+              ? 'bg-[#2c2c2e] hover:bg-[#38383a] border border-neutral-700 rounded-xl py-1.5'
+              : 'bg-[#282a2d] hover:bg-[#323539] border border-[#3b3e44] rounded-full'
+          }`}
           title="Click to copy receipt URL"
         >
+          {/* Left inside pill */}
           <div className="flex items-center gap-1.5 overflow-hidden">
-            <SlidersHorizontal className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
-            <span className="text-[14px] text-white font-sans tracking-tight truncate">
+            {browserType === 'phoenix' ? (
+              <Shield className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            ) : browserType === 'opera' || browserType === 'samsung' ? (
+              <Lock className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+            ) : browserType === 'safari' ? (
+              <span className="text-neutral-400 text-xs font-semibold shrink-0">aA</span>
+            ) : (
+              <SlidersHorizontal className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+            )}
+
+            {browserType === 'safari' && (
+              <Lock className="w-3 h-3 text-neutral-400 shrink-0 ml-0.5" />
+            )}
+
+            <span className="text-[13.5px] sm:text-[14px] text-white font-sans tracking-tight truncate">
               receipt.cbe.com.et
             </span>
           </div>
+
+          {/* Right inside pill */}
           <div className="flex items-center gap-1.5 shrink-0 pl-1">
-            {/* Google Translate G-文 icon */}
-            <div className="w-4 h-4 rounded-xs border border-neutral-400 flex items-center justify-center text-[9px] font-bold text-neutral-300 select-none">
-              G
-            </div>
-            {copiedUrl && (
+            {copiedUrl ? (
               <span className="text-[10px] text-emerald-400 font-bold animate-pulse">Copied</span>
+            ) : browserType === 'phoenix' ? (
+              <RotateCw 
+                onClick={(e) => { e.stopPropagation(); handleRefresh(); }} 
+                className={`w-3.5 h-3.5 text-emerald-400/80 hover:text-emerald-300 transition ${isRefreshing ? 'animate-spin' : ''}`} 
+              />
+            ) : browserType === 'opera' || browserType === 'safari' ? (
+              <RotateCw 
+                onClick={(e) => { e.stopPropagation(); handleRefresh(); }} 
+                className={`w-3.5 h-3.5 text-neutral-400 hover:text-white transition ${isRefreshing ? 'animate-spin' : ''}`} 
+              />
+            ) : browserType === 'samsung' ? (
+              <Star className="w-3.5 h-3.5 text-amber-400 shrink-0 fill-amber-400/20" />
+            ) : (
+              <div className="w-4 h-4 rounded-xs border border-neutral-400 flex items-center justify-center text-[9px] font-bold text-neutral-300 select-none">
+                G
+              </div>
             )}
           </div>
         </div>
 
-        {/* Browser Tab Count Badge (80) & 3-dots Menu */}
+        {/* Browser Tab Count Badge & 3-dots Menu */}
         <div className="flex items-center gap-1">
-          <div className="w-5.5 h-5.5 border-[1.8px] border-neutral-300 rounded-[5px] flex items-center justify-center text-[10.5px] font-bold text-neutral-200 select-none">
-            80
+          {/* Extra browser action icons */}
+          {browserType === 'phoenix' && (
+            <button
+              onClick={() => setIsMenuOpen(true)}
+              className="p-1 text-neutral-300 hover:text-white transition"
+              title="Phoenix Downloads & Settings"
+            >
+              <Download className="w-4 h-4" />
+            </button>
+          )}
+
+          {browserType === 'opera' && (
+            <div className="p-1 text-[#ff1b2d]" title="Opera Ad Blocker Enabled">
+              <Shield className="w-4 h-4 fill-[#ff1b2d]/20" />
+            </div>
+          )}
+
+          {browserType === 'samsung' && (
+            <button
+              onClick={handleRefresh}
+              className={`p-1 text-neutral-300 hover:text-white transition ${isRefreshing ? 'animate-spin' : ''}`}
+              title="Refresh"
+            >
+              <RotateCw className="w-4 h-4" />
+            </button>
+          )}
+
+          {/* Tab Count Box */}
+          <div 
+            onClick={() => setIsMenuOpen(true)}
+            className={`cursor-pointer transition select-none flex items-center justify-center font-bold ${
+              browserType === 'phoenix'
+                ? 'w-5.5 h-5.5 rounded-full border-[1.8px] border-emerald-400 bg-emerald-500/20 text-emerald-300 text-[10px]'
+                : browserType === 'safari'
+                ? 'w-5.5 h-5.5 border-[1.8px] border-blue-400 rounded-sm text-blue-400 text-[10px]'
+                : 'w-5.5 h-5.5 border-[1.8px] border-neutral-300 rounded-[5px] text-neutral-200 text-[10.5px]'
+            }`}
+            title="Tabs switcher (Click to configure)"
+          >
+            {tabCount}
           </div>
+
+          {/* 3-dots Button: Opens the change system menu */}
           <button 
-            onClick={handleCopyLink}
-            aria-label="More options"
-            className="p-1 rounded-full hover:bg-neutral-800 text-neutral-300 hover:text-white transition"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label="Browser options & style switcher"
+            className={`p-1 rounded-full hover:bg-neutral-800 transition active:scale-95 ${
+              isMenuOpen 
+                ? 'bg-neutral-800 text-white ring-2 ring-emerald-500/50' 
+                : browserType === 'safari'
+                ? 'text-blue-400 hover:text-blue-300'
+                : 'text-neutral-300 hover:text-white'
+            }`}
+            title="Change browser type & options"
           >
             <MoreVertical className="w-5 h-5" />
           </button>
         </div>
       </header>
 
+      {/* 3-Dot Options & Browser Style Switcher Menu Popup */}
+      {isMenuOpen && (
+        <>
+          {/* Backdrop dismiss */}
+          <div 
+            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-2xs animate-fade-in"
+            onClick={() => setIsMenuOpen(false)}
+          />
+
+          {/* Floating Options Card */}
+          <div 
+            className="fixed top-12 sm:top-14 right-2 sm:right-4 z-50 w-84 max-w-[calc(100vw-16px)] bg-[#1c1f26] text-white rounded-2xl shadow-2xl border border-neutral-700/90 p-4 animate-in fade-in zoom-in-95 duration-150 select-none"
+            style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-700/80 mb-3">
+              <div className="flex items-center gap-2">
+                <Globe className="w-4.5 h-4.5 text-emerald-400" />
+                <h3 className="text-[14px] font-bold tracking-tight">Browser Header Type</h3>
+              </div>
+              <button 
+                onClick={() => setIsMenuOpen(false)}
+                className="p-1 rounded-full hover:bg-neutral-800 text-neutral-400 hover:text-white transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Browser Type Selector */}
+            <div className="space-y-1.5 mb-4">
+              <p className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-2">
+                Choose Browser Header Type
+              </p>
+
+              {/* 1. Google Chrome */}
+              <button
+                type="button"
+                onClick={() => handleSelectBrowser('chrome')}
+                className={`w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition ${
+                  browserType === 'chrome'
+                    ? 'bg-emerald-500/20 border border-emerald-400/80 text-white'
+                    : 'bg-neutral-800/60 hover:bg-neutral-800 border border-neutral-700/50 text-neutral-300'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-neutral-900 flex items-center justify-center border border-neutral-700">
+                    <SlidersHorizontal className="w-4 h-4 text-emerald-400" />
+                  </div>
+                  <div>
+                    <div className="text-[13px] font-bold">Google Chrome</div>
+                    <div className="text-[10px] text-neutral-400">Android Chrome dark bar</div>
+                  </div>
+                </div>
+                {browserType === 'chrome' && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+              </button>
+
+              {/* 2. Phoenix Browser (Phonex) */}
+              <button
+                type="button"
+                onClick={() => handleSelectBrowser('phoenix')}
+                className={`w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition ${
+                  browserType === 'phoenix'
+                    ? 'bg-emerald-500/20 border border-emerald-400/80 text-white'
+                    : 'bg-neutral-800/60 hover:bg-neutral-800 border border-neutral-700/50 text-neutral-300'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-950/80 flex items-center justify-center border border-emerald-500/50 text-emerald-400 font-black text-xs">
+                    P
+                  </div>
+                  <div>
+                    <div className="text-[13px] font-bold">Phoenix Browser (Phonex)</div>
+                    <div className="text-[10px] text-neutral-400">Popular on Tecno, Infinix & Itel</div>
+                  </div>
+                </div>
+                {browserType === 'phoenix' && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+              </button>
+
+              {/* 3. Opera / Opera Mini */}
+              <button
+                type="button"
+                onClick={() => handleSelectBrowser('opera')}
+                className={`w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition ${
+                  browserType === 'opera'
+                    ? 'bg-emerald-500/20 border border-emerald-400/80 text-white'
+                    : 'bg-neutral-800/60 hover:bg-neutral-800 border border-neutral-700/50 text-neutral-300'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-red-950/80 flex items-center justify-center border border-red-500/50 text-red-400 font-black text-xs">
+                    O
+                  </div>
+                  <div>
+                    <div className="text-[13px] font-bold">Opera / Opera Mini</div>
+                    <div className="text-[10px] text-neutral-400">Red Opera icon & ad-blocker</div>
+                  </div>
+                </div>
+                {browserType === 'opera' && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+              </button>
+
+              {/* 4. Samsung Internet */}
+              <button
+                type="button"
+                onClick={() => handleSelectBrowser('samsung')}
+                className={`w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition ${
+                  browserType === 'samsung'
+                    ? 'bg-emerald-500/20 border border-emerald-400/80 text-white'
+                    : 'bg-neutral-800/60 hover:bg-neutral-800 border border-neutral-700/50 text-neutral-300'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-neutral-900 flex items-center justify-center border border-neutral-700 text-blue-400">
+                    <Star className="w-4 h-4 fill-amber-400/30 text-amber-400" />
+                  </div>
+                  <div>
+                    <div className="text-[13px] font-bold">Samsung Internet</div>
+                    <div className="text-[10px] text-neutral-400">Samsung Galaxy One UI browser</div>
+                  </div>
+                </div>
+                {browserType === 'samsung' && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+              </button>
+
+              {/* 5. Safari (iOS) */}
+              <button
+                type="button"
+                onClick={() => handleSelectBrowser('safari')}
+                className={`w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition ${
+                  browserType === 'safari'
+                    ? 'bg-emerald-500/20 border border-emerald-400/80 text-white'
+                    : 'bg-neutral-800/60 hover:bg-neutral-800 border border-neutral-700/50 text-neutral-300'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-blue-950/80 flex items-center justify-center border border-blue-500/50 text-blue-400 font-bold text-xs">
+                    iOS
+                  </div>
+                  <div>
+                    <div className="text-[13px] font-bold">Safari (Apple iOS)</div>
+                    <div className="text-[10px] text-neutral-400">Minimal Apple Safari style</div>
+                  </div>
+                </div>
+                {browserType === 'safari' && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+              </button>
+            </div>
+
+            {/* Tab Counter Selector */}
+            <div className="mb-4 pt-3 border-t border-neutral-700/80">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">
+                  Tab Counter Badge
+                </span>
+                <span className="text-xs text-emerald-400 font-mono font-bold">[{tabCount}]</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                {['80', '1', '4', '12', '99+'].map((num) => (
+                  <button
+                    key={num}
+                    type="button"
+                    onClick={() => handleSelectTabCount(num)}
+                    className={`flex-1 py-1 rounded-lg text-xs font-bold transition ${
+                      tabCount === num
+                        ? 'bg-emerald-500 text-black shadow-xs'
+                        : 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300'
+                    }`}
+                  >
+                    {num}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="pt-3 border-t border-neutral-700/80 space-y-1.5">
+              <button
+                type="button"
+                onClick={() => { handleCopyLink(); setIsMenuOpen(false); }}
+                className="w-full px-3 py-2 rounded-xl bg-neutral-800/60 hover:bg-neutral-800 text-neutral-200 hover:text-white text-xs font-medium flex items-center gap-2 transition"
+              >
+                <Copy className="w-3.5 h-3.5 text-neutral-400" />
+                <span>Copy Receipt URL (receipt.cbe.com.et)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { handleRefresh(); setIsMenuOpen(false); }}
+                className="w-full px-3 py-2 rounded-xl bg-neutral-800/60 hover:bg-neutral-800 text-neutral-200 hover:text-white text-xs font-medium flex items-center gap-2 transition"
+              >
+                <RefreshCw className="w-3.5 h-3.5 text-neutral-400" />
+                <span>Refresh / Reload Receipt Page</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { stampFileInputRef.current?.click(); }}
+                className="w-full px-3 py-2 rounded-xl bg-neutral-800/60 hover:bg-neutral-800 text-neutral-200 hover:text-white text-xs font-medium flex items-center justify-between transition"
+              >
+                <span className="flex items-center gap-2">
+                  <Upload className="w-3.5 h-3.5 text-neutral-400" />
+                  <span>Upload Custom Bank Stamp</span>
+                </span>
+                <span className="text-[10px] text-emerald-400 font-semibold">Image</span>
+              </button>
+
+              {customStamp && (
+                <button
+                  type="button"
+                  onClick={handleResetStamp}
+                  className="w-full px-3 py-2 rounded-xl bg-red-950/40 hover:bg-red-950/70 text-red-300 text-xs font-medium flex items-center gap-2 transition"
+                >
+                  <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                  <span>Reset Stamp to CBE Official</span>
+                </button>
+              )}
+            </div>
+
+          </div>
+        </>
+      )}
+
       {/* 2. Scrollable Receipt Content Canvas */}
       <main className="w-full flex-1 overflow-y-auto px-2 pt-2.5 pb-24 bg-[#f0f2f5] flex justify-center">
         <div 
           ref={receiptCardRef}
-          className="bg-white w-full max-w-[460px] shadow-sm border border-gray-200 rounded-sm overflow-hidden text-gray-900 self-start"
+          className={`bg-white w-full max-w-[460px] shadow-sm border border-gray-200 rounded-sm overflow-hidden text-gray-900 self-start transition-opacity ${
+            isRefreshing ? 'opacity-40 scale-[0.99]' : 'opacity-100'
+          }`}
           style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
         >
           
-          {/* Header Banner: Deep Royal CBE Purple (#781d77) with rounded top corners matching Screenshot_20260904-124119.png */}
-          <div className="bg-[#781d77] px-3 py-3 sm:px-3.5 sm:py-3.5 rounded-t-sm flex items-center">
+          {/* Header Banner: Deep Royal CBE Purple (#781d77) matching IMG_20260906_111256_173.png */}
+          <div className="bg-[#781d77] relative px-3 py-3.5 sm:px-4 sm:py-4 rounded-t-sm flex items-center justify-center min-h-[76px] overflow-hidden">
             {/* Admin Uploaded Logo or Official Golden Emblem positioned on left */}
-            <div className="w-11 h-11 sm:w-12 sm:h-12 shrink-0 flex items-center justify-center mr-1 sm:mr-2">
+            <div className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-12 sm:h-12 shrink-0 flex items-center justify-center select-none">
               <CbeLogo className="w-11 h-11 sm:w-12 sm:h-12 object-contain" src={adminLogo} />
             </div>
 
-            {/* Header Text: Single line title, centered with respect to remaining header width */}
-            <div className="flex-1 min-w-0 text-center select-none">
-              <h1 className="text-white font-bold text-[15.5px] sm:text-[17.5px] leading-tight tracking-tight whitespace-nowrap">
+            {/* Header Text: Exact font size, weights, colors and centered alignment matching IMG_20260906_111256_173.png */}
+            <div className="text-center px-12 sm:px-14 select-none">
+              <h1 className="text-white font-bold text-[17.5px] sm:text-[19px] leading-tight tracking-tight whitespace-nowrap">
                 Commercial Bank of Ethiopia
               </h1>
-              <p className="text-white text-[13px] sm:text-[13.5px] font-normal leading-tight mt-1 whitespace-nowrap">
+              <p className="text-white text-[13.5px] sm:text-[14px] font-normal leading-tight mt-1 whitespace-nowrap">
                 Customer Receipt
               </p>
-              <div className="text-[#38d368] font-bold text-[10.5px] sm:text-[11px] tracking-[0.16em] uppercase mt-1 whitespace-nowrap">
+              <div className="text-[#86efac] font-bold text-[10.5px] sm:text-[11px] tracking-[0.16em] uppercase mt-1 whitespace-nowrap">
                 Status: COMPLETED
               </div>
             </div>
