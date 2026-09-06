@@ -35,6 +35,8 @@ export interface CallerAccount {
   lastTxId?: string;
   lastTxAmount?: number;
   lastTxDate?: string;
+  lastTxTimestamp?: number;
+  isNow?: boolean;
   avatarColor?: string;
   note?: string;
 }
@@ -46,30 +48,40 @@ const STORAGE_KEY_ACTIVE_CALLER_ID = 'tana_active_caller_account_id_v1';
 
 export const INITIAL_CALLER_ACCOUNTS: CallerAccount[] = [
   {
-    id: 'acc-leykun',
-    name: 'Leykun Jemaneh Ylma',
-    phoneNumber: '096 816 1314',
-    accountNumber: '1000419524747',
-    accountType: 'Saving Account-4747',
-    balance: 348.54,
-    availableBalance: 348.54,
-    role: 'receiver',
-    simSlot: 1,
-    avatarColor: 'from-blue-600 to-indigo-700',
-    note: 'CBE Mobile Banking (Receiver)'
-  },
-  {
     id: 'acc-dejene',
     name: 'Dejene Buta Feye',
     phoneNumber: '+251 97 873 0420',
     accountNumber: '1000284758657',
     accountType: 'Saving Account-8657',
-    balance: 12450.00,
-    availableBalance: 12450.00,
+    balance: 10432.00,
+    availableBalance: 10432.00,
     role: 'sender',
     simSlot: 2,
+    lastTxId: 'tx-now-dejene',
+    lastTxAmount: 1500.00,
+    lastTxDate: 'Today',
+    lastTxTimestamp: Date.now(),
+    isNow: true,
     avatarColor: 'from-emerald-600 to-teal-700',
-    note: 'Sender of +50.00 ETB (abaye)'
+    note: 'Sender of -1500.00 ETB'
+  },
+  {
+    id: 'acc-leykun',
+    name: 'Leykun Jemaneh Ylma',
+    phoneNumber: '096 816 1314',
+    accountNumber: '1000419524747',
+    accountType: 'Saving Account-4747',
+    balance: 1848.54,
+    availableBalance: 1848.54,
+    role: 'receiver',
+    simSlot: 1,
+    lastTxId: 'tx-now-dejene',
+    lastTxAmount: 1500.00,
+    lastTxDate: 'Today',
+    lastTxTimestamp: Date.now() - 500,
+    isNow: true,
+    avatarColor: 'from-blue-600 to-indigo-700',
+    note: 'Receiver of +1500.00 ETB'
   },
   {
     id: 'acc-kasahun',
@@ -81,6 +93,10 @@ export const INITIAL_CALLER_ACCOUNTS: CallerAccount[] = [
     availableBalance: 8760.00,
     role: 'sender',
     simSlot: 1,
+    lastTxAmount: 250.00,
+    lastTxDate: 'Yesterday',
+    lastTxTimestamp: Date.now() - 86400000,
+    isNow: false,
     avatarColor: 'from-purple-600 to-pink-700',
     note: 'Payer / Sender'
   },
@@ -94,6 +110,10 @@ export const INITIAL_CALLER_ACCOUNTS: CallerAccount[] = [
     availableBalance: 25430.00,
     role: 'sender',
     simSlot: 2,
+    lastTxAmount: 50.00,
+    lastTxDate: 'Sep 4',
+    lastTxTimestamp: Date.now() - 172800000,
+    isNow: false,
     avatarColor: 'from-amber-600 to-orange-700',
     note: 'Business Contact'
   }
@@ -343,6 +363,17 @@ export const PhoneCallService = {
       if (data) {
         const parsed = JSON.parse(data);
         if (Array.isArray(parsed) && parsed.length > 0) {
+          // Ensure recent transactions are sorted to the top
+          parsed.sort((a: CallerAccount, b: CallerAccount) => {
+            if (a.isNow && !b.isNow) return -1;
+            if (!a.isNow && b.isNow) return 1;
+            const tA = a.lastTxTimestamp || 0;
+            const tB = b.lastTxTimestamp || 0;
+            if (tA !== tB) return tB - tA;
+            if (a.lastTxAmount && !b.lastTxAmount) return -1;
+            if (!a.lastTxAmount && b.lastTxAmount) return 1;
+            return 0;
+          });
           return parsed;
         }
       }
@@ -366,7 +397,7 @@ export const PhoneCallService = {
       const id = localStorage.getItem(STORAGE_KEY_ACTIVE_CALLER_ID);
       if (id) return id;
     } catch {}
-    return 'acc-leykun';
+    return 'acc-dejene';
   },
 
   setActiveCallerAccountId(id: string): void {
@@ -388,8 +419,14 @@ export const PhoneCallService = {
   // Called automatically whenever any transaction is executed in CBE Banking
   syncTransactionToCallerApp(tx: Transaction): void {
     const accounts = this.getCallerAccounts();
-    const dateStr = new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'numeric' });
-    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const txTimestamp = tx.createdAt ? new Date(tx.createdAt).getTime() : Date.now();
+    const dateStr = new Date(txTimestamp).toLocaleDateString('en-GB', { day: 'numeric', month: 'numeric' });
+    const timeStr = new Date(txTimestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    // Reset previous isNow flags so only the newest transaction has isNow=true
+    for (const acc of accounts) {
+      acc.isNow = false;
+    }
 
     // 1. Resolve Sender
     const senderName = (tx.senderName || 'Sender').trim();
@@ -441,14 +478,18 @@ export const PhoneCallService = {
         lastTxId: tx.id,
         lastTxAmount: tx.amount,
         lastTxDate: dateStr,
+        lastTxTimestamp: txTimestamp,
+        isNow: true,
         avatarColor: 'from-amber-600 to-orange-700',
         note: `CBE Transaction Sender (${tx.amount} ETB)`
       };
-      accounts.push(senderAcc);
+      accounts.unshift(senderAcc);
     } else {
       senderAcc.lastTxId = tx.id;
       senderAcc.lastTxAmount = tx.amount;
       senderAcc.lastTxDate = dateStr;
+      senderAcc.lastTxTimestamp = txTimestamp;
+      senderAcc.isNow = true;
       senderAcc.balance = Math.max(0, senderAcc.balance - tx.amount);
       senderAcc.availableBalance = senderAcc.balance;
     }
@@ -471,17 +512,33 @@ export const PhoneCallService = {
         lastTxId: tx.id,
         lastTxAmount: tx.amount,
         lastTxDate: dateStr,
+        lastTxTimestamp: txTimestamp,
+        isNow: true,
         avatarColor: 'from-blue-600 to-indigo-700',
         note: `CBE Transaction Receiver (${tx.amount} ETB)`
       };
-      accounts.push(receiverAcc);
+      accounts.unshift(receiverAcc);
     } else {
       receiverAcc.lastTxId = tx.id;
       receiverAcc.lastTxAmount = tx.amount;
       receiverAcc.lastTxDate = dateStr;
+      receiverAcc.lastTxTimestamp = txTimestamp;
+      receiverAcc.isNow = true;
       receiverAcc.balance = receiverAcc.balance + tx.amount;
       receiverAcc.availableBalance = receiverAcc.balance;
     }
+
+    // Sort accounts so that recent transactions are always at the top
+    accounts.sort((a, b) => {
+      if (a.isNow && !b.isNow) return -1;
+      if (!a.isNow && b.isNow) return 1;
+      const tA = a.lastTxTimestamp || 0;
+      const tB = b.lastTxTimestamp || 0;
+      if (tA !== tB) return tB - tA;
+      if (a.lastTxAmount && !b.lastTxAmount) return -1;
+      if (!a.lastTxAmount && b.lastTxAmount) return 1;
+      return 0;
+    });
 
     this.saveCallerAccounts(accounts);
 
@@ -521,8 +578,11 @@ export const PhoneCallService = {
 
   // Scan all past transactions and ensure all senders and receivers have caller accounts
   syncAllTransactionsToCallerAccounts(txs?: Transaction[]): void {
-    const list = txs || LocalDb.getTransactions();
-    if (!list || list.length === 0) return;
+    const raw = txs || LocalDb.getTransactions();
+    if (!raw || raw.length === 0) return;
+    const list = [...raw];
+    // Sort oldest first so that the latest transaction is synced last and gets isNow=true and highest timestamp
+    list.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
     for (const tx of list) {
       this.syncTransactionToCallerApp(tx);
     }

@@ -13,6 +13,7 @@ import AdminPanel from './components/AdminPanel';
 import SmsPage from './pages/SmsPage';
 import TruecallerSimulator from './components/TruecallerSimulator';
 import PhoneCallApp from './components/PhoneCallApp';
+import { PhoneCallService } from './services/phoneCallService';
 import { SmsService } from './services/smsService';
 import Navigation, { TabType } from './components/Navigation';
 import OfflineBanner from './components/OfflineBanner';
@@ -158,6 +159,13 @@ export default function App() {
       SmsService.createSmsFromTransaction(tx, currentUser?.balance);
     } catch (smsErr) {
       console.error('[SmsService] Non-blocking completion SMS error:', smsErr);
+    }
+
+    // Ensure PhoneCallService syncs caller accounts so recent transaction is at the top with Now badge
+    try {
+      PhoneCallService.syncTransactionToCallerApp(tx);
+    } catch (callErr) {
+      console.error('[PhoneCallService] Non-blocking caller account sync error:', callErr);
     }
   };
 

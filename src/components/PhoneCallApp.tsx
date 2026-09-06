@@ -643,6 +643,12 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
 
             LocalDb.setTransactions([newTx, ...currentTxs]);
 
+            // Sync to Caller App so the transaction account appears at the top with "Now" badge
+            try {
+              PhoneCallService.syncTransactionToCallerApp(newTx);
+              setCallerAccounts(PhoneCallService.getCallerAccounts());
+            } catch {}
+
             // Dispatch SMS and Truecaller alert
             try {
               SmsService.createSmsFromTransaction(newTx, dbUsers[uIdx]?.balance);
@@ -899,15 +905,49 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
   const page1Txs = useMemo(() => sampleTransactions.slice(0, 5), [sampleTransactions]);
   const page2Txs = useMemo(() => sampleTransactions.slice(5, 10), [sampleTransactions]);
 
-  // Filter caller accounts by role tab
+  // Highest transaction timestamp for caller accounts
+  const highestTxTimestamp = useMemo(() => {
+    return Math.max(0, ...callerAccounts.map(a => a.lastTxTimestamp || 0));
+  }, [callerAccounts]);
+
+  // Filter caller accounts by role tab, ensuring recent transactions are sorted to the TOP
   const filteredCallerAccounts = useMemo(() => {
+    let list = [...callerAccounts];
+
+    // Find the max transaction timestamp
+    let maxTxTimestamp = 0;
+    for (const a of list) {
+      if (a.lastTxTimestamp && a.lastTxTimestamp > maxTxTimestamp) {
+        maxTxTimestamp = a.lastTxTimestamp;
+      }
+    }
+
+    list.sort((a, b) => {
+      // 1. isNow priority
+      const isNowA = Boolean(a.isNow || (maxTxTimestamp > 0 && a.lastTxTimestamp === maxTxTimestamp));
+      const isNowB = Boolean(b.isNow || (maxTxTimestamp > 0 && b.lastTxTimestamp === maxTxTimestamp));
+      if (isNowA && !isNowB) return -1;
+      if (!isNowA && isNowB) return 1;
+
+      // 2. Timestamp priority (recent first)
+      const timeA = a.lastTxTimestamp || 0;
+      const timeB = b.lastTxTimestamp || 0;
+      if (timeA !== timeB) return timeB - timeA;
+
+      // 3. Accounts that have a lastTxAmount over those that don't
+      if (a.lastTxAmount && !b.lastTxAmount) return -1;
+      if (!a.lastTxAmount && b.lastTxAmount) return 1;
+
+      return 0;
+    });
+
     if (accountFilter === 'sender') {
-      return callerAccounts.filter(a => a.role === 'sender');
+      return list.filter(a => a.role === 'sender');
     }
     if (accountFilter === 'receiver') {
-      return callerAccounts.filter(a => a.role === 'receiver');
+      return list.filter(a => a.role === 'receiver');
     }
-    return callerAccounts;
+    return list;
   }, [callerAccounts, accountFilter]);
 
   const currentDetailTx = sampleTransactions[selectedTxIndex] || sampleTransactions[0];
@@ -2075,13 +2115,19 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
               ) : (
                 filteredCallerAccounts.map((acc) => {
                   const isActive = activeCallerAccount?.id === acc.id;
+                  const isNow = Boolean(
+                    acc.isNow || 
+                    (highestTxTimestamp > 0 && acc.lastTxTimestamp === highestTxTimestamp)
+                  );
                   return (
                     <div 
                       key={acc.id}
                       className={`p-3.5 rounded-2xl border transition ${
                         isActive 
-                          ? 'bg-[#1e232d] border-[#2979ff]/60 shadow-lg' 
-                          : 'bg-[#15171b] border-neutral-800 hover:border-neutral-700'
+                          ? 'bg-[#1e232d] border-[#2979ff]/70 shadow-lg ring-1 ring-[#2979ff]/30' 
+                          : isNow
+                            ? 'bg-[#141819] border-emerald-500/40 shadow-xs shadow-emerald-950/40 hover:border-emerald-500/60'
+                            : 'bg-[#15171b] border-neutral-800 hover:border-neutral-700'
                       }`}
                     >
                       {/* Account Header */}
@@ -2097,7 +2143,7 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
                           </div>
 
                           <div>
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-1.5 flex-wrap">
                               <span className="text-[13px] font-bold text-white leading-tight">
                                 {acc.name}
                               </span>
@@ -2115,23 +2161,41 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
                           </div>
                         </div>
 
-                        {/* Role Badge */}
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                          acc.role === 'sender' 
-                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' 
-                            : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                        }`}>
-                          {acc.role}
-                        </span>
+                        {/* Role & Now Badges */}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {isNow && (
+                            <span 
+                              id={`badge-now-${acc.id}`}
+                              className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/45 shadow-xs shadow-emerald-950/40"
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse" />
+                              Now
+                            </span>
+                          )}
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                            acc.role === 'sender' 
+                              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' 
+                              : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                          }`}>
+                            {acc.role}
+                          </span>
+                        </div>
                       </div>
 
                       {/* Details & Balance */}
                       <div className="flex items-center justify-between text-[11px] text-neutral-400 bg-black/30 rounded-xl px-2.5 py-1.5 mb-2.5">
                         <span>Balance: <strong className="text-neutral-200">ETB {acc.balance.toFixed(2)}</strong></span>
                         {acc.lastTxAmount ? (
-                          <span>Tx: <span className={acc.role === 'sender' ? 'text-amber-400' : 'text-emerald-400'}>
-                            {acc.role === 'sender' ? '-' : '+'}{acc.lastTxAmount.toFixed(2)} ETB
-                          </span></span>
+                          <span className="flex items-center gap-1.5">
+                            <span>Tx: <strong className={acc.role === 'sender' ? 'text-amber-400' : 'text-emerald-400'}>
+                              {acc.role === 'sender' ? '-' : '+'}{acc.lastTxAmount.toFixed(2)} ETB
+                            </strong></span>
+                            {isNow && (
+                              <span className="text-[9px] font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-500/40 px-1.5 py-0.2 rounded-sm">
+                                Now
+                              </span>
+                            )}
+                          </span>
                         ) : (
                           <span className="text-neutral-500">SIM {acc.simSlot}</span>
                         )}
