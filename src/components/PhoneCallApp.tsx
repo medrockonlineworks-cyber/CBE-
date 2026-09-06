@@ -876,28 +876,37 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
     return sanitizedTxs;
   }, [userTransactions, activeCallerAccount]);
 
-  // Current active caller available balance: total of received amount and initial balance
+  // Current active caller available balance:
+  // - For Receiver: strictly the total of the received amount and initial balance (initialBalance + receivedAmount)
+  // - For Sender: strictly the initial balance minus the current sent amount (initialBalance - sentAmount)
   const computedBalance = useMemo(() => {
     if (!activeCallerAccount) return user.balance ?? 18450.50;
 
     const initialBal = typeof activeCallerAccount.initialBalance === 'number' && !isNaN(activeCallerAccount.initialBalance)
       ? activeCallerAccount.initialBalance
-      : (activeCallerAccount.role === 'receiver' ? 18450.50 : 10432.00);
-
-    // Current received amount (the ONLY "in" transaction in the list)
-    const currentInTx = sampleTransactions.find(tx => tx.type === 'in');
-    const receivedAmount = currentInTx ? (currentInTx.rawAmount ?? 0) : (activeCallerAccount.role === 'receiver' ? (activeCallerAccount.lastTxAmount || 50.0) : 0);
+      : (activeCallerAccount.role === 'receiver' ? 18400.50 : 10482.00);
 
     if (activeCallerAccount.role === 'receiver') {
       // The available balance is strictly the total of the received amount and the initial balance
+      const currentInTx = sampleTransactions.find(tx => tx.type === 'in');
+      const receivedAmount = currentInTx 
+        ? (currentInTx.rawAmount ?? 0) 
+        : (activeCallerAccount.lastTxAmount || 50.0);
       const avail = Math.round((initialBal + receivedAmount) * 100) / 100;
       return avail;
     } else {
-      // For a sender, balance is initial balance minus sent amount
-      const currentOutTx = sampleTransactions.find(tx => tx.type === 'out');
-      const sentAmount = currentOutTx ? (currentOutTx.rawAmount ?? 0) : (activeCallerAccount.lastTxAmount || 50.0);
+      // For a sender: strictly initial balance minus the current sent amount
+      const primaryOutTx = sampleTransactions.find(tx => tx.type === 'out');
+      const sentAmount = (activeCallerAccount.lastTxAmount && activeCallerAccount.lastTxAmount > 0)
+        ? activeCallerAccount.lastTxAmount
+        : (primaryOutTx ? primaryOutTx.rawAmount : 50.0);
+
+      if (typeof activeCallerAccount.availableBalance === 'number' && activeCallerAccount.availableBalance > 0) {
+        return Math.round(activeCallerAccount.availableBalance * 100) / 100;
+      }
+
       const avail = Math.max(0, Math.round((initialBal - sentAmount) * 100) / 100);
-      return avail;
+      return avail > 0 ? avail : (activeCallerAccount.balance || 10432.00);
     }
   }, [activeCallerAccount, sampleTransactions, user.balance]);
 

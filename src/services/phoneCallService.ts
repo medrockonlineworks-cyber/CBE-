@@ -62,7 +62,7 @@ export interface CallerAccount {
 
 const STORAGE_KEY_CALL_LOGS = 'tana_phone_call_logs_v1';
 const STORAGE_KEY_CONTACTS = 'tana_phone_contacts_v1';
-const STORAGE_KEY_CALLER_ACCOUNTS = 'tana_caller_accounts_v1';
+const STORAGE_KEY_CALLER_ACCOUNTS = 'tana_caller_accounts_v2';
 const STORAGE_KEY_ACTIVE_CALLER_ID = 'tana_active_caller_account_id_v1';
 const STORAGE_KEY_CALLER_TRANSACTIONS = 'tana_caller_transactions_v4';
 
@@ -191,20 +191,20 @@ export const INITIAL_CALLER_ACCOUNTS: CallerAccount[] = [
     phoneNumber: '+251 97 873 0420',
     accountNumber: '1000284758657',
     accountType: 'Saving Account-8657',
-    initialBalance: 11842.12,
+    initialBalance: 10482.00,
     balance: 10432.00,
     availableBalance: 10432.00,
-    totalReceived: 140.00,
-    totalSent: 1550.12,
+    totalReceived: 0,
+    totalSent: 50.00,
     role: 'sender',
     simSlot: 2,
     lastTxId: 'tx-now-dejene',
-    lastTxAmount: 1500.00,
+    lastTxAmount: 50.00,
     lastTxDate: 'Today',
     lastTxTimestamp: Date.now(),
     isNow: true,
     avatarColor: 'from-emerald-600 to-teal-700',
-    note: 'Sender of -1500.00 ETB'
+    note: 'Sender of -50.00 ETB'
   },
   {
     id: 'acc-leykun',
@@ -212,20 +212,20 @@ export const INITIAL_CALLER_ACCOUNTS: CallerAccount[] = [
     phoneNumber: '096 816 1314',
     accountNumber: '1000419524747',
     accountType: 'Saving Account-4747',
-    initialBalance: 16790.62,
+    initialBalance: 18400.50,
     balance: 18450.50, // Between 500 - 150000 ETB
     availableBalance: 18450.50,
-    totalReceived: 1710.00,
-    totalSent: 50.12,
+    totalReceived: 50.00,
+    totalSent: 0,
     role: 'receiver',
     simSlot: 1,
     lastTxId: 'tx-now-dejene',
-    lastTxAmount: 1500.00,
+    lastTxAmount: 50.00,
     lastTxDate: 'Today',
     lastTxTimestamp: Date.now() - 500,
     isNow: true,
     avatarColor: 'from-blue-600 to-indigo-700',
-    note: 'Receiver of +1500.00 ETB'
+    note: 'Receiver of +50.00 ETB'
   },
   {
     id: 'acc-kasahun',
@@ -233,11 +233,11 @@ export const INITIAL_CALLER_ACCOUNTS: CallerAccount[] = [
     phoneNumber: '+251 91 189 2525',
     accountNumber: '1000482918925',
     accountType: 'Saving Account-8925',
-    initialBalance: 8870.12,
+    initialBalance: 9010.00,
     balance: 8760.00,
     availableBalance: 8760.00,
-    totalReceived: 150.00,
-    totalSent: 260.12,
+    totalReceived: 0,
+    totalSent: 250.00,
     role: 'sender',
     simSlot: 1,
     lastTxAmount: 250.00,
@@ -245,7 +245,7 @@ export const INITIAL_CALLER_ACCOUNTS: CallerAccount[] = [
     lastTxTimestamp: Date.now() - 86400000,
     isNow: false,
     avatarColor: 'from-purple-600 to-pink-700',
-    note: 'Payer / Sender'
+    note: 'Payer / Sender (-250.00 ETB)'
   },
   {
     id: 'acc-selamawit',
@@ -784,27 +784,37 @@ export const PhoneCallService = {
       }
     }
 
-    // Pass 2: Senders & other accounts (guarantee unique distinct balance)
+    // Pass 2: Senders & other accounts (guarantee unique distinct balance and correct sender available balance)
     for (const acc of accounts) {
       if (acc.role !== 'receiver') {
-        let initBal = typeof acc.initialBalance === 'number' && !isNaN(acc.initialBalance) 
-          ? Math.round(acc.initialBalance * 100) / 100 
-          : (typeof acc.balance === 'number' && !isNaN(acc.balance) ? Math.round(acc.balance * 100) / 100 : 0);
+        const cleanAcc = (acc.accountNumber || '').replace(/\D/g, '');
+        const currentSent = (acc.lastTxAmount && acc.lastTxAmount > 0) ? acc.lastTxAmount : 50.0;
+        const presetAvail = SENDER_PRESET_BALANCES[cleanAcc];
 
-        if (initBal <= 0 || usedBalances.has(initBal)) {
+        let initBal: number;
+        if (presetAvail) {
+          // If preset available balance exists (e.g. 10,432.00 ETB), initial balance is preset + currentSent (10,482.00 ETB)
+          initBal = Math.round((presetAvail + currentSent) * 100) / 100;
+        } else if (typeof acc.initialBalance === 'number' && !isNaN(acc.initialBalance) && acc.initialBalance > currentSent) {
+          initBal = Math.round(acc.initialBalance * 100) / 100;
+        } else if (typeof acc.balance === 'number' && !isNaN(acc.balance) && acc.balance > 0) {
+          initBal = Math.round((acc.balance + currentSent) * 100) / 100;
+        } else {
           initBal = getPresetOrUniqueSenderBalance(acc.accountNumber, acc.name, usedBalances);
+        }
+
+        while (usedBalances.has(initBal)) {
+          initBal = Math.round((initBal + 173.25) * 100) / 100;
         }
 
         acc.initialBalance = initBal;
         usedBalances.add(initBal);
 
-        const txs = this.getCallerTransactions(acc.id);
-        const totalReceived = Math.round(txs.filter(t => t.type === 'in').reduce((sum, t) => sum + t.rawAmount, 0) * 100) / 100;
-        const totalSent = Math.round(txs.filter(t => t.type === 'out').reduce((sum, t) => sum + t.rawAmount, 0) * 100) / 100;
+        acc.totalSent = currentSent;
+        acc.totalReceived = 0;
 
-        acc.totalReceived = totalReceived;
-        acc.totalSent = totalSent;
-        let availBal = Math.round((acc.initialBalance + totalReceived - totalSent) * 100) / 100;
+        // Correct sender available balance: strictly initial balance minus the current sent amount
+        let availBal = Math.max(0, Math.round((acc.initialBalance - currentSent) * 100) / 100);
         if (availBal <= 0) availBal = 100;
 
         acc.availableBalance = availBal;
