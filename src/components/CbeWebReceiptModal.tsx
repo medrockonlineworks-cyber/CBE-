@@ -159,10 +159,25 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
     return (localStorage.getItem('cbe_receipt_browser_type') as BrowserHeaderType) || 'chrome';
   });
   const [tabCount, setTabCount] = useState<string>(() => {
-    return localStorage.getItem('cbe_receipt_tab_count') || '80';
+    return localStorage.getItem('cbe_receipt_tab_count') || '2';
   });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [useLiveTime, setUseLiveTime] = useState<boolean>(() => {
+    return localStorage.getItem('cbe_receipt_live_time') === 'true';
+  });
+  const [currentTime, setCurrentTime] = useState<string>(() => {
+    const d = new Date();
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const d = new Date();
+      setCurrentTime(`${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`);
+    }, 10000);
+    return () => clearInterval(timer);
+  }, []);
   const stampFileInputRef = useRef<HTMLInputElement>(null);
 
   // Retrieve admin uploaded logo and stamp from LocalDb and listen to updates
@@ -347,7 +362,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
     };
   }, [transaction, smsMessage]);
 
-  const webReceiptUrl = `https://receipt.cbe.com.et/v2-hfHCxG${receiptData.refId}`;
+  const webReceiptUrl = `https://apps.cbe.com.et:100/?id=${receiptData.refId}`;
 
   // Generate QR Code for the web receipt
   useEffect(() => {
@@ -509,187 +524,294 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
         onChange={handleUploadStampFile}
       />
 
-      {/* 1. Mobile Browser Top Bar (Configurable in 3-dot menu: Chrome, Phoenix, Opera, Samsung, Safari) */}
-      <header 
-        className={`w-full px-3 py-2 flex items-center justify-between gap-2 shadow-md flex-shrink-0 z-30 transition-colors ${
-          browserType === 'phoenix' 
-            ? 'bg-[#131720] text-[#e0e5ee] border-b border-[#202735]' 
-            : browserType === 'opera'
-            ? 'bg-[#161616] text-[#e5e5e5] border-b border-neutral-800'
-            : browserType === 'samsung'
-            ? 'bg-[#181920] text-[#e2e4ea] border-b border-neutral-800'
-            : browserType === 'safari'
-            ? 'bg-[#1c1c1e] text-[#f2f2f7] border-b border-neutral-800'
-            : 'bg-[#121315] text-[#e3e3e3] border-b border-[#282a2e]'
-        }`}
+      {/* 1. Mobile Phone Status Bar (Present in both user screenshots: Clock, Airplane, Bluetooth, Silent, Speed, Dual SIM, Battery [62]) */}
+      <div 
+        id="cbe-phone-status-bar"
+        className="w-full bg-black text-white px-3.5 pt-1.5 pb-1 flex items-center justify-between text-xs select-none flex-shrink-0 z-30 font-sans border-b border-white/5"
       >
-        {/* Left Side Controls */}
+        {/* Left: Clock + Paper Airplane / Navigation Indicator */}
         <div className="flex items-center gap-1.5">
-          {/* Back button */}
-          <button 
-            onClick={onClose}
-            aria-label="Back"
-            className={`p-1.5 rounded-full transition active:scale-95 ${
-              browserType === 'safari' ? 'text-blue-400 hover:bg-neutral-800' : 'text-neutral-300 hover:text-white hover:bg-neutral-800'
-            }`}
-            title="Return to App"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-
-          {/* Browser Specific Branding / Home Button */}
-          {browserType === 'phoenix' ? (
-            <div 
-              onClick={() => setIsMenuOpen(true)}
-              className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-400/60 flex items-center justify-center text-emerald-400 text-xs font-black select-none cursor-pointer shadow-xs"
-              title="Phoenix Browser (Phonex)"
-            >
-              P
-            </div>
-          ) : browserType === 'opera' ? (
-            <div 
-              onClick={() => setIsMenuOpen(true)}
-              className="w-5.5 h-5.5 rounded-full bg-[#ff1b2d] flex items-center justify-center text-white text-[11.5px] font-black shadow-sm select-none cursor-pointer"
-              title="Opera / Opera Mini"
-            >
-              O
-            </div>
-          ) : browserType === 'safari' ? (
-            null
-          ) : (
-            <button 
-              onClick={onClose}
-              aria-label="Home"
-              className="p-1.5 rounded-full hover:bg-neutral-800 text-neutral-300 hover:text-white transition"
-              title="Home"
-            >
-              <Home className="w-5 h-5" />
-            </button>
-          )}
+          <span className="text-[13px] font-semibold tracking-tight text-white font-mono">
+            {useLiveTime ? currentTime : browserType === 'opera' ? '12:19' : '12:18'}
+          </span>
+          {/* Navigation Paper Airplane icon */}
+          <svg className="w-3.5 h-3.5 fill-white shrink-0" viewBox="0 0 24 24">
+            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+          </svg>
         </div>
 
-        {/* Address Bar Pill */}
-        <div 
-          onClick={handleCopyLink}
-          className={`flex-1 max-w-[285px] sm:max-w-xs mx-1 px-3 py-1 flex items-center justify-between cursor-pointer transition select-none ${
-            browserType === 'phoenix'
-              ? 'bg-[#1c222c] hover:bg-[#242b37] border border-emerald-500/35 rounded-full'
-              : browserType === 'opera'
-              ? 'bg-[#252525] hover:bg-[#2f2f2f] border border-neutral-700 rounded-full'
-              : browserType === 'samsung'
-              ? 'bg-[#242632] hover:bg-[#2d303f] border border-neutral-700/60 rounded-full'
-              : browserType === 'safari'
-              ? 'bg-[#2c2c2e] hover:bg-[#38383a] border border-neutral-700 rounded-xl py-1.5'
-              : 'bg-[#282a2d] hover:bg-[#323539] border border-[#3b3e44] rounded-full'
-          }`}
-          title="Click to copy receipt URL"
-        >
-          {/* Left inside pill */}
-          <div className="flex items-center gap-1.5 overflow-hidden">
-            {browserType === 'phoenix' ? (
-              <Shield className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-            ) : browserType === 'opera' || browserType === 'samsung' ? (
-              <Lock className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
-            ) : browserType === 'safari' ? (
-              <span className="text-neutral-400 text-xs font-semibold shrink-0">aA</span>
-            ) : (
-              <SlidersHorizontal className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
-            )}
+        {/* Right Status Icons: Bluetooth, Mute Bell, Network Speed, Dual SIM (H+, 3G), Battery [62] */}
+        <div className="flex items-center gap-2 sm:gap-2.5">
+          {/* Bluetooth */}
+          <svg className="w-2.5 h-3 text-white stroke-[2.2] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5" />
+          </svg>
 
-            {browserType === 'safari' && (
-              <Lock className="w-3 h-3 text-neutral-400 shrink-0 ml-0.5" />
-            )}
+          {/* Mute Bell with Slash */}
+          <svg className="w-3.5 h-3.5 text-white shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            <path d="M18.63 13A17.89 17.89 0 0 1 18 8" />
+            <path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14" />
+            <line x1="2" y1="2" x2="22" y2="22" />
+          </svg>
 
-            <span className="text-[13.5px] sm:text-[14px] text-white font-sans tracking-tight truncate">
-              receipt.cbe.com.et
+          {/* Network Speed: 25.3 KB/S (Chrome Image 1) vs 0.00 KB/S (Opera Image 2) */}
+          <div className="flex flex-col items-end leading-[0.8] justify-center text-white shrink-0 font-mono">
+            <span className="text-[8.5px] font-bold tracking-tight">
+              {browserType === 'opera' ? '0.00' : '25.3'}
+            </span>
+            <span className="text-[7px] font-extrabold tracking-tighter opacity-90">
+              KB/S
             </span>
           </div>
 
-          {/* Right inside pill */}
-          <div className="flex items-center gap-1.5 shrink-0 pl-1">
-            {copiedUrl ? (
-              <span className="text-[10px] text-emerald-400 font-bold animate-pulse">Copied</span>
-            ) : browserType === 'phoenix' ? (
-              <RotateCw 
-                onClick={(e) => { e.stopPropagation(); handleRefresh(); }} 
-                className={`w-3.5 h-3.5 text-emerald-400/80 hover:text-emerald-300 transition ${isRefreshing ? 'animate-spin' : ''}`} 
-              />
-            ) : browserType === 'opera' || browserType === 'safari' ? (
-              <RotateCw 
-                onClick={(e) => { e.stopPropagation(); handleRefresh(); }} 
-                className={`w-3.5 h-3.5 text-neutral-400 hover:text-white transition ${isRefreshing ? 'animate-spin' : ''}`} 
-              />
-            ) : browserType === 'samsung' ? (
-              <Star className="w-3.5 h-3.5 text-amber-400 shrink-0 fill-amber-400/20" />
-            ) : (
-              <div className="w-4 h-4 rounded-xs border border-neutral-400 flex items-center justify-center text-[9px] font-bold text-neutral-300 select-none">
-                G
+          {/* SIM 1 (H+ with signal bars) */}
+          <div className="flex flex-col items-center leading-none text-white shrink-0">
+            <span className="text-[7.5px] font-black tracking-tighter mb-0.5">H+</span>
+            <div className="flex items-end gap-[1.2px] h-2">
+              <div className="w-[1.6px] h-0.5 bg-white rounded-2xs" />
+              <div className="w-[1.6px] h-1 bg-white rounded-2xs" />
+              <div className="w-[1.6px] h-1.5 bg-white rounded-2xs" />
+              <div className="w-[1.6px] h-2 bg-white/35 rounded-2xs" />
+            </div>
+          </div>
+
+          {/* SIM 2 (3G with signal bars) */}
+          <div className="flex flex-col items-center leading-none text-white shrink-0">
+            <span className="text-[7.5px] font-black tracking-tighter mb-0.5">3G</span>
+            <div className="flex items-end gap-[1.2px] h-2">
+              <div className="w-[1.6px] h-0.5 bg-white rounded-2xs" />
+              <div className="w-[1.6px] h-1 bg-white rounded-2xs" />
+              <div className="w-[1.6px] h-1.5 bg-white rounded-2xs" />
+              <div className="w-[1.6px] h-2 bg-white rounded-2xs" />
+            </div>
+          </div>
+
+          {/* Battery pill [ 62 ] */}
+          <div className="flex items-center gap-[1px] shrink-0">
+            <div className="w-6.5 h-3 rounded-[3.5px] border border-white/80 p-[1px] relative flex items-center overflow-hidden bg-white/10">
+              <div className="h-full bg-white rounded-xs" style={{ width: '62%' }} />
+              <span className="absolute inset-0 flex items-center justify-center text-[7.5px] font-black text-white mix-blend-difference tracking-tighter">
+                62
+              </span>
+            </div>
+            <div className="w-[1.5px] h-1.5 bg-white/70 rounded-r-xs" />
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Mobile Browser Header */}
+      {browserType === 'opera' ? (
+        /* ================= OPERA HEADER (IMAGE 2) ================= */
+        /* Deep black background, no home icon, flat full-width address bar with (i), circular reload arrow & 3-dots */
+        <header 
+          id="cbe-opera-browser-header"
+          className="w-full px-3.5 py-2.5 bg-[#0e0e10] border-b border-neutral-900 flex items-center justify-between text-white flex-shrink-0 z-30 select-none"
+        >
+          {/* Left / Center: (i) Info icon + Exact URL: apps.cbe.com.et:100/?id=FT2... */}
+          <div 
+            onClick={handleCopyLink}
+            className="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer select-none pr-3 py-0.5"
+            title="Click to copy receipt URL"
+          >
+            {/* (i) Info circle icon */}
+            <svg viewBox="0 0 24 24" className="w-5 h-5 text-white/95 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.2">
+              <circle cx="12" cy="12" r="9.5" />
+              <path d="M12 7.5h.01M12 11v5" strokeWidth="2.2" strokeLinecap="round" />
+            </svg>
+
+            {/* URL string matching Image 2 */}
+            <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis text-[14.5px] text-[#e5e5e5] font-normal tracking-tight font-sans">
+              {copiedUrl ? (
+                <span className="text-emerald-400 font-bold text-xs">Copied URL to clipboard!</span>
+              ) : (
+                <span>apps.cbe.com.et:100/?id={receiptData.refId}</span>
+              )}
+            </div>
+          </div>
+
+          {/* Right: Circular Refresh Arrow + 3-Dots Menu */}
+          <div className="flex items-center gap-2.5 shrink-0">
+            {/* Circular Refresh Arrow (matching Opera Image 2) */}
+            <button
+              onClick={handleRefresh}
+              className="p-1 text-neutral-200 hover:text-white transition cursor-pointer flex items-center justify-center"
+              title="Reload page"
+              aria-label="Reload page"
+            >
+              <svg viewBox="0 0 24 24" className={`w-5 h-5 text-neutral-200 stroke-current ${isRefreshing ? 'animate-spin' : ''}`} fill="none" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12a9 9 0 1 1-2.6-6.3L21 8" />
+                <path d="M21 3v5h-5" />
+              </svg>
+            </button>
+
+            {/* 3-dots */}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-1 text-white hover:bg-white/10 rounded-full transition cursor-pointer flex items-center justify-center"
+              title="Opera menu & options"
+              aria-label="Opera menu & options"
+            >
+              <svg viewBox="0 0 24 24" className="w-5.5 h-5.5 fill-white">
+                <circle cx="12" cy="5" r="1.75" />
+                <circle cx="12" cy="12" r="1.75" />
+                <circle cx="12" cy="19" r="1.75" />
+              </svg>
+            </button>
+          </div>
+        </header>
+      ) : browserType === 'chrome' ? (
+        /* ================= GOOGLE CHROME HEADER (IMAGE 1) ================= */
+        /* Charcoal background, white home icon, capsule pill with (i) and URL, Google Translate icon, tab counter [2], 3-dots */
+        <header 
+          id="cbe-chrome-browser-header"
+          className="w-full px-2.5 py-1.5 bg-[#1f1f21] border-b border-[#2d2d30] flex items-center justify-between text-white flex-shrink-0 z-30 select-none"
+        >
+          {/* Left: Home Button (outline house with chimney & door) */}
+          <button
+            onClick={onClose}
+            aria-label="Home"
+            className="p-1 text-white hover:bg-white/10 rounded-full transition cursor-pointer flex items-center justify-center shrink-0"
+            title="Home (Close Receipt)"
+          >
+            <svg viewBox="0 0 24 24" className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 10.5L12 3l9 7.5V20a1.5 1.5 0 0 1-1.5 1.5H15v-6h-6v6H4.5A1.5 1.5 0 0 1 3 20v-9.5z" />
+            </svg>
+          </button>
+
+          {/* Center: Address Bar Pill */}
+          <div 
+            onClick={handleCopyLink}
+            className="flex-1 bg-[#2d2f31] hover:bg-[#36383c] h-9.5 rounded-full px-3 flex items-center gap-2 cursor-pointer transition select-none overflow-hidden mx-1.5 shadow-xs"
+            title="Click to copy receipt URL"
+          >
+            {/* (i) Info circle icon */}
+            <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 text-white/90 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.2">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 7.5h.01M12 11v5" strokeWidth="2.2" strokeLinecap="round" />
+            </svg>
+
+            {/* URL text matching Image 1: s.cbe.com.et:100 */}
+            <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis text-[13.5px] text-white/95 font-normal tracking-tight font-sans">
+              {copiedUrl ? (
+                <span className="text-emerald-400 font-bold text-xs">Copied URL to clipboard!</span>
+              ) : (
+                <span>s.cbe.com.et:100</span>
+              )}
+            </div>
+          </div>
+
+          {/* Right: Google Translate, Tab count [2], 3-dots */}
+          <div className="flex items-center gap-2 shrink-0 pr-0.5">
+            {/* Google Translate action icon matching Image 1 */}
+            <button
+              onClick={handleCopyLink}
+              className="p-1 text-white hover:bg-white/10 rounded-md transition cursor-pointer flex items-center justify-center shrink-0"
+              title="Google Translate"
+              aria-label="Google Translate"
+            >
+              <svg className="w-5.5 h-5.5" viewBox="0 0 24 24" fill="none">
+                {/* Back card with G */}
+                <path d="M4 6.5A1.5 1.5 0 0 1 5.5 5h7A1.5 1.5 0 0 1 14 6.5v8a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 4 14.5v-8z" fill="#ffffff" fillOpacity="0.9" />
+                <text x="6.2" y="13.2" fill="#1b1b1d" fontSize="7.8" fontWeight="bold" fontFamily="system-ui, sans-serif">G</text>
+                {/* Front card with Chinese character and folded corner */}
+                <path d="M9.5 8.5a1.5 1.5 0 0 1 1.5-1.5H18a1.5 1.5 0 0 1 1.5 1.5v6.5a1.5 1.5 0 0 1-.44 1.06l-2.8 2.8A1.5 1.5 0 0 1 15.2 19.5H11A1.5 1.5 0 0 1 9.5 18v-9.5z" fill="#1f1f21" stroke="#ffffff" strokeWidth="1.3" />
+                <text x="11.5" y="15" fill="#ffffff" fontSize="7.8" fontWeight="bold" fontFamily="system-ui, sans-serif">文</text>
+              </svg>
+            </button>
+
+            {/* Tab Counter Square [ 2 ] matching Image 1 */}
+            <button
+              onClick={() => setIsMenuOpen(true)}
+              className="w-5.5 h-5.5 rounded-[5px] border-[2px] border-white text-white font-bold text-[11.5px] flex items-center justify-center hover:bg-white/10 transition cursor-pointer shrink-0"
+              title="Tabs (Click to customize)"
+            >
+              {tabCount}
+            </button>
+
+            {/* 3-dots vertical button */}
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-1 text-white hover:bg-white/10 rounded-full transition cursor-pointer flex items-center justify-center shrink-0"
+              title="Chrome menu"
+              aria-label="Chrome menu"
+            >
+              <svg viewBox="0 0 24 24" className="w-5.5 h-5.5 fill-white">
+                <circle cx="12" cy="5" r="1.75" />
+                <circle cx="12" cy="12" r="1.75" />
+                <circle cx="12" cy="19" r="1.75" />
+              </svg>
+            </button>
+          </div>
+        </header>
+      ) : (
+        /* ================= FALLBACK (PHOENIX, SAMSUNG, SAFARI) ================= */
+        <header 
+          className={`w-full px-3 py-2 flex items-center justify-between gap-2 shadow-md flex-shrink-0 z-30 transition-colors ${
+            browserType === 'phoenix' 
+              ? 'bg-[#131720] text-[#e0e5ee] border-b border-[#202735]' 
+              : browserType === 'samsung'
+              ? 'bg-[#181920] text-[#e2e4ea] border-b border-neutral-800'
+              : 'bg-[#1c1c1e] text-[#f2f2f7] border-b border-neutral-800'
+          }`}
+        >
+          {/* Left Side Controls */}
+          <div className="flex items-center gap-1.5">
+            <button 
+              onClick={onClose}
+              aria-label="Back"
+              className="p-1.5 rounded-full text-neutral-300 hover:text-white hover:bg-neutral-800 transition active:scale-95"
+              title="Return to App"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+
+            {browserType === 'phoenix' && (
+              <div 
+                onClick={() => setIsMenuOpen(true)}
+                className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-400/60 flex items-center justify-center text-emerald-400 text-xs font-black select-none cursor-pointer shadow-xs"
+                title="Phoenix Browser (Phonex)"
+              >
+                P
               </div>
             )}
           </div>
-        </div>
 
-        {/* Browser Tab Count Badge & 3-dots Menu */}
-        <div className="flex items-center gap-1">
-          {/* Extra browser action icons */}
-          {browserType === 'phoenix' && (
-            <button
-              onClick={() => setIsMenuOpen(true)}
-              className="p-1 text-neutral-300 hover:text-white transition"
-              title="Phoenix Downloads & Settings"
-            >
-              <Download className="w-4 h-4" />
-            </button>
-          )}
-
-          {browserType === 'opera' && (
-            <div className="p-1 text-[#ff1b2d]" title="Opera Ad Blocker Enabled">
-              <Shield className="w-4 h-4 fill-[#ff1b2d]/20" />
-            </div>
-          )}
-
-          {browserType === 'samsung' && (
-            <button
-              onClick={handleRefresh}
-              className={`p-1 text-neutral-300 hover:text-white transition ${isRefreshing ? 'animate-spin' : ''}`}
-              title="Refresh"
-            >
-              <RotateCw className="w-4 h-4" />
-            </button>
-          )}
-
-          {/* Tab Count Box */}
+          {/* Address Bar Pill */}
           <div 
-            onClick={() => setIsMenuOpen(true)}
-            className={`cursor-pointer transition select-none flex items-center justify-center font-bold ${
-              browserType === 'phoenix'
-                ? 'w-5.5 h-5.5 rounded-full border-[1.8px] border-emerald-400 bg-emerald-500/20 text-emerald-300 text-[10px]'
-                : browserType === 'safari'
-                ? 'w-5.5 h-5.5 border-[1.8px] border-blue-400 rounded-sm text-blue-400 text-[10px]'
-                : 'w-5.5 h-5.5 border-[1.8px] border-neutral-300 rounded-[5px] text-neutral-200 text-[10.5px]'
-            }`}
-            title="Tabs switcher (Click to configure)"
+            onClick={handleCopyLink}
+            className="flex-1 max-w-[285px] sm:max-w-xs mx-1 px-3 py-1 flex items-center justify-between cursor-pointer transition select-none bg-[#282a2d] hover:bg-[#323539] border border-[#3b3e44] rounded-full"
+            title="Click to copy receipt URL"
           >
-            {tabCount}
+            <div className="flex items-center gap-1.5 overflow-hidden">
+              <SlidersHorizontal className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+              <span className="text-[13.5px] text-white font-sans tracking-tight truncate">
+                apps.cbe.com.et:100
+              </span>
+            </div>
           </div>
 
-          {/* 3-dots Button: Opens the change system menu */}
-          <button 
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-            aria-label="Browser options & style switcher"
-            className={`p-1 rounded-full hover:bg-neutral-800 transition active:scale-95 ${
-              isMenuOpen 
-                ? 'bg-neutral-800 text-white ring-2 ring-emerald-500/50' 
-                : browserType === 'safari'
-                ? 'text-blue-400 hover:text-blue-300'
-                : 'text-neutral-300 hover:text-white'
-            }`}
-            title="Change browser type & options"
-          >
-            <MoreVertical className="w-5 h-5" />
-          </button>
-        </div>
-      </header>
+          {/* Browser Tab Count Badge & 3-dots Menu */}
+          <div className="flex items-center gap-1">
+            <div 
+              onClick={() => setIsMenuOpen(true)}
+              className="cursor-pointer transition select-none flex items-center justify-center font-bold w-5.5 h-5.5 border-[1.8px] border-neutral-300 rounded-[5px] text-neutral-200 text-[10.5px]"
+              title="Tabs switcher"
+            >
+              {tabCount}
+            </div>
+
+            <button 
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label="Browser options"
+              className="p-1 rounded-full text-neutral-300 hover:text-white hover:bg-neutral-800 transition"
+              title="Change browser type"
+            >
+              <MoreVertical className="w-5 h-5" />
+            </button>
+          </div>
+        </header>
+      )}
 
       {/* 3-Dot Options & Browser Style Switcher Menu Popup */}
       {isMenuOpen && (
@@ -722,36 +844,69 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
             {/* Browser Type Selector */}
             <div className="space-y-1.5 mb-4">
               <p className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-2">
-                Choose Browser Header Type
+                Choose Browser Header Style
               </p>
 
-              {/* 1. Google Chrome */}
+              {/* 1. Google Chrome (Screenshot 1) */}
               <button
                 type="button"
                 onClick={() => handleSelectBrowser('chrome')}
-                className={`w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition ${
+                className={`w-full px-3 py-2.5 rounded-xl flex items-center justify-between text-left transition cursor-pointer ${
                   browserType === 'chrome'
                     ? 'bg-emerald-500/20 border border-emerald-400/80 text-white'
                     : 'bg-neutral-800/60 hover:bg-neutral-800 border border-neutral-700/50 text-neutral-300'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-neutral-900 flex items-center justify-center border border-neutral-700">
-                    <SlidersHorizontal className="w-4 h-4 text-emerald-400" />
+                  <div className="w-8 h-8 rounded-lg bg-[#1f1f21] flex items-center justify-center border border-neutral-600 text-white font-bold text-xs">
+                    <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 text-white" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M3 10.5L12 3l9 7.5V20a1.5 1.5 0 0 1-1.5 1.5H15v-6h-6v6H4.5A1.5 1.5 0 0 1 3 20v-9.5z" />
+                    </svg>
                   </div>
                   <div>
-                    <div className="text-[13px] font-bold">Google Chrome</div>
-                    <div className="text-[10px] text-neutral-400">Android Chrome dark bar</div>
+                    <div className="text-[13px] font-bold flex items-center gap-1.5">
+                      <span>Google Chrome</span>
+                      <span className="text-[9.5px] bg-neutral-700 text-white px-1.5 py-0.2 rounded font-semibold">Image 1</span>
+                    </div>
+                    <div className="text-[10px] text-neutral-400">Home icon, pill bar, Google Translate & tabs</div>
                   </div>
                 </div>
-                {browserType === 'chrome' && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                {browserType === 'chrome' && <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />}
               </button>
 
-              {/* 2. Phoenix Browser (Phonex) */}
+              {/* 2. Opera (Screenshot 2) */}
+              <button
+                type="button"
+                onClick={() => handleSelectBrowser('opera')}
+                className={`w-full px-3 py-2.5 rounded-xl flex items-center justify-between text-left transition cursor-pointer ${
+                  browserType === 'opera'
+                    ? 'bg-emerald-500/20 border border-emerald-400/80 text-white'
+                    : 'bg-neutral-800/60 hover:bg-neutral-800 border border-neutral-700/50 text-neutral-300'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-[#0e0e10] flex items-center justify-center border border-neutral-700 text-neutral-200">
+                    <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 text-neutral-200" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 12a9 9 0 1 1-2.6-6.3L21 8" />
+                      <path d="M21 3v5h-5" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div className="text-[13px] font-bold flex items-center gap-1.5">
+                      <span>Opera</span>
+                      <span className="text-[9.5px] bg-red-950 border border-red-500/50 text-red-300 px-1.5 py-0.2 rounded font-semibold">Image 2</span>
+                    </div>
+                    <div className="text-[10px] text-neutral-400">Flat black bar, full URL with ID, reload button</div>
+                  </div>
+                </div>
+                {browserType === 'opera' && <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />}
+              </button>
+
+              {/* 3. Phoenix Browser (Phonex) */}
               <button
                 type="button"
                 onClick={() => handleSelectBrowser('phoenix')}
-                className={`w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition ${
+                className={`w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition cursor-pointer ${
                   browserType === 'phoenix'
                     ? 'bg-emerald-500/20 border border-emerald-400/80 text-white'
                     : 'bg-neutral-800/60 hover:bg-neutral-800 border border-neutral-700/50 text-neutral-300'
@@ -762,78 +917,76 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                     P
                   </div>
                   <div>
-                    <div className="text-[13px] font-bold">Phoenix Browser (Phonex)</div>
-                    <div className="text-[10px] text-neutral-400">Popular on Tecno, Infinix & Itel</div>
+                    <div className="text-[13px] font-bold">Phoenix Browser</div>
+                    <div className="text-[10px] text-neutral-400">Tecno, Infinix & Itel mobile style</div>
                   </div>
                 </div>
-                {browserType === 'phoenix' && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
-              </button>
-
-              {/* 3. Opera / Opera Mini */}
-              <button
-                type="button"
-                onClick={() => handleSelectBrowser('opera')}
-                className={`w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition ${
-                  browserType === 'opera'
-                    ? 'bg-emerald-500/20 border border-emerald-400/80 text-white'
-                    : 'bg-neutral-800/60 hover:bg-neutral-800 border border-neutral-700/50 text-neutral-300'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-red-950/80 flex items-center justify-center border border-red-500/50 text-red-400 font-black text-xs">
-                    O
-                  </div>
-                  <div>
-                    <div className="text-[13px] font-bold">Opera / Opera Mini</div>
-                    <div className="text-[10px] text-neutral-400">Red Opera icon & ad-blocker</div>
-                  </div>
-                </div>
-                {browserType === 'opera' && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                {browserType === 'phoenix' && <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />}
               </button>
 
               {/* 4. Samsung Internet */}
               <button
                 type="button"
                 onClick={() => handleSelectBrowser('samsung')}
-                className={`w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition ${
+                className={`w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition cursor-pointer ${
                   browserType === 'samsung'
                     ? 'bg-emerald-500/20 border border-emerald-400/80 text-white'
                     : 'bg-neutral-800/60 hover:bg-neutral-800 border border-neutral-700/50 text-neutral-300'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-neutral-900 flex items-center justify-center border border-neutral-700 text-blue-400">
+                  <div className="w-7 h-7 rounded-lg bg-neutral-900 flex items-center justify-center border border-neutral-700 text-amber-400">
                     <Star className="w-4 h-4 fill-amber-400/30 text-amber-400" />
                   </div>
                   <div>
                     <div className="text-[13px] font-bold">Samsung Internet</div>
-                    <div className="text-[10px] text-neutral-400">Samsung Galaxy One UI browser</div>
+                    <div className="text-[10px] text-neutral-400">Galaxy One UI browser</div>
                   </div>
                 </div>
-                {browserType === 'samsung' && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                {browserType === 'samsung' && <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />}
               </button>
+            </div>
 
-              {/* 5. Safari (iOS) */}
-              <button
-                type="button"
-                onClick={() => handleSelectBrowser('safari')}
-                className={`w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition ${
-                  browserType === 'safari'
-                    ? 'bg-emerald-500/20 border border-emerald-400/80 text-white'
-                    : 'bg-neutral-800/60 hover:bg-neutral-800 border border-neutral-700/50 text-neutral-300'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-blue-950/80 flex items-center justify-center border border-blue-500/50 text-blue-400 font-bold text-xs">
-                    iOS
-                  </div>
-                  <div>
-                    <div className="text-[13px] font-bold">Safari (Apple iOS)</div>
-                    <div className="text-[10px] text-neutral-400">Minimal Apple Safari style</div>
-                  </div>
-                </div>
-                {browserType === 'safari' && <CheckCircle2 className="w-4 h-4 text-emerald-400" />}
-              </button>
+            {/* Status Bar Clock Mode */}
+            <div className="mb-4 pt-3 border-t border-neutral-700/80">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">
+                  Top Status Bar Clock
+                </span>
+                <span className="text-xs text-emerald-400 font-mono font-bold">
+                  {useLiveTime ? currentTime : browserType === 'opera' ? '12:19' : '12:18'}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUseLiveTime(false);
+                    localStorage.setItem('cbe_receipt_live_time', 'false');
+                  }}
+                  className={`py-1.5 px-2 rounded-lg text-xs font-semibold transition text-center cursor-pointer ${
+                    !useLiveTime
+                      ? 'bg-emerald-500 text-black font-bold shadow-xs'
+                      : 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300'
+                  }`}
+                >
+                  Screenshot ({browserType === 'opera' ? '12:19' : '12:18'})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUseLiveTime(true);
+                    localStorage.setItem('cbe_receipt_live_time', 'true');
+                  }}
+                  className={`py-1.5 px-2 rounded-lg text-xs font-semibold transition text-center cursor-pointer ${
+                    useLiveTime
+                      ? 'bg-emerald-500 text-black font-bold shadow-xs'
+                      : 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300'
+                  }`}
+                >
+                  Live Device Clock
+                </button>
+              </div>
             </div>
 
             {/* Tab Counter Selector */}
@@ -845,12 +998,12 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                 <span className="text-xs text-emerald-400 font-mono font-bold">[{tabCount}]</span>
               </div>
               <div className="flex items-center gap-1.5">
-                {['80', '1', '4', '12', '99+'].map((num) => (
+                {['2', '1', '4', '12', '80', '99+'].map((num) => (
                   <button
                     key={num}
                     type="button"
                     onClick={() => handleSelectTabCount(num)}
-                    className={`flex-1 py-1 rounded-lg text-xs font-bold transition ${
+                    className={`flex-1 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${
                       tabCount === num
                         ? 'bg-emerald-500 text-black shadow-xs'
                         : 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300'
@@ -926,16 +1079,16 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
               <button
                 type="button"
                 onClick={() => { handleCopyLink(); setIsMenuOpen(false); }}
-                className="w-full px-3 py-2 rounded-xl bg-neutral-800/60 hover:bg-neutral-800 text-neutral-200 hover:text-white text-xs font-medium flex items-center gap-2 transition"
+                className="w-full px-3 py-2 rounded-xl bg-neutral-800/60 hover:bg-neutral-800 text-neutral-200 hover:text-white text-xs font-medium flex items-center gap-2 transition cursor-pointer"
               >
                 <Copy className="w-3.5 h-3.5 text-neutral-400" />
-                <span>Copy Receipt URL (receipt.cbe.com.et)</span>
+                <span>Copy Receipt URL (apps.cbe.com.et:100)</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => { handleRefresh(); setIsMenuOpen(false); }}
-                className="w-full px-3 py-2 rounded-xl bg-neutral-800/60 hover:bg-neutral-800 text-neutral-200 hover:text-white text-xs font-medium flex items-center gap-2 transition"
+                className="w-full px-3 py-2 rounded-xl bg-neutral-800/60 hover:bg-neutral-800 text-neutral-200 hover:text-white text-xs font-medium flex items-center gap-2 transition cursor-pointer"
               >
                 <RefreshCw className="w-3.5 h-3.5 text-neutral-400" />
                 <span>Refresh / Reload Receipt Page</span>
@@ -944,7 +1097,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
               <button
                 type="button"
                 onClick={() => { stampFileInputRef.current?.click(); }}
-                className="w-full px-3 py-2 rounded-xl bg-neutral-800/60 hover:bg-neutral-800 text-neutral-200 hover:text-white text-xs font-medium flex items-center justify-between transition"
+                className="w-full px-3 py-2 rounded-xl bg-neutral-800/60 hover:bg-neutral-800 text-neutral-200 hover:text-white text-xs font-medium flex items-center justify-between transition cursor-pointer"
               >
                 <span className="flex items-center gap-2">
                   <Upload className="w-3.5 h-3.5 text-neutral-400" />
@@ -957,12 +1110,21 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                 <button
                   type="button"
                   onClick={handleResetStamp}
-                  className="w-full px-3 py-2 rounded-xl bg-red-950/40 hover:bg-red-950/70 text-red-300 text-xs font-medium flex items-center gap-2 transition"
+                  className="w-full px-3 py-2 rounded-xl bg-red-950/40 hover:bg-red-950/70 text-red-300 text-xs font-medium flex items-center gap-2 transition cursor-pointer"
                 >
                   <Trash2 className="w-3.5 h-3.5 text-red-400" />
                   <span>Reset Stamp to CBE Official</span>
                 </button>
               )}
+
+              <button
+                type="button"
+                onClick={() => { setIsMenuOpen(false); onClose(); }}
+                className="w-full px-3 py-2 rounded-xl bg-neutral-800/90 hover:bg-neutral-700 text-neutral-300 hover:text-white text-xs font-medium flex items-center gap-2 transition cursor-pointer pt-2 mt-1 border-t border-neutral-700"
+              >
+                <ArrowLeft className="w-3.5 h-3.5 text-neutral-400" />
+                <span>Close Receipt & Return to App</span>
+              </button>
             </div>
 
           </div>
