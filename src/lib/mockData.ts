@@ -1531,4 +1531,26 @@ export class LocalDb {
     // Broadcast across windows and local components
     window.dispatchEvent(new CustomEvent('cbe_stamp_updated', { detail: { stamp } }));
   }
+
+  static getBankStampSize(): number {
+    try {
+      const val = localStorage.getItem('tana_bank_stamp_size');
+      if (val) {
+        const parsed = parseInt(val, 10);
+        if (!isNaN(parsed) && parsed >= 180 && parsed <= 450) {
+          return parsed;
+        }
+      }
+    } catch {}
+    return 330; // Increased default size (significantly enlarged from previous 215-260px)
+  }
+
+  static setBankStampSize(size: number): void {
+    try {
+      localStorage.setItem('tana_bank_stamp_size', String(size));
+    } catch (err) {
+      console.warn('[LocalDb] Failed writing stamp size to localStorage:', err);
+    }
+    window.dispatchEvent(new CustomEvent('cbe_stamp_size_updated', { detail: { size } }));
+  }
 }

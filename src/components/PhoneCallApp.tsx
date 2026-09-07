@@ -36,7 +36,7 @@ import {
   ArrowUpRight
 } from 'lucide-react';
 import GboardKeyboard from './GboardKeyboard';
-import { PhoneCallService, CallLogItem, ContactItem, CallerAccount, AccountTransactionItem, formatUssdTxAmount } from '../services/phoneCallService';
+import { PhoneCallService, CallLogItem, ContactItem, CallerAccount, AccountTransactionItem, formatUssdTxAmount, SENDER_PRESET_BALANCES } from '../services/phoneCallService';
 import { LocalDb } from '../lib/mockData';
 import { UserProfile, Transaction } from '../types';
 import { SmsService } from '../services/smsService';
@@ -241,6 +241,27 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
       window.removeEventListener('storage', handleAccountsUpdate);
     };
   }, []);
+
+  // Sync active caller account if the user prop matches a known caller account
+  useEffect(() => {
+    if (user && user.accountNumber) {
+      const cleanUserAcc = user.accountNumber.replace(/\D/g, '');
+      const currentAccounts = PhoneCallService.getCallerAccounts();
+      const matched = currentAccounts.find(a => 
+        (a.accountNumber && a.accountNumber.replace(/\D/g, '') === cleanUserAcc) ||
+        (a.name && user.name && (
+          a.name.toLowerCase() === user.name.toLowerCase() ||
+          a.name.toLowerCase().includes(user.name.toLowerCase()) ||
+          user.name.toLowerCase().includes(a.name.toLowerCase()) ||
+          (user.name.toLowerCase().includes('global') && a.name.toLowerCase().includes('global'))
+        ))
+      );
+      if (matched && matched.id !== activeCallerAccount?.id) {
+        PhoneCallService.setActiveCallerAccountId(matched.id);
+        setActiveCallerAccount(matched);
+      }
+    }
+  }, [user?.accountNumber, user?.name, user?.balance]);
 
   // Switch Active Caller Account
   const handleSwitchCaller = (acc: CallerAccount) => {
@@ -882,11 +903,20 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
   const computedBalance = useMemo(() => {
     if (!activeCallerAccount) return user.balance ?? 18450.50;
 
-    const initialBal = typeof activeCallerAccount.initialBalance === 'number' && !isNaN(activeCallerAccount.initialBalance)
-      ? activeCallerAccount.initialBalance
-      : (activeCallerAccount.role === 'receiver' ? 18400.50 : 10482.00);
+    const cleanAcc = (activeCallerAccount.accountNumber || '').replace(/\D/g, '');
+    const cleanUserAcc = (user.accountNumber || '').replace(/\D/g, '');
+    const isGlobal = cleanAcc === '1000170986671' || activeCallerAccount.name.toLowerCase().includes('global');
+    const isCurrentUser = (cleanUserAcc && cleanAcc === cleanUserAcc) || 
+      (user.name && activeCallerAccount.name && (
+        user.name.toLowerCase() === activeCallerAccount.name.toLowerCase() ||
+        user.name.toLowerCase().includes(activeCallerAccount.name.toLowerCase()) ||
+        activeCallerAccount.name.toLowerCase().includes(user.name.toLowerCase())
+      ));
 
     if (activeCallerAccount.role === 'receiver') {
+      const initialBal = typeof activeCallerAccount.initialBalance === 'number' && !isNaN(activeCallerAccount.initialBalance)
+        ? activeCallerAccount.initialBalance
+        : 18400.50;
       // The available balance is strictly the total of the received amount and the initial balance
       const currentInTx = sampleTransactions.find(tx => tx.type === 'in');
       const receivedAmount = currentInTx 
@@ -895,20 +925,42 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
       const avail = Math.round((initialBal + receivedAmount) * 100) / 100;
       return avail;
     } else {
-      // For a sender: strictly initial balance minus the current sent amount
-      const primaryOutTx = sampleTransactions.find(tx => tx.type === 'out');
-      const sentAmount = (activeCallerAccount.lastTxAmount && activeCallerAccount.lastTxAmount > 0)
-        ? activeCallerAccount.lastTxAmount
-        : (primaryOutTx ? primaryOutTx.rawAmount : 50.0);
+      // SENDER CALCULATION:
+      // 1. If this account is the active user in the app, return user's balance
+      if (isCurrentUser && typeof user.balance === 'number' && !isNaN(user.balance)) {
+        return Math.round(user.balance * 100) / 100;
+      }
+      // 2. If this account is Global Online Market, return strictly 9,990,101,402.40 ETB
+      if (isGlobal) {
+        return 9990101402.40;
+      }
+      // 3. If this account has a preset sender balance (e.g. Dejene: 10432.00, Kasahun: 8760.00)
+      if (cleanAcc && SENDER_PRESET_BALANCES[cleanAcc]) {
+        return SENDER_PRESET_BALANCES[cleanAcc];
+      }
+
+      // 4. Mathematical calculation: initial balance minus sent amount
+      const initialBal = typeof activeCallerAccount.initialBalance === 'number' && !isNaN(activeCallerAccount.initialBalance)
+        ? activeCallerAccount.initialBalance
+        : (activeCallerAccount.balance ? activeCallerAccount.balance + 50.0 : 10482.00);
+
+      const outTxs = sampleTransactions.filter(tx => tx.type === 'out');
+      const totalOutFromTxs = outTxs.reduce((sum, tx) => sum + (tx.rawAmount || 0), 0);
+      const sentAmount = totalOutFromTxs > 0 
+        ? totalOutFromTxs 
+        : ((activeCallerAccount.lastTxAmount && activeCallerAccount.lastTxAmount > 0)
+            ? activeCallerAccount.lastTxAmount 
+            : 50.0);
+
+      const calculatedAvail = Math.max(0, Math.round((initialBal - sentAmount) * 100) / 100);
 
       if (typeof activeCallerAccount.availableBalance === 'number' && activeCallerAccount.availableBalance > 0) {
         return Math.round(activeCallerAccount.availableBalance * 100) / 100;
       }
 
-      const avail = Math.max(0, Math.round((initialBal - sentAmount) * 100) / 100);
-      return avail > 0 ? avail : (activeCallerAccount.balance || 10432.00);
+      return calculatedAvail > 0 ? calculatedAvail : (activeCallerAccount.balance || 10432.00);
     }
-  }, [activeCallerAccount, sampleTransactions, user.balance]);
+  }, [activeCallerAccount, sampleTransactions, user.balance, user.accountNumber, user.name]);
 
   // Current active caller balance formatted for USSD display
   const formattedBalance = useMemo(() => {

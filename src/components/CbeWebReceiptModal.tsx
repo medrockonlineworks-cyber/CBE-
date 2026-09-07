@@ -25,7 +25,8 @@ import {
   Trash2,
   Share2,
   ExternalLink,
-  RefreshCw
+  RefreshCw,
+  Stamp
 } from 'lucide-react';
 
 export type BrowserHeaderType = 'chrome' | 'phoenix' | 'opera' | 'samsung' | 'safari';
@@ -165,6 +166,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
   // Retrieve admin uploaded logo and stamp from LocalDb and listen to updates
   const [adminLogo, setAdminLogo] = useState<string | null>(() => LocalDb.getCustomBankLogo());
   const [customStamp, setCustomStamp] = useState<string | null>(() => LocalDb.getCustomBankStamp());
+  const [stampSize, setStampSize] = useState<number>(() => LocalDb.getBankStampSize());
   const activeStamp = customStamp || OFFICIAL_CBE_STAMP_LOGO;
 
   useEffect(() => {
@@ -174,13 +176,23 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
     const handleSyncStamp = () => {
       setCustomStamp(LocalDb.getCustomBankStamp());
     };
+    const handleSyncStampSize = (e: Event) => {
+      const customEvt = e as CustomEvent;
+      if (customEvt.detail?.size) {
+        setStampSize(customEvt.detail.size);
+      } else {
+        setStampSize(LocalDb.getBankStampSize());
+      }
+    };
     window.addEventListener('cbe_logo_updated', handleSyncLogo);
     window.addEventListener('cbe_stamp_updated', handleSyncStamp);
+    window.addEventListener('cbe_stamp_size_updated', handleSyncStampSize);
     window.addEventListener('storage', handleSyncLogo);
     window.addEventListener('storage', handleSyncStamp);
     return () => {
       window.removeEventListener('cbe_logo_updated', handleSyncLogo);
       window.removeEventListener('cbe_stamp_updated', handleSyncStamp);
+      window.removeEventListener('cbe_stamp_size_updated', handleSyncStampSize);
       window.removeEventListener('storage', handleSyncLogo);
       window.removeEventListener('storage', handleSyncStamp);
     };
@@ -782,6 +794,41 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
               </div>
             </div>
 
+            {/* Stamp Size Selector */}
+            <div className="mb-4 pt-3 border-t border-neutral-700/80">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Stamp className="w-3.5 h-3.5 text-purple-400" />
+                  <span>Stamp Size</span>
+                </span>
+                <span className="text-xs text-purple-300 font-mono font-bold">{stampSize}px</span>
+              </div>
+              <div className="grid grid-cols-4 gap-1.5">
+                {[
+                  { label: 'Normal', size: 260 },
+                  { label: 'Large', size: 330 },
+                  { label: 'X-Large', size: 365 },
+                  { label: 'Jumbo', size: 405 },
+                ].map((preset) => (
+                  <button
+                    key={preset.size}
+                    type="button"
+                    onClick={() => {
+                      LocalDb.setBankStampSize(preset.size);
+                      setStampSize(preset.size);
+                    }}
+                    className={`py-1.5 px-1 rounded-lg text-xs font-semibold transition text-center ${
+                      stampSize === preset.size
+                        ? 'bg-purple-600 text-white font-bold shadow-xs'
+                        : 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300'
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Quick Actions */}
             <div className="pt-3 border-t border-neutral-700/80 space-y-1.5">
               <button
@@ -1099,14 +1146,14 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                   className="absolute pointer-events-none select-none z-10 shrink-0"
                   style={{
                     top: '52%',
-                    left: '47%',
+                    left: '48%',
                     transform: 'translate(-50%, -50%)',
-                    width: 'clamp(215px, 66%, 260px)',
-                    height: 'clamp(215px, 66%, 260px)',
-                    minWidth: '215px',
-                    minHeight: '215px',
-                    maxWidth: '260px',
-                    maxHeight: '260px',
+                    width: `clamp(${Math.round(stampSize * 0.85)}px, 88%, ${stampSize}px)`,
+                    height: `clamp(${Math.round(stampSize * 0.85)}px, 88%, ${stampSize}px)`,
+                    minWidth: `${Math.round(stampSize * 0.80)}px`,
+                    minHeight: `${Math.round(stampSize * 0.80)}px`,
+                    maxWidth: `${stampSize}px`,
+                    maxHeight: `${stampSize}px`,
                     aspectRatio: '1 / 1'
                   }}
                 >

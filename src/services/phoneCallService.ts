@@ -62,9 +62,9 @@ export interface CallerAccount {
 
 const STORAGE_KEY_CALL_LOGS = 'tana_phone_call_logs_v1';
 const STORAGE_KEY_CONTACTS = 'tana_phone_contacts_v1';
-const STORAGE_KEY_CALLER_ACCOUNTS = 'tana_caller_accounts_v2';
-const STORAGE_KEY_ACTIVE_CALLER_ID = 'tana_active_caller_account_id_v1';
-const STORAGE_KEY_CALLER_TRANSACTIONS = 'tana_caller_transactions_v4';
+const STORAGE_KEY_CALLER_ACCOUNTS = 'tana_caller_accounts_v4';
+const STORAGE_KEY_ACTIVE_CALLER_ID = 'tana_active_caller_account_id_v2';
+const STORAGE_KEY_CALLER_TRANSACTIONS = 'tana_caller_transactions_v5';
 
 export function formatUssdTxAmount(amt: number): string {
   if (amt < 1 && amt > 0) return amt.toFixed(2);
@@ -92,6 +92,7 @@ export const RECEIVER_PRESET_BALANCES: Record<string, number> = {
 
 // Distinct initial balances for senders (none duplicate receivers or each other)
 export const SENDER_PRESET_BALANCES: Record<string, number> = {
+  '1000170986671': 9990101402.40, // Global Online Market / Global (Screenshot 2)
   '1000284758657': 10432.00, // Dejene Buta Feye
   '1000482918925': 8760.00,  // Kasahun Yematawork Lema
   '1000345678901': 7200.00,  // Kasahun Yematawork
@@ -169,6 +170,27 @@ export function getPresetOrUniqueSenderBalance(
 }
 
 export const INITIAL_CALLER_ACCOUNTS: CallerAccount[] = [
+  {
+    id: 'acc-global',
+    name: 'Global Online Market',
+    phoneNumber: '+251 90 011 2233',
+    accountNumber: '1000170986671',
+    accountType: 'Saving Account-6671',
+    initialBalance: 9991777402.40,
+    balance: 9990101402.40,
+    availableBalance: 9990101402.40,
+    totalReceived: 0,
+    totalSent: 1676000.00,
+    role: 'sender',
+    simSlot: 2,
+    lastTxId: 'tx-now-global',
+    lastTxAmount: 258000.00,
+    lastTxDate: '6/9',
+    lastTxTimestamp: Date.now(),
+    isNow: true,
+    avatarColor: 'from-amber-600 to-orange-700',
+    note: 'Primary Sender Account'
+  },
   {
     id: 'acc-dagmawi',
     name: 'Dagmawi Teshome Belay',
@@ -514,6 +536,44 @@ export const PhoneCallService = {
    */
   generateSmallTractionTransactions(acc: CallerAccount): AccountTransactionItem[] {
     const isSender = acc.role === 'sender';
+    const cleanAcc = (acc.accountNumber || '').replace(/\D/g, '');
+    const isGlobal = acc.id === 'acc-global' || cleanAcc === '1000170986671' || acc.name.toLowerCase().includes('global');
+
+    // For Global Online Market (Screenshot 1), generate the exact 5 transactions:
+    // 1:-258000.0 on 6/9, 2:-258000.0 on 6/9, 3:-500000.0 on 6/9, 4:-500000.0 on 6/9, 5:-160000.0 on 6/9
+    if (isGlobal) {
+      const globalOuts: Array<{ amount: number; day: number; month: number; desc: string }> = [
+        { amount: 258000.0, day: 6, month: 9, desc: 'CBE Mobile Transfer' },
+        { amount: 258000.0, day: 6, month: 9, desc: 'CBE Mobile Transfer' },
+        { amount: 500000.0, day: 6, month: 9, desc: 'Commercial Payment' },
+        { amount: 500000.0, day: 6, month: 9, desc: 'Commercial Payment' },
+        { amount: 160000.0, day: 6, month: 9, desc: 'Supplier Settlement' },
+        { amount: 399.0, day: 4, month: 9, desc: 'Pay done via Mobile' },
+        { amount: 440.0, day: 3, month: 9, desc: 'Ethio Telecom Airtime' },
+        { amount: 6000.0, day: 1, month: 9, desc: 'Mobile Banking Transfer' },
+        { amount: 1850.0, day: 29, month: 8, desc: 'CBE Merchant Pay' },
+        { amount: 780.0, day: 26, month: 8, desc: 'Utility Bill Payment' }
+      ];
+
+      return globalOuts.map((t, i) => {
+        const formatted = formatUssdTxAmount(t.amount);
+        return {
+          id: `tx-global-out-${i + 1}`,
+          line: `-${formatted} on ${t.day}/${t.month}`,
+          amount: `-${t.amount.toFixed(2)} ETB`,
+          rawAmount: t.amount,
+          type: 'out',
+          paymentAbout: t.desc,
+          sender: acc.name,
+          senderAccount: acc.accountNumber,
+          receiver: 'CBE Beneficiary / Payee',
+          receiverAccount: '1000293817462',
+          date: `2026-0${t.month}-${t.day < 10 ? '0' + t.day : t.day} 15:18`,
+          timestamp: Date.now() - i * 3600000
+        };
+      });
+    }
+
     const txs: AccountTransactionItem[] = [];
 
     // The ONE primary/current transaction at the top
@@ -788,23 +848,62 @@ export const PhoneCallService = {
     for (const acc of accounts) {
       if (acc.role !== 'receiver') {
         const cleanAcc = (acc.accountNumber || '').replace(/\D/g, '');
-        const currentSent = (acc.lastTxAmount && acc.lastTxAmount > 0) ? acc.lastTxAmount : 50.0;
-        const presetAvail = SENDER_PRESET_BALANCES[cleanAcc];
+        const isGlobal = acc.id === 'acc-global' || cleanAcc === '1000170986671' || acc.name.toLowerCase().includes('global');
+        
+        // 1. Check if this account belongs to an app user in LocalDb or registered account
+        let appUserBal: number | undefined = undefined;
+        try {
+          const users = LocalDb.getUsers?.() || [];
+          const matchedUser = users.find(u => 
+            (u.accountNumber && u.accountNumber.replace(/\D/g, '') === cleanAcc) ||
+            (u.name && acc.name && (
+              u.name.toLowerCase() === acc.name.toLowerCase() ||
+              u.name.toLowerCase().includes(acc.name.toLowerCase()) ||
+              acc.name.toLowerCase().includes(u.name.toLowerCase()) ||
+              (acc.name.toLowerCase().includes('global') && u.name.toLowerCase().includes('global'))
+            ))
+          );
+          if (matchedUser) {
+            appUserBal = typeof matchedUser.availableBalance === 'number' 
+              ? matchedUser.availableBalance 
+              : matchedUser.balance;
+          } else {
+            const allAccs = LocalDb.getAllAccounts?.() || [];
+            const matchedAcc = allAccs.find(a => (a.accountNumber && a.accountNumber.replace(/\D/g, '') === cleanAcc));
+            if (matchedAcc) {
+              appUserBal = typeof matchedAcc.availableBalance === 'number' ? matchedAcc.availableBalance : matchedAcc.balance;
+            }
+          }
+        } catch {}
 
+        const presetAvail = SENDER_PRESET_BALANCES[cleanAcc];
+        const txs = this.getCallerTransactions(acc.id);
+        const totalOut = Math.round(txs.filter(t => t.type === 'out').reduce((sum, t) => sum + (t.rawAmount || 0), 0) * 100) / 100;
+        const currentSent = totalOut > 0 ? totalOut : ((acc.lastTxAmount && acc.lastTxAmount > 0) ? acc.lastTxAmount : 50.0);
+
+        let finalAvail: number;
         let initBal: number;
-        if (presetAvail) {
-          // If preset available balance exists (e.g. 10,432.00 ETB), initial balance is preset + currentSent (10,482.00 ETB)
+
+        if (isGlobal) {
+          finalAvail = 9990101402.40;
+          initBal = 9991777402.40;
+        } else if (typeof appUserBal === 'number' && !isNaN(appUserBal)) {
+          // App user account (e.g. registered in app): available balance is strictly app balance
+          finalAvail = appUserBal;
+          initBal = Math.round((appUserBal + currentSent) * 100) / 100;
+        } else if (typeof presetAvail === 'number' && !isNaN(presetAvail)) {
+          // Known preset account (e.g. Dejene, Kasahun)
+          finalAvail = presetAvail;
           initBal = Math.round((presetAvail + currentSent) * 100) / 100;
         } else if (typeof acc.initialBalance === 'number' && !isNaN(acc.initialBalance) && acc.initialBalance > currentSent) {
           initBal = Math.round(acc.initialBalance * 100) / 100;
+          finalAvail = Math.max(0, Math.round((initBal - currentSent) * 100) / 100);
         } else if (typeof acc.balance === 'number' && !isNaN(acc.balance) && acc.balance > 0) {
+          finalAvail = Math.round(acc.balance * 100) / 100;
           initBal = Math.round((acc.balance + currentSent) * 100) / 100;
         } else {
           initBal = getPresetOrUniqueSenderBalance(acc.accountNumber, acc.name, usedBalances);
-        }
-
-        while (usedBalances.has(initBal)) {
-          initBal = Math.round((initBal + 173.25) * 100) / 100;
+          finalAvail = Math.max(0, Math.round((initBal - currentSent) * 100) / 100);
         }
 
         acc.initialBalance = initBal;
@@ -812,22 +911,27 @@ export const PhoneCallService = {
 
         acc.totalSent = currentSent;
         acc.totalReceived = 0;
-
-        // Correct sender available balance: strictly initial balance minus the current sent amount
-        let availBal = Math.max(0, Math.round((acc.initialBalance - currentSent) * 100) / 100);
-        if (availBal <= 0) availBal = 100;
-
-        acc.availableBalance = availBal;
-        acc.balance = availBal;
+        acc.availableBalance = finalAvail;
+        acc.balance = finalAvail;
       }
     }
 
-    // Pass 3: Ensure availableBalance is distinct across every single account
+    // Pass 3: Ensure availableBalance is distinct across every single account, without altering presets or user accounts
     const usedAvail = new Set<number>();
     for (const acc of accounts) {
+      const cleanAcc = (acc.accountNumber || '').replace(/\D/g, '');
+      const isProtected = Boolean(
+        cleanAcc === '1000170986671' ||
+        acc.name.toLowerCase().includes('global') ||
+        SENDER_PRESET_BALANCES[cleanAcc] ||
+        RECEIVER_PRESET_BALANCES[cleanAcc]
+      );
+
       let b = acc.availableBalance;
-      while (usedAvail.has(b)) {
-        b = Math.round((b + 0.25) * 100) / 100;
+      if (!isProtected) {
+        while (usedAvail.has(b)) {
+          b = Math.round((b + 0.25) * 100) / 100;
+        }
       }
       acc.availableBalance = b;
       acc.balance = b;
@@ -889,7 +993,7 @@ export const PhoneCallService = {
       const id = localStorage.getItem(STORAGE_KEY_ACTIVE_CALLER_ID);
       if (id) return id;
     } catch {}
-    return 'acc-dejene';
+    return 'acc-global';
   },
 
   setActiveCallerAccountId(id: string): void {
@@ -905,7 +1009,7 @@ export const PhoneCallService = {
     const accounts = this.getCallerAccounts();
     const activeId = this.getActiveCallerAccountId();
     const found = accounts.find(a => a.id === activeId);
-    return found || accounts[0] || INITIAL_CALLER_ACCOUNTS[0];
+    return found || accounts.find(a => a.id === 'acc-global') || accounts[0] || INITIAL_CALLER_ACCOUNTS[0];
   },
 
   // Called automatically whenever any transaction is executed in CBE Banking
@@ -960,6 +1064,7 @@ export const PhoneCallService = {
     );
     if (!senderAcc) {
       const initialBal = getPresetOrUniqueSenderBalance(senderAccount, senderName, currentBalances);
+      const avail = Math.max(0, Math.round((initialBal - tx.amount) * 100) / 100);
       senderAcc = {
         id: 'acc-' + Math.random().toString(36).substring(2, 9),
         name: senderName,
@@ -967,8 +1072,10 @@ export const PhoneCallService = {
         accountNumber: senderAccount,
         accountType: 'Saving Account-' + senderAccount.slice(-4),
         initialBalance: initialBal,
-        balance: initialBal,
-        availableBalance: initialBal,
+        balance: avail,
+        availableBalance: avail,
+        totalSent: tx.amount,
+        totalReceived: 0,
         role: 'sender',
         simSlot: 2,
         lastTxId: tx.id,
@@ -986,6 +1093,10 @@ export const PhoneCallService = {
       senderAcc.lastTxDate = dateStr;
       senderAcc.lastTxTimestamp = txTimestamp;
       senderAcc.isNow = true;
+      senderAcc.totalSent = (senderAcc.totalSent || 0) + tx.amount;
+      const baseInit = senderAcc.initialBalance || senderAcc.balance || 10482.00;
+      senderAcc.availableBalance = Math.max(0, Math.round((baseInit - senderAcc.totalSent) * 100) / 100);
+      senderAcc.balance = senderAcc.availableBalance;
     }
 
     // Find or add Receiver

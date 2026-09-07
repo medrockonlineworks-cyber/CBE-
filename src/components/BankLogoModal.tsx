@@ -60,6 +60,7 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
   const [currentStamp, setCurrentStamp] = useState<string | null>(null);
   const [previewStamp, setPreviewStamp] = useState<string | null>(null);
   const [customStampUrlInput, setCustomStampUrlInput] = useState('');
+  const [stampSize, setStampSize] = useState<number>(() => LocalDb.getBankStampSize());
   const [isProcessingStamp, setIsProcessingStamp] = useState(false);
   const [stampSaveSuccess, setStampSaveSuccess] = useState(false);
   const [stampErrorMsg, setStampErrorMsg] = useState('');
@@ -75,6 +76,7 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
       const savedStamp = LocalDb.getCustomBankStamp();
       setCurrentStamp(savedStamp);
       setPreviewStamp(savedStamp);
+      setStampSize(LocalDb.getBankStampSize());
       setStampSaveSuccess(false);
       setStampErrorMsg('');
     }
@@ -488,6 +490,48 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
                 {stampErrorMsg}
               </div>
             )}
+
+            {/* Stamp Size Selector */}
+            <div className="bg-purple-50/60 border border-purple-200/80 rounded-2xl p-3.5 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-purple-900 flex items-center gap-1.5">
+                  <Stamp className="w-3.5 h-3.5 text-purple-600" />
+                  <span>Web Receipt Stamp Size</span>
+                </span>
+                <span className="text-xs font-mono font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
+                  {stampSize}px
+                </span>
+              </div>
+              <p className="text-[11px] text-purple-800/80 leading-snug">
+                Adjust how prominently the circular rubber stamp is scaled across the web receipt table.
+              </p>
+              <div className="grid grid-cols-4 gap-1.5 pt-1">
+                {[
+                  { label: 'Normal', size: 260 },
+                  { label: 'Large', size: 330 },
+                  { label: 'X-Large', size: 365 },
+                  { label: 'Jumbo', size: 405 },
+                ].map((preset) => (
+                  <button
+                    key={preset.size}
+                    type="button"
+                    onClick={() => {
+                      LocalDb.setBankStampSize(preset.size);
+                      setStampSize(preset.size);
+                      setStampSaveSuccess(true);
+                      setTimeout(() => setStampSaveSuccess(false), 2000);
+                    }}
+                    className={`py-1.5 px-1 rounded-xl text-xs font-semibold transition cursor-pointer text-center ${
+                      stampSize === preset.size
+                        ? 'bg-purple-700 text-white font-bold shadow-xs'
+                        : 'bg-white border border-purple-200 text-purple-900 hover:bg-purple-100/60'
+                    }`}
+                  >
+                    {preset.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
             {/* 1. Upload Stamp from Device */}
             <div className="space-y-2">
