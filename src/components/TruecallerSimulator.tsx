@@ -49,8 +49,18 @@ import {
   Moon,
   ArrowDown,
   ArrowUp,
-  Users
+  Users,
+  ShieldAlert,
+  Info,
+  Shield,
+  CheckCircle,
+  Settings,
+  Sliders,
+  Inbox,
+  Filter,
+  Clock
 } from 'lucide-react';
+import { CbeWebReceiptModal } from './CbeWebReceiptModal';
 import { 
   TruecallerBankAccount, 
   TruecallerAlert, 
@@ -210,11 +220,31 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
   // 'inbox' = Google Messages list matching screenshot
   // 'bank_thread' = Transaction list for clicked bank (e.g. CBE)
   // 'takeover' = Full screen phone takeover with Truecaller pop-down
-  const [view, setView] = useState<'inbox' | 'bank_thread' | 'takeover'>('inbox');
+  const [view, setView] = useState<'inbox' | 'bank_thread' | 'takeover'>('bank_thread');
   
   // Selected bank for thread view
   const [activeBankKey, setActiveBankKey] = useState<TruecallerBankKey>('cbe');
-  const [activeBankSenderName, setActiveBankSenderName] = useState<string>('CBE');
+  const [activeBankSenderName, setActiveBankSenderName] = useState<string>('Cbe Bank');
+
+  // 3-Dot Dropdown Menu & Registered Account Management
+  const [showThreeDotMenu, setShowThreeDotMenu] = useState<boolean>(false);
+  const [threeDotTab, setThreeDotTab] = useState<'accounts' | 'settings' | 'simulate' | 'profile'>('accounts');
+  const [inboxFilterMode, setInboxFilterMode] = useState<'all' | 'inbox'>('all');
+  const [statusClockMode, setStatusClockMode] = useState<'2:47' | 'live'>('2:47');
+  const [batteryPercent, setBatteryPercent] = useState<number>(32);
+  const [selectedSimSlot, setSelectedSimSlot] = useState<number>(2);
+  const [showSpamBadge, setShowSpamBadge] = useState<boolean>(true);
+  const [recentTxOnTop, setRecentTxOnTop] = useState<boolean>(true);
+  const [enableSoundHaptics, setEnableSoundHaptics] = useState<boolean>(true);
+
+  const [showAddAccountModal, setShowAddAccountModal] = useState<boolean>(false);
+  const [newAccountHolder, setNewAccountHolder] = useState<string>('Leykun Jemaneh Ylma');
+  const [newAccountNumber, setNewAccountNumber] = useState<string>('1000419524747');
+  const [newAccountBalance, setNewAccountBalance] = useState<string>('298.54');
+  const [newAccountRole, setNewAccountRole] = useState<TruecallerRole>('sender');
+  const [receiptModalTx, setReceiptModalTx] = useState<any>(null);
+  const [useLiveClock, setUseLiveClock] = useState<boolean>(false);
+  const [bubbleActionTx, setBubbleActionTx] = useState<any>(null);
 
   // Search in Google Messages inbox
   const [searchQuery, setSearchQuery] = useState('');
@@ -363,91 +393,86 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
     // 1. From TruecallerAlerts matching this bank
     const matchingAlerts = alerts.filter(a => a.bankKey === activeBankKey);
 
-    // 2. Realistic seeded official CBE transactions matching user screenshots
+    // 2. Realistic seeded official CBE transactions matching user screenshots Screenshot_20260907-144751.png & Screenshot_20260907-144758.png
     const seededCbeList = [
+      {
+        id: 'tx-cbe-promo-oromoo',
+        amount: 0,
+        accountNumber: '1000419524747',
+        maskedAccount: '1*********4747',
+        holderName: 'Leykun Jemaneh Ylma',
+        role: 'receiver' as TruecallerRole,
+        bankName: 'Cbe Bank',
+        bankKey: 'cbe' as TruecallerBankKey,
+        timeString: '8:41 AM',
+        timestamp: '2026-09-05T08:41:00Z',
+        counterpartyName: 'Commercial Bank of Ethiopia',
+        balanceAfter: 298.54,
+        txId: 'CBE-PROMO-841',
+        simSlot: 2,
+        isSpam: false,
+        fullMessageText: `Itoophiyaatiin salphaatti xumuraa!\n\nBaankii Daldalaa Itoophiyaa\nBaankii Yoomiyyuu Itti Of\nAbdatan!`
+      },
+      {
+        id: 'tx-cbe-screenshot-debit-20',
+        amount: 20.00,
+        accountNumber: '1000419524747',
+        maskedAccount: '1*********4747',
+        holderName: 'Leykun Jemaneh Ylma',
+        role: 'sender' as TruecallerRole,
+        bankName: 'Cbe Bank',
+        bankKey: 'cbe' as TruecallerBankKey,
+        timeString: '12:54 PM',
+        timestamp: '2026-09-05T12:54:00Z',
+        counterpartyName: 'Service & Disaster Recovery',
+        balanceAfter: 298.54,
+        txId: 'v2-hfHCxGKNY8V0W9qoyCPX',
+        simSlot: 2,
+        isSpam: true,
+        receiptUrl: 'https://mreciept.cbe.com.et/v2-hfHCxGKNY8V0W9qoyCPX',
+        feedbackUrl: 'https://forms.gle/kGNGQpG3mQCCk3iD6',
+        fullMessageText: `Dear Leykun Jemaneh Ylma A debit transaction of ETB 20.0. has occurred on your account 1*********4747. Service charge of ETB 0.00 and VAT(15%) of 0.0 and Disaster Recovery(5%) of 0.00 with total of ETB20.00 .Your current balance is ETB298.54. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxGKNY8V0W9qoyCPX for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`
+      },
+      {
+        id: 'tx-cbe-screenshot-credit-50',
+        amount: 50.00,
+        accountNumber: '1000419524747',
+        maskedAccount: '1*********4747',
+        holderName: 'Leykun',
+        role: 'receiver' as TruecallerRole,
+        bankName: 'Cbe Bank',
+        bankKey: 'cbe' as TruecallerBankKey,
+        timeString: '4:41 PM',
+        dateLabel: 'Saturday, 05 Sep',
+        timestamp: '2026-09-05T16:41:01Z',
+        counterpartyName: 'Dejene Buta',
+        balanceAfter: 348.54,
+        txId: 'FT26248KLR82',
+        simSlot: 2,
+        isSpam: true,
+        receiptUrl: 'https://apps.cbe.com.et:100/?id=FT26248KLR8219524747',
+        fullMessageText: `Dear Leykun your Account 1*********4747 has been Credited with ETB 50.00 from Dejene Buta, on 05/09/2026 at 16:41:01 with Ref No FT26248KLR82 Your Current Balance is ETB 348.54. Thank you for Banking with CBE!\nhttps://apps.cbe.com.et:100/?id=FT26248KLR8219524747`
+      },
       {
         id: 'tx-cbe-seed-featured',
         amount: 244600.00,
         accountNumber: '1000419520913',
-        maskedAccount: '1********0913',
+        maskedAccount: '1*********0913',
         holderName: 'Leykun Jemaneh Ylma',
         role: 'receiver' as TruecallerRole,
-        bankName: 'CBE',
+        bankName: 'Cbe Bank',
         bankKey: 'cbe' as TruecallerBankKey,
         timeString: '2:35 PM',
-        timestamp: new Date().toISOString(),
+        timestamp: new Date(Date.now() - 3600000).toISOString(),
         counterpartyName: 'Commercial Bank of Ethiopia',
         balanceAfter: 289450.75,
         txId: 'FT26248MK0913',
-        fullMessageText: `Dear Leykun Jemaneh Ylma,\nYour Account 1000419520913 has been Credited with ETB 244,600.00 on 05/09/2026 02:35 PM.\nAvailable Balance is ETB 289,450.75.\nTxn Ref: FT26248MK0913.\nThank you for banking with CBE.\nhttps://cbe.com.et/mbreceipt/FT26248MK0913`
-      },
-      {
-        id: 'tx-cbe-seed-debit-current',
-        amount: 90000000.00,
-        accountNumber: '1000419529165',
-        maskedAccount: '1********9165',
-        holderName: 'Leykun Jemaneh Ylma',
-        role: 'sender' as TruecallerRole,
-        bankName: 'CBE',
-        bankKey: 'cbe' as TruecallerBankKey,
-        timeString: '1:18 PM',
-        timestamp: new Date(Date.now() - 300000).toISOString(),
-        counterpartyName: 'Commercial Bank of Ethiopia',
-        balanceAfter: 9897531463.00,
-        txId: 'FT269446FP77',
-        fullMessageText: `Dear Leykun Jemaneh Ylma,\nA debit transaction of ETB 90000000.00 has occurred on your Account 1000419529165 on 1:18 PM.\nAvailable Balance: ETB 9897531463.00.\nTxn Ref: FT269446FP77.\nThank you for banking with Cbe Bank.`
-      },
-      {
-        id: 'tx-cbe-seed-1',
-        amount: 450.00,
-        accountNumber: '1000419529165',
-        maskedAccount: '1********9165',
-        holderName: 'Leykun Jemaneh Ylma',
-        role: 'receiver' as TruecallerRole,
-        bankName: 'CBE',
-        bankKey: 'cbe' as TruecallerBankKey,
-        timeString: '11:58 AM',
-        timestamp: new Date(Date.now() - 1800000).toISOString(),
-        counterpartyName: 'Abebe Bikila',
-        balanceAfter: 5420.50,
-        txId: 'FT25104MK9165',
-        fullMessageText: `Dear Leykun Jemaneh Ylma,\nYour Account 1000419529165 has been Credited with ETB 450.00 on 05/09/2026 11:58 AM by Abebe Bikila.\nAvailable Balance is ETB 5,420.50.\nTxn Ref: FT25104MK9165.\nThank you for banking with CBE.\nhttps://cbe.com.et/mbreceipt/FT25104MK9165`
-      },
-      {
-        id: 'tx-cbe-seed-2',
-        amount: 250.00,
-        accountNumber: '1000419524747',
-        maskedAccount: '1********4747',
-        holderName: 'Leykun Jemaneh Ylma',
-        role: 'sender' as TruecallerRole,
-        bankName: 'Commercial Bank of Ethiopia',
-        bankKey: 'cbe' as TruecallerBankKey,
-        timeString: '10:20 AM',
-        timestamp: new Date(Date.now() - 3600000).toISOString(),
-        counterpartyName: 'Ethio Telecom Airtime',
-        balanceAfter: 1555.47,
-        txId: 'FT250918491',
-        fullMessageText: `Dear Leykun Jemaneh Ylma,\nA debit transaction of ETB 250.00 has occurred on your Account 1000419524747 on 05/09/2026 10:20 AM.\nReason: Airtime Top-Up.\nAvailable Balance: ETB 1,555.47.\nTxn Ref: FT250918491.\nThank you for banking with CBE.`
-      },
-      {
-        id: 'tx-cbe-seed-3',
-        amount: 1200.00,
-        accountNumber: '1000419529165',
-        maskedAccount: '1********9165',
-        holderName: 'Leykun Jemaneh Ylma',
-        role: 'receiver' as TruecallerRole,
-        bankName: 'Commercial Bank of Ethiopia',
-        bankKey: 'cbe' as TruecallerBankKey,
-        timeString: 'Yesterday',
-        timestamp: new Date(Date.now() - 86400000).toISOString(),
-        counterpartyName: 'Selamawit Tekle',
-        balanceAfter: 4970.50,
-        txId: 'FT2489104MK',
-        fullMessageText: `Dear Leykun Jemaneh Ylma,\nYour Account 1000419529165 has been Credited with ETB 1,200.00 on 04/09/2026 04:15 PM by Selamawit Tekle.\nAvailable Balance is ETB 4,970.50.\nTxn Ref: FT2489104MK.\nThank you for banking with CBE.`
+        simSlot: 1,
+        fullMessageText: `Dear Leykun Jemaneh Ylma,\nYour Account 1000419520913 has been Credited with ETB 244,600.00 on 05/09/2026 02:35 PM.\nAvailable Balance is ETB 289,450.75.\nTxn Ref: FT26248MK0913.\nThank you for banking with CBE.\nhttps://apps.cbe.com.et:100/?id=FT26248MK0913`
       }
     ];
 
-    // Combine matching alerts
+    // Combine matching alerts from service state
     const alertItems = matchingAlerts.map(a => ({
       id: a.id,
       amount: a.amount,
@@ -462,37 +487,45 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
       counterpartyName: a.counterpartyName,
       balanceAfter: a.balanceAfter,
       txId: a.txId,
+      simSlot: 2,
+      isSpam: false,
+      receiptUrl: `https://apps.cbe.com.et:100/?id=${a.txId || 'FT26248MK0913'}`,
       fullMessageText: a.fullSmsText || (
         a.role === 'receiver'
-          ? `Dear ${a.holderName || 'Leykun Jemaneh Ylma'},\nYour Account ${a.fullAccount || '1000419520913'} has been Credited with ETB ${a.amount.toFixed(2)} on ${a.timeString || 'Now'}${a.counterpartyName ? ` by ${a.counterpartyName}` : ''}.\nAvailable Balance is ETB ${(a.balanceAfter || 289450.75).toFixed(2)}.\nTxn Ref: ${a.txId || 'FT26248MK0913'}.\nThank you for banking with ${a.bankName}.`
-          : `Dear ${a.holderName || 'Leykun Jemaneh Ylma'},\nA debit transaction of ETB ${a.amount.toFixed(2)} has occurred on your Account ${a.fullAccount || '1000419529165'} on ${a.timeString || 'Now'}.\nAvailable Balance: ETB ${(a.balanceAfter || 9897531463.00).toFixed(2)}.\nTxn Ref: ${a.txId || 'FT269446FP77'}.\nThank you for banking with ${a.bankName}.`
+          ? `Dear ${a.holderName || 'Leykun Jemaneh Ylma'},\nYour Account ${a.fullAccount || '1000419520913'} has been Credited with ETB ${a.amount.toFixed(2)} on ${a.timeString || 'Now'}${a.counterpartyName ? ` from ${a.counterpartyName}` : ''}.\nAvailable Balance is ETB ${(a.balanceAfter || 79100.00).toFixed(2)}.\nTxn Ref: ${a.txId || 'FT26248MK0913'}.\nThank you for banking with ${a.bankName}.\nhttps://apps.cbe.com.et:100/?id=${a.txId || 'FT26248MK0913'}`
+          : `Dear ${a.holderName || 'Leykun Jemaneh Ylma'},\nA debit transaction of ETB ${a.amount.toFixed(2)} has occurred on your Account ${a.fullAccount || '1000419529165'} on ${a.timeString || 'Now'}${a.counterpartyName ? ` to ${a.counterpartyName}` : ''}.\nAvailable Balance: ETB ${(a.balanceAfter || 920.50).toFixed(2)}.\nTxn Ref: ${a.txId || 'FT269446FP77'}.\nThank you for banking with ${a.bankName}.\nhttps://apps.cbe.com.et:100/?id=${a.txId || 'FT269446FP77'}`
       )
     }));
 
-    // Combine all and deduplicate by txId
-    const allItems = [...alertItems];
+    // Alert items (freshly created or active alerts) go first at the top
+    let allItems: any[] = [];
+    
+    // Add dynamic alerts first (most recent)
+    for (const item of alertItems) {
+      if (!allItems.some(c => c.txId === item.txId)) {
+        allItems.push(item);
+      }
+    }
+
+    // Add seeded items next
     for (const seed of seededCbeList) {
       if (!allItems.some(c => c.txId === seed.txId)) {
         allItems.push(seed);
       }
     }
 
-    // Identify current RECEIVE (credit) and current SEND (debit) transactions to place at the top with "Now" badge
-    const topCredit = allItems.find(item => item.role === 'receiver') || seededCbeList[0];
-    const topDebit = allItems.find(item => item.role === 'sender') || seededCbeList[1];
+    // Filter if user clicked "View only Inbox"
+    if (inboxFilterMode === 'inbox') {
+      allItems = allItems.filter(item => item.amount > 0);
+    }
 
-    const currentTopList: (typeof seededCbeList[0] & { isNow: boolean })[] = [
-      { ...topCredit, isNow: true },
-      { ...topDebit, isNow: true }
-    ];
-
-    // Filter out top items from remaining list so there are no duplicates
-    const remainingItems = allItems
-      .filter(item => item.id !== topCredit.id && item.id !== topDebit.id && item.txId !== topCredit.txId && item.txId !== topDebit.txId)
-      .map(item => ({ ...item, isNow: false }));
-
-    return [...currentTopList, ...remainingItems];
-  }, [activeBankKey, alerts]);
+    // The first item (top recent transaction) always gets the prominent "Now" badge when recentTxOnTop is true
+    return allItems.map((item, index) => ({
+      ...item,
+      simSlot: selectedSimSlot || item.simSlot || 2,
+      isNow: recentTxOnTop ? (index === 0 || item.timeString === 'Now' || item.timeString?.toLowerCase().includes('now')) : false
+    }));
+  }, [activeBankKey, alerts, inboxFilterMode, recentTxOnTop, selectedSimSlot]);
 
   // Click on a thread in Google Messages Inbox
   const handleSelectThread = (thread: GoogleMessagesThreadItem) => {
@@ -1842,253 +1875,692 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
   // =========================================================================
   if (view === 'bank_thread') {
     return (
-      <div className="min-h-screen bg-[#121212] text-[#e3e3e3] flex flex-col font-sans select-none relative">
+      <div className="min-h-screen bg-black text-white flex flex-col font-sans select-none relative overflow-x-hidden">
         
-        {/* Android Status Bar */}
-        <div className="w-full px-4 pt-1.5 pb-1 flex items-center justify-between text-xs text-neutral-400 bg-[#121212]">
-          <div className="flex items-center space-x-1.5 font-medium tracking-tight text-white">
-            <span>1:28</span>
-            <svg className="w-3.5 h-3.5 fill-current opacity-85" viewBox="0 0 24 24">
-              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-            </svg>
+        {/* Toast popup */}
+        {toastMessage && (
+          <div className="fixed top-14 left-1/2 -translate-x-1/2 z-50 bg-[#1e293b] text-white font-medium px-4 py-2 rounded-full shadow-2xl text-xs flex items-center space-x-2 border border-blue-500/50 animate-in fade-in slide-in-from-top-3 duration-150">
+            <CheckCircle2 className="w-4 h-4 text-[#0066FF]" />
+            <span>{toastMessage}</span>
           </div>
-          <div className="flex items-center space-x-2 text-[11px]">
-            <span className="font-mono text-[10px]">19.2 KB/s</span>
-            <span className="font-bold text-[10px]">H+</span>
-            <span className="font-bold text-[10px]">3G</span>
-            <div className="w-6 h-3.5 border border-white/80 rounded-xs p-0.5 flex items-center justify-center">
-              <span className="text-[9.5px] font-bold leading-none text-white">68</span>
+        )}
+
+        {/* Android Status Bar matching Screenshot_20260907-144751.png */}
+        <div className="w-full px-4 pt-2 pb-1.5 flex items-center justify-between text-xs text-white bg-black select-none z-30">
+          {/* Left: Clock (2:47 matching screenshot or live clock if toggled) */}
+          <div className="flex items-center space-x-1.5 font-medium text-[13px] tracking-tight text-white">
+            <span>{statusClockMode === 'live' ? formatCurrentTimeString().replace(' AM', '').replace(' PM', '') : '2:47'}</span>
+          </div>
+
+          {/* Right: Bluetooth, Network Speed, 4G, 3G, Battery */}
+          <div className="flex items-center space-x-2.5 text-[11px]">
+            {/* Bluetooth */}
+            <svg className="w-3.5 h-3.5 text-white fill-current opacity-90" viewBox="0 0 24 24">
+              <path d="M14.88 16.29L13 18.17V14.41l1.88 1.88M13 5.83l1.88 1.88L13 9.59V5.83M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29z"/>
+            </svg>
+
+            {/* Speed: 0.00 KB/S */}
+            <div className="flex flex-col items-end leading-none">
+              <span className="font-mono text-[8px] font-bold text-neutral-300">0.00</span>
+              <span className="font-mono text-[6.5px] font-bold text-neutral-400">KB/S</span>
+            </div>
+
+            {/* 4G Signal with 4 bars */}
+            <div className="flex items-center space-x-0.5">
+              <div className="flex items-end space-x-0.5 h-3">
+                <div className="w-0.5 h-1 bg-white rounded-xs" />
+                <div className="w-0.5 h-1.5 bg-white rounded-xs" />
+                <div className="w-0.5 h-2 bg-white rounded-xs" />
+                <div className="w-0.5 h-2.5 bg-white rounded-xs" />
+              </div>
+              <span className="text-[10px] font-bold ml-0.5">4G</span>
+            </div>
+
+            {/* 3G Signal with 4 bars */}
+            <div className="flex items-center space-x-0.5">
+              <div className="flex items-end space-x-0.5 h-3">
+                <div className="w-0.5 h-1 bg-white rounded-xs" />
+                <div className="w-0.5 h-1.5 bg-white rounded-xs" />
+                <div className="w-0.5 h-2 bg-white rounded-xs" />
+                <div className="w-0.5 h-2.5 bg-white rounded-xs" />
+              </div>
+              <span className="text-[10px] font-bold ml-0.5">3G</span>
+            </div>
+
+            {/* Battery pill with 32 inside matching Screenshot_20260907-144751.png */}
+            <div className="w-7 h-3.5 border border-white rounded-[4px] px-0.5 flex items-center justify-center relative">
+              <span className="text-[9px] font-bold leading-none text-white">{batteryPercent}</span>
+              <div className="absolute -right-1 top-1 w-0.5 h-1.5 bg-white rounded-r-xs" />
             </div>
           </div>
         </div>
 
-        {/* Bank Thread App Bar */}
-        <header className="w-full bg-[#121212] border-b border-neutral-900/80 text-white px-2 py-2 flex items-center justify-between sticky top-0 z-30 shadow-md">
+        {/* Bank Thread App Bar matching screenshot */}
+        <header className="w-full bg-black border-b border-neutral-900 px-3 py-2 flex items-center justify-between sticky top-0 z-30">
           <div className="flex items-center space-x-3">
-            {/* Back Button returning to Google Messages inbox */}
+            {/* Back Button */}
             <button
               type="button"
               onClick={() => setView('inbox')}
-              className="p-2 rounded-full hover:bg-neutral-800 text-white transition-colors active:scale-95 cursor-pointer"
-              title="Back to Google Messages Inbox"
+              className="p-1 rounded-full hover:bg-neutral-900 text-white transition-colors active:scale-95 cursor-pointer"
+              title="Back"
             >
-              <ArrowLeft className="w-6 h-6" />
+              <ArrowLeft className="w-6 h-6 text-white" />
             </button>
 
-            {/* Bank Avatar */}
-            <div 
-              className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm"
-              style={{ backgroundColor: activeBankPreset.color || '#8e24aa' }}
-            >
-              <User className="w-6 h-6 text-white" />
+            {/* Bank Avatar: Dark Navy Circle with Bank Facade Columns Pediment Icon */}
+            <div className="w-10 h-10 rounded-full bg-[#18263b] flex items-center justify-center flex-shrink-0 border border-blue-900/40 shadow-sm">
+              <svg className="w-5 h-5 text-white fill-current" viewBox="0 0 24 24">
+                {/* Triangular roof */}
+                <path d="M12 2L2 7h20L12 2z"/>
+                {/* Horizontal architrave */}
+                <rect x="3" y="8" width="18" height="2"/>
+                {/* 4 Pillars */}
+                <rect x="4" y="11" width="2.5" height="7"/>
+                <rect x="8.5" y="11" width="2.5" height="7"/>
+                <rect x="13" y="11" width="2.5" height="7"/>
+                <rect x="17.5" y="11" width="2.5" height="7"/>
+                {/* Base */}
+                <rect x="2" y="19" width="20" height="3"/>
+              </svg>
             </div>
 
-            {/* Bank Title & Shortcode */}
+            {/* Bank Title & Mobile Banking Label */}
             <div>
-              <div className="flex items-center space-x-1.5">
-                <h1 className="text-[19px] font-medium tracking-wide leading-none text-white">
-                  {activeBankSenderName}
-                </h1>
-                <CheckCircle2 className="w-4 h-4 text-blue-400" />
-              </div>
-              <p className="text-[11px] text-neutral-400 mt-0.5">
-                Commercial Bank of Ethiopia • 889
+              <h1 className="text-[17px] font-medium tracking-normal leading-tight text-white">
+                Cbe Bank
+              </h1>
+              <p className="text-[12px] text-[#94a3b8] leading-tight">
+                (Mobile Banking)
               </p>
             </div>
           </div>
 
-          <div className="flex items-center space-x-1 text-neutral-300">
-            <button
-              type="button"
-              onClick={() => setShowQuickSimModal(true)}
-              className="px-2.5 py-1 bg-purple-700 hover:bg-purple-600 active:scale-95 text-white rounded-lg text-xs font-bold flex items-center space-x-1 transition cursor-pointer shadow-sm"
-              title="Simulate New Transaction"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Simulate Tx</span>
-            </button>
+          {/* 3-Dot Options Button with blue notification dot from screenshot */}
+          <div className="flex items-center space-x-1">
             <button 
               type="button"
-              onClick={() => setView('inbox')}
-              className="p-2 rounded-full hover:bg-neutral-800 text-neutral-300"
-              title="Options"
+              onClick={() => setShowThreeDotMenu(true)}
+              className="relative p-2 rounded-full hover:bg-neutral-900 text-white cursor-pointer transition-colors active:scale-95"
+              title="Options & Registered Accounts"
             >
-              <MoreVertical className="w-5 h-5" />
+              <MoreVertical className="w-6 h-6 text-white" />
+              {/* Blue notification badge dot from screenshot */}
+              <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-[#0066FF] ring-2 ring-black" />
             </button>
           </div>
         </header>
 
-        {/* Call to action instruction banner */}
-        <div className="bg-gradient-to-r from-blue-900/60 via-purple-900/50 to-blue-900/60 border-b border-blue-500/30 px-4 py-2.5 flex items-center justify-between text-xs text-blue-100">
-          <div className="flex items-center space-x-2">
-            <Sparkles className="w-4 h-4 text-amber-300 flex-shrink-0 animate-pulse" />
-            <span>
-              <strong>Step 2:</strong> Click any transaction below to choose <strong>Phone Screen &amp; Phone Type</strong> to show Truecaller pop-down!
-            </span>
-          </div>
-        </div>
-
-        {/* Auto-Created Accounts in Truecaller SMS status bar */}
-        <div className="bg-[#18191c] border-b border-neutral-800 px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-neutral-300">
-          <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-            <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30 font-bold flex items-center space-x-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-400 mr-0.5" />
-              <span>Truecaller SMS Accounts:</span>
-            </span>
-            <span className="text-neutral-400 font-mono text-[10.5px]">
-              <strong className="text-neutral-200">Sender (User X):</strong> 1000419529165 • <strong className="text-neutral-200">Receiver (User Y):</strong> 1000419520913
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              TruecallerService.simulateUserTransfer({
-                senderName: 'User X (Leykun Jemaneh)',
-                senderAccount: '1000419529165',
-                recipientName: 'User Y (Abebe Bikila)',
-                recipientAccount: '1000419520913',
-                amount: 4500,
-                bankKey: 'cbe'
-              });
-              setAccounts(TruecallerService.getAccounts());
-              setAlerts(TruecallerService.getAlerts());
-              showToast('Transfer of ETB 4,500.00 created: User X (Send) & User Y (Receive) accounts added to Truecaller SMS!');
-            }}
-            className="px-2.5 py-1 rounded-md bg-purple-600/30 hover:bg-purple-600/50 border border-purple-500/40 text-purple-200 font-bold text-[10.5px] flex items-center space-x-1 transition active:scale-95 cursor-pointer"
-          >
-            <span>Simulate User X → User Y (4,500) ⚡</span>
-          </button>
-        </div>
-
-        {/* Transaction Messages Stream */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-28">
+        {/* Transaction Messages Stream: Most recent at the top with "Now" badge */}
+        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 pb-36">
           {bankTransactions.length === 0 ? (
-            <div className="text-center py-16 text-neutral-500 text-sm">
+            <div className="text-center py-20 text-neutral-500 text-sm">
               No transactions found for {activeBankSenderName}.
             </div>
           ) : (
-            bankTransactions.map(tx => {
-              const isCredit = tx.role === 'receiver';
+            bankTransactions.map((tx, index) => {
+              const hasDateSeparator = tx.dateLabel || index === 1;
+
               return (
-                <div
-                  key={tx.id}
-                  onClick={() => handleOpenPickerForTx(tx)}
-                  className={`w-full max-w-md mx-auto bg-[#1f2023] hover:bg-[#25282d] border-2 ${
-                    tx.isNow 
-                      ? 'border-[#0066FF]/60 shadow-[0_4px_25px_rgba(0,102,255,0.18)]' 
-                      : 'border-neutral-800'
-                  } hover:border-[#0066FF] rounded-2xl p-4 transition-all duration-150 cursor-pointer shadow-lg group relative active:scale-[0.99]`}
-                >
-                  {/* Card Header: Credit/Debit status, Now Badge & Time */}
-                  <div className="flex items-center justify-between pb-2 mb-2 border-b border-neutral-800">
-                    <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-                      <span className={`px-2 py-0.5 rounded-full text-[11px] font-extrabold uppercase tracking-wide flex items-center space-x-1 ${
-                        isCredit 
-                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                          : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                      }`}>
-                        {isCredit ? <ArrowDown className="w-3 h-3" /> : <ArrowUp className="w-3 h-3" />}
-                        <span>{isCredit ? 'Credited (Receive)' : 'Debited (Send)'}</span>
+                <React.Fragment key={tx.id}>
+                  {/* Date separator chip (e.g. Saturday, 05 Sep) */}
+                  {hasDateSeparator && (
+                    <div className="flex justify-center my-3">
+                      <span className="px-3.5 py-1 bg-[#323741] text-neutral-200 text-[11px] font-medium rounded-full shadow-xs">
+                        {tx.dateLabel || 'Saturday, 05 Sep'}
                       </span>
+                    </div>
+                  )}
 
-                      {/* Prominent "Now" Badge */}
-                      {tx.isNow && (
-                        <span className="px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-[#0066FF] text-white shadow-sm flex items-center space-x-1 border border-blue-400/50 animate-pulse">
-                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-200 mr-0.5" />
+                  <div className="w-full max-w-[430px] mx-auto">
+                    {/* Top Transaction "Now" Badge */}
+                    {tx.isNow && (
+                      <div className="flex items-center space-x-1.5 mb-1.5 pl-1">
+                        <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#0066FF] text-white shadow-sm border border-blue-400/40">
+                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-200 animate-pulse mr-0.5" />
                           <span>Now</span>
                         </span>
-                      )}
+                        <span className="text-[11px] text-cyan-400 font-medium">Recent Transaction</span>
+                      </div>
+                    )}
 
-                      <span className="text-xs font-mono font-bold text-neutral-200">
-                        ETB {tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center space-x-1.5 text-xs text-neutral-400 font-medium">
-                      {tx.isNow ? (
-                        <span className="text-cyan-400 font-semibold text-[11.5px] flex items-center space-x-1">
-                          <span>Now</span>
-                          <span className="text-neutral-500">•</span>
-                          <span className="text-neutral-300 font-normal">{tx.timeString}</span>
-                        </span>
-                      ) : (
-                        <span>{tx.timeString}</span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Participant sub-header for User X / User Y */}
-                  <div className="text-[11px] mb-2 px-2 py-1 rounded-lg bg-neutral-900/60 border border-neutral-800/80 flex items-center justify-between text-neutral-300">
-                    <span className="font-medium">
-                      {isCredit ? (
-                        <span className="text-emerald-400">
-                          <strong>Receiver (User Y):</strong> {tx.holderName}
-                        </span>
-                      ) : (
-                        <span className="text-rose-400">
-                          <strong>Sender (User X):</strong> {tx.holderName}
-                        </span>
-                      )}
-                    </span>
-                    <span className="font-mono text-[10px] text-neutral-400">
-                      Acc: {tx.accountNumber}
-                    </span>
-                  </div>
-
-                  {/* Message Body */}
-                  <div className="text-[13.5px] leading-relaxed text-neutral-200 whitespace-pre-line font-normal">
-                    {tx.fullMessageText}
-                  </div>
-
-                  {/* Interactive Footer Button: Choose Phone Screen & Phone Type */}
-                  <div className="mt-3 pt-2.5 border-t border-neutral-800/80 flex items-center justify-between">
-                    <div className="flex items-center space-x-1.5 text-xs text-neutral-400">
-                      <CreditCard className="w-3.5 h-3.5 text-purple-400" />
-                      <span className="font-mono text-[11px] text-purple-300 font-semibold">
-                        {tx.accountNumber}
-                      </span>
-                    </div>
-
-                    {/* Prominent Action Button: Launch Picker */}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleOpenPickerForTx(tx);
-                      }}
-                      className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full bg-[#0066FF] hover:bg-blue-600 active:scale-95 text-white text-xs font-bold shadow-md transition cursor-pointer"
+                    {/* Charcoal SMS Message Bubble matching screenshot */}
+                    <div 
+                      onClick={() => setBubbleActionTx(tx)}
+                      className="bg-[#212429] hover:bg-[#272b32] active:scale-[0.99] rounded-[18px] p-4 text-white shadow-md transition cursor-pointer border border-neutral-800/60"
                     >
-                      <Smartphone className="w-3.5 h-3.5" />
-                      <span>Choose Phone &amp; Pop Down ⚡</span>
-                    </button>
+                      {/* Formatted message text with clickable receipt links */}
+                      <div className="text-[13.5px] leading-relaxed text-white whitespace-pre-line font-normal break-words">
+                        {(() => {
+                          const urlRegex = /(https?:\/\/[^\s]+)/g;
+                          const parts = (tx.fullMessageText || '').split(urlRegex);
+                          return parts.map((part, i) => {
+                            if (part.match(urlRegex)) {
+                              return (
+                                <span
+                                  key={i}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setReceiptModalTx({
+                                      id: tx.txId || 'FT26248KLR82',
+                                      type: tx.role === 'receiver' ? 'receive' : 'transfer',
+                                      amount: tx.amount || 20.00,
+                                      fee: 0,
+                                      receiverName: tx.role === 'receiver' ? (tx.holderName || 'Leykun') : (tx.counterpartyName || 'Retail Merchant'),
+                                      receiverAccount: tx.role === 'receiver' ? (tx.accountNumber || '1000419524747') : '1000419520913',
+                                      senderName: tx.role === 'receiver' ? (tx.counterpartyName || 'Dejene Buta') : (tx.holderName || 'Leykun Jemaneh Ylma'),
+                                      senderAccount: tx.role === 'receiver' ? '1000419520842' : (tx.accountNumber || '1000419524747'),
+                                      reference: tx.txId || 'FT26248KLR82',
+                                      timestamp: tx.timestamp || '2026-09-05T16:41:01Z',
+                                      status: 'completed',
+                                      reason: tx.role === 'receiver' ? 'Credit Transfer' : 'Debit Transaction'
+                                    });
+                                  }}
+                                  className="text-[#38bdf8] underline hover:text-blue-300 cursor-pointer break-all font-medium inline-block"
+                                  title="Click to view CBE Web Receipt"
+                                >
+                                  {part}
+                                </span>
+                              );
+                            }
+                            return <span key={i}>{part}</span>;
+                          });
+                        })()}
+                      </div>
+                    </div>
+
+                    {/* Sub-caption under bubble matching screenshot (Shield icon + Spam • SMS 2 • Time) */}
+                    <div className="flex items-center space-x-1.5 mt-1 text-[11px] text-neutral-400 pl-1">
+                      {tx.isSpam && showSpamBadge && (
+                        <>
+                          <Shield className="w-3.5 h-3.5 text-neutral-400 flex-shrink-0" />
+                          <span>Spam</span>
+                          <span>•</span>
+                        </>
+                      )}
+                      <span className="px-1 py-0.2 bg-[#2d3139] text-[9.5px] rounded text-neutral-200 font-bold leading-none">
+                        SMS {tx.simSlot || selectedSimSlot || 2}
+                      </span>
+                      <span>•</span>
+                      <span>{tx.timeString}</span>
+                    </div>
                   </div>
-                </div>
+                </React.Fragment>
               );
             })
           )}
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Bottom Bar with simulate quick button & back */}
-        <div className="p-3 bg-[#17181a] border-t border-neutral-800 flex items-center justify-between sticky bottom-0 z-20">
-          <button
-            type="button"
-            onClick={() => setView('inbox')}
-            className="px-4 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs font-bold transition flex items-center space-x-1.5"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Google Messages Inbox</span>
-          </button>
+        {/* Floating Action Controls & Bottom Bar matching Screenshot_20260907-144751.png */}
+        <div className="fixed bottom-10 left-0 right-0 z-20 pointer-events-none flex flex-col items-center">
+          {/* Centered Filter Pill matching screenshot: "Showing all messages • View only Inbox" */}
+          <div className="mb-2 pointer-events-auto">
+            <button
+              type="button"
+              onClick={() => {
+                const nextMode = inboxFilterMode === 'all' ? 'inbox' : 'all';
+                setInboxFilterMode(nextMode);
+                showToast(nextMode === 'inbox' ? 'Filtering: View only Inbox (Financial Transactions)' : 'Showing all messages');
+              }}
+              className="px-4 py-1.5 rounded-full bg-[#1e2229]/95 backdrop-blur-md border border-neutral-700/80 text-[11.5px] text-neutral-300 flex items-center space-x-2 shadow-2xl cursor-pointer hover:border-neutral-500 active:scale-95 transition"
+            >
+              <Inbox className="w-3.5 h-3.5 text-neutral-400" />
+              <span>{inboxFilterMode === 'all' ? 'Showing all messages' : 'Viewing Inbox'}</span>
+              <span className="text-neutral-500">•</span>
+              <span className="text-[#38bdf8] font-semibold hover:underline">
+                {inboxFilterMode === 'all' ? 'View only Inbox' : 'Show all'}
+              </span>
+            </button>
+          </div>
 
-          <button
-            type="button"
-            onClick={() => setShowQuickSimModal(true)}
-            className="px-4 py-2 rounded-xl bg-purple-700 hover:bg-purple-600 text-white text-xs font-bold transition flex items-center space-x-1.5 shadow-md"
+          <div className="w-full max-w-[440px] px-4 flex items-center justify-between pointer-events-auto mb-2">
+            {/* Left Action Pills: Report & View Profile matching screenshot */}
+            <div className="flex items-center space-x-2">
+              <button
+                type="button"
+                onClick={() => showToast('Reported to spam database')}
+                className="px-3.5 py-1.5 rounded-full bg-[#1e2229]/90 backdrop-blur-xs border border-neutral-800 text-neutral-300 hover:text-white text-xs font-medium flex items-center space-x-1.5 shadow-lg active:scale-95 transition cursor-pointer"
+              >
+                <ShieldAlert className="w-3.5 h-3.5 text-red-400" />
+                <span>Report</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setThreeDotTab('profile');
+                  setShowThreeDotMenu(true);
+                }}
+                className="px-3.5 py-1.5 rounded-full bg-[#1e2229]/90 backdrop-blur-xs border border-neutral-800 text-neutral-300 hover:text-white text-xs font-medium flex items-center space-x-1.5 shadow-lg active:scale-95 transition cursor-pointer"
+              >
+                <Info className="w-3.5 h-3.5 text-blue-400" />
+                <span>View profile</span>
+              </button>
+            </div>
+
+            {/* Right: Floating Down Arrow Button from screenshot */}
+            <button
+              type="button"
+              onClick={() => {
+                if (messagesEndRef.current) {
+                  messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+                }
+              }}
+              className="w-10 h-10 rounded-full bg-[#1e2638] hover:bg-[#253046] active:scale-95 border border-blue-900/30 text-blue-400 flex items-center justify-center shadow-xl transition cursor-pointer"
+              title="Scroll down"
+            >
+              <ChevronDown className="w-5 h-5 text-blue-300" />
+            </button>
+          </div>
+
+          {/* Non-replyable sender footer message */}
+          <div className="w-full max-w-[440px] px-4 py-2 bg-black text-center text-[12px] text-neutral-400 select-none pointer-events-auto border-t border-neutral-900">
+            Replying is not supported by this sender
+          </div>
+        </div>
+
+        {/* Bottom Android System Navigation Bar matching screenshot (≡, ○, ⊃) */}
+        <div className="w-full py-2 px-14 flex items-center justify-between text-neutral-500 text-lg font-light bg-black border-t border-neutral-900 fixed bottom-0 left-0 right-0 z-30">
+          <span className="hover:text-white cursor-pointer">≡</span>
+          <span className="hover:text-white cursor-pointer">○</span>
+          <button 
+            type="button" 
+            onClick={onBack}
+            className="hover:text-white cursor-pointer focus:outline-none"
+            title="Return to Banking App"
           >
-            <Plus className="w-4 h-4" />
-            <span>Simulate Custom Tx</span>
+            ⊃
           </button>
         </div>
+
+        {/* =================================================================== */}
+        {/* 3-DOT MENU: REGISTERED ACCOUNT LIST & SIMULATION CONTROLS          */}
+        {/* "make the register account list inside 3 Dot"                       */}
+        {/* =================================================================== */}
+        {showThreeDotMenu && (
+          <div 
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+            onClick={() => setShowThreeDotMenu(false)}
+          >
+            <div 
+              className="w-full max-w-md bg-[#17191e] border border-neutral-700/80 rounded-3xl p-5 shadow-2xl space-y-4 max-h-[88vh] overflow-y-auto text-white"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+                <div className="flex items-center space-x-2.5">
+                  <div className="w-9 h-9 rounded-full bg-[#18263b] flex items-center justify-center border border-blue-500/30">
+                    <svg className="w-4 h-4 text-white fill-current" viewBox="0 0 24 24">
+                      <path d="M12 2L2 7h20L12 2z"/>
+                      <rect x="3" y="8" width="18" height="2"/>
+                      <rect x="4" y="11" width="2.5" height="7"/>
+                      <rect x="8.5" y="11" width="2.5" height="7"/>
+                      <rect x="13" y="11" width="2.5" height="7"/>
+                      <rect x="17.5" y="11" width="2.5" height="7"/>
+                      <rect x="2" y="19" width="20" height="3"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm text-white flex items-center space-x-1">
+                      <span>Cbe Bank</span>
+                      <CheckCircle className="w-3.5 h-3.5 text-blue-400" />
+                    </h3>
+                    <p className="text-[11px] text-neutral-400">Options &amp; Registered Accounts</p>
+                  </div>
+                </div>
+                <button 
+                  type="button"
+                  onClick={() => setShowThreeDotMenu(false)}
+                  className="p-1 rounded-full text-neutral-400 hover:text-white cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* REGISTERED ACCOUNTS LIST BANNER */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-neutral-200 uppercase tracking-wider flex items-center space-x-1.5">
+                    <CreditCard className="w-3.5 h-3.5 text-[#0066FF]" />
+                    <span>Registered CBE Accounts ({accounts.length})</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowThreeDotMenu(false);
+                      setShowAddAccountModal(true);
+                    }}
+                    className="text-[11px] font-bold text-blue-400 hover:text-blue-300 flex items-center space-x-1 cursor-pointer"
+                  >
+                    <Plus className="w-3 h-3" />
+                    <span>Add New</span>
+                  </button>
+                </div>
+
+                {/* Account Cards */}
+                <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                  {accounts.map(acc => (
+                    <div 
+                      key={acc.id}
+                      className="p-3 rounded-2xl bg-neutral-900/90 border border-neutral-800 flex items-center justify-between hover:border-neutral-700 transition"
+                    >
+                      <div className="space-y-0.5">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs font-bold text-white">{acc.holderName}</span>
+                          <span className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded-full ${
+                            acc.accountType?.includes('Sender')
+                              ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                              : acc.accountType?.includes('Receiver')
+                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                              : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                          }`}>
+                            {acc.accountType?.includes('Sender') ? 'Sender (User X)' : acc.accountType?.includes('Receiver') ? 'Receiver (User Y)' : 'Primary'}
+                          </span>
+                        </div>
+                        <p className="font-mono text-[11px] text-neutral-400">
+                          {acc.accountNumber} <span className="text-neutral-500 font-sans text-[10px]">({acc.maskedAccount})</span>
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xs font-mono font-bold text-emerald-400">
+                          ETB {acc.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        </div>
+                        <div className="text-[10px] text-neutral-500">Balance</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* ACTION: Simulate User X → User Y Transfer (4,500 ETB) */}
+              <div className="p-3 rounded-2xl bg-purple-950/30 border border-purple-800/40 space-y-2">
+                <div className="text-xs text-purple-200 font-medium">
+                  ⚡ <strong>Quick Transfer Simulation:</strong> Send <strong>ETB 4,500.00</strong> from User X (1000419529165) to User Y (1000419520913). Adds new debit &amp; credit transactions at the top with <strong>Now</strong> badge!
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    TruecallerService.simulateUserTransfer({
+                      senderName: 'User X (Leykun Jemaneh)',
+                      senderAccount: '1000419529165',
+                      recipientName: 'User Y (Abebe Bikila)',
+                      recipientAccount: '1000419520913',
+                      amount: 4500,
+                      bankKey: 'cbe'
+                    });
+                    setAccounts(TruecallerService.getAccounts());
+                    setAlerts(TruecallerService.getAlerts());
+                    setShowThreeDotMenu(false);
+                    showToast('Transfer of ETB 4,500 created! Top recent transactions updated with Now badge.');
+                  }}
+                  className="w-full py-2 px-3 rounded-xl bg-purple-700 hover:bg-purple-600 active:scale-95 text-white font-bold text-xs shadow-md transition cursor-pointer flex items-center justify-center space-x-1.5"
+                >
+                  <Users className="w-3.5 h-3.5" />
+                  <span>Simulate User X → User Y (4,500 ETB)</span>
+                </button>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 gap-2 pt-1 text-xs font-bold">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowThreeDotMenu(false);
+                    setShowQuickSimModal(true);
+                  }}
+                  className="p-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-200 transition flex items-center justify-center space-x-1.5 cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5 text-blue-400" />
+                  <span>Custom Tx</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUseLiveClock(!useLiveClock);
+                    showToast(useLiveClock ? 'Switched to screenshot clock (2:24)' : 'Switched to live device clock');
+                  }}
+                  className="p-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-200 transition flex items-center justify-center space-x-1.5 cursor-pointer"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
+                  <span>{useLiveClock ? 'Clock: Live' : 'Clock: 2:24'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowThreeDotMenu(false);
+                    setView('inbox');
+                  }}
+                  className="col-span-2 p-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 transition flex items-center justify-center space-x-1.5 cursor-pointer"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span>Google Messages Inbox</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Add New Registered CBE Account */}
+        {showAddAccountModal && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
+            <div className="w-full max-w-sm bg-[#1a1c22] border border-neutral-700 rounded-3xl p-5 shadow-2xl space-y-4">
+              <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+                <h3 className="font-bold text-sm text-white">Register CBE Account</h3>
+                <button 
+                  type="button"
+                  onClick={() => setShowAddAccountModal(false)}
+                  className="p-1 rounded-full text-neutral-400 hover:text-white cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <form onSubmit={(e) => {
+                e.preventDefault();
+                const cleanAcc = newAccountNumber.replace(/\s+/g, '');
+                const parsedBalance = parseFloat(newAccountBalance) || 0;
+                
+                const created = TruecallerService.createAccount({
+                  bankKey: 'cbe',
+                  bankName: 'Cbe Bank',
+                  accountNumber: cleanAcc,
+                  holderName: newAccountHolder,
+                  accountType: newAccountRole === 'sender' ? 'Sender (User X)' : 'Receiver (User Y)',
+                  phone: '+251 91 104 4747',
+                  balance: parsedBalance,
+                  backgroundApp: 'tiktok',
+                  lastTransactionAt: new Date().toISOString()
+                });
+
+                setAccounts(TruecallerService.getAccounts());
+                setShowAddAccountModal(false);
+                setShowThreeDotMenu(true);
+                showToast(`Account ${created.maskedAccount} added to Registered Accounts list!`);
+              }} className="space-y-3 text-xs">
+                <div>
+                  <label className="text-neutral-400 block mb-1">Account Holder Name</label>
+                  <input
+                    type="text"
+                    value={newAccountHolder}
+                    onChange={(e) => setNewAccountHolder(e.target.value)}
+                    className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-3 py-2 text-white font-medium focus:border-blue-500 focus:outline-none"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="text-neutral-400 block mb-1">CBE Account Number</label>
+                  <input
+                    type="text"
+                    value={newAccountNumber}
+                    onChange={(e) => setNewAccountNumber(e.target.value)}
+                    className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-3 py-2 text-white font-mono focus:border-blue-500 focus:outline-none"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="text-neutral-400 block mb-1">Initial Balance (ETB)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={newAccountBalance}
+                    onChange={(e) => setNewAccountBalance(e.target.value)}
+                    className="w-full bg-neutral-800 border border-neutral-700 rounded-xl px-3 py-2 text-white font-mono focus:border-blue-500 focus:outline-none"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="text-neutral-400 block mb-1">Role Type</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setNewAccountRole('sender')}
+                      className={`py-2 rounded-xl font-bold transition flex items-center justify-center space-x-1 cursor-pointer ${
+                        newAccountRole === 'sender'
+                          ? 'bg-rose-600 text-white shadow'
+                          : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'
+                      }`}
+                    >
+                      <ArrowUp className="w-3 h-3" />
+                      <span>Sender (Debit)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNewAccountRole('receiver')}
+                      className={`py-2 rounded-xl font-bold transition flex items-center justify-center space-x-1 cursor-pointer ${
+                        newAccountRole === 'receiver'
+                          ? 'bg-emerald-600 text-white shadow'
+                          : 'bg-neutral-800 text-neutral-400 hover:bg-neutral-700'
+                      }`}
+                    >
+                      <ArrowDown className="w-3 h-3" />
+                      <span>Receiver (Credit)</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-bold text-xs shadow transition cursor-pointer"
+                  >
+                    Save &amp; Register Account
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: Bubble Tapped Action Sheet */}
+        {bubbleActionTx && (
+          <div 
+            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+            onClick={() => setBubbleActionTx(null)}
+          >
+            <div 
+              className="w-full max-w-sm bg-[#1a1c22] border border-neutral-700 rounded-3xl p-5 shadow-2xl space-y-3.5 text-white"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-neutral-800 pb-2.5">
+                <div>
+                  <h3 className="font-bold text-sm text-white">Transaction Actions</h3>
+                  <p className="text-[11px] text-neutral-400 font-mono">{bubbleActionTx.txId || 'FT26248KLR82'}</p>
+                </div>
+                <button 
+                  type="button"
+                  onClick={() => setBubbleActionTx(null)}
+                  className="p-1 rounded-full text-neutral-400 hover:text-white cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-2 text-xs font-bold">
+                {/* 1. Launch Phone Screen & Truecaller Pop-Down */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const tx = bubbleActionTx;
+                    setBubbleActionTx(null);
+                    handleOpenPickerForTx(tx);
+                  }}
+                  className="w-full p-3 rounded-2xl bg-[#0066FF] hover:bg-blue-600 active:scale-95 text-white transition flex items-center justify-between shadow-lg cursor-pointer"
+                >
+                  <div className="flex items-center space-x-2">
+                    <Smartphone className="w-4 h-4" />
+                    <span>Choose Phone &amp; Pop Down ⚡</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+
+                {/* 2. Open CBE Web Receipt */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const tx = bubbleActionTx;
+                    setBubbleActionTx(null);
+                    setReceiptModalTx({
+                      id: tx.txId || 'FT26248KLR82',
+                      type: tx.role === 'receiver' ? 'receive' : 'transfer',
+                      amount: tx.amount || 50.00,
+                      fee: 0,
+                      receiverName: tx.role === 'receiver' ? (tx.holderName || 'Leykun') : (tx.counterpartyName || 'Retail Merchant'),
+                      receiverAccount: tx.role === 'receiver' ? (tx.accountNumber || '1000419524747') : '1000419520913',
+                      senderName: tx.role === 'receiver' ? (tx.counterpartyName || 'Dejene Buta') : (tx.holderName || 'Leykun Jemaneh Ylma'),
+                      senderAccount: tx.role === 'receiver' ? '1000419520842' : (tx.accountNumber || '1000419524747'),
+                      reference: tx.txId || 'FT26248KLR82',
+                      timestamp: tx.timestamp || '2026-09-05T16:41:01Z',
+                      status: 'completed',
+                      reason: tx.role === 'receiver' ? 'Credit Transfer' : 'Debit Transaction'
+                    });
+                  }}
+                  className="w-full p-3 rounded-2xl bg-neutral-800 hover:bg-neutral-700 active:scale-95 text-neutral-200 transition flex items-center justify-between cursor-pointer"
+                >
+                  <div className="flex items-center space-x-2">
+                    <Building2 className="w-4 h-4 text-purple-400" />
+                    <span>Open Official CBE Web Receipt</span>
+                  </div>
+                  <ExternalLink className="w-4 h-4 text-neutral-400" />
+                </button>
+
+                {/* 3. Copy SMS Message */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    try {
+                      navigator.clipboard.writeText(bubbleActionTx.fullMessageText || '');
+                      showToast('SMS message copied to clipboard!');
+                    } catch {
+                      showToast('Copied to clipboard');
+                    }
+                    setBubbleActionTx(null);
+                  }}
+                  className="w-full p-3 rounded-2xl bg-neutral-800 hover:bg-neutral-700 active:scale-95 text-neutral-200 transition flex items-center justify-between cursor-pointer"
+                >
+                  <div className="flex items-center space-x-2">
+                    <Copy className="w-4 h-4 text-neutral-400" />
+                    <span>Copy SMS Text</span>
+                  </div>
+                  <Check className="w-4 h-4 text-neutral-400" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: CBE Web Receipt Modal */}
+        {receiptModalTx && (
+          <CbeWebReceiptModal
+            transaction={receiptModalTx}
+            onClose={() => setReceiptModalTx(null)}
+          />
+        )}
 
         {/* Modal: Quick Simulate Custom Transaction */}
         {showQuickSimModal && (

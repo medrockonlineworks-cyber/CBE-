@@ -90,11 +90,24 @@ export function formatTimeFromIso(isoString?: string): string {
 
 const DEFAULT_ACCOUNTS: TruecallerBankAccount[] = [
   {
+    id: 'tc-acc-cbe-leykun',
+    bankKey: 'cbe',
+    bankName: 'Cbe Bank',
+    accountNumber: '1000419524747',
+    maskedAccount: '1*********4747',
+    holderName: 'Leykun Jemaneh Ylma',
+    accountType: 'Savings Account',
+    phone: '+251 91 104 4747',
+    balance: 298.54,
+    backgroundApp: 'tiktok',
+    lastTransactionAt: '2026-09-07T12:54:00Z'
+  },
+  {
     id: 'tc-acc-cbe-user-x',
     bankKey: 'cbe',
     bankName: 'Cbe Bank',
     accountNumber: '1000419529165',
-    maskedAccount: '1XXXXXXXX9165',
+    maskedAccount: '1*********9165',
     holderName: 'User X (Leykun Jemaneh)',
     accountType: 'Savings Account',
     phone: '+251 91 104 9165',
@@ -107,7 +120,7 @@ const DEFAULT_ACCOUNTS: TruecallerBankAccount[] = [
     bankKey: 'cbe',
     bankName: 'Cbe Bank',
     accountNumber: '1000419520913',
-    maskedAccount: '1XXXXXXXX0913',
+    maskedAccount: '1*********0913',
     holderName: 'User Y (Abebe Bikila)',
     accountType: 'Savings Account',
     phone: '+251 92 104 0913',

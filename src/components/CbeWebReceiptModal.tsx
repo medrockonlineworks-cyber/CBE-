@@ -617,81 +617,83 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
         onChange={handleUploadStampFile}
       />
 
-      {/* 1. Mobile Phone Status Bar (Present in both user screenshots: Clock, Airplane, Bluetooth, Silent, Speed, Dual SIM, Battery [62]) */}
+      {/* 1. Mobile Phone Status Bar (Present in user screenshot: Clock 12:18 + Airplane, Bluetooth, Silent bell, 25.3 KB/S, Dual SIM H+ & 3G, Battery [62]) */}
       <div 
         id="cbe-phone-status-bar"
-        className={`w-full bg-black text-white px-3.5 pt-1.5 pb-1 flex items-center justify-between text-xs select-none flex-shrink-0 z-30 font-sans border-b border-white/5 transition-opacity duration-200 ${hideStatusBar ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
+        className={`w-full bg-[#121214] text-white px-3.5 pt-2 pb-1 flex items-center justify-between text-xs select-none flex-shrink-0 z-30 font-sans transition-opacity duration-200 ${hideStatusBar ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
       >
-        {/* Left: Clock + Paper Airplane / Navigation Indicator */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-[13px] font-semibold tracking-tight text-white font-mono">
-              {useLiveTime ? currentTime : browserType === 'opera' ? '12:19' : '12:18'}
-            </span>
-            {/* Navigation Paper Airplane icon */}
-            <svg className="w-3.5 h-3.5 fill-white shrink-0" viewBox="0 0 24 24">
+        {/* Left: Clock 12:18 + Tilted Paper Airplane Navigation Indicator */}
+        <div className="flex items-center gap-1.5 pl-0.5">
+          <span className="text-[14px] font-semibold tracking-tight text-white font-sans">
+            {useLiveTime ? currentTime : browserType === 'opera' ? '12:19' : '12:18'}
+          </span>
+          {/* Tilted Paper Airplane icon matching image */}
+          <div className="flex items-center justify-center -rotate-45 ml-0.5 -mt-0.5">
+            <svg className="w-[12.5px] h-[12.5px] fill-white shrink-0" viewBox="0 0 24 24">
               <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
             </svg>
           </div>
+        </div>
 
-          {/* Right Status Icons: Bluetooth, Mute Bell, Network Speed, Dual SIM (H+, 3G), Battery [62] */}
-          <div className="flex items-center gap-2 sm:gap-2.5">
-            {/* Bluetooth */}
-            <svg className="w-2.5 h-3 text-white stroke-[2.2] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5" />
-            </svg>
+        {/* Right Status Icons: Bluetooth, Mute Bell, Network Speed, Dual SIM (H+, 3G), Battery [62] */}
+        <div className="flex items-center gap-2 sm:gap-2.5 pr-0.5">
+          {/* Bluetooth */}
+          <svg className="w-[10px] h-[13px] text-white stroke-[2.2] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5" />
+          </svg>
 
-            {/* Mute Bell with Slash */}
-            <svg className="w-3.5 h-3.5 text-white shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-              <path d="M18.63 13A17.89 17.89 0 0 1 18 8" />
-              <path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14" />
-              <line x1="2" y1="2" x2="22" y2="22" />
-            </svg>
+          {/* Mute Bell with Slash (Top-Left to Bottom-Right) */}
+          <svg className="w-[13px] h-[13px] text-white shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            <path d="M18.63 13A17.89 17.89 0 0 1 18 8" />
+            <path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14" />
+            <line x1="2" y1="2" x2="22" y2="22" />
+          </svg>
 
-            {/* Network Speed: 25.3 KB/S (Chrome Image 1) vs 0.00 KB/S (Opera Image 2) */}
-            <div className="flex flex-col items-end leading-[0.8] justify-center text-white shrink-0 font-mono">
-              <span className="text-[8.5px] font-bold tracking-tight">
-                {browserType === 'opera' ? '0.00' : '25.3'}
-              </span>
-              <span className="text-[7px] font-extrabold tracking-tighter opacity-90">
-                KB/S
-              </span>
-            </div>
+          {/* Network Speed: 25.3 KB/S (Chrome Image 1) vs 0.00 KB/S (Opera Image 2) */}
+          <div className="flex flex-col items-end leading-[0.82] justify-center text-white shrink-0 font-mono">
+            <span className="text-[8.5px] font-bold tracking-tight">
+              {browserType === 'opera' ? '0.00' : '25.3'}
+            </span>
+            <span className="text-[6.8px] font-extrabold tracking-tighter opacity-90">
+              KB/S
+            </span>
+          </div>
 
-            {/* SIM 1 (H+ with signal bars) */}
-            <div className="flex flex-col items-center leading-none text-white shrink-0">
-              <span className="text-[7.5px] font-black tracking-tighter mb-0.5">H+</span>
-              <div className="flex items-end gap-[1.2px] h-2">
-                <div className="w-[1.6px] h-0.5 bg-white rounded-2xs" />
-                <div className="w-[1.6px] h-1 bg-white rounded-2xs" />
-                <div className="w-[1.6px] h-1.5 bg-white rounded-2xs" />
-                <div className="w-[1.6px] h-2 bg-white/35 rounded-2xs" />
-              </div>
-            </div>
-
-            {/* SIM 2 (3G with signal bars) */}
-            <div className="flex flex-col items-center leading-none text-white shrink-0">
-              <span className="text-[7.5px] font-black tracking-tighter mb-0.5">3G</span>
-              <div className="flex items-end gap-[1.2px] h-2">
-                <div className="w-[1.6px] h-0.5 bg-white rounded-2xs" />
-                <div className="w-[1.6px] h-1 bg-white rounded-2xs" />
-                <div className="w-[1.6px] h-1.5 bg-white rounded-2xs" />
-                <div className="w-[1.6px] h-2 bg-white rounded-2xs" />
-              </div>
-            </div>
-
-            {/* Battery pill [ 62 ] */}
-            <div className="flex items-center gap-[1px] shrink-0">
-              <div className="w-6.5 h-3 rounded-[3.5px] border border-white/80 p-[1px] relative flex items-center overflow-hidden bg-white/10">
-                <div className="h-full bg-white rounded-xs" style={{ width: '62%' }} />
-                <span className="absolute inset-0 flex items-center justify-center text-[7.5px] font-black text-white mix-blend-difference tracking-tighter">
-                  62
-                </span>
-              </div>
-              <div className="w-[1.5px] h-1.5 bg-white/70 rounded-r-xs" />
+          {/* SIM 1 (H+ with signal bars - all 4 full white) */}
+          <div className="flex flex-col items-center leading-none text-white shrink-0">
+            <span className="text-[7.5px] font-black tracking-tighter mb-0.5">H+</span>
+            <div className="flex items-end gap-[1.2px] h-2">
+              <div className="w-[1.6px] h-0.5 bg-white rounded-2xs" />
+              <div className="w-[1.6px] h-1 bg-white rounded-2xs" />
+              <div className="w-[1.6px] h-1.5 bg-white rounded-2xs" />
+              <div className="w-[1.6px] h-2 bg-white rounded-2xs" />
             </div>
           </div>
+
+          {/* SIM 2 (3G with signal bars - all 4 full white) */}
+          <div className="flex flex-col items-center leading-none text-white shrink-0">
+            <span className="text-[7.5px] font-black tracking-tighter mb-0.5">3G</span>
+            <div className="flex items-end gap-[1.2px] h-2">
+              <div className="w-[1.6px] h-0.5 bg-white rounded-2xs" />
+              <div className="w-[1.6px] h-1 bg-white rounded-2xs" />
+              <div className="w-[1.6px] h-1.5 bg-white rounded-2xs" />
+              <div className="w-[1.6px] h-2 bg-white rounded-2xs" />
+            </div>
+          </div>
+
+          {/* Battery pill [ 62 ] */}
+          <div className="flex items-center gap-[1px] shrink-0">
+            <div className="w-7 h-[13px] rounded-[3.5px] border border-white/80 p-[1px] relative flex items-center overflow-hidden bg-[#121214]">
+              <div className="h-full bg-white rounded-xs" style={{ width: '62%' }} />
+              <span className="absolute inset-0 flex items-center justify-center text-[7.5px] font-black text-white mix-blend-difference tracking-tighter select-none">
+                62
+              </span>
+            </div>
+            <div className="w-[1.5px] h-[5px] bg-white/80 rounded-r-[1px]" />
+          </div>
         </div>
+      </div>
 
       {/* 2. Mobile Browser Header */}
       {browserType === 'opera' ? (
@@ -755,47 +757,60 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
         </header>
       ) : browserType === 'chrome' ? (
         /* ================= GOOGLE CHROME HEADER (IMAGE 1) ================= */
-        /* Charcoal background, white home icon, capsule pill with (i) and URL, Google Translate icon, tab counter [2], 3-dots */
+        /* Exact match to user screenshot IMG_20260907_122015_019.png:
+           - Deep background #121214 seamlessly flowing from status bar
+           - Home outline button (clean pitched roof, straight walls, centered doorway opening)
+           - Capsule pill #28282b with (i) icon and s.cbe.com.et:100 (subtle soft fade on left of 's')
+           - Google Translate action icon (white back card with bold 'G', dark front card with white border, folded dog-ear & white '文')
+           - Tab switcher squircle [ 2 ] (white 2px border, rounded-4.5px, bold centered 2)
+           - 3-dots vertical button (three solid white dots)
+           - Thin bottom separator border #282a30
+        */
         <header 
           id="cbe-chrome-browser-header"
-          className="w-full px-2.5 py-1.5 bg-[#1f1f21] border-b border-[#2d2d30] flex items-center justify-between text-white flex-shrink-0 z-30 select-none"
+          className="w-full px-3 py-2 bg-[#121214] border-b border-[#282a30] flex items-center justify-between text-white flex-shrink-0 z-30 select-none"
         >
-          {/* Left: Home Button (outline house with chimney & door) */}
+          {/* Left: Home Button (outline house with pitched roof & open doorway) */}
           <button
             onClick={onClose}
             aria-label="Home"
             className="p-1 text-white hover:bg-white/10 rounded-full transition cursor-pointer flex items-center justify-center shrink-0"
             title="Home (Close Receipt)"
           >
-            <svg viewBox="0 0 24 24" className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M3 10.5L12 3l9 7.5V20a1.5 1.5 0 0 1-1.5 1.5H15v-6h-6v6H4.5A1.5 1.5 0 0 1 3 20v-9.5z" />
+            <svg viewBox="0 0 24 24" className="w-[22px] h-[22px] text-white" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 10.5L12 3l9 7.5V20a1.5 1.5 0 0 1-1.5 1.5H15v-6a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v6H4.5A1.5 1.5 0 0 1 3 20v-9.5z" />
             </svg>
           </button>
 
           {/* Center: Address Bar Pill */}
           <div 
             onClick={handleCopyLink}
-            className="flex-1 bg-[#2d2f31] hover:bg-[#36383c] h-9.5 rounded-full px-3 flex items-center gap-2 cursor-pointer transition select-none overflow-hidden mx-1.5 shadow-xs"
+            className="flex-1 bg-[#28282b] hover:bg-[#323236] h-10 rounded-full px-3.5 flex items-center gap-2.5 cursor-pointer transition select-none overflow-hidden mx-2.5 shadow-xs"
             title="Click to copy receipt URL"
           >
             {/* (i) Info circle icon */}
-            <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 text-white/90 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.2">
+            <svg viewBox="0 0 24 24" className="w-[19px] h-[19px] text-white shrink-0" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="9" />
-              <path d="M12 7.5h.01M12 11v5" strokeWidth="2.2" strokeLinecap="round" />
+              <circle cx="12" cy="7.8" r="0.9" fill="currentColor" stroke="none" />
+              <path d="M12 11.2v5.3" strokeWidth="2" strokeLinecap="round" />
             </svg>
 
             {/* URL text matching Image 1: s.cbe.com.et:100 */}
-            <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis text-[13.5px] text-white/95 font-normal tracking-tight font-sans">
+            <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis flex items-center">
               {copiedUrl ? (
                 <span className="text-emerald-400 font-bold text-xs">Copied URL to clipboard!</span>
               ) : (
-                <span>s.cbe.com.et:100</span>
+                <div className="text-[14.5px] text-[#e3e3e8] font-normal tracking-tight font-sans flex items-center">
+                  {/* The letter 's' with subtle left fade matching screenshot */}
+                  <span className="inline-block opacity-65">s</span>
+                  <span>.cbe.com.et:100</span>
+                </div>
               )}
             </div>
           </div>
 
           {/* Right: Google Translate, Tab count [2], 3-dots */}
-          <div className="flex items-center gap-2 shrink-0 pr-0.5">
+          <div className="flex items-center gap-2.5 shrink-0 pr-0.5">
             {/* Google Translate action icon matching Image 1 */}
             <button
               onClick={handleCopyLink}
@@ -803,23 +818,33 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
               title="Google Translate"
               aria-label="Google Translate"
             >
-              <svg className="w-5.5 h-5.5" viewBox="0 0 24 24" fill="none">
-                {/* Back card with G */}
-                <path d="M4 6.5A1.5 1.5 0 0 1 5.5 5h7A1.5 1.5 0 0 1 14 6.5v8a1.5 1.5 0 0 1-1.5 1.5h-7A1.5 1.5 0 0 1 4 14.5v-8z" fill="#ffffff" fillOpacity="0.9" />
-                <text x="6.2" y="13.2" fill="#1b1b1d" fontSize="7.8" fontWeight="bold" fontFamily="system-ui, sans-serif">G</text>
-                {/* Front card with Chinese character and folded corner */}
-                <path d="M9.5 8.5a1.5 1.5 0 0 1 1.5-1.5H18a1.5 1.5 0 0 1 1.5 1.5v6.5a1.5 1.5 0 0 1-.44 1.06l-2.8 2.8A1.5 1.5 0 0 1 15.2 19.5H11A1.5 1.5 0 0 1 9.5 18v-9.5z" fill="#1f1f21" stroke="#ffffff" strokeWidth="1.3" />
-                <text x="11.5" y="15" fill="#ffffff" fontSize="7.8" fontWeight="bold" fontFamily="system-ui, sans-serif">文</text>
+              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                {/* Back card with G (Solid white rounded rect) */}
+                <rect x="2.5" y="3.5" width="12" height="13.5" rx="2" fill="#ffffff" />
+                <text x="5.2" y="13" fill="#121214" fontSize="8" fontWeight="bold" fontFamily="system-ui, -apple-system, sans-serif">G</text>
+                
+                {/* Front card with Chinese character and folded bottom-right corner */}
+                <path 
+                  d="M8.5 7.5a1.5 1.5 0 0 1 1.5-1.5h8.5a1.5 1.5 0 0 1 1.5 1.5v7.2a1.5 1.5 0 0 1-.44 1.06l-2.7 2.7A1.5 1.5 0 0 1 15.8 19H10a1.5 1.5 0 0 1-1.5-1.5v-10z" 
+                  fill="#121214" 
+                  stroke="#ffffff" 
+                  strokeWidth="1.6" 
+                  strokeLinejoin="round"
+                />
+                {/* Folded dog-ear triangle in front card */}
+                <path d="M16.5 18.8v-2.5a.8.8 0 0 1 .8-.8h2.5" fill="none" stroke="#ffffff" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                {/* Chinese Character '文' */}
+                <text x="11.2" y="15" fill="#ffffff" fontSize="8" fontWeight="bold" fontFamily="system-ui, -apple-system, sans-serif">文</text>
               </svg>
             </button>
 
             {/* Tab Counter Square [ 2 ] matching Image 1 */}
             <button
               onClick={() => setIsMenuOpen(true)}
-              className="w-5.5 h-5.5 rounded-[5px] border-[2px] border-white text-white font-bold text-[11.5px] flex items-center justify-center hover:bg-white/10 transition cursor-pointer shrink-0"
+              className="w-[21px] h-[21px] rounded-[4.5px] border-[2px] border-white text-white font-bold text-[12px] flex items-center justify-center hover:bg-white/10 transition cursor-pointer shrink-0 leading-none"
               title="Tabs (Click to customize)"
             >
-              {tabCount}
+              <span className="-translate-y-[0.5px]">{tabCount}</span>
             </button>
 
             {/* 3-dots vertical button */}
@@ -829,10 +854,10 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
               title="Chrome menu"
               aria-label="Chrome menu"
             >
-              <svg viewBox="0 0 24 24" className="w-5.5 h-5.5 fill-white">
-                <circle cx="12" cy="5" r="1.75" />
-                <circle cx="12" cy="12" r="1.75" />
-                <circle cx="12" cy="19" r="1.75" />
+              <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white">
+                <circle cx="12" cy="5" r="1.6" />
+                <circle cx="12" cy="12" r="1.6" />
+                <circle cx="12" cy="19" r="1.6" />
               </svg>
             </button>
           </div>
