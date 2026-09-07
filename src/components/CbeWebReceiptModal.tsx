@@ -27,7 +27,8 @@ import {
   Share2,
   ExternalLink,
   RefreshCw,
-  Stamp
+  Stamp,
+  Sparkles
 } from 'lucide-react';
 
 export type BrowserHeaderType = 'chrome' | 'phoenix' | 'opera' | 'samsung' | 'safari';
@@ -179,6 +180,82 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
     return () => clearInterval(timer);
   }, []);
   const stampFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Double-tap/click to hide status bar
+  const [hideStatusBar, setHideStatusBar] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('cbe_hide_status_bar') === 'true' || localStorage.getItem('cbe_hide_phone_bars') === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const [barsToast, setBarsToast] = useState<string | null>(null);
+  const barsToastTimerRef = useRef<any>(null);
+  const lastTapRef = useRef<{ time: number; x: number; y: number }>({ time: 0, x: 0, y: 0 });
+
+  const showBarsToast = (msg: string) => {
+    if (barsToastTimerRef.current) clearTimeout(barsToastTimerRef.current);
+    setBarsToast(msg);
+    barsToastTimerRef.current = setTimeout(() => {
+      setBarsToast(null);
+    }, 2200);
+  };
+
+  const toggleStatusBar = () => {
+    setHideStatusBar(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem('cbe_hide_status_bar', String(next));
+      } catch {}
+      showBarsToast(next ? 'Status bar hidden (Double-tap to show)' : 'Status bar restored');
+      return next;
+    });
+  };
+
+  const handleScreenClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('a') || target.closest('input') || target.closest('#browser-settings-modal')) {
+      return;
+    }
+    const now = Date.now();
+    const timeDiff = now - lastTapRef.current.time;
+    const dist = Math.hypot(e.clientX - lastTapRef.current.x, e.clientY - lastTapRef.current.y);
+
+    if (timeDiff > 40 && timeDiff < 360 && dist < 45) {
+      toggleStatusBar();
+      lastTapRef.current = { time: 0, x: 0, y: 0 };
+    } else {
+      lastTapRef.current = { time: now, x: e.clientX, y: e.clientY };
+    }
+  };
+
+  const handleScreenTouchEnd = (e: React.TouchEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('a') || target.closest('input') || target.closest('#browser-settings-modal')) {
+      return;
+    }
+    const touch = e.changedTouches[0];
+    if (!touch) return;
+
+    const now = Date.now();
+    const timeDiff = now - lastTapRef.current.time;
+    const dist = Math.hypot(touch.clientX - lastTapRef.current.x, touch.clientY - lastTapRef.current.y);
+
+    if (timeDiff > 40 && timeDiff < 380 && dist < 50) {
+      toggleStatusBar();
+      lastTapRef.current = { time: 0, x: 0, y: 0 };
+    } else {
+      lastTapRef.current = { time: now, x: touch.clientX, y: touch.clientY };
+    }
+  };
+
+  const handleScreenDoubleClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('a') || target.closest('input') || target.closest('#browser-settings-modal')) {
+      return;
+    }
+    toggleStatusBar();
+  };
 
   // Retrieve admin uploaded logo and stamp from LocalDb and listen to updates
   const [adminLogo, setAdminLogo] = useState<string | null>(() => LocalDb.getCustomBankLogo());
@@ -513,8 +590,24 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex flex-col items-center justify-start overflow-hidden animate-fade-in">
+    <div 
+      onClick={handleScreenClick}
+      onDoubleClick={handleScreenDoubleClick}
+      onTouchEnd={handleScreenTouchEnd}
+      className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex flex-col items-center justify-start overflow-hidden animate-fade-in select-none cursor-pointer"
+    >
       
+      {/* Double Tap Floating Notification Toast */}
+      {barsToast && (
+        <div 
+          data-html2canvas-ignore="true"
+          className="fixed top-5 left-1/2 -translate-x-1/2 bg-gray-950/95 backdrop-blur-md text-white text-[12px] font-semibold py-2 px-4 rounded-full shadow-2xl z-[90] flex items-center gap-2 border border-white/20 pointer-events-none animate-in fade-in zoom-in-95 duration-200"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+          <span>{barsToast}</span>
+        </div>
+      )}
+
       {/* Hidden file input for uploading bank stamp directly */}
       <input 
         ref={stampFileInputRef}
@@ -527,78 +620,78 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
       {/* 1. Mobile Phone Status Bar (Present in both user screenshots: Clock, Airplane, Bluetooth, Silent, Speed, Dual SIM, Battery [62]) */}
       <div 
         id="cbe-phone-status-bar"
-        className="w-full bg-black text-white px-3.5 pt-1.5 pb-1 flex items-center justify-between text-xs select-none flex-shrink-0 z-30 font-sans border-b border-white/5"
+        className={`w-full bg-black text-white px-3.5 pt-1.5 pb-1 flex items-center justify-between text-xs select-none flex-shrink-0 z-30 font-sans border-b border-white/5 transition-opacity duration-200 ${hideStatusBar ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
       >
         {/* Left: Clock + Paper Airplane / Navigation Indicator */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-[13px] font-semibold tracking-tight text-white font-mono">
-            {useLiveTime ? currentTime : browserType === 'opera' ? '12:19' : '12:18'}
-          </span>
-          {/* Navigation Paper Airplane icon */}
-          <svg className="w-3.5 h-3.5 fill-white shrink-0" viewBox="0 0 24 24">
-            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-          </svg>
-        </div>
-
-        {/* Right Status Icons: Bluetooth, Mute Bell, Network Speed, Dual SIM (H+, 3G), Battery [62] */}
-        <div className="flex items-center gap-2 sm:gap-2.5">
-          {/* Bluetooth */}
-          <svg className="w-2.5 h-3 text-white stroke-[2.2] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5" />
-          </svg>
-
-          {/* Mute Bell with Slash */}
-          <svg className="w-3.5 h-3.5 text-white shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-            <path d="M18.63 13A17.89 17.89 0 0 1 18 8" />
-            <path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14" />
-            <line x1="2" y1="2" x2="22" y2="22" />
-          </svg>
-
-          {/* Network Speed: 25.3 KB/S (Chrome Image 1) vs 0.00 KB/S (Opera Image 2) */}
-          <div className="flex flex-col items-end leading-[0.8] justify-center text-white shrink-0 font-mono">
-            <span className="text-[8.5px] font-bold tracking-tight">
-              {browserType === 'opera' ? '0.00' : '25.3'}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[13px] font-semibold tracking-tight text-white font-mono">
+              {useLiveTime ? currentTime : browserType === 'opera' ? '12:19' : '12:18'}
             </span>
-            <span className="text-[7px] font-extrabold tracking-tighter opacity-90">
-              KB/S
-            </span>
+            {/* Navigation Paper Airplane icon */}
+            <svg className="w-3.5 h-3.5 fill-white shrink-0" viewBox="0 0 24 24">
+              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+            </svg>
           </div>
 
-          {/* SIM 1 (H+ with signal bars) */}
-          <div className="flex flex-col items-center leading-none text-white shrink-0">
-            <span className="text-[7.5px] font-black tracking-tighter mb-0.5">H+</span>
-            <div className="flex items-end gap-[1.2px] h-2">
-              <div className="w-[1.6px] h-0.5 bg-white rounded-2xs" />
-              <div className="w-[1.6px] h-1 bg-white rounded-2xs" />
-              <div className="w-[1.6px] h-1.5 bg-white rounded-2xs" />
-              <div className="w-[1.6px] h-2 bg-white/35 rounded-2xs" />
-            </div>
-          </div>
+          {/* Right Status Icons: Bluetooth, Mute Bell, Network Speed, Dual SIM (H+, 3G), Battery [62] */}
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            {/* Bluetooth */}
+            <svg className="w-2.5 h-3 text-white stroke-[2.2] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5" />
+            </svg>
 
-          {/* SIM 2 (3G with signal bars) */}
-          <div className="flex flex-col items-center leading-none text-white shrink-0">
-            <span className="text-[7.5px] font-black tracking-tighter mb-0.5">3G</span>
-            <div className="flex items-end gap-[1.2px] h-2">
-              <div className="w-[1.6px] h-0.5 bg-white rounded-2xs" />
-              <div className="w-[1.6px] h-1 bg-white rounded-2xs" />
-              <div className="w-[1.6px] h-1.5 bg-white rounded-2xs" />
-              <div className="w-[1.6px] h-2 bg-white rounded-2xs" />
-            </div>
-          </div>
+            {/* Mute Bell with Slash */}
+            <svg className="w-3.5 h-3.5 text-white shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              <path d="M18.63 13A17.89 17.89 0 0 1 18 8" />
+              <path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14" />
+              <line x1="2" y1="2" x2="22" y2="22" />
+            </svg>
 
-          {/* Battery pill [ 62 ] */}
-          <div className="flex items-center gap-[1px] shrink-0">
-            <div className="w-6.5 h-3 rounded-[3.5px] border border-white/80 p-[1px] relative flex items-center overflow-hidden bg-white/10">
-              <div className="h-full bg-white rounded-xs" style={{ width: '62%' }} />
-              <span className="absolute inset-0 flex items-center justify-center text-[7.5px] font-black text-white mix-blend-difference tracking-tighter">
-                62
+            {/* Network Speed: 25.3 KB/S (Chrome Image 1) vs 0.00 KB/S (Opera Image 2) */}
+            <div className="flex flex-col items-end leading-[0.8] justify-center text-white shrink-0 font-mono">
+              <span className="text-[8.5px] font-bold tracking-tight">
+                {browserType === 'opera' ? '0.00' : '25.3'}
+              </span>
+              <span className="text-[7px] font-extrabold tracking-tighter opacity-90">
+                KB/S
               </span>
             </div>
-            <div className="w-[1.5px] h-1.5 bg-white/70 rounded-r-xs" />
+
+            {/* SIM 1 (H+ with signal bars) */}
+            <div className="flex flex-col items-center leading-none text-white shrink-0">
+              <span className="text-[7.5px] font-black tracking-tighter mb-0.5">H+</span>
+              <div className="flex items-end gap-[1.2px] h-2">
+                <div className="w-[1.6px] h-0.5 bg-white rounded-2xs" />
+                <div className="w-[1.6px] h-1 bg-white rounded-2xs" />
+                <div className="w-[1.6px] h-1.5 bg-white rounded-2xs" />
+                <div className="w-[1.6px] h-2 bg-white/35 rounded-2xs" />
+              </div>
+            </div>
+
+            {/* SIM 2 (3G with signal bars) */}
+            <div className="flex flex-col items-center leading-none text-white shrink-0">
+              <span className="text-[7.5px] font-black tracking-tighter mb-0.5">3G</span>
+              <div className="flex items-end gap-[1.2px] h-2">
+                <div className="w-[1.6px] h-0.5 bg-white rounded-2xs" />
+                <div className="w-[1.6px] h-1 bg-white rounded-2xs" />
+                <div className="w-[1.6px] h-1.5 bg-white rounded-2xs" />
+                <div className="w-[1.6px] h-2 bg-white rounded-2xs" />
+              </div>
+            </div>
+
+            {/* Battery pill [ 62 ] */}
+            <div className="flex items-center gap-[1px] shrink-0">
+              <div className="w-6.5 h-3 rounded-[3.5px] border border-white/80 p-[1px] relative flex items-center overflow-hidden bg-white/10">
+                <div className="h-full bg-white rounded-xs" style={{ width: '62%' }} />
+                <span className="absolute inset-0 flex items-center justify-center text-[7.5px] font-black text-white mix-blend-difference tracking-tighter">
+                  62
+                </span>
+              </div>
+              <div className="w-[1.5px] h-1.5 bg-white/70 rounded-r-xs" />
+            </div>
           </div>
         </div>
-      </div>
 
       {/* 2. Mobile Browser Header */}
       {browserType === 'opera' ? (

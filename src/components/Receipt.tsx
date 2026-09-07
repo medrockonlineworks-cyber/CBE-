@@ -210,6 +210,82 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   const [customBankLogo, setCustomBankLogo] = useState<string | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
 
+  // Double-tap/click to hide status bar
+  const [hideStatusBar, setHideStatusBar] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem('cbe_hide_status_bar') === 'true' || localStorage.getItem('cbe_hide_phone_bars') === 'true';
+    } catch {
+      return false;
+    }
+  });
+  const [barsToast, setBarsToast] = useState<string | null>(null);
+  const barsToastTimerRef = useRef<any>(null);
+  const lastTapRef = useRef<{ time: number; x: number; y: number }>({ time: 0, x: 0, y: 0 });
+
+  const showBarsToast = (msg: string) => {
+    if (barsToastTimerRef.current) clearTimeout(barsToastTimerRef.current);
+    setBarsToast(msg);
+    barsToastTimerRef.current = setTimeout(() => {
+      setBarsToast(null);
+    }, 2200);
+  };
+
+  const toggleStatusBar = () => {
+    setHideStatusBar(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem('cbe_hide_status_bar', String(next));
+      } catch {}
+      showBarsToast(next ? 'Status bar hidden (Double-tap to show)' : 'Status bar restored');
+      return next;
+    });
+  };
+
+  const handleScreenClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('a') || target.closest('input')) {
+      return;
+    }
+    const now = Date.now();
+    const timeDiff = now - lastTapRef.current.time;
+    const dist = Math.hypot(e.clientX - lastTapRef.current.x, e.clientY - lastTapRef.current.y);
+
+    if (timeDiff > 40 && timeDiff < 360 && dist < 45) {
+      toggleStatusBar();
+      lastTapRef.current = { time: 0, x: 0, y: 0 };
+    } else {
+      lastTapRef.current = { time: now, x: e.clientX, y: e.clientY };
+    }
+  };
+
+  const handleScreenTouchEnd = (e: React.TouchEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('a') || target.closest('input')) {
+      return;
+    }
+    const touch = e.changedTouches[0];
+    if (!touch) return;
+
+    const now = Date.now();
+    const timeDiff = now - lastTapRef.current.time;
+    const dist = Math.hypot(touch.clientX - lastTapRef.current.x, touch.clientY - lastTapRef.current.y);
+
+    if (timeDiff > 40 && timeDiff < 380 && dist < 50) {
+      toggleStatusBar();
+      lastTapRef.current = { time: 0, x: 0, y: 0 };
+    } else {
+      lastTapRef.current = { time: now, x: touch.clientX, y: touch.clientY };
+    }
+  };
+
+  const handleScreenDoubleClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('a') || target.closest('input')) {
+      return;
+    }
+    toggleStatusBar();
+  };
+
   useEffect(() => {
     setCustomBankLogo(LocalDb.getCustomBankLogo());
 
@@ -348,28 +424,29 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     ctx.fillStyle = '#68137e';
     ctx.fillRect(0, 0, width, 220);
 
-    // Current Time for Status Bar (iOS standard format)
-    const now = new Date();
-    let statusHours = now.getHours();
-    const statusMinutes = now.getMinutes().toString().padStart(2, '0');
-    const statusTimeStr = `${statusHours % 12 || 12}:${statusMinutes}`;
+    if (!hideStatusBar) {
+      // Current Time for Status Bar (iOS standard format)
+      const now = new Date();
+      let statusHours = now.getHours();
+      const statusMinutes = now.getMinutes().toString().padStart(2, '0');
+      const statusTimeStr = `${statusHours % 12 || 12}:${statusMinutes}`;
 
-    // 1A. Status Bar - Left: Time
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '600 18px -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText(statusTimeStr, 44, 42);
-
-    // 1B. Status Bar - Right: Cellular 4-Bars, Wi-Fi, and iOS Battery
-    // 4 Cellular Bars (iOS Stepped Rounded Bars)
-    const cellX = width - 136;
-    for (let b = 0; b < 4; b++) {
+      // 1A. Status Bar - Left: Time
       ctx.fillStyle = '#ffffff';
-      const bHeight = 4 + b * 3.5;
-      ctx.beginPath();
-      ctx.roundRect(cellX + b * 4.5, 42 - bHeight, 3, bHeight, 1);
-      ctx.fill();
-    }
+      ctx.font = '600 18px -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(statusTimeStr, 44, 42);
+
+      // 1B. Status Bar - Right: Cellular 4-Bars, Wi-Fi, and iOS Battery
+      // 4 Cellular Bars (iOS Stepped Rounded Bars)
+      const cellX = width - 136;
+      for (let b = 0; b < 4; b++) {
+        ctx.fillStyle = '#ffffff';
+        const bHeight = 4 + b * 3.5;
+        ctx.beginPath();
+        ctx.roundRect(cellX + b * 4.5, 42 - bHeight, 3, bHeight, 1);
+        ctx.fill();
+      }
 
     // iOS Wi-Fi Icon (3 concentric curved arcs)
     const wifiX = width - 105;
@@ -434,6 +511,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       ctx.closePath();
       ctx.fill();
     }
+  }
 
     // 2. Top Purple Header: "Thank you / Success" & Top Scan Button
     // White Shield with Purple Checkmark (sharp crisp edges matching reference)
@@ -914,23 +992,43 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   };
 
   return (
-    <div id="receipt-screen-wrapper" className="h-full min-h-[100dvh] max-w-md mx-auto bg-[#68137e] text-slate-800 flex flex-col justify-between relative overflow-y-auto scrollbar-none">
+    <div 
+      id="receipt-screen-wrapper" 
+      onClick={handleScreenClick}
+      onDoubleClick={handleScreenDoubleClick}
+      onTouchEnd={handleScreenTouchEnd}
+      className="h-full min-h-[100dvh] max-w-md mx-auto bg-[#68137e] text-slate-800 flex flex-col justify-between relative overflow-y-auto scrollbar-none select-none cursor-pointer"
+    >
       
       {/* Camera Flash Animation Overlay */}
       {flashAnimation && (
         <div className="fixed inset-0 bg-white z-[100] pointer-events-none opacity-90 transition-opacity duration-300" />
       )}
 
+      {/* Double Tap Floating Notification Toast */}
+      {barsToast && (
+        <div 
+          data-html2canvas-ignore="true"
+          className="fixed top-5 left-1/2 -translate-x-1/2 bg-gray-950/95 backdrop-blur-md text-white text-[12px] font-semibold py-2 px-4 rounded-full shadow-2xl z-[90] flex items-center gap-2 border border-white/20 pointer-events-none animate-in fade-in zoom-in-95 duration-200"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+          <span>{barsToast}</span>
+        </div>
+      )}
+
       {/* Toast Notification */}
       {copiedToast && (
-        <div className="fixed top-5 left-1/2 -translate-x-1/2 bg-gray-900/95 backdrop-blur-md text-white text-xs font-bold py-2.5 px-5 rounded-full shadow-2xl z-50 animate-bounce flex items-center gap-2 border border-white/20">
+        <div 
+          data-html2canvas-ignore="true"
+          className="fixed top-5 left-1/2 -translate-x-1/2 bg-gray-900/95 backdrop-blur-md text-white text-xs font-bold py-2.5 px-5 rounded-full shadow-2xl z-50 animate-bounce flex items-center gap-2 border border-white/20"
+        >
           <CheckCircle2 className="w-4 h-4 text-green-400" />
           <span>{copiedToast}</span>
         </div>
       )}
 
-      {/* 1. Phone Top Status Bar (Time, Cellular, Wi-Fi, Battery) */}
-      <div className="w-full pt-2.5 pb-1 px-5 flex items-center justify-between text-white select-none z-20 flex-shrink-0">
+      {/* 1. Phone Top Status Bar (Time, Cellular, Wi-Fi, Battery) - Hidden on double click without shifting receipt */}
+      <div className={`w-full pt-2.5 pb-1 px-5 flex items-center justify-between text-white select-none z-20 flex-shrink-0 transition-opacity duration-200 ${hideStatusBar ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
         {/* Left: Time */}
         <div className="text-left">
           <span className="font-semibold text-[13px] sm:text-[14px] tracking-tight font-sans text-white/95 drop-shadow-xs">
@@ -1024,7 +1122,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           onClick={handleScreenshot}
           disabled={isCapturing}
           className="w-11 h-11 rounded-full bg-white/20 hover:bg-white/30 active:scale-95 flex items-center justify-center transition border border-white/20 text-white cursor-pointer disabled:opacity-50 shadow-xs"
-          title="Take iPhone Screenshot & Save"
+          title="Take iPhone Screenshot & Save (Tip: Double-tap screen to hide/show status bar)"
         >
           {isCapturing ? (
             <Loader2 className="w-5 h-5 animate-spin text-white" />
@@ -1146,7 +1244,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           </div>
         </div>
 
-        {/* Bottom Actions Section */}
+        {/* Bottom Actions Section - Restored to original persistent state */}
         <div className="mt-4 space-y-3.5 flex-shrink-0">
           {/* 3 Action Buttons matching exact app icons */}
           <div className="flex items-center justify-around px-3 text-black">
