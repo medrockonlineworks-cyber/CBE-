@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
-import html2canvas from 'html2canvas';
+import html2canvas from 'html2canvas-pro';
 import QRCode from 'qrcode';
 import { Transaction } from '../types';
 import { LocalDb, DEFAULT_CBE_LOGO, formatTo12CharTxId } from '../lib/mockData';
@@ -436,7 +436,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     }
 
     // 2. Top Purple Header: "Thank you / Success" & Top Scan Button
-    // White Shield with Purple Checkmark
+    // White Shield with Purple Checkmark (sharp crisp edges matching reference)
     const shieldX = 36;
     const shieldY = 106;
     ctx.save();
@@ -447,17 +447,18 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     ctx.moveTo(sX + 18, sY + 2);
     ctx.lineTo(sX + 33, sY + 7);
     ctx.lineTo(sX + 33, sY + 18);
-    ctx.bezierCurveTo(sX + 33, sY + 28, sX + 24, sY + 34, sX + 18, sY + 38);
+    ctx.bezierCurveTo(sX + 33, sY + 28, sX + 24, sY + 34, sX + 18, sY + 39);
     ctx.bezierCurveTo(sX + 12, sY + 34, sX + 3, sY + 28, sX + 3, sY + 18);
     ctx.lineTo(sX + 3, sY + 7);
     ctx.closePath();
     ctx.fill();
 
-    // Purple checkmark inside shield
+    // Purple checkmark inside shield with sharp edges and miter corner
     ctx.strokeStyle = '#68137e';
-    ctx.lineWidth = 3.2;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
+    ctx.lineWidth = 3.4;
+    ctx.lineCap = 'square';
+    ctx.lineJoin = 'miter';
+    ctx.miterLimit = 5;
     ctx.beginPath();
     ctx.moveTo(sX + 12, sY + 19);
     ctx.lineTo(sX + 16.5, sY + 23.5);
@@ -995,19 +996,20 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       {/* 2. Top Purple Navigation / App Header */}
       <div className="pt-6 sm:pt-7 pb-8 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0">
         <div className="flex items-center gap-3">
-          {/* Solid White Shield with Purple Checkmark Icon matching reference */}
+          {/* Solid White Shield with Purple Checkmark Icon with sharp edges matching reference */}
           <div className="w-8.5 h-8.5 flex-shrink-0 flex items-center justify-center">
             <svg className="w-8.5 h-8.5 drop-shadow-xs" viewBox="0 0 24 24" fill="none">
               <path 
-                d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3z" 
+                d="M12 2L4 5.2v6.2c0 5.2 3.4 9.9 8 11.4 4.6-1.5 8-6.2 8-11.4V5.2L12 2z" 
                 fill="#ffffff" 
               />
               <path 
-                d="M9 12l2.2 2.2 4.3-4.4" 
+                d="M8.3 12.2l2.8 2.8 5.4-5.4" 
                 stroke="#68137e" 
-                strokeWidth="2.5" 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
+                strokeWidth="2.8" 
+                strokeLinecap="square" 
+                strokeLinejoin="miter" 
+                strokeMiterlimit="5"
               />
             </svg>
           </div>

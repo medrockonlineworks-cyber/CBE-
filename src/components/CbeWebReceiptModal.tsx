@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import QRCode from 'qrcode';
-import html2canvas from 'html2canvas';
+import html2canvas from 'html2canvas-pro';
+import { jsPDF } from 'jspdf';
 import { Transaction } from '../types';
 import { SmsMessage } from '../types/sms';
 import { LocalDb, formatTo12CharTxId, DEFAULT_CBE_LOGO, OFFICIAL_CBE_PURPLE_LOGO, OFFICIAL_CBE_STAMP_LOGO } from '../lib/mockData';
@@ -150,6 +151,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
+  const [downloadError, setDownloadError] = useState<string | null>(null);
   const [copiedUrl, setCopiedUrl] = useState(false);
 
   // Browser bar customization state
@@ -365,21 +367,87 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
     if (!receiptCardRef.current || isDownloading) return;
     try {
       setIsDownloading(true);
+      setDownloadError(null);
       const canvas = await html2canvas(receiptCardRef.current, {
         scale: 2.5,
         useCORS: true,
-        backgroundColor: '#ffffff'
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        imageTimeout: 15000,
+      });
+      const imgData = canvas.toDataURL('image/png');
+
+      // Generate authentic high-resolution PDF document matching A4 format
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+        compress: true,
+      });
+
+      const pageWidth = pdf.internal.pageSize.getWidth(); // 210mm
+      const pageHeight = pdf.internal.pageSize.getHeight(); // 297mm
+
+      // Standard official margins
+      const marginX = 14;
+      const marginY = 14;
+      const printableWidth = pageWidth - (marginX * 2);
+      const printableHeight = pageHeight - (marginY * 2);
+
+      let renderWidth = printableWidth;
+      let renderHeight = (canvas.height * renderWidth) / canvas.width;
+
+      if (renderHeight > printableHeight) {
+        const ratio = printableHeight / renderHeight;
+        renderHeight = printableHeight;
+        renderWidth = renderWidth * ratio;
+      }
+
+      const startX = marginX + (printableWidth - renderWidth) / 2;
+      const startY = marginY;
+
+      pdf.addImage(imgData, 'PNG', startX, startY, renderWidth, renderHeight, undefined, 'FAST');
+      pdf.save(`CBE_Customer_Receipt_${receiptData.refId || 'FT'}.pdf`);
+
+      setDownloadSuccess(true);
+      setTimeout(() => setDownloadSuccess(false), 3000);
+    } catch (err: any) {
+      console.error('PDF Download error:', err);
+      setDownloadError(err?.message || 'Failed to generate PDF. Please try again.');
+      setTimeout(() => setDownloadError(null), 4000);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+  const handleDownloadPng = async () => {
+    if (!receiptCardRef.current || isDownloading) return;
+    try {
+      setIsDownloading(true);
+      setDownloadError(null);
+      const canvas = await html2canvas(receiptCardRef.current, {
+        scale: 2.5,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false,
+        imageTimeout: 15000,
       });
       const imgData = canvas.toDataURL('image/png');
       const link = document.createElement('a');
       link.href = imgData;
-      link.download = `CBE_Customer_Receipt_${receiptData.refId}.png`;
+      link.download = `CBE_Customer_Receipt_${receiptData.refId || 'FT'}.png`;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
 
       setDownloadSuccess(true);
       setTimeout(() => setDownloadSuccess(false), 3000);
-    } catch (err) {
-      console.error('Download error:', err);
+    } catch (err: any) {
+      console.error('PNG Download error:', err);
+      setDownloadError(err?.message || 'Failed to save image. Please try again.');
+      setTimeout(() => setDownloadError(null), 4000);
     } finally {
       setIsDownloading(false);
     }
@@ -833,6 +901,30 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
             <div className="pt-3 border-t border-neutral-700/80 space-y-1.5">
               <button
                 type="button"
+                onClick={() => { handleDownloadPdf(); setIsMenuOpen(false); }}
+                className="w-full px-3 py-2 rounded-xl bg-purple-900/40 hover:bg-purple-900/70 border border-purple-500/40 text-purple-200 hover:text-white text-xs font-semibold flex items-center justify-between transition cursor-pointer"
+              >
+                <span className="flex items-center gap-2">
+                  <Download className="w-3.5 h-3.5 text-purple-400" />
+                  <span>Download Receipt as PDF</span>
+                </span>
+                <span className="text-[10px] text-purple-300 font-bold bg-purple-800/60 px-1.5 py-0.5 rounded">.PDF</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { handleDownloadPng(); setIsMenuOpen(false); }}
+                className="w-full px-3 py-2 rounded-xl bg-neutral-800/60 hover:bg-neutral-800 text-neutral-200 hover:text-white text-xs font-medium flex items-center justify-between transition cursor-pointer"
+              >
+                <span className="flex items-center gap-2">
+                  <Download className="w-3.5 h-3.5 text-neutral-400" />
+                  <span>Save Receipt as Image</span>
+                </span>
+                <span className="text-[10px] text-neutral-400 font-semibold">.PNG</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => { handleCopyLink(); setIsMenuOpen(false); }}
                 className="w-full px-3 py-2 rounded-xl bg-neutral-800/60 hover:bg-neutral-800 text-neutral-200 hover:text-white text-xs font-medium flex items-center gap-2 transition"
               >
@@ -1211,7 +1303,12 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
       </main>
 
       {/* Floating Download PDF Button matching Screenshot_20260904-124119.png */}
-      <div className="fixed bottom-3 inset-x-0 flex justify-center z-20 pointer-events-auto">
+      <div className="fixed bottom-3 inset-x-0 flex flex-col items-center gap-1.5 z-20 pointer-events-auto px-4">
+        {downloadError && (
+          <div className="bg-red-900/90 border border-red-500 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg max-w-sm text-center">
+            {downloadError}
+          </div>
+        )}
         <button
           onClick={handleDownloadPdf}
           disabled={isDownloading}
@@ -1220,15 +1317,18 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
           {isDownloading ? (
             <span className="flex items-center gap-2">
               <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              <span>Downloading...</span>
+              <span>Generating PDF...</span>
             </span>
           ) : downloadSuccess ? (
             <span className="flex items-center gap-1.5">
-              <Check className="w-4 h-4" />
-              <span>Downloaded</span>
+              <Check className="w-4 h-4 text-emerald-300" />
+              <span>PDF Downloaded</span>
             </span>
           ) : (
-            <span>Download PDF</span>
+            <span className="flex items-center gap-2">
+              <Download className="w-4 h-4" />
+              <span>Download PDF</span>
+            </span>
           )}
         </button>
       </div>
