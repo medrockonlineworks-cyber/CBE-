@@ -676,7 +676,7 @@ export function getOfficialCbeStampSvg(weight: StampWeight = 'normal'): string {
     <path d="M 114 106 C 128 99, 144 108, 148 120 C 150 126, 145 130, 134 133" stroke-width="${(1.2 * mul).toFixed(1)}" />
     <path d="M 112 112 C 122 106, 136 113, 140 122 C 141 126, 138 128, 130 129" stroke-width="${(1.1 * mul).toFixed(1)}" />
   </g>
-  {/* Central Medallion: Solid Purple Background with White CBE Symbol */}
+  <!-- Central Medallion: Solid Purple Background with White CBE Symbol -->
   <g transform="translate(120, 116) rotate(-26)">
     <ellipse cx="0" cy="0" rx="25" ry="18" fill="#5e1887" stroke="#5e1887" stroke-width="${medallionStroke}" />
     <ellipse cx="0" cy="0" rx="22" ry="15" fill="none" stroke="#ffffff" stroke-width="${(1.2 * mul).toFixed(1)}" opacity="0.85" />

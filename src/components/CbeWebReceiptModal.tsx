@@ -6,6 +6,7 @@ import { Transaction } from '../types';
 import { SmsMessage } from '../types/sms';
 import { LocalDb, formatTo12CharTxId, DEFAULT_CBE_LOGO, OFFICIAL_CBE_PURPLE_LOGO, OFFICIAL_CBE_STAMP_LOGO, getOfficialCbeStampSvg, StampWeight } from '../lib/mockData';
 import { CbeLogo } from './CbeLogo';
+import { CbeOfficialPdfReceipt } from './CbeOfficialPdfReceipt';
 import { 
   ArrowLeft, 
   Home, 
@@ -153,6 +154,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
   onClose
 }) => {
   const receiptCardRef = useRef<HTMLDivElement>(null);
+  const pdfTemplateRef = useRef<HTMLDivElement>(null);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
@@ -486,19 +488,25 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
   }, [webReceiptUrl]);
 
   const handleDownloadPdf = async () => {
-    if (!receiptCardRef.current || isDownloading) return;
+    const targetElement = pdfTemplateRef.current;
+    if (!targetElement || isDownloading) return;
     try {
       setIsDownloading(true);
       setDownloadError(null);
-      const canvas = await html2canvas(receiptCardRef.current, {
+
+      // Brief delay to ensure fonts and QR code image render
+      await new Promise(r => setTimeout(r, 60));
+
+      const canvas = await html2canvas(targetElement, {
         scale: 2.5,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
         logging: false,
         imageTimeout: 15000,
+        windowWidth: 640,
       });
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL('image/png', 1.0);
 
       // Generate authentic high-resolution PDF document matching A4 format
       const pdf = new jsPDF({
@@ -511,9 +519,9 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
       const pageWidth = pdf.internal.pageSize.getWidth(); // 210mm
       const pageHeight = pdf.internal.pageSize.getHeight(); // 297mm
 
-      // Standard official margins
-      const marginX = 14;
-      const marginY = 14;
+      // Standard official margins (12mm)
+      const marginX = 12;
+      const marginY = 12;
       const printableWidth = pageWidth - (marginX * 2);
       const printableHeight = pageHeight - (marginY * 2);
 
@@ -544,12 +552,13 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
   };
 
   const handleDownloadPng = async () => {
-    if (!receiptCardRef.current || isDownloading) return;
+    const targetElement = pdfTemplateRef.current || receiptCardRef.current;
+    if (!targetElement || isDownloading) return;
     try {
       setIsDownloading(true);
       setDownloadError(null);
-      const canvas = await html2canvas(receiptCardRef.current, {
-        scale: 2.5,
+      const canvas = await html2canvas(targetElement, {
+        scale: 3.0,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
@@ -1725,6 +1734,31 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
             </span>
           )}
         </button>
+      </div>
+
+      {/* Offscreen CBE Official Customer Receipt Form (Dedicated for PDF download, matches IMG_20260907_191152_295.jpg) */}
+      <div 
+        style={{ 
+          position: 'fixed', 
+          top: 0, 
+          left: 0, 
+          width: '640px',
+          zIndex: -100, 
+          pointerEvents: 'none',
+          opacity: 1,
+          backgroundColor: '#ffffff',
+          overflow: 'hidden'
+        }}
+        aria-hidden="true"
+      >
+        <CbeOfficialPdfReceipt
+          ref={pdfTemplateRef}
+          receiptData={receiptData}
+          qrCodeDataUrl={qrCodeDataUrl}
+          activeStamp={activeStamp}
+          stampWeight={stampWeight}
+          stampSize={stampSize}
+        />
       </div>
 
     </div>
