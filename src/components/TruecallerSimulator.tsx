@@ -230,11 +230,11 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
   const [showThreeDotMenu, setShowThreeDotMenu] = useState<boolean>(false);
   const [threeDotTab, setThreeDotTab] = useState<'accounts' | 'settings' | 'simulate' | 'profile'>('accounts');
   const [inboxFilterMode, setInboxFilterMode] = useState<'all' | 'inbox'>('all');
-  const [statusClockMode, setStatusClockMode] = useState<'2:47' | 'live'>('2:47');
-  const [batteryPercent, setBatteryPercent] = useState<number>(32);
+  const [statusClockMode, setStatusClockMode] = useState<'11:54' | 'live'>('11:54');
+  const [batteryPercent, setBatteryPercent] = useState<number>(68);
   const [selectedSimSlot, setSelectedSimSlot] = useState<number>(2);
   const [showSpamBadge, setShowSpamBadge] = useState<boolean>(true);
-  const [recentTxOnTop, setRecentTxOnTop] = useState<boolean>(true);
+  const [recentTxOnTop, setRecentTxOnTop] = useState<boolean>(false);
   const [enableSoundHaptics, setEnableSoundHaptics] = useState<boolean>(true);
 
   const [showAddAccountModal, setShowAddAccountModal] = useState<boolean>(false);
@@ -396,6 +396,25 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
     // 2. Realistic seeded official CBE transactions matching user screenshots Screenshot_20260907-144751.png & Screenshot_20260907-144758.png
     const seededCbeList = [
       {
+        id: 'tx-cbe-receipt-345',
+        amount: 50.00,
+        accountNumber: '1000419524747',
+        maskedAccount: '1*********4747',
+        holderName: 'Leykun',
+        role: 'receiver' as TruecallerRole,
+        bankName: 'Cbe Bank',
+        bankKey: 'cbe' as TruecallerBankKey,
+        timeString: '3:45 PM',
+        timestamp: '2026-09-04T15:45:10Z',
+        counterpartyName: 'Abebe Bikila',
+        balanceAfter: 298.54,
+        txId: 'FT26245M0JG4',
+        simSlot: 2,
+        isSpam: true,
+        receiptUrl: 'https://apps.cbe.com.et:100/BranchReceipt/FT26245M0JG4&19524747',
+        fullMessageText: `https://apps.cbe.com.et:100/BranchReceipt/FT26245M0JG4&19524747`
+      },
+      {
         id: 'tx-cbe-promo-oromoo',
         amount: 0,
         accountNumber: '1000419524747',
@@ -405,13 +424,14 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
         bankName: 'Cbe Bank',
         bankKey: 'cbe' as TruecallerBankKey,
         timeString: '8:41 AM',
-        timestamp: '2026-09-05T08:41:00Z',
+        dateLabel: 'Friday, 04 Sep',
+        timestamp: '2026-09-04T08:41:00Z',
         counterpartyName: 'Commercial Bank of Ethiopia',
         balanceAfter: 298.54,
         txId: 'CBE-PROMO-841',
         simSlot: 2,
         isSpam: false,
-        fullMessageText: `Itoophiyaatiin salphaatti xumuraa!\n\nBaankii Daldalaa Itoophiyaa\nBaankii Yoomiyyuu Itti Of\nAbdatan!`
+        fullMessageText: `EKSIPOO FI FEESTIVAALA CBE ADEY 2019\n*************\nGiddugala Konveenshinii Addis Internaashinaaliitti Hagayya 23, 2018 irraa eegalee hanga Qaammee 5tti Eksipoo fi Feestivaala qophaa’e irratti hirmaadhaa!\nBittaa fi gurgurtaa ayyaanaaf raawwattan hundaaf, kaffaltii keessan karaa filannoowwan dijitaalaa Baankii Daldalaa Itoophiyaatiin salphaatti xumuraa!\n\nBaankii Daldalaa Itoophiyaa\nBaankii Yoomiyyuu Itti Of\nAbdatan!`
       },
       {
         id: 'tx-cbe-screenshot-debit-20',
@@ -429,9 +449,9 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
         txId: 'v2-hfHCxGKNY8V0W9qoyCPX',
         simSlot: 2,
         isSpam: true,
-        receiptUrl: 'https://mreciept.cbe.com.et/v2-hfHCxGKNY8V0W9qoyCPX',
+        receiptUrl: 'https://mbreciept.cbe.com.et/v2-hfHCxGKNY8V0W9qoyCPX',
         feedbackUrl: 'https://forms.gle/kGNGQpG3mQCCk3iD6',
-        fullMessageText: `Dear Leykun Jemaneh Ylma A debit transaction of ETB 20.0. has occurred on your account 1*********4747. Service charge of ETB 0.00 and VAT(15%) of 0.0 and Disaster Recovery(5%) of 0.00 with total of ETB20.00 .Your current balance is ETB298.54. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxGKNY8V0W9qoyCPX for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`
+        fullMessageText: `Dear Leykun Jemaneh Ylma A debit transaction of ETB 20.0. has occurred on your account 1*********4747. Service charge of ETB 0.00 and VAT(15%) of 0.0 and Disaster Recovery(5%) of 0.00 with total of ETB20.00 .Your current balance is ETB298.54. Thanks for Banking with CBE.\nhttps://mbreciept.cbe.com.et/v2-hfHCxGKNY8V0W9qoyCPX for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`
       },
       {
         id: 'tx-cbe-screenshot-credit-50',
@@ -452,23 +472,6 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
         isSpam: true,
         receiptUrl: 'https://apps.cbe.com.et:100/?id=FT26248KLR8219524747',
         fullMessageText: `Dear Leykun your Account 1*********4747 has been Credited with ETB 50.00 from Dejene Buta, on 05/09/2026 at 16:41:01 with Ref No FT26248KLR82 Your Current Balance is ETB 348.54. Thank you for Banking with CBE!\nhttps://apps.cbe.com.et:100/?id=FT26248KLR8219524747`
-      },
-      {
-        id: 'tx-cbe-seed-featured',
-        amount: 244600.00,
-        accountNumber: '1000419520913',
-        maskedAccount: '1*********0913',
-        holderName: 'Leykun Jemaneh Ylma',
-        role: 'receiver' as TruecallerRole,
-        bankName: 'Cbe Bank',
-        bankKey: 'cbe' as TruecallerBankKey,
-        timeString: '2:35 PM',
-        timestamp: new Date(Date.now() - 3600000).toISOString(),
-        counterpartyName: 'Commercial Bank of Ethiopia',
-        balanceAfter: 289450.75,
-        txId: 'FT26248MK0913',
-        simSlot: 1,
-        fullMessageText: `Dear Leykun Jemaneh Ylma,\nYour Account 1000419520913 has been Credited with ETB 244,600.00 on 05/09/2026 02:35 PM.\nAvailable Balance is ETB 289,450.75.\nTxn Ref: FT26248MK0913.\nThank you for banking with CBE.\nhttps://apps.cbe.com.et:100/?id=FT26248MK0913`
       }
     ];
 
@@ -497,20 +500,31 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
       )
     }));
 
-    // Alert items (freshly created or active alerts) go first at the top
     let allItems: any[] = [];
     
-    // Add dynamic alerts first (most recent)
-    for (const item of alertItems) {
-      if (!allItems.some(c => c.txId === item.txId)) {
-        allItems.push(item);
+    if (recentTxOnTop) {
+      // Top recent mode: dynamic alerts first, then reverse seeded list
+      for (const item of alertItems) {
+        if (!allItems.some(c => c.txId === item.txId)) {
+          allItems.push(item);
+        }
       }
-    }
-
-    // Add seeded items next
-    for (const seed of seededCbeList) {
-      if (!allItems.some(c => c.txId === seed.txId)) {
-        allItems.push(seed);
+      for (const seed of [...seededCbeList].reverse()) {
+        if (!allItems.some(c => c.txId === seed.txId)) {
+          allItems.push(seed);
+        }
+      }
+    } else {
+      // Natural chronological SMS stream matching user screenshots (Message 1 -> Message 2 -> Message 3 -> Message 4 -> new transactions)
+      for (const seed of seededCbeList) {
+        if (!allItems.some(c => c.txId === seed.txId)) {
+          allItems.push(seed);
+        }
+      }
+      for (const item of alertItems) {
+        if (!allItems.some(c => c.txId === item.txId)) {
+          allItems.push(item);
+        }
       }
     }
 
@@ -519,7 +533,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
       allItems = allItems.filter(item => item.amount > 0);
     }
 
-    // The first item (top recent transaction) always gets the prominent "Now" badge when recentTxOnTop is true
+    // The first item (top recent transaction) gets the prominent "Now" badge only when recentTxOnTop is true
     return allItems.map((item, index) => ({
       ...item,
       simSlot: selectedSimSlot || item.simSlot || 2,
@@ -1885,23 +1899,32 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
           </div>
         )}
 
-        {/* Android Status Bar matching Screenshot_20260907-144751.png */}
+        {/* Android Status Bar matching Screenshot_20260908-115438.png */}
         <div className="w-full px-4 pt-2 pb-1.5 flex items-center justify-between text-xs text-white bg-black select-none z-30">
-          {/* Left: Clock (2:47 matching screenshot or live clock if toggled) */}
+          {/* Left: Clock (11:54 matching screenshot or live clock if toggled) */}
           <div className="flex items-center space-x-1.5 font-medium text-[13px] tracking-tight text-white">
-            <span>{statusClockMode === 'live' ? formatCurrentTimeString().replace(' AM', '').replace(' PM', '') : '2:47'}</span>
+            <span>{statusClockMode === 'live' ? formatCurrentTimeString().replace(' AM', '').replace(' PM', '') : '11:54'}</span>
           </div>
 
-          {/* Right: Bluetooth, Network Speed, 4G, 3G, Battery */}
-          <div className="flex items-center space-x-2.5 text-[11px]">
-            {/* Bluetooth */}
-            <svg className="w-3.5 h-3.5 text-white fill-current opacity-90" viewBox="0 0 24 24">
-              <path d="M14.88 16.29L13 18.17V14.41l1.88 1.88M13 5.83l1.88 1.88L13 9.59V5.83M17.71 7.71L12 2h-1v7.59L6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 11 14.41V22h1l5.71-5.71-4.3-4.29 4.3-4.29z"/>
+          {/* Right: Headphone, Silent/Bell, Network Speed, 4G, 3G, Battery */}
+          <div className="flex items-center space-x-2 text-[11px]">
+            {/* Over-ear Headphone icon from screenshot */}
+            <svg className="w-3.5 h-3.5 text-white fill-none stroke-current stroke-2" viewBox="0 0 24 24">
+              <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
+              <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" fill="currentColor" />
             </svg>
 
-            {/* Speed: 0.00 KB/S */}
+            {/* Silent/vibrate crossed bell icon from screenshot */}
+            <svg className="w-3.5 h-3.5 text-white fill-none stroke-current stroke-2" viewBox="0 0 24 24">
+              <path d="M10.26 5.15A5.86 5.86 0 0 1 12 5c3.31 0 6 2.69 6 6v3" />
+              <path d="M6 11v3l-2 2h13" />
+              <path d="M10.3 21a2 2 0 0 0 3.4 0" />
+              <line x1="2" y1="2" x2="22" y2="22" stroke="currentColor" strokeWidth="2" />
+            </svg>
+
+            {/* Speed: 2.10 KB/S */}
             <div className="flex flex-col items-end leading-none">
-              <span className="font-mono text-[8px] font-bold text-neutral-300">0.00</span>
+              <span className="font-mono text-[8px] font-bold text-neutral-200">2.10</span>
               <span className="font-mono text-[6.5px] font-bold text-neutral-400">KB/S</span>
             </div>
 
@@ -1913,7 +1936,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                 <div className="w-0.5 h-2 bg-white rounded-xs" />
                 <div className="w-0.5 h-2.5 bg-white rounded-xs" />
               </div>
-              <span className="text-[10px] font-bold ml-0.5">4G</span>
+              <span className="text-[9.5px] font-bold ml-0.5">4G</span>
             </div>
 
             {/* 3G Signal with 4 bars */}
@@ -1924,10 +1947,10 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                 <div className="w-0.5 h-2 bg-white rounded-xs" />
                 <div className="w-0.5 h-2.5 bg-white rounded-xs" />
               </div>
-              <span className="text-[10px] font-bold ml-0.5">3G</span>
+              <span className="text-[9.5px] font-bold ml-0.5">3G</span>
             </div>
 
-            {/* Battery pill with 32 inside matching Screenshot_20260907-144751.png */}
+            {/* Battery pill with 68 inside matching Screenshot_20260908-115438.png */}
             <div className="w-7 h-3.5 border border-white rounded-[4px] px-0.5 flex items-center justify-center relative">
               <span className="text-[9px] font-bold leading-none text-white">{batteryPercent}</span>
               <div className="absolute -right-1 top-1 w-0.5 h-1.5 bg-white rounded-r-xs" />
@@ -1951,26 +1974,22 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
             {/* Bank Avatar: Dark Navy Circle with Bank Facade Columns Pediment Icon */}
             <div className="w-10 h-10 rounded-full bg-[#18263b] flex items-center justify-center flex-shrink-0 border border-blue-900/40 shadow-sm">
               <svg className="w-5 h-5 text-white fill-current" viewBox="0 0 24 24">
-                {/* Triangular roof */}
                 <path d="M12 2L2 7h20L12 2z"/>
-                {/* Horizontal architrave */}
                 <rect x="3" y="8" width="18" height="2"/>
-                {/* 4 Pillars */}
                 <rect x="4" y="11" width="2.5" height="7"/>
                 <rect x="8.5" y="11" width="2.5" height="7"/>
                 <rect x="13" y="11" width="2.5" height="7"/>
                 <rect x="17.5" y="11" width="2.5" height="7"/>
-                {/* Base */}
                 <rect x="2" y="19" width="20" height="3"/>
               </svg>
             </div>
 
             {/* Bank Title & Mobile Banking Label */}
             <div>
-              <h1 className="text-[17px] font-medium tracking-normal leading-tight text-white">
+              <h1 className="text-[17px] font-semibold tracking-normal leading-tight text-white">
                 Cbe Bank
               </h1>
-              <p className="text-[12px] text-[#94a3b8] leading-tight">
+              <p className="text-[12px] text-[#8e9aa8] leading-tight">
                 (Mobile Banking)
               </p>
             </div>
@@ -1991,29 +2010,27 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
           </div>
         </header>
 
-        {/* Transaction Messages Stream: Most recent at the top with "Now" badge */}
-        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 pb-36">
+        {/* Transaction Messages Stream: Exact charcoal bubbles, links, shield spam badges, and SIM indicators */}
+        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 pb-44">
           {bankTransactions.length === 0 ? (
             <div className="text-center py-20 text-neutral-500 text-sm">
               No transactions found for {activeBankSenderName}.
             </div>
           ) : (
-            bankTransactions.map((tx, index) => {
-              const hasDateSeparator = tx.dateLabel || index === 1;
-
+            bankTransactions.map((tx) => {
               return (
                 <React.Fragment key={tx.id}>
-                  {/* Date separator chip (e.g. Saturday, 05 Sep) */}
-                  {hasDateSeparator && (
+                  {/* Date separator chip (e.g. Friday, 04 Sep or Saturday, 05 Sep) */}
+                  {tx.dateLabel && (
                     <div className="flex justify-center my-3">
                       <span className="px-3.5 py-1 bg-[#323741] text-neutral-200 text-[11px] font-medium rounded-full shadow-xs">
-                        {tx.dateLabel || 'Saturday, 05 Sep'}
+                        {tx.dateLabel}
                       </span>
                     </div>
                   )}
 
                   <div className="w-full max-w-[430px] mx-auto">
-                    {/* Top Transaction "Now" Badge */}
+                    {/* Top Transaction "Now" Badge (only in recentTxOnTop mode) */}
                     {tx.isNow && (
                       <div className="flex items-center space-x-1.5 mb-1.5 pl-1">
                         <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#0066FF] text-white shadow-sm border border-blue-400/40">
@@ -2027,37 +2044,42 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                     {/* Charcoal SMS Message Bubble matching screenshot */}
                     <div 
                       onClick={() => setBubbleActionTx(tx)}
-                      className="bg-[#212429] hover:bg-[#272b32] active:scale-[0.99] rounded-[18px] p-4 text-white shadow-md transition cursor-pointer border border-neutral-800/60"
+                      className="bg-[#20232a] hover:bg-[#252932] active:scale-[0.99] rounded-[18px] px-4 py-3.5 text-white shadow-md transition cursor-pointer border border-[#2d313b]/70"
                     >
                       {/* Formatted message text with clickable receipt links */}
-                      <div className="text-[13.5px] leading-relaxed text-white whitespace-pre-line font-normal break-words">
+                      <div className="text-[13.5px] leading-[1.45] text-white whitespace-pre-line font-normal break-words">
                         {(() => {
                           const urlRegex = /(https?:\/\/[^\s]+)/g;
                           const parts = (tx.fullMessageText || '').split(urlRegex);
                           return parts.map((part, i) => {
                             if (part.match(urlRegex)) {
+                              const isReceipt = part.includes('cbe.com.et');
                               return (
                                 <span
                                   key={i}
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    setReceiptModalTx({
-                                      id: tx.txId || 'FT26248KLR82',
-                                      type: tx.role === 'receiver' ? 'receive' : 'transfer',
-                                      amount: tx.amount || 20.00,
-                                      fee: 0,
-                                      receiverName: tx.role === 'receiver' ? (tx.holderName || 'Leykun') : (tx.counterpartyName || 'Retail Merchant'),
-                                      receiverAccount: tx.role === 'receiver' ? (tx.accountNumber || '1000419524747') : '1000419520913',
-                                      senderName: tx.role === 'receiver' ? (tx.counterpartyName || 'Dejene Buta') : (tx.holderName || 'Leykun Jemaneh Ylma'),
-                                      senderAccount: tx.role === 'receiver' ? '1000419520842' : (tx.accountNumber || '1000419524747'),
-                                      reference: tx.txId || 'FT26248KLR82',
-                                      timestamp: tx.timestamp || '2026-09-05T16:41:01Z',
-                                      status: 'completed',
-                                      reason: tx.role === 'receiver' ? 'Credit Transfer' : 'Debit Transaction'
-                                    });
+                                    if (isReceipt) {
+                                      setReceiptModalTx({
+                                        id: tx.txId || 'FT26248KLR82',
+                                        type: tx.role === 'receiver' ? 'receive' : 'transfer',
+                                        amount: tx.amount || 50.00,
+                                        fee: 0,
+                                        receiverName: tx.role === 'receiver' ? (tx.holderName || 'Leykun') : (tx.counterpartyName || 'Dejene Buta'),
+                                        receiverAccount: tx.role === 'receiver' ? (tx.accountNumber || '1000419524747') : '1000419520913',
+                                        senderName: tx.role === 'receiver' ? (tx.counterpartyName || 'Dejene Buta') : (tx.holderName || 'Leykun Jemaneh Ylma'),
+                                        senderAccount: tx.role === 'receiver' ? '1000419520842' : (tx.accountNumber || '1000419524747'),
+                                        reference: tx.txId || 'FT26248KLR82',
+                                        timestamp: tx.timestamp || '2026-09-05T16:41:01Z',
+                                        status: 'completed',
+                                        reason: tx.role === 'receiver' ? 'Credit Transfer' : 'Debit Transaction'
+                                      });
+                                    } else {
+                                      showToast('Opening external feedback link');
+                                    }
                                   }}
-                                  className="text-[#38bdf8] underline hover:text-blue-300 cursor-pointer break-all font-medium inline-block"
-                                  title="Click to view CBE Web Receipt"
+                                  className="text-[#38bdf8] underline hover:text-blue-300 cursor-pointer break-all font-medium inline"
+                                  title={isReceipt ? 'Click to view CBE Web Receipt' : 'Open link'}
                                 >
                                   {part}
                                 </span>
@@ -2069,19 +2091,22 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                       </div>
                     </div>
 
-                    {/* Sub-caption under bubble matching screenshot (Shield icon + Spam • SMS 2 • Time) */}
-                    <div className="flex items-center space-x-1.5 mt-1 text-[11px] text-neutral-400 pl-1">
+                    {/* Sub-caption under bubble matching screenshot (Shield icon + Spam • SMS [2] • Time) */}
+                    <div className="flex items-center space-x-1.5 mt-1 text-[11px] text-neutral-400 pl-1 select-none">
                       {tx.isSpam && showSpamBadge && (
                         <>
                           <Shield className="w-3.5 h-3.5 text-neutral-400 flex-shrink-0" />
                           <span>Spam</span>
-                          <span>•</span>
+                          <span className="text-neutral-500">•</span>
                         </>
                       )}
-                      <span className="px-1 py-0.2 bg-[#2d3139] text-[9.5px] rounded text-neutral-200 font-bold leading-none">
-                        SMS {tx.simSlot || selectedSimSlot || 2}
+                      <span className="text-neutral-400 flex items-center">
+                        SMS
+                        <span className="inline-flex items-center justify-center min-w-[13px] h-[13px] px-0.5 border border-neutral-500 rounded-[3px] text-[8.5px] font-bold text-neutral-200 ml-1">
+                          {tx.simSlot || selectedSimSlot || 2}
+                        </span>
                       </span>
-                      <span>•</span>
+                      <span className="text-neutral-500">•</span>
                       <span>{tx.timeString}</span>
                     </div>
                   </div>
@@ -2092,21 +2117,37 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Floating Action Controls & Bottom Bar matching Screenshot_20260907-144751.png */}
-        <div className="fixed bottom-10 left-0 right-0 z-20 pointer-events-none flex flex-col items-center">
+        {/* Floating Scroll Down Arrow Button from screenshot */}
+        <button
+          type="button"
+          onClick={() => {
+            if (messagesEndRef.current) {
+              messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+            }
+          }}
+          className="fixed right-4 bottom-32 z-20 w-11 h-11 rounded-full bg-[#182638] hover:bg-[#22334c] active:scale-95 border border-blue-900/30 text-[#38bdf8] flex items-center justify-center shadow-2xl transition cursor-pointer"
+          title="Scroll down"
+        >
+          <ChevronDown className="w-5 h-5 text-[#38bdf8]" />
+        </button>
+
+        {/* Floating Action Controls & Bottom Bar matching Screenshot_20260908-115438.png */}
+        <div className="fixed bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-black via-black/95 to-transparent pt-4 flex flex-col items-center pointer-events-none">
           {/* Centered Filter Pill matching screenshot: "Showing all messages • View only Inbox" */}
-          <div className="mb-2 pointer-events-auto">
+          <div className="mb-2.5 pointer-events-auto">
             <button
               type="button"
               onClick={() => {
                 const nextMode = inboxFilterMode === 'all' ? 'inbox' : 'all';
                 setInboxFilterMode(nextMode);
-                showToast(nextMode === 'inbox' ? 'Filtering: View only Inbox (Financial Transactions)' : 'Showing all messages');
+                showToast(nextMode === 'inbox' ? 'Filtering: View only Inbox' : 'Showing all messages');
               }}
-              className="px-4 py-1.5 rounded-full bg-[#1e2229]/95 backdrop-blur-md border border-neutral-700/80 text-[11.5px] text-neutral-300 flex items-center space-x-2 shadow-2xl cursor-pointer hover:border-neutral-500 active:scale-95 transition"
+              className="px-4 py-1.5 rounded-full bg-[#181d24]/95 border border-neutral-700/80 text-[12px] flex items-center space-x-2 shadow-xl cursor-pointer hover:border-neutral-500 active:scale-95 transition"
             >
               <Inbox className="w-3.5 h-3.5 text-neutral-400" />
-              <span>{inboxFilterMode === 'all' ? 'Showing all messages' : 'Viewing Inbox'}</span>
+              <span className="text-neutral-300">
+                {inboxFilterMode === 'all' ? 'Showing all messages' : 'Viewing Inbox'}
+              </span>
               <span className="text-neutral-500">•</span>
               <span className="text-[#38bdf8] font-semibold hover:underline">
                 {inboxFilterMode === 'all' ? 'View only Inbox' : 'Show all'}
@@ -2114,64 +2155,48 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
             </button>
           </div>
 
-          <div className="w-full max-w-[440px] px-4 flex items-center justify-between pointer-events-auto mb-2">
-            {/* Left Action Pills: Report & View Profile matching screenshot */}
-            <div className="flex items-center space-x-2">
-              <button
-                type="button"
-                onClick={() => showToast('Reported to spam database')}
-                className="px-3.5 py-1.5 rounded-full bg-[#1e2229]/90 backdrop-blur-xs border border-neutral-800 text-neutral-300 hover:text-white text-xs font-medium flex items-center space-x-1.5 shadow-lg active:scale-95 transition cursor-pointer"
-              >
-                <ShieldAlert className="w-3.5 h-3.5 text-red-400" />
-                <span>Report</span>
-              </button>
+          {/* Action Pills: Report & View Profile matching screenshot */}
+          <div className="flex items-center justify-center space-x-3 mb-2 pointer-events-auto">
+            <button
+              type="button"
+              onClick={() => showToast('Reported to spam database')}
+              className="px-5 py-1.5 rounded-full bg-[#161920] border border-neutral-700/80 hover:border-red-500/50 text-white text-[12.5px] font-medium flex items-center space-x-2 shadow-lg active:scale-95 transition cursor-pointer"
+            >
+              <ShieldAlert className="w-4 h-4 text-[#ef4444]" />
+              <span>Report</span>
+            </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  setThreeDotTab('profile');
-                  setShowThreeDotMenu(true);
-                }}
-                className="px-3.5 py-1.5 rounded-full bg-[#1e2229]/90 backdrop-blur-xs border border-neutral-800 text-neutral-300 hover:text-white text-xs font-medium flex items-center space-x-1.5 shadow-lg active:scale-95 transition cursor-pointer"
-              >
-                <Info className="w-3.5 h-3.5 text-blue-400" />
-                <span>View profile</span>
-              </button>
-            </div>
-
-            {/* Right: Floating Down Arrow Button from screenshot */}
             <button
               type="button"
               onClick={() => {
-                if (messagesEndRef.current) {
-                  messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-                }
+                setThreeDotTab('profile');
+                setShowThreeDotMenu(true);
               }}
-              className="w-10 h-10 rounded-full bg-[#1e2638] hover:bg-[#253046] active:scale-95 border border-blue-900/30 text-blue-400 flex items-center justify-center shadow-xl transition cursor-pointer"
-              title="Scroll down"
+              className="px-5 py-1.5 rounded-full bg-[#161920] border border-neutral-700/80 hover:border-blue-500/50 text-white text-[12.5px] font-medium flex items-center space-x-2 shadow-lg active:scale-95 transition cursor-pointer"
             >
-              <ChevronDown className="w-5 h-5 text-blue-300" />
+              <Info className="w-4 h-4 text-[#38bdf8]" />
+              <span>View profile</span>
             </button>
           </div>
 
           {/* Non-replyable sender footer message */}
-          <div className="w-full max-w-[440px] px-4 py-2 bg-black text-center text-[12px] text-neutral-400 select-none pointer-events-auto border-t border-neutral-900">
+          <div className="w-full bg-black text-center text-[12px] text-[#8e9aa8] py-1 select-none pointer-events-auto">
             Replying is not supported by this sender
           </div>
-        </div>
 
-        {/* Bottom Android System Navigation Bar matching screenshot (≡, ○, ⊃) */}
-        <div className="w-full py-2 px-14 flex items-center justify-between text-neutral-500 text-lg font-light bg-black border-t border-neutral-900 fixed bottom-0 left-0 right-0 z-30">
-          <span className="hover:text-white cursor-pointer">≡</span>
-          <span className="hover:text-white cursor-pointer">○</span>
-          <button 
-            type="button" 
-            onClick={onBack}
-            className="hover:text-white cursor-pointer focus:outline-none"
-            title="Return to Banking App"
-          >
-            ⊃
-          </button>
+          {/* Bottom Android System Navigation Bar matching screenshot (|||, ○, <) */}
+          <div className="w-full py-2.5 px-16 flex items-center justify-between text-neutral-400 text-base font-light bg-black border-t border-neutral-900/80 select-none pointer-events-auto">
+            <span className="hover:text-white cursor-pointer tracking-tighter text-sm font-bold opacity-70">|||</span>
+            <span className="hover:text-white cursor-pointer text-base opacity-70">○</span>
+            <button 
+              type="button" 
+              onClick={() => setView('inbox')}
+              className="hover:text-white cursor-pointer opacity-70 focus:outline-none"
+              title="Back"
+            >
+              &lt;
+            </button>
+          </div>
         </div>
 
         {/* =================================================================== */}
@@ -2346,17 +2371,17 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="font-semibold text-white">Status Bar Clock</div>
-                        <div className="text-[10.5px] text-neutral-400">Screenshot clock (2:47) or live device time</div>
+                        <div className="text-[10.5px] text-neutral-400">Screenshot clock (11:54) or live device time</div>
                       </div>
                       <div className="flex rounded-lg bg-neutral-800 p-0.5 border border-neutral-700">
                         <button
                           type="button"
-                          onClick={() => setStatusClockMode('2:47')}
+                          onClick={() => setStatusClockMode('11:54')}
                           className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${
-                            statusClockMode === '2:47' ? 'bg-[#0066FF] text-white' : 'text-neutral-400'
+                            statusClockMode === '11:54' ? 'bg-[#0066FF] text-white' : 'text-neutral-400'
                           }`}
                         >
-                          2:47
+                          11:54
                         </button>
                         <button
                           type="button"
