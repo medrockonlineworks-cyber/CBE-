@@ -1525,6 +1525,28 @@ export class LocalDb {
     window.dispatchEvent(new CustomEvent('cbe_logo_updated', { detail: { logo } }));
   }
 
+  static getCustomPdfLogo(): string | null {
+    try {
+      const val = localStorage.getItem('cbe_custom_pdf_logo');
+      return (val && val.trim().length > 0) ? val : null;
+    } catch {
+      return null;
+    }
+  }
+
+  static setCustomPdfLogo(logo: string | null): void {
+    try {
+      if (!logo || logo.trim().length === 0) {
+        localStorage.removeItem('cbe_custom_pdf_logo');
+      } else {
+        localStorage.setItem('cbe_custom_pdf_logo', logo);
+      }
+    } catch (err) {
+      console.warn('[LocalDb] Failed writing custom pdf logo to localStorage:', err);
+    }
+    window.dispatchEvent(new CustomEvent('cbe_pdf_logo_updated', { detail: { logo } }));
+  }
+
   static getCustomBankStamp(): string | null {
     try {
       const val = localStorage.getItem('tana_custom_bank_stamp');

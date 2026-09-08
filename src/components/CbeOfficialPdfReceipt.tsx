@@ -26,6 +26,7 @@ interface CbeOfficialPdfReceiptProps {
   activeStamp?: string;
   stampWeight?: StampWeight;
   stampSize?: number;
+  customPdfLogo?: string | null;
 }
 
 /**
@@ -37,7 +38,8 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
   qrCodeDataUrl,
   activeStamp,
   stampWeight = 'normal',
-  stampSize = 185
+  stampSize = 185,
+  customPdfLogo
 }, ref) => {
   const effectiveStamp = activeStamp || getOfficialCbeStampSvg(stampWeight) || OFFICIAL_CBE_STAMP_LOGO;
 
@@ -66,9 +68,18 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
           position: 'relative'
         }}
       >
-        {/* Left: CBE Emblem */}
-        <div style={{ width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <CbeGoldenEmblemSvg className="w-12 h-12" />
+        {/* Left: CBE Emblem or Custom PDF Logo */}
+        <div style={{ width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+          {customPdfLogo ? (
+            <img 
+              src={customPdfLogo} 
+              alt="PDF Bank Logo" 
+              style={{ width: '48px', height: '48px', objectFit: 'contain' }} 
+              crossOrigin="anonymous" 
+            />
+          ) : (
+            <CbeGoldenEmblemSvg className="w-12 h-12" />
+          )}
         </div>
 
         {/* Center: Official CBE Title, Subtitle, and Status */}

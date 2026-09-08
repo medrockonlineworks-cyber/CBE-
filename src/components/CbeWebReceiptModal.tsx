@@ -33,7 +33,10 @@ import {
   ExternalLink,
   RefreshCw,
   Stamp,
-  Sparkles
+  Sparkles,
+  Printer,
+  FileText,
+  Link
 } from 'lucide-react';
 
 export type BrowserHeaderType = 'chrome' | 'phoenix' | 'opera' | 'samsung' | 'safari';
@@ -186,6 +189,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
     return () => clearInterval(timer);
   }, []);
   const stampFileInputRef = useRef<HTMLInputElement>(null);
+  const pdfLogoFileInputRef = useRef<HTMLInputElement>(null);
 
   // Double-tap/click to hide status bar
   const [hideStatusBar, setHideStatusBar] = useState<boolean>(() => {
@@ -195,6 +199,32 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
       return false;
     }
   });
+
+  // View Mode: 'web' for mobile web receipt, 'pdf' for official CBE PDF document opened in browser
+  const [viewMode, setViewMode] = useState<'web' | 'pdf'>('web');
+  const [pdfZoom, setPdfZoom] = useState<number>(1);
+  const [isAutoFit, setIsAutoFit] = useState<boolean>(true);
+  const [viewportWidth, setViewportWidth] = useState<number>(typeof window !== 'undefined' ? window.innerWidth : 640);
+  const pdfContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setViewportWidth(window.innerWidth);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Compute scale for 640px official A4 sheet to fit mobile screens automatically
+  const autoFitScale = useMemo(() => {
+    const available = Math.max(280, viewportWidth - 28);
+    if (available < 640) {
+      return Number((available / 640).toFixed(3));
+    }
+    return 1;
+  }, [viewportWidth]);
+
+  const effectiveScale = isAutoFit ? autoFitScale : pdfZoom;
   const [barsToast, setBarsToast] = useState<string | null>(null);
   const barsToastTimerRef = useRef<any>(null);
   const lastTapRef = useRef<{ time: number; x: number; y: number }>({ time: 0, x: 0, y: 0 });
@@ -265,6 +295,8 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
 
   // Retrieve admin uploaded logo and stamp from LocalDb and listen to updates
   const [adminLogo, setAdminLogo] = useState<string | null>(() => LocalDb.getCustomBankLogo());
+  const [customPdfLogo, setCustomPdfLogo] = useState<string | null>(() => LocalDb.getCustomPdfLogo());
+  const [pdfLogoUrlInput, setPdfLogoUrlInput] = useState<string>(() => LocalDb.getCustomPdfLogo() || '');
   const [customStamp, setCustomStamp] = useState<string | null>(() => LocalDb.getCustomBankStamp());
   const [stampSize, setStampSize] = useState<number>(() => LocalDb.getBankStampSize());
   const [stampWeight, setStampWeight] = useState<StampWeight>(() => LocalDb.getBankStampWeight());
@@ -277,6 +309,11 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
   useEffect(() => {
     const handleSyncLogo = () => {
       setAdminLogo(LocalDb.getCustomBankLogo());
+    };
+    const handleSyncPdfLogo = () => {
+      const val = LocalDb.getCustomPdfLogo();
+      setCustomPdfLogo(val);
+      setPdfLogoUrlInput(val || '');
     };
     const handleSyncStamp = () => {
       setCustomStamp(LocalDb.getCustomBankStamp());
@@ -298,17 +335,21 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
       }
     };
     window.addEventListener('cbe_logo_updated', handleSyncLogo);
+    window.addEventListener('cbe_pdf_logo_updated', handleSyncPdfLogo);
     window.addEventListener('cbe_stamp_updated', handleSyncStamp);
     window.addEventListener('cbe_stamp_size_updated', handleSyncStampSize);
     window.addEventListener('cbe_stamp_weight_updated', handleSyncStampWeight);
     window.addEventListener('storage', handleSyncLogo);
+    window.addEventListener('storage', handleSyncPdfLogo);
     window.addEventListener('storage', handleSyncStamp);
     return () => {
       window.removeEventListener('cbe_logo_updated', handleSyncLogo);
+      window.removeEventListener('cbe_pdf_logo_updated', handleSyncPdfLogo);
       window.removeEventListener('cbe_stamp_updated', handleSyncStamp);
       window.removeEventListener('cbe_stamp_size_updated', handleSyncStampSize);
       window.removeEventListener('cbe_stamp_weight_updated', handleSyncStampWeight);
       window.removeEventListener('storage', handleSyncLogo);
+      window.removeEventListener('storage', handleSyncPdfLogo);
       window.removeEventListener('storage', handleSyncStamp);
     };
   }, []);
@@ -487,18 +528,30 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
       .catch((err) => console.error('Failed to generate QR:', err));
   }, [webReceiptUrl]);
 
-  const handleDownloadPdf = async () => {
-    const targetElement = pdfTemplateRef.current;
-    if (!targetElement || isDownloading) return;
+  const handleDownloadPdf = async (stayInCurrentView = false) => {
+    if (isDownloading) return;
+
+    // When invoked from web view, switch view into the official PDF document opened in browser
+    if (viewMode === 'web' && !stayInCurrentView) {
+      setViewMode('pdf');
+      showBarsToast('Opening official CBE PDF in browser...');
+    }
+
     try {
       setIsDownloading(true);
       setDownloadError(null);
 
-      // Brief delay to ensure fonts and QR code image render
-      await new Promise(r => setTimeout(r, 60));
+      // Brief pause to allow any state batching to settle
+      await new Promise(r => setTimeout(r, 200));
 
-      const canvas = await html2canvas(targetElement, {
-        scale: 2.5,
+      // Target the permanently mounted offscreen template element
+      const targetElement = pdfTemplateRef.current || document.getElementById('cbe-official-pdf-render-canvas');
+      if (!targetElement || !document.body.contains(targetElement)) {
+        throw new Error('Receipt document template is not ready. Please try again.');
+      }
+
+      const canvas = await html2canvas(targetElement as HTMLElement, {
+        scale: 2,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
@@ -549,6 +602,10 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
     } finally {
       setIsDownloading(false);
     }
+  };
+
+  const handlePrintPdf = () => {
+    window.print();
   };
 
   const handleDownloadPng = async () => {
@@ -628,6 +685,41 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
     setCustomStamp(null);
   };
 
+  const handleUploadPdfLogoFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const dataUrl = event.target?.result as string;
+      if (dataUrl) {
+        LocalDb.setCustomPdfLogo(dataUrl);
+        setCustomPdfLogo(dataUrl);
+        setPdfLogoUrlInput(dataUrl);
+        showBarsToast('PDF logo updated (PDF only)');
+        setIsMenuOpen(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleApplyPdfLogoUrl = (inputUrl?: string) => {
+    const target = (inputUrl !== undefined ? inputUrl : pdfLogoUrlInput).trim();
+    if (!target) {
+      handleResetPdfLogo();
+      return;
+    }
+    LocalDb.setCustomPdfLogo(target);
+    setCustomPdfLogo(target);
+    showBarsToast('PDF logo updated by URL (PDF only)');
+  };
+
+  const handleResetPdfLogo = () => {
+    LocalDb.setCustomPdfLogo(null);
+    setCustomPdfLogo(null);
+    setPdfLogoUrlInput('');
+    showBarsToast('PDF logo reset to official CBE emblem');
+  };
+
   return (
     <div 
       onClick={handleScreenClick}
@@ -654,6 +746,15 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
         accept="image/*"
         className="hidden"
         onChange={handleUploadStampFile}
+      />
+
+      {/* Hidden file input for uploading custom PDF logo (PDF only) */}
+      <input 
+        ref={pdfLogoFileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleUploadPdfLogoFile}
       />
 
       {/* 1. Mobile Phone Status Bar (Present in user screenshot: Clock 12:18 + Airplane, Bluetooth, Silent bell, 25.3 KB/S, Dual SIM H+ & 3G, Battery [62]) */}
@@ -756,7 +857,12 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
 
             {/* URL string matching Image 2 */}
             <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis text-[14.5px] text-[#e5e5e5] font-normal tracking-tight font-sans">
-              {copiedUrl ? (
+              {viewMode === 'pdf' ? (
+                <span className="flex items-center gap-1.5">
+                  <span className="bg-red-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-2xs leading-none">PDF</span>
+                  <span className="truncate">apps.cbe.com.et:100/pdf/?id={receiptData.refId}</span>
+                </span>
+              ) : copiedUrl ? (
                 <span className="text-emerald-400 font-bold text-xs">Copied URL to clipboard!</span>
               ) : (
                 <span>apps.cbe.com.et:100/?id={receiptData.refId}</span>
@@ -836,7 +942,12 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
 
             {/* URL text matching Image 1: s.cbe.com.et:100 */}
             <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis flex items-center">
-              {copiedUrl ? (
+              {viewMode === 'pdf' ? (
+                <div className="flex items-center gap-1.5 text-[13.5px] text-[#e3e3e8] font-normal tracking-tight font-sans">
+                  <span className="bg-red-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-2xs leading-none">PDF</span>
+                  <span className="truncate">apps.cbe.com.et:100/pdf/?id={receiptData.refId}</span>
+                </div>
+              ) : copiedUrl ? (
                 <span className="text-emerald-400 font-bold text-xs">Copied URL to clipboard!</span>
               ) : (
                 <div className="text-[14.5px] text-[#e3e3e8] font-normal tracking-tight font-sans flex items-center">
@@ -1288,7 +1399,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
             <div className="pt-3 border-t border-neutral-700/80 space-y-1.5">
               <button
                 type="button"
-                onClick={() => { handleDownloadPdf(); setIsMenuOpen(false); }}
+                onClick={() => { handleDownloadPdf(false); setIsMenuOpen(false); }}
                 className="w-full px-3 py-2 rounded-xl bg-purple-900/40 hover:bg-purple-900/70 border border-purple-500/40 text-purple-200 hover:text-white text-xs font-semibold flex items-center justify-between transition cursor-pointer"
               >
                 <span className="flex items-center gap-2">
@@ -1351,6 +1462,64 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                 </button>
               )}
 
+              {/* Change PDF Logo by URL (PDF Only) */}
+              <div className="bg-neutral-850/80 border border-neutral-700/80 rounded-xl p-2.5 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 text-xs font-semibold text-purple-200">
+                    <Link className="w-3.5 h-3.5 text-purple-400" />
+                    <span>PDF Logo (by URL)</span>
+                  </span>
+                  <span className="text-[10px] text-purple-300 font-bold bg-purple-900/60 px-1.5 py-0.5 rounded">
+                    PDF Only
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="url"
+                    value={pdfLogoUrlInput}
+                    onChange={(e) => setPdfLogoUrlInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleApplyPdfLogoUrl();
+                      }
+                    }}
+                    placeholder="https://... image URL"
+                    className="flex-1 bg-neutral-900 border border-neutral-700 focus:border-purple-500 rounded-lg px-2.5 py-1.5 text-xs text-neutral-100 placeholder-neutral-500 outline-none transition"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleApplyPdfLogoUrl()}
+                    className="bg-purple-700 hover:bg-purple-600 active:bg-purple-800 text-white font-semibold text-xs px-3 py-1.5 rounded-lg transition shrink-0 cursor-pointer shadow-sm"
+                  >
+                    Apply
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between pt-1 border-t border-neutral-700/50 text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() => pdfLogoFileInputRef.current?.click()}
+                    className="text-neutral-400 hover:text-neutral-200 flex items-center gap-1 transition cursor-pointer"
+                  >
+                    <Upload className="w-3 h-3" />
+                    <span>Or upload file</span>
+                  </button>
+
+                  {customPdfLogo && (
+                    <button
+                      type="button"
+                      onClick={handleResetPdfLogo}
+                      className="text-red-400 hover:text-red-300 flex items-center gap-1 transition cursor-pointer"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span>Reset to default</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
               <button
                 type="button"
                 onClick={() => { setIsMenuOpen(false); onClose(); }}
@@ -1365,8 +1534,160 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
         </>
       )}
 
-      {/* 2. Scrollable Receipt Content Canvas */}
-      <main className="w-full flex-1 overflow-y-auto px-2 pt-2.5 pb-24 bg-[#f0f2f5] flex justify-center">
+      {/* 2. Main Content Canvas: Either In-Browser PDF Document Viewer or Mobile Web Receipt */}
+      {viewMode === 'pdf' ? (
+        <div className="w-full flex-1 flex flex-col overflow-hidden bg-[#525659]">
+          {/* Authentic In-Browser PDF Viewer Toolbar */}
+          <div className="w-full bg-[#2a2b2e] text-white px-3 py-2 border-b border-neutral-700/90 flex items-center justify-between z-20 shrink-0 select-none shadow-md">
+            {/* Left: Back to Web Receipt & PDF Title */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setViewMode('web')}
+                className="flex items-center gap-1.5 text-xs font-semibold text-purple-200 hover:text-white bg-purple-900/60 hover:bg-purple-800/80 px-2.5 py-1.5 rounded-lg border border-purple-500/50 transition cursor-pointer active:scale-95"
+                title="Switch back to Web Receipt view"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>Web Receipt</span>
+              </button>
+
+              <div className="hidden sm:flex items-center gap-1.5 text-xs text-neutral-300 font-mono bg-neutral-850 px-2.5 py-1 rounded border border-neutral-700/80">
+                <FileText className="w-3.5 h-3.5 text-red-400 shrink-0" />
+                <span className="truncate max-w-[190px]">CBE_Customer_Receipt_{receiptData.refId}.pdf</span>
+                <span className="text-[10px] text-neutral-400 font-sans ml-1">1 / 1</span>
+              </div>
+            </div>
+
+            {/* Right: Zoom Controls, Print & Save PDF Button */}
+            <div className="flex items-center gap-1.5 sm:gap-2">
+              {/* Zoom Controls */}
+              <div className="flex items-center bg-neutral-800/90 rounded-lg p-0.5 border border-neutral-700">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAutoFit(false);
+                    setPdfZoom(prev => Math.max(0.4, Number((prev - 0.15).toFixed(2))));
+                  }}
+                  className="p-1 text-neutral-300 hover:text-white hover:bg-neutral-700 rounded transition cursor-pointer"
+                  title="Zoom Out"
+                >
+                  <Minus className="w-3 h-3" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAutoFit(prev => !prev);
+                    if (!isAutoFit) setPdfZoom(1);
+                  }}
+                  className={`px-1.5 py-0.5 text-[10.5px] font-bold rounded transition cursor-pointer ${
+                    isAutoFit ? 'text-purple-300 bg-purple-950/60' : 'text-neutral-300 hover:text-white'
+                  }`}
+                  title={isAutoFit ? 'Auto-Fit to Screen Width' : 'Reset to 100%'}
+                >
+                  {isAutoFit ? 'Fit' : `${Math.round(pdfZoom * 100)}%`}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAutoFit(false);
+                    setPdfZoom(prev => Math.min(1.8, Number((prev + 0.15).toFixed(2))));
+                  }}
+                  className="p-1 text-neutral-300 hover:text-white hover:bg-neutral-700 rounded transition cursor-pointer"
+                  title="Zoom In"
+                >
+                  <Plus className="w-3 h-3" />
+                </button>
+              </div>
+
+              {/* Print Button */}
+              <button
+                type="button"
+                onClick={handlePrintPdf}
+                className="hidden sm:flex p-1.5 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-lg transition cursor-pointer"
+                title="Print Receipt"
+              >
+                <Printer className="w-4 h-4" />
+              </button>
+
+              {/* Download .PDF File Button */}
+              <button
+                type="button"
+                onClick={() => handleDownloadPdf(true)}
+                disabled={isDownloading}
+                className="flex items-center gap-1.5 text-xs font-bold text-white bg-[#781d77] hover:bg-[#68137e] active:bg-[#580f68] px-3 py-1.5 rounded-lg shadow-md transition cursor-pointer disabled:opacity-75 active:scale-95"
+                title="Save PDF file to device storage"
+              >
+                {isDownloading ? (
+                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Download className="w-3.5 h-3.5" />
+                )}
+                <span>Save PDF</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Scrollable PDF Document Canvas */}
+          <div 
+            ref={pdfContainerRef}
+            className="flex-1 overflow-auto p-3 sm:p-6 flex flex-col items-center justify-start relative select-none"
+          >
+            {/* Visual wrapper that scales accurately on mobile while keeping A4 document structure */}
+            <div
+              className="transition-transform duration-200 ease-out origin-top flex flex-col items-center"
+              style={{
+                width: effectiveScale < 1 ? `${640 * effectiveScale}px` : '640px',
+                height: effectiveScale < 1 ? `calc(900px * ${effectiveScale})` : 'auto',
+                marginBottom: effectiveScale < 1 ? '24px' : '48px'
+              }}
+            >
+              <div
+                style={{
+                  width: '640px',
+                  transform: effectiveScale !== 1 ? `scale(${effectiveScale})` : undefined,
+                  transformOrigin: 'top center',
+                  boxShadow: '0 8px 36px rgba(0,0,0,0.38), 0 2px 8px rgba(0,0,0,0.22)',
+                  backgroundColor: '#ffffff',
+                  borderRadius: '2px'
+                }}
+              >
+                <CbeOfficialPdfReceipt
+                  receiptData={receiptData}
+                  qrCodeDataUrl={qrCodeDataUrl}
+                  activeStamp={activeStamp}
+                  stampWeight={stampWeight}
+                  stampSize={stampSize}
+                  customPdfLogo={customPdfLogo}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Floating Mobile Bottom Action Pill in PDF mode */}
+          <div className="fixed bottom-3 inset-x-0 flex items-center justify-center gap-2 z-30 pointer-events-auto px-4">
+            <button
+              type="button"
+              onClick={() => setViewMode('web')}
+              className="bg-neutral-900/95 hover:bg-neutral-800 text-white font-semibold text-xs py-2 px-4 rounded-full shadow-2xl border border-white/20 flex items-center gap-1.5 transition active:scale-95 cursor-pointer backdrop-blur-md"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 text-purple-400" />
+              <span>Back to Web Receipt</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleDownloadPdf(true)}
+              disabled={isDownloading}
+              className="bg-[#781d77] hover:bg-[#68137e] text-white font-bold text-xs py-2 px-4 rounded-full shadow-2xl flex items-center gap-1.5 transition active:scale-95 cursor-pointer disabled:opacity-75"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>{isDownloading ? 'Saving...' : 'Save PDF'}</span>
+            </button>
+          </div>
+        </div>
+      ) : (
+        /* Web Receipt Mode */
+        <>
+          <main className="w-full flex-1 overflow-y-auto px-2 pt-2.5 pb-24 bg-[#f0f2f5] flex justify-center">
         <div 
           ref={receiptCardRef}
           className={`bg-white w-full max-w-[460px] shadow-sm border border-gray-200 rounded-sm overflow-hidden text-gray-900 self-start transition-opacity ${
@@ -1706,38 +2027,42 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
       </main>
 
       {/* Floating Download PDF Button matching Screenshot_20260904-124119.png */}
-      <div className="fixed bottom-3 inset-x-0 flex flex-col items-center gap-1.5 z-20 pointer-events-auto px-4">
-        {downloadError && (
-          <div className="bg-red-900/90 border border-red-500 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg max-w-sm text-center">
-            {downloadError}
+          <div className="fixed bottom-3 inset-x-0 flex flex-col items-center gap-1.5 z-20 pointer-events-auto px-4">
+            {downloadError && (
+              <div className="bg-red-900/90 border border-red-500 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg max-w-sm text-center">
+                {downloadError}
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => handleDownloadPdf(false)}
+              disabled={isDownloading}
+              className="bg-[#781d77] hover:bg-[#68137e] active:bg-[#580f68] text-white font-bold text-[13px] py-2 px-6 rounded-lg shadow-xl flex items-center justify-center transition active:scale-95 disabled:opacity-75 cursor-pointer"
+            >
+              {isDownloading ? (
+                <span className="flex items-center gap-2">
+                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Opening PDF in Browser...</span>
+                </span>
+              ) : downloadSuccess ? (
+                <span className="flex items-center gap-1.5">
+                  <Check className="w-4 h-4 text-emerald-300" />
+                  <span>PDF Downloaded</span>
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <Download className="w-4 h-4" />
+                  <span>Download PDF</span>
+                </span>
+              )}
+            </button>
           </div>
-        )}
-        <button
-          onClick={handleDownloadPdf}
-          disabled={isDownloading}
-          className="bg-[#781d77] hover:bg-[#68137e] active:bg-[#580f68] text-white font-bold text-[13px] py-2 px-6 rounded-lg shadow-xl flex items-center justify-center transition active:scale-95 disabled:opacity-75 cursor-pointer"
-        >
-          {isDownloading ? (
-            <span className="flex items-center gap-2">
-              <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              <span>Generating PDF...</span>
-            </span>
-          ) : downloadSuccess ? (
-            <span className="flex items-center gap-1.5">
-              <Check className="w-4 h-4 text-emerald-300" />
-              <span>PDF Downloaded</span>
-            </span>
-          ) : (
-            <span className="flex items-center gap-2">
-              <Download className="w-4 h-4" />
-              <span>Download PDF</span>
-            </span>
-          )}
-        </button>
-      </div>
+        </>
+      )}
 
-      {/* Offscreen CBE Official Customer Receipt Form (Dedicated for PDF download, matches IMG_20260907_191152_295.jpg) */}
+      {/* Permanently mounted offscreen CBE Official Customer Receipt Form for html2canvas */}
       <div 
+        id="cbe-official-pdf-render-canvas"
         style={{ 
           position: 'fixed', 
           top: 0, 
@@ -1758,6 +2083,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
           activeStamp={activeStamp}
           stampWeight={stampWeight}
           stampSize={stampSize}
+          customPdfLogo={customPdfLogo}
         />
       </div>
 
