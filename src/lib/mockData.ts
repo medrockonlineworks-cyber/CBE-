@@ -620,28 +620,42 @@ export const DEFAULT_CBE_LOGO = `data:image/svg+xml;utf8,${encodeURIComponent(`
 </svg>
 `)}`;
 
+export type StampWeight = 'light' | 'normal' | 'medium' | 'bold' | 'heavy';
+
 // Authentic Official CBE Circular Purple Rubber Stamp SVG Data URI matching IMG_20260905_105826_969.png
-export const OFFICIAL_CBE_STAMP_LOGO = `data:image/svg+xml;utf8,${encodeURIComponent(`
+export function getOfficialCbeStampSvg(weight: StampWeight = 'normal'): string {
+  const mul = weight === 'light' ? 0.75 : weight === 'medium' ? 1.25 : weight === 'bold' ? 1.6 : weight === 'heavy' ? 2.05 : 1.0;
+  
+  const outerStroke = (4.2 * mul).toFixed(1);
+  const secondStroke = (2.0 * mul).toFixed(1);
+  const textUpperStroke = (0.8 * mul).toFixed(1);
+  const textLowerStroke = (0.6 * mul).toFixed(1);
+  const innerRingStroke = (3.2 * mul).toFixed(1);
+  const lineStroke = (1.4 * mul).toFixed(1);
+  const hatchStroke = (1.2 * mul).toFixed(1);
+  const medallionStroke = (2.5 * mul).toFixed(1);
+
+  return `data:image/svg+xml;utf8,${encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none">
   <defs>
     <path id="cbeUpper" d="M 29.5,120 A 90.5,90.5 0 0,1 210.5,120" />
     <path id="cbeLower" d="M 29.5,120 A 90.5,90.5 0 0,0 210.5,120" />
     <pattern id="hatch" width="3.2" height="3.2" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
-      <line x1="0" y1="0" x2="0" y2="3.2" stroke="#5e1887" stroke-width="1.2" />
+      <line x1="0" y1="0" x2="0" y2="3.2" stroke="#5e1887" stroke-width="${hatchStroke}" />
     </pattern>
   </defs>
-  <circle cx="120" cy="120" r="114" stroke="#5e1887" stroke-width="4.2" stroke-dasharray="140 2 95 1.5 130 2" stroke-linecap="round" />
-  <circle cx="120" cy="120" r="107.5" stroke="#5e1887" stroke-width="2.0" opacity="0.95" />
-  <text fill="#5e1887" stroke="#5e1887" stroke-width="0.8" paint-order="stroke fill" font-size="16.5" font-weight="900" letter-spacing="2.8px" font-family="system-ui, sans-serif">
+  <circle cx="120" cy="120" r="114" stroke="#5e1887" stroke-width="${outerStroke}" stroke-dasharray="140 2 95 1.5 130 2" stroke-linecap="round" />
+  <circle cx="120" cy="120" r="107.5" stroke="#5e1887" stroke-width="${secondStroke}" opacity="0.95" />
+  <text fill="#5e1887" stroke="#5e1887" stroke-width="${textUpperStroke}" paint-order="stroke fill" font-size="16.5" font-weight="900" letter-spacing="2.8px" font-family="system-ui, sans-serif">
     <textPath href="#cbeUpper" startOffset="50%" text-anchor="middle">የኢትዮጵያ ንግድ ባንክ</textPath>
   </text>
-  <text fill="#5e1887" stroke="#5e1887" stroke-width="0.6" paint-order="stroke fill" font-size="12.5" font-weight="900" letter-spacing="1.2px" font-family="system-ui, sans-serif">
+  <text fill="#5e1887" stroke="#5e1887" stroke-width="${textLowerStroke}" paint-order="stroke fill" font-size="12.5" font-weight="900" letter-spacing="1.2px" font-family="system-ui, sans-serif">
     <textPath href="#cbeLower" startOffset="50%" text-anchor="middle">Commercial Bank of Ethiopia * 9.1.6</textPath>
   </text>
-  <circle cx="120" cy="120" r="76" stroke="#5e1887" stroke-width="3.2" />
+  <circle cx="120" cy="120" r="76" stroke="#5e1887" stroke-width="${innerRingStroke}" />
   <path d="M 68 100 C 72 68, 114 56, 148 64 C 176 72, 184 104, 178 136 C 166 166, 126 178, 92 168 C 66 156, 62 126, 68 100 Z" fill="url(#hatch)" opacity="0.45" />
-  <g stroke="#5e1887" stroke-width="1.4" opacity="0.95">
-    <path d="M 68 96 C 72 74, 86 58, 114 56 L 122 56" fill="none" stroke-width="2.0" />
+  <g stroke="#5e1887" stroke-width="${lineStroke}" opacity="0.95">
+    <path d="M 68 96 C 72 74, 86 58, 114 56 L 122 56" fill="none" stroke-width="${(2.0 * mul).toFixed(1)}" />
     <line x1="108" y1="105" x2="68" y2="96" />
     <line x1="110" y1="102" x2="72" y2="86" />
     <line x1="112" y1="99" x2="78" y2="76" />
@@ -649,23 +663,23 @@ export const OFFICIAL_CBE_STAMP_LOGO = `data:image/svg+xml;utf8,${encodeURICompo
     <line x1="116" y1="93" x2="96" y2="61" />
     <line x1="118" y1="90" x2="108" y2="57" />
     <line x1="120" y1="88" x2="120" y2="56" />
-    <path d="M 72 92 C 80 82, 92 72, 110 68" fill="none" stroke-width="1.1" />
-    <path d="M 80 96 C 88 86, 100 78, 116 75" fill="none" stroke-width="1.1" />
-    <path d="M 90 101 C 96 93, 106 85, 120 82" fill="none" stroke-width="1.1" />
+    <path d="M 72 92 C 80 82, 92 72, 110 68" fill="none" stroke-width="${(1.1 * mul).toFixed(1)}" />
+    <path d="M 80 96 C 88 86, 100 78, 116 75" fill="none" stroke-width="${(1.1 * mul).toFixed(1)}" />
+    <path d="M 90 101 C 96 93, 106 85, 120 82" fill="none" stroke-width="${(1.1 * mul).toFixed(1)}" />
   </g>
   <g stroke="#5e1887" fill="none" opacity="0.95">
-    <path d="M 124 76 C 152 64, 184 82, 188 110 C 192 134, 178 154, 154 162" stroke-width="2.0" />
-    <path d="M 122 82 C 148 71, 176 88, 180 112 C 183 131, 171 149, 150 156" stroke-width="1.7" />
-    <path d="M 120 88 C 144 78, 168 93, 172 114 C 175 129, 164 144, 146 150" stroke-width="1.5" />
-    <path d="M 118 94 C 138 85, 160 98, 164 116 C 167 127, 158 139, 142 144" stroke-width="1.4" />
-    <path d="M 116 100 C 132 92, 152 103, 156 118 C 158 126, 152 134, 138 138" stroke-width="1.3" />
-    <path d="M 114 106 C 128 99, 144 108, 148 120 C 150 126, 145 130, 134 133" stroke-width="1.2" />
-    <path d="M 112 112 C 122 106, 136 113, 140 122 C 141 126, 138 128, 130 129" stroke-width="1.1" />
+    <path d="M 124 76 C 152 64, 184 82, 188 110 C 192 134, 178 154, 154 162" stroke-width="${(2.0 * mul).toFixed(1)}" />
+    <path d="M 122 82 C 148 71, 176 88, 180 112 C 183 131, 171 149, 150 156" stroke-width="${(1.7 * mul).toFixed(1)}" />
+    <path d="M 120 88 C 144 78, 168 93, 172 114 C 175 129, 164 144, 146 150" stroke-width="${(1.5 * mul).toFixed(1)}" />
+    <path d="M 118 94 C 138 85, 160 98, 164 116 C 167 127, 158 139, 142 144" stroke-width="${(1.4 * mul).toFixed(1)}" />
+    <path d="M 116 100 C 132 92, 152 103, 156 118 C 158 126, 152 134, 138 138" stroke-width="${(1.3 * mul).toFixed(1)}" />
+    <path d="M 114 106 C 128 99, 144 108, 148 120 C 150 126, 145 130, 134 133" stroke-width="${(1.2 * mul).toFixed(1)}" />
+    <path d="M 112 112 C 122 106, 136 113, 140 122 C 141 126, 138 128, 130 129" stroke-width="${(1.1 * mul).toFixed(1)}" />
   </g>
   {/* Central Medallion: Solid Purple Background with White CBE Symbol */}
   <g transform="translate(120, 116) rotate(-26)">
-    <ellipse cx="0" cy="0" rx="25" ry="18" fill="#5e1887" stroke="#5e1887" stroke-width="2.5" />
-    <ellipse cx="0" cy="0" rx="22" ry="15" fill="none" stroke="#ffffff" stroke-width="1.2" opacity="0.85" />
+    <ellipse cx="0" cy="0" rx="25" ry="18" fill="#5e1887" stroke="#5e1887" stroke-width="${medallionStroke}" />
+    <ellipse cx="0" cy="0" rx="22" ry="15" fill="none" stroke="#ffffff" stroke-width="${(1.2 * mul).toFixed(1)}" opacity="0.85" />
     <g fill="#ffffff" transform="scale(0.92)">
       <rect x="-2.5" y="-10" width="5" height="20" rx="1.5" />
       <path d="M -2.5 -8.5 C -13 -8.5, -13 8.5, -2.5 8.5 L -2.5 4.8 C -8.5 4.8, -8.5 -4.8, -2.5 -4.8 Z" />
@@ -678,6 +692,9 @@ export const OFFICIAL_CBE_STAMP_LOGO = `data:image/svg+xml;utf8,${encodeURICompo
   </g>
 </svg>
 `)}`;
+}
+
+export const OFFICIAL_CBE_STAMP_LOGO = getOfficialCbeStampSvg('normal');
 
 // Official CBE Purple Brand Logo with crisp white CBE Symbol
 export const OFFICIAL_CBE_PURPLE_LOGO = `data:image/svg+xml;utf8,${encodeURIComponent(`
@@ -1537,12 +1554,12 @@ export class LocalDb {
       const val = localStorage.getItem('tana_bank_stamp_size');
       if (val) {
         const parsed = parseInt(val, 10);
-        if (!isNaN(parsed) && parsed >= 180 && parsed <= 450) {
+        if (!isNaN(parsed) && parsed >= 160 && parsed <= 500) {
           return parsed;
         }
       }
     } catch {}
-    return 330; // Increased default size (significantly enlarged from previous 215-260px)
+    return 330; // Default size
   }
 
   static setBankStampSize(size: number): void {
@@ -1552,5 +1569,32 @@ export class LocalDb {
       console.warn('[LocalDb] Failed writing stamp size to localStorage:', err);
     }
     window.dispatchEvent(new CustomEvent('cbe_stamp_size_updated', { detail: { size } }));
+  }
+
+  static getBankStampWidth(): number {
+    return this.getBankStampSize();
+  }
+
+  static setBankStampWidth(width: number): void {
+    this.setBankStampSize(width);
+  }
+
+  static getBankStampWeight(): StampWeight {
+    try {
+      const val = localStorage.getItem('tana_bank_stamp_weight') as StampWeight;
+      if (val && ['light', 'normal', 'medium', 'bold', 'heavy'].includes(val)) {
+        return val;
+      }
+    } catch {}
+    return 'normal';
+  }
+
+  static setBankStampWeight(weight: StampWeight): void {
+    try {
+      localStorage.setItem('tana_bank_stamp_weight', weight);
+    } catch (err) {
+      console.warn('[LocalDb] Failed writing stamp weight to localStorage:', err);
+    }
+    window.dispatchEvent(new CustomEvent('cbe_stamp_weight_updated', { detail: { weight } }));
   }
 }

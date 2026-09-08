@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LocalDb, DEFAULT_CBE_LOGO, OFFICIAL_CBE_STAMP_LOGO, OFFICIAL_CBE_PURPLE_LOGO } from '../lib/mockData';
+import { LocalDb, DEFAULT_CBE_LOGO, OFFICIAL_CBE_STAMP_LOGO, OFFICIAL_CBE_PURPLE_LOGO, getOfficialCbeStampSvg, StampWeight } from '../lib/mockData';
 import { UserProfile } from '../types';
 import { CbeLogo } from './CbeLogo';
 import { compressImageFile } from '../lib/imageUtils';
@@ -14,7 +14,11 @@ import {
   Sparkles,
   Eye,
   Loader2,
-  Stamp
+  Stamp,
+  Sliders,
+  Minus,
+  Plus,
+  Feather
 } from 'lucide-react';
 
 interface BankLogoModalProps {
@@ -61,6 +65,7 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
   const [previewStamp, setPreviewStamp] = useState<string | null>(null);
   const [customStampUrlInput, setCustomStampUrlInput] = useState('');
   const [stampSize, setStampSize] = useState<number>(() => LocalDb.getBankStampSize());
+  const [stampWeight, setStampWeight] = useState<StampWeight>(() => LocalDb.getBankStampWeight());
   const [isProcessingStamp, setIsProcessingStamp] = useState(false);
   const [stampSaveSuccess, setStampSaveSuccess] = useState(false);
   const [stampErrorMsg, setStampErrorMsg] = useState('');
@@ -75,8 +80,9 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
 
       const savedStamp = LocalDb.getCustomBankStamp();
       setCurrentStamp(savedStamp);
-      setPreviewStamp(savedStamp);
+      setPreviewStamp(savedStamp || getOfficialCbeStampSvg(LocalDb.getBankStampWeight()));
       setStampSize(LocalDb.getBankStampSize());
+      setStampWeight(LocalDb.getBankStampWeight());
       setStampSaveSuccess(false);
       setStampErrorMsg('');
     }
@@ -491,45 +497,127 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
               </div>
             )}
 
-            {/* Stamp Size Selector */}
-            <div className="bg-purple-50/60 border border-purple-200/80 rounded-2xl p-3.5 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-purple-900 flex items-center gap-1.5">
-                  <Stamp className="w-3.5 h-3.5 text-purple-600" />
-                  <span>Web Receipt Stamp Size</span>
-                </span>
-                <span className="text-xs font-mono font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full">
-                  {stampSize}px
-                </span>
+            {/* Stamp Width & Weight Settings */}
+            <div className="bg-purple-50/60 border border-purple-200/80 rounded-2xl p-3.5 space-y-3">
+              {/* Width */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-purple-900 flex items-center gap-1.5">
+                    <Sliders className="w-3.5 h-3.5 text-purple-600" />
+                    <span>Web Receipt Stamp Width (ስፋት)</span>
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newSize = Math.max(160, stampSize - 10);
+                        LocalDb.setBankStampSize(newSize);
+                        setStampSize(newSize);
+                        setStampSaveSuccess(true);
+                        setTimeout(() => setStampSaveSuccess(false), 2000);
+                      }}
+                      className="w-5 h-5 rounded bg-purple-200 hover:bg-purple-300 text-purple-800 flex items-center justify-center font-bold text-xs cursor-pointer"
+                    >
+                      <Minus className="w-3 h-3" />
+                    </button>
+                    <span className="text-xs font-mono font-bold text-purple-700 bg-purple-100 px-2 py-0.5 rounded-full min-w-[50px] text-center">
+                      {stampSize}px
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newSize = Math.min(480, stampSize + 10);
+                        LocalDb.setBankStampSize(newSize);
+                        setStampSize(newSize);
+                        setStampSaveSuccess(true);
+                        setTimeout(() => setStampSaveSuccess(false), 2000);
+                      }}
+                      className="w-5 h-5 rounded bg-purple-200 hover:bg-purple-300 text-purple-800 flex items-center justify-center font-bold text-xs cursor-pointer"
+                    >
+                      <Plus className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+
+                <input
+                  type="range"
+                  min="160"
+                  max="480"
+                  step="5"
+                  value={stampSize}
+                  onChange={(e) => {
+                    const newSize = Number(e.target.value);
+                    LocalDb.setBankStampSize(newSize);
+                    setStampSize(newSize);
+                  }}
+                  className="w-full accent-purple-600 h-1.5 bg-purple-200 rounded-lg cursor-pointer"
+                />
+
+                <div className="grid grid-cols-5 gap-1 pt-0.5">
+                  {[
+                    { label: 'Small', size: 220 },
+                    { label: 'Normal', size: 260 },
+                    { label: 'Med', size: 330 },
+                    { label: 'Large', size: 380 },
+                    { label: 'Jumbo', size: 440 },
+                  ].map((preset) => (
+                    <button
+                      key={preset.size}
+                      type="button"
+                      onClick={() => {
+                        LocalDb.setBankStampSize(preset.size);
+                        setStampSize(preset.size);
+                        setStampSaveSuccess(true);
+                        setTimeout(() => setStampSaveSuccess(false), 2000);
+                      }}
+                      className={`py-1.5 px-0.5 rounded-xl text-[10.5px] font-semibold transition cursor-pointer text-center ${
+                        stampSize === preset.size
+                          ? 'bg-purple-700 text-white font-bold shadow-xs'
+                          : 'bg-white border border-purple-200 text-purple-900 hover:bg-purple-100/60'
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <p className="text-[11px] text-purple-800/80 leading-snug">
-                Adjust how prominently the circular rubber stamp is scaled across the web receipt table.
-              </p>
-              <div className="grid grid-cols-4 gap-1.5 pt-1">
-                {[
-                  { label: 'Normal', size: 260 },
-                  { label: 'Large', size: 330 },
-                  { label: 'X-Large', size: 365 },
-                  { label: 'Jumbo', size: 405 },
-                ].map((preset) => (
-                  <button
-                    key={preset.size}
-                    type="button"
-                    onClick={() => {
-                      LocalDb.setBankStampSize(preset.size);
-                      setStampSize(preset.size);
-                      setStampSaveSuccess(true);
-                      setTimeout(() => setStampSaveSuccess(false), 2000);
-                    }}
-                    className={`py-1.5 px-1 rounded-xl text-xs font-semibold transition cursor-pointer text-center ${
-                      stampSize === preset.size
-                        ? 'bg-purple-700 text-white font-bold shadow-xs'
-                        : 'bg-white border border-purple-200 text-purple-900 hover:bg-purple-100/60'
-                    }`}
-                  >
-                    {preset.label}
-                  </button>
-                ))}
+
+              {/* Weight / Ink Thickness */}
+              <div className="space-y-1.5 pt-2 border-t border-purple-200/60">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-purple-900 flex items-center gap-1.5">
+                    <Feather className="w-3.5 h-3.5 text-purple-600" />
+                    <span>Stamp Weight / Ink Thickness (ክብደት)</span>
+                  </span>
+                  <span className="text-[11px] font-bold text-purple-700 capitalize">
+                    {stampWeight}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-5 gap-1">
+                  {(['light', 'normal', 'medium', 'bold', 'heavy'] as StampWeight[]).map((w) => (
+                    <button
+                      key={w}
+                      type="button"
+                      onClick={() => {
+                        LocalDb.setBankStampWeight(w);
+                        setStampWeight(w);
+                        if (!currentStamp) {
+                          setPreviewStamp(getOfficialCbeStampSvg(w));
+                        }
+                        setStampSaveSuccess(true);
+                        setTimeout(() => setStampSaveSuccess(false), 2000);
+                      }}
+                      className={`py-1 px-0.5 rounded-xl text-[10.5px] font-semibold transition cursor-pointer text-center capitalize ${
+                        stampWeight === w
+                          ? 'bg-purple-700 text-white font-bold shadow-xs'
+                          : 'bg-white border border-purple-200 text-purple-900 hover:bg-purple-100/60'
+                      }`}
+                    >
+                      {w}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
