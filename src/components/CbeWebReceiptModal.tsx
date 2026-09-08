@@ -143,12 +143,382 @@ function formatCbeReceiptDate(dateStr?: string | number | Date): string {
   return `${dateFormatted}, ${timeFormatted}`;
 }
 
+// Predefined Bank Receipt Props
+interface CbeReceiptCardProps {
+  receiptData: {
+    refId: string;
+    payerName: string;
+    payerAccount: string;
+    receiverName: string;
+    receiverAccount: string;
+    paymentType: string;
+    paymentDate: string;
+    reason: string;
+    amount: number;
+    serviceCharge: number;
+    vat: number;
+    disasterRecovery: number;
+    totalDebited: number;
+    words: string;
+    customerName: string;
+  };
+  adminLogo: string | null;
+  activeStamp: string | null;
+  stampSize: number;
+  qrCodeDataUrl: string;
+  isPrintVersion?: boolean;
+}
+
+/**
+ * Authentic Commercial Bank of Ethiopia Customer Receipt Card
+ * Matches Screenshot_20260908-094200.png identically:
+ * - Deep purple (#751c6b) banner with Golden Emblem & pure white Status: COMPLETED
+ * - 2-Column Company Address & Other Information | Customer Information
+ * - Purple-bordered Payment / Transaction Information table
+ * - Authentic centered circular purple CBE rubber stamp watermark
+ * - Side-by-side Amount in Word box & QR code
+ * - Separator line & purple slogan footer
+ */
+export const CbeReceiptCard: React.FC<CbeReceiptCardProps> = ({
+  receiptData,
+  adminLogo,
+  activeStamp,
+  stampSize,
+  qrCodeDataUrl,
+  isPrintVersion = false
+}) => {
+  return (
+    <div 
+      className={`bg-white text-gray-900 ${
+        isPrintVersion 
+          ? 'w-[580px] p-2 bg-white' 
+          : 'w-full max-w-[500px] shadow-sm border border-gray-200 rounded-sm overflow-hidden'
+      }`}
+      style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
+    >
+      {/* 1. Header Banner: Deep Rich CBE Purple (#751c6b) matching Screenshot_20260908-094200.png */}
+      <div className="bg-[#751c6b] relative px-3 py-3 sm:px-4 sm:py-3.5 rounded-md flex items-center justify-center min-h-[72px] overflow-hidden select-none">
+        {/* Admin Uploaded Logo or Official Golden Emblem positioned on left */}
+        <div className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-12 sm:h-12 shrink-0 flex items-center justify-center">
+          <CbeLogo className="w-11 h-11 sm:w-12 sm:h-12 object-contain" src={adminLogo} />
+        </div>
+
+        {/* Centered Header Text: Exact font size, weights, colors matching Screenshot_20260908-094200.png */}
+        <div className="text-center px-10 sm:px-14">
+          <h1 className="text-white font-bold text-[17.5px] sm:text-[18.5px] leading-tight tracking-tight whitespace-nowrap">
+            Commercial Bank of Ethiopia
+          </h1>
+          <p className="text-white text-[13px] sm:text-[13.5px] font-normal leading-tight mt-0.5 whitespace-nowrap">
+            Customer Receipt
+          </p>
+          <div className="text-white font-bold text-[10.5px] sm:text-[11px] tracking-wider uppercase mt-1 whitespace-nowrap">
+            Status: COMPLETED
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Two Columns Section: Company Address & Other Information | Customer Information */}
+      <div className="px-3 pt-3 pb-2 sm:px-4 sm:pt-3.5 sm:pb-2.5">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 text-[10.5px] sm:text-[11px] leading-[1.38]">
+          
+          {/* Left Column: Company Address & Other Information */}
+          <div className="space-y-0.5 text-[#111827]">
+            <h2 className="font-bold text-black text-[11.5px] sm:text-[12px] leading-tight mb-1">
+              Company Address & Other Information
+            </h2>
+            
+            <div className="flex justify-between">
+              <span className="text-gray-700 font-normal">Country:</span>
+              <span className="font-normal text-right">Ethiopia</span>
+            </div>
+            
+            <div className="flex justify-between">
+              <span className="text-gray-700 font-normal">City:</span>
+              <span className="font-normal text-right">Addis Ababa</span>
+            </div>
+
+            <div className="flex justify-between items-baseline gap-1">
+              <span className="text-gray-700 font-normal shrink-0">Address:</span>
+              <span className="font-normal text-right">Ras Desta Damtew St, 01, Kirkos</span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-gray-700 font-normal">Postal code:</span>
+              <span className="font-normal text-right">255</span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-gray-700 font-normal">SWIFT Code:</span>
+              <span className="font-normal text-right">CBETETAA</span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-gray-700 font-normal">Email:</span>
+              <span className="font-normal text-right">info@cbe.com.et</span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-gray-700 font-normal">Tel:</span>
+              <span className="font-normal text-right">+251-551-50-04</span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-gray-700 font-normal">Fax:</span>
+              <span className="font-normal text-right">+251-551-45-22</span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-gray-700 font-normal">Tfn:</span>
+              <span className="font-normal text-right">0000006966</span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-gray-700 font-normal">VAT Receipt No:</span>
+              <span className="font-normal text-right">{receiptData.refId}</span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-gray-700 font-normal">VAT Registration No:</span>
+              <span className="font-normal text-right">011140</span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-gray-700 font-normal">VAT Registration Date:</span>
+              <span className="font-normal text-right">01/01/2003</span>
+            </div>
+          </div>
+
+          {/* Right Column: Customer Information */}
+          <div className="space-y-0.5 text-[#111827]">
+            <h2 className="font-bold text-black text-[11.5px] sm:text-[12px] leading-tight mb-1">
+              Customer Information
+            </h2>
+
+            <div className="flex justify-between items-start gap-1">
+              <span className="text-gray-700 font-normal shrink-0">Customer Name:</span>
+              <span className="font-normal text-right leading-tight">
+                {receiptData.customerName}
+              </span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-gray-700 font-normal">Region:</span>
+              <span className="font-normal text-right">-</span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-gray-700 font-normal">City:</span>
+              <span className="font-normal text-right">-</span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-gray-700 font-normal">Sub City:</span>
+              <span className="font-normal text-right">-</span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-gray-700 font-normal">Wereda/Kebele:</span>
+              <span className="font-normal text-right">-</span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-gray-700 font-normal">VAT Registration No:</span>
+              <span className="font-normal text-right">-</span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-gray-700 font-normal">VAT Registration Date:</span>
+              <span className="font-normal text-right">-</span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-gray-700 font-normal">TIN (TAX ID):</span>
+              <span className="font-normal text-right">-</span>
+            </div>
+
+            <div className="flex justify-between">
+              <span className="text-gray-700 font-normal">Branch:</span>
+              <span className="font-normal text-right">-</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* 3. Section: Payment / Transaction Information with Purple Border */}
+      <div className="px-3 pb-2 sm:px-4 sm:pb-3 relative">
+        <div className="border border-[#751c6b] rounded-lg overflow-hidden relative bg-white">
+          
+          {/* Table Header Bar */}
+          <div className="border-b border-[#751c6b] bg-white py-1.5 px-3">
+            <h2 className="text-center font-bold text-black text-[12.5px] sm:text-[13px]">
+              Payment / Transaction Information
+            </h2>
+          </div>
+
+          {/* Table Rows */}
+          <div className="text-[11px] sm:text-[11.5px] leading-tight relative">
+            
+            <div className="flex justify-between items-center px-3 py-1.5 border-b border-gray-200">
+              <span className="text-gray-800 font-normal">Payer:</span>
+              <span className="text-black font-normal text-right">{receiptData.payerName}</span>
+            </div>
+
+            <div className="flex justify-between items-center px-3 py-1.5 border-b border-gray-200">
+              <span className="text-gray-800 font-normal">Account:</span>
+              <span className="text-black font-normal text-right">{receiptData.payerAccount}</span>
+            </div>
+
+            <div className="flex justify-between items-center px-3 py-1.5 border-b border-gray-200">
+              <span className="text-gray-800 font-normal">Receiver:</span>
+              <span className="text-black font-normal text-right">{receiptData.receiverName}</span>
+            </div>
+
+            <div className="flex justify-between items-center px-3 py-1.5 border-b border-gray-200">
+              <span className="text-gray-800 font-normal">Account:</span>
+              <span className="text-black font-normal text-right">{receiptData.receiverAccount}</span>
+            </div>
+
+            <div className="flex justify-between items-center px-3 py-1.5 border-b border-gray-200">
+              <span className="text-gray-800 font-normal">Payment Type:</span>
+              <span className="text-black font-normal text-right">{receiptData.paymentType}</span>
+            </div>
+
+            <div className="flex justify-between items-center px-3 py-1.5 border-b border-gray-200">
+              <span className="text-gray-800 font-normal">Payment Date & Time:</span>
+              <span className="text-black font-normal text-right">{receiptData.paymentDate}</span>
+            </div>
+
+            <div className="flex justify-between items-center px-3 py-1.5 border-b border-gray-200">
+              <span className="text-gray-800 font-normal">Reference No. (VAT Invoice No):</span>
+              <span className="text-black font-normal text-right">{receiptData.refId}</span>
+            </div>
+
+            <div className="flex justify-between items-center px-3 py-1.5 border-b border-gray-200">
+              <span className="text-gray-800 font-normal">Reason / Type of service:</span>
+              <span className="text-black font-normal text-right">{receiptData.reason}</span>
+            </div>
+
+            <div className="flex justify-between items-center px-3 py-1.5 border-b border-gray-200">
+              <span className="text-gray-800 font-normal">Transferred Amount:</span>
+              <span className="text-black font-normal text-right">
+                {receiptData.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center px-3 py-1.5 border-b border-gray-200">
+              <span className="text-gray-800 font-normal">Service Charge:</span>
+              <span className="text-black font-normal text-right">
+                {receiptData.serviceCharge.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center px-3 py-1.5 border-b border-gray-200">
+              <span className="text-gray-800 font-normal">VAT (15% of service charge):</span>
+              <span className="text-black font-normal text-right">
+                {receiptData.vat.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
+              </span>
+            </div>
+
+            <div className="flex justify-between items-center px-3 py-1.5 border-b border-gray-200">
+              <span className="text-gray-800 font-normal">
+                Disaster Risk Response Fund (5% of service charge):
+              </span>
+              <span className="text-black font-normal text-right">
+                {receiptData.disasterRecovery.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
+              </span>
+            </div>
+
+            {/* Total Amount Debited Row */}
+            <div className="flex justify-between items-center px-3 py-2 border-t border-[#751c6b] bg-white">
+              <span className="font-bold text-black text-[12px] sm:text-[12.5px]">
+                Total amount debited from customer's account:
+              </span>
+              <span className="font-bold text-black text-[13px] sm:text-[13.5px] text-right">
+                {receiptData.totalDebited.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
+              </span>
+            </div>
+
+            {/* Overlaid Authentic CBE Stamp */}
+            {activeStamp && (
+              <div 
+                className="absolute pointer-events-none select-none z-10 shrink-0"
+                style={{
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: `${Math.min(stampSize || 195, 210)}px`,
+                  height: `${Math.min(stampSize || 195, 210)}px`,
+                  aspectRatio: '1 / 1'
+                }}
+              >
+                <img
+                  src={activeStamp}
+                  alt="Official Bank Stamp"
+                  className="w-full h-full object-contain pointer-events-none select-none"
+                  style={{
+                    mixBlendMode: 'multiply',
+                    filter: 'contrast(1.15)',
+                    transform: 'rotate(-13deg)'
+                  }}
+                />
+              </div>
+            )}
+
+          </div>
+        </div>
+
+        {/* 4. Side-by-Side: Amount in Word Box + QR Code */}
+        <div className="mt-3.5 flex items-stretch justify-between gap-3">
+          {/* Left: Amount in Word Box */}
+          <div className="flex-1 bg-[#f1f3f5] rounded-lg p-3 text-center flex flex-col justify-center">
+            <div className="font-bold text-black text-[12px]">
+              Amount in Word:
+            </div>
+            <div className="text-[#1f2937] text-[11px] sm:text-[11.5px] font-normal mt-0.5 leading-snug">
+              {receiptData.words}
+            </div>
+          </div>
+
+          {/* Right: QR Code */}
+          <div className="w-[82px] h-[82px] shrink-0 p-1 bg-white border border-gray-200 flex items-center justify-center rounded-xs">
+            {qrCodeDataUrl ? (
+              <img 
+                src={qrCodeDataUrl} 
+                alt="Official CBE Receipt QR" 
+                className="w-full h-full object-contain" 
+              />
+            ) : (
+              <div className="w-full h-full bg-gray-100 animate-pulse" />
+            )}
+          </div>
+        </div>
+
+        {/* 5. Horizontal Divider Line */}
+        <div className="mt-5 mb-4 border-t border-gray-300" />
+
+        {/* 6. Footer Text */}
+        <div className="text-center pb-2">
+          <p className="text-[#751c6b] font-bold text-[12px] sm:text-[12.5px]">
+            The Bank you can always rely on.
+          </p>
+          <p className="text-gray-600 text-[10px] sm:text-[10.5px] mt-0.5">
+            © 2026 Commercial Bank of Ethiopia. All rights reserved.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  );
+};
+
 export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
   transaction,
   smsMessage,
   onClose
 }) => {
   const receiptCardRef = useRef<HTMLDivElement>(null);
+  const pdfCaptureRef = useRef<HTMLDivElement>(null);
   const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
@@ -419,23 +789,23 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
       };
     }
 
-    // Default Fallback matching Screenshot_20260904-124119.png exactly
+    // Default Fallback matching Screenshot_20260908-094200.png exactly
     return {
-      refId: 'FT26233ZJ908',
-      payerName: 'Kasahun Yematawork Lema',
-      payerAccount: '1****8925',
-      receiverName: 'Leykun Jemaneh Ylma',
-      receiverAccount: '1****4747',
+      refId: 'FT26242C7F9V',
+      payerName: 'Leykun Jemaneh Ylma',
+      payerAccount: '1****4747',
+      receiverName: 'Kess-jemane Yilma Desalegn',
+      receiverAccount: '1****6068',
       paymentType: 'A2A',
-      paymentDate: 'Aug 21, 2026, 6:51 PM',
-      reason: '50',
-      amount: 50.00,
+      paymentDate: 'Aug 30, 2026, 4:26 PM',
+      reason: 'Mobile Banking Transfer',
+      amount: 100.00,
       serviceCharge: 0.50,
       vat: 0.08,
       disasterRecovery: 0.03,
-      totalDebited: 50.61,
-      words: 'Fifty ETB and Sixty One cents',
-      customerName: 'Kasahun Yematawork Lema'
+      totalDebited: 100.61,
+      words: 'One Hundred ETB and Sixty One cents',
+      customerName: 'Leykun Jemaneh Ylma'
     };
   }, [transaction, smsMessage]);
 
@@ -456,12 +826,20 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
   }, [webReceiptUrl]);
 
   const handleDownloadPdf = async () => {
-    if (!receiptCardRef.current || isDownloading) return;
+    const captureEl = pdfCaptureRef.current || receiptCardRef.current;
+    if (!captureEl || isDownloading) return;
     try {
       setIsDownloading(true);
       setDownloadError(null);
-      const canvas = await html2canvas(receiptCardRef.current, {
-        scale: 2.5,
+
+      // Ensure fonts are completely ready before rasterizing
+      if (document.fonts) {
+        await document.fonts.ready;
+      }
+
+      // Capture at ultra-high resolution (scale: 3) for vector-crisp typography and borders
+      const canvas = await html2canvas(captureEl, {
+        scale: 3,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
@@ -481,11 +859,10 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
       const pageWidth = pdf.internal.pageSize.getWidth(); // 210mm
       const pageHeight = pdf.internal.pageSize.getHeight(); // 297mm
 
-      // Standard official margins
+      // Standard official margins matching Screenshot_20260908-094200.png
       const marginX = 14;
-      const marginY = 14;
-      const printableWidth = pageWidth - (marginX * 2);
-      const printableHeight = pageHeight - (marginY * 2);
+      const printableWidth = pageWidth - (marginX * 2); // 182mm
+      const printableHeight = pageHeight - (14 * 2);
 
       let renderWidth = printableWidth;
       let renderHeight = (canvas.height * renderWidth) / canvas.width;
@@ -496,8 +873,8 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
         renderWidth = renderWidth * ratio;
       }
 
-      const startX = marginX + (printableWidth - renderWidth) / 2;
-      const startY = marginY;
+      const startX = (pageWidth - renderWidth) / 2;
+      const startY = 14; // Clean top margin
 
       pdf.addImage(imgData, 'PNG', startX, startY, renderWidth, renderHeight, undefined, 'FAST');
       pdf.save(`CBE_Customer_Receipt_${receiptData.refId || 'FT'}.pdf`);
@@ -514,12 +891,18 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
   };
 
   const handleDownloadPng = async () => {
-    if (!receiptCardRef.current || isDownloading) return;
+    const captureEl = pdfCaptureRef.current || receiptCardRef.current;
+    if (!captureEl || isDownloading) return;
     try {
       setIsDownloading(true);
       setDownloadError(null);
-      const canvas = await html2canvas(receiptCardRef.current, {
-        scale: 2.5,
+
+      if (document.fonts) {
+        await document.fonts.ready;
+      }
+
+      const canvas = await html2canvas(captureEl, {
+        scale: 3,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
@@ -1253,334 +1636,45 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
       <main className="w-full flex-1 overflow-y-auto px-2 pt-2.5 pb-24 bg-[#f0f2f5] flex justify-center">
         <div 
           ref={receiptCardRef}
-          className={`bg-white w-full max-w-[460px] shadow-sm border border-gray-200 rounded-sm overflow-hidden text-gray-900 self-start transition-opacity ${
+          className={`w-full max-w-[500px] flex justify-center self-start transition-opacity ${
             isRefreshing ? 'opacity-40 scale-[0.99]' : 'opacity-100'
           }`}
-          style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
         >
-          
-          {/* Header Banner: Deep Royal CBE Purple (#781d77) matching IMG_20260906_111256_173.png */}
-          <div className="bg-[#781d77] relative px-3 py-3.5 sm:px-4 sm:py-4 rounded-t-sm flex items-center justify-center min-h-[76px] overflow-hidden">
-            {/* Admin Uploaded Logo or Official Golden Emblem positioned on left */}
-            <div className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-12 sm:h-12 shrink-0 flex items-center justify-center select-none">
-              <CbeLogo className="w-11 h-11 sm:w-12 sm:h-12 object-contain" src={adminLogo} />
-            </div>
-
-            {/* Header Text: Exact font size, weights, colors and centered alignment matching IMG_20260906_111256_173.png */}
-            <div className="text-center px-12 sm:px-14 select-none">
-              <h1 className="text-white font-bold text-[17.5px] sm:text-[19px] leading-tight tracking-tight whitespace-nowrap">
-                Commercial Bank of Ethiopia
-              </h1>
-              <p className="text-white text-[13.5px] sm:text-[14px] font-normal leading-tight mt-1 whitespace-nowrap">
-                Customer Receipt
-              </p>
-              <div className="text-[#86efac] font-bold text-[10.5px] sm:text-[11px] tracking-[0.16em] uppercase mt-1 whitespace-nowrap">
-                Status: COMPLETED
-              </div>
-            </div>
-          </div>
-
-          {/* Body Information: 2 Columns with exact text style, weights and layout */}
-          <div className="p-3 sm:p-4 border-b border-gray-200">
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 text-[11px] leading-[1.38]">
-              
-              {/* Left Column: Company Address & Other Information */}
-              <div className="space-y-0.5 text-[#111827]">
-                <h2 className="font-bold text-black text-[12px] leading-tight mb-1">
-                  Company Address & Other Information
-                </h2>
-                
-                <div className="flex justify-between">
-                  <span className="text-gray-700 font-normal">Country:</span>
-                  <span className="font-normal text-right">Ethiopia</span>
-                </div>
-                
-                <div className="flex justify-between">
-                  <span className="text-gray-700 font-normal">City:</span>
-                  <span className="font-normal text-right">Addis Ababa</span>
-                </div>
-
-                <div className="flex flex-col">
-                  <span className="text-gray-700 font-normal">Address: Ras Desta Damtew</span>
-                  <span className="font-normal text-right">St, 01, Kirkos</span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-gray-700 font-normal">Postal code:</span>
-                  <span className="font-normal text-right">255</span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-gray-700 font-normal">SWIFT Code:</span>
-                  <span className="font-normal text-right">CBETETAA</span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-gray-700 font-normal">Email:</span>
-                  <span className="font-normal text-right truncate">info@cbe.com.et</span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-gray-700 font-normal">Tel:</span>
-                  <span className="font-normal text-right">+251-551-50-04</span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-gray-700 font-normal">Fax:</span>
-                  <span className="font-normal text-right">+251-551-45-22</span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-gray-700 font-normal">Tin:</span>
-                  <span className="font-normal text-right">0000006966</span>
-                </div>
-
-                <div className="flex justify-between items-baseline">
-                  <span className="text-gray-700 font-normal">VAT Receipt</span>
-                  <span className="font-normal text-right">{receiptData.refId}</span>
-                </div>
-                <div className="text-gray-700 font-normal -mt-0.5">
-                  No:
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-gray-700 font-normal">VAT Registration No:</span>
-                  <span className="font-normal text-right">011140</span>
-                </div>
-
-                <div className="flex justify-between items-baseline">
-                  <span className="text-gray-700 font-normal">VAT Registration</span>
-                  <span className="font-normal text-right">01/01/2003</span>
-                </div>
-                <div className="text-gray-700 font-normal -mt-0.5">
-                  Date:
-                </div>
-              </div>
-
-              {/* Right Column: Customer Information */}
-              <div className="space-y-0.5 text-[#111827]">
-                <h2 className="font-bold text-black text-[12px] leading-tight mb-1">
-                  Customer Information
-                </h2>
-
-                <div className="flex justify-between items-start">
-                  <span className="text-gray-700 font-normal shrink-0">Customer</span>
-                  <span className="font-normal text-right leading-tight max-w-[130px]">
-                    {receiptData.customerName}
-                  </span>
-                </div>
-                <div className="text-gray-700 font-normal -mt-0.5">
-                  Name:
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-gray-700 font-normal">Region:</span>
-                  <span className="font-normal text-right">-</span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-gray-700 font-normal">City:</span>
-                  <span className="font-normal text-right">-</span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-gray-700 font-normal">Sub City:</span>
-                  <span className="font-normal text-right">-</span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-gray-700 font-normal">Wereda/Kebele:</span>
-                  <span className="font-normal text-right">-</span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-gray-700 font-normal">VAT Registration No:</span>
-                  <span className="font-normal text-right">-</span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-gray-700 font-normal">VAT Registration Date:</span>
-                  <span className="font-normal text-right">-</span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-gray-700 font-normal">TIN (TAX ID):</span>
-                  <span className="font-normal text-right">-</span>
-                </div>
-
-                <div className="flex justify-between">
-                  <span className="text-gray-700 font-normal">Branch:</span>
-                  <span className="font-normal text-right">-</span>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-          {/* Section: Payment / Transaction Informations */}
-          <div className="p-3 sm:p-4 relative">
-            
-            {/* Table Header Bar with bordered card top */}
-            <div className="border border-[#d1d5db] rounded-t-sm bg-white py-1.5 px-3">
-              <h2 className="text-center font-bold text-black text-[13px] sm:text-[13.5px]">
-                Payment / Transaction Informations
-              </h2>
-            </div>
-
-            {/* Structured Table matching Screenshot_20260904-124119.png and Screenshot_20260904-124126.png */}
-            <div className="border-x border-b border-[#d1d5db] text-[11.5px] leading-tight relative">
-              
-              <div className="flex justify-between items-center px-3 py-2 border-b border-gray-200">
-                <span className="text-gray-800 font-normal">Payer:</span>
-                <span className="text-black font-normal text-right">{receiptData.payerName}</span>
-              </div>
-
-              <div className="flex justify-between items-center px-3 py-2 border-b border-gray-200">
-                <span className="text-gray-800 font-normal">Account:</span>
-                <span className="text-black font-normal text-right">{receiptData.payerAccount}</span>
-              </div>
-
-              <div className="flex justify-between items-center px-3 py-2 border-b border-gray-200">
-                <span className="text-gray-800 font-normal">Receiver:</span>
-                <span className="text-black font-normal text-right">{receiptData.receiverName}</span>
-              </div>
-
-              <div className="flex justify-between items-center px-3 py-2 border-b border-gray-200">
-                <span className="text-gray-800 font-normal">Account:</span>
-                <span className="text-black font-normal text-right">{receiptData.receiverAccount}</span>
-              </div>
-
-              <div className="flex justify-between items-center px-3 py-2 border-b border-gray-200">
-                <span className="text-gray-800 font-normal">Payment Type:</span>
-                <span className="text-black font-normal text-right">{receiptData.paymentType}</span>
-              </div>
-
-              <div className="flex justify-between items-center px-3 py-2 border-b border-gray-200">
-                <span className="text-gray-800 font-normal">Payment Date & Time:</span>
-                <span className="text-black font-normal text-right">{receiptData.paymentDate}</span>
-              </div>
-
-              <div className="flex justify-between items-center px-3 py-2 border-b border-gray-200">
-                <span className="text-gray-800 font-normal leading-tight">
-                  Reference No. (VAT Invoice<br />No):
-                </span>
-                <span className="text-black font-normal text-right self-center">{receiptData.refId}</span>
-              </div>
-
-              <div className="flex justify-between items-center px-3 py-2 border-b border-gray-200">
-                <span className="text-gray-800 font-normal">Reason / Type of service:</span>
-                <span className="text-black font-normal text-right">{receiptData.reason}</span>
-              </div>
-
-              <div className="flex justify-between items-center px-3 py-2 border-b border-gray-200">
-                <span className="text-gray-800 font-normal">Transferred Amount:</span>
-                <span className="text-black font-normal text-right">
-                  {receiptData.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center px-3 py-2 border-b border-gray-200">
-                <span className="text-gray-800 font-normal">Service Charge:</span>
-                <span className="text-black font-normal text-right">
-                  {receiptData.serviceCharge.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center px-3 py-2 border-b border-gray-200">
-                <span className="text-gray-800 font-normal">VAT (15% of service charge):</span>
-                <span className="text-black font-normal text-right">
-                  {receiptData.vat.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center px-3 py-2 border-b border-gray-200">
-                <span className="text-gray-800 font-normal leading-tight">
-                  Disaster Risk Response Fund<br />(5% of service charge):
-                </span>
-                <span className="text-black font-normal text-right self-center">
-                  {receiptData.disasterRecovery.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
-                </span>
-              </div>
-
-              {/* Total Amount Debited Row: Bold label and bold value matching screenshot */}
-              <div className="flex justify-between items-center px-3 py-2.5 border-t border-[#d1d5db]">
-                <span className="font-bold text-black text-[12.5px] max-w-[200px] leading-snug">
-                  Total amount debited from customer's account:
-                </span>
-                <span className="font-bold text-black text-[13.5px] text-right">
-                  {receiptData.totalDebited.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
-                </span>
-              </div>
-
-              {/* Authentic Overlaid Stamp: Defaults to official CBE purple stamp, or admin uploaded stamp */}
-              {activeStamp && (
-                <div 
-                  className="absolute pointer-events-none select-none z-10 shrink-0"
-                  style={{
-                    top: '52%',
-                    left: '48%',
-                    transform: 'translate(-50%, -50%)',
-                    width: `clamp(${Math.round(stampSize * 0.85)}px, 88%, ${stampSize}px)`,
-                    height: `clamp(${Math.round(stampSize * 0.85)}px, 88%, ${stampSize}px)`,
-                    minWidth: `${Math.round(stampSize * 0.80)}px`,
-                    minHeight: `${Math.round(stampSize * 0.80)}px`,
-                    maxWidth: `${stampSize}px`,
-                    maxHeight: `${stampSize}px`,
-                    aspectRatio: '1 / 1'
-                  }}
-                >
-                  <img
-                    src={activeStamp}
-                    alt="Official Bank Stamp"
-                    className="w-full h-full object-contain pointer-events-none select-none"
-                    style={{
-                      mixBlendMode: 'multiply',
-                      filter: 'contrast(1.15)',
-                      transform: 'rotate(-13deg)'
-                    }}
-                  />
-                </div>
-              )}
-
-            </div>
-
-            {/* Amount in Word Box: Light gray card matching Screenshot_20260904-124126.png */}
-            <div className="mt-3.5 bg-[#f8f9fa] border border-[#d1d5db] rounded-md p-3 text-center">
-              <div className="font-bold text-black text-[12px]">
-                Amount in Word:
-              </div>
-              <div className="text-[#1f2937] text-[11.5px] font-normal mt-1">
-                {receiptData.words}
-              </div>
-            </div>
-
-            {/* Centered QR Code */}
-            <div className="mt-3.5 flex flex-col items-center justify-center">
-              {qrCodeDataUrl ? (
-                <img 
-                  src={qrCodeDataUrl} 
-                  alt="Official CBE Receipt QR" 
-                  className="w-28 h-28 border border-gray-200 p-0.5 bg-white shadow-2xs"
-                />
-              ) : (
-                <div className="w-28 h-28 bg-gray-100 animate-pulse border border-gray-200" />
-              )}
-            </div>
-
-            {/* Footer Text */}
-            <div className="mt-3 text-center pb-2">
-              <p className="text-[#781d77] font-bold text-[12px]">
-                The Bank you can always rely on.
-              </p>
-              <p className="text-gray-500 text-[10px] mt-0.5">
-                © 2026 Commercial Bank of Ethiopia. All rights reserved.
-              </p>
-            </div>
-
-          </div>
-
+          <CbeReceiptCard
+            receiptData={receiptData}
+            adminLogo={adminLogo}
+            activeStamp={activeStamp}
+            stampSize={stampSize}
+            qrCodeDataUrl={qrCodeDataUrl}
+            isPrintVersion={false}
+          />
         </div>
       </main>
+
+      {/* Hidden Offscreen Container dedicated for PDF & PNG capture (scaled to 580px width matching Screenshot_20260908-094200.png) */}
+      <div 
+        style={{ 
+          position: 'fixed', 
+          left: '-9999px', 
+          top: '-9999px', 
+          width: '580px',
+          zIndex: -100,
+          pointerEvents: 'none',
+          opacity: 0
+        }} 
+        aria-hidden="true"
+      >
+        <div ref={pdfCaptureRef} className="bg-white">
+          <CbeReceiptCard
+            receiptData={receiptData}
+            adminLogo={adminLogo}
+            activeStamp={activeStamp}
+            stampSize={stampSize}
+            qrCodeDataUrl={qrCodeDataUrl}
+            isPrintVersion={true}
+          />
+        </div>
+      </div>
 
       {/* Floating Download PDF Button matching Screenshot_20260904-124119.png */}
       <div className="fixed bottom-3 inset-x-0 flex flex-col items-center gap-1.5 z-20 pointer-events-auto px-4">

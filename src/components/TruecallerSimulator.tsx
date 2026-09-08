@@ -2187,11 +2187,11 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
               className="w-full max-w-md bg-[#17191e] border border-neutral-700/80 rounded-3xl p-5 shadow-2xl space-y-4 max-h-[88vh] overflow-y-auto text-white"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Header */}
+              {/* Header with Verified CBE Profile info */}
               <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
                 <div className="flex items-center space-x-2.5">
-                  <div className="w-9 h-9 rounded-full bg-[#18263b] flex items-center justify-center border border-blue-500/30">
-                    <svg className="w-4 h-4 text-white fill-current" viewBox="0 0 24 24">
+                  <div className="w-10 h-10 rounded-full bg-[#18263b] flex items-center justify-center border border-blue-500/30">
+                    <svg className="w-5 h-5 text-white fill-current" viewBox="0 0 24 24">
                       <path d="M12 2L2 7h20L12 2z"/>
                       <rect x="3" y="8" width="18" height="2"/>
                       <rect x="4" y="11" width="2.5" height="7"/>
@@ -2202,141 +2202,474 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-bold text-sm text-white flex items-center space-x-1">
+                    <h3 className="font-bold text-sm text-white flex items-center space-x-1.5">
                       <span>Cbe Bank</span>
-                      <CheckCircle className="w-3.5 h-3.5 text-blue-400" />
+                      <CheckCircle className="w-4 h-4 text-blue-400 fill-blue-400/20" />
                     </h3>
-                    <p className="text-[11px] text-neutral-400">Options &amp; Registered Accounts</p>
+                    <p className="text-[11px] text-neutral-400">Verified Business • SMS &amp; Mobile Banking</p>
                   </div>
                 </div>
                 <button 
                   type="button"
                   onClick={() => setShowThreeDotMenu(false)}
-                  className="p-1 rounded-full text-neutral-400 hover:text-white cursor-pointer"
+                  className="p-1.5 rounded-full text-neutral-400 hover:text-white hover:bg-neutral-800 transition cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              {/* REGISTERED ACCOUNTS LIST BANNER */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-neutral-200 uppercase tracking-wider flex items-center space-x-1.5">
-                    <CreditCard className="w-3.5 h-3.5 text-[#0066FF]" />
-                    <span>Registered CBE Accounts ({accounts.length})</span>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowThreeDotMenu(false);
-                      setShowAddAccountModal(true);
-                    }}
-                    className="text-[11px] font-bold text-blue-400 hover:text-blue-300 flex items-center space-x-1 cursor-pointer"
-                  >
-                    <Plus className="w-3 h-3" />
-                    <span>Add New</span>
-                  </button>
-                </div>
+              {/* TAB BAR INSIDE 3-DOT MENU: Accounts | Settings | Simulate | Profile */}
+              <div className="flex rounded-2xl bg-neutral-900/90 p-1 border border-neutral-800 text-xs font-semibold">
+                <button
+                  type="button"
+                  onClick={() => setThreeDotTab('accounts')}
+                  className={`flex-1 py-1.5 px-2 rounded-xl transition flex items-center justify-center space-x-1.5 cursor-pointer ${
+                    threeDotTab === 'accounts'
+                      ? 'bg-[#0066FF] text-white shadow-md'
+                      : 'text-neutral-400 hover:text-white'
+                  }`}
+                >
+                  <CreditCard className="w-3.5 h-3.5" />
+                  <span>Accounts</span>
+                </button>
 
-                {/* Account Cards */}
-                <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                  {accounts.map(acc => (
-                    <div 
-                      key={acc.id}
-                      className="p-3 rounded-2xl bg-neutral-900/90 border border-neutral-800 flex items-center justify-between hover:border-neutral-700 transition"
+                <button
+                  type="button"
+                  onClick={() => setThreeDotTab('settings')}
+                  className={`flex-1 py-1.5 px-2 rounded-xl transition flex items-center justify-center space-x-1.5 cursor-pointer ${
+                    threeDotTab === 'settings'
+                      ? 'bg-[#0066FF] text-white shadow-md'
+                      : 'text-neutral-400 hover:text-white'
+                  }`}
+                >
+                  <Settings className="w-3.5 h-3.5" />
+                  <span>Settings</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setThreeDotTab('simulate')}
+                  className={`flex-1 py-1.5 px-2 rounded-xl transition flex items-center justify-center space-x-1.5 cursor-pointer ${
+                    threeDotTab === 'simulate'
+                      ? 'bg-[#0066FF] text-white shadow-md'
+                      : 'text-neutral-400 hover:text-white'
+                  }`}
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Simulate</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setThreeDotTab('profile')}
+                  className={`flex-1 py-1.5 px-2 rounded-xl transition flex items-center justify-center space-x-1.5 cursor-pointer ${
+                    threeDotTab === 'profile'
+                      ? 'bg-[#0066FF] text-white shadow-md'
+                      : 'text-neutral-400 hover:text-white'
+                  }`}
+                >
+                  <Info className="w-3.5 h-3.5" />
+                  <span>Profile</span>
+                </button>
+              </div>
+
+              {/* TAB 1: REGISTERED ACCOUNTS */}
+              {threeDotTab === 'accounts' && (
+                <div className="space-y-3 animate-in fade-in duration-100">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-neutral-200 uppercase tracking-wider flex items-center space-x-1.5">
+                      <CreditCard className="w-3.5 h-3.5 text-[#0066FF]" />
+                      <span>Registered CBE Accounts ({accounts.length})</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowThreeDotMenu(false);
+                        setShowAddAccountModal(true);
+                      }}
+                      className="text-[11px] font-bold text-blue-400 hover:text-blue-300 flex items-center space-x-1 cursor-pointer bg-blue-500/10 px-2.5 py-1 rounded-lg border border-blue-500/20"
                     >
-                      <div className="space-y-0.5">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-xs font-bold text-white">{acc.holderName}</span>
-                          <span className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded-full ${
-                            acc.accountType?.includes('Sender')
-                              ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                              : acc.accountType?.includes('Receiver')
-                              ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                              : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                          }`}>
-                            {acc.accountType?.includes('Sender') ? 'Sender (User X)' : acc.accountType?.includes('Receiver') ? 'Receiver (User Y)' : 'Primary'}
-                          </span>
+                      <Plus className="w-3 h-3" />
+                      <span>Add New</span>
+                    </button>
+                  </div>
+
+                  {/* Account Cards List */}
+                  <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                    {accounts.map(acc => (
+                      <div 
+                        key={acc.id}
+                        className="p-3 rounded-2xl bg-neutral-900/90 border border-neutral-800 flex items-center justify-between hover:border-neutral-700 transition"
+                      >
+                        <div className="space-y-0.5">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-xs font-bold text-white">{acc.holderName}</span>
+                            <span className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded-full ${
+                              acc.accountType?.includes('Sender')
+                                ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                                : acc.accountType?.includes('Receiver')
+                                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                                : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                            }`}>
+                              {acc.accountType?.includes('Sender') ? 'Sender (User X)' : acc.accountType?.includes('Receiver') ? 'Receiver (User Y)' : 'Primary'}
+                            </span>
+                          </div>
+                          <p className="font-mono text-[11px] text-neutral-400">
+                            {acc.accountNumber} <span className="text-neutral-500 font-sans text-[10px]">({acc.maskedAccount})</span>
+                          </p>
                         </div>
-                        <p className="font-mono text-[11px] text-neutral-400">
-                          {acc.accountNumber} <span className="text-neutral-500 font-sans text-[10px]">({acc.maskedAccount})</span>
-                        </p>
+                        <div className="text-right">
+                          <div className="text-xs font-mono font-bold text-emerald-400">
+                            ETB {acc.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                          </div>
+                          <div className="text-[10px] text-neutral-500">Balance</div>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-xs font-mono font-bold text-emerald-400">
-                          ETB {acc.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                        </div>
-                        <div className="text-[10px] text-neutral-500">Balance</div>
+                    ))}
+                  </div>
+
+                  <p className="text-[11px] text-neutral-400 text-center">
+                    Simulating transfers updates sender debit &amp; receiver credit accounts instantly.
+                  </p>
+                </div>
+              )}
+
+              {/* TAB 2: SETTINGS */}
+              {threeDotTab === 'settings' && (
+                <div className="space-y-3 animate-in fade-in duration-100 text-xs">
+                  <div className="p-3 rounded-2xl bg-neutral-900/90 border border-neutral-800 space-y-3">
+                    <span className="font-bold text-neutral-200 uppercase text-[11px] tracking-wider block">
+                      Truecaller SMS Preferences
+                    </span>
+
+                    {/* Clock Mode Setting */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-semibold text-white">Status Bar Clock</div>
+                        <div className="text-[10.5px] text-neutral-400">Screenshot clock (2:47) or live device time</div>
+                      </div>
+                      <div className="flex rounded-lg bg-neutral-800 p-0.5 border border-neutral-700">
+                        <button
+                          type="button"
+                          onClick={() => setStatusClockMode('2:47')}
+                          className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${
+                            statusClockMode === '2:47' ? 'bg-[#0066FF] text-white' : 'text-neutral-400'
+                          }`}
+                        >
+                          2:47
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setStatusClockMode('live')}
+                          className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${
+                            statusClockMode === 'live' ? 'bg-[#0066FF] text-white' : 'text-neutral-400'
+                          }`}
+                        >
+                          Live
+                        </button>
                       </div>
                     </div>
-                  ))}
+
+                    {/* SIM Slot Setting */}
+                    <div className="flex items-center justify-between pt-2 border-t border-neutral-800">
+                      <div>
+                        <div className="font-semibold text-white">Default SIM Slot</div>
+                        <div className="text-[10.5px] text-neutral-400">Shown in message footer (SMS 1 or SMS 2)</div>
+                      </div>
+                      <div className="flex rounded-lg bg-neutral-800 p-0.5 border border-neutral-700">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedSimSlot(1);
+                            showToast('SIM Slot set to SMS 1');
+                          }}
+                          className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${
+                            selectedSimSlot === 1 ? 'bg-[#0066FF] text-white' : 'text-neutral-400'
+                          }`}
+                        >
+                          SIM 1
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedSimSlot(2);
+                            showToast('SIM Slot set to SMS 2');
+                          }}
+                          className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${
+                            selectedSimSlot === 2 ? 'bg-[#0066FF] text-white' : 'text-neutral-400'
+                          }`}
+                        >
+                          SIM 2
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Battery percentage setting */}
+                    <div className="flex items-center justify-between pt-2 border-t border-neutral-800">
+                      <div>
+                        <div className="font-semibold text-white">Status Bar Battery Level</div>
+                        <div className="text-[10.5px] text-neutral-400">Current display: {batteryPercent}%</div>
+                      </div>
+                      <div className="flex items-center space-x-1.5">
+                        {[32, 68, 85, 100].map(pct => (
+                          <button
+                            key={pct}
+                            type="button"
+                            onClick={() => {
+                              setBatteryPercent(pct);
+                              showToast(`Battery set to ${pct}%`);
+                            }}
+                            className={`px-2 py-1 rounded-md font-mono text-[10.5px] font-bold ${
+                              batteryPercent === pct ? 'bg-[#0066FF] text-white' : 'bg-neutral-800 text-neutral-400'
+                            }`}
+                          >
+                            {pct}%
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Recent Tx on Top Toggle */}
+                    <div className="flex items-center justify-between pt-2 border-t border-neutral-800">
+                      <div>
+                        <div className="font-semibold text-white">Recent Transactions On Top</div>
+                        <div className="text-[10.5px] text-neutral-400">Highlight newest transaction with "Now" badge</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRecentTxOnTop(!recentTxOnTop);
+                          showToast(!recentTxOnTop ? 'Recent transactions on top with Now badge enabled' : 'Now badge sorting disabled');
+                        }}
+                        className={`w-11 h-6 rounded-full transition-colors p-1 cursor-pointer flex items-center ${
+                          recentTxOnTop ? 'bg-[#0066FF] justify-end' : 'bg-neutral-700 justify-start'
+                        }`}
+                      >
+                        <div className="w-4 h-4 rounded-full bg-white shadow-md" />
+                      </button>
+                    </div>
+
+                    {/* Spam Shield Indicator Toggle */}
+                    <div className="flex items-center justify-between pt-2 border-t border-neutral-800">
+                      <div>
+                        <div className="font-semibold text-white">Show Spam Shield Caption</div>
+                        <div className="text-[10.5px] text-neutral-400">Truecaller spam categorization under bubbles</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowSpamBadge(!showSpamBadge)}
+                        className={`w-11 h-6 rounded-full transition-colors p-1 cursor-pointer flex items-center ${
+                          showSpamBadge ? 'bg-[#0066FF] justify-end' : 'bg-neutral-700 justify-start'
+                        }`}
+                      >
+                        <div className="w-4 h-4 rounded-full bg-white shadow-md" />
+                      </button>
+                    </div>
+
+                    {/* Inbox Filter setting */}
+                    <div className="flex items-center justify-between pt-2 border-t border-neutral-800">
+                      <div>
+                        <div className="font-semibold text-white">Message Stream Filter</div>
+                        <div className="text-[10.5px] text-neutral-400">Toggle between All Messages &amp; Financial Inbox only</div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const next = inboxFilterMode === 'all' ? 'inbox' : 'all';
+                          setInboxFilterMode(next);
+                          showToast(next === 'inbox' ? 'Filtered to Financial Inbox only' : 'Showing all messages');
+                        }}
+                        className="px-3 py-1 bg-neutral-800 hover:bg-neutral-700 rounded-lg text-blue-400 font-semibold"
+                      >
+                        {inboxFilterMode === 'all' ? 'Show All' : 'Only Inbox'}
+                      </button>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
 
-              {/* ACTION: Simulate User X → User Y Transfer (4,500 ETB) */}
-              <div className="p-3 rounded-2xl bg-purple-950/30 border border-purple-800/40 space-y-2">
-                <div className="text-xs text-purple-200 font-medium">
-                  ⚡ <strong>Quick Transfer Simulation:</strong> Send <strong>ETB 4,500.00</strong> from User X (1000419529165) to User Y (1000419520913). Adds new debit &amp; credit transactions at the top with <strong>Now</strong> badge!
+              {/* TAB 3: SIMULATE TRANSACTIONS */}
+              {threeDotTab === 'simulate' && (
+                <div className="space-y-3 animate-in fade-in duration-100 text-xs">
+                  {/* Quick User X -> User Y transfer */}
+                  <div className="p-3.5 rounded-2xl bg-purple-950/40 border border-purple-800/50 space-y-2.5">
+                    <div className="flex items-center space-x-2 text-purple-300 font-bold">
+                      <Sparkles className="w-4 h-4 text-amber-300" />
+                      <span>User X → User Y Direct Transfer</span>
+                    </div>
+                    <p className="text-[11px] text-purple-200/80 leading-relaxed">
+                      Simulate sending <strong>ETB 4,500.00</strong> from <strong>User X</strong> (1000419529165) to <strong>User Y</strong> (1000419520913). Both accounts update their balances and transactions appear at top with <strong>Now</strong> badge!
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        TruecallerService.simulateUserTransfer({
+                          senderName: 'User X (Leykun Jemaneh)',
+                          senderAccount: '1000419529165',
+                          recipientName: 'User Y (Abebe Bikila)',
+                          recipientAccount: '1000419520913',
+                          amount: 4500,
+                          bankKey: 'cbe'
+                        });
+                        setAccounts(TruecallerService.getAccounts());
+                        setAlerts(TruecallerService.getAlerts());
+                        setShowThreeDotMenu(false);
+                        showToast('Transfer of ETB 4,500 created! Top recent transactions updated with Now badge.');
+                      }}
+                      className="w-full py-2.5 px-3 rounded-xl bg-purple-700 hover:bg-purple-600 active:scale-95 text-white font-bold text-xs shadow-md transition cursor-pointer flex items-center justify-center space-x-2"
+                    >
+                      <Users className="w-4 h-4" />
+                      <span>Execute 4,500 ETB Transfer ⚡</span>
+                    </button>
+                  </div>
+
+                  {/* Custom Amount Generator */}
+                  <div className="p-3.5 rounded-2xl bg-neutral-900/90 border border-neutral-800 space-y-2">
+                    <span className="font-bold text-neutral-200 uppercase text-[11px] tracking-wider block">
+                      Quick Preset Simulations
+                    </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          TruecallerService.simulateUserTransfer({
+                            senderName: 'Dejene Buta',
+                            senderAccount: '1000419520842',
+                            recipientName: 'Leykun Jemaneh Ylma',
+                            recipientAccount: '1000419524747',
+                            amount: 50.00,
+                            bankKey: 'cbe'
+                          });
+                          setAccounts(TruecallerService.getAccounts());
+                          setAlerts(TruecallerService.getAlerts());
+                          setShowThreeDotMenu(false);
+                          showToast('Simulated ETB 50.00 credit from Dejene Buta with Now badge!');
+                        }}
+                        className="p-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-emerald-400 font-bold text-[11px] text-center transition"
+                      >
+                        + ETB 50.00 (Credit)
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          TruecallerService.simulateUserTransfer({
+                            senderName: 'Leykun Jemaneh Ylma',
+                            senderAccount: '1000419524747',
+                            recipientName: 'Retail Merchant',
+                            recipientAccount: '1000419520913',
+                            amount: 20.00,
+                            bankKey: 'cbe'
+                          });
+                          setAccounts(TruecallerService.getAccounts());
+                          setAlerts(TruecallerService.getAlerts());
+                          setShowThreeDotMenu(false);
+                          showToast('Simulated ETB 20.00 debit payment with Now badge!');
+                        }}
+                        className="p-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-rose-400 font-bold text-[11px] text-center transition"
+                      >
+                        - ETB 20.00 (Debit)
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowThreeDotMenu(false);
+                        setShowQuickSimModal(true);
+                      }}
+                      className="w-full py-2 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 font-bold text-xs border border-blue-500/30 flex items-center justify-center space-x-1.5 transition"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Open Full Custom Generator</span>
+                    </button>
+                  </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    TruecallerService.simulateUserTransfer({
-                      senderName: 'User X (Leykun Jemaneh)',
-                      senderAccount: '1000419529165',
-                      recipientName: 'User Y (Abebe Bikila)',
-                      recipientAccount: '1000419520913',
-                      amount: 4500,
-                      bankKey: 'cbe'
-                    });
-                    setAccounts(TruecallerService.getAccounts());
-                    setAlerts(TruecallerService.getAlerts());
-                    setShowThreeDotMenu(false);
-                    showToast('Transfer of ETB 4,500 created! Top recent transactions updated with Now badge.');
-                  }}
-                  className="w-full py-2 px-3 rounded-xl bg-purple-700 hover:bg-purple-600 active:scale-95 text-white font-bold text-xs shadow-md transition cursor-pointer flex items-center justify-center space-x-1.5"
-                >
-                  <Users className="w-3.5 h-3.5" />
-                  <span>Simulate User X → User Y (4,500 ETB)</span>
-                </button>
-              </div>
+              )}
 
-              {/* Action Buttons */}
-              <div className="grid grid-cols-2 gap-2 pt-1 text-xs font-bold">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowThreeDotMenu(false);
-                    setShowQuickSimModal(true);
-                  }}
-                  className="p-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-200 transition flex items-center justify-center space-x-1.5 cursor-pointer"
-                >
-                  <Plus className="w-3.5 h-3.5 text-blue-400" />
-                  <span>Custom Tx</span>
-                </button>
+              {/* TAB 4: PROFILE */}
+              {threeDotTab === 'profile' && (
+                <div className="space-y-3 animate-in fade-in duration-100 text-xs">
+                  <div className="p-4 rounded-2xl bg-neutral-900/90 border border-neutral-800 space-y-3">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 rounded-full bg-[#18263b] flex items-center justify-center border border-blue-500/40">
+                        <svg className="w-6 h-6 text-white fill-current" viewBox="0 0 24 24">
+                          <path d="M12 2L2 7h20L12 2z"/>
+                          <rect x="3" y="8" width="18" height="2"/>
+                          <rect x="4" y="11" width="2.5" height="7"/>
+                          <rect x="8.5" y="11" width="2.5" height="7"/>
+                          <rect x="13" y="11" width="2.5" height="7"/>
+                          <rect x="17.5" y="11" width="2.5" height="7"/>
+                          <rect x="2" y="19" width="20" height="3"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-sm text-white flex items-center space-x-1.5">
+                          <span>Cbe Bank</span>
+                          <CheckCircle className="w-4 h-4 text-blue-400 fill-blue-400/20" />
+                        </h4>
+                        <p className="text-[11px] text-neutral-400">Commercial Bank of Ethiopia</p>
+                        <span className="inline-block mt-0.5 px-2 py-0.2 rounded-full bg-blue-500/20 text-blue-400 text-[10px] font-bold">
+                          Verified Business Profile
+                        </span>
+                      </div>
+                    </div>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUseLiveClock(!useLiveClock);
-                    showToast(useLiveClock ? 'Switched to screenshot clock (2:24)' : 'Switched to live device clock');
-                  }}
-                  className="p-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-200 transition flex items-center justify-center space-x-1.5 cursor-pointer"
-                >
-                  <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
-                  <span>{useLiveClock ? 'Clock: Live' : 'Clock: 2:24'}</span>
-                </button>
+                    <div className="pt-2 border-t border-neutral-800 space-y-2 text-[11.5px]">
+                      <div className="flex justify-between py-1 border-b border-neutral-800/60">
+                        <span className="text-neutral-400">SMS Shortcode</span>
+                        <span className="font-mono font-bold text-white">889 (Cbe Bank)</span>
+                      </div>
+                      <div className="flex justify-between py-1 border-b border-neutral-800/60">
+                        <span className="text-neutral-400">Category</span>
+                        <span className="text-white">Banking &amp; Financial Services</span>
+                      </div>
+                      <div className="flex justify-between py-1 border-b border-neutral-800/60">
+                        <span className="text-neutral-400">Official Portal</span>
+                        <a href="https://apps.cbe.com.et" target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">
+                          apps.cbe.com.et
+                        </a>
+                      </div>
+                      <div className="flex justify-between py-1">
+                        <span className="text-neutral-400">Spam Score</span>
+                        <span className="text-emerald-400 font-bold">0.02% (Extremely Low)</span>
+                      </div>
+                    </div>
+                  </div>
 
+                  <div className="flex space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => showToast('Reported to spam database')}
+                      className="flex-1 py-2 rounded-xl bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 font-bold text-xs border border-rose-500/30 flex items-center justify-center space-x-1"
+                    >
+                      <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
+                      <span>Report Bank</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => showToast('Profile details verified with Truecaller business directory')}
+                      className="flex-1 py-2 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 font-bold text-xs border border-blue-500/30 flex items-center justify-center space-x-1"
+                    >
+                      <Check className="w-3.5 h-3.5 text-blue-400" />
+                      <span>Verified</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Bottom Quick Return to Inbox Button */}
+              <div className="pt-2 border-t border-neutral-800">
                 <button
                   type="button"
                   onClick={() => {
                     setShowThreeDotMenu(false);
                     setView('inbox');
                   }}
-                  className="col-span-2 p-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 transition flex items-center justify-center space-x-1.5 cursor-pointer"
+                  className="w-full py-2 px-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs font-bold transition flex items-center justify-center space-x-1.5 cursor-pointer"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Google Messages Inbox</span>
+                  <span>Return to Google Messages Inbox</span>
                 </button>
               </div>
             </div>
