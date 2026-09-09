@@ -84,6 +84,29 @@ interface TruecallerSimulatorProps {
 }
 
 // Synthesize pleasant SMS arrival alert chime using browser Web Audio API
+function updateSmsAvailableBalance(messageText: string, balance: number): string {
+  if (!messageText) return messageText;
+  const formattedBal = balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  
+  // Available Balance is ETB ...
+  if (/Available Balance\s+is\s+ETB\s*[\d,]+(\.\d+)?/i.test(messageText)) {
+    return messageText.replace(/Available Balance\s+is\s+ETB\s*[\d,]+(\.\d+)?/i, `Available Balance is ETB ${formattedBal}`);
+  }
+  // Available Balance: ETB ...
+  if (/Available Balance\s*:\s*ETB\s*[\d,]+(\.\d+)?/i.test(messageText)) {
+    return messageText.replace(/Available Balance\s*:\s*ETB\s*[\d,]+(\.\d+)?/i, `Available Balance: ETB ${formattedBal}`);
+  }
+  // Your current balance is ETB ...
+  if (/Your current balance is ETB\s*[\d,]+(\.\d+)?/i.test(messageText)) {
+    return messageText.replace(/Your current balance is ETB\s*[\d,]+(\.\d+)?/i, `Your current balance is ETB ${formattedBal}`);
+  }
+  // Your Current Balance is ETB ...
+  if (/Your Current Balance is ETB\s*[\d,]+(\.\d+)?/i.test(messageText)) {
+    return messageText.replace(/Your Current Balance is ETB\s*[\d,]+(\.\d+)?/i, `Your Current Balance is ETB ${formattedBal}`);
+  }
+  return messageText;
+}
+
 function playTruecallerChime() {
   try {
     const AudioContextClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -261,6 +284,39 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
     }
   });
 
+  // Active selected account for thread and messages
+  const [activeAccountId, setActiveAccountId] = useState<string>(() => {
+    return TruecallerService.getActiveAccountId();
+  });
+  const [accountSearchQuery, setAccountSearchQuery] = useState<string>('');
+
+  // Active selected account object (defaults to first CBE account or first account)
+  const activeAccount = useMemo(() => {
+    if (activeAccountId) {
+      const found = accounts.find(a => a.id === activeAccountId);
+      if (found) return found;
+    }
+    const cbeAcc = accounts.find(a => a.bankKey === 'cbe') || accounts[0];
+    return cbeAcc || null;
+  }, [accounts, activeAccountId]);
+
+  // Bank specific accounts list (e.g. CBE accounts)
+  const bankSpecificAccounts = useMemo(() => {
+    const matching = accounts.filter(a => a.bankKey === activeBankKey);
+    return matching.length > 0 ? matching : accounts;
+  }, [accounts, activeBankKey]);
+
+  // Search filtered accounts list
+  const filteredAccounts = useMemo(() => {
+    if (!accountSearchQuery.trim()) return bankSpecificAccounts;
+    const q = accountSearchQuery.toLowerCase().trim();
+    return bankSpecificAccounts.filter(a => 
+      a.holderName.toLowerCase().includes(q) ||
+      a.accountNumber.includes(q) ||
+      (a.maskedAccount && a.maskedAccount.includes(q))
+    );
+  }, [bankSpecificAccounts, accountSearchQuery]);
+
   // Modal: Choose Phone Screen & Phone Type
   const [showPickerModal, setShowPickerModal] = useState<boolean>(false);
   const [selectedTxForPicker, setSelectedTxForPicker] = useState<{
@@ -390,36 +446,52 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
 
   // Compiled transaction messages for the selected bank (e.g. CBE)
   const bankTransactions = useMemo(() => {
-    // 1. From TruecallerAlerts matching this bank
-    const matchingAlerts = alerts.filter(a => a.bankKey === activeBankKey);
+    // 1. From TruecallerAlerts matching this bank AND strictly matching the selected account
+    const matchingAlerts = alerts.filter(a => {
+      if (a.bankKey !== activeBankKey) return false;
+      if (!activeAccount) return true;
+      return (
+        a.accountId === activeAccount.id ||
+        (a.fullAccount && a.fullAccount === activeAccount.accountNumber) ||
+        (a.maskedAccount && activeAccount.maskedAccount && a.maskedAccount === activeAccount.maskedAccount)
+      );
+    });
 
-    // 2. Realistic seeded official CBE transactions matching user screenshots Screenshot_20260907-144751.png & Screenshot_20260907-144758.png
+    // 2. Realistic seeded official CBE transactions customized strictly to the selected account
+    const curHolderName = activeAccount?.holderName || 'Leul Degsew Alemayehu';
+    const curFirstName = curHolderName.split(' ')[0] || 'Leul';
+    const curAccount = activeAccount?.accountNumber || '1000478156450';
+    const curMasked = activeAccount?.maskedAccount || maskTruecallerAccount(curAccount);
+    const curBalance = activeAccount ? activeAccount.balance : 8879100.00;
+    const curBranchSuffix = curAccount.length >= 8 ? curAccount.slice(-8) : curAccount;
+    const curCreditBalance = curBalance + 50.00;
+
     const seededCbeList = [
       {
-        id: 'tx-cbe-receipt-345',
+        id: `tx-cbe-receipt-${curAccount}`,
         amount: 50.00,
-        accountNumber: '1000419524747',
-        maskedAccount: '1*********4747',
-        holderName: 'Leykun',
+        accountNumber: curAccount,
+        maskedAccount: curMasked,
+        holderName: curFirstName,
         role: 'receiver' as TruecallerRole,
         bankName: 'Cbe Bank',
         bankKey: 'cbe' as TruecallerBankKey,
         timeString: '3:45 PM',
         timestamp: '2026-09-04T15:45:10Z',
         counterpartyName: 'Abebe Bikila',
-        balanceAfter: 298.54,
+        balanceAfter: curBalance,
         txId: 'FT26245M0JG4',
         simSlot: 2,
         isSpam: true,
-        receiptUrl: 'https://apps.cbe.com.et:100/BranchReceipt/FT26245M0JG4&19524747',
-        fullMessageText: `https://apps.cbe.com.et:100/BranchReceipt/FT26245M0JG4&19524747`
+        receiptUrl: `https://apps.cbe.com.et:100/BranchReceipt/FT26245M0JG4&${curBranchSuffix}`,
+        fullMessageText: `https://apps.cbe.com.et:100/BranchReceipt/FT26245M0JG4&${curBranchSuffix}`
       },
       {
-        id: 'tx-cbe-promo-oromoo',
+        id: `tx-cbe-promo-${curAccount}`,
         amount: 0,
-        accountNumber: '1000419524747',
-        maskedAccount: '1*********4747',
-        holderName: 'Leykun Jemaneh Ylma',
+        accountNumber: curAccount,
+        maskedAccount: curMasked,
+        holderName: curHolderName,
         role: 'receiver' as TruecallerRole,
         bankName: 'Cbe Bank',
         bankKey: 'cbe' as TruecallerBankKey,
@@ -427,38 +499,38 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
         dateLabel: 'Friday, 04 Sep',
         timestamp: '2026-09-04T08:41:00Z',
         counterpartyName: 'Commercial Bank of Ethiopia',
-        balanceAfter: 298.54,
+        balanceAfter: curBalance,
         txId: 'CBE-PROMO-841',
         simSlot: 2,
         isSpam: false,
         fullMessageText: `EKSIPOO FI FEESTIVAALA CBE ADEY 2019\n*************\nGiddugala Konveenshinii Addis Internaashinaaliitti Hagayya 23, 2018 irraa eegalee hanga Qaammee 5tti Eksipoo fi Feestivaala qophaa’e irratti hirmaadhaa!\nBittaa fi gurgurtaa ayyaanaaf raawwattan hundaaf, kaffaltii keessan karaa filannoowwan dijitaalaa Baankii Daldalaa Itoophiyaatiin salphaatti xumuraa!\n\nBaankii Daldalaa Itoophiyaa\nBaankii Yoomiyyuu Itti Of\nAbdatan!`
       },
       {
-        id: 'tx-cbe-screenshot-debit-20',
+        id: `tx-cbe-debit-${curAccount}`,
         amount: 20.00,
-        accountNumber: '1000419524747',
-        maskedAccount: '1*********4747',
-        holderName: 'Leykun Jemaneh Ylma',
+        accountNumber: curAccount,
+        maskedAccount: curMasked,
+        holderName: curHolderName,
         role: 'sender' as TruecallerRole,
         bankName: 'Cbe Bank',
         bankKey: 'cbe' as TruecallerBankKey,
         timeString: '12:54 PM',
         timestamp: '2026-09-05T12:54:00Z',
         counterpartyName: 'Service & Disaster Recovery',
-        balanceAfter: 298.54,
+        balanceAfter: curBalance,
         txId: 'v2-hfHCxGKNY8V0W9qoyCPX',
         simSlot: 2,
         isSpam: true,
         receiptUrl: 'https://mbreciept.cbe.com.et/v2-hfHCxGKNY8V0W9qoyCPX',
         feedbackUrl: 'https://forms.gle/kGNGQpG3mQCCk3iD6',
-        fullMessageText: `Dear Leykun Jemaneh Ylma A debit transaction of ETB 20.0. has occurred on your account 1*********4747. Service charge of ETB 0.00 and VAT(15%) of 0.0 and Disaster Recovery(5%) of 0.00 with total of ETB20.00 .Your current balance is ETB298.54. Thanks for Banking with CBE.\nhttps://mbreciept.cbe.com.et/v2-hfHCxGKNY8V0W9qoyCPX for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`
+        fullMessageText: `Dear ${curHolderName} A debit transaction of ETB 20.0. has occurred on your account ${curMasked}. Service charge of ETB 0.00 and VAT(15%) of 0.0 and Disaster Recovery(5%) of 0.00 with total of ETB20.00 .Your current balance is ETB${curBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}. Thanks for Banking with CBE.\nhttps://mbreciept.cbe.com.et/v2-hfHCxGKNY8V0W9qoyCPX for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`
       },
       {
-        id: 'tx-cbe-screenshot-credit-50',
+        id: `tx-cbe-credit-${curAccount}`,
         amount: 50.00,
-        accountNumber: '1000419524747',
-        maskedAccount: '1*********4747',
-        holderName: 'Leykun',
+        accountNumber: curAccount,
+        maskedAccount: curMasked,
+        holderName: curFirstName,
         role: 'receiver' as TruecallerRole,
         bankName: 'Cbe Bank',
         bankKey: 'cbe' as TruecallerBankKey,
@@ -466,65 +538,119 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
         dateLabel: 'Saturday, 05 Sep',
         timestamp: '2026-09-05T16:41:01Z',
         counterpartyName: 'Dejene Buta',
-        balanceAfter: 348.54,
+        balanceAfter: curCreditBalance,
         txId: 'FT26248KLR82',
         simSlot: 2,
         isSpam: true,
-        receiptUrl: 'https://apps.cbe.com.et:100/?id=FT26248KLR8219524747',
-        fullMessageText: `Dear Leykun your Account 1*********4747 has been Credited with ETB 50.00 from Dejene Buta, on 05/09/2026 at 16:41:01 with Ref No FT26248KLR82 Your Current Balance is ETB 348.54. Thank you for Banking with CBE!\nhttps://apps.cbe.com.et:100/?id=FT26248KLR8219524747`
+        receiptUrl: `https://apps.cbe.com.et:100/?id=FT26248KLR82${curBranchSuffix}`,
+        fullMessageText: `Dear ${curFirstName} your Account ${curMasked} has been Credited with ETB 50.00 from Dejene Buta, on 05/09/2026 at 16:41:01 with Ref No FT26248KLR82 Your Current Balance is ETB ${curCreditBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}. Thank you for Banking with CBE!\nhttps://apps.cbe.com.et:100/?id=FT26248KLR82${curBranchSuffix}`
       }
     ];
 
-    // Combine matching alerts from service state
-    const alertItems = matchingAlerts.map(a => ({
-      id: a.id,
-      amount: a.amount,
-      accountNumber: a.fullAccount || '1000419529165',
-      maskedAccount: a.maskedAccount || maskTruecallerAccount(a.fullAccount || '1000419529165'),
-      holderName: a.holderName || 'Leykun Jemaneh Ylma',
-      role: a.role,
-      bankName: a.bankName,
-      bankKey: a.bankKey,
-      timeString: a.timeString || 'Now',
-      timestamp: a.timestamp,
-      counterpartyName: a.counterpartyName,
-      balanceAfter: a.balanceAfter,
-      txId: a.txId,
-      simSlot: 2,
-      isSpam: false,
-      receiptUrl: `https://apps.cbe.com.et:100/?id=${a.txId || 'FT26248MK0913'}`,
-      fullMessageText: a.fullSmsText || (
-        a.role === 'receiver'
-          ? `Dear ${a.holderName || 'Leykun Jemaneh Ylma'},\nYour Account ${a.fullAccount || '1000419520913'} has been Credited with ETB ${a.amount.toFixed(2)} on ${a.timeString || 'Now'}${a.counterpartyName ? ` from ${a.counterpartyName}` : ''}.\nAvailable Balance is ETB ${(a.balanceAfter || 79100.00).toFixed(2)}.\nTxn Ref: ${a.txId || 'FT26248MK0913'}.\nThank you for banking with ${a.bankName}.\nhttps://apps.cbe.com.et:100/?id=${a.txId || 'FT26248MK0913'}`
-          : `Dear ${a.holderName || 'Leykun Jemaneh Ylma'},\nA debit transaction of ETB ${a.amount.toFixed(2)} has occurred on your Account ${a.fullAccount || '1000419529165'} on ${a.timeString || 'Now'}${a.counterpartyName ? ` to ${a.counterpartyName}` : ''}.\nAvailable Balance: ETB ${(a.balanceAfter || 920.50).toFixed(2)}.\nTxn Ref: ${a.txId || 'FT269446FP77'}.\nThank you for banking with ${a.bankName}.\nhttps://apps.cbe.com.et:100/?id=${a.txId || 'FT269446FP77'}`
-      )
-    }));
+    // Deduplicate matchingAlerts by txId/id
+    const uniqueAlertsMap = new Map<string, TruecallerAlert>();
+    for (const a of matchingAlerts) {
+      if (a.txId) {
+        uniqueAlertsMap.set(a.txId, a);
+      } else {
+        uniqueAlertsMap.set(a.id, a);
+      }
+    }
+    const dedupedAlerts = Array.from(uniqueAlertsMap.values());
+
+    // Sort chronologically (oldest first) to ensure mathematically progressive balance:
+    // "When user receive the available balance is the previous balance plus the the current received balance."
+    const sortedAlerts = [...dedupedAlerts].sort((a, b) => {
+      const tA = new Date(a.timestamp).getTime() || 0;
+      const tB = new Date(b.timestamp).getTime() || 0;
+      return tA - tB;
+    });
+
+    // Calculate baseline balance prior to these alerts
+    let netAlertsDelta = 0;
+    for (const a of sortedAlerts) {
+      if (a.role === 'receiver') {
+        netAlertsDelta += a.amount;
+      } else {
+        netAlertsDelta -= a.amount;
+      }
+    }
+
+    const currentFinalBalance = activeAccount ? activeAccount.balance : 8879100.00;
+    let runningBalance = Math.max(0, currentFinalBalance - netAlertsDelta);
+
+    if (sortedAlerts.length > 0) {
+      const first = sortedAlerts[0];
+      if (first.balanceAfter !== undefined && first.balanceAfter > 0) {
+        const derivedStart = first.role === 'receiver' 
+          ? Math.max(0, first.balanceAfter - first.amount) 
+          : first.balanceAfter + first.amount;
+        if (derivedStart > 0 && Math.abs(derivedStart - runningBalance) > 1) {
+          runningBalance = derivedStart;
+        }
+      }
+    }
+
+    // Now compute progressive available balance for every alert strictly following the user's rule:
+    const calculatedAlertItems = sortedAlerts.map(a => {
+      const prevBal = runningBalance;
+      if (a.role === 'receiver') {
+        // EXACT DIRECTIVE: "When user receive the available balance is the previous balance plus the the current received balance."
+        runningBalance = prevBal + a.amount;
+      } else {
+        runningBalance = Math.max(0, prevBal - a.amount);
+      }
+      const calculatedBalanceAfter = runningBalance;
+      const formattedCalcBal = calculatedBalanceAfter.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+      let fullMsg = a.fullSmsText;
+      if (!fullMsg) {
+        if (a.role === 'receiver') {
+          fullMsg = `Dear ${a.holderName || curHolderName},\nYour Account ${a.fullAccount || curAccount} has been Credited with ETB ${a.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} on ${a.timeString || 'Now'}${a.counterpartyName ? ` by ${a.counterpartyName}` : ''}.\nAvailable Balance is ETB ${formattedCalcBal}.\nTxn Ref: ${a.txId || 'FT26248MK0913'}.\nThank you for banking with ${a.bankName || 'Cbe Bank'}.\nhttps://cbe.com.et/mbreceipt/${a.txId || 'FT26248MK0913'}`;
+        } else {
+          fullMsg = `Dear ${a.holderName || curHolderName},\nA debit transaction of ETB ${a.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} has occurred on your Account ${a.fullAccount || curAccount} on ${a.timeString || 'Now'}${a.counterpartyName ? ` to ${a.counterpartyName}` : ''}.\nAvailable Balance: ETB ${formattedCalcBal}.\nTxn Ref: ${a.txId || 'FT269446FP77'}.\nThank you for banking with ${a.bankName || 'Cbe Bank'}.`;
+        }
+      } else {
+        // Dynamically ensure the SMS message text reflects the mathematically accurate available balance
+        fullMsg = updateSmsAvailableBalance(fullMsg, calculatedBalanceAfter);
+      }
+
+      return {
+        id: a.id,
+        amount: a.amount,
+        accountNumber: a.fullAccount || curAccount,
+        maskedAccount: a.maskedAccount || maskTruecallerAccount(a.fullAccount || curAccount),
+        holderName: a.holderName || curHolderName,
+        role: a.role,
+        bankName: a.bankName,
+        bankKey: a.bankKey,
+        timeString: a.timeString || 'Now',
+        timestamp: a.timestamp,
+        counterpartyName: a.counterpartyName,
+        balanceAfter: calculatedBalanceAfter,
+        txId: a.txId,
+        simSlot: 2,
+        isSpam: false,
+        receiptUrl: `https://apps.cbe.com.et:100/?id=${a.txId || 'FT26248MK0913'}`,
+        fullMessageText: fullMsg
+      };
+    });
 
     let allItems: any[] = [];
     
-    if (recentTxOnTop) {
-      // Top recent mode: dynamic alerts first, then reverse seeded list
-      for (const item of alertItems) {
-        if (!allItems.some(c => c.txId === item.txId)) {
-          allItems.push(item);
-        }
-      }
-      for (const seed of [...seededCbeList].reverse()) {
-        if (!allItems.some(c => c.txId === seed.txId)) {
-          allItems.push(seed);
-        }
+    if (calculatedAlertItems.length > 0) {
+      // Strictly show messages for the selected account
+      if (recentTxOnTop) {
+        allItems = [...calculatedAlertItems].reverse();
+      } else {
+        allItems = [...calculatedAlertItems];
       }
     } else {
-      // Natural chronological SMS stream matching user screenshots (Message 1 -> Message 2 -> Message 3 -> Message 4 -> new transactions)
-      for (const seed of seededCbeList) {
-        if (!allItems.some(c => c.txId === seed.txId)) {
-          allItems.push(seed);
-        }
-      }
-      for (const item of alertItems) {
-        if (!allItems.some(c => c.txId === item.txId)) {
-          allItems.push(item);
-        }
+      // No custom alerts yet: show authentic seeded CBE list tailored to this account
+      if (recentTxOnTop) {
+        allItems = [...seededCbeList].reverse();
+      } else {
+        allItems = [...seededCbeList];
       }
     }
 
@@ -539,7 +665,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
       simSlot: selectedSimSlot || item.simSlot || 2,
       isNow: recentTxOnTop ? (index === 0 || item.timeString === 'Now' || item.timeString?.toLowerCase().includes('now')) : false
     }));
-  }, [activeBankKey, alerts, inboxFilterMode, recentTxOnTop, selectedSimSlot]);
+  }, [activeBankKey, alerts, activeAccount, inboxFilterMode, recentTxOnTop, selectedSimSlot]);
 
   // Click on a thread in Google Messages Inbox
   const handleSelectThread = (thread: GoogleMessagesThreadItem) => {
@@ -1984,7 +2110,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
               </svg>
             </div>
 
-            {/* Bank Title & Mobile Banking Label */}
+            {/* Bank Title & Mobile Banking Label - Clean header without account name or number */}
             <div>
               <h1 className="text-[17px] font-semibold tracking-normal leading-tight text-white">
                 Cbe Bank
@@ -2304,7 +2430,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-neutral-200 uppercase tracking-wider flex items-center space-x-1.5">
                       <CreditCard className="w-3.5 h-3.5 text-[#0066FF]" />
-                      <span>Registered CBE Accounts ({accounts.length})</span>
+                      <span>Registered CBE Accounts ({filteredAccounts.length})</span>
                     </span>
                     <button
                       type="button"
@@ -2319,38 +2445,80 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                     </button>
                   </div>
 
-                  {/* Account Cards List */}
-                  <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-                    {accounts.map(acc => (
-                      <div 
-                        key={acc.id}
-                        className="p-3 rounded-2xl bg-neutral-900/90 border border-neutral-800 flex items-center justify-between hover:border-neutral-700 transition"
+                  {/* Search bar when browsing accounts */}
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-neutral-400" />
+                    <input
+                      type="text"
+                      value={accountSearchQuery}
+                      onChange={(e) => setAccountSearchQuery(e.target.value)}
+                      placeholder="Search accounts by name or number..."
+                      className="w-full pl-8 pr-7 py-1.5 bg-neutral-900 border border-neutral-800 rounded-xl text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500"
+                    />
+                    {accountSearchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setAccountSearchQuery('')}
+                        className="absolute right-2.5 top-2 text-neutral-400 hover:text-white"
                       >
-                        <div className="space-y-0.5">
-                          <div className="flex items-center space-x-2">
-                            <span className="text-xs font-bold text-white">{acc.holderName}</span>
-                            <span className={`text-[9.5px] font-bold px-1.5 py-0.2 rounded-full ${
-                              acc.accountType?.includes('Sender')
-                                ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                                : acc.accountType?.includes('Receiver')
-                                ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                                : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
-                            }`}>
-                              {acc.accountType?.includes('Sender') ? 'Sender (User X)' : acc.accountType?.includes('Receiver') ? 'Receiver (User Y)' : 'Primary'}
-                            </span>
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Account Cards List with Select & Filter */}
+                  <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                    {filteredAccounts.map(acc => {
+                      const isSelected = activeAccount?.id === acc.id || activeAccountId === acc.id;
+                      return (
+                        <div 
+                          key={acc.id}
+                          onClick={() => {
+                            setActiveAccountId(acc.id);
+                            TruecallerService.setActiveAccountId(acc.id);
+                            setSimSenderAccount(acc.accountNumber);
+                            setSimSenderName(acc.holderName);
+                            showToast(`Selected account: ${acc.holderName}`);
+                          }}
+                          className={`p-3 rounded-2xl border transition cursor-pointer flex items-center justify-between group ${
+                            isSelected
+                              ? 'bg-[#121927] border-[#0066FF] ring-1 ring-[#0066FF]/60 shadow-lg'
+                              : 'bg-neutral-900/90 border-neutral-800 hover:border-blue-500/40 hover:bg-neutral-800/80'
+                          }`}
+                        >
+                          <div className="space-y-0.5">
+                            <div className="flex items-center space-x-2">
+                              <span className={`text-xs font-bold ${isSelected ? 'text-white' : 'text-neutral-200 group-hover:text-white'}`}>
+                                {acc.holderName}
+                              </span>
+                              {isSelected ? (
+                                <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-[#0066FF] text-white flex items-center space-x-1 shadow-sm">
+                                  <Check className="w-2.5 h-2.5 stroke-[3]" />
+                                  <span>Active</span>
+                                </span>
+                              ) : (
+                                <span className="text-[9.5px] font-semibold px-2 py-0.5 rounded-full bg-neutral-800 text-neutral-400 border border-neutral-700 group-hover:border-blue-400 group-hover:text-white transition">
+                                  Select
+                                </span>
+                              )}
+                            </div>
+                            <p className="font-mono text-[11px] text-neutral-300">
+                              {acc.accountNumber}
+                            </p>
+                            <p className="font-sans text-[10px] text-neutral-400">
+                              ({acc.maskedAccount || maskTruecallerAccount(acc.accountNumber)})
+                            </p>
                           </div>
-                          <p className="font-mono text-[11px] text-neutral-400">
-                            {acc.accountNumber} <span className="text-neutral-500 font-sans text-[10px]">({acc.maskedAccount})</span>
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-xs font-mono font-bold text-emerald-400">
-                            ETB {acc.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                          <div className="text-right flex flex-col items-end">
+                            <div className="text-xs font-mono font-bold text-[#e879f9] flex items-baseline space-x-1">
+                              <span className="text-[10px] font-semibold">ETB</span>
+                              <span>{acc.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                            </div>
+                            <div className="text-[10px] text-neutral-500">Balance</div>
                           </div>
-                          <div className="text-[10px] text-neutral-500">Balance</div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
 
                   <p className="text-[11px] text-neutral-400 text-center">

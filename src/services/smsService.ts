@@ -766,8 +766,16 @@ export class SmsService {
       }
 
       if (receiverAccNum) {
+        // Calculate receiver balance: "When user receive the available balance is the previous balance plus the current received balance."
+        let calcRecBal = receiverBalance;
+        if (calcRecBal === undefined) {
+          const recAcc = this.getAccounts().find(a => a.accountNumber === receiverAccNum);
+          const prevBal = recAcc ? recAcc.balance : 244600.0;
+          calcRecBal = prevBal + tx.amount;
+        }
+
         // Ensure receiver account exists independently
-        this.ensureAccount(receiverAccNum, receiverName, receiverBalance);
+        this.ensureAccount(receiverAccNum, receiverName, calcRecBal);
 
         const creditBody = formatCbeCreditMessage({
           receiverName,
@@ -775,7 +783,7 @@ export class SmsService {
           senderAccountNumber: senderAccNum,
           senderName,
           receiverAccountNumber: receiverAccNum,
-          balance: receiverBalance,
+          balance: calcRecBal,
           receiptUrl,
           feedbackUrl,
         });
@@ -790,7 +798,7 @@ export class SmsService {
           recipient: senderAccNum,
           type: 'CREDIT',
           amount: tx.amount,
-          balance: receiverBalance,
+          balance: calcRecBal,
           message: creditBody,
           receiptUrl,
           feedbackUrl,
