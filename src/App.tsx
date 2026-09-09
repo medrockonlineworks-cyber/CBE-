@@ -13,6 +13,7 @@ import AdminPanel from './components/AdminPanel';
 import SmsPage from './pages/SmsPage';
 import TruecallerSimulator from './components/TruecallerSimulator';
 import PhoneCallApp from './components/PhoneCallApp';
+import DashenBankApp from './components/DashenBankApp';
 import { PhoneCallService } from './services/phoneCallService';
 import { SmsService } from './services/smsService';
 import Navigation, { TabType } from './components/Navigation';
@@ -34,11 +35,12 @@ export default function App() {
       return null;
     }
   });
-  const [activeView, setActiveView] = useState<'auth' | 'main' | 'receipt' | 'admin' | 'sms' | 'truecaller' | 'phone'>(() => {
+  const [activeView, setActiveView] = useState<'auth' | 'main' | 'receipt' | 'admin' | 'sms' | 'truecaller' | 'phone' | 'dashen'>(() => {
     if (typeof window !== 'undefined') {
       if (window.location.pathname === '/sms') return 'sms';
       if (window.location.pathname === '/truecaller') return 'truecaller';
       if (window.location.pathname === '/phone') return 'phone';
+      if (window.location.pathname === '/dashen') return 'dashen';
     }
     return 'main';
   });
@@ -51,13 +53,21 @@ export default function App() {
   const navHistoryRef = useRef<{ view: string; tab: string }[]>([]);
 
   // Navigation pusher that keeps browser history in sync with Android back-button
-  const navigateTo = useCallback((view: 'auth' | 'main' | 'receipt' | 'admin' | 'sms' | 'truecaller' | 'phone', tab: TabType = activeTab) => {
+  const navigateTo = useCallback((view: 'auth' | 'main' | 'receipt' | 'admin' | 'sms' | 'truecaller' | 'phone' | 'dashen', tab: TabType = activeTab) => {
     setActiveView(view);
     setActiveTab(tab);
     
     try {
       const stateObj = { view, tab };
-      const targetPath = view === 'sms' ? '/sms' : (view === 'truecaller' ? '/truecaller' : (view === 'phone' ? '/phone' : (window.location.pathname === '/sms' || window.location.pathname === '/truecaller' || window.location.pathname === '/phone' ? '/' : window.location.pathname)));
+      const targetPath = view === 'sms' 
+        ? '/sms' 
+        : (view === 'truecaller' 
+          ? '/truecaller' 
+          : (view === 'phone' 
+            ? '/phone' 
+            : (view === 'dashen' 
+              ? '/dashen' 
+              : (['/sms', '/truecaller', '/phone', '/dashen'].includes(window.location.pathname) ? '/' : window.location.pathname))));
       window.history.pushState(stateObj, '', targetPath);
       navHistoryRef.current.push(stateObj);
     } catch {
@@ -74,8 +84,8 @@ export default function App() {
     } catch {}
 
     const handlePopState = (e: PopStateEvent) => {
-      // If user was on SMS, Truecaller or Phone view
-      if (activeView === 'sms' || activeView === 'truecaller' || activeView === 'phone') {
+      // If user was on SMS, Truecaller, Phone or Dashen view
+      if (activeView === 'sms' || activeView === 'truecaller' || activeView === 'phone' || activeView === 'dashen') {
         setActiveView('main');
         setActiveTab('profile');
       } else if (activeView === 'receipt') {
@@ -251,6 +261,7 @@ export default function App() {
             onOpenSmsSimulator={() => navigateTo('sms', 'profile')}
             onOpenTruecallerSimulator={() => navigateTo('truecaller', 'profile')}
             onOpenPhoneApp={() => navigateTo('phone', 'profile')}
+            onOpenDashenApp={() => navigateTo('dashen', 'profile')}
           />
         );
       default:
@@ -261,6 +272,7 @@ export default function App() {
             onOpenSmsSimulator={() => navigateTo('sms', 'profile')}
             onOpenTruecallerSimulator={() => navigateTo('truecaller', 'profile')}
             onOpenPhoneApp={() => navigateTo('phone', 'profile')}
+            onOpenDashenApp={() => navigateTo('dashen', 'profile')}
           />
         );
     }
@@ -289,9 +301,11 @@ export default function App() {
               ? 'h-full overflow-hidden bg-slate-950'
               : activeView === 'phone'
                 ? 'h-full overflow-hidden bg-black'
-                : activeTab === 'home' || activeTab === 'history' 
-                  ? 'overflow-hidden h-full' 
-                  : 'overflow-y-auto bg-gray-50'
+                : activeView === 'dashen'
+                  ? 'h-full overflow-hidden bg-[#040b18]'
+                  : activeTab === 'home' || activeTab === 'history' 
+                    ? 'overflow-hidden h-full' 
+                    : 'overflow-y-auto bg-gray-50'
         }`}>
           
           {activeView === 'auth' && (
@@ -375,6 +389,15 @@ export default function App() {
 
           {activeView === 'phone' && (
             <PhoneCallApp 
+              currentUser={currentUser}
+              onBack={() => {
+                navigateTo('main', 'profile');
+              }}
+            />
+          )}
+
+          {activeView === 'dashen' && (
+            <DashenBankApp 
               currentUser={currentUser}
               onBack={() => {
                 navigateTo('main', 'profile');

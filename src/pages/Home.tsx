@@ -43,6 +43,7 @@ interface HomeProps {
   onOpenSmsSimulator?: () => void;
   onOpenTruecallerSimulator?: () => void;
   onOpenPhoneApp?: () => void;
+  onOpenDashenApp?: () => void;
 }
 
 export const Home: React.FC<HomeProps> = ({
@@ -54,6 +55,7 @@ export const Home: React.FC<HomeProps> = ({
   onOpenSmsSimulator,
   onOpenTruecallerSimulator,
   onOpenPhoneApp,
+  onOpenDashenApp,
 }) => {
   // Fallback demo user if none passed in
   const currentUser: UserProfile = propUser || {
@@ -730,6 +732,27 @@ export const Home: React.FC<HomeProps> = ({
                 <PhoneCall className="w-5 h-5 text-emerald-600 mb-1.5" />
                 <p className="text-xs font-bold text-emerald-950">Phone &amp; USSD</p>
                 <p className="text-[10px] text-emerald-700">*889# Mobile Banking</p>
+              </button>
+
+              <button
+                onClick={() => {
+                  setActiveModal(null);
+                  if (onOpenDashenApp) {
+                    onOpenDashenApp();
+                  } else {
+                    try {
+                      window.history.pushState({ view: 'dashen' }, '', '/dashen');
+                      window.dispatchEvent(new PopStateEvent('popstate', { state: { view: 'dashen' } }));
+                    } catch {}
+                  }
+                }}
+                className="p-3 bg-blue-50 hover:bg-blue-100/80 rounded-2xl text-left transition cursor-pointer border border-blue-200"
+              >
+                <div className="w-5 h-5 bg-[#0c1e3f] rounded-lg text-white flex flex-col items-center justify-center mb-1.5">
+                  <span className="text-[6px] font-bold">ዳሽን</span>
+                </div>
+                <p className="text-xs font-bold text-blue-950">Dashen Bank</p>
+                <p className="text-[10px] text-blue-700">Super App &amp; Transfer</p>
               </button>
 
               {onOpenAdmin && (

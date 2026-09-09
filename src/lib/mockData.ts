@@ -16,6 +16,7 @@ import { firebaseService } from '../services/firebaseService';
 import { SmsService } from '../services/smsService';
 import { TruecallerService } from '../services/truecallerService';
 import { PhoneCallService } from '../services/phoneCallService';
+import { DashenBankService } from '../services/dashenBankService';
 
 // Helper to generate IDs
 const generateId = () => Math.random().toString(36).substring(2, 11).toUpperCase();
@@ -179,6 +180,15 @@ export const VERIFIED_DIRECTORY_ACCOUNTS: RegisteredAccountInfo[] = [
     phone: '+251900112233',
     isVerified: true,
     accountType: 'Savings Account'
+  },
+  {
+    accountNumber: '5502877108011',
+    accountName: 'Leykun Jemaneh Yilma',
+    bankName: 'Dashen Bank',
+    userId: 'user_admin',
+    phone: '+251900112233',
+    isVerified: true,
+    accountType: 'Dashen Savings Account'
   },
   {
     accountNumber: '1000246810121',
@@ -1137,6 +1147,15 @@ export class LocalDb {
     const list: RegisteredAccountInfo[] = [...VERIFIED_DIRECTORY_ACCOUNTS];
     const seenAccs = new Set<string>(list.map(a => a.accountNumber));
 
+    // Add custom/external registered directory accounts
+    const customList = loadData<RegisteredAccountInfo[]>('tana_custom_directory_accounts', []);
+    customList.forEach(c => {
+      if (c.accountNumber && !seenAccs.has(c.accountNumber)) {
+        list.push(c);
+        seenAccs.add(c.accountNumber);
+      }
+    });
+
     // Add all registered users
     const users = this.getUsers();
     users.forEach(u => {
@@ -1208,6 +1227,17 @@ export class LocalDb {
     if (byName) return byName;
 
     return null;
+  }
+
+  static registerNewAccount(account: RegisteredAccountInfo): void {
+    const list = loadData<RegisteredAccountInfo[]>('tana_custom_directory_accounts', []);
+    const existingIndex = list.findIndex(a => a.accountNumber === account.accountNumber);
+    if (existingIndex >= 0) {
+      list[existingIndex] = { ...list[existingIndex], ...account };
+    } else {
+      list.unshift(account);
+    }
+    saveData('tana_custom_directory_accounts', list);
   }
 
   static getAuditLogs(): AuditLog[] {
@@ -1394,6 +1424,25 @@ export class LocalDb {
       PhoneCallService.syncTransactionToCallerApp(newTx);
     } catch (callErr) {
       console.error('[PhoneCallService] Non-blocking caller account sync error:', callErr);
+    }
+
+    // Automatically credit & register inside Dashen Bank if recipient is Dashen or account 550...
+    try {
+      const isDashen = (newTx.recipientBank && newTx.recipientBank.toLowerCase().includes('dashen')) ||
+                       (newTx.recipientAccount && newTx.recipientAccount.replace(/\D/g, '').startsWith('550')) ||
+                       (newTx.recipientAccount && newTx.recipientAccount.replace(/\D/g, '') === '5502877108011');
+      if (isDashen && type !== 'receive') {
+        DashenBankService.receiveIncomingTransfer({
+          amount: newTx.amount,
+          senderName: newTx.senderName || user.name,
+          senderAccount: newTx.senderAccount || user.accountNumber,
+          senderBank: 'Commercial Bank of Ethiopia',
+          reference: newTx.reference || newTx.id,
+          description: newTx.description
+        });
+      }
+    } catch (dashErr) {
+      console.error('[DashenBankService] Non-blocking Dashen sync error:', dashErr);
     }
 
     return newTx;
