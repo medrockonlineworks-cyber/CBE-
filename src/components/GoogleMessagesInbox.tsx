@@ -13,8 +13,11 @@ import {
   Wifi,
   Battery,
   ShieldCheck,
-  ChevronRight
+  ChevronRight,
+  Smartphone
 } from 'lucide-react';
+import PhoneStatusBar from './PhoneStatusBar';
+import PhoneSettingsModal from './PhoneSettingsModal';
 import { MessageThread } from '../types/messages';
 import { GoogleMessagesService } from '../services/googleMessagesData';
 
@@ -40,6 +43,7 @@ export default function GoogleMessagesInbox({
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showPhoneSettingsModal, setShowPhoneSettingsModal] = useState(false);
   const [showStartChatModal, setShowStartChatModal] = useState(false);
   const [showGeminiModal, setShowGeminiModal] = useState(false);
   
@@ -85,26 +89,12 @@ export default function GoogleMessagesInbox({
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-[#121316] text-white' : 'bg-[#f8f9fa] text-neutral-900'} flex flex-col font-sans transition-colors duration-150 select-none`}>
       
-      {/* 📱 Android Native Status Bar */}
-      <div className={`w-full px-5 pt-2.5 pb-1 flex items-center justify-between text-xs ${isDarkMode ? 'text-neutral-300' : 'text-neutral-700'}`}>
-        <div className="flex items-center space-x-1.5 font-medium tracking-tight">
-          <span>1:28</span>
-          <svg className="w-3.5 h-3.5 fill-current opacity-80" viewBox="0 0 24 24">
-            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-          </svg>
-        </div>
-
-        <div className="flex items-center space-x-2.5 text-[11px]">
-          <span className="font-mono text-[10px] opacity-80">19.2 KB/s</span>
-          <span className="font-semibold text-[10.5px]">H+</span>
-          <span className="font-semibold text-[10.5px]">3G</span>
-          <Wifi className="w-3.5 h-3.5" />
-          <div className="flex items-center space-x-0.5">
-            <Battery className="w-4 h-4" />
-            <span className="text-[10px] font-bold">68</span>
-          </div>
-        </div>
-      </div>
+      {/* 📱 Phone Status Bar (Tappable to customize) */}
+      <PhoneStatusBar 
+        theme={isDarkMode ? 'dark' : 'light'} 
+        onClick={() => setShowPhoneSettingsModal(true)} 
+        showEditHint={true} 
+      />
 
       {/* 🔍 Google Messages Top App Bar */}
       <header className={`px-4 pt-3 pb-2 flex items-center justify-between sticky top-0 z-30 ${isDarkMode ? 'bg-[#121316]' : 'bg-[#f8f9fa]'}`}>
@@ -365,6 +355,22 @@ export default function GoogleMessagesInbox({
               <button
                 onClick={() => {
                   setShowProfileModal(false);
+                  setShowPhoneSettingsModal(true);
+                }}
+                className={`w-full p-3 rounded-xl flex items-center justify-between text-sm font-medium transition-colors ${
+                  isDarkMode ? 'bg-neutral-800/70 hover:bg-neutral-800 text-neutral-200' : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-800'
+                }`}
+              >
+                <span className="flex items-center space-x-2.5">
+                  <Smartphone className="w-4 h-4 text-cyan-400" />
+                  <span>Phone Model &amp; Status Bar Settings</span>
+                </span>
+                <ChevronRight className="w-4 h-4 text-neutral-400" />
+              </button>
+
+              <button
+                onClick={() => {
+                  setShowProfileModal(false);
                   onBackToApp();
                 }}
                 className={`w-full p-3 rounded-xl flex items-center justify-between text-sm font-medium transition-colors ${
@@ -559,6 +565,12 @@ export default function GoogleMessagesInbox({
           </div>
         </div>
       )}
+
+      {/* Global Phone Type & Status Bar Settings Modal */}
+      <PhoneSettingsModal 
+        isOpen={showPhoneSettingsModal} 
+        onClose={() => setShowPhoneSettingsModal(false)} 
+      />
 
     </div>
   );

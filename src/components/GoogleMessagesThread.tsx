@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { MessageThread } from '../types/messages';
 import { GoogleMessagesService } from '../services/googleMessagesData';
+import PhoneStatusBar from './PhoneStatusBar';
 
 interface GoogleMessagesThreadProps {
   thread: MessageThread;
@@ -67,6 +68,9 @@ export default function GoogleMessagesThread({
     <div className={`min-h-screen flex flex-col ${
       isDarkMode ? 'bg-[#121316] text-white' : 'bg-[#f8f9fa] text-neutral-900'
     } font-sans select-none`}>
+      
+      {/* Phone Status Bar */}
+      <PhoneStatusBar theme={isDarkMode ? 'dark' : 'light'} />
       
       {/* Top App Bar */}
       <header className={`px-3 py-2.5 flex items-center justify-between sticky top-0 z-20 border-b ${

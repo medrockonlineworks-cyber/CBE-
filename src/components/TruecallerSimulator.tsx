@@ -69,6 +69,9 @@ import {
   TruecallerBackgroundApp,
   TruecallerPhoneType
 } from '../types/truecaller';
+import PhoneStatusBar from './PhoneStatusBar';
+import PhoneSettingsModal from './PhoneSettingsModal';
+import { PhoneSettingsService, PhoneModelType } from '../services/phoneSettingsService';
 import { 
   TruecallerService, 
   BANK_PRESETS, 
@@ -259,6 +262,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
   const [showSpamBadge, setShowSpamBadge] = useState<boolean>(true);
   const [recentTxOnTop, setRecentTxOnTop] = useState<boolean>(true);
   const [enableSoundHaptics, setEnableSoundHaptics] = useState<boolean>(true);
+  const [showPhoneSettingsModal, setShowPhoneSettingsModal] = useState<boolean>(false);
 
   const [showAddAccountModal, setShowAddAccountModal] = useState<boolean>(false);
   const [newAccountHolder, setNewAccountHolder] = useState<string>('Leykun Jemaneh Ylma');
@@ -1702,7 +1706,12 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                     <button
                       key={p.id}
                       type="button"
-                      onClick={() => setSelectedPhoneType(p.id)}
+                      onClick={() => {
+                        setSelectedPhoneType(p.id);
+                        try {
+                          PhoneSettingsService.applyPreset(p.id as PhoneModelType);
+                        } catch {}
+                      }}
                       className={`p-3 rounded-2xl border-2 text-left cursor-pointer transition-all duration-150 flex items-center space-x-3 ${
                         isSelected 
                           ? 'bg-[#0066FF]/20 border-[#0066FF] text-white shadow-lg ring-2 ring-[#0066FF]/40' 
@@ -2063,64 +2072,12 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
           </div>
         )}
 
-        {/* Android Status Bar matching Screenshot_20260908-115438.png */}
-        <div className="w-full px-4 pt-2 pb-1.5 flex items-center justify-between text-xs text-white bg-black select-none z-30">
-          {/* Left: Clock (11:54 matching screenshot or live clock if toggled) */}
-          <div className="flex items-center space-x-1.5 font-medium text-[13px] tracking-tight text-white">
-            <span>{statusClockMode === 'live' ? formatCurrentTimeString().replace(' AM', '').replace(' PM', '') : '11:54'}</span>
-          </div>
-
-          {/* Right: Headphone, Silent/Bell, Network Speed, 4G, 3G, Battery */}
-          <div className="flex items-center space-x-2 text-[11px]">
-            {/* Over-ear Headphone icon from screenshot */}
-            <svg className="w-3.5 h-3.5 text-white fill-none stroke-current stroke-2" viewBox="0 0 24 24">
-              <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
-              <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" fill="currentColor" />
-            </svg>
-
-            {/* Silent/vibrate crossed bell icon from screenshot */}
-            <svg className="w-3.5 h-3.5 text-white fill-none stroke-current stroke-2" viewBox="0 0 24 24">
-              <path d="M10.26 5.15A5.86 5.86 0 0 1 12 5c3.31 0 6 2.69 6 6v3" />
-              <path d="M6 11v3l-2 2h13" />
-              <path d="M10.3 21a2 2 0 0 0 3.4 0" />
-              <line x1="2" y1="2" x2="22" y2="22" stroke="currentColor" strokeWidth="2" />
-            </svg>
-
-            {/* Speed: 2.10 KB/S */}
-            <div className="flex flex-col items-end leading-none">
-              <span className="font-mono text-[8px] font-bold text-neutral-200">2.10</span>
-              <span className="font-mono text-[6.5px] font-bold text-neutral-400">KB/S</span>
-            </div>
-
-            {/* 4G Signal with 4 bars */}
-            <div className="flex items-center space-x-0.5">
-              <div className="flex items-end space-x-0.5 h-3">
-                <div className="w-0.5 h-1 bg-white rounded-xs" />
-                <div className="w-0.5 h-1.5 bg-white rounded-xs" />
-                <div className="w-0.5 h-2 bg-white rounded-xs" />
-                <div className="w-0.5 h-2.5 bg-white rounded-xs" />
-              </div>
-              <span className="text-[9.5px] font-bold ml-0.5">4G</span>
-            </div>
-
-            {/* 3G Signal with 4 bars */}
-            <div className="flex items-center space-x-0.5">
-              <div className="flex items-end space-x-0.5 h-3">
-                <div className="w-0.5 h-1 bg-white rounded-xs" />
-                <div className="w-0.5 h-1.5 bg-white rounded-xs" />
-                <div className="w-0.5 h-2 bg-white rounded-xs" />
-                <div className="w-0.5 h-2.5 bg-white rounded-xs" />
-              </div>
-              <span className="text-[9.5px] font-bold ml-0.5">3G</span>
-            </div>
-
-            {/* Battery pill with 68 inside matching Screenshot_20260908-115438.png */}
-            <div className="w-7 h-3.5 border border-white rounded-[4px] px-0.5 flex items-center justify-center relative">
-              <span className="text-[9px] font-bold leading-none text-white">{batteryPercent}</span>
-              <div className="absolute -right-1 top-1 w-0.5 h-1.5 bg-white rounded-r-xs" />
-            </div>
-          </div>
-        </div>
+        {/* Phone Status Bar with direct tap to customize */}
+        <PhoneStatusBar 
+          theme="dark" 
+          onClick={() => setShowPhoneSettingsModal(true)} 
+          showEditHint={true} 
+        />
 
         {/* Bank Thread App Bar matching screenshot */}
         <header className="w-full bg-black border-b border-neutral-900 px-3 py-2 flex items-center justify-between sticky top-0 z-30">
@@ -2324,20 +2281,6 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
           {/* Non-replyable sender footer message */}
           <div className="w-full bg-black text-center text-[12px] text-[#8e9aa8] py-1 select-none pointer-events-auto">
             Replying is not supported by this sender
-          </div>
-
-          {/* Bottom Android System Navigation Bar matching screenshot (|||, ○, <) */}
-          <div className="w-full py-2.5 px-16 flex items-center justify-between text-neutral-400 text-base font-light bg-black border-t border-neutral-900/80 select-none pointer-events-auto">
-            <span className="hover:text-white cursor-pointer tracking-tighter text-sm font-bold opacity-70">|||</span>
-            <span className="hover:text-white cursor-pointer text-base opacity-70">○</span>
-            <button 
-              type="button" 
-              onClick={() => setView('inbox')}
-              className="hover:text-white cursor-pointer opacity-70 focus:outline-none"
-              title="Back"
-            >
-              &lt;
-            </button>
           </div>
         </div>
 
@@ -2546,6 +2489,30 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
               {/* TAB 2: SETTINGS */}
               {threeDotTab === 'settings' && (
                 <div className="space-y-3 animate-in fade-in duration-100 text-xs">
+                  {/* Phone Model & Status Bar Global Customizer */}
+                  <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-950/40 via-purple-950/30 to-neutral-900 border border-blue-500/30 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2 text-white font-bold text-xs">
+                        <Smartphone className="w-4 h-4 text-[#0066FF]" />
+                        <span>Phone Model &amp; Status Bar</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowThreeDotMenu(false);
+                          setShowPhoneSettingsModal(true);
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-[#0066FF] hover:bg-blue-600 text-white font-bold text-[11px] transition shadow-xs flex items-center space-x-1 cursor-pointer"
+                      >
+                        <Sliders className="w-3 h-3" />
+                        <span>Customize</span>
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-neutral-300 leading-relaxed">
+                      Switch between Tecno (HiOS), Samsung One UI, iPhone 16 Pro, Google Pixel, and Xiaomi. Updates status bar icons, battery style, time, and navigation controls across all views!
+                    </p>
+                  </div>
+
                   <div className="p-3 rounded-2xl bg-neutral-900/90 border border-neutral-800 space-y-3">
                     <span className="font-bold text-neutral-200 uppercase text-[11px] tracking-wider block">
                       Truecaller SMS Preferences
@@ -3339,7 +3306,11 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
       <div className="relative w-full h-full max-w-[440px] max-h-[920px] bg-black sm:rounded-[38px] overflow-hidden sm:border-[5px] sm:border-neutral-800 shadow-[0_25px_70px_rgba(0,0,0,0.8)] flex flex-col">
         
         {/* Selected Phone Hardware Status Bar */}
-        {renderPhoneHeader(selectedPhoneType, currentAlert?.timeString)}
+        <PhoneStatusBar 
+          theme="dark" 
+          onClick={() => setShowPhoneSettingsModal(true)} 
+          showEditHint={true} 
+        />
 
         {/* Selected Phone Screen (TikTok, YouTube, Telegram, Instagram, WhatsApp, LockScreen) */}
         <div className="relative w-full flex-1 overflow-hidden">
@@ -3558,13 +3529,16 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
 
         </div>
 
-        {/* Selected Phone Hardware Navigation Bar */}
-        {renderPhoneFooter(selectedPhoneType)}
-
       </div>
 
       {/* Render the Picker Modal if triggered */}
       {renderPickerModal()}
+
+      {/* Global Phone Type & Status Bar Settings Modal */}
+      <PhoneSettingsModal 
+        isOpen={showPhoneSettingsModal} 
+        onClose={() => setShowPhoneSettingsModal(false)} 
+      />
 
     </div>
   );

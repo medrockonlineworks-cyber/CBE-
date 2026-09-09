@@ -18,8 +18,12 @@ import {
   Sun,
   Moon,
   Smartphone,
-  Clock
+  Clock,
+  Sliders,
+  ChevronRight
 } from 'lucide-react';
+import PhoneStatusBar from '../components/PhoneStatusBar';
+import PhoneSettingsModal from '../components/PhoneSettingsModal';
 import { SmsMessage, SmsAccount } from '../types/sms';
 import { 
   SmsService, 
@@ -61,6 +65,7 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
     const acc = initialAccountId || SmsService.getActiveAccountNumber();
     return SmsService.getSmsMessages(acc);
   });
+  const [showPhoneSettingsModal, setShowPhoneSettingsModal] = useState<boolean>(false);
 
   // Theme State (Persisted in localStorage, defaults to dark)
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -320,21 +325,12 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-[#121212] text-[#e3e3e3]' : 'bg-[#f4f5f7] text-[#1f2328]'} flex flex-col font-sans select-text antialiased transition-colors duration-150`}>
       
-      {/* 1. Android Native Simulated Status Bar (Matching screenshot) */}
-      <div className={`w-full ${isDarkMode ? 'bg-[#121212] text-neutral-400' : 'bg-[#f4f5f7] text-neutral-600'} px-4 pt-1.5 pb-1 flex items-center justify-between text-xs select-none`}>
-        <div className="flex items-center space-x-2">
-          <span className={`font-semibold ${isDarkMode ? 'text-white' : 'text-neutral-900'} tracking-tight`}>3:28</span>
-        </div>
-        <div className="flex items-center space-x-2 text-[11px]">
-          <span className="text-[10px] font-mono">2.21 KB/s</span>
-          <span className="font-bold text-[10px]">H+</span>
-          <span className="font-bold text-[10px]">3G</span>
-          <div className="flex items-center space-x-0.5">
-            <Battery className={`w-3.5 h-3.5 ${isDarkMode ? 'fill-white text-white' : 'fill-neutral-900 text-neutral-900'} rotate-90`} />
-            <span className={`text-[10px] ${isDarkMode ? 'text-white' : 'text-neutral-900'}`}>100</span>
-          </div>
-        </div>
-      </div>
+      {/* 1. Android Native Simulated Status Bar (Tappable to customize) */}
+      <PhoneStatusBar 
+        theme={isDarkMode ? 'dark' : 'light'} 
+        onClick={() => setShowPhoneSettingsModal(true)} 
+        showEditHint={true} 
+      />
 
       {/* 2. Google Messages CBE Header Bar (Matching screenshot) */}
       <header className={`w-full ${isDarkMode ? 'bg-[#121212] border-neutral-900/80 text-white' : 'bg-white border-neutral-200 text-neutral-900 shadow-sm'} border-b px-2 py-2 flex items-center justify-between relative z-40`}>
@@ -412,6 +408,29 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
                       : 'bg-neutral-100 text-neutral-700 border border-neutral-200'
                   }`}>
                     {isDarkMode ? 'Dark' : 'Light'}
+                  </span>
+                </button>
+
+                {/* 📱 Phone & Status Bar Settings Option inside 3-dot */}
+                <button
+                  onClick={() => {
+                    setShowMenu(false);
+                    setShowPhoneSettingsModal(true);
+                  }}
+                  className={`w-full px-4 py-2.5 text-left text-sm flex items-center justify-between transition-colors border-b ${
+                    isDarkMode 
+                      ? 'border-neutral-800/80 text-neutral-200 hover:bg-neutral-800/70' 
+                      : 'border-neutral-100 text-neutral-800 hover:bg-neutral-50'
+                  }`}
+                  title="Change Phone Type and Status Bar Style"
+                >
+                  <div className="flex items-center space-x-2.5">
+                    <Smartphone className="w-4 h-4 text-blue-400" />
+                    <span className="font-medium">Phone &amp; Status Bar</span>
+                  </div>
+                  <span className="text-xs text-blue-400 font-semibold flex items-center gap-1">
+                    <span>Customize</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
                   </span>
                 </button>
 
@@ -907,6 +926,12 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
           onClose={() => setShowReceiptModal(null)} 
         />
       )}
+
+      {/* 8. Global Phone Type & Status Bar Settings Modal */}
+      <PhoneSettingsModal 
+        isOpen={showPhoneSettingsModal} 
+        onClose={() => setShowPhoneSettingsModal(false)} 
+      />
 
     </div>
   );

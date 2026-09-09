@@ -36,6 +36,8 @@ import {
   ArrowUpRight
 } from 'lucide-react';
 import GboardKeyboard from './GboardKeyboard';
+import PhoneStatusBar from './PhoneStatusBar';
+import PhoneSettingsModal from './PhoneSettingsModal';
 import { PhoneCallService, CallLogItem, ContactItem, CallerAccount, AccountTransactionItem, formatUssdTxAmount, SENDER_PRESET_BALANCES } from '../services/phoneCallService';
 import { LocalDb } from '../lib/mockData';
 import { UserProfile, Transaction } from '../types';
@@ -102,6 +104,7 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [accountFilter, setAccountFilter] = useState<'all' | 'sender' | 'receiver'>('all');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isPhoneSettingsOpen, setIsPhoneSettingsOpen] = useState(false);
 
   // Active Calling Screen (outgoing and incoming)
   const [activeCall, setActiveCall] = useState<{
@@ -1190,49 +1193,12 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
       className="relative w-full h-full max-w-md mx-auto bg-black text-white flex flex-col overflow-hidden font-sans select-none"
       style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
     >
-      {/* 1. Android Status Bar (Matching Screenshot_20260906-121622.png & USSD Screenshots) */}
-      <div className="w-full px-4 pt-2.5 pb-1 flex items-center justify-between text-xs text-neutral-300 font-medium z-10 shrink-0">
-        <div className="flex items-center gap-2">
-          <span className="text-[13px] font-semibold text-white tracking-tight">
-            {ussdStep !== 'idle' ? '11:34' : '12:16'}
-          </span>
-          {/* Notification icons matching Screenshot 1 */}
-          {ussdStep === 'idle' && (
-            <div className="flex items-center gap-1.5 ml-1">
-              {/* Chrome icon */}
-              <div className="w-3.5 h-3.5 rounded-full border border-neutral-400/80 flex items-center justify-center p-[1.5px]">
-                <div className="w-full h-full rounded-full bg-neutral-300" />
-              </div>
-              {/* Telegram send paper airplane icon */}
-              <Send className="w-3 h-3 text-neutral-300 -rotate-12" />
-            </div>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2 text-[11px]">
-          {/* Bluetooth icon */}
-          <span className="text-neutral-400 font-serif">ᛒ</span>
-          {/* Vibrate / Silent phone icon */}
-          <VolumeX className="w-3.5 h-3.5 text-neutral-400 stroke-[1.8]" />
-          {/* Data rate indicator */}
-          <div className="flex flex-col text-[8.5px] font-mono leading-none tracking-tighter text-neutral-300 text-right">
-            <span>{ussdStep !== 'idle' ? '2.10' : '238'}</span>
-            <span>KB/S</span>
-          </div>
-          {/* Cellular Network 1 */}
-          <div className="flex items-center text-[9.5px] font-bold text-neutral-300 tracking-tighter">
-            {ussdStep !== 'idle' ? '4G' : 'H+'}
-          </div>
-          {/* Cellular Network 2 */}
-          <div className="flex items-center text-[9.5px] font-bold text-neutral-300 tracking-tighter">
-            3G
-          </div>
-          {/* Battery pill matching screenshot: rounded rectangle with percentage inside */}
-          <div className="w-6 h-3 rounded-[3px] border border-neutral-300 px-0.5 flex items-center justify-center text-[9px] font-bold text-neutral-200">
-            {ussdStep !== 'idle' ? '49' : '39'}
-          </div>
-        </div>
-      </div>
+      {/* 1. Phone Status Bar (Tappable to customize phone model & status bar) */}
+      <PhoneStatusBar 
+        theme="dark" 
+        onClick={() => setIsPhoneSettingsOpen(true)} 
+        showEditHint={true} 
+      />
 
       {/* 2. Top Header Row: Search & Settings Hexagon (Right-aligned matching Screenshot 1) */}
       <div className="w-full px-4 pt-1 pb-1 flex items-center justify-between shrink-0 z-10">
@@ -1256,6 +1222,16 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
             title="Search call logs"
           >
             <Search className="w-5 h-5 stroke-[1.8]" />
+          </button>
+
+          {/* Phone Model & Status Bar Settings */}
+          <button 
+            id="btn-phone-model-settings"
+            onClick={() => setIsPhoneSettingsOpen(true)}
+            className="p-1 text-neutral-300 hover:text-white transition active:scale-95"
+            title="Change Phone Model and Status Bar Style"
+          >
+            <Smartphone className="w-5 h-5 stroke-[1.8] text-blue-400" />
           </button>
 
           {/* Settings Hexagon Icon from screenshot - opens Caller Accounts Drawer */}
@@ -1739,30 +1715,11 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
       {ussdStep !== 'idle' && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-[1px] flex flex-col justify-between animate-in fade-in duration-150">
           
-          {/* Top Status Bar in USSD mode matching Screenshots */}
-          <div className="w-full px-4 pt-2.5 pb-1 flex items-center justify-between text-xs text-neutral-300 font-medium z-10 shrink-0">
-            <div className="flex items-center gap-2">
-              <span className="text-[13px] font-semibold text-white tracking-tight">11:34</span>
-            </div>
-
-            <div className="flex items-center gap-2 text-[11px]">
-              <span className="text-neutral-400 font-serif">ᛒ</span>
-              <VolumeX className="w-3.5 h-3.5 text-neutral-400 stroke-[1.8]" />
-              <div className="flex flex-col text-[8.5px] font-mono leading-none tracking-tighter text-neutral-300 text-right">
-                <span>2.10</span>
-                <span>KB/S</span>
-              </div>
-              <div className="flex items-center text-[9.5px] font-bold text-neutral-300 tracking-tighter">
-                4G
-              </div>
-              <div className="flex items-center text-[9.5px] font-bold text-neutral-300 tracking-tighter">
-                3G
-              </div>
-              <div className="w-6 h-3 rounded-[3px] border border-neutral-300 px-0.5 flex items-center justify-center text-[9px] font-bold text-neutral-200">
-                49
-              </div>
-            </div>
-          </div>
+          {/* Top Status Bar in USSD mode */}
+          <PhoneStatusBar 
+            theme="dark" 
+            onClick={() => setIsPhoneSettingsOpen(true)} 
+          />
 
           {/* Upper/Center Section: Floating USSD Card */}
           <div className="flex-1 flex flex-col items-center justify-center px-4 py-2">
@@ -1849,6 +1806,10 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
       {/* 9. Active Calling Full-Screen Overlay */}
       {activeCall && (
         <div className="fixed inset-0 z-50 bg-[#121316] text-white flex flex-col items-center justify-between p-6 animate-in fade-in duration-200">
+          {/* Top Phone Status Bar */}
+          <div className="w-full">
+            <PhoneStatusBar theme="dark" onClick={() => setIsPhoneSettingsOpen(true)} />
+          </div>
           {/* Top Call Info */}
           <div className="flex flex-col items-center pt-8 text-center">
             {/* Contact Avatar Circle */}
@@ -2338,6 +2299,12 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
           {ussdToast || toastMessage}
         </div>
       )}
+
+      {/* Global Phone Type & Status Bar Settings Modal */}
+      <PhoneSettingsModal 
+        isOpen={isPhoneSettingsOpen} 
+        onClose={() => setIsPhoneSettingsOpen(false)} 
+      />
 
     </div>
   );
