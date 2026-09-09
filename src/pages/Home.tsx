@@ -770,7 +770,7 @@ export const Home: React.FC<HomeProps> = ({
               {recentTransactions.length === 0 ? (
                 <div className="py-8 text-center text-xs text-gray-400">No recent transactions recorded.</div>
               ) : (
-                recentTransactions.map((tx) => (
+                recentTransactions.map((tx, index) => (
                   <div 
                     key={tx.id} 
                     onClick={() => {
@@ -786,7 +786,14 @@ export const Home: React.FC<HomeProps> = ({
                         {tx.senderId === currentUser.id ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownLeft className="w-4 h-4" />}
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-gray-900 truncate max-w-[140px]">{tx.recipientName || 'CBE Transfer'}</p>
+                        <div className="flex items-center gap-1.5">
+                          {index < 2 && (
+                            <span className="text-[8px] font-black uppercase px-1.5 py-0.2 rounded-full bg-purple-100 text-[#711A9F] border border-purple-200">
+                              Recent
+                            </span>
+                          )}
+                          <p className="text-xs font-bold text-gray-900 truncate max-w-[140px]">{tx.recipientName || 'CBE Transfer'}</p>
+                        </div>
                         <p className="text-[10px] text-gray-400">{new Date(tx.createdAt).toLocaleDateString()}</p>
                       </div>
                     </div>

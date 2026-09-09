@@ -578,7 +578,7 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
               {recentTransactions.length === 0 ? (
                 <p className="text-xs text-gray-400 text-center py-4">No recent transactions recorded.</p>
               ) : (
-                recentTransactions.slice(0, 5).map(tx => (
+                recentTransactions.slice(0, 5).map((tx, index) => (
                   <button
                     key={tx.id}
                     onClick={() => {
@@ -588,7 +588,14 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
                     className="w-full text-left p-2.5 bg-gray-50 hover:bg-purple-50/50 rounded-xl flex justify-between items-center transition border border-gray-100"
                   >
                     <div>
-                      <p className="text-xs font-bold text-gray-900">{tx.recipientName}</p>
+                      <div className="flex items-center gap-1.5">
+                        {index < 2 && (
+                          <span className="text-[8px] font-black uppercase px-1.5 py-0.2 rounded-full bg-purple-100 text-[#68137e] border border-purple-200">
+                            Recent
+                          </span>
+                        )}
+                        <p className="text-xs font-bold text-gray-900">{tx.recipientName}</p>
+                      </div>
                       <p className="text-[10px] text-gray-400 font-mono">{tx.id} • {new Date(tx.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                     </div>
                     <div className="text-right">

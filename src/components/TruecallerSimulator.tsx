@@ -88,6 +88,14 @@ function updateSmsAvailableBalance(messageText: string, balance: number): string
   if (!messageText) return messageText;
   const formattedBal = balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   
+  // Your current balance is ETB...
+  if (/Your current balance is ETB\s*[\d,]+(\.\d+)?/i.test(messageText)) {
+    return messageText.replace(/Your current balance is ETB\s*[\d,]+(\.\d+)?/i, `Your current balance is ETB${formattedBal}`);
+  }
+  // Your Current Balance is ETB ...
+  if (/Your Current Balance is ETB\s*[\d,]+(\.\d+)?/i.test(messageText)) {
+    return messageText.replace(/Your Current Balance is ETB\s*[\d,]+(\.\d+)?/i, `Your Current Balance is ETB ${formattedBal}`);
+  }
   // Available Balance is ETB ...
   if (/Available Balance\s+is\s+ETB\s*[\d,]+(\.\d+)?/i.test(messageText)) {
     return messageText.replace(/Available Balance\s+is\s+ETB\s*[\d,]+(\.\d+)?/i, `Available Balance is ETB ${formattedBal}`);
@@ -95,14 +103,6 @@ function updateSmsAvailableBalance(messageText: string, balance: number): string
   // Available Balance: ETB ...
   if (/Available Balance\s*:\s*ETB\s*[\d,]+(\.\d+)?/i.test(messageText)) {
     return messageText.replace(/Available Balance\s*:\s*ETB\s*[\d,]+(\.\d+)?/i, `Available Balance: ETB ${formattedBal}`);
-  }
-  // Your current balance is ETB ...
-  if (/Your current balance is ETB\s*[\d,]+(\.\d+)?/i.test(messageText)) {
-    return messageText.replace(/Your current balance is ETB\s*[\d,]+(\.\d+)?/i, `Your current balance is ETB ${formattedBal}`);
-  }
-  // Your Current Balance is ETB ...
-  if (/Your Current Balance is ETB\s*[\d,]+(\.\d+)?/i.test(messageText)) {
-    return messageText.replace(/Your Current Balance is ETB\s*[\d,]+(\.\d+)?/i, `Your Current Balance is ETB ${formattedBal}`);
   }
   return messageText;
 }
@@ -257,7 +257,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
   const [batteryPercent, setBatteryPercent] = useState<number>(68);
   const [selectedSimSlot, setSelectedSimSlot] = useState<number>(2);
   const [showSpamBadge, setShowSpamBadge] = useState<boolean>(true);
-  const [recentTxOnTop, setRecentTxOnTop] = useState<boolean>(false);
+  const [recentTxOnTop, setRecentTxOnTop] = useState<boolean>(true);
   const [enableSoundHaptics, setEnableSoundHaptics] = useState<boolean>(true);
 
   const [showAddAccountModal, setShowAddAccountModal] = useState<boolean>(false);
@@ -458,33 +458,36 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
     });
 
     // 2. Realistic seeded official CBE transactions customized strictly to the selected account
-    const curHolderName = activeAccount?.holderName || 'Leul Degsew Alemayehu';
-    const curFirstName = curHolderName.split(' ')[0] || 'Leul';
-    const curAccount = activeAccount?.accountNumber || '1000478156450';
+    const curHolderName = activeAccount?.holderName || 'Leykun Jemaneh Ylma';
+    const curFirstName = curHolderName.split(' ')[0] || 'Leykun';
+    const curAccount = activeAccount?.accountNumber || '1000419524747';
     const curMasked = activeAccount?.maskedAccount || maskTruecallerAccount(curAccount);
-    const curBalance = activeAccount ? activeAccount.balance : 8879100.00;
+    const curBalance = activeAccount ? activeAccount.balance : 298.54;
     const curBranchSuffix = curAccount.length >= 8 ? curAccount.slice(-8) : curAccount;
     const curCreditBalance = curBalance + 50.00;
 
     const seededCbeList = [
       {
-        id: `tx-cbe-receipt-${curAccount}`,
+        id: `tx-cbe-receive-kasahun-${curAccount}`,
         amount: 50.00,
         accountNumber: curAccount,
         maskedAccount: curMasked,
-        holderName: curFirstName,
+        holderName: curHolderName,
         role: 'receiver' as TruecallerRole,
-        bankName: 'Cbe Bank',
+        bankName: 'CBE',
         bankKey: 'cbe' as TruecallerBankKey,
-        timeString: '3:45 PM',
-        timestamp: '2026-09-04T15:45:10Z',
-        counterpartyName: 'Abebe Bikila',
-        balanceAfter: curBalance,
-        txId: 'FT26245M0JG4',
+        timeString: '6:51 PM',
+        dateLabel: 'Friday, 21 Aug',
+        timestamp: '2026-08-21T18:51:00Z',
+        counterpartyName: 'Kasahun Yematawork Lema',
+        counterpartyAccount: '1000482918925',
+        balanceAfter: 1805.47,
+        txId: 'v2-hfHCxGwmcij7q3ExbiWb',
         simSlot: 2,
         isSpam: true,
-        receiptUrl: `https://apps.cbe.com.et:100/BranchReceipt/FT26245M0JG4&${curBranchSuffix}`,
-        fullMessageText: `https://apps.cbe.com.et:100/BranchReceipt/FT26245M0JG4&${curBranchSuffix}`
+        receiptUrl: 'https://mreciept.cbe.com.et/v2-hfHCxGwmcij7q3ExbiWb',
+        feedbackUrl: 'https://forms.gle/kGNGQpG3mQCCk3iD6',
+        fullMessageText: `Dear ${curHolderName} You have received ETB 50.00 from account 1*********8925 (Kasahun Yematawork Lema) to your account ${curMasked}. Your current balance is ETB1,805.47. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxGwmcij7q3ExbiWb for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`
       },
       {
         id: `tx-cbe-promo-${curAccount}`,
@@ -493,11 +496,11 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
         maskedAccount: curMasked,
         holderName: curHolderName,
         role: 'receiver' as TruecallerRole,
-        bankName: 'Cbe Bank',
+        bankName: 'CBE',
         bankKey: 'cbe' as TruecallerBankKey,
         timeString: '8:41 AM',
-        dateLabel: 'Friday, 04 Sep',
-        timestamp: '2026-09-04T08:41:00Z',
+        dateLabel: 'Monday, 24 Aug',
+        timestamp: '2026-08-24T08:41:00Z',
         counterpartyName: 'Commercial Bank of Ethiopia',
         balanceAfter: curBalance,
         txId: 'CBE-PROMO-841',
@@ -512,7 +515,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
         maskedAccount: curMasked,
         holderName: curHolderName,
         role: 'sender' as TruecallerRole,
-        bankName: 'Cbe Bank',
+        bankName: 'CBE',
         bankKey: 'cbe' as TruecallerBankKey,
         timeString: '12:54 PM',
         timestamp: '2026-09-05T12:54:00Z',
@@ -521,9 +524,9 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
         txId: 'v2-hfHCxGKNY8V0W9qoyCPX',
         simSlot: 2,
         isSpam: true,
-        receiptUrl: 'https://mbreciept.cbe.com.et/v2-hfHCxGKNY8V0W9qoyCPX',
+        receiptUrl: 'https://mreciept.cbe.com.et/v2-hfHCxGKNY8V0W9qoyCPX',
         feedbackUrl: 'https://forms.gle/kGNGQpG3mQCCk3iD6',
-        fullMessageText: `Dear ${curHolderName} A debit transaction of ETB 20.0. has occurred on your account ${curMasked}. Service charge of ETB 0.00 and VAT(15%) of 0.0 and Disaster Recovery(5%) of 0.00 with total of ETB20.00 .Your current balance is ETB${curBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}. Thanks for Banking with CBE.\nhttps://mbreciept.cbe.com.et/v2-hfHCxGKNY8V0W9qoyCPX for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`
+        fullMessageText: `Dear ${curHolderName} A debit transaction of ETB 20.0. has occurred on your account ${curMasked}. Service charge of ETB 0.00 and VAT(15%) of 0.0 and Disaster Recovery(5%) of 0.00 with total of ETB20.00 .Your current balance is ETB${curBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxGKNY8V0W9qoyCPX for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`
       },
       {
         id: `tx-cbe-credit-${curAccount}`,
@@ -532,7 +535,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
         maskedAccount: curMasked,
         holderName: curFirstName,
         role: 'receiver' as TruecallerRole,
-        bankName: 'Cbe Bank',
+        bankName: 'CBE',
         bankKey: 'cbe' as TruecallerBankKey,
         timeString: '4:41 PM',
         dateLabel: 'Saturday, 05 Sep',
@@ -605,10 +608,26 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
 
       let fullMsg = a.fullSmsText;
       if (!fullMsg) {
+        const isCbe = a.bankKey === 'cbe' || (a.bankName && a.bankName.toLowerCase().includes('cbe')) || activeBankKey === 'cbe';
         if (a.role === 'receiver') {
-          fullMsg = `Dear ${a.holderName || curHolderName},\nYour Account ${a.fullAccount || curAccount} has been Credited with ETB ${a.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} on ${a.timeString || 'Now'}${a.counterpartyName ? ` by ${a.counterpartyName}` : ''}.\nAvailable Balance is ETB ${formattedCalcBal}.\nTxn Ref: ${a.txId || 'FT26248MK0913'}.\nThank you for banking with ${a.bankName || 'Cbe Bank'}.\nhttps://cbe.com.et/mbreceipt/${a.txId || 'FT26248MK0913'}`;
+          if (isCbe) {
+            const formattedAmt = a.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const senderAccMasked = a.counterpartyAccount ? maskTruecallerAccount(a.counterpartyAccount) : '1*********8925';
+            const senderName = a.counterpartyName || 'Kasahun Yematawork Lema';
+            const rCode = (a.txId || 'wmcij7q3ExbiWb').replace(/[^a-zA-Z0-9]/g, '').slice(-12);
+            fullMsg = `Dear ${a.holderName || curHolderName} You have received ETB ${formattedAmt} from account ${senderAccMasked} (${senderName}) to your account ${curMasked}. Your current balance is ETB${formattedCalcBal}. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxG${rCode} for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`;
+          } else {
+            fullMsg = `Dear ${a.holderName || curHolderName},\nYour Account ${a.fullAccount || curAccount} has been Credited with ETB ${a.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} on ${a.timeString || 'Now'}${a.counterpartyName ? ` by ${a.counterpartyName}` : ''}.\nAvailable Balance is ETB ${formattedCalcBal}.\nTxn Ref: ${a.txId || 'FT26248MK0913'}.\nThank you for banking with ${a.bankName || 'CBE'}.\nhttps://cbe.com.et/mbreceipt/${a.txId || 'FT26248MK0913'}`;
+          }
         } else {
-          fullMsg = `Dear ${a.holderName || curHolderName},\nA debit transaction of ETB ${a.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} has occurred on your Account ${a.fullAccount || curAccount} on ${a.timeString || 'Now'}${a.counterpartyName ? ` to ${a.counterpartyName}` : ''}.\nAvailable Balance: ETB ${formattedCalcBal}.\nTxn Ref: ${a.txId || 'FT269446FP77'}.\nThank you for banking with ${a.bankName || 'Cbe Bank'}.`;
+          if (isCbe) {
+            const amtStr = a.amount % 1 === 0 ? `${a.amount.toFixed(1)}.` : `${a.amount.toFixed(2)}.`;
+            const totStr = a.amount.toFixed(2);
+            const rCode = (a.txId || 'KNY8V0W9qoyCPX').replace(/[^a-zA-Z0-9]/g, '').slice(-12);
+            fullMsg = `Dear ${a.holderName || curHolderName} A debit transaction of ETB ${amtStr} has occurred on your account ${curMasked}. Service charge of ETB 0.00 and VAT(15%) of 0.0 and Disaster Recovery(5%) of 0.00 with total of ETB${totStr} .Your current balance is ETB${formattedCalcBal}. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxG${rCode} for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`;
+          } else {
+            fullMsg = `Dear ${a.holderName || curHolderName},\nA debit transaction of ETB ${a.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} has occurred on your Account ${a.fullAccount || curAccount} on ${a.timeString || 'Now'}${a.counterpartyName ? ` to ${a.counterpartyName}` : ''}.\nAvailable Balance: ETB ${formattedCalcBal}.\nTxn Ref: ${a.txId || 'FT269446FP77'}.\nThank you for banking with ${a.bankName || 'CBE'}.`;
+          }
         }
       } else {
         // Dynamically ensure the SMS message text reflects the mathematically accurate available balance
@@ -630,40 +649,59 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
         balanceAfter: calculatedBalanceAfter,
         txId: a.txId,
         simSlot: 2,
-        isSpam: false,
+        isSpam: true,
         receiptUrl: `https://apps.cbe.com.et:100/?id=${a.txId || 'FT26248MK0913'}`,
         fullMessageText: fullMsg
       };
     });
 
-    let allItems: any[] = [];
-    
-    if (calculatedAlertItems.length > 0) {
-      // Strictly show messages for the selected account
-      if (recentTxOnTop) {
-        allItems = [...calculatedAlertItems].reverse();
-      } else {
-        allItems = [...calculatedAlertItems];
-      }
-    } else {
-      // No custom alerts yet: show authentic seeded CBE list tailored to this account
-      if (recentTxOnTop) {
-        allItems = [...seededCbeList].reverse();
-      } else {
-        allItems = [...seededCbeList];
+    // Combine calculatedAlertItems and seededCbeList (avoiding duplicate transaction IDs)
+    const combinedMap = new Map<string, any>();
+    // First, add all alerts for this account (reversed: newest alerts first)
+    for (const item of [...calculatedAlertItems].reverse()) {
+      const key = item.txId || item.id;
+      if (!combinedMap.has(key)) {
+        combinedMap.set(key, item);
       }
     }
+    // Also include seeded authentic CBE transactions (reversed: newest seeds first)
+    for (const seed of [...seededCbeList].reverse()) {
+      const key = seed.txId || seed.id;
+      if (!combinedMap.has(key)) {
+        combinedMap.set(key, seed);
+      }
+    }
+
+    let allItems = Array.from(combinedMap.values());
+
+    // Sort items:
+    // If recentTxOnTop is enabled, newest items are at the top (indices 0 and 1)
+    // Otherwise, authentic chronological messaging thread order (oldest to newest, matching screenshots)
+    allItems.sort((a, b) => {
+      const aIsNow = a.timeString === 'Now' || a.timeString?.toLowerCase().includes('now');
+      const bIsNow = b.timeString === 'Now' || b.timeString?.toLowerCase().includes('now');
+      const timeA = new Date(a.timestamp).getTime() || 0;
+      const timeB = new Date(b.timestamp).getTime() || 0;
+
+      if (recentTxOnTop) {
+        if (aIsNow && !bIsNow) return -1;
+        if (!aIsNow && bIsNow) return 1;
+        return timeB - timeA;
+      } else {
+        // Chronological thread (matches screenshots: 21 Aug -> 24 Aug -> 05 Sep)
+        return timeA - timeB;
+      }
+    });
 
     // Filter if user clicked "View only Inbox"
     if (inboxFilterMode === 'inbox') {
       allItems = allItems.filter(item => item.amount > 0);
     }
 
-    // The first item (top recent transaction) gets the prominent "Now" badge only when recentTxOnTop is true
     return allItems.map((item, index) => ({
       ...item,
       simSlot: selectedSimSlot || item.simSlot || 2,
-      isNow: recentTxOnTop ? (index === 0 || item.timeString === 'Now' || item.timeString?.toLowerCase().includes('now')) : false
+      isNow: recentTxOnTop ? (index === 0 || index === 1 || item.timeString === 'Now') : (item.timeString === 'Now')
     }));
   }, [activeBankKey, alerts, activeAccount, inboxFilterMode, recentTxOnTop, selectedSimSlot]);
 
@@ -2112,8 +2150,8 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
 
             {/* Bank Title & Mobile Banking Label - Clean header without account name or number */}
             <div>
-              <h1 className="text-[17px] font-semibold tracking-normal leading-tight text-white">
-                Cbe Bank
+              <h1 className="text-[17px] font-bold tracking-normal leading-tight text-white">
+                CBE
               </h1>
               <p className="text-[12px] text-[#8e9aa8] leading-tight">
                 (Mobile Banking)
@@ -2257,32 +2295,10 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
           <ChevronDown className="w-5 h-5 text-[#38bdf8]" />
         </button>
 
-        {/* Floating Action Controls & Bottom Bar matching Screenshot_20260908-115438.png */}
-        <div className="fixed bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-black via-black/95 to-transparent pt-4 flex flex-col items-center pointer-events-none">
-          {/* Centered Filter Pill matching screenshot: "Showing all messages • View only Inbox" */}
-          <div className="mb-2.5 pointer-events-auto">
-            <button
-              type="button"
-              onClick={() => {
-                const nextMode = inboxFilterMode === 'all' ? 'inbox' : 'all';
-                setInboxFilterMode(nextMode);
-                showToast(nextMode === 'inbox' ? 'Filtering: View only Inbox' : 'Showing all messages');
-              }}
-              className="px-4 py-1.5 rounded-full bg-[#181d24]/95 border border-neutral-700/80 text-[12px] flex items-center space-x-2 shadow-xl cursor-pointer hover:border-neutral-500 active:scale-95 transition"
-            >
-              <Inbox className="w-3.5 h-3.5 text-neutral-400" />
-              <span className="text-neutral-300">
-                {inboxFilterMode === 'all' ? 'Showing all messages' : 'Viewing Inbox'}
-              </span>
-              <span className="text-neutral-500">•</span>
-              <span className="text-[#38bdf8] font-semibold hover:underline">
-                {inboxFilterMode === 'all' ? 'View only Inbox' : 'Show all'}
-              </span>
-            </button>
-          </div>
-
-          {/* Action Pills: Report & View Profile matching screenshot */}
-          <div className="flex items-center justify-center space-x-3 mb-2 pointer-events-auto">
+        {/* Floating Action Controls & Bottom Bar matching screenshots */}
+        <div className="fixed bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-black via-black/95 to-transparent pt-3 flex flex-col items-center pointer-events-none">
+          {/* Action Pills: Report & View Profile matching screenshots */}
+          <div className="flex items-center justify-center space-x-3 mb-2.5 pointer-events-auto">
             <button
               type="button"
               onClick={() => showToast('Reported to spam database')}

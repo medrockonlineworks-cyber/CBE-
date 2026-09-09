@@ -51,24 +51,33 @@ export default function History({ currentUser, onSelectTransaction }: HistoryPro
   };
 
   // Apply filters
-  const filteredTransactions = transactions.filter((t) => {
-    const isCredit = isCreditTx(t);
-    const participantName = isCredit ? t.senderName || 'Cash Deposit' : t.recipientName;
-    
-    if (creditDebitFilter === 'credit' && !isCredit) return false;
-    if (creditDebitFilter === 'debit' && isCredit) return false;
+  const filteredTransactions = transactions
+    .filter((t) => {
+      const isCredit = isCreditTx(t);
+      const participantName = isCredit ? t.senderName || 'Cash Deposit' : t.recipientName;
+      
+      if (creditDebitFilter === 'credit' && !isCredit) return false;
+      if (creditDebitFilter === 'debit' && isCredit) return false;
 
-    const matchesSearch = 
-      participantName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      t.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      t.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      t.recipientAccount.includes(searchTerm);
+      const matchesSearch = 
+        participantName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        t.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        t.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        t.recipientAccount.includes(searchTerm);
 
-    const matchesType = typeFilter === 'all' || t.type === typeFilter;
-    const matchesStatus = statusFilter === 'all' || t.status === statusFilter;
+      const matchesType = typeFilter === 'all' || t.type === typeFilter;
+      const matchesStatus = statusFilter === 'all' || t.status === statusFilter;
 
-    return matchesSearch && matchesType && matchesStatus;
-  });
+      return matchesSearch && matchesType && matchesStatus;
+    })
+    .sort((a, b) => {
+      const timeA = new Date(a.createdAt).getTime();
+      const timeB = new Date(b.createdAt).getTime();
+      if (isNaN(timeA) || isNaN(timeB)) {
+        return (b.createdAt || '').localeCompare(a.createdAt || '');
+      }
+      return timeB - timeA;
+    });
 
   const totalCreditCount = transactions.filter(t => isCreditTx(t)).length;
   const totalDebitCount = transactions.filter(t => !isCreditTx(t)).length;
@@ -209,8 +218,9 @@ export default function History({ currentUser, onSelectTransaction }: HistoryPro
               <p className="text-xs text-gray-400">Try modifying your filter parameters or search terms.</p>
             </div>
           ) : (
-            filteredTransactions.map((tx) => {
+            filteredTransactions.map((tx, index) => {
               const isCredit = isCreditTx(tx);
+              const isRecentTop = index < 2;
               return (
                 <button
                   id={`btn-history-tx-${tx.id}`}
@@ -225,7 +235,12 @@ export default function History({ currentUser, onSelectTransaction }: HistoryPro
                       {isCredit ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
                     </div>
                     <div>
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {isRecentTop && (
+                          <span className="text-[7.5px] font-black uppercase px-1.5 py-0.5 rounded bg-purple-100 text-[#68137e] border border-purple-200">
+                            Recent
+                          </span>
+                        )}
                         <span className={`text-[7.5px] font-extrabold uppercase px-1.5 py-0.5 rounded ${
                           isCredit ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
                         }`}>

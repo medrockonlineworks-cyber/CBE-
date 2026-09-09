@@ -17,7 +17,8 @@ import {
   X,
   Sun,
   Moon,
-  Smartphone
+  Smartphone,
+  Clock
 } from 'lucide-react';
 import { SmsMessage, SmsAccount } from '../types/sms';
 import { 
@@ -90,6 +91,7 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
   const [customAccInput, setCustomAccInput] = useState('');
   const [customNameInput, setCustomNameInput] = useState('');
   const [showScrollBottom, setShowScrollBottom] = useState(false);
+  const [recentFirst, setRecentFirst] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -438,6 +440,30 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
                   </span>
                 </button>
 
+                {/* Toggle Recent Messages on Top */}
+                <button
+                  onClick={() => {
+                    setRecentFirst(!recentFirst);
+                    setShowMenu(false);
+                  }}
+                  className={`w-full px-4 py-2.5 text-left text-xs flex items-center justify-between transition-colors border-b ${
+                    isDarkMode 
+                      ? 'border-neutral-800/80 text-neutral-200 hover:bg-neutral-800/70' 
+                      : 'border-neutral-100 text-neutral-800 hover:bg-neutral-50'
+                  }`}
+                  title="Toggle Recent Transactions on Top"
+                >
+                  <div className="flex items-center space-x-2.5">
+                    <Clock className="w-4 h-4 text-purple-400" />
+                    <span className="font-medium">Recent Messages On Top</span>
+                  </div>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                    recentFirst ? 'bg-purple-600 text-white' : (isDarkMode ? 'bg-neutral-800 text-neutral-400' : 'bg-neutral-200 text-neutral-600')
+                  }`}>
+                    {recentFirst ? 'ON' : 'OFF'}
+                  </span>
+                </button>
+
                 {/* Menu Header / Section Label */}
                 <div className={`px-4 py-2 border-b ${isDarkMode ? 'border-neutral-800' : 'border-neutral-100'} flex items-center justify-between`}>
                   <div className={`flex items-center space-x-2 text-xs font-semibold ${isDarkMode ? 'text-neutral-300' : 'text-neutral-600'} uppercase tracking-wider`}>
@@ -593,7 +619,8 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
         ) : (
           <>
             {/* Message bubbles sequence */}
-            {messages.map((msg, index) => {
+            {(recentFirst ? [...messages].reverse() : messages).map((msg, index) => {
+              const isRecentTwo = recentFirst && index < 2;
               const isUnreadBoundary = unreadIndex !== -1 && index === unreadIndex;
               const prevMsg = index > 0 ? messages[index - 1] : null;
               const showDateHeader = !prevMsg || (() => {
@@ -632,6 +659,14 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
 
                   {/* Message Bubble Container (Exact Google Messages bubble style) */}
                   <div className="flex flex-col items-start w-full mb-3">
+                    {isRecentTwo && (
+                      <div className="flex items-center space-x-1.5 mb-1.5 pl-1">
+                        <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-purple-600 text-white shadow-sm">
+                          <span className="w-1.5 h-1.5 rounded-full bg-purple-200 animate-pulse" />
+                          <span>Recent</span>
+                        </span>
+                      </div>
+                    )}
                     <div 
                       className={`max-w-[92%] ${
                         isDarkMode 

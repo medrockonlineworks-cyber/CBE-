@@ -636,28 +636,37 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
     return false;
   };
 
-  const filteredRecords = transactionsList.filter((t) => {
-    const isCredit = isCreditTx(t);
+  const filteredRecords = transactionsList
+    .filter((t) => {
+      const isCredit = isCreditTx(t);
 
-    if (filterType === 'credit' && !isCredit) return false;
-    if (filterType === 'debit' && isCredit) return false;
+      if (filterType === 'credit' && !isCredit) return false;
+      if (filterType === 'debit' && isCredit) return false;
 
-    if (statusFilter !== 'all' && t.status !== statusFilter) return false;
+      if (statusFilter !== 'all' && t.status !== statusFilter) return false;
 
-    if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
-      const matchesRecipient = (t.recipientName || '').toLowerCase().includes(term);
-      const matchesSender = (t.senderName || '').toLowerCase().includes(term);
-      const matchesAccount = (t.recipientAccount || '').includes(term) || (t.senderAccount || '').includes(term);
-      const matchesRef = (t.reference || '').toLowerCase().includes(term) || (t.id || '').toLowerCase().includes(term);
-      const matchesDesc = (t.description || '').toLowerCase().includes(term);
-      if (!matchesRecipient && !matchesSender && !matchesAccount && !matchesRef && !matchesDesc) {
-        return false;
+      if (searchTerm.trim()) {
+        const term = searchTerm.toLowerCase();
+        const matchesRecipient = (t.recipientName || '').toLowerCase().includes(term);
+        const matchesSender = (t.senderName || '').toLowerCase().includes(term);
+        const matchesAccount = (t.recipientAccount || '').includes(term) || (t.senderAccount || '').includes(term);
+        const matchesRef = (t.reference || '').toLowerCase().includes(term) || (t.id || '').toLowerCase().includes(term);
+        const matchesDesc = (t.description || '').toLowerCase().includes(term);
+        if (!matchesRecipient && !matchesSender && !matchesAccount && !matchesRef && !matchesDesc) {
+          return false;
+        }
       }
-    }
 
-    return true;
-  });
+      return true;
+    })
+    .sort((a, b) => {
+      const timeA = new Date(a.createdAt).getTime();
+      const timeB = new Date(b.createdAt).getTime();
+      if (isNaN(timeA) || isNaN(timeB)) {
+        return (b.createdAt || '').localeCompare(a.createdAt || '');
+      }
+      return timeB - timeA;
+    });
 
   const totalCreditCount = transactionsList.filter(t => isCreditTx(t)).length;
   const totalDebitCount = transactionsList.filter(t => !isCreditTx(t)).length;
@@ -911,8 +920,9 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
                   </div>
 
                   {filteredRecords.length > 0 ? (
-                    filteredRecords.map((tx) => {
+                    filteredRecords.map((tx, index) => {
                       const isCredit = isCreditTx(tx);
+                      const isRecentTop = index < 2;
                       return (
                         <div
                           key={tx.id}
@@ -938,6 +948,12 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
 
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-1.5 flex-wrap">
+                                {isRecentTop && (
+                                  <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-purple-100 text-[#68137e] border border-purple-200 flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-[#68137e] animate-pulse" />
+                                    Recent
+                                  </span>
+                                )}
                                 <span className={`text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-md ${
                                   isCredit 
                                     ? 'bg-emerald-100/70 text-emerald-800' 
