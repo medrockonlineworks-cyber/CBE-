@@ -30,6 +30,7 @@ export interface TruecallerBankAccount {
   backgroundApp?: TruecallerBackgroundApp; // 'tiktok' | 'youtube' | 'telegram' | 'instagram' | 'whatsapp' | 'lockscreen'
   phoneType?: TruecallerPhoneType; // 'tecno' | 'iphone' | 'samsung' | 'pixel'
   lastTransactionAt?: string;
+  isNow?: boolean;
 }
 
 export type TruecallerRole = 'receiver' | 'sender'; // receiver = credited, sender = debited

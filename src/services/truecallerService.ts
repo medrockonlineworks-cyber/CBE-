@@ -477,17 +477,20 @@ export const TruecallerService = {
       : Math.max(0, prevBalance - amount);
 
     // Update and persist the account balance
+    let allAccounts = accounts.map(a => ({ ...a, isNow: false }));
     if (targetIdx !== -1) {
-      accounts[targetIdx].balance = newBalance;
-      accounts[targetIdx].lastTransactionAt = new Date().toISOString();
-      this.saveAccounts(accounts);
+      allAccounts[targetIdx].balance = newBalance;
+      allAccounts[targetIdx].lastTransactionAt = new Date().toISOString();
+      allAccounts[targetIdx].isNow = true;
+      this.saveAccounts(allAccounts);
     } else {
       const newAcc: TruecallerBankAccount = {
         ...account,
         balance: newBalance,
-        lastTransactionAt: new Date().toISOString()
+        lastTransactionAt: new Date().toISOString(),
+        isNow: true
       };
-      this.saveAccounts([newAcc, ...accounts]);
+      this.saveAccounts([newAcc, ...allAccounts]);
     }
 
     const actionWord = role === 'receiver' ? 'credited with' : 'debited with';
@@ -610,6 +613,10 @@ export const TruecallerService = {
       updatedAccounts = [recipientAcc, ...updatedAccounts];
     }
 
+    updatedAccounts = updatedAccounts.map(a => ({
+      ...a,
+      isNow: a.id === senderAcc.id
+    }));
     this.saveAccounts(updatedAccounts);
     this.setActiveAccountId(senderAcc.id);
 
@@ -753,6 +760,10 @@ export const TruecallerService = {
       updatedAccounts = [recipientAcc, ...updatedAccounts.filter(a => a.id !== recipientAcc!.id)];
     }
 
+    updatedAccounts = updatedAccounts.map(a => ({
+      ...a,
+      isNow: a.id === recipientAcc!.id
+    }));
     this.saveAccounts(updatedAccounts);
 
     const formattedAmount = amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

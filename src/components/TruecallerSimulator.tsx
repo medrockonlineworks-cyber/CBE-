@@ -310,16 +310,75 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
     return matching.length > 0 ? matching : accounts;
   }, [accounts, activeBankKey]);
 
-  // Search filtered accounts list
+  // Determine which account has the current / newest message:
+  // USER RULE: "In the Truecaller sms the now badge and the the current message topfirst rule only applies in side the account list not the message ok"
+  const currentMessageAccountId = useMemo(() => {
+    // 1. Check if an account explicitly has isNow: true
+    const explicitNowAcc = accounts.find(a => a.isNow && a.bankKey === activeBankKey);
+    if (explicitNowAcc) return explicitNowAcc.id;
+
+    // 2. Check newest alert for active bank
+    const bankAlerts = alerts.filter(a => a.bankKey === activeBankKey);
+    const candidateAlerts = bankAlerts.length > 0 ? bankAlerts : alerts;
+    if (candidateAlerts.length > 0) {
+      const sortedAlerts = [...candidateAlerts].sort((a, b) => {
+        const aIsNow = a.timeString === 'Now' || a.timeString?.toLowerCase().includes('now');
+        const bIsNow = b.timeString === 'Now' || b.timeString?.toLowerCase().includes('now');
+        if (aIsNow && !bIsNow) return -1;
+        if (!aIsNow && bIsNow) return 1;
+        const tA = new Date(a.timestamp).getTime() || 0;
+        const tB = new Date(b.timestamp).getTime() || 0;
+        return tB - tA;
+      });
+      const topAlert = sortedAlerts[0];
+      const matched = accounts.find(acc => 
+        acc.id === topAlert.accountId ||
+        acc.accountNumber === topAlert.fullAccount ||
+        acc.accountNumber === topAlert.maskedAccount
+      );
+      if (matched) return matched.id;
+      if (topAlert.accountId) return topAlert.accountId;
+    }
+
+    // 3. Check most recent lastTransactionAt timestamp
+    const accountsWithTx = accounts.filter(a => a.bankKey === activeBankKey && a.lastTransactionAt);
+    if (accountsWithTx.length > 0) {
+      const sorted = [...accountsWithTx].sort((a, b) => {
+        const tA = new Date(a.lastTransactionAt!).getTime() || 0;
+        const tB = new Date(b.lastTransactionAt!).getTime() || 0;
+        return tB - tA;
+      });
+      return sorted[0].id;
+    }
+
+    return activeAccountId || accounts.find(a => a.bankKey === activeBankKey)?.id || accounts[0]?.id || null;
+  }, [alerts, accounts, activeBankKey, activeAccountId]);
+
+  // Search filtered accounts list with current message top-first rule strictly inside the account list:
   const filteredAccounts = useMemo(() => {
-    if (!accountSearchQuery.trim()) return bankSpecificAccounts;
-    const q = accountSearchQuery.toLowerCase().trim();
-    return bankSpecificAccounts.filter(a => 
-      a.holderName.toLowerCase().includes(q) ||
-      a.accountNumber.includes(q) ||
-      (a.maskedAccount && a.maskedAccount.includes(q))
-    );
-  }, [bankSpecificAccounts, accountSearchQuery]);
+    let list = bankSpecificAccounts;
+    if (accountSearchQuery.trim()) {
+      const q = accountSearchQuery.toLowerCase().trim();
+      list = list.filter(a => 
+        a.holderName.toLowerCase().includes(q) ||
+        a.accountNumber.includes(q) ||
+        (a.maskedAccount && a.maskedAccount.includes(q))
+      );
+    }
+
+    // The current message top-first rule applies strictly inside the account list!
+    return [...list].sort((a, b) => {
+      if (recentTxOnTop && currentMessageAccountId) {
+        const aIsCurrent = a.id === currentMessageAccountId;
+        const bIsCurrent = b.id === currentMessageAccountId;
+        if (aIsCurrent && !bIsCurrent) return -1;
+        if (!aIsCurrent && bIsCurrent) return 1;
+      }
+      const timeA = a.lastTransactionAt ? new Date(a.lastTransactionAt).getTime() : 0;
+      const timeB = b.lastTransactionAt ? new Date(b.lastTransactionAt).getTime() : 0;
+      return timeB - timeA;
+    });
+  }, [bankSpecificAccounts, accountSearchQuery, currentMessageAccountId, recentTxOnTop]);
 
   // Modal: Choose Phone Screen & Phone Type
   const [showPickerModal, setShowPickerModal] = useState<boolean>(false);
@@ -679,22 +738,14 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
     let allItems = Array.from(combinedMap.values());
 
     // Sort items:
-    // If recentTxOnTop is enabled, newest items are at the top (indices 0 and 1)
-    // Otherwise, authentic chronological messaging thread order (oldest to newest, matching screenshots)
+    // IMPORTANT USER DIRECTIVE:
+    // "In the Truecaller sms the now badge and the the current message topfirst rule only applies in side the account list not the message ok"
+    // Messages in the SMS thread are ALWAYS ordered chronologically (oldest at top -> newest at bottom).
+    // The top-first rule and the "Now" badge do NOT apply to messages.
     allItems.sort((a, b) => {
-      const aIsNow = a.timeString === 'Now' || a.timeString?.toLowerCase().includes('now');
-      const bIsNow = b.timeString === 'Now' || b.timeString?.toLowerCase().includes('now');
       const timeA = new Date(a.timestamp).getTime() || 0;
       const timeB = new Date(b.timestamp).getTime() || 0;
-
-      if (recentTxOnTop) {
-        if (aIsNow && !bIsNow) return -1;
-        if (!aIsNow && bIsNow) return 1;
-        return timeB - timeA;
-      } else {
-        // Chronological thread (matches screenshots: 21 Aug -> 24 Aug -> 05 Sep)
-        return timeA - timeB;
-      }
+      return timeA - timeB;
     });
 
     // Filter if user clicked "View only Inbox"
@@ -702,12 +753,12 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
       allItems = allItems.filter(item => item.amount > 0);
     }
 
-    return allItems.map((item, index) => ({
+    return allItems.map((item) => ({
       ...item,
       simSlot: selectedSimSlot || item.simSlot || 2,
-      isNow: recentTxOnTop ? (index === 0 || index === 1 || item.timeString === 'Now') : (item.timeString === 'Now')
+      isNow: false
     }));
-  }, [activeBankKey, alerts, activeAccount, inboxFilterMode, recentTxOnTop, selectedSimSlot]);
+  }, [activeBankKey, alerts, activeAccount, inboxFilterMode, selectedSimSlot]);
 
   // Click on a thread in Google Messages Inbox
   const handleSelectThread = (thread: GoogleMessagesThreadItem) => {
@@ -2151,17 +2202,6 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                   )}
 
                   <div className="w-full max-w-[430px] mx-auto">
-                    {/* Top Transaction "Now" Badge (only in recentTxOnTop mode) */}
-                    {tx.isNow && (
-                      <div className="flex items-center space-x-1.5 mb-1.5 pl-1">
-                        <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#0066FF] text-white shadow-sm border border-blue-400/40">
-                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-200 animate-pulse mr-0.5" />
-                          <span>Now</span>
-                        </span>
-                        <span className="text-[11px] text-cyan-400 font-medium">Recent Transaction</span>
-                      </div>
-                    )}
-
                     {/* Charcoal SMS Message Bubble matching screenshot */}
                     <div 
                       onClick={() => setBubbleActionTx(tx)}
@@ -2429,6 +2469,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                   <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
                     {filteredAccounts.map(acc => {
                       const isSelected = activeAccount?.id === acc.id || activeAccountId === acc.id;
+                      const isNowAccount = acc.id === currentMessageAccountId;
                       return (
                         <div 
                           key={acc.id}
@@ -2442,14 +2483,23 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                           className={`p-3 rounded-2xl border transition cursor-pointer flex items-center justify-between group ${
                             isSelected
                               ? 'bg-[#121927] border-[#0066FF] ring-1 ring-[#0066FF]/60 shadow-lg'
+                              : isNowAccount
+                              ? 'bg-[#0f172a]/95 border-blue-500/50 hover:bg-neutral-800/80 ring-1 ring-blue-500/30'
                               : 'bg-neutral-900/90 border-neutral-800 hover:border-blue-500/40 hover:bg-neutral-800/80'
                           }`}
                         >
                           <div className="space-y-0.5">
                             <div className="flex items-center space-x-2">
-                              <span className={`text-xs font-bold ${isSelected ? 'text-white' : 'text-neutral-200 group-hover:text-white'}`}>
+                              <span className={`text-xs font-bold ${isSelected || isNowAccount ? 'text-white' : 'text-neutral-200 group-hover:text-white'}`}>
                                 {acc.holderName}
                               </span>
+                              {/* "Now" badge strictly inside the account list matching user rule */}
+                              {isNowAccount && (
+                                <span className="text-[9.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#0066FF] text-white flex items-center space-x-1 shadow-sm border border-blue-400/40">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-200 animate-pulse mr-0.5" />
+                                  <span>Now</span>
+                                </span>
+                              )}
                               {isSelected ? (
                                 <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-[#0066FF] text-white flex items-center space-x-1 shadow-sm">
                                   <Check className="w-2.5 h-2.5 stroke-[3]" />
@@ -2605,17 +2655,17 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                       </div>
                     </div>
 
-                    {/* Recent Tx on Top Toggle */}
+                    {/* Account List: Current Message On Top Toggle */}
                     <div className="flex items-center justify-between pt-2 border-t border-neutral-800">
                       <div>
-                        <div className="font-semibold text-white">Recent Transactions On Top</div>
-                        <div className="text-[10.5px] text-neutral-400">Highlight newest transaction with "Now" badge</div>
+                        <div className="font-semibold text-white">Account List: Current Message On Top</div>
+                        <div className="text-[10.5px] text-neutral-400">Puts current message account at top with "Now" badge in accounts list</div>
                       </div>
                       <button
                         type="button"
                         onClick={() => {
                           setRecentTxOnTop(!recentTxOnTop);
-                          showToast(!recentTxOnTop ? 'Recent transactions on top with Now badge enabled' : 'Now badge sorting disabled');
+                          showToast(!recentTxOnTop ? 'Current message account on top with Now badge enabled' : 'Top-first account sorting disabled');
                         }}
                         className={`w-11 h-6 rounded-full transition-colors p-1 cursor-pointer flex items-center ${
                           recentTxOnTop ? 'bg-[#0066FF] justify-end' : 'bg-neutral-700 justify-start'
@@ -2674,7 +2724,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                       <span>User X → User Y Direct Transfer</span>
                     </div>
                     <p className="text-[11px] text-purple-200/80 leading-relaxed">
-                      Simulate sending <strong>ETB 4,500.00</strong> from <strong>User X</strong> (1000419529165) to <strong>User Y</strong> (1000419520913). Both accounts update their balances and transactions appear at top with <strong>Now</strong> badge!
+                      Simulate sending <strong>ETB 4,500.00</strong> from <strong>User X</strong> (1000419529165) to <strong>User Y</strong> (1000419520913). Both accounts update their balances and the receiver account appears at top of Accounts list with <strong>Now</strong> badge!
                     </p>
                     <button
                       type="button"
@@ -2690,7 +2740,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                         setAccounts(TruecallerService.getAccounts());
                         setAlerts(TruecallerService.getAlerts());
                         setShowThreeDotMenu(false);
-                        showToast('Transfer of ETB 4,500 created! Top recent transactions updated with Now badge.');
+                        showToast('Transfer of ETB 4,500 created! Receiver account on top with Now badge.');
                       }}
                       className="w-full py-2.5 px-3 rounded-xl bg-purple-700 hover:bg-purple-600 active:scale-95 text-white font-bold text-xs shadow-md transition cursor-pointer flex items-center justify-center space-x-2"
                     >
@@ -2719,7 +2769,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                           setAccounts(TruecallerService.getAccounts());
                           setAlerts(TruecallerService.getAlerts());
                           setShowThreeDotMenu(false);
-                          showToast('Simulated ETB 50.00 credit from Dejene Buta with Now badge!');
+                          showToast('Simulated ETB 50.00 credit! Leykun account on top with Now badge.');
                         }}
                         className="p-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-emerald-400 font-bold text-[11px] text-center transition"
                       >
@@ -2740,7 +2790,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                           setAccounts(TruecallerService.getAccounts());
                           setAlerts(TruecallerService.getAlerts());
                           setShowThreeDotMenu(false);
-                          showToast('Simulated ETB 20.00 debit payment with Now badge!');
+                          showToast('Simulated ETB 20.00 debit! Leykun account on top with Now badge.');
                         }}
                         className="p-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-rose-400 font-bold text-[11px] text-center transition"
                       >
@@ -3126,7 +3176,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                 {simMode === 'transfer' ? (
                   <>
                     <div className="p-2.5 rounded-xl bg-purple-950/40 border border-purple-800/40 text-[11px] text-purple-200 leading-relaxed">
-                      💡 <strong>Bidirectional Sync:</strong> Automatically creates <strong>both Sender (User X)</strong> and <strong>Receiver (User Y)</strong> accounts inside Truecaller SMS. Both the debit alert (User X sends 4500) and credit alert (User Y receives 4500) will show in the list with the <strong>Now</strong> badge.
+                      💡 <strong>Bidirectional Sync:</strong> Automatically creates <strong>both Sender (User X)</strong> and <strong>Receiver (User Y)</strong> accounts inside Truecaller SMS. Both the debit alert and credit alert will sync, and the account with the current message appears at the top of the Accounts list with the <strong>Now</strong> badge.
                     </div>
 
                     <div>
