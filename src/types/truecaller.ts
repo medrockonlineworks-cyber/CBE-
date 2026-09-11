@@ -58,3 +58,13 @@ export interface TruecallerAlert {
   phoneType?: TruecallerPhoneType;
   forAllUsers?: boolean;
 }
+
+export type PopdownFontFamily = 'system' | 'inter' | 'mono' | 'space' | 'nunito' | 'serif' | 'oswald';
+export type PopdownFontSize = 'sm' | 'md' | 'lg' | 'xl';
+
+export interface PopdownTypographyConfig {
+  fontFamily: PopdownFontFamily;
+  fontSize: PopdownFontSize;
+  customScale: number; // 80 to 150
+}
+

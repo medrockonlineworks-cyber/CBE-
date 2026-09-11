@@ -58,7 +58,8 @@ import {
   Sliders,
   Inbox,
   Filter,
-  Clock
+  Clock,
+  Type
 } from 'lucide-react';
 import { CbeWebReceiptModal } from './CbeWebReceiptModal';
 import { CbeHolidayCardModal } from './CbeHolidayCardModal';
@@ -68,7 +69,9 @@ import {
   TruecallerRole, 
   TruecallerBankKey,
   TruecallerBackgroundApp,
-  TruecallerPhoneType
+  TruecallerPhoneType,
+  PopdownFontFamily,
+  PopdownFontSize
 } from '../types/truecaller';
 import PhoneStatusBar from './PhoneStatusBar';
 import PhoneSettingsModal from './PhoneSettingsModal';
@@ -86,6 +89,23 @@ import { Transaction } from '../types';
 interface TruecallerSimulatorProps {
   onBack: () => void;
 }
+
+export const POPDOWN_FONTS: { id: PopdownFontFamily; name: string; style: string; badge: string; desc: string }[] = [
+  { id: 'system', name: 'System UI', style: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif', badge: 'Default', desc: 'Standard mobile OS font' },
+  { id: 'inter', name: 'Inter Clean', style: '"Inter", sans-serif', badge: 'Modern', desc: 'High-legibility sans-serif' },
+  { id: 'mono', name: 'JetBrains Mono', style: '"JetBrains Mono", monospace', badge: 'Tech', desc: 'Digital banking monospace' },
+  { id: 'space', name: 'Space Grotesk', style: '"Space Grotesk", sans-serif', badge: 'Geometric', desc: 'Modern geometric display' },
+  { id: 'nunito', name: 'Nunito Rounded', style: '"Nunito", system-ui, sans-serif', badge: 'Soft', desc: 'Friendly rounded numerals' },
+  { id: 'oswald', name: 'Oswald Condensed', style: '"Oswald", "Arial Narrow", sans-serif', badge: 'Impact', desc: 'High-contrast condensed digits' },
+  { id: 'serif', name: 'Classic Serif', style: 'Georgia, Cambria, "Times New Roman", serif', badge: 'Classic', desc: 'Formal banking elegance' },
+];
+
+export const POPDOWN_SIZES: { id: PopdownFontSize; name: string; accountPx: number; amountPx: number; label: string }[] = [
+  { id: 'sm', name: 'Small', accountPx: 14, amountPx: 19, label: 'Compact (19px)' },
+  { id: 'md', name: 'Normal', accountPx: 15.5, amountPx: 22, label: 'Standard (22px)' },
+  { id: 'lg', name: 'Large', accountPx: 17.5, amountPx: 25, label: 'Prominent (25px)' },
+  { id: 'xl', name: 'Extra Large', accountPx: 19.5, amountPx: 29, label: 'Bold (29px)' },
+];
 
 // Synthesize pleasant SMS arrival alert chime using browser Web Audio API
 function updateSmsAvailableBalance(messageText: string, balance: number): string {
@@ -274,6 +294,64 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
   const [showHolidayCardModal, setShowHolidayCardModal] = useState<boolean>(false);
   const [useLiveClock, setUseLiveClock] = useState<boolean>(false);
   const [bubbleActionTx, setBubbleActionTx] = useState<any>(null);
+
+  // Popdown Typography Settings (Font Family & Text Size)
+  const [popdownFontFamily, setPopdownFontFamily] = useState<PopdownFontFamily>(() => {
+    try {
+      return (localStorage.getItem('tc_popdown_font') as PopdownFontFamily) || 'system';
+    } catch {
+      return 'system';
+    }
+  });
+  const [popdownFontSize, setPopdownFontSize] = useState<PopdownFontSize>(() => {
+    try {
+      return (localStorage.getItem('tc_popdown_size') as PopdownFontSize) || 'md';
+    } catch {
+      return 'md';
+    }
+  });
+  const [popdownScale, setPopdownScale] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('tc_popdown_scale');
+      return saved ? Math.min(150, Math.max(80, parseInt(saved, 10))) : 100;
+    } catch {
+      return 100;
+    }
+  });
+  const [showTypographyDrawer, setShowTypographyDrawer] = useState<boolean>(false);
+
+  const handleUpdateFont = (font: PopdownFontFamily) => {
+    setPopdownFontFamily(font);
+    try {
+      localStorage.setItem('tc_popdown_font', font);
+    } catch {}
+  };
+
+  const handleUpdateSize = (size: PopdownFontSize) => {
+    setPopdownFontSize(size);
+    try {
+      localStorage.setItem('tc_popdown_size', size);
+    } catch {}
+  };
+
+  const handleUpdateScale = (scale: number) => {
+    setPopdownScale(scale);
+    try {
+      localStorage.setItem('tc_popdown_scale', scale.toString());
+    } catch {}
+  };
+
+  const activeFont = useMemo(() => {
+    return POPDOWN_FONTS.find(f => f.id === popdownFontFamily) || POPDOWN_FONTS[0];
+  }, [popdownFontFamily]);
+
+  const activeSize = useMemo(() => {
+    return POPDOWN_SIZES.find(s => s.id === popdownFontSize) || POPDOWN_SIZES[1];
+  }, [popdownFontSize]);
+
+  const scaleFactor = popdownScale / 100;
+  const computedAccountFontSize = `${(activeSize.accountPx * scaleFactor).toFixed(1)}px`;
+  const computedAmountFontSize = `${(activeSize.amountPx * scaleFactor).toFixed(1)}px`;
 
   // Search in Google Messages inbox
   const [searchQuery, setSearchQuery] = useState('');
@@ -1811,11 +1889,104 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
               </div>
             </div>
 
-            {/* STEP 3: VISUAL STATUS BAR & TRUECALLER POP-DOWN COMPATIBILITY PREVIEW */}
-            <div className="pt-4 space-y-2.5">
+            {/* STEP 3: CHOOSE TEXT FONT & ADJUST SIZE */}
+            <div className="pt-4 space-y-3">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-extrabold uppercase tracking-wider text-blue-400 flex items-center space-x-1.5">
                   <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 inline-flex items-center justify-center text-[11px]">3</span>
+                  <span>Text Font &amp; Size</span>
+                </label>
+                <span className="text-[11px] text-neutral-400">{activeFont.name} • {activeSize.name} ({popdownScale}%)</span>
+              </div>
+
+              {/* Font Family Selection */}
+              <div className="space-y-1.5">
+                <span className="text-[11px] font-bold text-neutral-300 block">Choose Font Family</span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {POPDOWN_FONTS.map(f => {
+                    const isSelected = popdownFontFamily === f.id;
+                    return (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => handleUpdateFont(f.id)}
+                        className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${
+                          isSelected
+                            ? 'bg-[#0066FF]/25 border-[#0066FF] text-white shadow-md ring-2 ring-[#0066FF]/40'
+                            : 'bg-neutral-900 border-neutral-800 text-neutral-300 hover:border-neutral-700 hover:bg-neutral-850'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between w-full mb-1">
+                          <span className="text-[10px] font-bold uppercase text-neutral-400 truncate">{f.name}</span>
+                          <span className="text-[9px] px-1 py-0.2 rounded bg-neutral-800 text-neutral-400 font-mono flex-shrink-0">{f.badge}</span>
+                        </div>
+                        <div 
+                          className="text-sm font-extrabold text-white tracking-tight truncate"
+                          style={{ fontFamily: f.style }}
+                        >
+                          ETB 459.00
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Text Size Presets & Scale Slider */}
+              <div className="space-y-2 pt-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-neutral-300">Text Size Preset</span>
+                  <span className="text-[11px] text-[#0066FF] font-semibold">{activeSize.label}</span>
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                  {POPDOWN_SIZES.map(s => {
+                    const isSelected = popdownFontSize === s.id;
+                    return (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => handleUpdateSize(s.id)}
+                        className={`py-2 px-1 rounded-xl text-center font-bold text-xs transition cursor-pointer border ${
+                          isSelected
+                            ? 'bg-[#0066FF] text-white border-blue-400 shadow-md'
+                            : 'bg-neutral-900 text-neutral-300 border-neutral-800 hover:border-neutral-700'
+                        }`}
+                      >
+                        {s.name}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Fine-Tuning Scale Slider */}
+                <div className="flex items-center space-x-3 bg-neutral-900/80 p-2.5 rounded-xl border border-neutral-800">
+                  <span className="text-[10.5px] font-semibold text-neutral-400 flex-shrink-0">Fine-tune Scale:</span>
+                  <input
+                    type="range"
+                    min="80"
+                    max="140"
+                    step="5"
+                    value={popdownScale}
+                    onChange={(e) => handleUpdateScale(parseInt(e.target.value, 10))}
+                    className="flex-1 accent-[#0066FF] cursor-pointer h-1.5"
+                  />
+                  <span className="text-[11px] font-mono font-bold text-white w-10 text-right flex-shrink-0">{popdownScale}%</span>
+                  <button
+                    type="button"
+                    onClick={() => handleUpdateScale(100)}
+                    className="text-[10px] px-2 py-1 rounded bg-neutral-800 text-neutral-300 hover:text-white flex-shrink-0 transition"
+                  >
+                    Reset
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* STEP 4: VISUAL STATUS BAR & TRUECALLER POP-DOWN COMPATIBILITY PREVIEW */}
+            <div className="pt-4 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-extrabold uppercase tracking-wider text-blue-400 flex items-center space-x-1.5">
+                  <span className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-400 inline-flex items-center justify-center text-[11px]">4</span>
                   <span>Status Bar & Pop-Out Message Compatibility</span>
                 </label>
                 <span className="text-[11px] text-neutral-400">Live preview</span>
@@ -1860,10 +2031,24 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                         </div>
 
                         {/* Main Transaction Message Text */}
-                        <div className="text-[16px] leading-[1.35] text-slate-900 font-bold tracking-tight pt-0.5">
-                          Account {previewAccount} {pickerRole === 'receiver' ? 'credited with ETB' : 'debited with ETB'}
-                          <div className="font-extrabold text-slate-950 text-[21px] tracking-tight mt-0.5">
-                            {previewAmt}.
+                        <div 
+                          className="leading-[1.35] text-slate-900 font-bold tracking-tight pt-0.5"
+                          style={{
+                            fontFamily: activeFont.style,
+                            fontSize: computedAccountFontSize,
+                          }}
+                        >
+                          Account {previewAccount} {pickerRole === 'receiver' ? 'credited with' : 'debited with'}
+                          <div 
+                            className="font-extrabold text-slate-950 tracking-tight mt-0.5 whitespace-nowrap"
+                            style={{
+                              fontFamily: activeFont.style,
+                              fontSize: computedAmountFontSize,
+                            }}
+                          >
+                            <span className="whitespace-nowrap inline-block">
+                              ETB {previewAmt}
+                            </span>
                           </div>
                         </div>
 
@@ -2588,6 +2773,105 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                     <p className="text-[11px] text-neutral-300 leading-relaxed">
                       Switch between Tecno (HiOS), Samsung One UI, iPhone 16 Pro, Google Pixel, and Xiaomi. Updates status bar icons, battery style, time, and navigation controls across all views!
                     </p>
+                  </div>
+
+                  {/* Popdown Message Typography (Font & Size) */}
+                  <div className="p-3.5 rounded-2xl bg-neutral-900/90 border border-neutral-800 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2 text-white font-bold text-xs">
+                        <Type className="w-4 h-4 text-[#0066FF]" />
+                        <span>Popdown Typography (Font &amp; Size)</span>
+                      </div>
+                      <span className="text-[10px] font-semibold text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full border border-blue-500/20">
+                        {activeFont.name} • {activeSize.name}
+                      </span>
+                    </div>
+
+                    {/* Font selector */}
+                    <div className="space-y-1.5">
+                      <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block">Choose Font</span>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                        {POPDOWN_FONTS.map(f => {
+                          const isSelected = popdownFontFamily === f.id;
+                          return (
+                            <button
+                              key={f.id}
+                              type="button"
+                              onClick={() => handleUpdateFont(f.id)}
+                              className={`p-2 rounded-xl border text-left transition cursor-pointer ${
+                                isSelected
+                                  ? 'bg-[#0066FF]/25 border-[#0066FF] text-white ring-1 ring-[#0066FF]'
+                                  : 'bg-neutral-850 border-neutral-800 text-neutral-300 hover:border-neutral-700'
+                              }`}
+                            >
+                              <div className="text-[10.5px] font-bold truncate">{f.name}</div>
+                              <div className="text-[11px] font-semibold opacity-90 truncate mt-0.5" style={{ fontFamily: f.style }}>
+                                ETB 459.00
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Size selector */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Text Size Preset</span>
+                        <span className="text-[10.5px] text-[#0066FF] font-mono">{activeSize.label} ({popdownScale}%)</span>
+                      </div>
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {POPDOWN_SIZES.map(s => {
+                          const isSelected = popdownFontSize === s.id;
+                          return (
+                            <button
+                              key={s.id}
+                              type="button"
+                              onClick={() => handleUpdateSize(s.id)}
+                              className={`py-1.5 px-1 rounded-xl text-center font-bold text-[11px] transition cursor-pointer border ${
+                                isSelected
+                                  ? 'bg-[#0066FF] text-white border-blue-400 shadow-sm'
+                                  : 'bg-neutral-850 text-neutral-300 border-neutral-800 hover:border-neutral-700'
+                              }`}
+                            >
+                              {s.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {/* Scale slider */}
+                      <div className="flex items-center space-x-2 pt-1">
+                        <span className="text-[10px] text-neutral-400">Scale:</span>
+                        <input
+                          type="range"
+                          min="80"
+                          max="140"
+                          step="5"
+                          value={popdownScale}
+                          onChange={(e) => handleUpdateScale(parseInt(e.target.value, 10))}
+                          className="flex-1 accent-[#0066FF] cursor-pointer h-1.5"
+                        />
+                        <span className="text-[11px] font-mono font-bold text-white w-9 text-right">{popdownScale}%</span>
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateScale(100)}
+                          className="text-[9.5px] px-2 py-0.5 rounded bg-neutral-800 text-neutral-300 hover:text-white"
+                        >
+                          Reset
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Live Preview snippet */}
+                    <div className="p-2.5 rounded-xl bg-white text-slate-900 border border-slate-200">
+                      <div className="text-[10px] uppercase font-bold text-slate-400 mb-1">Popdown Live Sample</div>
+                      <div style={{ fontFamily: activeFont.style, fontSize: computedAccountFontSize }} className="font-bold text-slate-900 leading-tight">
+                        Account 1********0913 credited with
+                      </div>
+                      <div style={{ fontFamily: activeFont.style, fontSize: computedAmountFontSize }} className="font-extrabold text-slate-950 whitespace-nowrap mt-0.5">
+                        ETB 459.00
+                      </div>
+                    </div>
                   </div>
 
                   <div className="p-3 rounded-2xl bg-neutral-900/90 border border-neutral-800 space-y-3">
@@ -3465,10 +3749,24 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                     </div>
 
                     {/* Main Transaction Message Text (Matches exact layout in reference photo IMG_20260905_131647_440.jpg) */}
-                    <div className="text-[15.5px] sm:text-[16px] leading-snug text-slate-900 font-bold tracking-tight pt-0.5">
-                      Account {(currentAlert.maskedAccount || '1********0913').replace(/X/g, '*')} {currentAlert.role === 'receiver' ? 'credited with ETB' : 'debited with ETB'}
-                      <div className="font-extrabold text-slate-950 text-[22px] sm:text-[23px] tracking-tight mt-0.5 leading-none">
-                        {currentAlert.amount.toFixed(2)}.
+                    <div 
+                      className="leading-snug text-slate-900 font-bold tracking-tight pt-0.5"
+                      style={{
+                        fontFamily: activeFont.style,
+                        fontSize: computedAccountFontSize,
+                      }}
+                    >
+                      Account {(currentAlert.maskedAccount || '1********0913').replace(/X/g, '*')} {currentAlert.role === 'receiver' ? 'credited with' : 'debited with'}
+                      <div 
+                        className="font-extrabold text-slate-950 tracking-tight mt-0.5 leading-none whitespace-nowrap"
+                        style={{
+                          fontFamily: activeFont.style,
+                          fontSize: computedAmountFontSize,
+                        }}
+                      >
+                        <span className="whitespace-nowrap inline-block">
+                          ETB {currentAlert.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
                       </div>
                     </div>
 
@@ -3505,7 +3803,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                           {currentAlert.balanceAfter !== undefined && (
                             <div className="flex justify-between border-t border-slate-200 pt-1.5">
                               <span className="text-slate-400 font-medium">Balance After:</span>
-                              <span className="font-bold text-emerald-700">
+                              <span className="font-bold text-emerald-700 whitespace-nowrap">
                                 ETB {currentAlert.balanceAfter.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                               </span>
                             </div>
@@ -3554,15 +3852,15 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                 : 'opacity-100 pointer-events-auto visible'
             }`}
           >
-            <div className="grid grid-cols-3 gap-2 w-full max-w-[400px] p-2 bg-neutral-950/85 backdrop-blur-md rounded-2xl border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
+            <div className="grid grid-cols-4 gap-1.5 w-full max-w-[420px] p-2 bg-neutral-950/85 backdrop-blur-md rounded-2xl border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.8)]">
               {/* 1. Back Button */}
               <button
                 type="button"
                 onClick={() => setView('bank_thread')}
-                className="flex items-center justify-center space-x-1.5 py-2.5 px-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition active:scale-95 border border-white/10 cursor-pointer"
+                className="flex items-center justify-center space-x-1 py-2.5 px-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-[11px] font-bold transition active:scale-95 border border-white/10 cursor-pointer"
                 title="Back to CBE Transactions"
               >
-                <ArrowLeft className="w-4 h-4 text-neutral-300 flex-shrink-0" />
+                <ArrowLeft className="w-3.5 h-3.5 text-neutral-300 flex-shrink-0" />
                 <span className="truncate">Back</span>
               </button>
 
@@ -3570,11 +3868,11 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
               <button
                 type="button"
                 onClick={handleRetriggerAlert}
-                className="flex items-center justify-center space-x-1.5 py-2.5 px-2 rounded-xl bg-[#0066FF] hover:bg-blue-600 text-white text-xs font-extrabold transition active:scale-95 shadow-lg border border-blue-400/40 cursor-pointer"
+                className="flex items-center justify-center space-x-1 py-2.5 px-1.5 rounded-xl bg-[#0066FF] hover:bg-blue-600 text-white text-[11px] font-extrabold transition active:scale-95 shadow-lg border border-blue-400/40 cursor-pointer"
                 title="Simulate or Reload Truecaller Pop-down Alert"
               >
-                <RefreshCw className="w-4 h-4 flex-shrink-0" />
-                <span className="truncate">Simulate Again</span>
+                <RefreshCw className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="truncate">Simulate</span>
               </button>
 
               {/* 3. Choose Button */}
@@ -3602,14 +3900,133 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                     setShowPickerModal(true);
                   }
                 }}
-                className="flex items-center justify-center space-x-1.5 py-2.5 px-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-amber-300 text-xs font-bold transition active:scale-95 border border-amber-400/35 cursor-pointer"
+                className="flex items-center justify-center space-x-1 py-2.5 px-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-amber-300 text-[11px] font-bold transition active:scale-95 border border-amber-400/35 cursor-pointer"
                 title="Choose Phone Model, Background Screen, or Bank Transaction"
               >
-                <Smartphone className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                <Smartphone className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
                 <span className="truncate">Choose</span>
+              </button>
+
+              {/* 4. Font & Size Button */}
+              <button
+                type="button"
+                onClick={() => setShowTypographyDrawer(!showTypographyDrawer)}
+                className="flex items-center justify-center space-x-1 py-2.5 px-1.5 rounded-xl bg-indigo-950/80 hover:bg-indigo-900 text-cyan-300 text-[11px] font-bold transition active:scale-95 border border-cyan-400/35 cursor-pointer"
+                title="Customize Popdown Font Family & Text Size"
+              >
+                <Type className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" />
+                <span className="truncate">Font/Size</span>
               </button>
             </div>
           </div>
+
+          {/* Floating Font & Text Size Quick Tuner Button */}
+          <div className="absolute bottom-5 right-3.5 z-40 pointer-events-auto">
+            <button
+              type="button"
+              onClick={() => setShowTypographyDrawer(!showTypographyDrawer)}
+              className="flex items-center space-x-1.5 py-2 px-3 rounded-full bg-neutral-950/90 hover:bg-neutral-900 text-white border border-white/20 shadow-2xl backdrop-blur-md text-[11.5px] font-bold transition active:scale-95 cursor-pointer"
+              title="Adjust Popdown Font and Size"
+            >
+              <Type className="w-3.5 h-3.5 text-blue-400" />
+              <span>Font &amp; Size</span>
+            </button>
+          </div>
+
+          {/* Popdown Typography Customizer Sheet (Available directly while watching the popdown alert) */}
+          {showTypographyDrawer && (
+            <div className="absolute inset-x-2.5 bottom-16 z-50 p-3.5 bg-neutral-950/95 backdrop-blur-xl rounded-2xl border border-blue-500/40 shadow-[0_20px_50px_rgba(0,0,0,0.8)] space-y-3 animate-in fade-in slide-in-from-bottom-3 duration-150">
+              <div className="flex items-center justify-between border-b border-neutral-800 pb-2">
+                <div className="flex items-center space-x-2 text-white font-bold text-xs">
+                  <Type className="w-4 h-4 text-[#0066FF]" />
+                  <span>Popdown Font &amp; Text Size</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowTypographyDrawer(false)}
+                  className="w-6 h-6 rounded-full hover:bg-white/10 text-neutral-400 hover:text-white flex items-center justify-center transition cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              {/* Font Family selection */}
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block">Choose Font</span>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 max-h-[140px] overflow-y-auto">
+                  {POPDOWN_FONTS.map(f => {
+                    const isSelected = popdownFontFamily === f.id;
+                    return (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => handleUpdateFont(f.id)}
+                        className={`p-1.5 rounded-xl border text-left transition cursor-pointer ${
+                          isSelected
+                            ? 'bg-[#0066FF] border-blue-400 text-white shadow-sm'
+                            : 'bg-neutral-900 border-neutral-800 text-neutral-300 hover:border-neutral-700'
+                        }`}
+                      >
+                        <div className="text-[10px] font-bold truncate">{f.name}</div>
+                        <div className="text-[11px] font-semibold opacity-90 truncate" style={{ fontFamily: f.style }}>
+                          ETB 459.00
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Text Size Presets & Slider */}
+              <div className="space-y-1.5 pt-0.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Text Size</span>
+                  <span className="text-[10.5px] text-[#0066FF] font-mono">{activeSize.label} ({popdownScale}%)</span>
+                </div>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {POPDOWN_SIZES.map(s => {
+                    const isSelected = popdownFontSize === s.id;
+                    return (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => handleUpdateSize(s.id)}
+                        className={`py-1.5 px-1 rounded-xl text-center font-bold text-[11px] transition cursor-pointer border ${
+                          isSelected
+                            ? 'bg-[#0066FF] text-white border-blue-400 shadow-sm'
+                            : 'bg-neutral-900 text-neutral-300 border-neutral-800 hover:border-neutral-700'
+                        }`}
+                      >
+                        {s.name}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Scale slider */}
+                <div className="flex items-center space-x-2 pt-1">
+                  <span className="text-[10px] text-neutral-400">Scale:</span>
+                  <input
+                    type="range"
+                    min="80"
+                    max="140"
+                    step="5"
+                    value={popdownScale}
+                    onChange={(e) => handleUpdateScale(parseInt(e.target.value, 10))}
+                    className="flex-1 accent-[#0066FF] cursor-pointer h-1.5"
+                  />
+                  <span className="text-[11px] font-mono font-bold text-white w-9 text-right">{popdownScale}%</span>
+                  <button
+                    type="button"
+                    onClick={() => handleUpdateScale(100)}
+                    className="text-[9.5px] px-2 py-0.5 rounded bg-neutral-800 text-neutral-300 hover:text-white"
+                  >
+                    Reset
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
         </div>
 
