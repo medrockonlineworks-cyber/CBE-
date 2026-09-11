@@ -45,9 +45,20 @@ import {
   DashenMountainBackdrop, 
   DashenLogo, 
   DashenLogoModal, 
+  DashenThemeFab,
   DASHEN_PRESET_LOGOS, 
   OFFICIAL_DASHEN_LOGO_SVG 
 } from './DashenBrandAssets';
+import {
+  DashenPaperPlaneIcon,
+  DashenPhoneTransferIcon,
+  DashenOtherBanksBirdIcon,
+  DashenWalletsIcon,
+  DashenMyCardsIcon,
+  DashenMobileTopUpIcon,
+  DashenUtilityPaymentsIcon,
+  DashenSeeMoreIcon
+} from './DashenGridIcons';
 import { compressImageFile } from '../lib/imageUtils';
 import { LocalDb } from '../lib/mockData';
 import { UserProfile } from '../types';
@@ -842,15 +853,9 @@ export default function DashenBankApp({ currentUser, onBack }: DashenBankAppProp
 
               {/* Balance & Account Card matching Screenshot 123028 */}
               <div className="relative text-center pt-2 pb-1 space-y-1">
-                {/* Paintbrush Theme / Branding Button positioned on the right matching Screenshot 123028 */}
-                <div className="absolute right-0 top-0">
-                  <button 
-                    onClick={() => setShowLogoModal(true)}
-                    className="w-10 h-10 rounded-2xl border border-white/25 bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center text-neutral-100 shadow-lg backdrop-blur-md transition cursor-pointer"
-                    title="Customize Bank Logo & Wallpaper"
-                  >
-                    <Paintbrush className="w-4 h-4" />
-                  </button>
+                {/* Floating Paintbrush Theme / Wallpaper Customizer FAB matching Screenshot 123028 & 125235 */}
+                <div className="absolute right-0 top-0 z-10">
+                  <DashenThemeFab onClick={() => setShowLogoModal(true)} />
                 </div>
 
                 <p className="text-[15px] font-semibold text-neutral-200">
@@ -883,19 +888,20 @@ export default function DashenBankApp({ currentUser, onBack }: DashenBankAppProp
                   </button>
                 </div>
 
-                {/* "Accounts >" Pill Button */}
-                <div className="pt-1">
+                {/* "Accounts >" Pill Button matching Screenshot 151718 */}
+                <div className="pt-1 flex justify-center">
                   <button 
                     onClick={() => setShowAccountsModal(true)}
-                    className="inline-flex items-center gap-1 px-4 py-1 rounded-full bg-[#122244]/80 border border-[#274070] text-xs font-semibold text-neutral-200 hover:bg-[#182c55] active:scale-95 transition"
+                    className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white/[0.10] hover:bg-white/[0.16] border border-white/20 backdrop-blur-md text-xs font-semibold text-white active:scale-95 transition shadow-sm cursor-pointer"
                   >
                     <span>Accounts</span>
-                    <ChevronRight className="w-3.5 h-3.5" />
+                    <ChevronRight className="w-3.5 h-3.5 text-white/80" />
                   </button>
                 </div>
               </div>
 
-              {/* 2x4 Quick Actions Grid matching Screenshot 123028 */}
+              {/* 2x4 Quick Actions Grid matching Screenshot 151718 */}
+              {/* Fully transparent glass buttons with authentic white vector icons */}
               <div className="grid grid-cols-4 gap-2.5 pt-1">
                 {/* 1. Transfer To Dashen */}
                 <button 
@@ -903,12 +909,13 @@ export default function DashenBankApp({ currentUser, onBack }: DashenBankAppProp
                     setSendStep('input_acc');
                     setSubScreen('send_dashen');
                   }}
-                  className="p-2.5 rounded-2xl bg-[#122244]/70 hover:bg-[#192f5e]/80 border border-[#233c6f]/60 flex flex-col items-center justify-center text-center gap-1.5 transition active:scale-95 shadow-md"
+                  className="p-2 min-h-[86px] rounded-[22px] bg-white/[0.08] hover:bg-white/[0.14] active:scale-95 border border-white/[0.18] backdrop-blur-md flex flex-col items-center justify-between text-center transition shadow-lg cursor-pointer group"
+                  title="Transfer To Dashen"
                 >
-                  <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-300">
-                    <Send className="w-4 h-4" />
+                  <div className="pt-1.5 flex items-center justify-center">
+                    <DashenPaperPlaneIcon className="w-7 h-7 text-white drop-shadow-xs group-hover:scale-105 transition" />
                   </div>
-                  <span className="text-[11px] font-semibold text-neutral-200 leading-tight">
+                  <span className="text-[11px] font-semibold text-white leading-[1.2] pb-0.5">
                     Transfer To<br />Dashen
                   </span>
                 </button>
@@ -918,28 +925,30 @@ export default function DashenBankApp({ currentUser, onBack }: DashenBankAppProp
                   onClick={() => {
                     setSubScreen('send_dashen');
                   }}
-                  className="p-2.5 rounded-2xl bg-[#122244]/70 hover:bg-[#192f5e]/80 border border-[#233c6f]/60 flex flex-col items-center justify-center text-center gap-1.5 transition active:scale-95 shadow-md"
+                  className="p-2 min-h-[86px] rounded-[22px] bg-white/[0.08] hover:bg-white/[0.14] active:scale-95 border border-white/[0.18] backdrop-blur-md flex flex-col items-center justify-between text-center transition shadow-lg cursor-pointer group"
+                  title="Transfer by Phone"
                 >
-                  <div className="w-8 h-8 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-300">
-                    <PhoneCall className="w-4 h-4" />
+                  <div className="pt-1.5 flex items-center justify-center">
+                    <DashenPhoneTransferIcon className="w-7 h-7 text-white drop-shadow-xs group-hover:scale-105 transition" />
                   </div>
-                  <span className="text-[11px] font-semibold text-neutral-200 leading-tight">
+                  <span className="text-[11px] font-semibold text-white leading-[1.2] pb-0.5">
                     Transfer<br />by Pho...
                   </span>
                 </button>
 
-                {/* 3. Transfer To Other Banks (CBE, Awash, etc.) */}
+                {/* 3. Transfer To Other Banks (Authentic Ethiopian Interbank Dove/Bird) */}
                 <button 
                   onClick={() => {
                     setSendStep('input_acc');
                     setSubScreen('send_other_banks');
                   }}
-                  className="p-2.5 rounded-2xl bg-[#122244]/70 hover:bg-[#192f5e]/80 border border-[#233c6f]/60 flex flex-col items-center justify-center text-center gap-1.5 transition active:scale-95 shadow-md"
+                  className="p-2 min-h-[86px] rounded-[22px] bg-white/[0.08] hover:bg-white/[0.14] active:scale-95 border border-white/[0.18] backdrop-blur-md flex flex-col items-center justify-between text-center transition shadow-lg cursor-pointer group"
+                  title="Transfer To Other Banks"
                 >
-                  <div className="w-8 h-8 rounded-full bg-cyan-500/20 flex items-center justify-center text-cyan-300">
-                    <Building2 className="w-4 h-4" />
+                  <div className="pt-1.5 flex items-center justify-center">
+                    <DashenOtherBanksBirdIcon className="w-7 h-7 text-white drop-shadow-xs group-hover:scale-105 transition" />
                   </div>
-                  <span className="text-[11px] font-semibold text-neutral-200 leading-tight">
+                  <span className="text-[11px] font-semibold text-white leading-[1.2] pb-0.5">
                     Transfer To<br />Other Banks
                   </span>
                 </button>
@@ -949,12 +958,13 @@ export default function DashenBankApp({ currentUser, onBack }: DashenBankAppProp
                   onClick={() => {
                     setSubScreen('send_other_banks');
                   }}
-                  className="p-2.5 rounded-2xl bg-[#122244]/70 hover:bg-[#192f5e]/80 border border-[#233c6f]/60 flex flex-col items-center justify-center text-center gap-1.5 transition active:scale-95 shadow-md"
+                  className="p-2 min-h-[86px] rounded-[22px] bg-white/[0.08] hover:bg-white/[0.14] active:scale-95 border border-white/[0.18] backdrop-blur-md flex flex-col items-center justify-between text-center transition shadow-lg cursor-pointer group"
+                  title="Transfer To Wallets"
                 >
-                  <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-300">
-                    <Wallet className="w-4 h-4" />
+                  <div className="pt-1.5 flex items-center justify-center">
+                    <DashenWalletsIcon className="w-7 h-7 text-white drop-shadow-xs group-hover:scale-105 transition" />
                   </div>
-                  <span className="text-[11px] font-semibold text-neutral-200 leading-tight">
+                  <span className="text-[11px] font-semibold text-white leading-[1.2] pb-0.5">
                     Transfer To<br />Wallets
                   </span>
                 </button>
@@ -965,12 +975,13 @@ export default function DashenBankApp({ currentUser, onBack }: DashenBankAppProp
                     setCopyToast('Dashen Branded Visa & Mastercard: Active');
                     setTimeout(() => setCopyToast(null), 2000);
                   }}
-                  className="p-2.5 rounded-2xl bg-[#122244]/70 hover:bg-[#192f5e]/80 border border-[#233c6f]/60 flex flex-col items-center justify-center text-center gap-1.5 transition active:scale-95 shadow-md"
+                  className="p-2 min-h-[86px] rounded-[22px] bg-white/[0.08] hover:bg-white/[0.14] active:scale-95 border border-white/[0.18] backdrop-blur-md flex flex-col items-center justify-between text-center transition shadow-lg cursor-pointer group"
+                  title="My Cards"
                 >
-                  <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-300">
-                    <CreditCard className="w-4 h-4" />
+                  <div className="pt-2 flex items-center justify-center">
+                    <DashenMyCardsIcon className="w-7 h-7 text-white drop-shadow-xs group-hover:scale-105 transition" />
                   </div>
-                  <span className="text-[11px] font-semibold text-neutral-200 leading-tight">
+                  <span className="text-[11px] font-semibold text-white leading-[1.2] pb-1">
                     My Cards
                   </span>
                 </button>
@@ -981,12 +992,13 @@ export default function DashenBankApp({ currentUser, onBack }: DashenBankAppProp
                     setCopyToast('Airtime Top-up ready');
                     setTimeout(() => setCopyToast(null), 1500);
                   }}
-                  className="p-2.5 rounded-2xl bg-[#122244]/70 hover:bg-[#192f5e]/80 border border-[#233c6f]/60 flex flex-col items-center justify-center text-center gap-1.5 transition active:scale-95 shadow-md"
+                  className="p-2 min-h-[86px] rounded-[22px] bg-white/[0.08] hover:bg-white/[0.14] active:scale-95 border border-white/[0.18] backdrop-blur-md flex flex-col items-center justify-between text-center transition shadow-lg cursor-pointer group"
+                  title="Mobile Top-up"
                 >
-                  <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-300">
-                    <Smartphone className="w-4 h-4" />
+                  <div className="pt-1.5 flex items-center justify-center">
+                    <DashenMobileTopUpIcon className="w-7 h-7 text-white drop-shadow-xs group-hover:scale-105 transition" />
                   </div>
-                  <span className="text-[11px] font-semibold text-neutral-200 leading-tight">
+                  <span className="text-[11px] font-semibold text-white leading-[1.2] pb-0.5">
                     Mobile<br />Top-up
                   </span>
                 </button>
@@ -997,12 +1009,13 @@ export default function DashenBankApp({ currentUser, onBack }: DashenBankAppProp
                     setCopyToast('Utility Payments: Water, Electricity, DSTV');
                     setTimeout(() => setCopyToast(null), 2000);
                   }}
-                  className="p-2.5 rounded-2xl bg-[#122244]/70 hover:bg-[#192f5e]/80 border border-[#233c6f]/60 flex flex-col items-center justify-center text-center gap-1.5 transition active:scale-95 shadow-md"
+                  className="p-2 min-h-[86px] rounded-[22px] bg-white/[0.08] hover:bg-white/[0.14] active:scale-95 border border-white/[0.18] backdrop-blur-md flex flex-col items-center justify-between text-center transition shadow-lg cursor-pointer group"
+                  title="Utility Payments"
                 >
-                  <div className="w-8 h-8 rounded-full bg-teal-500/20 flex items-center justify-center text-teal-300">
-                    <Receipt className="w-4 h-4" />
+                  <div className="pt-1.5 flex items-center justify-center">
+                    <DashenUtilityPaymentsIcon className="w-7 h-7 text-white drop-shadow-xs group-hover:scale-105 transition" />
                   </div>
-                  <span className="text-[11px] font-semibold text-neutral-200 leading-tight">
+                  <span className="text-[11px] font-semibold text-white leading-[1.2] pb-0.5">
                     Utility<br />Payments
                   </span>
                 </button>
@@ -1010,12 +1023,13 @@ export default function DashenBankApp({ currentUser, onBack }: DashenBankAppProp
                 {/* 8. See More */}
                 <button 
                   onClick={() => setCurrentTab('apps')}
-                  className="p-2.5 rounded-2xl bg-[#122244]/70 hover:bg-[#192f5e]/80 border border-[#233c6f]/60 flex flex-col items-center justify-center text-center gap-1.5 transition active:scale-95 shadow-md"
+                  className="p-2 min-h-[86px] rounded-[22px] bg-white/[0.08] hover:bg-white/[0.14] active:scale-95 border border-white/[0.18] backdrop-blur-md flex flex-col items-center justify-between text-center transition shadow-lg cursor-pointer group"
+                  title="See More"
                 >
-                  <div className="w-8 h-8 rounded-full bg-neutral-600/20 flex items-center justify-center text-neutral-300">
-                    <MoreHorizontal className="w-4 h-4" />
+                  <div className="pt-2.5 flex items-center justify-center">
+                    <DashenSeeMoreIcon className="w-7 h-7 text-white drop-shadow-xs group-hover:scale-105 transition" />
                   </div>
-                  <span className="text-[11px] font-semibold text-neutral-200 leading-tight">
+                  <span className="text-[11px] font-semibold text-white leading-[1.2] pb-1">
                     See More
                   </span>
                 </button>
@@ -1044,25 +1058,204 @@ export default function DashenBankApp({ currentUser, onBack }: DashenBankAppProp
                 <ChevronRight className="w-4 h-4 text-neutral-400 shrink-0" />
               </div>
 
-              {/* Floating Glowing Blue QR Scanner button matching Screenshot 123028 */}
-              <div className="flex items-center justify-between pt-1">
-                <div className="text-xs text-neutral-400 font-medium">
-                  3 Click e-commerce
-                </div>
-                <div className="flex items-center gap-2">
+              {/* 3 Click E-commerce Section matching Screenshot 125235 */}
+              <div className="space-y-2.5 pt-1">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-[13px] font-bold text-white tracking-tight">
+                    3 Click e-commerce
+                  </h4>
                   <button 
                     onClick={() => setCurrentTab('ecommerce')}
                     className="text-xs font-semibold text-blue-400 hover:text-blue-300"
                   >
                     See All
                   </button>
-                  <button 
-                    onClick={() => setShowQrModal(true)}
-                    className="w-12 h-12 rounded-full bg-gradient-to-tr from-[#1a73e8] to-[#2979ff] text-white flex items-center justify-center shadow-lg shadow-blue-500/30 hover:scale-105 active:scale-95 transition"
-                    title="Scan QR"
+                </div>
+
+                {/* 3 Click Product Cards Row matching Screenshot 125235 */}
+                <div className="grid grid-cols-3 gap-2.5">
+                  {/* Product 1: Honey */}
+                  <div 
+                    onClick={() => {
+                      setCopyToast('Selected: Honey (Natural Gold)');
+                      setTimeout(() => setCopyToast(null), 1800);
+                    }}
+                    className="relative bg-[#101c34]/80 border border-[#1e335b] rounded-2xl p-2.5 flex flex-col items-center text-center cursor-pointer hover:border-blue-500/50 transition group"
                   >
-                    <QrCode className="w-6 h-6" />
+                    <div className="w-full aspect-square rounded-xl bg-[#142343] overflow-hidden flex items-center justify-center p-1.5 mb-2 relative">
+                      <img 
+                        src="https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=300&q=80" 
+                        alt="Honey" 
+                        className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition"
+                      />
+                      <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-amber-500/90 border border-white/50 flex items-center justify-center shadow-xs">
+                        <span className="text-[9px]">🍯</span>
+                      </div>
+                    </div>
+                    <span className="text-xs font-bold text-white leading-tight truncate w-full">
+                      Honey
+                    </span>
+                    <span className="text-[10px] text-neutral-400 leading-tight truncate w-full mt-0.5">
+                      Natural Gold
+                    </span>
+                  </div>
+
+                  {/* Product 2: Dubai Chocolate */}
+                  <div 
+                    onClick={() => {
+                      setCopyToast('Selected: Dubai Chocolate');
+                      setTimeout(() => setCopyToast(null), 1800);
+                    }}
+                    className="relative bg-[#101c34]/80 border border-[#1e335b] rounded-2xl p-2.5 flex flex-col items-center text-center cursor-pointer hover:border-blue-500/50 transition group"
+                  >
+                    <div className="w-full aspect-square rounded-xl bg-[#142343] overflow-hidden flex items-center justify-center p-1.5 mb-2 relative">
+                      <img 
+                        src="https://images.unsplash.com/photo-1548907040-4baa42d10919?w=300&q=80" 
+                        alt="Dubai Chocolate" 
+                        className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition"
+                      />
+                      <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-emerald-600/90 border border-white/50 flex items-center justify-center shadow-xs">
+                        <span className="text-[9px]">🍫</span>
+                      </div>
+                    </div>
+                    <span className="text-xs font-bold text-white leading-tight truncate w-full">
+                      Dubai Chocolate
+                    </span>
+                    <span className="text-[10px] text-neutral-400 leading-tight truncate w-full mt-0.5">
+                      Indulgence In Every...
+                    </span>
+                  </div>
+
+                  {/* Product 3: Teff Flour */}
+                  <div 
+                    onClick={() => {
+                      setCopyToast('Selected: Teff Flour (100% Teff)');
+                      setTimeout(() => setCopyToast(null), 1800);
+                    }}
+                    className="relative bg-[#101c34]/80 border border-[#1e335b] rounded-2xl p-2.5 flex flex-col items-center text-center cursor-pointer hover:border-blue-500/50 transition group"
+                  >
+                    <div className="w-full aspect-square rounded-xl bg-[#142343] overflow-hidden flex items-center justify-center p-1.5 mb-2 relative">
+                      <img 
+                        src="https://images.unsplash.com/photo-1509440159596-0249088772ff?w=300&q=80" 
+                        alt="Teff Flour" 
+                        className="w-full h-full object-cover rounded-lg group-hover:scale-105 transition"
+                      />
+                      <div className="absolute top-1 right-1 w-5 h-5 rounded-full bg-yellow-600/90 border border-white/50 flex items-center justify-center shadow-xs">
+                        <span className="text-[9px]">🌾</span>
+                      </div>
+                    </div>
+                    <span className="text-xs font-bold text-white leading-tight truncate w-full">
+                      Teff Flour
+                    </span>
+                    <span className="text-[10px] text-neutral-400 leading-tight truncate w-full mt-0.5">
+                      100% Teff
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Promotional Coffee Banner matching Screenshot 125235 */}
+              <div className="relative rounded-[22px] overflow-hidden bg-gradient-to-r from-[#2a1b12] via-[#3d2417] to-[#1a110a] border border-[#52331f]/70 p-4 shadow-lg cursor-pointer">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1 max-w-[62%]">
+                    <h3 className="text-sm font-extrabold text-white leading-snug">
+                      Explore The Taste.
+                    </h3>
+                    <p className="text-xs font-bold text-amber-300 leading-snug">
+                      Experience The Tradition.
+                    </p>
+                    <p className="text-[10px] text-neutral-300 pt-0.5">
+                      Premium Ethiopian Yirgacheffe &amp; Sidama Beans
+                    </p>
+                  </div>
+                  <div className="w-20 h-16 rounded-xl overflow-hidden shadow-md flex items-center justify-center bg-[#150d08]">
+                    <img 
+                      src="https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=300&q=80" 
+                      alt="Ethiopian Coffee" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+                {/* Carousel Indicator Dots */}
+                <div className="flex items-center justify-center gap-1.5 pt-2">
+                  <div className="w-4 h-1.5 rounded-full bg-white" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-white/40" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-white/40" />
+                </div>
+              </div>
+
+              {/* Mini Apps Section matching Screenshot 125235 */}
+              <div className="space-y-2.5 pt-1">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-[13px] font-bold text-white tracking-tight">
+                    Mini Apps
+                  </h4>
+                  <button 
+                    onClick={() => setCurrentTab('apps')}
+                    className="text-xs font-semibold text-blue-400 hover:text-blue-300"
+                  >
+                    See All
                   </button>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2.5">
+                  {/* 1. DSTV */}
+                  <div 
+                    onClick={() => {
+                      setCopyToast('Opening DSTV Mini App');
+                      setTimeout(() => setCopyToast(null), 1800);
+                    }}
+                    className="bg-[#101c34]/80 border border-[#1e335b] rounded-2xl p-3 flex flex-col items-center text-center cursor-pointer hover:border-blue-500/50 transition group"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-[#0a1b38] border border-cyan-400/40 flex items-center justify-center shadow-md mb-1.5 overflow-hidden">
+                      <span className="text-[12px] font-black tracking-tighter text-white">
+                        DStv
+                      </span>
+                    </div>
+                    <span className="text-xs font-bold text-white truncate w-full">
+                      DSTV
+                    </span>
+                  </div>
+
+                  {/* 2. Ethiopian Airlines */}
+                  <div 
+                    onClick={() => {
+                      setCopyToast('Opening Ethiopian Airlines Mini App');
+                      setTimeout(() => setCopyToast(null), 1800);
+                    }}
+                    className="bg-[#101c34]/80 border border-[#1e335b] rounded-2xl p-3 flex flex-col items-center text-center cursor-pointer hover:border-blue-500/50 transition group"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-white border border-neutral-300 flex items-center justify-center shadow-md mb-1.5 overflow-hidden p-1">
+                      <div className="flex flex-col items-center">
+                        <span className="text-[9px] font-black text-emerald-700 tracking-tighter leading-none">
+                          Ethiopian
+                        </span>
+                        <div className="w-4 h-0.5 bg-yellow-500 my-0.5" />
+                        <span className="text-[7.5px] font-bold text-rose-700 tracking-tighter leading-none">
+                          Airlines
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-xs font-bold text-white truncate w-full">
+                      Ethiopian Airlines
+                    </span>
+                  </div>
+
+                  {/* 3. Dashen Events */}
+                  <div 
+                    onClick={() => {
+                      setCopyToast('Opening Dashen Events');
+                      setTimeout(() => setCopyToast(null), 1800);
+                    }}
+                    className="bg-[#101c34]/80 border border-[#1e335b] rounded-2xl p-3 flex flex-col items-center text-center cursor-pointer hover:border-blue-500/50 transition group"
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-[#0b2149] border border-blue-400/40 flex items-center justify-center shadow-md mb-1.5 overflow-hidden p-1">
+                      <DashenLogo src={customLogo} className="w-9 h-9" showText={false} />
+                    </div>
+                    <span className="text-xs font-bold text-white truncate w-full">
+                      Dashen Events
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -1531,6 +1724,18 @@ export default function DashenBankApp({ currentUser, onBack }: DashenBankAppProp
 
         </div>
       )}
+
+      {/* Floating Glowing Blue QR Scanner FAB matching Screenshots 123028 & 125235 */}
+      <div className="absolute bottom-20 right-4 z-40 pointer-events-auto">
+        <button 
+          onClick={() => setShowQrModal(true)}
+          className="w-13 h-13 rounded-full bg-gradient-to-tr from-[#1a73e8] via-[#2176ff] to-[#3d8bfe] text-white flex items-center justify-center shadow-2xl shadow-blue-500/50 hover:scale-105 active:scale-95 transition border border-white/25 cursor-pointer"
+          title="Scan QR Code / Dashen Pay"
+          aria-label="Scan QR Code"
+        >
+          <QrCode className="w-6 h-6 text-white" />
+        </button>
+      </div>
 
       {/* =================================================================== */}
       {/* BOTTOM NAVIGATION BAR (Exact match for Screenshots 1, 2, 3)          */}

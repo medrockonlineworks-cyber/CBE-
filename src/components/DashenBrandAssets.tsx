@@ -16,29 +16,17 @@ import { compressImageFile } from '../lib/imageUtils';
 import { DashenBankService } from '../services/dashenBankService';
 
 /**
- * High-fidelity vector SVG for official Dashen Bank emblem
+ * High-fidelity vector SVG path for official Dashen Bank emblem
+ * Features authentic Ras Dashen mountain contour, truss triangulation, circle crests, and bilingual Amharic/English typography
  */
-export const OFFICIAL_DASHEN_LOGO_SVG = `data:image/svg+xml;utf8,${encodeURIComponent(`
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="100%" height="100%">
-  <rect width="160" height="160" rx="24" fill="#0b2149"/>
-  <rect x="4" y="4" width="152" height="152" rx="20" fill="none" stroke="#2555a6" stroke-width="2" stroke-opacity="0.6"/>
-  <!-- Mountain Silhouette Base & Summit -->
-  <path d="M 30 102 L 130 102 L 130 96 L 30 96 Z" fill="#ffffff"/>
-  <path d="M 40 96 L 80 40 L 120 96 Z" fill="#ffffff"/>
-  <path d="M 72 96 L 80 84 L 88 96 Z" fill="#0b2149"/>
-  <path d="M 80 40 L 120 96 L 98 96 L 80 62 Z" fill="#e2ecfb" opacity="0.85"/>
-  <!-- Typography -->
-  <text x="80" y="122" font-family="system-ui, -apple-system, sans-serif" font-size="15" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="0.5">ዳሽን ባንክ</text>
-  <text x="80" y="140" font-family="system-ui, -apple-system, sans-serif" font-size="11.5" font-weight="600" fill="#9ec1f9" text-anchor="middle" letter-spacing="0.5">Dashen Bank</text>
-</svg>
-`)}`;
+export const OFFICIAL_DASHEN_LOGO_SVG = '/dashen-logo-clean.svg';
 
 export const DASHEN_PRESET_LOGOS = [
   {
     id: 'official_dashen',
-    name: 'Official Dashen Bank (Mountain)',
-    description: 'Authentic Dashen Bank emblem with Ras Dashen mountain summit and bilingual typography',
-    url: OFFICIAL_DASHEN_LOGO_SVG,
+    name: 'Official Dashen Bank (Authentic Emblem)',
+    description: 'Authentic Ras Dashen mountain crest, triangulation truss, and official bilingual typography matching mobile banking',
+    url: '/dashen-logo-clean.svg',
     isOfficial: true
   },
   {
@@ -321,7 +309,7 @@ export function DashenMountainBackdrop({
 
 /**
  * Dashen Bank Logo Box Component
- * Displays custom uploaded logo or official Dashen vector logo
+ * Displays custom uploaded logo or official Dashen vector logo matching Screenshot_20260909-123028.png top-left
  */
 export function DashenLogo({
   src,
@@ -339,36 +327,92 @@ export function DashenLogo({
   return (
     <div 
       onClick={onClick}
-      className={`relative rounded-[11px] border border-white/30 bg-[#0b2149]/80 backdrop-blur-xs flex flex-col items-center justify-center p-1 text-center shadow-md overflow-hidden shrink-0 transition ${
-        onClick ? 'cursor-pointer hover:border-white/60 active:scale-95' : ''
+      className={`relative rounded-[12px] border border-white/35 bg-[#0b2149]/95 backdrop-blur-md flex items-center justify-center p-0.5 text-center shadow-md overflow-hidden shrink-0 transition ${
+        onClick ? 'cursor-pointer hover:border-white/70 active:scale-95' : ''
       } ${className}`}
-      title={isCustom ? 'Custom Uploaded Logo (Click to change)' : 'Official Dashen Bank Logo (Click to change)'}
+      title={isCustom ? 'Custom Uploaded Logo (Click to change)' : 'Official Dashen Bank Emblem (Click to customize)'}
     >
-      {isCustom ? (
-        <img 
-          src={src || ''} 
-          alt="Bank Logo" 
-          className="w-full h-full object-contain"
-          onError={(e) => {
-            // Fallback to official logo if broken link
-            (e.target as HTMLElement).style.display = 'none';
-          }}
-        />
-      ) : (
-        <div className="w-full h-full flex flex-col items-center justify-center">
-          {/* Mountain silhouette icon */}
-          <div className="w-5 h-2.5 border-b-2 border-white flex items-end justify-center">
-            <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[8px] border-b-white" />
-          </div>
-          {showText && (
-            <>
-              <span className="text-[6.5px] font-extrabold tracking-tighter text-white leading-none mt-0.5">ዳሽን ባንክ</span>
-              <span className="text-[5px] text-blue-200 font-medium leading-none">Dashen Bank</span>
-            </>
-          )}
-        </div>
-      )}
+      <img 
+        src={isCustom ? (src || '') : '/dashen-logo-clean.svg'} 
+        alt="Dashen Bank Emblem" 
+        className="w-full h-full object-contain filter drop-shadow-xs"
+        onError={(e) => {
+          // Graceful fallback to official vector logo
+          (e.currentTarget as HTMLImageElement).src = '/dashen-logo-clean.svg';
+        }}
+      />
     </div>
+  );
+}
+
+/**
+ * Floating Theme / Wallpaper Customizer FAB
+ * Exact 1:1 match for the floating paintbrush squircle icon in Screenshot_20260909-125235.png and Screenshot_20260909-123028.png
+ */
+export function DashenThemeFab({
+  onClick,
+  className = ''
+}: {
+  onClick: () => void;
+  className?: string;
+}) {
+  return (
+    <button 
+      onClick={onClick}
+      className={`w-12 h-12 rounded-2xl bg-[#374151]/85 backdrop-blur-md border border-white/35 shadow-xl flex items-center justify-center p-1.5 hover:scale-105 active:scale-95 transition cursor-pointer select-none ${className}`}
+      title="Customize Bank Logo & Wallpaper"
+      aria-label="Customize Bank Logo & Wallpaper"
+    >
+      {/* Inner White Circular Disc */}
+      <div className="w-9 h-9 rounded-full bg-white shadow-xs flex items-center justify-center">
+        {/* Stylized Diagonal Paintbrush Icon with blue handle and dark tip matching screenshots */}
+        <svg 
+          viewBox="0 0 36 36" 
+          className="w-6 h-6 transform rotate-45"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            {/* Blue gradient handle */}
+            <linearGradient id="fabBlueHandle" x1="100%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="35%" stopColor="#3b82f6" />
+              <stop offset="85%" stopColor="#1d4ed8" />
+              <stop offset="100%" stopColor="#1e3a8a" />
+            </linearGradient>
+            {/* Silver metallic ferrule */}
+            <linearGradient id="fabSilverFerrule" x1="100%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#f8fafc" />
+              <stop offset="50%" stopColor="#94a3b8" />
+              <stop offset="100%" stopColor="#64748b" />
+            </linearGradient>
+            {/* Dark slate bristle tip */}
+            <linearGradient id="fabDarkBristle" x1="100%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#334155" />
+              <stop offset="60%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#090d16" />
+            </linearGradient>
+            {/* White specular shine */}
+            <linearGradient id="fabShine" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+
+          {/* 1. Paintbrush Handle */}
+          <path d="M 16 3 C 16 2, 20 2, 20 3 L 20 18 L 16 18 Z" fill="url(#fabBlueHandle)" />
+          <ellipse cx="18" cy="3" rx="2" ry="1.2" fill="#e2e8f0" />
+          <path d="M 16.5 4 L 17.5 4 L 17.5 17 L 16.5 17 Z" fill="url(#fabShine)" />
+
+          {/* 2. Ferrule Band */}
+          <rect x="15.5" y="18" width="5" height="4" rx="0.5" fill="url(#fabSilverFerrule)" />
+          <line x1="15.5" y1="20" x2="20.5" y2="20" stroke="#cbd5e1" strokeWidth="0.5" />
+
+          {/* 3. Dark Pointed Bristle Tip */}
+          <path d="M 15.8 22 C 16 24, 17.2 29.5, 18 31.5 C 18.8 29.5, 20 24, 20.2 22 Z" fill="url(#fabDarkBristle)" />
+          <path d="M 17.7 28.5 L 18 31.5 L 18.3 28.5 Z" fill="#60a5fa" opacity="0.6" />
+        </svg>
+      </div>
+    </button>
   );
 }
 

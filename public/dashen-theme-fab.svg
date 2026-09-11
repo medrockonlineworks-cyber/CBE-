@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36" width="36" height="36">
+  <defs>
+    <linearGradient id="themeHandleGrad" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#93c5fd"/>
+      <stop offset="30%" stop-color="#3b82f6"/>
+      <stop offset="85%" stop-color="#1d4ed8"/>
+      <stop offset="100%" stop-color="#1e3a8a"/>
+    </linearGradient>
+    <linearGradient id="themeSilverFerrule" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f8fafc"/>
+      <stop offset="50%" stop-color="#94a3b8"/>
+      <stop offset="100%" stop-color="#64748b"/>
+    </linearGradient>
+    <linearGradient id="themeBristleGrad" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#334155"/>
+      <stop offset="60%" stop-color="#1e293b"/>
+      <stop offset="100%" stop-color="#090d16"/>
+    </linearGradient>
+    <linearGradient id="themeShineGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(18, 18) rotate(45) translate(-18, -18)">
+    <!-- Handle (top part) -->
+    <path d="M 16 3 C 16 2, 20 2, 20 3 L 20 18 L 16 18 Z" fill="url(#themeHandleGrad)"/>
+    <!-- Rounded tail end cap -->
+    <ellipse cx="18" cy="3" rx="2" ry="1.2" fill="#e2e8f0"/>
+    <!-- Specular highlight along handle -->
+    <path d="M 16.5 4 L 17.5 4 L 17.5 17 L 16.5 17 Z" fill="url(#themeShineGrad)"/>
+
+    <!-- Ferrule (silver band) -->
+    <rect x="15.5" y="18" width="5" height="4" rx="0.5" fill="url(#themeSilverFerrule)"/>
+    <line x1="15.5" y1="20" x2="20.5" y2="20" stroke="#cbd5e1" stroke-width="0.5"/>
+
+    <!-- Bristles (tapered pointed tip) -->
+    <path d="M 15.8 22 C 16 24, 17.2 29.5, 18 31.5 C 18.8 29.5, 20 24, 20.2 22 Z" fill="url(#themeBristleGrad)"/>
+    <!-- Fine tip highlight -->
+    <path d="M 17.7 28.5 L 18 31.5 L 18.3 28.5 Z" fill="#60a5fa" opacity="0.6"/>
+  </g>
+</svg>
