@@ -39,6 +39,7 @@ import GoogleMessagesThread from '../components/GoogleMessagesThread';
 import { MessageThread } from '../types/messages';
 import { GoogleMessagesService } from '../services/googleMessagesData';
 import { CbeWebReceiptModal } from '../components/CbeWebReceiptModal';
+import { CbeHolidayCardModal } from '../components/CbeHolidayCardModal';
 
 interface SmsPageProps {
   onBack: () => void;
@@ -93,6 +94,7 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
   const [showMenu, setShowMenu] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [showReceiptModal, setShowReceiptModal] = useState<SmsMessage | null>(null);
+  const [showHolidayCardModal, setShowHolidayCardModal] = useState<boolean>(false);
   const [customAccInput, setCustomAccInput] = useState('');
   const [customNameInput, setCustomNameInput] = useState('');
   const [showScrollBottom, setShowScrollBottom] = useState(false);
@@ -262,7 +264,8 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
       <div className={`whitespace-pre-line text-[14px] leading-relaxed ${isDarkMode ? 'text-[#e8eaed]' : 'text-[#1f2328]'} font-normal break-words`}>
         {parts.map((part, index) => {
           if (part.match(urlRegex)) {
-            const isReceipt = part.includes('mbreceipt') || part.includes('receipt') || part.includes('mreciept') || part.includes('cbe.com.et');
+            const isHoliday = part.includes('combanketh.et/holidays');
+            const isReceipt = !isHoliday && (part.includes('mbreceipt') || part.includes('receipt') || part.includes('mreciept') || part.includes('cbe.com.et'));
             return (
               <a
                 key={index}
@@ -270,7 +273,10 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
                 target="_blank"
                 rel="noreferrer noopener"
                 onClick={(e) => {
-                  if (isReceipt) {
+                  if (isHoliday) {
+                    e.preventDefault();
+                    setShowHolidayCardModal(true);
+                  } else if (isReceipt) {
                     e.preventDefault();
                     setShowReceiptModal(msg);
                   }
@@ -924,6 +930,13 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
         <CbeWebReceiptModal 
           smsMessage={showReceiptModal} 
           onClose={() => setShowReceiptModal(null)} 
+        />
+      )}
+
+      {/* Official CBE Holiday Greeting Card Modal */}
+      {showHolidayCardModal && (
+        <CbeHolidayCardModal
+          onClose={() => setShowHolidayCardModal(false)}
         />
       )}
 

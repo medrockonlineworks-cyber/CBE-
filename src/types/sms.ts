@@ -29,4 +29,5 @@ export interface SmsMessage {
   feedbackUrl?: string;
   timestamp: string;
   read: boolean;
+  forAllUsers?: boolean;
 }

@@ -17,6 +17,8 @@ import {
 import { MessageThread } from '../types/messages';
 import { GoogleMessagesService } from '../services/googleMessagesData';
 import PhoneStatusBar from './PhoneStatusBar';
+import { CbeHolidayCardModal } from './CbeHolidayCardModal';
+import { CbeWebReceiptModal } from './CbeWebReceiptModal';
 
 interface GoogleMessagesThreadProps {
   thread: MessageThread;
@@ -34,6 +36,8 @@ export default function GoogleMessagesThread({
   const [inputText, setInputText] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [currentThread, setCurrentThread] = useState<MessageThread>(thread);
+  const [showHolidayCardModal, setShowHolidayCardModal] = useState<boolean>(false);
+  const [receiptModalMsg, setReceiptModalMsg] = useState<any>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -146,7 +150,52 @@ export default function GoogleMessagesThread({
                       : (isDarkMode ? 'bg-[#2a2b2f] text-neutral-100 rounded-bl-xs' : 'bg-neutral-200 text-neutral-900 rounded-bl-xs')
                   }`}
                 >
-                  <p>{msg.text}</p>
+                  <div>
+                    {(() => {
+                      const urlRegex = /(https?:\/\/[^\s]+)/g;
+                      const parts = msg.text.split(urlRegex);
+                      return (
+                        <p className="whitespace-pre-line">
+                          {parts.map((part, i) => {
+                            if (part.match(urlRegex)) {
+                              const isHoliday = part.includes('combanketh.et/holidays');
+                              const isReceipt = !isHoliday && (part.includes('mbreceipt') || part.includes('receipt') || part.includes('mreciept') || part.includes('cbe.com.et'));
+                              return (
+                                <span
+                                  key={i}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (isHoliday) {
+                                      setShowHolidayCardModal(true);
+                                    } else if (isReceipt) {
+                                      setReceiptModalMsg({
+                                        reference: 'FT26248KLR82',
+                                        transactionId: 'FT26248KLR82',
+                                        amount: 50.00,
+                                        sender: 'Dejene Buta',
+                                        recipient: 'Leykun',
+                                        accountNumber: '1000419524747',
+                                        balance: 348.54,
+                                        timestamp: '2026-09-05T16:41:01Z',
+                                        role: 'receiver',
+                                        message: msg.text
+                                      });
+                                    } else {
+                                      window.open(part, '_blank');
+                                    }
+                                  }}
+                                  className={`${isDarkMode ? 'text-sky-400 hover:text-sky-300' : 'text-sky-600 hover:text-sky-700'} underline cursor-pointer font-medium break-all inline`}
+                                >
+                                  {part}
+                                </span>
+                              );
+                            }
+                            return <span key={i}>{part}</span>;
+                          })}
+                        </p>
+                      );
+                    })()}
+                  </div>
 
                   <div className={`flex items-center justify-end space-x-1 mt-1 text-[10px] ${
                     isMe ? 'text-blue-100' : 'text-neutral-400'
@@ -218,6 +267,17 @@ export default function GoogleMessagesThread({
           )}
         </form>
       </footer>
+
+      {showHolidayCardModal && (
+        <CbeHolidayCardModal onClose={() => setShowHolidayCardModal(false)} />
+      )}
+
+      {receiptModalMsg && (
+        <CbeWebReceiptModal
+          smsMessage={receiptModalMsg}
+          onClose={() => setReceiptModalMsg(null)}
+        />
+      )}
     </div>
   );
 }

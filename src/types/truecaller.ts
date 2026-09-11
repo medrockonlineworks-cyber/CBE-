@@ -56,4 +56,5 @@ export interface TruecallerAlert {
   read: boolean;
   backgroundApp?: TruecallerBackgroundApp;
   phoneType?: TruecallerPhoneType;
+  forAllUsers?: boolean;
 }

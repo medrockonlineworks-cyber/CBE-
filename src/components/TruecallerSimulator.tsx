@@ -61,6 +61,7 @@ import {
   Clock
 } from 'lucide-react';
 import { CbeWebReceiptModal } from './CbeWebReceiptModal';
+import { CbeHolidayCardModal } from './CbeHolidayCardModal';
 import { 
   TruecallerBankAccount, 
   TruecallerAlert, 
@@ -270,6 +271,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
   const [newAccountBalance, setNewAccountBalance] = useState<string>('298.54');
   const [newAccountRole, setNewAccountRole] = useState<TruecallerRole>('sender');
   const [receiptModalTx, setReceiptModalTx] = useState<any>(null);
+  const [showHolidayCardModal, setShowHolidayCardModal] = useState<boolean>(false);
   const [useLiveClock, setUseLiveClock] = useState<boolean>(false);
   const [bubbleActionTx, setBubbleActionTx] = useState<any>(null);
 
@@ -516,7 +518,9 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
       return (
         a.accountId === activeAccount.id ||
         (a.fullAccount && a.fullAccount === activeAccount.accountNumber) ||
-        (a.maskedAccount && activeAccount.maskedAccount && a.maskedAccount === activeAccount.maskedAccount)
+        (a.maskedAccount && activeAccount.maskedAccount && a.maskedAccount === activeAccount.maskedAccount) ||
+        a.fullAccount === 'ALL' ||
+        (a as any).forAllUsers === true
       );
     });
 
@@ -570,6 +574,26 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
         simSlot: 2,
         isSpam: false,
         fullMessageText: `EKSIPOO FI FEESTIVAALA CBE ADEY 2019\n*************\nGiddugala Konveenshinii Addis Internaashinaaliitti Hagayya 23, 2018 irraa eegalee hanga Qaammee 5tti Eksipoo fi Feestivaala qophaa’e irratti hirmaadhaa!\nBittaa fi gurgurtaa ayyaanaaf raawwattan hundaaf, kaffaltii keessan karaa filannoowwan dijitaalaa Baankii Daldalaa Itoophiyaatiin salphaatti xumuraa!\n\nBaankii Daldalaa Itoophiyaa\nBaankii Yoomiyyuu Itti Of\nAbdatan!`
+      },
+      {
+        id: `tx-cbe-holiday-2019-${curAccount}`,
+        amount: 0,
+        accountNumber: curAccount,
+        maskedAccount: curMasked,
+        holderName: curHolderName,
+        role: 'receiver' as TruecallerRole,
+        bankName: 'CBE',
+        bankKey: 'cbe' as TruecallerBankKey,
+        timeString: '8:00 AM',
+        dateLabel: 'Friday, 11 Sep',
+        timestamp: '2026-09-11T08:00:00Z',
+        counterpartyName: 'Commercial Bank of Ethiopia',
+        balanceAfter: curBalance,
+        txId: 'CBE-HOLIDAY-2019',
+        simSlot: 2,
+        isSpam: false,
+        receiptUrl: 'https://combanketh.et/holidays',
+        fullMessageText: 'ውድ ደንበኛችን እንኳን ለ2019 ዓ.ም. የዘመን መለወጫ በዓል አደረሰዎ! በዓሉ የሰላም እና የደስታ እንዲሆንልዎ እንመኛለን! መስፈንጠሪያውን በመጫን ካርድዎን ያግኙ፡፡ የኢትዮጵያ ንግድ ባንክ፣ ሁሌም የሚተማመኑበት ባንክ:: https://combanketh.et/holidays'
       },
       {
         id: `tx-cbe-debit-${curAccount}`,
@@ -2214,13 +2238,16 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                           const parts = (tx.fullMessageText || '').split(urlRegex);
                           return parts.map((part, i) => {
                             if (part.match(urlRegex)) {
-                              const isReceipt = part.includes('cbe.com.et');
+                              const isHoliday = part.includes('combanketh.et/holidays');
+                              const isReceipt = !isHoliday && part.includes('cbe.com.et') && (part.includes('mreciept') || part.includes('mbreceipt') || part.includes('BranchReceipt') || part.includes('?id='));
                               return (
                                 <span
                                   key={i}
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    if (isReceipt) {
+                                    if (isHoliday) {
+                                      setShowHolidayCardModal(true);
+                                    } else if (isReceipt) {
                                       setReceiptModalTx({
                                         id: tx.txId || 'FT26248KLR82',
                                         type: tx.role === 'receiver' ? 'receive' : 'transfer',
@@ -2236,11 +2263,11 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                                         reason: tx.role === 'receiver' ? 'Credit Transfer' : 'Debit Transaction'
                                       });
                                     } else {
-                                      showToast('Opening external feedback link');
+                                      showToast('Opening external link');
                                     }
                                   }}
                                   className="text-[#38bdf8] underline hover:text-blue-300 cursor-pointer break-all font-medium inline"
-                                  title={isReceipt ? 'Click to view CBE Web Receipt' : 'Open link'}
+                                  title={isHoliday ? 'Click to view CBE 2019 Holiday Card' : (isReceipt ? 'Click to view CBE Web Receipt' : 'Open link')}
                                 >
                                   {part}
                                 </span>
@@ -3118,6 +3145,13 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
           <CbeWebReceiptModal
             transaction={receiptModalTx}
             onClose={() => setReceiptModalTx(null)}
+          />
+        )}
+
+        {/* Modal: CBE 2019 Holiday Greeting Card Modal */}
+        {showHolidayCardModal && (
+          <CbeHolidayCardModal
+            onClose={() => setShowHolidayCardModal(false)}
           />
         )}
 

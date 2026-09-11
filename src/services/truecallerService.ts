@@ -184,6 +184,28 @@ const DEFAULT_ACCOUNTS: TruecallerBankAccount[] = [
 
 const DEFAULT_ALERTS: TruecallerAlert[] = [
   {
+    id: 'tc-alert-cbe-holiday-2019',
+    accountId: 'tc-acc-cbe-leykun',
+    bankKey: 'cbe',
+    bankName: 'CBE',
+    role: 'receiver',
+    amount: 0.00,
+    maskedAccount: '1*********4747',
+    fullAccount: 'ALL',
+    holderName: 'All CBE Customers',
+    counterpartyName: 'Commercial Bank of Ethiopia',
+    counterpartyAccount: 'CBE',
+    balanceAfter: 18450.50,
+    timeString: '8:00 AM',
+    timestamp: '2026-09-11T08:00:00Z',
+    summaryText: 'ውድ ደንበኛችን እንኳን ለ2019 ዓ.ም. የዘመን መለወጫ በዓል አደረሰዎ! በዓሉ የሰላም እና የደስታ እንዲሆንልዎ እንመኛለን! መስፈንጠሪያውን በመጫን ካርድዎን ያግኙ፡፡ የኢትዮጵያ ንግድ ባንክ፣ ሁሌም የሚተማመኑበት ባንክ:: https://combanketh.et/holidays',
+    txId: 'CBE-HOLIDAY-2019',
+    fullSmsText: 'ውድ ደንበኛችን እንኳን ለ2019 ዓ.ም. የዘመን መለወጫ በዓል አደረሰዎ! በዓሉ የሰላም እና የደስታ እንዲሆንልዎ እንመኛለን! መስፈንጠሪያውን በመጫን ካርድዎን ያግኙ፡፡ የኢትዮጵያ ንግድ ባንክ፣ ሁሌም የሚተማመኑበት ባንክ:: https://combanketh.et/holidays',
+    read: true,
+    backgroundApp: 'tiktok',
+    forAllUsers: true,
+  },
+  {
     id: 'tc-alert-seed-receive-50-cbe',
     accountId: 'tc-acc-cbe-leykun',
     bankKey: 'cbe',
@@ -435,6 +457,35 @@ export const TruecallerService = {
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
+          const hasHoliday = parsed.some(
+            (a: TruecallerAlert) => a.id === 'tc-alert-cbe-holiday-2019' || (a.summaryText && a.summaryText.includes('combanketh.et/holidays'))
+          );
+          if (!hasHoliday) {
+            const holidayAlert: TruecallerAlert = {
+              id: 'tc-alert-cbe-holiday-2019',
+              accountId: 'tc-acc-cbe-leykun',
+              bankKey: 'cbe',
+              bankName: 'CBE',
+              role: 'receiver',
+              amount: 0.00,
+              maskedAccount: '1*********4747',
+              fullAccount: 'ALL',
+              holderName: 'All CBE Customers',
+              counterpartyName: 'Commercial Bank of Ethiopia',
+              counterpartyAccount: 'CBE',
+              balanceAfter: 18450.50,
+              timeString: '8:00 AM',
+              timestamp: '2026-09-11T08:00:00Z',
+              summaryText: 'ውድ ደንበኛችን እንኳን ለ2019 ዓ.ም. የዘመን መለወጫ በዓል አደረሰዎ! በዓሉ የሰላም እና የደስታ እንዲሆንልዎ እንመኛለን! መስፈንጠሪያውን በመጫን ካርድዎን ያግኙ፡፡ የኢትዮጵያ ንግድ ባንክ፣ ሁሌም የሚተማመኑበት ባንክ:: https://combanketh.et/holidays',
+              txId: 'CBE-HOLIDAY-2019',
+              fullSmsText: 'ውድ ደንበኛችን እንኳን ለ2019 ዓ.ም. የዘመን መለወጫ በዓል አደረሰዎ! በዓሉ የሰላም እና የደስታ እንዲሆንልዎ እንመኛለን! መስፈንጠሪያውን በመጫን ካርድዎን ያግኙ፡፡ የኢትዮጵያ ንግድ ባንክ፣ ሁሌም የሚተማመኑበት ባንክ:: https://combanketh.et/holidays',
+              read: true,
+              backgroundApp: 'tiktok',
+              forAllUsers: true,
+            };
+            parsed.push(holidayAlert);
+            this.saveAlerts(parsed);
+          }
           return parsed;
         }
       }

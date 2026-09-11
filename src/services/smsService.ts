@@ -236,7 +236,33 @@ const INITIAL_DEMO_ACCOUNTS: SmsAccount[] = [
   },
 ];
 
+export const CBE_NEW_YEAR_2019_MESSAGE = 'ውድ ደንበኛችን እንኳን ለ2019 ዓ.ም. የዘመን መለወጫ በዓል አደረሰዎ! በዓሉ የሰላም እና የደስታ እንዲሆንልዎ እንመኛለን! መስፈንጠሪያውን በመጫን ካርድዎን ያግኙ፡፡ የኢትዮጵያ ንግድ ባንክ፣ ሁሌም የሚተማመኑበት ባንክ:: https://combanketh.et/holidays';
+
 const INITIAL_DEMO_MESSAGES: SmsMessage[] = [
+  // Official CBE 2019 Ethiopian New Year holiday message broadcast to all users
+  {
+    id: 'sms-cbe-holiday-2019',
+    transactionId: 'CBE-HOLIDAY-2019',
+    accountNumber: 'ALL',
+    accountName: 'All CBE Customers',
+    forAllUsers: true,
+    role: 'receiver',
+    bankName: 'CBE',
+    sender: 'CBE',
+    recipient: 'All Customers',
+    type: 'INFO',
+    amount: 0,
+    serviceCharge: 0,
+    vat: 0,
+    disasterRecovery: 0,
+    totalDebited: 0,
+    balance: 0,
+    message: CBE_NEW_YEAR_2019_MESSAGE,
+    receiptUrl: 'https://combanketh.et/holidays',
+    feedbackUrl: DEFAULT_FEEDBACK_URL,
+    timestamp: getRelativeDate(0, 8, 0), // Today at 8:00 AM (New Year morning)
+    read: true,
+  },
   {
     id: 'sms-cbe-seed-1',
     transactionId: 'FT25104MK01',
@@ -544,8 +570,41 @@ export class SmsService {
             localStorage.setItem(STORAGE_MESSAGES_KEY, JSON.stringify(list));
           }
 
-          // Migrate any existing messages that contain mreciept.cbe.com.et to mbreceipt.cbe.com.et
           let listNeedsResave = false;
+
+          // Self-heal: ensure CBE 2019 New Year holiday message is present for all users
+          const hasHolidayMsg = list.some(
+            m => m.id === 'sms-cbe-holiday-2019' || (m.message && m.message.includes('combanketh.et/holidays'))
+          );
+          if (!hasHolidayMsg) {
+            const holidayMsg: SmsMessage = {
+              id: 'sms-cbe-holiday-2019',
+              transactionId: 'CBE-HOLIDAY-2019',
+              accountNumber: 'ALL',
+              accountName: 'All CBE Customers',
+              forAllUsers: true,
+              role: 'receiver',
+              bankName: 'CBE',
+              sender: 'CBE',
+              recipient: 'All Customers',
+              type: 'INFO',
+              amount: 0,
+              serviceCharge: 0,
+              vat: 0,
+              disasterRecovery: 0,
+              totalDebited: 0,
+              balance: 0,
+              message: CBE_NEW_YEAR_2019_MESSAGE,
+              receiptUrl: 'https://combanketh.et/holidays',
+              feedbackUrl: DEFAULT_FEEDBACK_URL,
+              timestamp: getRelativeDate(0, 8, 0),
+              read: true,
+            };
+            list.push(holidayMsg);
+            listNeedsResave = true;
+          }
+
+          // Migrate any existing messages that contain mreciept.cbe.com.et to mbreceipt.cbe.com.et
           list.forEach(m => {
             if (m.receiptUrl && (m.receiptUrl.includes('mreciept.cbe.com.et') || m.receiptUrl.includes('mbreciept.cbe.com.et'))) {
               m.receiptUrl = m.receiptUrl.replace(/m(?:b)?reciept\.cbe\.com\.et/g, 'mbreceipt.cbe.com.et');
@@ -566,7 +625,8 @@ export class SmsService {
       list.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
       if (accountNumber) {
-        return list.filter(m => m.accountNumber === accountNumber);
+        const cleanTarget = accountNumber.replace(/\D/g, '');
+        return list.filter(m => m.accountNumber.replace(/\D/g, '') === cleanTarget || m.forAllUsers === true || m.accountNumber === 'ALL');
       }
       return list;
     } catch (err) {
@@ -972,9 +1032,9 @@ export class SmsService {
     }
 
     // 2. Check SMS messages for the latest transaction sender and receiver
-    const sortedAllMessages = [...allMessages].sort(
-      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-    );
+    const sortedAllMessages = [...allMessages]
+      .filter(m => !m.forAllUsers && m.accountNumber !== 'ALL')
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
     if (nowAccountCleanSet.size < 2 && sortedAllMessages.length > 0) {
       const topMsg = sortedAllMessages[0];
