@@ -40,7 +40,7 @@ import { maskAccountNumber } from '../services/smsService';
  */
 function ScreenshotViewfinderIcon({ 
   className = "w-7 h-7 text-white",
-  strokeWidth = 2.8 
+  strokeWidth = 2.0 
 }: { 
   className?: string;
   strokeWidth?: number;
@@ -57,15 +57,15 @@ function ScreenshotViewfinderIcon({
     >
       {/* 4 Corner Viewfinder Brackets - scaled up with uniform gap to center circle */}
       {/* Top-Left */}
-      <path d="M 3.8 8.0 V 6.0 A 2.2 2.2 0 0 1 6.0 3.8 H 8.0" />
+      <path d="M 3.8 8.2 V 6.0 A 2.2 2.2 0 0 1 6.0 3.8 H 8.2" />
       {/* Top-Right */}
-      <path d="M 16.0 3.8 H 18.0 A 2.2 2.2 0 0 1 20.2 6.0 V 8.0" />
+      <path d="M 15.8 3.8 H 18.0 A 2.2 2.2 0 0 1 20.2 6.0 V 8.2" />
       {/* Bottom-Right */}
-      <path d="M 20.2 16.0 V 18.0 A 2.2 2.2 0 0 1 18.0 20.2 H 16.0" />
+      <path d="M 20.2 15.8 V 18.0 A 2.2 2.2 0 0 1 18.0 20.2 H 15.8" />
       {/* Bottom-Left */}
-      <path d="M 8.0 20.2 H 6.0 A 2.2 2.2 0 0 1 3.8 18.0 V 16.0" />
-      {/* Enlarged center focus circle */}
-      <circle cx="12" cy="12" r="4.2" />
+      <path d="M 8.2 20.2 H 6.0 A 2.2 2.2 0 0 1 3.8 18.0 V 15.8" />
+      {/* Enlarged center focus circle with refined line weight */}
+      <circle cx="12" cy="12" r="4.4" />
     </svg>
   );
 }
@@ -608,45 +608,45 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     const toCanvasY = (svgY: number) => btnCy + (svgY - 12) * s;
 
     ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 2.8 * s;
+    ctx.lineWidth = 2.0 * s;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
     // Top-left bracket
     ctx.beginPath();
-    ctx.moveTo(toCanvasX(3.8), toCanvasY(8.0));
+    ctx.moveTo(toCanvasX(3.8), toCanvasY(8.2));
     ctx.lineTo(toCanvasX(3.8), toCanvasY(6.0));
     ctx.arcTo(toCanvasX(3.8), toCanvasY(3.8), toCanvasX(6.0), toCanvasY(3.8), 2.2 * s);
-    ctx.lineTo(toCanvasX(8.0), toCanvasY(3.8));
+    ctx.lineTo(toCanvasX(8.2), toCanvasY(3.8));
     ctx.stroke();
 
     // Top-right bracket
     ctx.beginPath();
-    ctx.moveTo(toCanvasX(16.0), toCanvasY(3.8));
+    ctx.moveTo(toCanvasX(15.8), toCanvasY(3.8));
     ctx.lineTo(toCanvasX(18.0), toCanvasY(3.8));
     ctx.arcTo(toCanvasX(20.2), toCanvasY(3.8), toCanvasX(20.2), toCanvasY(6.0), 2.2 * s);
-    ctx.lineTo(toCanvasX(20.2), toCanvasY(8.0));
+    ctx.lineTo(toCanvasX(20.2), toCanvasY(8.2));
     ctx.stroke();
 
     // Bottom-right bracket
     ctx.beginPath();
-    ctx.moveTo(toCanvasX(20.2), toCanvasY(16.0));
+    ctx.moveTo(toCanvasX(20.2), toCanvasY(15.8));
     ctx.lineTo(toCanvasX(20.2), toCanvasY(18.0));
     ctx.arcTo(toCanvasX(20.2), toCanvasY(20.2), toCanvasX(18.0), toCanvasY(20.2), 2.2 * s);
-    ctx.lineTo(toCanvasX(16.0), toCanvasY(20.2));
+    ctx.lineTo(toCanvasX(15.8), toCanvasY(20.2));
     ctx.stroke();
 
     // Bottom-left bracket
     ctx.beginPath();
-    ctx.moveTo(toCanvasX(8.0), toCanvasY(20.2));
+    ctx.moveTo(toCanvasX(8.2), toCanvasY(20.2));
     ctx.lineTo(toCanvasX(6.0), toCanvasY(20.2));
     ctx.arcTo(toCanvasX(3.8), toCanvasY(20.2), toCanvasX(3.8), toCanvasY(18.0), 2.2 * s);
-    ctx.lineTo(toCanvasX(3.8), toCanvasY(16.0));
+    ctx.lineTo(toCanvasX(3.8), toCanvasY(15.8));
     ctx.stroke();
 
     // Center circle ring - enlarged matching second image with uniform gap
     ctx.beginPath();
-    ctx.arc(btnCx, btnCy, 4.2 * s, 0, Math.PI * 2);
+    ctx.arc(btnCx, btnCy, 4.4 * s, 0, Math.PI * 2);
     ctx.stroke();
 
     // 3. Main White Card
@@ -1192,7 +1192,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           {isCapturing ? (
             <Loader2 className="w-5 h-5 animate-spin text-white" />
           ) : (
-            <ScreenshotViewfinderIcon className="w-7 h-7 text-white" strokeWidth={2.8} />
+            <ScreenshotViewfinderIcon className="w-7 h-7 text-white" strokeWidth={2.0} />
           )}
         </button>
       </div>
@@ -1348,7 +1348,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
               {isCapturing ? (
                 <Loader2 className="w-[18px] h-[18px] stroke-[2.2] animate-spin text-[#68137e]" />
               ) : (
-                <ScreenshotViewfinderIcon className="w-[18px] h-[18px] text-black" strokeWidth={2.6} />
+                <ScreenshotViewfinderIcon className="w-[18px] h-[18px] text-black" strokeWidth={1.8} />
               )}
               <span>{isCapturing ? 'Saving...' : 'Screenshot'}</span>
             </button>
