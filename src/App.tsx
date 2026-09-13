@@ -386,17 +386,6 @@ export default function App() {
         id="app-main-canvas"
         className="w-full max-w-md bg-gray-50 h-[100dvh] max-h-[100dvh] md:h-[840px] md:max-h-[880px] md:rounded-3xl md:shadow-2xl relative flex flex-col overflow-hidden border-0 md:border md:border-slate-800/60 pt-safe pb-safe"
       >
-        {/* Unified Phone Status Bar for CBE Main, Auth, Admin & Receipt Views */}
-        {(activeView === 'main' || activeView === 'auth' || activeView === 'receipt' || activeView === 'admin') && (
-          <div className="relative z-30 shrink-0 bg-[#70189F]">
-            <PhoneStatusBar 
-              theme="dark" 
-              onClick={() => setIsPhoneSettingsOpen(true)}
-              showEditHint={false}
-            />
-          </div>
-        )}
-
         {/* Real-time Offline Warning Banner */}
         <OfflineBanner />
 

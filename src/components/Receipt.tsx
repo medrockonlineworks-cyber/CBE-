@@ -34,6 +34,43 @@ import {
 import { maskAccountNumber } from '../services/smsService';
 
 /**
+ * Viewfinder focus screenshot icon matching exact reference (IMG_20260913_140907_194.jpg)
+ * Features four enlarged surrounding corner brackets and an enlarged center circle ring
+ * with an even, snug gap between the circle and brackets.
+ */
+function ScreenshotViewfinderIcon({ 
+  className = "w-7 h-7 text-white",
+  strokeWidth = 2.8 
+}: { 
+  className?: string;
+  strokeWidth?: number;
+}) {
+  return (
+    <svg 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth={strokeWidth} 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      className={className}
+    >
+      {/* 4 Corner Viewfinder Brackets - scaled up with uniform gap to center circle */}
+      {/* Top-Left */}
+      <path d="M 3.8 8.0 V 6.0 A 2.2 2.2 0 0 1 6.0 3.8 H 8.0" />
+      {/* Top-Right */}
+      <path d="M 16.0 3.8 H 18.0 A 2.2 2.2 0 0 1 20.2 6.0 V 8.0" />
+      {/* Bottom-Right */}
+      <path d="M 20.2 16.0 V 18.0 A 2.2 2.2 0 0 1 18.0 20.2 H 16.0" />
+      {/* Bottom-Left */}
+      <path d="M 8.0 20.2 H 6.0 A 2.2 2.2 0 0 1 3.8 18.0 V 16.0" />
+      {/* Enlarged center focus circle */}
+      <circle cx="12" cy="12" r="4.2" />
+    </svg>
+  );
+}
+
+/**
  * Generates an authentic, high-density 33x33 QR matrix with Finder patterns,
  * Timing patterns, Alignment block, and unique deterministic data modules.
  */
@@ -553,36 +590,64 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     ctx.font = '400 16px system-ui, -apple-system, sans-serif';
     ctx.fillText('Success', shieldX + 46, shieldY + 38);
 
-    // Top Right Viewfinder / Scan Button (Translucent circle with focus icon)
+    // Top Right Viewfinder / Scan Button (Translucent circle with enlarged focus icon matching Image 2)
     const scanBtnX = width - 82;
     const scanBtnY = 96;
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-    ctx.beginPath();
-    ctx.arc(scanBtnX + 22, scanBtnY + 22, 22, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
+    const btnRadius = 22;
+    const btnCx = scanBtnX + btnRadius;
+    const btnCy = scanBtnY + btnRadius;
 
-    // Viewfinder focus brackets & center ring
-    const vfX = scanBtnX + 11;
-    const vfY = scanBtnY + 11;
-    const vfS = 22;
-    const vfCr = 4;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+    ctx.beginPath();
+    ctx.arc(btnCx, btnCy, btnRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Map 24x24 SVG coordinates to 28px icon inside canvas button
+    const s = 28 / 24;
+    const toCanvasX = (svgX: number) => btnCx + (svgX - 12) * s;
+    const toCanvasY = (svgY: number) => btnCy + (svgY - 12) * s;
+
     ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 2.4;
+    ctx.lineWidth = 2.8 * s;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    // Top-left
-    ctx.beginPath(); ctx.moveTo(vfX, vfY + vfCr + 2); ctx.lineTo(vfX, vfY + 2); ctx.arcTo(vfX, vfY, vfX + 2, vfY, 2); ctx.lineTo(vfX + vfCr + 2, vfY); ctx.stroke();
-    // Top-right
-    ctx.beginPath(); ctx.moveTo(vfX + vfS - vfCr - 2, vfY); ctx.lineTo(vfX + vfS - 2, vfY); ctx.arcTo(vfX + vfS, vfY, vfX + vfS, vfY + 2, 2); ctx.lineTo(vfX + vfS, vfY + vfCr + 2); ctx.stroke();
-    // Bottom-left
-    ctx.beginPath(); ctx.moveTo(vfX, vfY + vfS - vfCr - 2); ctx.lineTo(vfX, vfY + vfS - 2); ctx.arcTo(vfX, vfY + vfS, vfX + 2, vfY + vfS, 2); ctx.lineTo(vfX + vfCr + 2, vfY + vfS); ctx.stroke();
-    // Bottom-right
-    ctx.beginPath(); ctx.moveTo(vfX + vfS - vfCr - 2, vfY + vfS); ctx.lineTo(vfX + vfS - 2, vfY + vfS); ctx.arcTo(vfX + vfS, vfY + vfS, vfX + vfS, vfY + vfS - 2, 2); ctx.lineTo(vfX + vfS, vfY + vfS - vfCr - 2); ctx.stroke();
-    // Center circle ring
-    ctx.beginPath(); ctx.arc(vfX + vfS / 2, vfY + vfS / 2, 4, 0, Math.PI * 2); ctx.stroke();
+
+    // Top-left bracket
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(3.8), toCanvasY(8.0));
+    ctx.lineTo(toCanvasX(3.8), toCanvasY(6.0));
+    ctx.arcTo(toCanvasX(3.8), toCanvasY(3.8), toCanvasX(6.0), toCanvasY(3.8), 2.2 * s);
+    ctx.lineTo(toCanvasX(8.0), toCanvasY(3.8));
+    ctx.stroke();
+
+    // Top-right bracket
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(16.0), toCanvasY(3.8));
+    ctx.lineTo(toCanvasX(18.0), toCanvasY(3.8));
+    ctx.arcTo(toCanvasX(20.2), toCanvasY(3.8), toCanvasX(20.2), toCanvasY(6.0), 2.2 * s);
+    ctx.lineTo(toCanvasX(20.2), toCanvasY(8.0));
+    ctx.stroke();
+
+    // Bottom-right bracket
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(20.2), toCanvasY(16.0));
+    ctx.lineTo(toCanvasX(20.2), toCanvasY(18.0));
+    ctx.arcTo(toCanvasX(20.2), toCanvasY(20.2), toCanvasX(18.0), toCanvasY(20.2), 2.2 * s);
+    ctx.lineTo(toCanvasX(16.0), toCanvasY(20.2));
+    ctx.stroke();
+
+    // Bottom-left bracket
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(8.0), toCanvasY(20.2));
+    ctx.lineTo(toCanvasX(6.0), toCanvasY(20.2));
+    ctx.arcTo(toCanvasX(3.8), toCanvasY(20.2), toCanvasX(3.8), toCanvasY(18.0), 2.2 * s);
+    ctx.lineTo(toCanvasX(3.8), toCanvasY(16.0));
+    ctx.stroke();
+
+    // Center circle ring - enlarged matching second image with uniform gap
+    ctx.beginPath();
+    ctx.arc(btnCx, btnCy, 4.2 * s, 0, Math.PI * 2);
+    ctx.stroke();
 
     // 3. Main White Card
     const cardTop = 180;
@@ -1117,17 +1182,17 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           </div>
         </div>
 
-        {/* Screenshot Button (Translucent circular badge with focus viewfinder) */}
+        {/* Screenshot Button (Translucent circular badge with enlarged focus viewfinder matching Image 2) */}
         <button 
           onClick={handleScreenshot}
           disabled={isCapturing}
-          className="w-11 h-11 rounded-full bg-white/20 hover:bg-white/30 active:scale-95 flex items-center justify-center transition border border-white/20 text-white cursor-pointer disabled:opacity-50 shadow-xs"
+          className="w-11 h-11 rounded-full bg-white/20 hover:bg-white/30 active:scale-95 flex items-center justify-center transition text-white cursor-pointer disabled:opacity-50 shadow-xs"
           title="Take iPhone Screenshot & Save (Tip: Double-tap screen to hide/show status bar)"
         >
           {isCapturing ? (
             <Loader2 className="w-5 h-5 animate-spin text-white" />
           ) : (
-            <Focus className="w-5.5 h-5.5 text-white stroke-[2.2]" />
+            <ScreenshotViewfinderIcon className="w-7 h-7 text-white" strokeWidth={2.8} />
           )}
         </button>
       </div>
@@ -1283,7 +1348,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
               {isCapturing ? (
                 <Loader2 className="w-[18px] h-[18px] stroke-[2.2] animate-spin text-[#68137e]" />
               ) : (
-                <Focus className="w-[18px] h-[18px] stroke-[2.4] text-black" />
+                <ScreenshotViewfinderIcon className="w-[18px] h-[18px] text-black" strokeWidth={2.6} />
               )}
               <span>{isCapturing ? 'Saving...' : 'Screenshot'}</span>
             </button>
