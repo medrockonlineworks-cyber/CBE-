@@ -45,6 +45,7 @@ interface ProfileProps {
   onOpenTruecallerSimulator?: () => void;
   onOpenPhoneApp?: () => void;
   onOpenDashenApp?: () => void;
+  onOpenTelebirrApp?: () => void;
 }
 
 const LANGUAGES = [
@@ -54,7 +55,7 @@ const LANGUAGES = [
   { code: 'ti', label: 'Tigrinya (ትግርኛ)' }
 ];
 
-export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdmin, onOpenSmsSimulator, onOpenTruecallerSimulator, onOpenPhoneApp, onOpenDashenApp }: ProfileProps) {
+export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdmin, onOpenSmsSimulator, onOpenTruecallerSimulator, onOpenPhoneApp, onOpenDashenApp, onOpenTelebirrApp }: ProfileProps) {
   const [activeLang, setActiveLang] = useState('en');
   const [showLogoModal, setShowLogoModal] = useState(false);
   const [customBankLogo, setCustomBankLogo] = useState<string | null>(() => LocalDb.getCustomBankLogo());
@@ -788,6 +789,45 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
                 }
               }}
               className="px-3 py-1.5 bg-[#1a73e8] hover:bg-[#1557b0] active:scale-95 text-white rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 shadow-xs flex-shrink-0"
+            >
+              <span>Open</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Telebirr Super App (Requested Below Dashen Bank) */}
+          <div className="flex items-center justify-between p-3 rounded-2xl bg-lime-50/50 hover:bg-lime-50 border border-lime-200/80 transition">
+            <div className="flex items-center gap-3">
+              <div className="p-1.5 bg-gradient-to-br from-[#5cb82e] to-[#0085ca] text-white rounded-xl flex-shrink-0 shadow-sm flex flex-col items-center justify-center w-9 h-9 border border-lime-300">
+                <span className="text-[11px] font-black text-white leading-none">t</span>
+                <span className="text-[6px] font-extrabold text-white leading-none mt-0.5">telebirr</span>
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-bold text-gray-800">Telebirr Super App</p>
+                  <span className="text-[9px] font-extrabold bg-[#5cb82e] text-white px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    Live
+                  </span>
+                </div>
+                <p className="text-[10px] text-gray-500 truncate max-w-[200px] sm:max-w-xs">
+                  Balance 41,865.79 ETB • Transfer to Bank &amp; Airtime
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              id="settings-telebirr-app-btn"
+              onClick={() => {
+                if (onOpenTelebirrApp) {
+                  onOpenTelebirrApp();
+                } else {
+                  try {
+                    window.history.pushState({ view: 'telebirr' }, '', '/telebirr');
+                    window.dispatchEvent(new PopStateEvent('popstate', { state: { view: 'telebirr' } }));
+                  } catch {}
+                }
+              }}
+              className="px-3 py-1.5 bg-[#5cb82e] hover:bg-[#4ea026] active:scale-95 text-white rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 shadow-xs flex-shrink-0"
             >
               <span>Open</span>
               <ChevronRight className="w-3.5 h-3.5" />

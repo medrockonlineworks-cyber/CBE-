@@ -66,12 +66,13 @@ import { UserProfile } from '../types';
 interface DashenBankAppProps {
   currentUser?: UserProfile | null;
   onBack: () => void;
+  onOpenTelebirr?: () => void;
 }
 
 type DashenMainTab = 'home' | 'apps' | 'ecommerce' | 'transactions' | 'profile';
 type DashenSubScreen = 'none' | 'send_dashen' | 'send_phone' | 'send_other_banks' | 'send_wallets' | 'my_cards' | 'mobile_topup' | 'utility_payments' | 'see_more';
 
-export default function DashenBankApp({ currentUser, onBack }: DashenBankAppProps) {
+export default function DashenBankApp({ currentUser, onBack, onOpenTelebirr }: DashenBankAppProps) {
   // State
   const [account, setAccount] = useState<DashenAccount>(() => DashenBankService.getAccount());
   const [transactions, setTransactions] = useState<DashenTransaction[]>(() => DashenBankService.getTransactions());
@@ -862,26 +863,30 @@ export default function DashenBankApp({ currentUser, onBack }: DashenBankAppProp
                   {account.accountName}
                 </p>
 
-                {/* Balance & Eye toggle */}
+                {/* Balance & Eye toggle matching Screenshot_20260911-174046.png and 174056.png */}
                 <div className="flex items-center justify-center gap-2">
-                  <span className="text-[32px] font-extrabold text-white tracking-tight">
-                    {showBalance ? `${account.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })} ETB` : '•••••••• ETB'}
+                  <span className={`font-extrabold text-white tracking-tight ${
+                    showBalance ? 'text-[32px]' : 'text-[28px] tracking-[0.14em]'
+                  }`}>
+                    {showBalance ? `${account.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })} ETB` : '************'}
                   </span>
                   <button 
                     onClick={() => setShowBalance(!showBalance)}
-                    className="text-neutral-300 hover:text-white p-1 transition"
+                    className="text-neutral-300 hover:text-white p-1 transition cursor-pointer"
                     title="Toggle Balance Visibility"
                   >
-                    {showBalance ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                    <Eye className="w-5 h-5" />
                   </button>
                 </div>
 
-                {/* Account Number with Copy button */}
+                {/* Account Number with Copy button (Masked with 10 asterisks when hidden) */}
                 <div className="flex items-center justify-center gap-1.5 text-[13.5px] text-neutral-300 font-mono">
-                  <span>{account.accountNumber}</span>
+                  <span className={showBalance ? '' : 'tracking-[0.18em]'}>
+                    {showBalance ? account.accountNumber : '**********'}
+                  </span>
                   <button 
                     onClick={handleCopyAccount}
-                    className="text-neutral-400 hover:text-white transition active:scale-90"
+                    className="text-neutral-400 hover:text-white transition active:scale-90 cursor-pointer"
                     title="Copy Account Number"
                   >
                     <Copy className="w-3.5 h-3.5" />
@@ -1254,6 +1259,28 @@ export default function DashenBankApp({ currentUser, onBack }: DashenBankAppProp
                     </div>
                     <span className="text-xs font-bold text-white truncate w-full">
                       Dashen Events
+                    </span>
+                  </div>
+
+                  {/* 4. Telebirr Super App */}
+                  <div 
+                    onClick={() => {
+                      if (onOpenTelebirr) {
+                        onOpenTelebirr();
+                      } else {
+                        try {
+                          window.history.pushState({ view: 'telebirr' }, '', '/telebirr');
+                          window.dispatchEvent(new PopStateEvent('popstate', { state: { view: 'telebirr' } }));
+                        } catch {}
+                      }
+                    }}
+                    className="bg-[#101c34]/80 border border-lime-500/40 rounded-2xl p-3 flex flex-col items-center text-center cursor-pointer hover:border-lime-400 transition group"
+                  >
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#5cb82e] to-[#0085ca] border border-lime-300 flex items-center justify-center shadow-md mb-1.5 overflow-hidden p-1">
+                      <span className="text-sm font-black text-white leading-none">t</span>
+                    </div>
+                    <span className="text-xs font-bold text-lime-400 truncate w-full">
+                      Telebirr
                     </span>
                   </div>
                 </div>

@@ -44,6 +44,7 @@ interface HomeProps {
   onOpenTruecallerSimulator?: () => void;
   onOpenPhoneApp?: () => void;
   onOpenDashenApp?: () => void;
+  onOpenTelebirrApp?: () => void;
 }
 
 export const Home: React.FC<HomeProps> = ({
@@ -56,6 +57,7 @@ export const Home: React.FC<HomeProps> = ({
   onOpenTruecallerSimulator,
   onOpenPhoneApp,
   onOpenDashenApp,
+  onOpenTelebirrApp,
 }) => {
   // Fallback demo user if none passed in
   const currentUser: UserProfile = propUser || {
@@ -753,6 +755,27 @@ export const Home: React.FC<HomeProps> = ({
                 </div>
                 <p className="text-xs font-bold text-blue-950">Dashen Bank</p>
                 <p className="text-[10px] text-blue-700">Super App &amp; Transfer</p>
+              </button>
+
+              <button
+                onClick={() => {
+                  setActiveModal(null);
+                  if (onOpenTelebirrApp) {
+                    onOpenTelebirrApp();
+                  } else {
+                    try {
+                      window.history.pushState({ view: 'telebirr' }, '', '/telebirr');
+                      window.dispatchEvent(new PopStateEvent('popstate', { state: { view: 'telebirr' } }));
+                    } catch {}
+                  }
+                }}
+                className="p-3 bg-lime-50 hover:bg-lime-100/80 rounded-2xl text-left transition cursor-pointer border border-lime-200"
+              >
+                <div className="w-5 h-5 bg-gradient-to-br from-[#5cb82e] to-[#0085ca] rounded-lg text-white flex flex-col items-center justify-center mb-1.5 shadow-xs">
+                  <span className="text-[7px] font-black">t</span>
+                </div>
+                <p className="text-xs font-bold text-lime-950">Telebirr App</p>
+                <p className="text-[10px] text-lime-700">Transfer &amp; 41,865 ETB</p>
               </button>
 
               {onOpenAdmin && (

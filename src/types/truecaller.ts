@@ -12,7 +12,7 @@ export type TruecallerBankKey =
   | 'wegagen' 
   | 'custom';
 
-export type TruecallerBackgroundApp = 'tiktok' | 'youtube' | 'telegram' | 'instagram' | 'whatsapp' | 'lockscreen';
+export type TruecallerBackgroundApp = 'tiktok' | 'youtube' | 'telegram' | 'instagram' | 'whatsapp' | 'lockscreen' | 'dashen' | 'telebirr';
 
 export type TruecallerPhoneType = 'tecno' | 'iphone' | 'samsung' | 'pixel';
 

@@ -1,8 +1,28 @@
 import React, { StrictMode, ReactNode, ErrorInfo } from 'react';
 import { createRoot } from 'react-dom/client';
-import App from './App.tsx';
+import App from './App';
 import './index.css';
-import { initPwaDynamicManifest } from './utils/pwaBranding.ts';
+import { initPwaDynamicManifest } from './utils/pwaBranding';
+
+// Clean up any stale service workers or caches in development/preview to prevent hook/React chunk mismatches
+if (typeof window !== 'undefined') {
+  const isDev = window.location.hostname === 'localhost' || 
+                window.location.hostname === '127.0.0.1' || 
+                window.location.hostname.includes('run.app') ||
+                window.location.hostname.includes('ais-');
+  if (isDev) {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((regs) => {
+        regs.forEach((r) => r.unregister());
+      }).catch(() => {});
+    }
+    if ('caches' in window) {
+      caches.keys().then((names) => {
+        names.forEach((n) => caches.delete(n));
+      }).catch(() => {});
+    }
+  }
+}
 
 // Safe PWA manifest dynamic loader
 try {

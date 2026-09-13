@@ -59,7 +59,10 @@ import {
   Inbox,
   Filter,
   Clock,
-  Type
+  Type,
+  Eye,
+  ShoppingBag,
+  QrCode
 } from 'lucide-react';
 import { CbeWebReceiptModal } from './CbeWebReceiptModal';
 import { CbeHolidayCardModal } from './CbeHolidayCardModal';
@@ -1533,6 +1536,181 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
     );
   };
 
+  // 7. DASHEN BANK SCREEN (Matching Screenshot_20260911-174046.png and 174056.png)
+  const renderDashenScreen = () => {
+    return (
+      <div className="absolute inset-0 bg-[#050c18] flex flex-col overflow-hidden text-white select-none font-sans">
+        {/* Mountain Faceted Gradient Backdrop */}
+        <div 
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          style={{
+            background: 'radial-gradient(ellipse 120% 80% at 50% 18%, #133f84 0%, #0c2a5c 42%, #051433 70%, #030816 100%)'
+          }}
+        />
+
+        {/* Top Header Bar */}
+        <div className="relative px-4 pt-3 pb-2 flex items-center justify-between z-10">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#003882] to-[#0066FF] border border-white/25 flex items-center justify-center shadow-md">
+              <Building2 className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-[14px] font-bold text-white tracking-tight leading-tight">Hello Leykun</h2>
+              <p className="text-[10.5px] text-neutral-300 font-medium">Welcome Back!</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-neutral-300">
+              <RefreshCw className="w-3.5 h-3.5" />
+            </div>
+            <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-neutral-300 relative">
+              <Bell className="w-3.5 h-3.5" />
+              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-600 text-white rounded-full text-[9px] font-bold flex items-center justify-center">2</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Dashen Content Body */}
+        <div className="relative flex-1 overflow-y-auto px-4 py-1 space-y-3 z-10 scrollbar-none">
+          {/* Leykun Jemaneh Yilma & Balance */}
+          <div className="text-center pt-0.5 pb-1 space-y-0.5">
+            <p className="text-[13px] font-semibold text-neutral-200">Leykun Jemaneh Yilma</p>
+            <div className="flex items-center justify-center gap-2">
+              <span className="text-[26px] font-extrabold text-white tracking-tight">
+                778.18 ETB
+              </span>
+              <Eye className="w-4 h-4 text-neutral-300" />
+            </div>
+            <div className="flex items-center justify-center gap-1.5 text-[12px] text-neutral-300 font-mono">
+              <span>5502877108011</span>
+              <Copy className="w-3 h-3 text-neutral-400" />
+            </div>
+            <div className="pt-0.5 flex justify-center">
+              <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full bg-white/10 border border-white/20 text-[10px] font-semibold text-white">
+                Accounts <ChevronRight className="w-3 h-3" />
+              </span>
+            </div>
+          </div>
+
+          {/* 8 Quick Action Buttons */}
+          <div className="grid grid-cols-4 gap-1.5">
+            {[
+              { label: 'Transfer To Dashen', icon: '✈️' },
+              { label: 'Transfer by Phone', icon: '📱' },
+              { label: 'Transfer To Other Banks', icon: '🏛️' },
+              { label: 'Transfer To Wallets', icon: '💳' },
+              { label: 'My Cards', icon: '💳' },
+              { label: 'Mobile Top-up', icon: '⚡' },
+              { label: 'Utility Payments', icon: '📄' },
+              { label: 'See More', icon: '•••' },
+            ].map((btn, i) => (
+              <div key={i} className="p-1.5 rounded-2xl bg-white/[0.08] border border-white/[0.18] flex flex-col items-center justify-between text-center min-h-[66px]">
+                <span className="text-sm">{btn.icon}</span>
+                <span className="text-[9px] font-medium text-white leading-tight">{btn.label}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* E-Commerce Banner */}
+          <div className="bg-[#101c34]/90 border border-[#1e335b] rounded-2xl p-3 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center">
+                <ShoppingBag className="w-4 h-4 text-blue-400" />
+              </div>
+              <div>
+                <h3 className="text-xs font-bold text-white">E-commerce</h3>
+                <p className="text-[9.5px] text-neutral-300">Explore our list of merchants.</p>
+              </div>
+            </div>
+            <ChevronRight className="w-3.5 h-3.5 text-neutral-400" />
+          </div>
+        </div>
+
+        {/* Dashen Bottom Bar */}
+        <div className="w-full bg-[#050c18] border-t border-[#131d2e] px-2 py-1.5 flex items-center justify-around z-20 text-[8.5px] text-neutral-400">
+          <div className="flex flex-col items-center text-white"><HomeIcon className="w-3.5 h-3.5" /><span>Home</span></div>
+          <div className="flex flex-col items-center"><Smartphone className="w-3.5 h-3.5" /><span>Apps</span></div>
+          <div className="flex flex-col items-center"><ShoppingBag className="w-3.5 h-3.5" /><span>E-Comm...</span></div>
+          <div className="flex flex-col items-center"><Copy className="w-3.5 h-3.5" /><span>Transact...</span></div>
+          <div className="flex flex-col items-center"><User className="w-3.5 h-3.5" /><span>Profile</span></div>
+        </div>
+      </div>
+    );
+  };
+
+  // 8. TELEBIRR SUPER APP SCREEN (Matching official Telebirr interface)
+  const renderTelebirrScreen = () => {
+    return (
+      <div className="absolute inset-0 bg-[#f4f7fa] flex flex-col overflow-hidden text-neutral-800 select-none font-sans">
+        {/* Top Header Row with vibrant Telebirr Blue */}
+        <div className="bg-[#0070bc] px-4 pt-3 pb-4 text-white">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center font-black text-[#5cb82e] text-xs shadow-sm">
+                t
+              </div>
+              <div>
+                <p className="text-[13px] font-bold tracking-tight">Telebirr Super App</p>
+                <p className="text-[10px] text-sky-200">Leykun Jemaneh</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center">
+                <Bell className="w-3.5 h-3.5 text-white" />
+              </div>
+              <div className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center">
+                <Search className="w-3.5 h-3.5 text-white" />
+              </div>
+            </div>
+          </div>
+
+          {/* Balance card */}
+          <div className="mt-3 p-3 bg-white rounded-2xl text-neutral-800 shadow-md border border-neutral-100 flex items-center justify-between">
+            <div>
+              <p className="text-[10.5px] font-medium text-neutral-400">Available Balance</p>
+              <p className="text-xl font-black text-neutral-900 tracking-tight">41,865.79 <span className="text-xs font-bold text-neutral-500">ETB</span></p>
+            </div>
+            <div className="px-2.5 py-1 bg-lime-100 text-lime-800 rounded-full text-[10px] font-bold">
+              Active
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Grid actions */}
+        <div className="p-4 grid grid-cols-4 gap-2.5 text-center">
+          {[
+            { label: 'Deposit', bg: 'bg-blue-50 text-blue-600', icon: '📥' },
+            { label: 'Send Money', bg: 'bg-emerald-50 text-emerald-600', icon: '💸' },
+            { label: 'Buy Airtime', bg: 'bg-amber-50 text-amber-600', icon: '📶' },
+            { label: 'Receive', bg: 'bg-purple-50 text-purple-600', icon: '📱' },
+          ].map((item, idx) => (
+            <div key={idx} className="p-2.5 rounded-2xl bg-white border border-neutral-100 shadow-xs flex flex-col items-center">
+              <span className="text-lg">{item.icon}</span>
+              <span className="text-[10px] font-bold text-neutral-700 mt-1">{item.label}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Mini Apps / Banner */}
+        <div className="px-4 flex-1 overflow-hidden">
+          <div className="p-3 bg-gradient-to-r from-emerald-600 to-teal-700 text-white rounded-2xl shadow-sm space-y-1">
+            <p className="text-xs font-bold">Transfer to Any Bank</p>
+            <p className="text-[10px] text-emerald-100">Send money directly to CBE, Dashen &amp; Awash instantly.</p>
+          </div>
+        </div>
+
+        {/* Bottom Tab Bar */}
+        <div className="w-full bg-white border-t border-neutral-200 px-4 py-2 flex items-center justify-around text-[9px] font-bold text-neutral-500">
+          <div className="flex flex-col items-center text-[#0070bc]"><HomeIcon className="w-4 h-4" /><span>Home</span></div>
+          <div className="flex flex-col items-center"><Building2 className="w-4 h-4" /><span>Finance</span></div>
+          <div className="flex flex-col items-center"><QrCode className="w-4 h-4 text-[#5cb82e]" /><span>Pay</span></div>
+          <div className="flex flex-col items-center"><Smartphone className="w-4 h-4" /><span>Services</span></div>
+          <div className="flex flex-col items-center"><User className="w-4 h-4" /><span>Me</span></div>
+        </div>
+      </div>
+    );
+  };
+
   // Render selected background screen
   const renderBackgroundScreen = (app: TruecallerBackgroundApp) => {
     switch (app) {
@@ -1542,6 +1720,8 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
       case 'instagram': return renderInstagramScreen();
       case 'whatsapp': return renderWhatsAppScreen();
       case 'lockscreen': return renderLockScreen();
+      case 'dashen': return renderDashenScreen();
+      case 'telebirr': return renderTelebirrScreen();
       default: return renderTikTokScreen();
     }
   };
@@ -1723,6 +1903,8 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
     if (!showPickerModal || !selectedTxForPicker) return null;
 
     const phoneScreens: { id: TruecallerBackgroundApp; name: string; icon: string; desc: string; previewBadge: string }[] = [
+      { id: 'dashen', name: 'Dashen Bank', icon: '🏛️', desc: 'Dashen Super App with 778.18 ETB & 3-Click E-commerce', previewBadge: 'Dashen App' },
+      { id: 'telebirr', name: 'Telebirr App', icon: '📱', desc: 'Telebirr Super App with 41,865.79 ETB & Send Money', previewBadge: 'Telebirr' },
       { id: 'tiktok', name: 'TikTok', icon: '🎵', desc: 'Video feed, floating actions, music audio', previewBadge: 'Video Feed' },
       { id: 'youtube', name: 'YouTube', icon: '▶️', desc: 'Video player with red scrubber & recommended videos', previewBadge: 'Video Player' },
       { id: 'telegram', name: 'Telegram', icon: '✈️', desc: 'Addis Financial channel & bulletin feed', previewBadge: 'Chat App' },

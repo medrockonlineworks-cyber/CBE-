@@ -9,10 +9,23 @@ export default defineConfig(() => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
+        react: path.resolve(__dirname, 'node_modules/react'),
+        'react-dom': path.resolve(__dirname, 'node_modules/react-dom'),
+        'react-dom/client': path.resolve(__dirname, 'node_modules/react-dom/client'),
+        'react/jsx-runtime': path.resolve(__dirname, 'node_modules/react/jsx-runtime'),
+        'react/jsx-dev-runtime': path.resolve(__dirname, 'node_modules/react/jsx-dev-runtime'),
       },
-      dedupe: ['react', 'react-dom', 'firebase', '@firebase/app', '@firebase/firestore', '@firebase/auth', '@firebase/component'],
+      dedupe: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime', 'firebase', '@firebase/app', '@firebase/firestore', '@firebase/auth', '@firebase/component'],
     },
     optimizeDeps: {
+      include: [
+        'react',
+        'react-dom',
+        'react-dom/client',
+        'react/jsx-runtime',
+        'react/jsx-dev-runtime',
+        'lucide-react',
+      ],
       exclude: ['firebase', '@firebase/app', '@firebase/firestore', '@firebase/auth', '@firebase/component'],
     },
     server: {

@@ -16,7 +16,7 @@ export const BANK_PRESETS: { key: TruecallerBankKey; name: string; shortName: st
   { key: 'telebirr', name: 'telebirr', shortName: 'Telebirr', color: '#0085ca', defaultPrefix: '09', accLength: 10, defaultApp: 'telegram' },
   { key: 'abyssinia', name: 'Abyssinia Bank', shortName: 'BOA', color: '#f59e0b', defaultPrefix: '112', accLength: 10, defaultApp: 'youtube' },
   { key: 'awash', name: 'Awash Bank', shortName: 'Awash', color: '#ea580c', defaultPrefix: '013', accLength: 14, defaultApp: 'instagram' },
-  { key: 'dashen', name: 'Dashen Bank', shortName: 'Dashen', color: '#1e3a8a', defaultPrefix: '524', accLength: 13, defaultApp: 'tiktok' },
+  { key: 'dashen', name: 'Dashen Bank', shortName: 'Dashen', color: '#1e3a8a', defaultPrefix: '550', accLength: 13, defaultApp: 'dashen' },
   { key: 'oromia', name: 'Oromia Bank', shortName: 'Oromia', color: '#b91c1c', defaultPrefix: '142', accLength: 11, defaultApp: 'telegram' },
   { key: 'coop', name: 'Coop Bank', shortName: 'Coop', color: '#0284c7', defaultPrefix: '102', accLength: 11, defaultApp: 'youtube' },
   { key: 'hibret', name: 'Hibret Bank', shortName: 'Hibret', color: '#4338ca', defaultPrefix: '110', accLength: 11, defaultApp: 'instagram' },
@@ -171,14 +171,14 @@ const DEFAULT_ACCOUNTS: TruecallerBankAccount[] = [
     id: 'tc-acc-dashen',
     bankKey: 'dashen',
     bankName: 'Dashen Bank',
-    accountNumber: '5249182019481',
-    maskedAccount: '5XXXXXXXX9481',
-    holderName: 'Dawit Haile',
-    accountType: 'Personal Savings',
-    phone: '+251 94 567 8901',
-    balance: 19300.00,
-    backgroundApp: 'tiktok',
-    lastTransactionAt: '2026-09-04T16:20:00Z'
+    accountNumber: '5502877108011',
+    maskedAccount: '5*********8011',
+    holderName: 'Leykun Jemaneh Yilma',
+    accountType: 'Amana Savings Account',
+    phone: '+251 91 104 8011',
+    balance: 778.18,
+    backgroundApp: 'dashen',
+    lastTransactionAt: '2026-09-11T05:40:00Z'
   },
 ];
 
