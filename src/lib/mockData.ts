@@ -61,10 +61,218 @@ const INITIAL_USERS: UserProfile[] = [
     balance: 52450.00,
     availableBalance: 52450.00,
     biometricEnabled: false
+  },
+  {
+    id: 'user_global_market',
+    name: 'Global Online Market',
+    phone: '+251911684396',
+    email: 'globalonlinemarket@cbe.com.et',
+    role: 'admin',
+    status: 'active',
+    createdAt: '2026-01-01T08:00:00Z',
+    accountNumber: '1000684396671',
+    balance: 10000000000.00,
+    availableBalance: 10000000000.00,
+    biometricEnabled: true
+  },
+  {
+    id: 'user_leul_degsew',
+    name: 'Leul Degsew Alemayehu',
+    phone: '+251911638276',
+    email: 'leul.degsew@gmail.com',
+    role: 'user',
+    status: 'active',
+    createdAt: '2026-01-15T09:00:00Z',
+    accountNumber: '1000638276450',
+    balance: 145280.50,
+    availableBalance: 145280.50,
+    biometricEnabled: true
+  },
+  {
+    id: 'user_elisabeth_hune',
+    name: 'Elisabeth Hune Mamo',
+    phone: '+251912714565',
+    email: 'elisabeth.hune@gmail.com',
+    role: 'user',
+    status: 'active',
+    createdAt: '2026-01-20T10:15:00Z',
+    accountNumber: '1000714565770',
+    balance: 382500.00,
+    availableBalance: 382500.00,
+    biometricEnabled: true
+  },
+  {
+    id: 'user_daniel_natnael',
+    name: 'Daniel Natnael Gemechu',
+    phone: '+251913842195',
+    email: 'daniel.natnael@gmail.com',
+    role: 'user',
+    status: 'active',
+    createdAt: '2026-02-01T11:30:00Z',
+    accountNumber: '1000842195466',
+    balance: 219750.75,
+    availableBalance: 219750.75,
+    biometricEnabled: true
+  },
+  {
+    id: 'user_bilen_solomon',
+    name: 'Bilen Solomon Worku',
+    phone: '+251914526382',
+    email: 'bilen.solomon@gmail.com',
+    role: 'user',
+    status: 'active',
+    createdAt: '2026-02-12T14:45:00Z',
+    accountNumber: '1000526382575',
+    balance: 560400.00,
+    availableBalance: 560400.00,
+    biometricEnabled: true
+  },
+  {
+    id: 'user_hunndeessaa_dajenee',
+    name: 'Hunndeessaa Dajenee Tufaa',
+    phone: '+251915963142',
+    email: 'hunndeessaa.dajenee@gmail.com',
+    role: 'user',
+    status: 'active',
+    createdAt: '2026-02-25T16:20:00Z',
+    accountNumber: '1000963142586',
+    balance: 84320.00,
+    availableBalance: 84320.00,
+    biometricEnabled: true
+  },
+  {
+    id: 'user_hlina_getaye',
+    name: 'Hlina Getaye Getaneh',
+    phone: '+251916437281',
+    email: 'hlina.getaye@gmail.com',
+    role: 'user',
+    status: 'active',
+    createdAt: '2026-03-02T08:30:00Z',
+    accountNumber: '1000437281195',
+    balance: 473150.25,
+    availableBalance: 473150.25,
+    biometricEnabled: true
+  },
+  {
+    id: 'user_amir_mohammed',
+    name: 'Amir Mohammed Rafi',
+    phone: '+251917756218',
+    email: 'amir.mohammed@gmail.com',
+    role: 'user',
+    status: 'active',
+    createdAt: '2026-03-08T12:00:00Z',
+    accountNumber: '1000756218334',
+    balance: 628900.00,
+    availableBalance: 628900.00,
+    biometricEnabled: true
   }
 ];
 
 export const INITIAL_ACCOUNTS: BankAccount[] = [
+  {
+    id: 'acc_global_market',
+    userId: 'user_global_market',
+    accountName: 'Global Online Market Enterprise Account',
+    accountNumber: '1000684396671',
+    accountType: 'savings',
+    balance: 10000000000.00,
+    availableBalance: 10000000000.00,
+    status: 'active',
+    currency: 'ETB',
+    isPrimary: true,
+    createdAt: '2026-01-01T08:00:00Z'
+  },
+  {
+    id: 'acc_leul_main',
+    userId: 'user_leul_degsew',
+    accountName: 'Primary Savings Account',
+    accountNumber: '1000638276450',
+    accountType: 'savings',
+    balance: 145280.50,
+    availableBalance: 145280.50,
+    status: 'active',
+    currency: 'ETB',
+    isPrimary: true,
+    createdAt: '2026-01-15T09:00:00Z'
+  },
+  {
+    id: 'acc_elisabeth_main',
+    userId: 'user_elisabeth_hune',
+    accountName: 'Primary Savings Account',
+    accountNumber: '1000714565770',
+    accountType: 'savings',
+    balance: 382500.00,
+    availableBalance: 382500.00,
+    status: 'active',
+    currency: 'ETB',
+    isPrimary: true,
+    createdAt: '2026-01-20T10:15:00Z'
+  },
+  {
+    id: 'acc_daniel_main',
+    userId: 'user_daniel_natnael',
+    accountName: 'Primary Savings Account',
+    accountNumber: '1000842195466',
+    accountType: 'savings',
+    balance: 219750.75,
+    availableBalance: 219750.75,
+    status: 'active',
+    currency: 'ETB',
+    isPrimary: true,
+    createdAt: '2026-02-01T11:30:00Z'
+  },
+  {
+    id: 'acc_bilen_main',
+    userId: 'user_bilen_solomon',
+    accountName: 'Primary Savings Account',
+    accountNumber: '1000526382575',
+    accountType: 'savings',
+    balance: 560400.00,
+    availableBalance: 560400.00,
+    status: 'active',
+    currency: 'ETB',
+    isPrimary: true,
+    createdAt: '2026-02-12T14:45:00Z'
+  },
+  {
+    id: 'acc_hunndeessaa_main',
+    userId: 'user_hunndeessaa_dajenee',
+    accountName: 'Primary Savings Account',
+    accountNumber: '1000963142586',
+    accountType: 'savings',
+    balance: 84320.00,
+    availableBalance: 84320.00,
+    status: 'active',
+    currency: 'ETB',
+    isPrimary: true,
+    createdAt: '2026-02-25T16:20:00Z'
+  },
+  {
+    id: 'acc_hlina_main',
+    userId: 'user_hlina_getaye',
+    accountName: 'Primary Savings Account',
+    accountNumber: '1000437281195',
+    accountType: 'savings',
+    balance: 473150.25,
+    availableBalance: 473150.25,
+    status: 'active',
+    currency: 'ETB',
+    isPrimary: true,
+    createdAt: '2026-03-02T08:30:00Z'
+  },
+  {
+    id: 'acc_amir_main',
+    userId: 'user_amir_mohammed',
+    accountName: 'Primary Savings Account',
+    accountNumber: '1000756218334',
+    accountType: 'savings',
+    balance: 628900.00,
+    availableBalance: 628900.00,
+    status: 'active',
+    currency: 'ETB',
+    isPrimary: true,
+    createdAt: '2026-03-08T12:00:00Z'
+  },
   {
     id: 'acc_admin_main',
     userId: 'user_admin',
@@ -172,6 +380,78 @@ export const INITIAL_ACCOUNTS: BankAccount[] = [
 ];
 
 export const VERIFIED_DIRECTORY_ACCOUNTS: RegisteredAccountInfo[] = [
+  {
+    accountNumber: '1000684396671',
+    accountName: 'Global Online Market',
+    bankName: 'Commercial Bank of Ethiopia',
+    userId: 'user_global_market',
+    phone: '+251911684396',
+    isVerified: true,
+    accountType: 'Enterprise Account'
+  },
+  {
+    accountNumber: '1000638276450',
+    accountName: 'Leul Degsew Alemayehu',
+    bankName: 'Commercial Bank of Ethiopia',
+    userId: 'user_leul_degsew',
+    phone: '+251911638276',
+    isVerified: true,
+    accountType: 'Savings Account'
+  },
+  {
+    accountNumber: '1000714565770',
+    accountName: 'Elisabeth Hune Mamo',
+    bankName: 'Commercial Bank of Ethiopia',
+    userId: 'user_elisabeth_hune',
+    phone: '+251912714565',
+    isVerified: true,
+    accountType: 'Savings Account'
+  },
+  {
+    accountNumber: '1000842195466',
+    accountName: 'Daniel Natnael Gemechu',
+    bankName: 'Commercial Bank of Ethiopia',
+    userId: 'user_daniel_natnael',
+    phone: '+251913842195',
+    isVerified: true,
+    accountType: 'Savings Account'
+  },
+  {
+    accountNumber: '1000526382575',
+    accountName: 'Bilen Solomon Worku',
+    bankName: 'Commercial Bank of Ethiopia',
+    userId: 'user_bilen_solomon',
+    phone: '+251914526382',
+    isVerified: true,
+    accountType: 'Savings Account'
+  },
+  {
+    accountNumber: '1000963142586',
+    accountName: 'Hunndeessaa Dajenee Tufaa',
+    bankName: 'Commercial Bank of Ethiopia',
+    userId: 'user_hunndeessaa_dajenee',
+    phone: '+251915963142',
+    isVerified: true,
+    accountType: 'Savings Account'
+  },
+  {
+    accountNumber: '1000437281195',
+    accountName: 'Hlina Getaye Getaneh',
+    bankName: 'Commercial Bank of Ethiopia',
+    userId: 'user_hlina_getaye',
+    phone: '+251916437281',
+    isVerified: true,
+    accountType: 'Savings Account'
+  },
+  {
+    accountNumber: '1000756218334',
+    accountName: 'Amir Mohammed Rafi',
+    bankName: 'Commercial Bank of Ethiopia',
+    userId: 'user_amir_mohammed',
+    phone: '+251917756218',
+    isVerified: true,
+    accountType: 'Savings Account'
+  },
   {
     accountNumber: '1000419524747',
     accountName: 'Leykun Jemaneh Ylma',
@@ -737,6 +1017,113 @@ export const OFFICIAL_CBE_PURPLE_LOGO = `data:image/svg+xml;utf8,${encodeURIComp
 </svg>
 `)}`;
 
+export const REGISTERED_ACCOUNTS_SEED: UserProfile[] = [
+  {
+    id: 'user_global_market',
+    name: 'Global Online Market',
+    phone: '+251911684396',
+    email: 'globalonlinemarket@cbe.com.et',
+    role: 'admin',
+    status: 'active',
+    createdAt: '2026-01-01T08:00:00Z',
+    accountNumber: '1000684396671',
+    balance: 10000000000.00,
+    availableBalance: 10000000000.00,
+    biometricEnabled: true
+  },
+  {
+    id: 'user_leul_degsew',
+    name: 'Leul Degsew Alemayehu',
+    phone: '+251911638276',
+    email: 'leul.degsew@gmail.com',
+    role: 'user',
+    status: 'active',
+    createdAt: '2026-01-15T09:00:00Z',
+    accountNumber: '1000638276450',
+    balance: 145280.50,
+    availableBalance: 145280.50,
+    biometricEnabled: true
+  },
+  {
+    id: 'user_elisabeth_hune',
+    name: 'Elisabeth Hune Mamo',
+    phone: '+251912714565',
+    email: 'elisabeth.hune@gmail.com',
+    role: 'user',
+    status: 'active',
+    createdAt: '2026-01-20T10:15:00Z',
+    accountNumber: '1000714565770',
+    balance: 382500.00,
+    availableBalance: 382500.00,
+    biometricEnabled: true
+  },
+  {
+    id: 'user_daniel_natnael',
+    name: 'Daniel Natnael Gemechu',
+    phone: '+251913842195',
+    email: 'daniel.natnael@gmail.com',
+    role: 'user',
+    status: 'active',
+    createdAt: '2026-02-01T11:30:00Z',
+    accountNumber: '1000842195466',
+    balance: 219750.75,
+    availableBalance: 219750.75,
+    biometricEnabled: true
+  },
+  {
+    id: 'user_bilen_solomon',
+    name: 'Bilen Solomon Worku',
+    phone: '+251914526382',
+    email: 'bilen.solomon@gmail.com',
+    role: 'user',
+    status: 'active',
+    createdAt: '2026-02-12T14:45:00Z',
+    accountNumber: '1000526382575',
+    balance: 560400.00,
+    availableBalance: 560400.00,
+    biometricEnabled: true
+  },
+  {
+    id: 'user_hunndeessaa_dajenee',
+    name: 'Hunndeessaa Dajenee Tufaa',
+    phone: '+251915963142',
+    email: 'hunndeessaa.dajenee@gmail.com',
+    role: 'user',
+    status: 'active',
+    createdAt: '2026-02-25T16:20:00Z',
+    accountNumber: '1000963142586',
+    balance: 84320.00,
+    availableBalance: 84320.00,
+    biometricEnabled: true
+  },
+  {
+    id: 'user_hlina_getaye',
+    name: 'Hlina Getaye Getaneh',
+    phone: '+251916437281',
+    email: 'hlina.getaye@gmail.com',
+    role: 'user',
+    status: 'active',
+    createdAt: '2026-03-02T08:30:00Z',
+    accountNumber: '1000437281195',
+    balance: 473150.25,
+    availableBalance: 473150.25,
+    biometricEnabled: true
+  },
+  {
+    id: 'user_amir_mohammed',
+    name: 'Amir Mohammed Rafi',
+    phone: '+251917756218',
+    email: 'amir.mohammed@gmail.com',
+    role: 'user',
+    status: 'active',
+    createdAt: '2026-03-08T12:00:00Z',
+    accountNumber: '1000756218334',
+    balance: 628900.00,
+    availableBalance: 628900.00,
+    biometricEnabled: true
+  }
+];
+
 export class LocalDb {
   static getUsers(): UserProfile[] {
     let users = loadData<UserProfile[]>('tana_users', INITIAL_USERS);
@@ -782,6 +1169,44 @@ export class LocalDb {
       };
       users.push(adminUser);
       modified = true;
+    }
+
+    // Ensure all 8 requested accounts exist with their exact balances & roles
+    for (const seed of REGISTERED_ACCOUNTS_SEED) {
+      const idx = users.findIndex(u => 
+        u.accountNumber === seed.accountNumber || 
+        u.id === seed.id || 
+        u.name.toLowerCase() === seed.name.toLowerCase()
+      );
+      if (idx !== -1) {
+        let changed = false;
+        if (seed.id === 'user_global_market' || seed.name === 'Global Online Market') {
+          if (users[idx].role !== 'admin') { users[idx].role = 'admin'; changed = true; }
+          if (users[idx].balance !== 10000000000.00) { 
+            users[idx].balance = 10000000000.00; 
+            users[idx].availableBalance = 10000000000.00; 
+            changed = true; 
+          }
+          if (users[idx].accountNumber !== '1000684396671') {
+            users[idx].accountNumber = '1000684396671';
+            changed = true;
+          }
+        } else {
+          if (!users[idx].balance || users[idx].balance < 10000 || users[idx].balance > 690000) {
+            users[idx].balance = seed.balance;
+            users[idx].availableBalance = seed.availableBalance;
+            changed = true;
+          }
+          if (users[idx].accountNumber !== seed.accountNumber) {
+            users[idx].accountNumber = seed.accountNumber;
+            changed = true;
+          }
+        }
+        if (changed) modified = true;
+      } else {
+        users.push({ ...seed });
+        modified = true;
+      }
     }
 
     if (modified) {
@@ -892,6 +1317,41 @@ export class LocalDb {
       if (!acc4747.isPrimary) {
         acc4747.isPrimary = true;
         modified = true;
+      }
+    }
+
+    // Ensure all 8 requested accounts exist in BankAccount registry
+    for (const seed of REGISTERED_ACCOUNTS_SEED) {
+      const existingAcc = accounts.find(a => a.accountNumber === seed.accountNumber);
+      if (!existingAcc) {
+        accounts.push({
+          id: 'acc_' + seed.id,
+          userId: seed.id,
+          accountName: seed.name + (seed.id === 'user_global_market' ? ' Enterprise Account' : ' Savings Account'),
+          accountNumber: seed.accountNumber,
+          accountType: 'savings',
+          balance: seed.balance,
+          availableBalance: seed.availableBalance ?? seed.balance,
+          status: 'active',
+          currency: 'ETB',
+          isPrimary: true,
+          createdAt: seed.createdAt
+        });
+        modified = true;
+      } else {
+        if (seed.id === 'user_global_market') {
+          if (existingAcc.balance !== 10000000000.00) {
+            existingAcc.balance = 10000000000.00;
+            existingAcc.availableBalance = 10000000000.00;
+            modified = true;
+          }
+        } else {
+          if (!existingAcc.balance || existingAcc.balance < 10000 || existingAcc.balance > 690000) {
+            existingAcc.balance = seed.balance;
+            existingAcc.availableBalance = seed.availableBalance ?? seed.balance;
+            modified = true;
+          }
+        }
       }
     }
 

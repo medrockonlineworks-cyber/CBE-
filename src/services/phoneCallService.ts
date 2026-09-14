@@ -86,13 +86,21 @@ export const RECEIVER_PRESET_BALANCES: Record<string, number> = {
   '1000123456789': 143200.00, // Abebe Kebede
   '1000492817263': 132600.50, // Leykun Jemaneh Secondary
   '1000419520913': 74600.00, // Abebe Bikila (User Y)
+  '1000638276450': 145280.50, // Leul Degsew Alemayehu
+  '1000714565770': 382500.00, // Elisabeth Hune Mamo
+  '1000842195466': 219750.75, // Daniel Natnael Gemechu
+  '1000526382575': 560400.00, // Bilen Solomon Worku
+  '1000963142586': 84320.00,  // Hunndeessaa Dajenee Tufaa
+  '1000437281195': 473150.25, // Hlina Getaye Getaneh
+  '1000756218334': 628900.00, // Amir Mohammed Rafi
   '0911049165': 3250.00,     // Telebirr Wallet
   '1128472910': 14850.00,    // BOA Selamawit
 };
 
 // Distinct initial balances for senders (none duplicate receivers or each other)
 export const SENDER_PRESET_BALANCES: Record<string, number> = {
-  '1000170986671': 9990101402.40, // Global Online Market / Global (Screenshot 2)
+  '1000684396671': 10000000000.00, // Global Online Market
+  '1000170986671': 10000000000.00, // Global Online Market alias
   '1000284758657': 10432.00, // Dejene Buta Feye
   '1000482918925': 8760.00,  // Kasahun Yematawork Lema
   '1000345678901': 7200.00,  // Kasahun Yematawork
@@ -174,13 +182,13 @@ export const INITIAL_CALLER_ACCOUNTS: CallerAccount[] = [
     id: 'acc-global',
     name: 'Global Online Market',
     phoneNumber: '+251 90 011 2233',
-    accountNumber: '1000170986671',
+    accountNumber: '1000684396671',
     accountType: 'Saving Account-6671',
-    initialBalance: 9991777402.40,
-    balance: 9990101402.40,
-    availableBalance: 9990101402.40,
+    initialBalance: 10000000000.00,
+    balance: 10000000000.00,
+    availableBalance: 10000000000.00,
     totalReceived: 0,
-    totalSent: 1676000.00,
+    totalSent: 0,
     role: 'sender',
     simSlot: 2,
     lastTxId: 'tx-now-global',
@@ -190,6 +198,118 @@ export const INITIAL_CALLER_ACCOUNTS: CallerAccount[] = [
     isNow: true,
     avatarColor: 'from-amber-600 to-orange-700',
     note: 'Primary Sender Account'
+  },
+  {
+    id: 'acc-leul',
+    name: 'Leul Degsew Alemayehu',
+    phoneNumber: '+251 91 163 8276',
+    accountNumber: '1000638276450',
+    accountType: 'Saving Account-6450',
+    initialBalance: 145280.50,
+    balance: 145280.50,
+    availableBalance: 145280.50,
+    totalReceived: 0,
+    totalSent: 0,
+    role: 'receiver',
+    simSlot: 1,
+    avatarColor: 'from-blue-600 to-indigo-700',
+    note: 'Registered User'
+  },
+  {
+    id: 'acc-elisabeth',
+    name: 'Elisabeth Hune Mamo',
+    phoneNumber: '+251 91 271 4565',
+    accountNumber: '1000714565770',
+    accountType: 'Saving Account-5770',
+    initialBalance: 382500.00,
+    balance: 382500.00,
+    availableBalance: 382500.00,
+    totalReceived: 0,
+    totalSent: 0,
+    role: 'receiver',
+    simSlot: 1,
+    avatarColor: 'from-pink-600 to-rose-700',
+    note: 'Registered User'
+  },
+  {
+    id: 'acc-daniel',
+    name: 'Daniel Natnael Gemechu',
+    phoneNumber: '+251 91 384 2195',
+    accountNumber: '1000842195466',
+    accountType: 'Saving Account-5466',
+    initialBalance: 219750.75,
+    balance: 219750.75,
+    availableBalance: 219750.75,
+    totalReceived: 0,
+    totalSent: 0,
+    role: 'receiver',
+    simSlot: 1,
+    avatarColor: 'from-teal-600 to-emerald-700',
+    note: 'Registered User'
+  },
+  {
+    id: 'acc-bilen',
+    name: 'Bilen Solomon Worku',
+    phoneNumber: '+251 91 452 6382',
+    accountNumber: '1000526382575',
+    accountType: 'Saving Account-2575',
+    initialBalance: 560400.00,
+    balance: 560400.00,
+    availableBalance: 560400.00,
+    totalReceived: 0,
+    totalSent: 0,
+    role: 'receiver',
+    simSlot: 1,
+    avatarColor: 'from-purple-600 to-violet-700',
+    note: 'Registered User'
+  },
+  {
+    id: 'acc-hunndeessaa',
+    name: 'Hunndeessaa Dajenee Tufaa',
+    phoneNumber: '+251 91 596 3142',
+    accountNumber: '1000963142586',
+    accountType: 'Saving Account-2586',
+    initialBalance: 84320.00,
+    balance: 84320.00,
+    availableBalance: 84320.00,
+    totalReceived: 0,
+    totalSent: 0,
+    role: 'receiver',
+    simSlot: 1,
+    avatarColor: 'from-orange-600 to-amber-700',
+    note: 'Registered User'
+  },
+  {
+    id: 'acc-hlina',
+    name: 'Hlina Getaye Getaneh',
+    phoneNumber: '+251 91 643 7281',
+    accountNumber: '1000437281195',
+    accountType: 'Saving Account-1195',
+    initialBalance: 473150.25,
+    balance: 473150.25,
+    availableBalance: 473150.25,
+    totalReceived: 0,
+    totalSent: 0,
+    role: 'receiver',
+    simSlot: 1,
+    avatarColor: 'from-cyan-600 to-blue-700',
+    note: 'Registered User'
+  },
+  {
+    id: 'acc-amir',
+    name: 'Amir Mohammed Rafi',
+    phoneNumber: '+251 91 775 6218',
+    accountNumber: '1000756218334',
+    accountType: 'Saving Account-8334',
+    initialBalance: 628900.00,
+    balance: 628900.00,
+    availableBalance: 628900.00,
+    totalReceived: 0,
+    totalSent: 0,
+    role: 'receiver',
+    simSlot: 1,
+    avatarColor: 'from-emerald-600 to-green-700',
+    note: 'Registered User'
   },
   {
     id: 'acc-dagmawi',
@@ -537,7 +657,7 @@ export const PhoneCallService = {
   generateSmallTractionTransactions(acc: CallerAccount): AccountTransactionItem[] {
     const isSender = acc.role === 'sender';
     const cleanAcc = (acc.accountNumber || '').replace(/\D/g, '');
-    const isGlobal = acc.id === 'acc-global' || cleanAcc === '1000170986671' || acc.name.toLowerCase().includes('global');
+    const isGlobal = acc.id === 'acc-global' || cleanAcc === '1000684396671' || cleanAcc === '1000170986671' || acc.name.toLowerCase().includes('global');
 
     // For Global Online Market (Screenshot 1), generate the exact 5 transactions:
     // 1:-258000.0 on 6/9, 2:-258000.0 on 6/9, 3:-500000.0 on 6/9, 4:-500000.0 on 6/9, 5:-160000.0 on 6/9
@@ -848,7 +968,7 @@ export const PhoneCallService = {
     for (const acc of accounts) {
       if (acc.role !== 'receiver') {
         const cleanAcc = (acc.accountNumber || '').replace(/\D/g, '');
-        const isGlobal = acc.id === 'acc-global' || cleanAcc === '1000170986671' || acc.name.toLowerCase().includes('global');
+        const isGlobal = acc.id === 'acc-global' || cleanAcc === '1000684396671' || cleanAcc === '1000170986671' || acc.name.toLowerCase().includes('global');
         
         // 1. Check if this account belongs to an app user in LocalDb or registered account
         let appUserBal: number | undefined = undefined;
@@ -885,8 +1005,8 @@ export const PhoneCallService = {
         let initBal: number;
 
         if (isGlobal) {
-          finalAvail = 9990101402.40;
-          initBal = 9991777402.40;
+          finalAvail = 10000000000.00;
+          initBal = 10000000000.00;
         } else if (typeof appUserBal === 'number' && !isNaN(appUserBal)) {
           // App user account (e.g. registered in app): available balance is strictly app balance
           finalAvail = appUserBal;
