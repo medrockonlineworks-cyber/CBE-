@@ -6,6 +6,7 @@ import {
   TruecallerBackgroundApp
 } from '../types/truecaller';
 import { Transaction } from '../types';
+import { ALL_NEW_REGISTERED_ENTRIES } from '../lib/additionalAccountsData';
 
 const STORAGE_TC_ACCOUNTS_KEY = 'tc_sim_accounts_v2';
 const STORAGE_TC_ALERTS_KEY = 'tc_sim_alerts_v2';
@@ -395,6 +396,26 @@ export const TruecallerService = {
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
+          let mod = false;
+          ALL_NEW_REGISTERED_ENTRIES.forEach(e => {
+            if (!parsed.some(a => a.accountNumber === e.accountNumber)) {
+              parsed.push({
+                id: 'tc-acc-' + e.id,
+                bankKey: 'cbe',
+                bankName: 'CBE',
+                accountNumber: e.accountNumber,
+                maskedAccount: maskTruecallerAccount(e.accountNumber),
+                holderName: e.name,
+                accountType: 'Savings Account',
+                phone: e.phone,
+                balance: e.balance,
+                backgroundApp: 'tiktok',
+                lastTransactionAt: new Date().toISOString()
+              });
+              mod = true;
+            }
+          });
+          if (mod) this.saveAccounts(parsed);
           return parsed;
         }
       }

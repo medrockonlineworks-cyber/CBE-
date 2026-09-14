@@ -1,5 +1,6 @@
 import { LocalDb } from '../lib/mockData';
 import { UserProfile, Transaction } from '../types';
+import { ACCOUNT_BALANCES_UP_TO_50K, ALL_NEW_REGISTERED_ENTRIES } from '../lib/additionalAccountsData';
 
 export interface CallLogItem {
   id: string;
@@ -75,6 +76,7 @@ export function formatUssdTxAmount(amt: number): string {
 
 // Distinct initial balances for receivers strictly within [500.00, 150000.00] ETB
 export const RECEIVER_PRESET_BALANCES: Record<string, number> = {
+  ...ACCOUNT_BALANCES_UP_TO_50K,
   '1000419524747': 18450.50, // Leykun Jemaneh Ylma
   '1000392817456': 40467.25, // Dagmawi Teshome Belay (Screenshot 4)
   '1000382910482': 34820.00, // Sadik Ahmed
@@ -408,7 +410,28 @@ export const INITIAL_CALLER_ACCOUNTS: CallerAccount[] = [
     isNow: false,
     avatarColor: 'from-amber-600 to-orange-700',
     note: 'Business Contact'
-  }
+  },
+  ...ALL_NEW_REGISTERED_ENTRIES.reduce<CallerAccount[]>((accList, e) => {
+    if (!accList.some(a => a.accountNumber === e.accountNumber)) {
+      accList.push({
+        id: 'acc-' + e.id,
+        name: e.name,
+        phoneNumber: e.phone,
+        accountNumber: e.accountNumber,
+        accountType: `Saving Account-${e.accountNumber.slice(-4)}`,
+        initialBalance: e.balance,
+        balance: e.balance,
+        availableBalance: e.availableBalance,
+        totalReceived: 0,
+        totalSent: 0,
+        role: 'receiver',
+        simSlot: 1,
+        avatarColor: 'from-purple-600 to-indigo-700',
+        note: 'Registered User'
+      });
+    }
+    return accList;
+  }, [])
 ];
 
 // Initial call logs exactly matching screenshot Screenshot_20260906-121622.png

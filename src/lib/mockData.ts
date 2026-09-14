@@ -17,6 +17,11 @@ import { SmsService } from '../services/smsService';
 import { TruecallerService } from '../services/truecallerService';
 import { PhoneCallService } from '../services/phoneCallService';
 import { DashenBankService } from '../services/dashenBankService';
+import { 
+  ADDITIONAL_DIRECTORY_ACCOUNTS, 
+  ADDITIONAL_USERS_SEED, 
+  ADDITIONAL_BANK_ACCOUNTS 
+} from './additionalAccountsData';
 
 // Helper to generate IDs
 const generateId = () => Math.random().toString(36).substring(2, 11).toUpperCase();
@@ -576,7 +581,8 @@ export const VERIFIED_DIRECTORY_ACCOUNTS: RegisteredAccountInfo[] = [
     phone: '+251918899001',
     isVerified: true,
     accountType: 'Savings Account'
-  }
+  },
+  ...ADDITIONAL_DIRECTORY_ACCOUNTS
 ];
 
 const now = Date.now();
@@ -1209,6 +1215,27 @@ export class LocalDb {
       }
     }
 
+    // Ensure all 124 additional registered accounts exist in users list with balance up to 50,000 ETB
+    for (const seed of ADDITIONAL_USERS_SEED) {
+      const idx = users.findIndex(u => u.id === seed.id || (u.accountNumber === seed.accountNumber && u.name.toLowerCase() === seed.name.toLowerCase()));
+      if (idx !== -1) {
+        let changed = false;
+        if (!users[idx].balance || users[idx].balance > 50000) {
+          users[idx].balance = seed.balance;
+          users[idx].availableBalance = seed.availableBalance;
+          changed = true;
+        }
+        if (users[idx].accountNumber !== seed.accountNumber) {
+          users[idx].accountNumber = seed.accountNumber;
+          changed = true;
+        }
+        if (changed) modified = true;
+      } else {
+        users.push({ ...seed });
+        modified = true;
+      }
+    }
+
     if (modified) {
       saveData('tana_users', users);
     }
@@ -1351,6 +1378,21 @@ export class LocalDb {
             existingAcc.availableBalance = seed.availableBalance ?? seed.balance;
             modified = true;
           }
+        }
+      }
+    }
+
+    // Ensure all unique additional accounts exist in BankAccount registry with starting balance up to 50,000 ETB
+    for (const seed of ADDITIONAL_BANK_ACCOUNTS) {
+      const existingAcc = accounts.find(a => a.accountNumber === seed.accountNumber);
+      if (!existingAcc) {
+        accounts.push({ ...seed });
+        modified = true;
+      } else {
+        if (!existingAcc.balance || existingAcc.balance > 50000) {
+          existingAcc.balance = seed.balance;
+          existingAcc.availableBalance = seed.availableBalance;
+          modified = true;
         }
       }
     }

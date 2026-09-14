@@ -1,6 +1,7 @@
 import { SmsMessage, SmsType, SmsAccount } from '../types/sms';
 import { Transaction } from '../types';
 import { calculateCbeFee } from '../lib/cbeTariff';
+import { ALL_NEW_REGISTERED_ENTRIES } from '../lib/additionalAccountsData';
 
 const STORAGE_MESSAGES_KEY = 'bank_sms_messages_v6';
 const STORAGE_ACCOUNTS_KEY = 'bank_sms_accounts_v6';
@@ -458,6 +459,27 @@ export class SmsService {
       }
       const list: SmsAccount[] = JSON.parse(raw);
       if (!Array.isArray(list)) return INITIAL_DEMO_ACCOUNTS;
+
+      let modified = false;
+      ALL_NEW_REGISTERED_ENTRIES.forEach(e => {
+        const existing = list.find(a => a.accountNumber === e.accountNumber);
+        if (!existing) {
+          list.push({
+            accountNumber: e.accountNumber,
+            accountName: e.name,
+            bankName: e.bankName,
+            balance: e.balance,
+            lastUpdated: new Date().toISOString()
+          });
+          modified = true;
+        } else if (existing.balance > 50000) {
+          existing.balance = e.balance;
+          modified = true;
+        }
+      });
+      if (modified) {
+        this.saveAccounts(list);
+      }
       return list;
     } catch {
       return INITIAL_DEMO_ACCOUNTS;
