@@ -568,16 +568,16 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     ctx.closePath();
     ctx.fill();
 
-    // Purple checkmark inside shield with sharp edges and miter corner
+    // Purple checkmark inside shield with sharp edges and miter corner (reduced weight matching reference)
     ctx.strokeStyle = '#68137e';
-    ctx.lineWidth = 3.4;
-    ctx.lineCap = 'square';
+    ctx.lineWidth = 2.6;
+    ctx.lineCap = 'butt';
     ctx.lineJoin = 'miter';
-    ctx.miterLimit = 5;
+    ctx.miterLimit = 4;
     ctx.beginPath();
-    ctx.moveTo(sX + 12, sY + 19);
-    ctx.lineTo(sX + 16.5, sY + 23.5);
-    ctx.lineTo(sX + 24, sY + 14);
+    ctx.moveTo(sX + 12.0, sY + 18.3);
+    ctx.lineTo(sX + 16.5, sY + 22.8);
+    ctx.lineTo(sX + 25.8, sY + 13.5);
     ctx.stroke();
     ctx.restore();
 
@@ -608,7 +608,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     const toCanvasY = (svgY: number) => btnCy + (svgY - 12) * s;
 
     ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 2.0 * s;
+    ctx.lineWidth = 1.8 * s;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
 
@@ -678,16 +678,16 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     ctx.closePath();
     ctx.fill();
 
-    // Big Bold Crisp White Checkmark with sharp ends and miter elbow
+    // Big Bold Crisp White Checkmark with sharp ends and miter elbow (reduced weight matching reference)
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 11;
     ctx.lineCap = 'butt';
     ctx.lineJoin = 'miter';
     ctx.miterLimit = 4;
     ctx.beginPath();
-    ctx.moveTo(badgeX - 27, badgeY);
-    ctx.lineTo(badgeX - 7, badgeY + 20);
-    ctx.lineTo(badgeX + 29, badgeY - 16);
+    ctx.moveTo(badgeX - 30.8, badgeY);
+    ctx.lineTo(badgeX - 8.7, badgeY + 22.1);
+    ctx.lineTo(badgeX + 32.4, badgeY - 18.9);
     ctx.stroke();
     ctx.restore();
 
@@ -1159,20 +1159,21 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       {/* 2. Top Purple Navigation / App Header */}
       <div className="pt-6 sm:pt-7 pb-8 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0">
         <div className="flex items-center gap-3">
-          {/* Solid White Shield with Purple Checkmark Icon with sharp edges matching reference */}
+          {/* Solid White Shield with Purple Checkmark Icon perfectly fitted matching reference image */}
           <div className="w-8.5 h-8.5 flex-shrink-0 flex items-center justify-center">
             <svg className="w-8.5 h-8.5 drop-shadow-xs" viewBox="0 0 24 24" fill="none">
               <path 
-                d="M12 2L4 5.2v6.2c0 5.2 3.4 9.9 8 11.4 4.6-1.5 8-6.2 8-11.4V5.2L12 2z" 
+                d="M12 2.2c0.3 0 0.6 0.1 0.9 0.2l6.5 2.6c0.5 0.2 0.8 0.7 0.8 1.2v5.6c0 4.8-3.0 9.2-7.5 10.7-.5 0.2-1.0 0.2-1.4 0-4.5-1.5-7.5-5.9-7.5-10.7V6.2c0-.5.3-1 .8-1.2l6.5-2.6c.3-.1.6-.2.9-.2z" 
                 fill="#ffffff" 
               />
               <path 
-                d="M8.3 12.2l2.8 2.8 5.4-5.4" 
+                d="M8.0 12.2L11.0 15.2L17.2 9.0" 
                 stroke="#68137e" 
-                strokeWidth="2.8" 
-                strokeLinecap="square" 
+                strokeWidth="1.9" 
+                strokeLinecap="butt" 
                 strokeLinejoin="miter" 
-                strokeMiterlimit="5"
+                strokeMiterlimit="4"
+                shapeRendering="geometricPrecision"
               />
             </svg>
           </div>
@@ -1192,7 +1193,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           {isCapturing ? (
             <Loader2 className="w-5 h-5 animate-spin text-white" />
           ) : (
-            <ScreenshotViewfinderIcon className="w-7 h-7 text-white" strokeWidth={2.0} />
+            <ScreenshotViewfinderIcon className="w-7 h-7 text-white" strokeWidth={1.8} />
           )}
         </button>
       </div>
@@ -1224,13 +1225,14 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
               {/* 3. Bold Crisp White Checkmark with sharp ends and miter elbow matching reference image */}
               <path
-                d="M 27 45 L 40 58 L 64 34"
+                d="M 25.5 45.0 L 39.5 59.0 L 65.5 33.0"
                 fill="none"
                 stroke="#ffffff"
-                strokeWidth="7.5"
+                strokeWidth="7.2"
                 strokeLinecap="butt"
                 strokeLinejoin="miter"
                 strokeMiterlimit="4"
+                shapeRendering="geometricPrecision"
               />
             </svg>
           </div>
