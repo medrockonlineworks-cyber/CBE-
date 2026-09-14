@@ -678,16 +678,16 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     ctx.closePath();
     ctx.fill();
 
-    // Big Bold Crisp White Checkmark with sharp ends and miter elbow (reduced weight matching reference)
+    // Big Bold Crisp White Checkmark with sharp ends and miter elbow (extended right arm matching reference)
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 11;
     ctx.lineCap = 'butt';
     ctx.lineJoin = 'miter';
     ctx.miterLimit = 4;
     ctx.beginPath();
-    ctx.moveTo(badgeX - 30.8, badgeY);
-    ctx.lineTo(badgeX - 8.7, badgeY + 22.1);
-    ctx.lineTo(badgeX + 32.4, badgeY - 18.9);
+    ctx.moveTo(badgeX - 32.4, badgeY + 0.8);
+    ctx.lineTo(badgeX - 9.5, badgeY + 23.7);
+    ctx.lineTo(badgeX + 41.1, badgeY - 26.8);
     ctx.stroke();
     ctx.restore();
 
@@ -1223,9 +1223,9 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 fill="#ffffff" 
               />
 
-              {/* 3. Bold Crisp White Checkmark with sharp ends and miter elbow matching reference image */}
+              {/* 3. Bold Crisp White Checkmark with extended right arm and sharp ends matching reference image */}
               <path
-                d="M 25.5 45.0 L 39.5 59.0 L 65.5 33.0"
+                d="M 24.5 45.5 L 39.0 60.0 L 71.0 28.0"
                 fill="none"
                 stroke="#ffffff"
                 strokeWidth="7.2"
