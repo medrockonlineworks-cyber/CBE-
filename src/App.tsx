@@ -15,6 +15,7 @@ import TruecallerSimulator from './components/TruecallerSimulator';
 import PhoneCallApp from './components/PhoneCallApp';
 import DashenBankApp from './components/DashenBankApp';
 import TelebirrApp from './components/TelebirrApp';
+import TelegramSimulatorApp from './components/telegram/TelegramSimulatorApp';
 import { PhoneCallService } from './services/phoneCallService';
 import { SmsService } from './services/smsService';
 import Navigation, { TabType } from './components/Navigation';
@@ -38,7 +39,7 @@ export default function App() {
       return null;
     }
   });
-  const [activeView, setActiveView] = useState<'auth' | 'main' | 'receipt' | 'admin' | 'sms' | 'truecaller' | 'phone' | 'dashen' | 'telebirr'>(() => {
+  const [activeView, setActiveView] = useState<'auth' | 'main' | 'receipt' | 'admin' | 'sms' | 'truecaller' | 'phone' | 'dashen' | 'telebirr' | 'telegram'>(() => {
     if (typeof window !== 'undefined') {
       const path = (window.location.pathname || '').toLowerCase();
       const search = new URLSearchParams(window.location.search);
@@ -50,19 +51,20 @@ export default function App() {
       if (path === '/phone' || appParam === 'phone' || hash === '#phone' || hash === '#/phone') return 'phone';
       if (path === '/dashen' || appParam === 'dashen' || hash === '#dashen' || hash === '#/dashen') return 'dashen';
       if (path === '/telebirr' || appParam === 'telebirr' || hash === '#telebirr' || hash === '#/telebirr') return 'telebirr';
+      if (path === '/telegram' || appParam === 'telegram' || hash === '#telegram' || hash === '#/telegram') return 'telegram';
       if (path === '/admin' || appParam === 'admin' || hash === '#admin') return 'admin';
 
       // Restore last active app from localStorage
       try {
         const savedView = localStorage.getItem('tana_active_view');
-        if (savedView && ['main', 'dashen', 'telebirr', 'sms', 'truecaller', 'phone', 'admin'].includes(savedView)) {
+        if (savedView && ['main', 'dashen', 'telebirr', 'sms', 'truecaller', 'phone', 'admin', 'telegram'].includes(savedView)) {
           return savedView as any;
         }
       } catch {
         // Ignore storage errors
       }
     }
-    return 'telebirr';
+    return 'telegram';
   });
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [returnTab, setReturnTab] = useState<TabType>('home');
@@ -75,7 +77,7 @@ export default function App() {
   const navHistoryRef = useRef<{ view: string; tab: string }[]>([]);
 
   // Navigation pusher that keeps browser history in sync with Android back-button
-  const navigateTo = useCallback((view: 'auth' | 'main' | 'receipt' | 'admin' | 'sms' | 'truecaller' | 'phone' | 'dashen' | 'telebirr', tab: TabType = activeTab) => {
+  const navigateTo = useCallback((view: 'auth' | 'main' | 'receipt' | 'admin' | 'sms' | 'truecaller' | 'phone' | 'dashen' | 'telebirr' | 'telegram', tab: TabType = activeTab) => {
     if (activeView === 'main') {
       setReturnTab(activeTab);
     }
@@ -96,7 +98,9 @@ export default function App() {
               ? '/dashen' 
               : (view === 'telebirr'
                 ? '/telebirr'
-                : (['/sms', '/truecaller', '/phone', '/dashen', '/telebirr'].includes(window.location.pathname) ? '/' : window.location.pathname)))));
+                : (view === 'telegram'
+                  ? '/telegram'
+                  : (['/sms', '/truecaller', '/phone', '/dashen', '/telebirr', '/telegram'].includes(window.location.pathname) ? '/' : window.location.pathname))))));
       window.history.pushState(stateObj, '', targetPath);
       navHistoryRef.current.push(stateObj);
     } catch {
@@ -113,8 +117,8 @@ export default function App() {
     } catch {}
 
     const handlePopState = (e: PopStateEvent) => {
-      // If user was on SMS, Truecaller, Phone, Dashen or Telebirr view
-      if (activeView === 'sms' || activeView === 'truecaller' || activeView === 'phone' || activeView === 'dashen' || activeView === 'telebirr') {
+      // If user was on SMS, Truecaller, Phone, Dashen, Telebirr or Telegram view
+      if (activeView === 'sms' || activeView === 'truecaller' || activeView === 'phone' || activeView === 'dashen' || activeView === 'telebirr' || activeView === 'telegram') {
         setActiveView('main');
         setActiveTab('profile');
       } else if (activeView === 'receipt') {
@@ -247,6 +251,7 @@ export default function App() {
             onOpenPhoneApp={() => navigateTo('phone', 'home')}
             onOpenDashenApp={() => navigateTo('dashen', 'home')}
             onOpenTelebirrApp={() => navigateTo('telebirr', 'home')}
+            onOpenTelegramSimulator={() => navigateTo('telegram', 'home')}
           />
         );
       case 'transfer':
@@ -287,6 +292,7 @@ export default function App() {
             onOpenPhoneApp={() => navigateTo('phone', 'history')}
             onOpenDashenApp={() => navigateTo('dashen', 'history')}
             onOpenTelebirrApp={() => navigateTo('telebirr', 'history')}
+            onOpenTelegramSimulator={() => navigateTo('telegram', 'history')}
           />
         );
       case 'profile':
@@ -301,6 +307,7 @@ export default function App() {
             onOpenPhoneApp={() => navigateTo('phone', 'profile')}
             onOpenDashenApp={() => navigateTo('dashen', 'profile')}
             onOpenTelebirrApp={() => navigateTo('telebirr', 'profile')}
+            onOpenTelegramApp={() => navigateTo('telegram', 'profile')}
           />
         );
       default:
@@ -313,6 +320,7 @@ export default function App() {
             onOpenPhoneApp={() => navigateTo('phone', 'home')}
             onOpenDashenApp={() => navigateTo('dashen', 'home')}
             onOpenTelebirrApp={() => navigateTo('telebirr', 'home')}
+            onOpenTelegramSimulator={() => navigateTo('telegram', 'home')}
           />
         );
     }
@@ -344,6 +352,15 @@ export default function App() {
         >
           <span className="w-2 h-2 rounded-full bg-lime-200" />
           Telebirr
+        </button>
+        <button
+          onClick={() => navigateTo('telegram')}
+          className={`px-3 py-1 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+            activeView === 'telegram' ? 'bg-[#229ED9] text-white shadow-xs' : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <span className="w-2 h-2 rounded-full bg-sky-300" />
+          Telegram
         </button>
         <button
           onClick={() => navigateTo('dashen')}
@@ -401,7 +418,9 @@ export default function App() {
                   ? 'h-full overflow-hidden bg-[#040b18]'
                   : activeView === 'telebirr'
                     ? 'h-full overflow-hidden bg-white'
-                    : activeTab === 'home' || activeTab === 'history' 
+                    : activeView === 'telegram'
+                      ? 'h-full overflow-hidden bg-slate-900'
+                      : activeTab === 'home' || activeTab === 'history' 
                       ? 'overflow-hidden h-full' 
                       : 'overflow-y-auto bg-gray-50'
         }`}>
@@ -520,6 +539,26 @@ export default function App() {
               }}
               onOpenSms={() => {
                 navigateTo('sms', returnTab);
+              }}
+              onOpenTelegram={() => {
+                navigateTo('telegram', returnTab);
+              }}
+            />
+          )}
+
+          {activeView === 'telegram' && (
+            <TelegramSimulatorApp 
+              onBack={() => {
+                navigateTo('telebirr', returnTab);
+              }}
+              onOpenTelebirr={() => {
+                navigateTo('telebirr', returnTab);
+              }}
+              onOpenCbe={() => {
+                navigateTo('main', 'home');
+              }}
+              onOpenDashen={() => {
+                navigateTo('dashen', returnTab);
               }}
             />
           )}

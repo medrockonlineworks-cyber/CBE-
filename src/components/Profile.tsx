@@ -46,6 +46,7 @@ interface ProfileProps {
   onOpenPhoneApp?: () => void;
   onOpenDashenApp?: () => void;
   onOpenTelebirrApp?: () => void;
+  onOpenTelegramApp?: () => void;
 }
 
 const LANGUAGES = [
@@ -55,7 +56,7 @@ const LANGUAGES = [
   { code: 'ti', label: 'Tigrinya (ትግርኛ)' }
 ];
 
-export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdmin, onOpenSmsSimulator, onOpenTruecallerSimulator, onOpenPhoneApp, onOpenDashenApp, onOpenTelebirrApp }: ProfileProps) {
+export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdmin, onOpenSmsSimulator, onOpenTruecallerSimulator, onOpenPhoneApp, onOpenDashenApp, onOpenTelebirrApp, onOpenTelegramApp }: ProfileProps) {
   const [activeLang, setActiveLang] = useState('en');
   const [showLogoModal, setShowLogoModal] = useState(false);
   const [customBankLogo, setCustomBankLogo] = useState<string | null>(() => LocalDb.getCustomBankLogo());
@@ -828,6 +829,44 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
                 }
               }}
               className="px-3 py-1.5 bg-[#5cb82e] hover:bg-[#4ea026] active:scale-95 text-white rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 shadow-xs flex-shrink-0"
+            >
+              <span>Open</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
+          {/* Telegram Chat Simulator (Requested Below Telebirr App) */}
+          <div className="flex items-center justify-between p-3 rounded-2xl bg-sky-50/50 hover:bg-sky-50 border border-sky-200/80 transition">
+            <div className="flex items-center gap-3">
+              <div className="p-1.5 bg-[#229ED9] text-white rounded-xl flex-shrink-0 shadow-sm flex flex-col items-center justify-center w-9 h-9 border border-sky-300">
+                <MessageSquare className="w-5 h-5 text-white" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-bold text-gray-800">Telegram Chat Simulator</p>
+                  <span className="text-[9px] font-extrabold bg-[#229ED9] text-white px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    New
+                  </span>
+                </div>
+                <p className="text-[10px] text-gray-500 truncate max-w-[200px] sm:max-w-xs">
+                  Fictional mock chat editor • Custom bubbles, receipts &amp; export
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              id="settings-telegram-simulator-app-btn"
+              onClick={() => {
+                if (onOpenTelegramApp) {
+                  onOpenTelegramApp();
+                } else {
+                  try {
+                    window.history.pushState({ view: 'telegram' }, '', '/telegram');
+                    window.dispatchEvent(new PopStateEvent('popstate', { state: { view: 'telegram' } }));
+                  } catch {}
+                }
+              }}
+              className="px-3 py-1.5 bg-[#229ED9] hover:bg-[#1b88bd] active:scale-95 text-white rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 shadow-xs flex-shrink-0"
             >
               <span>Open</span>
               <ChevronRight className="w-3.5 h-3.5" />

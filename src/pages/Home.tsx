@@ -45,6 +45,7 @@ interface HomeProps {
   onOpenPhoneApp?: () => void;
   onOpenDashenApp?: () => void;
   onOpenTelebirrApp?: () => void;
+  onOpenTelegramSimulator?: () => void;
 }
 
 export const Home: React.FC<HomeProps> = ({
@@ -58,6 +59,7 @@ export const Home: React.FC<HomeProps> = ({
   onOpenPhoneApp,
   onOpenDashenApp,
   onOpenTelebirrApp,
+  onOpenTelegramSimulator,
 }) => {
   // Fallback demo user if none passed in
   const currentUser: UserProfile = propUser || {
@@ -776,6 +778,27 @@ export const Home: React.FC<HomeProps> = ({
                 </div>
                 <p className="text-xs font-bold text-lime-950">Telebirr App</p>
                 <p className="text-[10px] text-lime-700">Transfer &amp; 41,865 ETB</p>
+              </button>
+
+              <button
+                onClick={() => {
+                  setActiveModal(null);
+                  if (onOpenTelegramSimulator) {
+                    onOpenTelegramSimulator();
+                  } else {
+                    try {
+                      window.history.pushState({ view: 'telegram' }, '', '/telegram');
+                      window.dispatchEvent(new PopStateEvent('popstate', { state: { view: 'telegram' } }));
+                    } catch {}
+                  }
+                }}
+                className="p-3 bg-sky-50 hover:bg-sky-100/80 rounded-2xl text-left transition cursor-pointer border border-sky-200"
+              >
+                <div className="w-5 h-5 bg-[#229ED9] rounded-lg text-white flex items-center justify-center mb-1.5 shadow-xs">
+                  <MessageSquare className="w-3 h-3 text-white" />
+                </div>
+                <p className="text-xs font-bold text-sky-950">Telegram Simulator</p>
+                <p className="text-[10px] text-sky-700">Mockup Chat Designer</p>
               </button>
 
               {onOpenAdmin && (

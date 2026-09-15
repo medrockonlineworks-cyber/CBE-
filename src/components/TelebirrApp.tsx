@@ -76,6 +76,7 @@ interface TelebirrAppProps {
   onOpenDashen?: () => void;
   onOpenCbe?: () => void;
   onOpenSms?: () => void;
+  onOpenTelegram?: () => void;
 }
 
 type TelebirrView = 'home' | 'transfer_select' | 'transfer_amount' | 'transfer_receipt';
@@ -85,7 +86,8 @@ export default function TelebirrApp({
   onBack,
   onOpenDashen,
   onOpenCbe,
-  onOpenSms 
+  onOpenSms,
+  onOpenTelegram 
 }: TelebirrAppProps) {
   // State from service
   const [teleState, setTeleState] = useState<TelebirrAccountState>(() => TelebirrService.getState());
@@ -1567,6 +1569,24 @@ export default function TelebirrApp({
                 </button>
               )}
 
+              {onOpenTelegram && (
+                <button
+                  onClick={onOpenTelegram}
+                  className="w-full p-2.5 rounded-xl border border-sky-100 bg-sky-50/50 hover:bg-sky-100/60 flex items-center justify-between transition cursor-pointer"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-lg bg-[#229ED9] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                      💬
+                    </div>
+                    <div className="text-left">
+                      <p className="text-xs font-bold text-[#0077b5]">Telegram Chat Simulator</p>
+                      <p className="text-[10px] text-neutral-500">Fictional chat & support simulator</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-neutral-400" />
+                </button>
+              )}
+
               <button
                 onClick={onBack}
                 className="w-full p-2.5 rounded-xl border border-neutral-200 hover:bg-neutral-50 flex items-center justify-between transition cursor-pointer text-neutral-700"
@@ -1754,6 +1774,21 @@ export default function TelebirrApp({
                   <span className="text-2xl mb-1">🚕</span>
                   <span className="text-[11px] font-bold text-neutral-800">Ride Hailing</span>
                   <span className="text-[9px] text-neutral-400">Feres & RIDE</span>
+                </div>
+
+                <div 
+                  onClick={() => {
+                    if (onOpenTelegram) {
+                      onOpenTelegram();
+                    } else {
+                      setToastMessage('Opening Telegram Chat Simulator...');
+                    }
+                  }}
+                  className="bg-white p-3 rounded-2xl border border-sky-100 shadow-xs flex flex-col items-center text-center cursor-pointer hover:border-sky-400 transition"
+                >
+                  <span className="text-2xl mb-1">💬</span>
+                  <span className="text-[11px] font-bold text-neutral-800">Telegram Chat</span>
+                  <span className="text-[9px] text-neutral-400">Chat Simulator</span>
                 </div>
               </div>
             </div>
