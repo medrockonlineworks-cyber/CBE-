@@ -937,8 +937,8 @@ export function getOfficialCbeStampSvg(weight: StampWeight = 'normal'): string {
   const hatchStroke = (1.2 * mul).toFixed(1);
   const medallionStroke = (2.5 * mul).toFixed(1);
 
-  return `data:image/svg+xml;utf8,${encodeURIComponent(`
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none">
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="240" height="240" fill="none">
   <defs>
     <path id="cbeUpper" d="M 29.5,120 A 90.5,90.5 0 0,1 210.5,120" />
     <path id="cbeLower" d="M 29.5,120 A 90.5,90.5 0 0,0 210.5,120" />
@@ -997,6 +997,41 @@ export function getOfficialCbeStampSvg(weight: StampWeight = 'normal'): string {
 }
 
 export const OFFICIAL_CBE_STAMP_LOGO = getOfficialCbeStampSvg('normal');
+
+/**
+ * Rasterizes an SVG string or data URI into a crystal-clear PNG data URI
+ * to ensure 100% faithful CBE purple color (#5e1887) rendering in html2canvas and PDF engines.
+ */
+export function rasterizeSvgToPng(svgDataUrl: string, size = 640): Promise<string> {
+  return new Promise((resolve) => {
+    if (!svgDataUrl || !svgDataUrl.startsWith('data:image/svg')) {
+      resolve(svgDataUrl);
+      return;
+    }
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(svgDataUrl);
+          return;
+        }
+        ctx.clearRect(0, 0, size, size);
+        ctx.drawImage(img, 0, 0, size, size);
+        const pngUrl = canvas.toDataURL('image/png');
+        resolve(pngUrl);
+      } catch {
+        resolve(svgDataUrl);
+      }
+    };
+    img.onerror = () => resolve(svgDataUrl);
+    img.src = svgDataUrl;
+  });
+}
 
 // Authentic CBE Receipt QR Code Template (matching reference IMG_20260916_103244_278.png)
 export const OFFICIAL_CBE_QR_PRESET = `data:image/svg+xml;utf8,${encodeURIComponent(`
@@ -2218,9 +2253,9 @@ export class LocalDb {
     window.dispatchEvent(new CustomEvent('cbe_stamp_updated', { detail: { stamp } }));
   }
 
-  static getBankStampSize(): number {
+  static getWebStampSize(): number {
     try {
-      const val = localStorage.getItem('tana_bank_stamp_size');
+      const val = localStorage.getItem('tana_web_bank_stamp_size') || localStorage.getItem('tana_bank_stamp_size');
       if (val) {
         const parsed = parseInt(val, 10);
         if (!isNaN(parsed) && parsed >= 160 && parsed <= 500) {
@@ -2231,21 +2266,53 @@ export class LocalDb {
     return 330; // Default size
   }
 
-  static setBankStampSize(size: number): void {
+  static setWebStampSize(size: number): void {
     try {
+      localStorage.setItem('tana_web_bank_stamp_size', String(size));
       localStorage.setItem('tana_bank_stamp_size', String(size));
     } catch (err) {
-      console.warn('[LocalDb] Failed writing stamp size to localStorage:', err);
+      console.warn('[LocalDb] Failed writing web stamp size to localStorage:', err);
     }
+    window.dispatchEvent(new CustomEvent('cbe_web_stamp_size_updated', { detail: { size } }));
     window.dispatchEvent(new CustomEvent('cbe_stamp_size_updated', { detail: { size } }));
   }
 
+  static getPdfStampSize(): number {
+    try {
+      const val = localStorage.getItem('tana_pdf_bank_stamp_size');
+      if (val) {
+        const parsed = parseInt(val, 10);
+        if (!isNaN(parsed) && parsed >= 160 && parsed <= 500) {
+          return parsed;
+        }
+      }
+    } catch {}
+    return 330; // Default PDF size
+  }
+
+  static setPdfStampSize(size: number): void {
+    try {
+      localStorage.setItem('tana_pdf_bank_stamp_size', String(size));
+    } catch (err) {
+      console.warn('[LocalDb] Failed writing pdf stamp size to localStorage:', err);
+    }
+    window.dispatchEvent(new CustomEvent('cbe_pdf_stamp_size_updated', { detail: { size } }));
+  }
+
+  static getBankStampSize(): number {
+    return this.getWebStampSize();
+  }
+
+  static setBankStampSize(size: number): void {
+    this.setWebStampSize(size);
+  }
+
   static getBankStampWidth(): number {
-    return this.getBankStampSize();
+    return this.getWebStampSize();
   }
 
   static setBankStampWidth(width: number): void {
-    this.setBankStampSize(width);
+    this.setWebStampSize(width);
   }
 
   static getCustomQrCode(): string | null {
@@ -2280,9 +2347,9 @@ export class LocalDb {
     window.dispatchEvent(new CustomEvent('cbe_qr_updated', { detail: { qr } }));
   }
 
-  static getBankStampWeight(): StampWeight {
+  static getWebStampWeight(): StampWeight {
     try {
-      const val = localStorage.getItem('tana_bank_stamp_weight') as StampWeight;
+      const val = (localStorage.getItem('tana_web_bank_stamp_weight') || localStorage.getItem('tana_bank_stamp_weight')) as StampWeight;
       if (val && ['light', 'normal', 'medium', 'bold', 'heavy'].includes(val)) {
         return val;
       }
@@ -2290,18 +2357,47 @@ export class LocalDb {
     return 'normal';
   }
 
-  static setBankStampWeight(weight: StampWeight): void {
+  static setWebStampWeight(weight: StampWeight): void {
     try {
+      localStorage.setItem('tana_web_bank_stamp_weight', weight);
       localStorage.setItem('tana_bank_stamp_weight', weight);
     } catch (err) {
-      console.warn('[LocalDb] Failed writing stamp weight to localStorage:', err);
+      console.warn('[LocalDb] Failed writing web stamp weight to localStorage:', err);
     }
+    window.dispatchEvent(new CustomEvent('cbe_web_stamp_weight_updated', { detail: { weight } }));
     window.dispatchEvent(new CustomEvent('cbe_stamp_weight_updated', { detail: { weight } }));
   }
 
-  static getBankStampPosition(): StampPosition {
+  static getPdfStampWeight(): StampWeight {
     try {
-      const val = localStorage.getItem('tana_bank_stamp_position');
+      const val = localStorage.getItem('tana_pdf_bank_stamp_weight') as StampWeight;
+      if (val && ['light', 'normal', 'medium', 'bold', 'heavy'].includes(val)) {
+        return val;
+      }
+    } catch {}
+    return 'normal';
+  }
+
+  static setPdfStampWeight(weight: StampWeight): void {
+    try {
+      localStorage.setItem('tana_pdf_bank_stamp_weight', weight);
+    } catch (err) {
+      console.warn('[LocalDb] Failed writing pdf stamp weight to localStorage:', err);
+    }
+    window.dispatchEvent(new CustomEvent('cbe_pdf_stamp_weight_updated', { detail: { weight } }));
+  }
+
+  static getBankStampWeight(): StampWeight {
+    return this.getWebStampWeight();
+  }
+
+  static setBankStampWeight(weight: StampWeight): void {
+    this.setWebStampWeight(weight);
+  }
+
+  static getWebStampPosition(): StampPosition {
+    try {
+      const val = localStorage.getItem('tana_web_bank_stamp_position') || localStorage.getItem('tana_bank_stamp_position');
       if (val) {
         const parsed = JSON.parse(val);
         if (typeof parsed?.xPercent === 'number' && typeof parsed?.yPercent === 'number') {
@@ -2315,19 +2411,63 @@ export class LocalDb {
     return { xPercent: 48, yPercent: 52 };
   }
 
-  static setBankStampPosition(pos: StampPosition | null): void {
+  static setWebStampPosition(pos: StampPosition | null): void {
     try {
       if (!pos) {
+        localStorage.removeItem('tana_web_bank_stamp_position');
         localStorage.removeItem('tana_bank_stamp_position');
       } else {
-        localStorage.setItem('tana_bank_stamp_position', JSON.stringify({
+        const str = JSON.stringify({
+          xPercent: Math.round(pos.xPercent * 10) / 10,
+          yPercent: Math.round(pos.yPercent * 10) / 10,
+        });
+        localStorage.setItem('tana_web_bank_stamp_position', str);
+        localStorage.setItem('tana_bank_stamp_position', str);
+      }
+    } catch (err) {
+      console.warn('[LocalDb] Failed writing web stamp position to localStorage:', err);
+    }
+    window.dispatchEvent(new CustomEvent('cbe_web_stamp_position_updated', { detail: { position: pos } }));
+    window.dispatchEvent(new CustomEvent('cbe_stamp_position_updated', { detail: { position: pos } }));
+  }
+
+  static getPdfStampPosition(): StampPosition {
+    try {
+      const val = localStorage.getItem('tana_pdf_bank_stamp_position');
+      if (val) {
+        const parsed = JSON.parse(val);
+        if (typeof parsed?.xPercent === 'number' && typeof parsed?.yPercent === 'number') {
+          return {
+            xPercent: Math.max(5, Math.min(95, parsed.xPercent)),
+            yPercent: Math.max(5, Math.min(95, parsed.yPercent)),
+          };
+        }
+      }
+    } catch {}
+    return { xPercent: 48, yPercent: 52 };
+  }
+
+  static setPdfStampPosition(pos: StampPosition | null): void {
+    try {
+      if (!pos) {
+        localStorage.removeItem('tana_pdf_bank_stamp_position');
+      } else {
+        localStorage.setItem('tana_pdf_bank_stamp_position', JSON.stringify({
           xPercent: Math.round(pos.xPercent * 10) / 10,
           yPercent: Math.round(pos.yPercent * 10) / 10,
         }));
       }
     } catch (err) {
-      console.warn('[LocalDb] Failed writing stamp position to localStorage:', err);
+      console.warn('[LocalDb] Failed writing pdf stamp position to localStorage:', err);
     }
-    window.dispatchEvent(new CustomEvent('cbe_stamp_position_updated', { detail: { position: pos } }));
+    window.dispatchEvent(new CustomEvent('cbe_pdf_stamp_position_updated', { detail: { position: pos } }));
+  }
+
+  static getBankStampPosition(): StampPosition {
+    return this.getWebStampPosition();
+  }
+
+  static setBankStampPosition(pos: StampPosition | null): void {
+    this.setWebStampPosition(pos);
   }
 }

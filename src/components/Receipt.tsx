@@ -1455,7 +1455,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       {/* Official CBE Customer Receipt Web Page when User Clicks 'Receipt' */}
       {showDetailedModal && (
         <CbeWebReceiptModal 
-          transaction={transaction} 
+          transaction={transaction}
+          initialQrCode={customQrCode || txQrSvgDataUri || qrDataUrl}
           onClose={() => setShowDetailedModal(false)} 
         />
       )}

@@ -29,6 +29,13 @@ export interface CbeOfficialPdfReceiptProps {
   stampPosition?: StampPosition;
   customPdfLogo?: string | null;
   isPreview?: boolean;
+  tableRef?: React.RefObject<HTMLDivElement>;
+  isEditingStampPosition?: boolean;
+  isDraggingStamp?: boolean;
+  onStampPointerDown?: (e: React.PointerEvent) => void;
+  onStampClick?: (e: React.MouseEvent) => void;
+  onStampDoubleClick?: (e: React.MouseEvent) => void;
+  onStampTouchEnd?: (e: React.TouchEvent) => void;
 }
 
 /**
@@ -44,12 +51,19 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
   stampSize = 330,
   stampPosition,
   customPdfLogo,
-  isPreview = false
+  isPreview = false,
+  tableRef,
+  isEditingStampPosition = false,
+  isDraggingStamp = false,
+  onStampPointerDown,
+  onStampClick,
+  onStampDoubleClick,
+  onStampTouchEnd
 }, ref) => {
   const effectiveStamp = activeStamp || getOfficialCbeStampSvg(stampWeight) || OFFICIAL_CBE_STAMP_LOGO;
   // Use full, prominent stamp size (default 330px) to match the authentic web receipt layout
-  const effectiveStampSize = stampSize || 330;
-  const effectiveStampPos = stampPosition || LocalDb.getBankStampPosition();
+  const effectiveStampSize = stampSize || LocalDb.getPdfStampSize() || 330;
+  const effectiveStampPos = stampPosition || LocalDb.getPdfStampPosition();
 
   return (
     <div
@@ -204,6 +218,7 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
 
         {/* 3. Main Box: Payment / Transaction Information Table with Overlaid Stamp */}
         <div 
+          ref={tableRef}
           style={{ 
             marginTop: '16px', 
             border: '1.2px solid #77126a', 
@@ -277,6 +292,7 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
 
           {/* Authentic Overlaid Stamp: Full prominent size matching Screenshot_20260916-125145.png */}
           <div 
+            id={isPreview ? "cbe-stamp-container" : undefined}
             style={{
               position: 'absolute',
               top: `${effectiveStampPos.yPercent}%`,
@@ -286,10 +302,30 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
               height: `${effectiveStampSize}px`,
               maxWidth: '92%',
               aspectRatio: '1 / 1',
-              pointerEvents: 'none',
-              zIndex: 10
+              pointerEvents: isPreview ? 'auto' : 'none',
+              cursor: isPreview ? (isEditingStampPosition ? (isDraggingStamp ? 'grabbing' : 'grab') : 'pointer') : 'default',
+              zIndex: 10,
+              touchAction: isPreview ? 'none' : 'auto'
             }}
+            onPointerDown={isPreview && isEditingStampPosition ? onStampPointerDown : undefined}
+            onClick={isPreview ? onStampClick : undefined}
+            onDoubleClick={isPreview ? onStampDoubleClick : undefined}
+            onTouchEnd={isPreview ? onStampTouchEnd : undefined}
           >
+            {/* Visual Focus Ring in Edit Mode */}
+            {isPreview && isEditingStampPosition && (
+              <div 
+                data-html2canvas-ignore="true"
+                style={{
+                  position: 'absolute',
+                  inset: -6,
+                  border: '2.5px dashed #9333ea',
+                  borderRadius: '50%',
+                  pointerEvents: 'none',
+                  boxShadow: '0 0 0 2px rgba(255,255,255,0.8), 0 4px 14px rgba(147, 51, 234, 0.45)'
+                }}
+              />
+            )}
             <img
               src={effectiveStamp}
               alt="Bank Stamp"
@@ -298,20 +334,37 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
                 width: '100%',
                 height: '100%',
                 objectFit: 'contain',
-                mixBlendMode: 'multiply',
                 transform: 'rotate(-13deg)',
-                filter: stampWeight === 'light' 
-                  ? 'contrast(1.02) brightness(1.04)'
-                  : stampWeight === 'normal' 
-                  ? 'contrast(1.15) brightness(0.98)' 
-                  : stampWeight === 'medium'
-                  ? 'contrast(1.30) brightness(0.92) drop-shadow(0 0 0.35px #5e1887)'
-                  : stampWeight === 'bold'
-                  ? 'contrast(1.50) brightness(0.85) drop-shadow(0 0 0.65px #461066)'
-                  : 'contrast(1.75) brightness(0.78) drop-shadow(0 0 1.2px #461066) drop-shadow(0 0 0.5px #5e1887)',
-                opacity: stampWeight === 'light' ? 0.85 : stampWeight === 'normal' ? 0.95 : 1
+                opacity: stampWeight === 'light' ? 0.88 : stampWeight === 'normal' ? 0.96 : 1
               }}
             />
+            {/* Moving badge in Edit Mode */}
+            {isPreview && isEditingStampPosition && (
+              <div 
+                data-html2canvas-ignore="true"
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  backgroundColor: 'rgba(126, 34, 206, 0.95)',
+                  color: '#ffffff',
+                  fontSize: '10px',
+                  fontWeight: 800,
+                  padding: '3px 9px',
+                  borderRadius: '9999px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  pointerEvents: 'none',
+                  whiteSpace: 'nowrap',
+                  border: '1px solid rgba(255,255,255,0.5)'
+                }}
+              >
+                <span>{isDraggingStamp ? 'Moving...' : 'Drag to Move'}</span>
+              </div>
+            )}
           </div>
         </div>
 

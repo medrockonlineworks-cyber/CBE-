@@ -4,7 +4,19 @@ import html2canvas from 'html2canvas-pro';
 import { jsPDF } from 'jspdf';
 import { Transaction } from '../types';
 import { SmsMessage } from '../types/sms';
-import { LocalDb, formatTo12CharTxId, DEFAULT_CBE_LOGO, OFFICIAL_CBE_PURPLE_LOGO, OFFICIAL_CBE_STAMP_LOGO, getOfficialCbeStampSvg, StampWeight, StampPosition } from '../lib/mockData';
+import { 
+  LocalDb, 
+  formatTo12CharTxId, 
+  DEFAULT_CBE_LOGO, 
+  OFFICIAL_CBE_PURPLE_LOGO, 
+  OFFICIAL_CBE_STAMP_LOGO, 
+  getOfficialCbeStampSvg, 
+  StampWeight, 
+  StampPosition, 
+  rasterizeSvgToPng,
+  getAuthenticCbeQrSvgDataUri,
+  getAuthenticCbeQrPngDataUrl
+} from '../lib/mockData';
 import { CbeLogo } from './CbeLogo';
 import { CbeOfficialPdfReceipt } from './CbeOfficialPdfReceipt';
 import { 
@@ -51,6 +63,8 @@ interface CbeWebReceiptModalProps {
   transaction?: Transaction | null;
   smsMessage?: SmsMessage | null;
   onClose: () => void;
+  initialViewMode?: 'web' | 'pdf';
+  initialQrCode?: string;
 }
 
 /**
@@ -160,11 +174,18 @@ function formatCbeReceiptDate(dateStr?: string | number | Date): string {
 export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
   transaction,
   smsMessage,
-  onClose
+  onClose,
+  initialViewMode = 'web',
+  initialQrCode
 }) => {
   const receiptCardRef = useRef<HTMLDivElement>(null);
   const pdfTemplateRef = useRef<HTMLDivElement>(null);
-  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('');
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>(() => {
+    if (initialQrCode) return initialQrCode;
+    const custom = LocalDb.getCustomQrCode();
+    if (custom) return custom;
+    return '';
+  });
   const [isDownloading, setIsDownloading] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
@@ -313,21 +334,31 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
   const [customPdfLogo, setCustomPdfLogo] = useState<string | null>(() => LocalDb.getCustomPdfLogo());
   const [pdfLogoUrlInput, setPdfLogoUrlInput] = useState<string>(() => LocalDb.getCustomPdfLogo() || '');
   const [customStamp, setCustomStamp] = useState<string | null>(() => LocalDb.getCustomBankStamp());
-  const [stampSize, setStampSize] = useState<number>(() => LocalDb.getBankStampSize());
-  const [stampWeight, setStampWeight] = useState<StampWeight>(() => LocalDb.getBankStampWeight());
+  // Web Receipt stamp settings
+  const [webStampSize, setWebStampSize] = useState<number>(() => LocalDb.getWebStampSize());
+  const [webStampWeight, setWebStampWeight] = useState<StampWeight>(() => LocalDb.getWebStampWeight());
+  const [webStampPosition, setWebStampPosition] = useState<StampPosition>(() => LocalDb.getWebStampPosition());
+
+  // PDF Receipt stamp settings
+  const [pdfStampSize, setPdfStampSize] = useState<number>(() => LocalDb.getPdfStampSize());
+  const [pdfStampWeight, setPdfStampWeight] = useState<StampWeight>(() => LocalDb.getPdfStampWeight());
+  const [pdfStampPosition, setPdfStampPosition] = useState<StampPosition>(() => LocalDb.getPdfStampPosition());
+
+  // Dedicated menu state for PDF viewer
+  const [isPdfMenuOpen, setIsPdfMenuOpen] = useState<boolean>(false);
   
   // Rearrangeable stamp position state
-  const [stampPosition, setStampPosition] = useState<StampPosition>(() => LocalDb.getBankStampPosition());
   const [isEditingStampPosition, setIsEditingStampPosition] = useState<boolean>(false);
   const [isDraggingStamp, setIsDraggingStamp] = useState<boolean>(false);
   const [hasUnsavedStampPos, setHasUnsavedStampPos] = useState<boolean>(false);
   const transactionTableRef = useRef<HTMLDivElement>(null);
+  const pdfTableRef = useRef<HTMLDivElement>(null);
   const dragStartRef = useRef<{ clientX: number; clientY: number; startXPercent: number; startYPercent: number } | null>(null);
   const stampLastTapRef = useRef<{ time: number; x: number; y: number }>({ time: 0, x: 0, y: 0 });
 
   const wakeUpStampRearrange = () => {
     setIsEditingStampPosition(true);
-    showBarsToast('Stamp rearrange active — drag to move, saved for all receipts');
+    showBarsToast(`${viewMode === 'pdf' ? 'PDF' : 'Web'} stamp rearrange active — drag to move, saved for all receipts`);
   };
 
   const handleStampClick = (e: React.MouseEvent) => {
@@ -369,10 +400,29 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
     wakeUpStampRearrange();
   };
 
-  const activeStamp = useMemo(() => {
+  const webActiveStamp = useMemo(() => {
     if (customStamp) return customStamp;
-    return getOfficialCbeStampSvg(stampWeight);
-  }, [customStamp, stampWeight]);
+    return getOfficialCbeStampSvg(webStampWeight);
+  }, [customStamp, webStampWeight]);
+
+  const pdfActiveStamp = useMemo(() => {
+    if (customStamp) return customStamp;
+    return getOfficialCbeStampSvg(pdfStampWeight);
+  }, [customStamp, pdfStampWeight]);
+
+  const [rasterizedPdfStampPng, setRasterizedPdfStampPng] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isCancelled = false;
+    rasterizeSvgToPng(pdfActiveStamp, 640).then((pngUrl) => {
+      if (!isCancelled && pngUrl) {
+        setRasterizedPdfStampPng(pngUrl);
+      }
+    });
+    return () => {
+      isCancelled = true;
+    };
+  }, [pdfActiveStamp]);
 
   useEffect(() => {
     const handleSyncLogo = () => {
@@ -386,28 +436,55 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
     const handleSyncStamp = () => {
       setCustomStamp(LocalDb.getCustomBankStamp());
     };
-    const handleSyncStampSize = (e: Event) => {
+
+    const handleSyncWebStampSize = (e: Event) => {
       const customEvt = e as CustomEvent;
       if (customEvt.detail?.size) {
-        setStampSize(customEvt.detail.size);
+        setWebStampSize(customEvt.detail.size);
       } else {
-        setStampSize(LocalDb.getBankStampSize());
+        setWebStampSize(LocalDb.getWebStampSize());
       }
     };
-    const handleSyncStampWeight = (e: Event) => {
+    const handleSyncWebStampWeight = (e: Event) => {
       const customEvt = e as CustomEvent;
       if (customEvt.detail?.weight) {
-        setStampWeight(customEvt.detail.weight);
+        setWebStampWeight(customEvt.detail.weight);
       } else {
-        setStampWeight(LocalDb.getBankStampWeight());
+        setWebStampWeight(LocalDb.getWebStampWeight());
       }
     };
-    const handleSyncStampPosition = (e: Event) => {
+    const handleSyncWebStampPosition = (e: Event) => {
       const customEvt = e as CustomEvent;
       if (customEvt.detail?.position) {
-        setStampPosition(customEvt.detail.position);
+        setWebStampPosition(customEvt.detail.position);
       } else {
-        setStampPosition(LocalDb.getBankStampPosition());
+        setWebStampPosition(LocalDb.getWebStampPosition());
+      }
+      setHasUnsavedStampPos(false);
+    };
+
+    const handleSyncPdfStampSize = (e: Event) => {
+      const customEvt = e as CustomEvent;
+      if (customEvt.detail?.size) {
+        setPdfStampSize(customEvt.detail.size);
+      } else {
+        setPdfStampSize(LocalDb.getPdfStampSize());
+      }
+    };
+    const handleSyncPdfStampWeight = (e: Event) => {
+      const customEvt = e as CustomEvent;
+      if (customEvt.detail?.weight) {
+        setPdfStampWeight(customEvt.detail.weight);
+      } else {
+        setPdfStampWeight(LocalDb.getPdfStampWeight());
+      }
+    };
+    const handleSyncPdfStampPosition = (e: Event) => {
+      const customEvt = e as CustomEvent;
+      if (customEvt.detail?.position) {
+        setPdfStampPosition(customEvt.detail.position);
+      } else {
+        setPdfStampPosition(LocalDb.getPdfStampPosition());
       }
       setHasUnsavedStampPos(false);
     };
@@ -415,9 +492,17 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
     window.addEventListener('cbe_logo_updated', handleSyncLogo);
     window.addEventListener('cbe_pdf_logo_updated', handleSyncPdfLogo);
     window.addEventListener('cbe_stamp_updated', handleSyncStamp);
-    window.addEventListener('cbe_stamp_size_updated', handleSyncStampSize);
-    window.addEventListener('cbe_stamp_weight_updated', handleSyncStampWeight);
-    window.addEventListener('cbe_stamp_position_updated', handleSyncStampPosition);
+    window.addEventListener('cbe_web_stamp_size_updated', handleSyncWebStampSize);
+    window.addEventListener('cbe_stamp_size_updated', handleSyncWebStampSize);
+    window.addEventListener('cbe_web_stamp_weight_updated', handleSyncWebStampWeight);
+    window.addEventListener('cbe_stamp_weight_updated', handleSyncWebStampWeight);
+    window.addEventListener('cbe_web_stamp_position_updated', handleSyncWebStampPosition);
+    window.addEventListener('cbe_stamp_position_updated', handleSyncWebStampPosition);
+
+    window.addEventListener('cbe_pdf_stamp_size_updated', handleSyncPdfStampSize);
+    window.addEventListener('cbe_pdf_stamp_weight_updated', handleSyncPdfStampWeight);
+    window.addEventListener('cbe_pdf_stamp_position_updated', handleSyncPdfStampPosition);
+
     window.addEventListener('storage', handleSyncLogo);
     window.addEventListener('storage', handleSyncPdfLogo);
     window.addEventListener('storage', handleSyncStamp);
@@ -425,26 +510,47 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
       window.removeEventListener('cbe_logo_updated', handleSyncLogo);
       window.removeEventListener('cbe_pdf_logo_updated', handleSyncPdfLogo);
       window.removeEventListener('cbe_stamp_updated', handleSyncStamp);
-      window.removeEventListener('cbe_stamp_size_updated', handleSyncStampSize);
-      window.removeEventListener('cbe_stamp_weight_updated', handleSyncStampWeight);
-      window.removeEventListener('cbe_stamp_position_updated', handleSyncStampPosition);
+      window.removeEventListener('cbe_web_stamp_size_updated', handleSyncWebStampSize);
+      window.removeEventListener('cbe_stamp_size_updated', handleSyncWebStampSize);
+      window.removeEventListener('cbe_web_stamp_weight_updated', handleSyncWebStampWeight);
+      window.removeEventListener('cbe_stamp_weight_updated', handleSyncWebStampWeight);
+      window.removeEventListener('cbe_web_stamp_position_updated', handleSyncWebStampPosition);
+      window.removeEventListener('cbe_stamp_position_updated', handleSyncWebStampPosition);
+
+      window.removeEventListener('cbe_pdf_stamp_size_updated', handleSyncPdfStampSize);
+      window.removeEventListener('cbe_pdf_stamp_weight_updated', handleSyncPdfStampWeight);
+      window.removeEventListener('cbe_pdf_stamp_position_updated', handleSyncPdfStampPosition);
+
       window.removeEventListener('storage', handleSyncLogo);
       window.removeEventListener('storage', handleSyncPdfLogo);
       window.removeEventListener('storage', handleSyncStamp);
     };
   }, []);
 
-  const handleUpdateStampWidth = (newSize: number) => {
+  const handleUpdateWebStampWidth = (newSize: number) => {
     const clamped = Math.max(160, Math.min(480, Math.round(newSize)));
-    LocalDb.setBankStampSize(clamped);
-    setStampSize(clamped);
-    showBarsToast(`Stamp size set to ${clamped}px (saved for all receipts)`);
+    LocalDb.setWebStampSize(clamped);
+    setWebStampSize(clamped);
+    showBarsToast(`Web stamp size set to ${clamped}px (saved for web receipts)`);
   };
 
-  const handleUpdateStampWeight = (newWeight: StampWeight) => {
-    LocalDb.setBankStampWeight(newWeight);
-    setStampWeight(newWeight);
-    showBarsToast(`Stamp weight set to ${newWeight} (saved for all receipts)`);
+  const handleUpdateWebStampWeight = (newWeight: StampWeight) => {
+    LocalDb.setWebStampWeight(newWeight);
+    setWebStampWeight(newWeight);
+    showBarsToast(`Web stamp weight set to ${newWeight} (saved for web receipts)`);
+  };
+
+  const handleUpdatePdfStampWidth = (newSize: number) => {
+    const clamped = Math.max(160, Math.min(480, Math.round(newSize)));
+    LocalDb.setPdfStampSize(clamped);
+    setPdfStampSize(clamped);
+    showBarsToast(`PDF stamp size set to ${clamped}px (saved for PDF receipts)`);
+  };
+
+  const handleUpdatePdfStampWeight = (newWeight: StampWeight) => {
+    LocalDb.setPdfStampWeight(newWeight);
+    setPdfStampWeight(newWeight);
+    showBarsToast(`PDF stamp weight set to ${newWeight} (saved for PDF receipts)`);
   };
 
   // Drag & reposition stamp handlers
@@ -455,17 +561,20 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
     e.preventDefault();
 
     setIsDraggingStamp(true);
+    const activePos = viewMode === 'pdf' ? pdfStampPosition : webStampPosition;
 
     dragStartRef.current = {
       clientX: e.clientX,
       clientY: e.clientY,
-      startXPercent: stampPosition.xPercent,
-      startYPercent: stampPosition.yPercent
+      startXPercent: activePos.xPercent,
+      startYPercent: activePos.yPercent
     };
 
     const handlePointerMove = (moveEvt: PointerEvent) => {
-      if (!dragStartRef.current || !transactionTableRef.current) return;
-      const rect = transactionTableRef.current.getBoundingClientRect();
+      if (!dragStartRef.current) return;
+      const targetTable = viewMode === 'pdf' ? pdfTableRef.current : transactionTableRef.current;
+      if (!targetTable) return;
+      const rect = targetTable.getBoundingClientRect();
       if (rect.width <= 0 || rect.height <= 0) return;
 
       const deltaX = moveEvt.clientX - dragStartRef.current.clientX;
@@ -477,7 +586,11 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
       const newXPercent = Math.max(5, Math.min(95, Math.round((dragStartRef.current.startXPercent + deltaXPercent) * 10) / 10));
       const newYPercent = Math.max(5, Math.min(95, Math.round((dragStartRef.current.startYPercent + deltaYPercent) * 10) / 10));
 
-      setStampPosition({ xPercent: newXPercent, yPercent: newYPercent });
+      if (viewMode === 'pdf') {
+        setPdfStampPosition({ xPercent: newXPercent, yPercent: newYPercent });
+      } else {
+        setWebStampPosition({ xPercent: newXPercent, yPercent: newYPercent });
+      }
       setHasUnsavedStampPos(true);
     };
 
@@ -488,13 +601,20 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
       window.removeEventListener('pointerup', handlePointerUp);
       window.removeEventListener('pointercancel', handlePointerUp);
 
-      // Automatically persist the new position to storage for this and all other receipts
-      setStampPosition(current => {
-        LocalDb.setBankStampPosition(current);
-        return current;
-      });
+      if (viewMode === 'pdf') {
+        setPdfStampPosition(current => {
+          LocalDb.setPdfStampPosition(current);
+          return current;
+        });
+        showBarsToast('PDF stamp position saved for all receipts');
+      } else {
+        setWebStampPosition(current => {
+          LocalDb.setWebStampPosition(current);
+          return current;
+        });
+        showBarsToast('Web stamp position saved for all receipts');
+      }
       setHasUnsavedStampPos(false);
-      showBarsToast('Stamp position saved for all receipts');
     };
 
     window.addEventListener('pointermove', handlePointerMove);
@@ -503,28 +623,50 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
   };
 
   const handleSaveStampPosition = () => {
-    LocalDb.setBankStampPosition(stampPosition);
+    if (viewMode === 'pdf') {
+      LocalDb.setPdfStampPosition(pdfStampPosition);
+      showBarsToast('PDF stamp position saved for all receipts');
+    } else {
+      LocalDb.setWebStampPosition(webStampPosition);
+      showBarsToast('Web stamp position saved for all receipts');
+    }
     setHasUnsavedStampPos(false);
-    showBarsToast('Stamp position saved for all receipts');
   };
 
   const handleResetStampPosition = () => {
     const defaultPos: StampPosition = { xPercent: 48, yPercent: 52 };
-    LocalDb.setBankStampPosition(defaultPos);
-    setStampPosition(defaultPos);
+    if (viewMode === 'pdf') {
+      LocalDb.setPdfStampPosition(defaultPos);
+      setPdfStampPosition(defaultPos);
+      showBarsToast('PDF stamp position reset to center (saved for all receipts)');
+    } else {
+      LocalDb.setWebStampPosition(defaultPos);
+      setWebStampPosition(defaultPos);
+      showBarsToast('Web stamp position reset to center (saved for all receipts)');
+    }
     setHasUnsavedStampPos(false);
-    showBarsToast('Stamp position reset to center (saved for all receipts)');
   };
 
   const handleNudgeStamp = (dx: number, dy: number) => {
-    setStampPosition(prev => {
-      const nextX = Math.max(5, Math.min(95, Math.round((prev.xPercent + dx) * 10) / 10));
-      const nextY = Math.max(5, Math.min(95, Math.round((prev.yPercent + dy) * 10) / 10));
-      const nextPos = { xPercent: nextX, yPercent: nextY };
-      LocalDb.setBankStampPosition(nextPos);
-      setHasUnsavedStampPos(false);
-      return nextPos;
-    });
+    if (viewMode === 'pdf') {
+      setPdfStampPosition(prev => {
+        const nextX = Math.max(5, Math.min(95, Math.round((prev.xPercent + dx) * 10) / 10));
+        const nextY = Math.max(5, Math.min(95, Math.round((prev.yPercent + dy) * 10) / 10));
+        const nextPos = { xPercent: nextX, yPercent: nextY };
+        LocalDb.setPdfStampPosition(nextPos);
+        setHasUnsavedStampPos(false);
+        return nextPos;
+      });
+    } else {
+      setWebStampPosition(prev => {
+        const nextX = Math.max(5, Math.min(95, Math.round((prev.xPercent + dx) * 10) / 10));
+        const nextY = Math.max(5, Math.min(95, Math.round((prev.yPercent + dy) * 10) / 10));
+        const nextPos = { xPercent: nextX, yPercent: nextY };
+        LocalDb.setWebStampPosition(nextPos);
+        setHasUnsavedStampPos(false);
+        return nextPos;
+      });
+    }
   };
 
   // Derive all receipt fields accurately from either Transaction or SmsMessage
@@ -676,32 +818,83 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
 
   const webReceiptUrl = `https://apps.cbe.com.et:100/?id=${receiptData.refId}`;
 
-  // Generate QR Code for the web receipt
+  // Synchronize identical authentic CBE QR code for Receipt, Web Receipt, and PDF Receipt
   useEffect(() => {
-    QRCode.toDataURL(webReceiptUrl, {
-      width: 140,
-      margin: 1,
-      color: {
-        dark: '#000000',
-        light: '#ffffff'
-      }
-    })
-      .then((url) => setQrCodeDataUrl(url))
-      .catch((err) => console.error('Failed to generate QR:', err));
-  }, [webReceiptUrl]);
+    let isMounted = true;
 
-  const handleDownloadPdf = async (stayInCurrentView = false) => {
-    if (isDownloading) return;
-
-    // When invoked from web view, switch view into the official PDF document opened in browser
-    if (viewMode === 'web' && !stayInCurrentView) {
-      setViewMode('pdf');
-      showBarsToast('Opening official CBE PDF in browser...');
+    // 1. If a custom QR code was uploaded or set in AdminPanel, use it
+    const customQr = LocalDb.getCustomQrCode();
+    if (customQr) {
+      setQrCodeDataUrl(customQr);
+      return;
     }
+
+    // 2. If passed directly from in-app receipt props, sync it
+    if (initialQrCode) {
+      setQrCodeDataUrl(initialQrCode);
+      return;
+    }
+
+    const txId = receiptData.refId;
+    if (!txId) return;
+
+    // 3. Immediately render authentic SVG data URI so there is zero flash or delay
+    try {
+      const svgUri = getAuthenticCbeQrSvgDataUri(txId);
+      if (svgUri && isMounted) {
+        setQrCodeDataUrl(svgUri);
+      }
+    } catch {
+      // Fallback to async PNG
+    }
+
+    // 4. Generate high-res 450px Version 3 authentic CBE QR PNG matching Receipt.tsx exactly
+    getAuthenticCbeQrPngDataUrl(txId, 450)
+      .then((pngUrl) => {
+        if (isMounted && pngUrl) {
+          setQrCodeDataUrl(pngUrl);
+        }
+      })
+      .catch((err) => console.error('Failed to generate authentic CBE QR:', err));
+
+    return () => {
+      isMounted = false;
+    };
+  }, [receiptData.refId, initialQrCode]);
+
+  // Synchronize dynamic QR updates from AdminPanel or cross-tab storage
+  useEffect(() => {
+    const handleQrUpdate = () => {
+      const customQr = LocalDb.getCustomQrCode();
+      if (customQr) {
+        setQrCodeDataUrl(customQr);
+      } else if (receiptData.refId) {
+        getAuthenticCbeQrPngDataUrl(receiptData.refId, 450)
+          .then((pngUrl) => setQrCodeDataUrl(pngUrl))
+          .catch(() => {});
+      }
+    };
+
+    window.addEventListener('cbe_qr_updated', handleQrUpdate);
+    window.addEventListener('storage', handleQrUpdate);
+    return () => {
+      window.removeEventListener('cbe_qr_updated', handleQrUpdate);
+      window.removeEventListener('storage', handleQrUpdate);
+    };
+  }, [receiptData.refId]);
+
+  const handleOpenPdfView = () => {
+    setViewMode('pdf');
+    showBarsToast('Official CBE PDF opened — double-tap stamp to rearrange, or click Save PDF');
+  };
+
+  const handleDownloadPdf = async () => {
+    if (isDownloading) return;
 
     try {
       setIsDownloading(true);
       setDownloadError(null);
+      showBarsToast('Generating high-resolution official CBE PDF...');
 
       // Brief pause to allow any state batching to settle
       await new Promise(r => setTimeout(r, 200));
@@ -1294,7 +1487,15 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
             <div className="flex items-center justify-between pb-3 border-b border-neutral-700/80 mb-3">
               <div className="flex items-center gap-2">
                 <Globe className="w-4.5 h-4.5 text-emerald-400" />
-                <h3 className="text-[14px] font-bold tracking-tight">Browser Header Type</h3>
+                <div>
+                  <h3 className="text-[14px] font-bold tracking-tight flex items-center gap-1.5">
+                    <span>Web Receipt Settings</span>
+                    <span className="text-[9.5px] bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 px-1.5 py-0.2 rounded font-bold">
+                      Web View
+                    </span>
+                  </h3>
+                  <p className="text-[10px] text-neutral-400">Header style &amp; web receipt stamp options</p>
+                </div>
               </div>
               <button 
                 onClick={() => setIsMenuOpen(false)}
@@ -1478,40 +1679,40 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
               </div>
             </div>
 
-            {/* Stamp Width & Weight Customizer */}
+            {/* Web Stamp Width & Weight Customizer */}
             <div className="mb-4 pt-3 border-t border-neutral-700/80 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-semibold text-neutral-300 uppercase tracking-wider flex items-center gap-1.5">
                   <Stamp className="w-3.5 h-3.5 text-purple-400" />
-                  <span>Stamp Width &amp; Weight</span>
+                  <span>Web Stamp Width &amp; Weight</span>
                 </span>
                 <span className="text-[10px] text-purple-300 font-mono font-bold bg-purple-900/60 border border-purple-500/40 px-2 py-0.5 rounded-full">
-                  {stampSize}px • {stampWeight.toUpperCase()}
+                  {webStampSize}px • {webStampWeight.toUpperCase()}
                 </span>
               </div>
 
-              {/* 1. Stamp Width Control (Slider, Steppers, & Quick Presets) */}
+              {/* 1. Web Stamp Width Control (Slider, Steppers, & Quick Presets) */}
               <div className="bg-neutral-850/80 border border-neutral-700/70 rounded-xl p-2.5 space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-semibold text-neutral-200 flex items-center gap-1.5">
                     <Sliders className="w-3.5 h-3.5 text-purple-400" />
-                    <span>Stamp Width (ስፋት)</span>
+                    <span>Web Stamp Width (ስፋት)</span>
                   </span>
                   <div className="flex items-center gap-1">
                     <button
                       type="button"
-                      onClick={() => handleUpdateStampWidth(stampSize - 10)}
+                      onClick={() => handleUpdateWebStampWidth(webStampSize - 10)}
                       className="w-5 h-5 rounded bg-neutral-700 hover:bg-neutral-600 text-neutral-200 flex items-center justify-center font-bold text-xs transition cursor-pointer"
                       title="Decrease width by 10px"
                     >
                       <Minus className="w-3 h-3" />
                     </button>
                     <span className="text-xs text-purple-300 font-mono font-bold px-1 min-w-[46px] text-center">
-                      {stampSize}px
+                      {webStampSize}px
                     </span>
                     <button
                       type="button"
-                      onClick={() => handleUpdateStampWidth(stampSize + 10)}
+                      onClick={() => handleUpdateWebStampWidth(webStampSize + 10)}
                       className="w-5 h-5 rounded bg-neutral-700 hover:bg-neutral-600 text-neutral-200 flex items-center justify-center font-bold text-xs transition cursor-pointer"
                       title="Increase width by 10px"
                     >
@@ -1526,8 +1727,8 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                   min="160"
                   max="480"
                   step="5"
-                  value={stampSize}
-                  onChange={(e) => handleUpdateStampWidth(Number(e.target.value))}
+                  value={webStampSize}
+                  onChange={(e) => handleUpdateWebStampWidth(Number(e.target.value))}
                   className="w-full accent-purple-500 h-1.5 bg-neutral-700 rounded-lg cursor-pointer"
                 />
 
@@ -1543,9 +1744,9 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                     <button
                       key={preset.size}
                       type="button"
-                      onClick={() => handleUpdateStampWidth(preset.size)}
+                      onClick={() => handleUpdateWebStampWidth(preset.size)}
                       className={`py-1 px-0.5 rounded-lg text-[10px] font-semibold transition text-center cursor-pointer ${
-                        stampSize === preset.size
+                        webStampSize === preset.size
                           ? 'bg-purple-600 text-white font-bold shadow-xs'
                           : 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300'
                       }`}
@@ -1556,18 +1757,18 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                 </div>
               </div>
 
-              {/* 2. Stamp Weight (Ink Thickness & Saturated Impression) */}
+              {/* 2. Web Stamp Weight (Ink Thickness & Saturated Impression) */}
               <div className="bg-neutral-850/80 border border-neutral-700/70 rounded-xl p-2.5 space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-semibold text-neutral-200 flex items-center gap-1.5">
                     <Feather className="w-3.5 h-3.5 text-purple-400" />
-                    <span>Stamp Weight / Ink (ክብደት)</span>
+                    <span>Web Stamp Weight / Ink (ክብደት)</span>
                   </span>
                   <span className="text-purple-300 font-medium text-[10.5px]">
-                    {stampWeight === 'light' ? 'Light (ቀላል)' : 
-                     stampWeight === 'normal' ? 'Normal (መደበኛ)' :
-                     stampWeight === 'medium' ? 'Medium (መካከለኛ)' :
-                     stampWeight === 'bold' ? 'Bold (ደማቅ)' : 'Heavy (እጅግ ደማቅ)'}
+                    {webStampWeight === 'light' ? 'Light (ቀላል)' : 
+                     webStampWeight === 'normal' ? 'Normal (መደበኛ)' :
+                     webStampWeight === 'medium' ? 'Medium (መካከለኛ)' :
+                     webStampWeight === 'bold' ? 'Bold (ደማቅ)' : 'Heavy (እጅግ ደማቅ)'}
                   </span>
                 </div>
 
@@ -1576,9 +1777,9 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                     <button
                       key={w}
                       type="button"
-                      onClick={() => handleUpdateStampWeight(w)}
+                      onClick={() => handleUpdateWebStampWeight(w)}
                       className={`py-1.5 px-0.5 rounded-lg text-[10px] font-semibold transition text-center capitalize cursor-pointer ${
-                        stampWeight === w
+                        webStampWeight === w
                           ? 'bg-purple-600 text-white font-bold shadow-xs'
                           : 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300'
                       }`}
@@ -1589,15 +1790,15 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                 </div>
               </div>
 
-              {/* 3. Stamp Position Controls (Rearrange & Reset) */}
+              {/* 3. Web Stamp Position Controls (Rearrange & Reset) */}
               <div className="bg-neutral-850/80 border border-neutral-700/70 rounded-xl p-2.5 space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-semibold text-neutral-200 flex items-center gap-1.5">
                     <Move className="w-3.5 h-3.5 text-purple-400" />
-                    <span>Stamp Position (ቦታ)</span>
+                    <span>Web Stamp Position (ቦታ)</span>
                   </span>
                   <span className="text-[10px] text-purple-300 font-mono font-bold bg-purple-900/40 px-1.5 py-0.5 rounded border border-purple-500/30">
-                    X: {stampPosition.xPercent}% • Y: {stampPosition.yPercent}%
+                    X: {webStampPosition.xPercent}% • Y: {webStampPosition.yPercent}%
                   </span>
                 </div>
 
@@ -1607,7 +1808,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                     onClick={() => {
                       setIsEditingStampPosition(true);
                       setIsMenuOpen(false);
-                      showBarsToast('Click & drag stamp to position anywhere, then click Save');
+                      showBarsToast('Click & drag stamp to position anywhere on web receipt, then click Save');
                     }}
                     className="flex-1 py-1.5 px-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-95 shadow-md shadow-purple-600/30"
                   >
@@ -1619,7 +1820,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                     type="button"
                     onClick={handleResetStampPosition}
                     className="py-1.5 px-2.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white text-xs font-semibold flex items-center justify-center gap-1 transition cursor-pointer border border-neutral-700 active:scale-95"
-                    title="Reset to default center"
+                    title="Reset web stamp to default center"
                   >
                     <RotateCcw className="w-3 h-3" />
                     <span>Center</span>
@@ -1632,14 +1833,26 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
             <div className="pt-3 border-t border-neutral-700/80 space-y-1.5">
               <button
                 type="button"
-                onClick={() => { handleDownloadPdf(false); setIsMenuOpen(false); }}
+                onClick={() => { handleOpenPdfView(); setIsMenuOpen(false); }}
                 className="w-full px-3 py-2 rounded-xl bg-purple-900/40 hover:bg-purple-900/70 border border-purple-500/40 text-purple-200 hover:text-white text-xs font-semibold flex items-center justify-between transition cursor-pointer"
               >
                 <span className="flex items-center gap-2">
-                  <Download className="w-3.5 h-3.5 text-purple-400" />
-                  <span>Download Receipt as PDF</span>
+                  <FileText className="w-3.5 h-3.5 text-purple-400" />
+                  <span>Open Official PDF View</span>
                 </span>
                 <span className="text-[10px] text-purple-300 font-bold bg-purple-800/60 px-1.5 py-0.5 rounded">.PDF</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { handleDownloadPdf(); setIsMenuOpen(false); }}
+                className="w-full px-3 py-2 rounded-xl bg-neutral-800/80 hover:bg-neutral-800 border border-neutral-700/80 text-neutral-300 hover:text-white text-xs font-medium flex items-center justify-between transition cursor-pointer"
+              >
+                <span className="flex items-center gap-2">
+                  <Download className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Direct Download PDF</span>
+                </span>
+                <span className="text-[10px] text-neutral-400 font-medium">Save</span>
               </button>
 
               <button
@@ -1845,7 +2058,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
               {/* Download .PDF File Button */}
               <button
                 type="button"
-                onClick={() => handleDownloadPdf(true)}
+                onClick={() => handleDownloadPdf()}
                 disabled={isDownloading}
                 className="flex items-center gap-1.5 text-xs font-bold text-white bg-[#781d77] hover:bg-[#68137e] active:bg-[#580f68] px-3 py-1.5 rounded-lg shadow-md transition cursor-pointer disabled:opacity-75 active:scale-95"
                 title="Save PDF file to device storage"
@@ -1857,8 +2070,280 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                 )}
                 <span>Save PDF</span>
               </button>
+
+              {/* 3-Dot Options Button for PDF Receipt Form */}
+              <button
+                type="button"
+                onClick={() => setIsPdfMenuOpen(prev => !prev)}
+                aria-label="PDF Receipt Form Options"
+                className={`p-1.5 rounded-lg transition cursor-pointer flex items-center justify-center ${
+                  isPdfMenuOpen 
+                    ? 'bg-purple-700 text-white shadow-sm ring-1 ring-white/50' 
+                    : 'text-neutral-300 hover:text-white hover:bg-neutral-800'
+                }`}
+                title="PDF Receipt Settings (Stamp Size, Weight, Position & Logo)"
+              >
+                <MoreVertical className="w-4 h-4" />
+              </button>
             </div>
           </div>
+
+          {/* Dedicated 3-Dot Settings Menu Popup for PDF Receipt Form */}
+          {isPdfMenuOpen && (
+            <>
+              {/* Backdrop dismiss */}
+              <div 
+                className="fixed inset-0 z-40 bg-black/40 backdrop-blur-2xs animate-fade-in"
+                onClick={() => setIsPdfMenuOpen(false)}
+              />
+
+              {/* Floating PDF Options Card */}
+              <div 
+                className="fixed top-12 sm:top-14 right-2 sm:right-4 z-50 w-84 max-w-[calc(100vw-16px)] max-h-[calc(100vh-64px)] overflow-y-auto bg-[#1c1f26] text-white rounded-2xl shadow-2xl border border-neutral-700/90 p-4 animate-in fade-in zoom-in-95 duration-150 select-none"
+                style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
+              >
+                {/* Header */}
+                <div className="flex items-center justify-between pb-3 border-b border-neutral-700/80 mb-3">
+                  <div className="flex items-center gap-2">
+                    <FileText className="w-4.5 h-4.5 text-red-400" />
+                    <div>
+                      <h3 className="text-[14px] font-bold tracking-tight flex items-center gap-1.5">
+                        <span>PDF Receipt Settings</span>
+                        <span className="text-[9.5px] bg-red-950/80 border border-red-500/50 text-red-300 px-1.5 py-0.2 rounded font-bold">
+                          PDF View
+                        </span>
+                      </h3>
+                      <p className="text-[10px] text-neutral-400">PDF receipt stamp &amp; logo options</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => setIsPdfMenuOpen(false)}
+                    className="p-1 rounded-full hover:bg-neutral-800 text-neutral-400 hover:text-white transition cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* PDF Stamp Width & Weight Customizer */}
+                <div className="space-y-3 mb-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-neutral-300 uppercase tracking-wider flex items-center gap-1.5">
+                      <Stamp className="w-3.5 h-3.5 text-purple-400" />
+                      <span>PDF Stamp Width &amp; Weight</span>
+                    </span>
+                    <span className="text-[10px] text-purple-300 font-mono font-bold bg-purple-900/60 border border-purple-500/40 px-2 py-0.5 rounded-full">
+                      {pdfStampSize}px • {pdfStampWeight.toUpperCase()}
+                    </span>
+                  </div>
+
+                  {/* 1. PDF Stamp Width Control (Slider, Steppers, & Quick Presets) */}
+                  <div className="bg-neutral-850/80 border border-neutral-700/70 rounded-xl p-2.5 space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-semibold text-neutral-200 flex items-center gap-1.5">
+                        <Sliders className="w-3.5 h-3.5 text-purple-400" />
+                        <span>PDF Stamp Width (ስፋት)</span>
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => handleUpdatePdfStampWidth(pdfStampSize - 10)}
+                          className="w-5 h-5 rounded bg-neutral-700 hover:bg-neutral-600 text-neutral-200 flex items-center justify-center font-bold text-xs transition cursor-pointer"
+                          title="Decrease PDF stamp width by 10px"
+                        >
+                          <Minus className="w-3 h-3" />
+                        </button>
+                        <span className="text-xs text-purple-300 font-mono font-bold px-1 min-w-[46px] text-center">
+                          {pdfStampSize}px
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleUpdatePdfStampWidth(pdfStampSize + 10)}
+                          className="w-5 h-5 rounded bg-neutral-700 hover:bg-neutral-600 text-neutral-200 flex items-center justify-center font-bold text-xs transition cursor-pointer"
+                          title="Increase PDF stamp width by 10px"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Range Slider */}
+                    <input
+                      type="range"
+                      min="160"
+                      max="480"
+                      step="5"
+                      value={pdfStampSize}
+                      onChange={(e) => handleUpdatePdfStampWidth(Number(e.target.value))}
+                      className="w-full accent-purple-500 h-1.5 bg-neutral-700 rounded-lg cursor-pointer"
+                    />
+
+                    {/* Quick Presets */}
+                    <div className="grid grid-cols-5 gap-1 pt-0.5">
+                      {[
+                        { label: '220px', size: 220, name: 'Small' },
+                        { label: '260px', size: 260, name: 'Normal' },
+                        { label: '330px', size: 330, name: 'Med' },
+                        { label: '380px', size: 380, name: 'Large' },
+                        { label: '440px', size: 440, name: 'Jumbo' },
+                      ].map((preset) => (
+                        <button
+                          key={preset.size}
+                          type="button"
+                          onClick={() => handleUpdatePdfStampWidth(preset.size)}
+                          className={`py-1 px-0.5 rounded-lg text-[10px] font-semibold transition text-center cursor-pointer ${
+                            pdfStampSize === preset.size
+                              ? 'bg-purple-600 text-white font-bold shadow-xs'
+                              : 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300'
+                          }`}
+                        >
+                          {preset.name}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 2. PDF Stamp Weight */}
+                  <div className="bg-neutral-850/80 border border-neutral-700/70 rounded-xl p-2.5 space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-semibold text-neutral-200 flex items-center gap-1.5">
+                        <Feather className="w-3.5 h-3.5 text-purple-400" />
+                        <span>PDF Stamp Weight / Ink (ክብደት)</span>
+                      </span>
+                      <span className="text-purple-300 font-medium text-[10.5px]">
+                        {pdfStampWeight === 'light' ? 'Light (ቀላል)' : 
+                         pdfStampWeight === 'normal' ? 'Normal (መደበኛ)' :
+                         pdfStampWeight === 'medium' ? 'Medium (መካከለኛ)' :
+                         pdfStampWeight === 'bold' ? 'Bold (ደማቅ)' : 'Heavy (እጅግ ደማቅ)'}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-5 gap-1">
+                      {(['light', 'normal', 'medium', 'bold', 'heavy'] as StampWeight[]).map((w) => (
+                        <button
+                          key={w}
+                          type="button"
+                          onClick={() => handleUpdatePdfStampWeight(w)}
+                          className={`py-1.5 px-0.5 rounded-lg text-[10px] font-semibold transition text-center capitalize cursor-pointer ${
+                            pdfStampWeight === w
+                              ? 'bg-purple-600 text-white font-bold shadow-xs'
+                              : 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300'
+                          }`}
+                        >
+                          {w}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* 3. PDF Stamp Position Controls (Rearrange & Reset) */}
+                  <div className="bg-neutral-850/80 border border-neutral-700/70 rounded-xl p-2.5 space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-semibold text-neutral-200 flex items-center gap-1.5">
+                        <Move className="w-3.5 h-3.5 text-purple-400" />
+                        <span>PDF Stamp Position (ቦታ)</span>
+                      </span>
+                      <span className="text-[10px] text-purple-300 font-mono font-bold bg-purple-900/40 px-1.5 py-0.5 rounded border border-purple-500/30">
+                        X: {pdfStampPosition.xPercent}% • Y: {pdfStampPosition.yPercent}%
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsEditingStampPosition(true);
+                          setIsPdfMenuOpen(false);
+                          showBarsToast('Click & drag stamp anywhere on PDF receipt, then click Save');
+                        }}
+                        className="flex-1 py-1.5 px-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-95 shadow-md shadow-purple-600/30"
+                      >
+                        <Move className="w-3.5 h-3.5" />
+                        <span>Rearrange Position</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleResetStampPosition}
+                        className="py-1.5 px-2.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white text-xs font-semibold flex items-center justify-center gap-1 transition cursor-pointer border border-neutral-700 active:scale-95"
+                        title="Reset PDF stamp to default center"
+                      >
+                        <RotateCcw className="w-3 h-3" />
+                        <span>Center</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* PDF Header Logo Customizer */}
+                <div className="pt-3 border-t border-neutral-700/80 space-y-2 mb-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-neutral-300 uppercase tracking-wider flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5 text-purple-400" />
+                      <span>PDF Official Header Logo</span>
+                    </span>
+                    {customPdfLogo && (
+                      <span className="text-[9.5px] bg-purple-900/60 border border-purple-500/40 text-purple-300 px-1.5 py-0.2 rounded font-bold">
+                        Custom
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="url"
+                      value={pdfLogoUrlInput}
+                      onChange={(e) => setPdfLogoUrlInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleApplyPdfLogoUrl();
+                        }
+                      }}
+                      placeholder="https://... image URL"
+                      className="flex-1 bg-neutral-900 border border-neutral-700 focus:border-purple-500 rounded-lg px-2.5 py-1.5 text-xs text-neutral-100 placeholder-neutral-500 outline-none transition"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleApplyPdfLogoUrl()}
+                      className="bg-purple-700 hover:bg-purple-600 active:bg-purple-800 text-white font-semibold text-xs px-3 py-1.5 rounded-lg transition shrink-0 cursor-pointer shadow-sm"
+                    >
+                      Apply
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1 border-t border-neutral-700/50 text-[11px]">
+                    <button
+                      type="button"
+                      onClick={() => pdfLogoFileInputRef.current?.click()}
+                      className="text-neutral-400 hover:text-neutral-200 flex items-center gap-1 transition cursor-pointer"
+                    >
+                      <Upload className="w-3 h-3" />
+                      <span>Or upload file</span>
+                    </button>
+
+                    {customPdfLogo && (
+                      <button
+                        type="button"
+                        onClick={handleResetPdfLogo}
+                        className="text-red-400 hover:text-red-300 flex items-center gap-1 transition cursor-pointer"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        <span>Reset to default</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsPdfMenuOpen(false)}
+                  className="w-full px-3 py-2 rounded-xl bg-neutral-800/90 hover:bg-neutral-700 text-neutral-300 hover:text-white text-xs font-medium flex items-center justify-center gap-2 transition cursor-pointer border border-neutral-700"
+                >
+                  <span>Done</span>
+                </button>
+              </div>
+            </>
+          )}
 
           {/* Scrollable PDF Document Canvas */}
           <div 
@@ -1884,12 +2369,19 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                 <CbeOfficialPdfReceipt
                   receiptData={receiptData}
                   qrCodeDataUrl={qrCodeDataUrl}
-                  activeStamp={activeStamp}
-                  stampWeight={stampWeight}
-                  stampSize={stampSize}
-                  stampPosition={stampPosition}
+                  activeStamp={rasterizedPdfStampPng || pdfActiveStamp}
+                  stampWeight={pdfStampWeight}
+                  stampSize={pdfStampSize}
+                  stampPosition={pdfStampPosition}
                   customPdfLogo={customPdfLogo}
                   isPreview={true}
+                  tableRef={pdfTableRef}
+                  isEditingStampPosition={isEditingStampPosition && viewMode === 'pdf'}
+                  isDraggingStamp={isDraggingStamp}
+                  onStampPointerDown={handleStampPointerDown}
+                  onStampClick={handleStampClick}
+                  onStampDoubleClick={handleStampDoubleClick}
+                  onStampTouchEnd={handleStampTouchEnd}
                 />
               </div>
             </div>
@@ -1907,7 +2399,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => handleDownloadPdf(true)}
+              onClick={() => handleDownloadPdf()}
               disabled={isDownloading}
               className="bg-[#781d77] hover:bg-[#68137e] text-white font-bold text-xs py-2 px-4 rounded-full shadow-2xl flex items-center gap-1.5 transition active:scale-95 cursor-pointer disabled:opacity-75"
             >
@@ -2182,53 +2674,43 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
               </div>
 
               {/* Authentic Overlaid Stamp: Double-tap wakes up rearrange mode; drag anywhere to position */}
-              {activeStamp && (
+              {webActiveStamp && (
                 <div 
                   id="cbe-stamp-container"
-                  onPointerDown={isEditingStampPosition ? handleStampPointerDown : undefined}
+                  onPointerDown={isEditingStampPosition && viewMode === 'web' ? handleStampPointerDown : undefined}
                   onClick={handleStampClick}
                   onDoubleClick={handleStampDoubleClick}
                   onTouchEnd={handleStampTouchEnd}
                   className={`absolute select-none z-20 shrink-0 touch-none transition-all ${
-                    isEditingStampPosition 
+                    isEditingStampPosition && viewMode === 'web'
                       ? 'cursor-grab active:cursor-grabbing ring-2 ring-purple-600 ring-offset-2 ring-offset-white rounded-full' 
                       : 'cursor-pointer hover:ring-2 hover:ring-purple-400/60 hover:ring-offset-1 rounded-full'
                   }`}
                   style={{
-                    top: `${stampPosition.yPercent}%`,
-                    left: `${stampPosition.xPercent}%`,
+                    top: `${webStampPosition.yPercent}%`,
+                    left: `${webStampPosition.xPercent}%`,
                     transform: 'translate(-50%, -50%)',
-                    width: `${stampSize}px`,
-                    height: `${stampSize}px`,
+                    width: `${webStampSize}px`,
+                    height: `${webStampSize}px`,
                     maxWidth: 'min(98vw, 490px)',
                     maxHeight: 'min(98vw, 490px)',
                     aspectRatio: '1 / 1'
                   }}
-                  title={isEditingStampPosition ? "Drag stamp to position anywhere" : "Double-tap stamp to rearrange position"}
+                  title={isEditingStampPosition && viewMode === 'web' ? "Drag stamp to position anywhere" : "Double-tap stamp to rearrange position"}
                 >
                   <img
-                    src={activeStamp}
+                    src={webActiveStamp}
                     alt="Official Bank Stamp"
                     draggable={false}
                     className="w-full h-full object-contain pointer-events-none select-none transition-all duration-150"
                     style={{
-                      mixBlendMode: 'multiply',
                       transform: 'rotate(-13deg)',
-                      filter: stampWeight === 'light' 
-                        ? 'contrast(1.02) brightness(1.04)'
-                        : stampWeight === 'normal' 
-                        ? 'contrast(1.15) brightness(0.98)' 
-                        : stampWeight === 'medium'
-                        ? 'contrast(1.30) brightness(0.92) drop-shadow(0 0 0.35px #5e1887)'
-                        : stampWeight === 'bold'
-                        ? 'contrast(1.50) brightness(0.85) drop-shadow(0 0 0.65px #461066)'
-                        : 'contrast(1.75) brightness(0.78) drop-shadow(0 0 1.2px #461066) drop-shadow(0 0 0.5px #5e1887)',
-                      opacity: stampWeight === 'light' ? 0.85 : stampWeight === 'normal' ? 0.95 : 1,
+                      opacity: webStampWeight === 'light' ? 0.88 : webStampWeight === 'normal' ? 0.96 : 1,
                     }}
                   />
 
                   {/* Visual Drag Handle Badge when in Position Edit Mode */}
-                  {isEditingStampPosition && (
+                  {isEditingStampPosition && viewMode === 'web' && (
                     <div 
                       data-html2canvas-ignore="true"
                       className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-purple-700/90 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-xl flex items-center gap-1.5 pointer-events-none border border-white/40 backdrop-blur-xs whitespace-nowrap animate-in fade-in zoom-in-90 duration-150"
@@ -2289,26 +2771,13 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
             )}
             <button
               type="button"
-              onClick={() => handleDownloadPdf(false)}
-              disabled={isDownloading}
-              className="bg-[#781d77] hover:bg-[#68137e] active:bg-[#580f68] text-white font-bold text-[13px] py-2 px-6 rounded-lg shadow-xl flex items-center justify-center transition active:scale-95 disabled:opacity-75 cursor-pointer"
+              onClick={handleOpenPdfView}
+              className="bg-[#781d77] hover:bg-[#68137e] active:bg-[#580f68] text-white font-bold text-[13px] py-2 px-6 rounded-lg shadow-xl flex items-center justify-center transition active:scale-95 cursor-pointer"
             >
-              {isDownloading ? (
-                <span className="flex items-center gap-2">
-                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Opening PDF in Browser...</span>
-                </span>
-              ) : downloadSuccess ? (
-                <span className="flex items-center gap-1.5">
-                  <Check className="w-4 h-4 text-emerald-300" />
-                  <span>PDF Downloaded</span>
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <Download className="w-4 h-4" />
-                  <span>Download PDF</span>
-                </span>
-              )}
+              <span className="flex items-center gap-2">
+                <Download className="w-4 h-4" />
+                <span>Download PDF</span>
+              </span>
             </button>
           </div>
         </>
@@ -2334,10 +2803,10 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
           ref={pdfTemplateRef}
           receiptData={receiptData}
           qrCodeDataUrl={qrCodeDataUrl}
-          activeStamp={activeStamp}
-          stampWeight={stampWeight}
-          stampSize={stampSize}
-          stampPosition={stampPosition}
+          activeStamp={rasterizedPdfStampPng || pdfActiveStamp}
+          stampWeight={pdfStampWeight}
+          stampSize={pdfStampSize}
+          stampPosition={pdfStampPosition}
           customPdfLogo={customPdfLogo}
         />
       </div>
@@ -2358,7 +2827,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
               </div>
               <div>
                 <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                  <span>Rearrange Stamp Position</span>
+                  <span>Rearrange {viewMode === 'pdf' ? 'PDF' : 'Web'} Stamp Position</span>
                   {hasUnsavedStampPos && (
                     <span className="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded font-semibold border border-amber-500/30">
                       Unsaved
@@ -2366,7 +2835,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                   )}
                 </div>
                 <div className="text-[10px] text-neutral-300">
-                  Drag stamp anywhere (saved for all receipts)
+                  Drag {viewMode === 'pdf' ? 'PDF' : 'web'} stamp anywhere (saved for all receipts)
                 </div>
               </div>
             </div>
@@ -2384,9 +2853,9 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
           {/* Coordinates & Nudge Arrows */}
           <div className="flex items-center justify-between bg-neutral-800/80 rounded-xl px-3 py-2 border border-neutral-700/60 text-xs">
             <div className="flex items-center gap-1 font-mono text-[11px] text-purple-300">
-              <span>X: {stampPosition.xPercent}%</span>
+              <span>X: {(viewMode === 'pdf' ? pdfStampPosition : webStampPosition).xPercent}%</span>
               <span className="text-neutral-500">•</span>
-              <span>Y: {stampPosition.yPercent}%</span>
+              <span>Y: {(viewMode === 'pdf' ? pdfStampPosition : webStampPosition).yPercent}%</span>
             </div>
 
             {/* Directional Nudge Buttons */}
