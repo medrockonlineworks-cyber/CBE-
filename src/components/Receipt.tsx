@@ -274,9 +274,21 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       return false;
     }
   });
+  const toggleStatusBar = () => {
+    setHideStatusBar(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem('cbe_hide_status_bar', String(next));
+      } catch {}
+      showBarsToast(next ? 'Status bar hidden (Double-tap to restore)' : 'Status bar restored');
+      return next;
+    });
+  };
+
   const [barsToast, setBarsToast] = useState<string | null>(null);
   const barsToastTimerRef = useRef<any>(null);
   const lastTapRef = useRef<{ time: number; x: number; y: number }>({ time: 0, x: 0, y: 0 });
+  const isTouchRef = useRef<boolean>(false);
 
   const showBarsToast = (msg: string) => {
     if (barsToastTimerRef.current) clearTimeout(barsToastTimerRef.current);
@@ -287,11 +299,15 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   };
 
   const handleDoubleAction = () => {
-    // Toggle hiding action buttons (screenshot icon, receipt, screenshot, share)
-    toggleUiElements();
+    // In receipt double tap hides/shows header phone status bar
+    toggleStatusBar();
   };
 
   const handleScreenClick = (e: React.MouseEvent) => {
+    if (isTouchRef.current) {
+      isTouchRef.current = false;
+      return;
+    }
     const target = e.target as HTMLElement;
     if (target.closest('button') || target.closest('a') || target.closest('input')) {
       return;
@@ -300,7 +316,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     const timeDiff = now - lastTapRef.current.time;
     const dist = Math.hypot(e.clientX - lastTapRef.current.x, e.clientY - lastTapRef.current.y);
 
-    if (timeDiff > 40 && timeDiff < 360 && dist < 45) {
+    if (timeDiff > 50 && timeDiff < 450 && dist < 50) {
       handleDoubleAction();
       lastTapRef.current = { time: 0, x: 0, y: 0 };
     } else {
@@ -309,6 +325,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   };
 
   const handleScreenTouchEnd = (e: React.TouchEvent) => {
+    isTouchRef.current = true;
     const target = e.target as HTMLElement;
     if (target.closest('button') || target.closest('a') || target.closest('input')) {
       return;
@@ -320,7 +337,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     const timeDiff = now - lastTapRef.current.time;
     const dist = Math.hypot(touch.clientX - lastTapRef.current.x, touch.clientY - lastTapRef.current.y);
 
-    if (timeDiff > 40 && timeDiff < 380 && dist < 50) {
+    if (timeDiff > 50 && timeDiff < 450 && dist < 65) {
       handleDoubleAction();
       lastTapRef.current = { time: 0, x: 0, y: 0 };
     } else {

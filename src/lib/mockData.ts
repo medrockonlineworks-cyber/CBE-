@@ -919,6 +919,11 @@ export const DEFAULT_CBE_LOGO = `data:image/svg+xml;utf8,${encodeURIComponent(`
 
 export type StampWeight = 'light' | 'normal' | 'medium' | 'bold' | 'heavy';
 
+export interface StampPosition {
+  xPercent: number; // default 48%
+  yPercent: number; // default 52%
+}
+
 // Authentic Official CBE Circular Purple Rubber Stamp SVG Data URI matching IMG_20260905_105826_969.png
 export function getOfficialCbeStampSvg(weight: StampWeight = 'normal'): string {
   const mul = weight === 'light' ? 0.75 : weight === 'medium' ? 1.25 : weight === 'bold' ? 1.6 : weight === 'heavy' ? 2.05 : 1.0;
@@ -2292,5 +2297,37 @@ export class LocalDb {
       console.warn('[LocalDb] Failed writing stamp weight to localStorage:', err);
     }
     window.dispatchEvent(new CustomEvent('cbe_stamp_weight_updated', { detail: { weight } }));
+  }
+
+  static getBankStampPosition(): StampPosition {
+    try {
+      const val = localStorage.getItem('tana_bank_stamp_position');
+      if (val) {
+        const parsed = JSON.parse(val);
+        if (typeof parsed?.xPercent === 'number' && typeof parsed?.yPercent === 'number') {
+          return {
+            xPercent: Math.max(5, Math.min(95, parsed.xPercent)),
+            yPercent: Math.max(5, Math.min(95, parsed.yPercent)),
+          };
+        }
+      }
+    } catch {}
+    return { xPercent: 48, yPercent: 52 };
+  }
+
+  static setBankStampPosition(pos: StampPosition | null): void {
+    try {
+      if (!pos) {
+        localStorage.removeItem('tana_bank_stamp_position');
+      } else {
+        localStorage.setItem('tana_bank_stamp_position', JSON.stringify({
+          xPercent: Math.round(pos.xPercent * 10) / 10,
+          yPercent: Math.round(pos.yPercent * 10) / 10,
+        }));
+      }
+    } catch (err) {
+      console.warn('[LocalDb] Failed writing stamp position to localStorage:', err);
+    }
+    window.dispatchEvent(new CustomEvent('cbe_stamp_position_updated', { detail: { position: pos } }));
   }
 }

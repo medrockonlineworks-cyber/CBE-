@@ -4,7 +4,7 @@ import html2canvas from 'html2canvas-pro';
 import { jsPDF } from 'jspdf';
 import { Transaction } from '../types';
 import { SmsMessage } from '../types/sms';
-import { LocalDb, formatTo12CharTxId, DEFAULT_CBE_LOGO, OFFICIAL_CBE_PURPLE_LOGO, OFFICIAL_CBE_STAMP_LOGO, getOfficialCbeStampSvg, StampWeight } from '../lib/mockData';
+import { LocalDb, formatTo12CharTxId, DEFAULT_CBE_LOGO, OFFICIAL_CBE_PURPLE_LOGO, OFFICIAL_CBE_STAMP_LOGO, getOfficialCbeStampSvg, StampWeight, StampPosition } from '../lib/mockData';
 import { CbeLogo } from './CbeLogo';
 import { CbeOfficialPdfReceipt } from './CbeOfficialPdfReceipt';
 import { 
@@ -20,6 +20,7 @@ import {
   Feather,
   Copy,
   RotateCw,
+  RotateCcw,
   Shield,
   Star,
   Download,
@@ -36,7 +37,12 @@ import {
   Sparkles,
   Printer,
   FileText,
-  Link
+  Link,
+  Move,
+  Save,
+  ArrowUp,
+  ArrowDown,
+  ArrowRight
 } from 'lucide-react';
 
 export type BrowserHeaderType = 'chrome' | 'phoenix' | 'opera' | 'samsung' | 'safari';
@@ -237,27 +243,33 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
     }, 2200);
   };
 
+  const isTouchRef = useRef<boolean>(false);
+
   const toggleStatusBar = () => {
     setHideStatusBar(prev => {
       const next = !prev;
       try {
         localStorage.setItem('cbe_hide_status_bar', String(next));
       } catch {}
-      showBarsToast(next ? 'Status bar hidden (Double-tap to show)' : 'Status bar restored');
+      showBarsToast(next ? 'Phone status bar hidden (Double-tap to show)' : 'Phone status bar restored');
       return next;
     });
   };
 
   const handleScreenClick = (e: React.MouseEvent) => {
+    if (isTouchRef.current) {
+      isTouchRef.current = false;
+      return;
+    }
     const target = e.target as HTMLElement;
-    if (target.closest('button') || target.closest('a') || target.closest('input') || target.closest('#browser-settings-modal')) {
+    if (target.closest('button') || target.closest('a') || target.closest('input') || target.closest('#browser-settings-modal') || target.closest('#stamp-position-toolbar') || target.closest('#cbe-stamp-container')) {
       return;
     }
     const now = Date.now();
     const timeDiff = now - lastTapRef.current.time;
     const dist = Math.hypot(e.clientX - lastTapRef.current.x, e.clientY - lastTapRef.current.y);
 
-    if (timeDiff > 40 && timeDiff < 360 && dist < 45) {
+    if (timeDiff > 50 && timeDiff < 450 && dist < 50) {
       toggleStatusBar();
       lastTapRef.current = { time: 0, x: 0, y: 0 };
     } else {
@@ -266,10 +278,13 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
   };
 
   const handleScreenTouchEnd = (e: React.TouchEvent) => {
+    isTouchRef.current = true;
     const target = e.target as HTMLElement;
-    if (target.closest('button') || target.closest('a') || target.closest('input') || target.closest('#browser-settings-modal')) {
+    if (target.closest('button') || target.closest('a') || target.closest('input') || target.closest('#browser-settings-modal') || target.closest('#stamp-position-toolbar') || target.closest('#cbe-stamp-container')) {
       return;
     }
+    if (isDraggingStamp) return;
+
     const touch = e.changedTouches[0];
     if (!touch) return;
 
@@ -277,7 +292,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
     const timeDiff = now - lastTapRef.current.time;
     const dist = Math.hypot(touch.clientX - lastTapRef.current.x, touch.clientY - lastTapRef.current.y);
 
-    if (timeDiff > 40 && timeDiff < 380 && dist < 50) {
+    if (timeDiff > 50 && timeDiff < 450 && dist < 65) {
       toggleStatusBar();
       lastTapRef.current = { time: 0, x: 0, y: 0 };
     } else {
@@ -287,7 +302,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
 
   const handleScreenDoubleClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
-    if (target.closest('button') || target.closest('a') || target.closest('input') || target.closest('#browser-settings-modal')) {
+    if (target.closest('button') || target.closest('a') || target.closest('input') || target.closest('#browser-settings-modal') || target.closest('#stamp-position-toolbar') || target.closest('#cbe-stamp-container')) {
       return;
     }
     toggleStatusBar();
@@ -301,6 +316,59 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
   const [stampSize, setStampSize] = useState<number>(() => LocalDb.getBankStampSize());
   const [stampWeight, setStampWeight] = useState<StampWeight>(() => LocalDb.getBankStampWeight());
   
+  // Rearrangeable stamp position state
+  const [stampPosition, setStampPosition] = useState<StampPosition>(() => LocalDb.getBankStampPosition());
+  const [isEditingStampPosition, setIsEditingStampPosition] = useState<boolean>(false);
+  const [isDraggingStamp, setIsDraggingStamp] = useState<boolean>(false);
+  const [hasUnsavedStampPos, setHasUnsavedStampPos] = useState<boolean>(false);
+  const transactionTableRef = useRef<HTMLDivElement>(null);
+  const dragStartRef = useRef<{ clientX: number; clientY: number; startXPercent: number; startYPercent: number } | null>(null);
+  const stampLastTapRef = useRef<{ time: number; x: number; y: number }>({ time: 0, x: 0, y: 0 });
+
+  const wakeUpStampRearrange = () => {
+    setIsEditingStampPosition(true);
+    showBarsToast('Stamp rearrange active — drag to move, saved for all receipts');
+  };
+
+  const handleStampClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isEditingStampPosition) return;
+
+    const now = Date.now();
+    const timeDiff = now - stampLastTapRef.current.time;
+    const dist = Math.hypot(e.clientX - stampLastTapRef.current.x, e.clientY - stampLastTapRef.current.y);
+
+    if (timeDiff > 40 && timeDiff < 480 && dist < 60) {
+      wakeUpStampRearrange();
+      stampLastTapRef.current = { time: 0, x: 0, y: 0 };
+    } else {
+      stampLastTapRef.current = { time: now, x: e.clientX, y: e.clientY };
+    }
+  };
+
+  const handleStampTouchEnd = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    if (isEditingStampPosition) return;
+
+    const touch = e.changedTouches[0];
+    if (!touch) return;
+    const now = Date.now();
+    const timeDiff = now - stampLastTapRef.current.time;
+    const dist = Math.hypot(touch.clientX - stampLastTapRef.current.x, touch.clientY - stampLastTapRef.current.y);
+
+    if (timeDiff > 40 && timeDiff < 480 && dist < 65) {
+      wakeUpStampRearrange();
+      stampLastTapRef.current = { time: 0, x: 0, y: 0 };
+    } else {
+      stampLastTapRef.current = { time: now, x: touch.clientX, y: touch.clientY };
+    }
+  };
+
+  const handleStampDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    wakeUpStampRearrange();
+  };
+
   const activeStamp = useMemo(() => {
     if (customStamp) return customStamp;
     return getOfficialCbeStampSvg(stampWeight);
@@ -334,11 +402,22 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
         setStampWeight(LocalDb.getBankStampWeight());
       }
     };
+    const handleSyncStampPosition = (e: Event) => {
+      const customEvt = e as CustomEvent;
+      if (customEvt.detail?.position) {
+        setStampPosition(customEvt.detail.position);
+      } else {
+        setStampPosition(LocalDb.getBankStampPosition());
+      }
+      setHasUnsavedStampPos(false);
+    };
+
     window.addEventListener('cbe_logo_updated', handleSyncLogo);
     window.addEventListener('cbe_pdf_logo_updated', handleSyncPdfLogo);
     window.addEventListener('cbe_stamp_updated', handleSyncStamp);
     window.addEventListener('cbe_stamp_size_updated', handleSyncStampSize);
     window.addEventListener('cbe_stamp_weight_updated', handleSyncStampWeight);
+    window.addEventListener('cbe_stamp_position_updated', handleSyncStampPosition);
     window.addEventListener('storage', handleSyncLogo);
     window.addEventListener('storage', handleSyncPdfLogo);
     window.addEventListener('storage', handleSyncStamp);
@@ -348,6 +427,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
       window.removeEventListener('cbe_stamp_updated', handleSyncStamp);
       window.removeEventListener('cbe_stamp_size_updated', handleSyncStampSize);
       window.removeEventListener('cbe_stamp_weight_updated', handleSyncStampWeight);
+      window.removeEventListener('cbe_stamp_position_updated', handleSyncStampPosition);
       window.removeEventListener('storage', handleSyncLogo);
       window.removeEventListener('storage', handleSyncPdfLogo);
       window.removeEventListener('storage', handleSyncStamp);
@@ -358,11 +438,93 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
     const clamped = Math.max(160, Math.min(480, Math.round(newSize)));
     LocalDb.setBankStampSize(clamped);
     setStampSize(clamped);
+    showBarsToast(`Stamp size set to ${clamped}px (saved for all receipts)`);
   };
 
   const handleUpdateStampWeight = (newWeight: StampWeight) => {
     LocalDb.setBankStampWeight(newWeight);
     setStampWeight(newWeight);
+    showBarsToast(`Stamp weight set to ${newWeight} (saved for all receipts)`);
+  };
+
+  // Drag & reposition stamp handlers
+  const handleStampPointerDown = (e: React.PointerEvent) => {
+    if (!isEditingStampPosition) return;
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    e.stopPropagation();
+    e.preventDefault();
+
+    setIsDraggingStamp(true);
+
+    dragStartRef.current = {
+      clientX: e.clientX,
+      clientY: e.clientY,
+      startXPercent: stampPosition.xPercent,
+      startYPercent: stampPosition.yPercent
+    };
+
+    const handlePointerMove = (moveEvt: PointerEvent) => {
+      if (!dragStartRef.current || !transactionTableRef.current) return;
+      const rect = transactionTableRef.current.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+
+      const deltaX = moveEvt.clientX - dragStartRef.current.clientX;
+      const deltaY = moveEvt.clientY - dragStartRef.current.clientY;
+
+      const deltaXPercent = (deltaX / rect.width) * 100;
+      const deltaYPercent = (deltaY / rect.height) * 100;
+
+      const newXPercent = Math.max(5, Math.min(95, Math.round((dragStartRef.current.startXPercent + deltaXPercent) * 10) / 10));
+      const newYPercent = Math.max(5, Math.min(95, Math.round((dragStartRef.current.startYPercent + deltaYPercent) * 10) / 10));
+
+      setStampPosition({ xPercent: newXPercent, yPercent: newYPercent });
+      setHasUnsavedStampPos(true);
+    };
+
+    const handlePointerUp = () => {
+      setIsDraggingStamp(false);
+      dragStartRef.current = null;
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+      window.removeEventListener('pointercancel', handlePointerUp);
+
+      // Automatically persist the new position to storage for this and all other receipts
+      setStampPosition(current => {
+        LocalDb.setBankStampPosition(current);
+        return current;
+      });
+      setHasUnsavedStampPos(false);
+      showBarsToast('Stamp position saved for all receipts');
+    };
+
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+    window.addEventListener('pointercancel', handlePointerUp);
+  };
+
+  const handleSaveStampPosition = () => {
+    LocalDb.setBankStampPosition(stampPosition);
+    setHasUnsavedStampPos(false);
+    showBarsToast('Stamp position saved for all receipts');
+  };
+
+  const handleResetStampPosition = () => {
+    const defaultPos: StampPosition = { xPercent: 48, yPercent: 52 };
+    LocalDb.setBankStampPosition(defaultPos);
+    setStampPosition(defaultPos);
+    setHasUnsavedStampPos(false);
+    showBarsToast('Stamp position reset to center (saved for all receipts)');
+  };
+
+  const handleNudgeStamp = (dx: number, dy: number) => {
+    setStampPosition(prev => {
+      const nextX = Math.max(5, Math.min(95, Math.round((prev.xPercent + dx) * 10) / 10));
+      const nextY = Math.max(5, Math.min(95, Math.round((prev.yPercent + dy) * 10) / 10));
+      const nextPos = { xPercent: nextX, yPercent: nextY };
+      LocalDb.setBankStampPosition(nextPos);
+      setHasUnsavedStampPos(false);
+      return nextPos;
+    });
   };
 
   // Derive all receipt fields accurately from either Transaction or SmsMessage
@@ -545,12 +707,16 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
       await new Promise(r => setTimeout(r, 200));
 
       // Target the permanently mounted offscreen template element
-      const targetElement = pdfTemplateRef.current || document.getElementById('cbe-official-pdf-render-canvas');
-      if (!targetElement || !document.body.contains(targetElement)) {
+      const targetContainer = pdfTemplateRef.current || document.getElementById('cbe-official-pdf-render-canvas');
+      if (!targetContainer || !document.body.contains(targetContainer)) {
         throw new Error('Receipt document template is not ready. Please try again.');
       }
 
-      const canvas = await html2canvas(targetElement as HTMLElement, {
+      const page1Element = (targetContainer.querySelector('#cbe-pdf-page-1') || targetContainer) as HTMLElement;
+      const page2Element = targetContainer.querySelector('#cbe-pdf-page-2') as HTMLElement | null;
+
+      // Capture Page 1
+      const canvas1 = await html2canvas(page1Element, {
         scale: 2,
         useCORS: true,
         allowTaint: true,
@@ -559,9 +725,25 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
         imageTimeout: 15000,
         windowWidth: 640,
       });
-      const imgData = canvas.toDataURL('image/png', 1.0);
+      const imgData1 = canvas1.toDataURL('image/png', 1.0);
 
-      // Generate authentic high-resolution PDF document matching A4 format
+      // Capture Page 2 (The Bank you can always rely on footer)
+      let canvas2: HTMLCanvasElement | null = null;
+      let imgData2: string | null = null;
+      if (page2Element) {
+        canvas2 = await html2canvas(page2Element, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#ffffff',
+          logging: false,
+          imageTimeout: 15000,
+          windowWidth: 640,
+        });
+        imgData2 = canvas2.toDataURL('image/png', 1.0);
+      }
+
+      // Generate authentic high-resolution 2-page PDF document matching A4 format
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -578,19 +760,31 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
       const printableWidth = pageWidth - (marginX * 2);
       const printableHeight = pageHeight - (marginY * 2);
 
-      let renderWidth = printableWidth;
-      let renderHeight = (canvas.height * renderWidth) / canvas.width;
+      // --- RENDER PAGE 1 ---
+      let renderWidth1 = printableWidth;
+      let renderHeight1 = (canvas1.height * renderWidth1) / canvas1.width;
+      if (renderHeight1 > printableHeight) {
+        const ratio = printableHeight / renderHeight1;
+        renderHeight1 = printableHeight;
+        renderWidth1 = renderWidth1 * ratio;
+      }
+      const startX1 = marginX + (printableWidth - renderWidth1) / 2;
+      pdf.addImage(imgData1, 'PNG', startX1, marginY, renderWidth1, renderHeight1, undefined, 'FAST');
 
-      if (renderHeight > printableHeight) {
-        const ratio = printableHeight / renderHeight;
-        renderHeight = printableHeight;
-        renderWidth = renderWidth * ratio;
+      // --- RENDER PAGE 2 ---
+      if (imgData2 && canvas2) {
+        pdf.addPage();
+        let renderWidth2 = printableWidth;
+        let renderHeight2 = (canvas2.height * renderWidth2) / canvas2.width;
+        if (renderHeight2 > printableHeight) {
+          const ratio = printableHeight / renderHeight2;
+          renderHeight2 = printableHeight;
+          renderWidth2 = renderWidth2 * ratio;
+        }
+        const startX2 = marginX + (printableWidth - renderWidth2) / 2;
+        pdf.addImage(imgData2, 'PNG', startX2, marginY, renderWidth2, renderHeight2, undefined, 'FAST');
       }
 
-      const startX = marginX + (printableWidth - renderWidth) / 2;
-      const startY = marginY;
-
-      pdf.addImage(imgData, 'PNG', startX, startY, renderWidth, renderHeight, undefined, 'FAST');
       pdf.save(`CBE_Customer_Receipt_${receiptData.refId || 'FT'}.pdf`);
 
       setDownloadSuccess(true);
@@ -609,8 +803,9 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
   };
 
   const handleDownloadPng = async () => {
-    const targetElement = pdfTemplateRef.current || receiptCardRef.current;
-    if (!targetElement || isDownloading) return;
+    const rawTarget = pdfTemplateRef.current || receiptCardRef.current;
+    if (!rawTarget || isDownloading) return;
+    const targetElement = (rawTarget.querySelector('#cbe-pdf-page-1') as HTMLElement) || rawTarget;
     try {
       setIsDownloading(true);
       setDownloadError(null);
@@ -1393,6 +1588,44 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                   ))}
                 </div>
               </div>
+
+              {/* 3. Stamp Position Controls (Rearrange & Reset) */}
+              <div className="bg-neutral-850/80 border border-neutral-700/70 rounded-xl p-2.5 space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-neutral-200 flex items-center gap-1.5">
+                    <Move className="w-3.5 h-3.5 text-purple-400" />
+                    <span>Stamp Position (ቦታ)</span>
+                  </span>
+                  <span className="text-[10px] text-purple-300 font-mono font-bold bg-purple-900/40 px-1.5 py-0.5 rounded border border-purple-500/30">
+                    X: {stampPosition.xPercent}% • Y: {stampPosition.yPercent}%
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsEditingStampPosition(true);
+                      setIsMenuOpen(false);
+                      showBarsToast('Click & drag stamp to position anywhere, then click Save');
+                    }}
+                    className="flex-1 py-1.5 px-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-95 shadow-md shadow-purple-600/30"
+                  >
+                    <Move className="w-3.5 h-3.5" />
+                    <span>Rearrange Position</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleResetStampPosition}
+                    className="py-1.5 px-2.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white text-xs font-semibold flex items-center justify-center gap-1 transition cursor-pointer border border-neutral-700 active:scale-95"
+                    title="Reset to default center"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                    <span>Center</span>
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Quick Actions */}
@@ -1554,7 +1787,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
               <div className="hidden sm:flex items-center gap-1.5 text-xs text-neutral-300 font-mono bg-neutral-850 px-2.5 py-1 rounded border border-neutral-700/80">
                 <FileText className="w-3.5 h-3.5 text-red-400 shrink-0" />
                 <span className="truncate max-w-[190px]">CBE_Customer_Receipt_{receiptData.refId}.pdf</span>
-                <span className="text-[10px] text-neutral-400 font-sans ml-1">1 / 1</span>
+                <span className="text-[10px] text-neutral-400 font-sans ml-1">2 pages</span>
               </div>
             </div>
 
@@ -1632,13 +1865,13 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
             ref={pdfContainerRef}
             className="flex-1 overflow-auto p-3 sm:p-6 flex flex-col items-center justify-start relative select-none"
           >
-            {/* Visual wrapper that scales accurately on mobile while keeping A4 document structure */}
+            {/* Visual wrapper that scales accurately on mobile while keeping A4 2-page document structure */}
             <div
               className="transition-transform duration-200 ease-out origin-top flex flex-col items-center"
               style={{
                 width: effectiveScale < 1 ? `${640 * effectiveScale}px` : '640px',
-                height: effectiveScale < 1 ? `calc(900px * ${effectiveScale})` : 'auto',
-                marginBottom: effectiveScale < 1 ? '24px' : '48px'
+                height: effectiveScale < 1 ? `calc(1860px * ${effectiveScale})` : 'auto',
+                marginBottom: effectiveScale < 1 ? '36px' : '64px'
               }}
             >
               <div
@@ -1646,9 +1879,6 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                   width: '640px',
                   transform: effectiveScale !== 1 ? `scale(${effectiveScale})` : undefined,
                   transformOrigin: 'top center',
-                  boxShadow: '0 8px 36px rgba(0,0,0,0.38), 0 2px 8px rgba(0,0,0,0.22)',
-                  backgroundColor: '#ffffff',
-                  borderRadius: '2px'
                 }}
               >
                 <CbeOfficialPdfReceipt
@@ -1657,7 +1887,9 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                   activeStamp={activeStamp}
                   stampWeight={stampWeight}
                   stampSize={stampSize}
+                  stampPosition={stampPosition}
                   customPdfLogo={customPdfLogo}
+                  isPreview={true}
                 />
               </div>
             </div>
@@ -1865,7 +2097,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
             </div>
 
             {/* Structured Table matching Screenshot_20260904-124119.png and Screenshot_20260904-124126.png */}
-            <div className="border-x border-b border-[#d1d5db] text-[11.5px] leading-tight relative">
+            <div ref={transactionTableRef} className="border-x border-b border-[#d1d5db] text-[11.5px] leading-tight relative">
               
               <div className="flex justify-between items-center px-3 py-2 border-b border-gray-200">
                 <span className="text-gray-800 font-normal">Payer:</span>
@@ -1949,13 +2181,22 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                 </span>
               </div>
 
-              {/* Authentic Overlaid Stamp: Defaults to official CBE purple stamp, or admin uploaded stamp */}
+              {/* Authentic Overlaid Stamp: Double-tap wakes up rearrange mode; drag anywhere to position */}
               {activeStamp && (
                 <div 
-                  className="absolute pointer-events-none select-none z-10 shrink-0"
+                  id="cbe-stamp-container"
+                  onPointerDown={isEditingStampPosition ? handleStampPointerDown : undefined}
+                  onClick={handleStampClick}
+                  onDoubleClick={handleStampDoubleClick}
+                  onTouchEnd={handleStampTouchEnd}
+                  className={`absolute select-none z-20 shrink-0 touch-none transition-all ${
+                    isEditingStampPosition 
+                      ? 'cursor-grab active:cursor-grabbing ring-2 ring-purple-600 ring-offset-2 ring-offset-white rounded-full' 
+                      : 'cursor-pointer hover:ring-2 hover:ring-purple-400/60 hover:ring-offset-1 rounded-full'
+                  }`}
                   style={{
-                    top: '52%',
-                    left: '48%',
+                    top: `${stampPosition.yPercent}%`,
+                    left: `${stampPosition.xPercent}%`,
                     transform: 'translate(-50%, -50%)',
                     width: `${stampSize}px`,
                     height: `${stampSize}px`,
@@ -1963,10 +2204,12 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                     maxHeight: 'min(98vw, 490px)',
                     aspectRatio: '1 / 1'
                   }}
+                  title={isEditingStampPosition ? "Drag stamp to position anywhere" : "Double-tap stamp to rearrange position"}
                 >
                   <img
                     src={activeStamp}
                     alt="Official Bank Stamp"
+                    draggable={false}
                     className="w-full h-full object-contain pointer-events-none select-none transition-all duration-150"
                     style={{
                       mixBlendMode: 'multiply',
@@ -1983,6 +2226,17 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                       opacity: stampWeight === 'light' ? 0.85 : stampWeight === 'normal' ? 0.95 : 1,
                     }}
                   />
+
+                  {/* Visual Drag Handle Badge when in Position Edit Mode */}
+                  {isEditingStampPosition && (
+                    <div 
+                      data-html2canvas-ignore="true"
+                      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-purple-700/90 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-xl flex items-center gap-1.5 pointer-events-none border border-white/40 backdrop-blur-xs whitespace-nowrap animate-in fade-in zoom-in-90 duration-150"
+                    >
+                      <Move className="w-3.5 h-3.5 text-amber-300" />
+                      <span>{isDraggingStamp ? 'Moving...' : 'Drag to Move'}</span>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -2083,9 +2337,129 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
           activeStamp={activeStamp}
           stampWeight={stampWeight}
           stampSize={stampSize}
+          stampPosition={stampPosition}
           customPdfLogo={customPdfLogo}
         />
       </div>
+
+      {/* Floating Stamp Repositioning & Save Toolbar (Active when clicking stamp or menu) */}
+      {isEditingStampPosition && (
+        <div 
+          id="stamp-position-toolbar"
+          data-html2canvas-ignore="true"
+          onClick={(e) => e.stopPropagation()}
+          className="fixed bottom-14 sm:bottom-16 inset-x-3 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-50 bg-[#171922]/95 backdrop-blur-md border border-purple-500/60 text-white rounded-2xl p-3 sm:p-3.5 shadow-2xl flex flex-col gap-2.5 max-w-sm sm:max-w-md w-full animate-in fade-in slide-in-from-bottom-3 duration-200 select-none"
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between pb-2 border-b border-neutral-700/80">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-purple-600/30 border border-purple-400 flex items-center justify-center text-purple-300">
+                <Move className="w-3.5 h-3.5" />
+              </div>
+              <div>
+                <div className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <span>Rearrange Stamp Position</span>
+                  {hasUnsavedStampPos && (
+                    <span className="text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded font-semibold border border-amber-500/30">
+                      Unsaved
+                    </span>
+                  )}
+                </div>
+                <div className="text-[10px] text-neutral-300">
+                  Drag stamp anywhere (saved for all receipts)
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsEditingStampPosition(false)}
+              className="p-1 rounded-full text-neutral-400 hover:text-white hover:bg-neutral-800 transition cursor-pointer"
+              title="Close editor"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Coordinates & Nudge Arrows */}
+          <div className="flex items-center justify-between bg-neutral-800/80 rounded-xl px-3 py-2 border border-neutral-700/60 text-xs">
+            <div className="flex items-center gap-1 font-mono text-[11px] text-purple-300">
+              <span>X: {stampPosition.xPercent}%</span>
+              <span className="text-neutral-500">•</span>
+              <span>Y: {stampPosition.yPercent}%</span>
+            </div>
+
+            {/* Directional Nudge Buttons */}
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => handleNudgeStamp(-2, 0)}
+                className="w-7 h-7 bg-neutral-700 hover:bg-neutral-600 active:bg-neutral-500 rounded flex items-center justify-center text-neutral-200 transition active:scale-95 cursor-pointer"
+                title="Nudge Left"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => handleNudgeStamp(0, -2)}
+                className="w-7 h-7 bg-neutral-700 hover:bg-neutral-600 active:bg-neutral-500 rounded flex items-center justify-center text-neutral-200 transition active:scale-95 cursor-pointer"
+                title="Nudge Up"
+              >
+                <ArrowUp className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => handleNudgeStamp(0, 2)}
+                className="w-7 h-7 bg-neutral-700 hover:bg-neutral-600 active:bg-neutral-500 rounded flex items-center justify-center text-neutral-200 transition active:scale-95 cursor-pointer"
+                title="Nudge Down"
+              >
+                <ArrowDown className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => handleNudgeStamp(2, 0)}
+                className="w-7 h-7 bg-neutral-700 hover:bg-neutral-600 active:bg-neutral-500 rounded flex items-center justify-center text-neutral-200 transition active:scale-95 cursor-pointer"
+                title="Nudge Right"
+              >
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Action Buttons: Save Position, Reset, Done */}
+          <div className="grid grid-cols-3 gap-2 pt-0.5">
+            <button
+              type="button"
+              onClick={handleSaveStampPosition}
+              className="col-span-1 py-1.5 px-2 rounded-xl bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-purple-600/30 transition active:scale-95 cursor-pointer"
+            >
+              <Save className="w-3.5 h-3.5" />
+              <span>Save</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleResetStampPosition}
+              className="col-span-1 py-1.5 px-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white text-xs font-semibold flex items-center justify-center gap-1.5 border border-neutral-700 transition active:scale-95 cursor-pointer"
+            >
+              <RotateCcw className="w-3 h-3 text-neutral-400" />
+              <span>Center</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (hasUnsavedStampPos) handleSaveStampPosition();
+                setIsEditingStampPosition(false);
+              }}
+              className="col-span-1 py-1.5 px-2 rounded-xl bg-neutral-750 hover:bg-neutral-700 text-white text-xs font-semibold flex items-center justify-center gap-1.5 border border-neutral-700 transition active:scale-95 cursor-pointer"
+            >
+              <Check className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Done</span>
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   );
