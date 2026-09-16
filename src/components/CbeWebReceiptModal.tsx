@@ -1998,16 +1998,16 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
               </div>
             </div>
 
-            {/* Centered QR Code */}
+            {/* Centered QR Code without frame */}
             <div className="mt-3.5 flex flex-col items-center justify-center">
               {qrCodeDataUrl ? (
                 <img 
                   src={qrCodeDataUrl} 
                   alt="Official CBE Receipt QR" 
-                  className="w-28 h-28 border border-gray-200 p-0.5 bg-white shadow-2xs"
+                  className="w-28 h-28 object-contain block"
                 />
               ) : (
-                <div className="w-28 h-28 bg-gray-100 animate-pulse border border-gray-200" />
+                <div className="w-28 h-28 bg-gray-100 animate-pulse" />
               )}
             </div>
 

@@ -2,7 +2,14 @@ import React, { useRef, useState, useEffect, useMemo } from 'react';
 import html2canvas from 'html2canvas-pro';
 import QRCode from 'qrcode';
 import { Transaction } from '../types';
-import { LocalDb, DEFAULT_CBE_LOGO, formatTo12CharTxId } from '../lib/mockData';
+import { 
+  LocalDb, 
+  DEFAULT_CBE_LOGO, 
+  formatTo12CharTxId, 
+  getAuthenticCbeQrSvgDataUri, 
+  getAuthenticCbeQrMatrix, 
+  getAuthenticCbeQrPngDataUrl 
+} from '../lib/mockData';
 import { calculateCbeFee } from '../lib/cbeTariff';
 import { CbeLogo } from './CbeLogo';
 import { CbeWebReceiptModal } from './CbeWebReceiptModal';
@@ -245,7 +252,19 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
   // Dynamic customized feedback assets
   const [customBankLogo, setCustomBankLogo] = useState<string | null>(null);
+  const [customQrCode, setCustomQrCode] = useState<string | null>(() => LocalDb.getCustomQrCode());
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
+
+  // Double-tap/click to toggle hiding action controls (top-right icon and bottom action buttons: receipt, screenshot, share)
+  const [hideUiElements, setHideUiElements] = useState<boolean>(false);
+
+  const toggleUiElements = () => {
+    setHideUiElements(prev => {
+      const next = !prev;
+      showBarsToast(next ? 'Controls hidden (Double-tap screen to restore)' : 'Controls restored');
+      return next;
+    });
+  };
 
   // Double-tap/click to hide status bar
   const [hideStatusBar, setHideStatusBar] = useState<boolean>(() => {
@@ -267,15 +286,9 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     }, 2200);
   };
 
-  const toggleStatusBar = () => {
-    setHideStatusBar(prev => {
-      const next = !prev;
-      try {
-        localStorage.setItem('cbe_hide_status_bar', String(next));
-      } catch {}
-      showBarsToast(next ? 'Status bar hidden (Double-tap to show)' : 'Status bar restored');
-      return next;
-    });
+  const handleDoubleAction = () => {
+    // Toggle hiding action buttons (screenshot icon, receipt, screenshot, share)
+    toggleUiElements();
   };
 
   const handleScreenClick = (e: React.MouseEvent) => {
@@ -288,7 +301,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     const dist = Math.hypot(e.clientX - lastTapRef.current.x, e.clientY - lastTapRef.current.y);
 
     if (timeDiff > 40 && timeDiff < 360 && dist < 45) {
-      toggleStatusBar();
+      handleDoubleAction();
       lastTapRef.current = { time: 0, x: 0, y: 0 };
     } else {
       lastTapRef.current = { time: now, x: e.clientX, y: e.clientY };
@@ -308,7 +321,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     const dist = Math.hypot(touch.clientX - lastTapRef.current.x, touch.clientY - lastTapRef.current.y);
 
     if (timeDiff > 40 && timeDiff < 380 && dist < 50) {
-      toggleStatusBar();
+      handleDoubleAction();
       lastTapRef.current = { time: 0, x: 0, y: 0 };
     } else {
       lastTapRef.current = { time: now, x: touch.clientX, y: touch.clientY };
@@ -320,18 +333,26 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     if (target.closest('button') || target.closest('a') || target.closest('input')) {
       return;
     }
-    toggleStatusBar();
+    handleDoubleAction();
   };
 
   useEffect(() => {
     setCustomBankLogo(LocalDb.getCustomBankLogo());
+    setCustomQrCode(LocalDb.getCustomQrCode());
 
     const handleUpdate = () => {
       setCustomBankLogo(LocalDb.getCustomBankLogo());
     };
+    const handleQrUpdate = () => {
+      setCustomQrCode(LocalDb.getCustomQrCode());
+    };
     window.addEventListener('cbe_logo_updated', handleUpdate);
+    window.addEventListener('cbe_qr_updated', handleQrUpdate);
+    window.addEventListener('storage', handleQrUpdate);
     return () => {
       window.removeEventListener('cbe_logo_updated', handleUpdate);
+      window.removeEventListener('cbe_qr_updated', handleQrUpdate);
+      window.removeEventListener('storage', handleQrUpdate);
     };
   }, []);
 
@@ -418,26 +439,22 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
   const reason = transaction.description || 'Mobile Banking Transfer';
 
-  // Generate dynamic authentic CBE QR code
+  // Memoized dynamic authentic CBE QR Code SVG Data URI generated uniquely for this transaction (Version 3, 29x29 modules, IMG_20260916_103244_278.png)
+  const txQrSvgDataUri = useMemo(() => {
+    return getAuthenticCbeQrSvgDataUri(txId);
+  }, [txId]);
+
+  // Memoized authentic 29x29 Version 3 QR Matrix for this transaction
+  const qrMatrix = useMemo(() => {
+    return getAuthenticCbeQrMatrix(txId);
+  }, [txId]);
+
+  // Generate dynamic authentic CBE QR code PNG data URL for downloads and canvas
   useEffect(() => {
-    const payload = `https://apps.cbe.com.et/verify?tx=${txId}&amt=${amount.toFixed(2)}&dt=${encodeURIComponent(formattedDate)}`;
-    QRCode.toDataURL(payload, {
-      width: 400,
-      margin: 0,
-      errorCorrectionLevel: 'M',
-      color: {
-        dark: '#000000',
-        light: '#00000000'
-      }
-    })
+    getAuthenticCbeQrPngDataUrl(txId, 450)
       .then(url => setQrDataUrl(url))
       .catch(err => console.error('QR code generation failed:', err));
-  }, [txId, amount, formattedDate]);
-
-  // Memoized 33x33 High-Density QR Matrix
-  const qrMatrix = useMemo(() => {
-    return getDenseQrMatrix(txId, `${amount}|${rawRecipientAccount}|${rawSenderAccount}|${formattedDate}`);
-  }, [txId, amount, rawRecipientAccount, rawSenderAccount, formattedDate]);
+  }, [txId]);
 
   // Print handle
   const handlePrint = () => {
@@ -445,7 +462,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   };
 
   // Generate pixel-perfect CBE Mobile Phone Screenshot identical to user's uploaded reference
-  const generateCanvasReceipt = async (): Promise<string> => {
+  const generateCanvasReceipt = async (hideButtons: boolean = false): Promise<string> => {
     const width = 720;
     const height = 1520;
     const canvas = document.createElement('canvas');
@@ -590,64 +607,66 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     ctx.font = '400 16px system-ui, -apple-system, sans-serif';
     ctx.fillText('Success', shieldX + 46, shieldY + 38);
 
-    // Top Right Viewfinder / Scan Button (Translucent circle with enlarged focus icon matching Image 2)
-    const scanBtnX = width - 82;
-    const scanBtnY = 96;
-    const btnRadius = 22;
-    const btnCx = scanBtnX + btnRadius;
-    const btnCy = scanBtnY + btnRadius;
+    // Top Right Viewfinder / Scan Button (hidden when taking screenshot)
+    if (!hideButtons) {
+      const scanBtnX = width - 82;
+      const scanBtnY = 96;
+      const btnRadius = 22;
+      const btnCx = scanBtnX + btnRadius;
+      const btnCy = scanBtnY + btnRadius;
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
-    ctx.beginPath();
-    ctx.arc(btnCx, btnCy, btnRadius, 0, Math.PI * 2);
-    ctx.fill();
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+      ctx.beginPath();
+      ctx.arc(btnCx, btnCy, btnRadius, 0, Math.PI * 2);
+      ctx.fill();
 
-    // Map 24x24 SVG coordinates to 28px icon inside canvas button
-    const s = 28 / 24;
-    const toCanvasX = (svgX: number) => btnCx + (svgX - 12) * s;
-    const toCanvasY = (svgY: number) => btnCy + (svgY - 12) * s;
+      // Map 24x24 SVG coordinates to 28px icon inside canvas button
+      const s = 28 / 24;
+      const toCanvasX = (svgX: number) => btnCx + (svgX - 12) * s;
+      const toCanvasY = (svgY: number) => btnCy + (svgY - 12) * s;
 
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1.8 * s;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.8 * s;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
 
-    // Top-left bracket
-    ctx.beginPath();
-    ctx.moveTo(toCanvasX(3.8), toCanvasY(8.2));
-    ctx.lineTo(toCanvasX(3.8), toCanvasY(6.0));
-    ctx.arcTo(toCanvasX(3.8), toCanvasY(3.8), toCanvasX(6.0), toCanvasY(3.8), 2.2 * s);
-    ctx.lineTo(toCanvasX(8.2), toCanvasY(3.8));
-    ctx.stroke();
+      // Top-left bracket
+      ctx.beginPath();
+      ctx.moveTo(toCanvasX(3.8), toCanvasY(8.2));
+      ctx.lineTo(toCanvasX(3.8), toCanvasY(6.0));
+      ctx.arcTo(toCanvasX(3.8), toCanvasY(3.8), toCanvasX(6.0), toCanvasY(3.8), 2.2 * s);
+      ctx.lineTo(toCanvasX(8.2), toCanvasY(3.8));
+      ctx.stroke();
 
-    // Top-right bracket
-    ctx.beginPath();
-    ctx.moveTo(toCanvasX(15.8), toCanvasY(3.8));
-    ctx.lineTo(toCanvasX(18.0), toCanvasY(3.8));
-    ctx.arcTo(toCanvasX(20.2), toCanvasY(3.8), toCanvasX(20.2), toCanvasY(6.0), 2.2 * s);
-    ctx.lineTo(toCanvasX(20.2), toCanvasY(8.2));
-    ctx.stroke();
+      // Top-right bracket
+      ctx.beginPath();
+      ctx.moveTo(toCanvasX(15.8), toCanvasY(3.8));
+      ctx.lineTo(toCanvasX(18.0), toCanvasY(3.8));
+      ctx.arcTo(toCanvasX(20.2), toCanvasY(3.8), toCanvasX(20.2), toCanvasY(6.0), 2.2 * s);
+      ctx.lineTo(toCanvasX(20.2), toCanvasY(8.2));
+      ctx.stroke();
 
-    // Bottom-right bracket
-    ctx.beginPath();
-    ctx.moveTo(toCanvasX(20.2), toCanvasY(15.8));
-    ctx.lineTo(toCanvasX(20.2), toCanvasY(18.0));
-    ctx.arcTo(toCanvasX(20.2), toCanvasY(20.2), toCanvasX(18.0), toCanvasY(20.2), 2.2 * s);
-    ctx.lineTo(toCanvasX(15.8), toCanvasY(20.2));
-    ctx.stroke();
+      // Bottom-right bracket
+      ctx.beginPath();
+      ctx.moveTo(toCanvasX(20.2), toCanvasY(15.8));
+      ctx.lineTo(toCanvasX(20.2), toCanvasY(18.0));
+      ctx.arcTo(toCanvasX(20.2), toCanvasY(20.2), toCanvasX(18.0), toCanvasY(20.2), 2.2 * s);
+      ctx.lineTo(toCanvasX(15.8), toCanvasY(20.2));
+      ctx.stroke();
 
-    // Bottom-left bracket
-    ctx.beginPath();
-    ctx.moveTo(toCanvasX(8.2), toCanvasY(20.2));
-    ctx.lineTo(toCanvasX(6.0), toCanvasY(20.2));
-    ctx.arcTo(toCanvasX(3.8), toCanvasY(20.2), toCanvasX(3.8), toCanvasY(18.0), 2.2 * s);
-    ctx.lineTo(toCanvasX(3.8), toCanvasY(15.8));
-    ctx.stroke();
+      // Bottom-left bracket
+      ctx.beginPath();
+      ctx.moveTo(toCanvasX(8.2), toCanvasY(20.2));
+      ctx.lineTo(toCanvasX(6.0), toCanvasY(20.2));
+      ctx.arcTo(toCanvasX(3.8), toCanvasY(20.2), toCanvasX(3.8), toCanvasY(18.0), 2.2 * s);
+      ctx.lineTo(toCanvasX(3.8), toCanvasY(15.8));
+      ctx.stroke();
 
-    // Center circle ring - enlarged matching second image with uniform gap
-    ctx.beginPath();
-    ctx.arc(btnCx, btnCy, 4.4 * s, 0, Math.PI * 2);
-    ctx.stroke();
+      // Center circle ring - enlarged matching second image with uniform gap
+      ctx.beginPath();
+      ctx.arc(btnCx, btnCy, 4.4 * s, 0, Math.PI * 2);
+      ctx.stroke();
+    }
 
     // 3. Main White Card
     const cardTop = 180;
@@ -710,13 +729,25 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
     // "Transaction Summary" Subtitle
     ctx.textAlign = 'left';
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = 'bold 16px system-ui, -apple-system, sans-serif';
+    ctx.fillStyle = '#8e8e93';
+    ctx.font = 'normal 17px system-ui, -apple-system, sans-serif';
     ctx.fillText('Transaction Summary', boxX + 26, boxY + 40);
 
     // Structured Rich Text Rendering with bolding support
     type TextFragment = { text: string; bold: boolean };
-    const fragments: TextFragment[] = [
+    const fragments: TextFragment[] = isCredit ? [
+      { text: 'ETB ', bold: false },
+      { text: `${amountFormatted}`, bold: true },
+      { text: ' has been credited to ', bold: false },
+      { text: `${recipientName}`, bold: true },
+      { text: ` ${recipientSuffix} from `, bold: false },
+      { text: `${senderName}`, bold: true },
+      { text: ` ${senderSuffix} on `, bold: false },
+      { text: `${formattedDate}`, bold: true },
+      { text: ' with transaction ID: ', bold: false },
+      { text: `${txId}.`, bold: true },
+      { text: ` Reason: ${reason}`, bold: false }
+    ] : [
       { text: 'ETB ', bold: false },
       { text: `${amountFormatted}`, bold: true },
       { text: ' has been debited from ', bold: false },
@@ -728,13 +759,13 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       { text: ' with transaction ID: ', bold: false },
       { text: `${txId}.`, bold: true },
       { text: ` Reason: ${reason} `, bold: false },
-      { text: `\nTotal Amount Debited: ${totalDebitedFormatted} ETB with Service Charge of ETB${serviceChargeFormatted}, VAT (15%) of ETB${vatFormatted} and Disaster Recovery (5%) of ETB${disasterRecoveryFormatted}.`, bold: false }
+      { text: `Total Amount Debited: ETB${totalDebitedFormatted} with Service Charge of ETB${serviceChargeFormatted}, VAT (15%) of ETB${vatFormatted} and Disaster Recovery (5%) of ETB${disasterRecoveryFormatted}.`, bold: false }
     ];
 
     let cursorX = boxX + 26;
-    let cursorY = boxY + 80;
+    let cursorY = boxY + 75;
     const textMaxWidth = boxW - 52;
-    const lineHeight = 28;
+    const lineHeight = 30;
 
     for (const frag of fragments) {
       if (frag.text.includes('\n')) {
@@ -758,8 +789,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       for (let i = 0; i < words.length; i++) {
         const w = (i === 0 ? '' : ' ') + words[i];
         ctx.font = isBold 
-          ? 'bold 18px system-ui, -apple-system, sans-serif' 
-          : 'normal 17px system-ui, -apple-system, sans-serif';
+          ? 'bold 19px system-ui, -apple-system, sans-serif' 
+          : 'normal 18px system-ui, -apple-system, sans-serif';
         ctx.fillStyle = '#111827';
 
         const metrics = ctx.measureText(w);
@@ -783,30 +814,34 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       });
     };
 
-    // 7. Authentic Centered QR Code
-    const qrSize = 250;
-    const qrX = (width - qrSize) / 2;
-    const qrY = boxY + 360;
+    // 7. Authentic Centered QR Code with rounded grey border matching reference (IMG_20260916_103244_278.png)
+    const qrInnerSize = 208;
+    const qrPadding = 18;
+    const qrBoxSize = qrInnerSize + qrPadding * 2; // 244px
+    const qrBoxX = (width - qrBoxSize) / 2;
+    const qrBoxY = boxY + 355;
+    const qrInnerX = qrBoxX + qrPadding;
+    const qrInnerY = qrBoxY + qrPadding;
+
+    // Draw outer rounded rectangle container with grey border
+    ctx.save();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.roundRect(qrBoxX, qrBoxY, qrBoxSize, qrBoxSize, 34);
+    ctx.fill();
+
+    ctx.strokeStyle = '#737373';
+    ctx.lineWidth = 5.5;
+    ctx.stroke();
+    ctx.restore();
 
     let qrImageLoaded = false;
-    const activeQrUrl = qrDataUrl || (await (async () => {
-      try {
-        const payload = `https://apps.cbe.com.et/verify?tx=${txId}&amt=${amount.toFixed(2)}&dt=${encodeURIComponent(formattedDate)}`;
-        return await QRCode.toDataURL(payload, {
-          width: 400,
-          margin: 0,
-          errorCorrectionLevel: 'M',
-          color: { dark: '#000000', light: '#00000000' }
-        });
-      } catch {
-        return null;
-      }
-    })());
+    const activeQrUrl = customQrCode || qrDataUrl || (await getAuthenticCbeQrPngDataUrl(txId, 450));
 
     if (activeQrUrl) {
       try {
         const qrImg = await loadImageAsync(activeQrUrl);
-        ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+        ctx.drawImage(qrImg, qrInnerX, qrInnerY, qrInnerSize, qrInnerSize);
         qrImageLoaded = true;
       } catch (err) {
         console.warn('QR image load failed for canvas, rendering fallback matrix:', err);
@@ -814,17 +849,17 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     }
 
     if (!qrImageLoaded) {
-      // Draw High-Density QR Code Modules
-      const matrix = getDenseQrMatrix(txId, `${amount}|${rawRecipientAccount}|${rawSenderAccount}`);
-      const gridSize = matrix.length; // 33
-      const cellSize = qrSize / gridSize;
+      // Draw authentic 29x29 Version 3 QR Code Modules for this specific transaction
+      const matrix = qrMatrix;
+      const gridSize = matrix.length; // 29
+      const cellSize = qrInnerSize / gridSize;
       ctx.fillStyle = '#000000';
 
       for (let r = 0; r < gridSize; r++) {
         for (let c = 0; c < gridSize; c++) {
           if (matrix[r][c]) {
             ctx.beginPath();
-            ctx.roundRect(qrX + c * cellSize + 0.5, qrY + r * cellSize + 0.5, cellSize - 1, cellSize - 1, 1);
+            ctx.rect(qrInnerX + c * cellSize, qrInnerY + r * cellSize, cellSize, cellSize);
             ctx.fill();
           }
         }
@@ -833,7 +868,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
     // 8. Commercial Bank of Ethiopia Footer Inset
     const logoX = boxX + 36;
-    const logoY = qrY + qrSize + 48;
+    const logoY = qrBoxY + qrBoxSize + 36;
     const activeLogoUrl = customBankLogo || LocalDb.getCustomBankLogo() || DEFAULT_CBE_LOGO;
 
     let logoImageLoaded = false;
@@ -879,105 +914,109 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     ctx.font = 'italic 15px system-ui, -apple-system, sans-serif';
     ctx.fillText('The bank you can always rely on!', logoX + 56, logoY + 34);
 
-    // 9. Bottom Action Buttons: Receipt, Screenshot, Share
+    // 9. Bottom Action Buttons: Receipt, Screenshot, Share (hidden when taking screenshot)
     const actY = boxY + boxH + 34;
 
-    // Button 1: Receipt
-    const b1X = 90;
-    ctx.strokeStyle = '#1e293b';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(b1X - 24, actY - 14, 16, 20);
-    ctx.font = 'bold 12px system-ui, -apple-system, sans-serif';
-    ctx.fillStyle = '#1e293b';
-    ctx.fillText('$', b1X - 19, actY + 1);
-    ctx.font = 'bold 17px system-ui, -apple-system, sans-serif';
-    ctx.fillText('Receipt', b1X, actY);
+    if (!hideButtons) {
+      // Button 1: Receipt
+      const b1X = 90;
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(b1X - 24, actY - 14, 16, 20);
+      ctx.font = 'bold 12px system-ui, -apple-system, sans-serif';
+      ctx.fillStyle = '#1e293b';
+      ctx.fillText('$', b1X - 19, actY + 1);
+      ctx.font = 'bold 17px system-ui, -apple-system, sans-serif';
+      ctx.fillText('Receipt', b1X, actY);
 
-    // Button 2: Screenshot
-    const b2X = width / 2 - 40;
-    const sIcoX = b2X - 22;
-    const sIcoY = actY - 14;
-    const sz = 18;
-    const cr = 4;
-    ctx.strokeStyle = '#1e293b';
-    ctx.lineWidth = 2.2;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    // 4 rounded corners
-    // Top-left
-    ctx.beginPath();
-    ctx.moveTo(sIcoX, sIcoY + cr + 1);
-    ctx.lineTo(sIcoX, sIcoY + 2);
-    ctx.arcTo(sIcoX, sIcoY, sIcoX + 2, sIcoY, 2);
-    ctx.lineTo(sIcoX + cr + 1, sIcoY);
-    ctx.stroke();
-    // Top-right
-    ctx.beginPath();
-    ctx.moveTo(sIcoX + sz - cr - 1, sIcoY);
-    ctx.lineTo(sIcoX + sz - 2, sIcoY);
-    ctx.arcTo(sIcoX + sz, sIcoY, sIcoX + sz, sIcoY + 2, 2);
-    ctx.lineTo(sIcoX + sz, sIcoY + cr + 1);
-    ctx.stroke();
-    // Bottom-left
-    ctx.beginPath();
-    ctx.moveTo(sIcoX, sIcoY + sz - cr - 1);
-    ctx.lineTo(sIcoX, sIcoY + sz - 2);
-    ctx.arcTo(sIcoX, sIcoY + sz, sIcoX + 2, sIcoY + sz, 2);
-    ctx.lineTo(sIcoX + cr + 1, sIcoY + sz);
-    ctx.stroke();
-    // Bottom-right
-    ctx.beginPath();
-    ctx.moveTo(sIcoX + sz - cr - 1, sIcoY + sz);
-    ctx.lineTo(sIcoX + sz - 2, sIcoY + sz);
-    ctx.arcTo(sIcoX + sz, sIcoY + sz, sIcoX + sz, sIcoY + sz - 2, 2);
-    ctx.lineTo(sIcoX + sz, sIcoY + sz - cr - 1);
-    ctx.stroke();
-    // Center circle
-    ctx.beginPath();
-    ctx.arc(sIcoX + sz / 2, sIcoY + sz / 2, 3.5, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.fillStyle = '#1e293b';
-    ctx.font = 'bold 17px system-ui, -apple-system, sans-serif';
-    ctx.fillText('Screenshot', b2X + 4, actY);
+      // Button 2: Screenshot
+      const b2X = width / 2 - 40;
+      const sIcoX = b2X - 22;
+      const sIcoY = actY - 14;
+      const sz = 18;
+      const cr = 4;
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 2.2;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      // 4 rounded corners
+      // Top-left
+      ctx.beginPath();
+      ctx.moveTo(sIcoX, sIcoY + cr + 1);
+      ctx.lineTo(sIcoX, sIcoY + 2);
+      ctx.arcTo(sIcoX, sIcoY, sIcoX + 2, sIcoY, 2);
+      ctx.lineTo(sIcoX + cr + 1, sIcoY);
+      ctx.stroke();
+      // Top-right
+      ctx.beginPath();
+      ctx.moveTo(sIcoX + sz - cr - 1, sIcoY);
+      ctx.lineTo(sIcoX + sz - 2, sIcoY);
+      ctx.arcTo(sIcoX + sz, sIcoY, sIcoX + sz, sIcoY + 2, 2);
+      ctx.lineTo(sIcoX + sz, sIcoY + cr + 1);
+      ctx.stroke();
+      // Bottom-left
+      ctx.beginPath();
+      ctx.moveTo(sIcoX, sIcoY + sz - cr - 1);
+      ctx.lineTo(sIcoX, sIcoY + sz - 2);
+      ctx.arcTo(sIcoX, sIcoY + sz, sIcoX + 2, sIcoY + sz, 2);
+      ctx.lineTo(sIcoX + cr + 1, sIcoY + sz);
+      ctx.stroke();
+      // Bottom-right
+      ctx.beginPath();
+      ctx.moveTo(sIcoX + sz - cr - 1, sIcoY + sz);
+      ctx.lineTo(sIcoX + sz - 2, sIcoY + sz);
+      ctx.arcTo(sIcoX + sz, sIcoY + sz, sIcoX + sz, sIcoY + sz - 2, 2);
+      ctx.lineTo(sIcoX + sz, sIcoY + sz - cr - 1);
+      ctx.stroke();
+      // Center circle
+      ctx.beginPath();
+      ctx.arc(sIcoX + sz / 2, sIcoY + sz / 2, 3.5, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = '#1e293b';
+      ctx.font = 'bold 17px system-ui, -apple-system, sans-serif';
+      ctx.fillText('Screenshot', b2X + 4, actY);
 
-    // Button 3: Share
-    const b3X = width - 150;
-    ctx.strokeStyle = '#1e293b';
-    ctx.lineWidth = 2;
-    // 3 share nodes
-    ctx.beginPath();
-    ctx.arc(b3X - 18, actY - 4, 3, 0, Math.PI * 2);
-    ctx.arc(b3X - 8, actY - 11, 3, 0, Math.PI * 2);
-    ctx.arc(b3X - 8, actY + 3, 3, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(b3X - 18, actY - 4); ctx.lineTo(b3X - 8, actY - 11);
-    ctx.moveTo(b3X - 18, actY - 4); ctx.lineTo(b3X - 8, actY + 3);
-    ctx.stroke();
-    ctx.font = 'bold 17px system-ui, -apple-system, sans-serif';
-    ctx.fillText('Share', b3X, actY);
+      // Button 3: Share
+      const b3X = width - 150;
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 2;
+      // 3 share nodes
+      ctx.beginPath();
+      ctx.arc(b3X - 18, actY - 4, 3, 0, Math.PI * 2);
+      ctx.arc(b3X - 8, actY - 11, 3, 0, Math.PI * 2);
+      ctx.arc(b3X - 8, actY + 3, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(b3X - 18, actY - 4); ctx.lineTo(b3X - 8, actY - 11);
+      ctx.moveTo(b3X - 18, actY - 4); ctx.lineTo(b3X - 8, actY + 3);
+      ctx.stroke();
+      ctx.font = 'bold 17px system-ui, -apple-system, sans-serif';
+      ctx.fillText('Share', b3X, actY);
+    }
 
-    // 10. Close Button (Pill)
-    const closeBtnY = actY + 28;
-    ctx.fillStyle = '#d7d7db';
-    ctx.beginPath();
-    ctx.roundRect(32, closeBtnY, width - 64, 58, 29);
-    ctx.fill();
-    ctx.fillStyle = '#1e293b';
-    ctx.font = 'bold 19px system-ui, -apple-system, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('Close', width / 2, closeBtnY + 36);
+    // 10. Close Button (Pill) & 11. iPhone Bottom Home Indicator (hidden when taking screenshot)
+    if (!hideButtons) {
+      const closeBtnY = actY + 28;
+      ctx.fillStyle = '#d7d7db';
+      ctx.beginPath();
+      ctx.roundRect(32, closeBtnY, width - 64, 58, 29);
+      ctx.fill();
+      ctx.fillStyle = '#1e293b';
+      ctx.font = 'bold 19px system-ui, -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('Close', width / 2, closeBtnY + 36);
 
-    // 11. iPhone Bottom Home Indicator
-    const navY = height - 48;
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, navY, width, 48);
+      // 11. iPhone Bottom Home Indicator
+      const navY = height - 48;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, navY, width, 48);
 
-    // Centered iOS Home Indicator Bar
-    ctx.fillStyle = '#1e293b';
-    ctx.beginPath();
-    ctx.roundRect((width - 200) / 2, height - 24, 200, 7, 3.5);
-    ctx.fill();
+      // Centered iOS Home Indicator Bar
+      ctx.fillStyle = '#1e293b';
+      ctx.beginPath();
+      ctx.roundRect((width - 200) / 2, height - 24, 200, 7, 3.5);
+      ctx.fill();
+    }
 
     return canvas.toDataURL('image/png');
   };
@@ -991,6 +1030,9 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       // 1. Trigger realistic camera shutter flash effect
       setFlashAnimation(true);
       setTimeout(() => setFlashAnimation(false), 250);
+
+      // Allow React state update to flush so elements hidden by isCapturing are removed from DOM
+      await new Promise(resolve => setTimeout(resolve, 80));
 
       const receiptEl = document.getElementById('receipt-screen-wrapper');
       let dataUrl: string | null = null;
@@ -1011,7 +1053,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       }
 
       if (!dataUrl) {
-        dataUrl = await generateCanvasReceipt();
+        dataUrl = await generateCanvasReceipt(true);
       }
 
       // 2. Trigger instant download to user device
@@ -1183,19 +1225,16 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           </div>
         </div>
 
-        {/* Screenshot Button (Translucent circular badge with enlarged focus viewfinder matching Image 2) */}
-        <button 
-          onClick={handleScreenshot}
-          disabled={isCapturing}
-          className="w-11 h-11 rounded-full bg-white/20 hover:bg-white/30 active:scale-95 flex items-center justify-center transition text-white cursor-pointer disabled:opacity-50 shadow-xs"
-          title="Take iPhone Screenshot & Save (Tip: Double-tap screen to hide/show status bar)"
-        >
-          {isCapturing ? (
-            <Loader2 className="w-5 h-5 animate-spin text-white" />
-          ) : (
+        {/* Screenshot Button (Translucent circular badge with enlarged focus viewfinder - clicking hides the controls, double tap also toggles) */}
+        {!hideUiElements && !isCapturing && (
+          <button 
+            onClick={toggleUiElements}
+            className="w-11 h-11 rounded-full bg-white/20 hover:bg-white/30 active:scale-95 flex items-center justify-center transition text-white cursor-pointer shadow-xs"
+            title="Hide action buttons & icon (Double-tap anywhere to restore)"
+          >
             <ScreenshotViewfinderIcon className="w-7 h-7 text-white" strokeWidth={1.8} />
-          )}
-        </button>
+          </button>
+        )}
       </div>
 
       {/* Main White Sheet Container */}
@@ -1242,144 +1281,157 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         <div className="h-12 sm:h-13 flex-shrink-0" />
 
         <div className="space-y-3 flex-1 flex flex-col justify-center">
-          {/* Headline (Normal weight as requested) */}
-          <h1 className="text-center text-[13.5px] sm:text-[15px] font-normal text-gray-900 tracking-tight">
+          {/* Headline */}
+          <h1 className="text-center text-[15px] sm:text-[16px] font-medium text-black tracking-tight">
             Transaction Completed Successfully!
           </h1>
 
           {/* Main Transaction Summary Gray Card */}
           <div 
             ref={receiptRef}
-            className="bg-[#ededf0] rounded-[20px] sm:rounded-[24px] p-3.5 sm:p-4 space-y-3 border border-gray-200/60 shadow-xs"
+            className="bg-[#f2f3f5] rounded-[24px] p-4 sm:p-5 space-y-3.5 border border-gray-200/50 shadow-xs"
           >
-            <p className="text-gray-400 font-bold text-[11px]">Transaction Summary</p>
+            <p className="text-[#8e8e93] font-normal text-[13.5px] sm:text-[14px]">Transaction Summary</p>
 
             {/* Paragraph Text with bold highlights matching CBE reference */}
             {isCredit ? (
-              <p className="text-[12px] sm:text-[13px] leading-[1.65] text-gray-900 font-normal select-text">
+              <p className="text-[14px] sm:text-[15px] leading-[1.62] text-[#1a1a1a] font-normal select-text">
                 ETB <span className="font-bold text-black">{amountFormatted}</span> has been credited to <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} from <span className="font-bold text-black">{senderName}</span> {senderSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason}
               </p>
             ) : (
-              <p className="text-[12px] sm:text-[13px] leading-[1.65] text-gray-900 font-normal select-text">
-                ETB <span className="font-bold text-black">{amountFormatted}</span> has been debited from <span className="font-bold text-black">{senderName}</span> {senderSuffix} for <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason}
-                <br className="my-0.5" />
-                Total Amount Debited: {totalDebitedFormatted} ETB with Service Charge of ETB{serviceChargeFormatted}, VAT (15%) of ETB{vatFormatted} and Disaster Recovery (5%) of ETB{disasterRecoveryFormatted}.
+              <p className="text-[14px] sm:text-[15px] leading-[1.62] text-[#1a1a1a] font-normal select-text">
+                ETB <span className="font-bold text-black">{amountFormatted}</span> has been debited from <span className="font-bold text-black">{senderName}</span> {senderSuffix} for <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason} Total Amount Debited: ETB{totalDebitedFormatted} with Service Charge of ETB{serviceChargeFormatted}, VAT (15%) of ETB{vatFormatted} and Disaster Recovery (5%) of ETB{disasterRecoveryFormatted}.
               </p>
             )}
 
-            {/* High-Density Realistic QR Code Centered */}
-            <div className="flex justify-center py-1">
-              <div className="w-32 h-32 sm:w-36 sm:h-36 bg-transparent flex items-center justify-center p-0.5">
-                {qrDataUrl ? (
-                  <img 
-                    src={qrDataUrl} 
-                    alt="Transaction QR Code" 
-                    className="w-full h-full object-contain"
-                  />
-                ) : (
-                  /* High-fidelity 33x33 Dense QR Matrix fallback */
-                  <div 
-                    className="grid gap-[1px] w-full h-full"
-                    style={{ gridTemplateColumns: `repeat(${qrMatrix.length}, minmax(0, 1fr))` }}
-                  >
-                    {qrMatrix.flatMap((row, rIdx) =>
-                      row.map((filled, cIdx) => (
-                        <div 
-                          key={`${rIdx}-${cIdx}`} 
-                          className={`rounded-[0.2px] ${
-                            filled ? 'bg-black' : 'bg-transparent'
-                          }`}
-                        />
-                      ))
-                    )}
-                  </div>
-                )}
+            {/* Realistic QR Code Centered with authentic rounded grey frame */}
+            <div className="flex justify-center py-1.5">
+              <div 
+                id="receipt-qr-container"
+                className="bg-white p-2.5 sm:p-3 rounded-[24px] border-[3px] border-[#737373] shadow-xs inline-flex items-center justify-center select-none"
+              >
+                <div className="w-36 h-36 sm:w-40 sm:h-40 flex items-center justify-center">
+                  {customQrCode ? (
+                    <img 
+                      src={customQrCode} 
+                      alt={`Transaction ${txId} QR Code`} 
+                      className="w-full h-full object-contain block"
+                    />
+                  ) : txQrSvgDataUri ? (
+                    <img 
+                      src={txQrSvgDataUri} 
+                      alt={`Transaction ${txId} QR Code`} 
+                      className="w-full h-full object-contain block"
+                    />
+                  ) : qrDataUrl ? (
+                    <img 
+                      src={qrDataUrl} 
+                      alt={`Transaction ${txId} QR Code`} 
+                      className="w-full h-full object-contain block"
+                    />
+                  ) : (
+                    /* Authentic 29x29 Version 3 Matrix fallback */
+                    <div 
+                      className="grid gap-[1px] w-full h-full bg-white p-0.5"
+                      style={{ gridTemplateColumns: `repeat(${qrMatrix.length}, minmax(0, 1fr))` }}
+                    >
+                      {qrMatrix.flatMap((row, rIdx) =>
+                        row.map((filled, cIdx) => (
+                          <div 
+                            key={`${rIdx}-${cIdx}`} 
+                            className={`rounded-[0.2px] ${
+                              filled ? 'bg-black' : 'bg-transparent'
+                            }`}
+                          />
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
             {/* Commercial Bank of Ethiopia Footer Inset */}
-            <div className="flex items-center gap-2 pt-0.5 min-w-0">
-              <div className="w-9 h-9 flex-shrink-0 flex items-center justify-center">
-                <CbeLogo className="w-8 h-8" src={customBankLogo} />
+            <div className="flex items-center gap-2.5 pt-1 min-w-0">
+              <div className="w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0 flex items-center justify-center">
+                <CbeLogo className="w-8 h-8 sm:w-9 sm:h-9" src={customBankLogo} />
               </div>
               <div className="min-w-0 flex-1">
-                <h4 className="font-extrabold text-gray-900 text-xs leading-tight whitespace-nowrap overflow-hidden text-ellipsis">Commercial Bank of Ethiopia</h4>
-                <p className="text-gray-500 text-[10px] font-normal mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">The bank you can always rely on!</p>
+                <h4 className="font-bold text-gray-900 text-[13.5px] sm:text-[14.5px] leading-tight whitespace-nowrap overflow-hidden text-ellipsis">Commercial Bank of Ethiopia</h4>
+                <p className="text-gray-500 text-[10.5px] sm:text-[11.5px] font-medium leading-tight whitespace-nowrap overflow-hidden text-ellipsis mt-0.5">The bank you can always rely on!</p>
               </div>
             </div>
 
           </div>
         </div>
 
-        {/* Bottom Actions Section - Restored to original persistent state */}
-        <div className="mt-4 space-y-3.5 flex-shrink-0">
-          {/* 3 Action Buttons matching exact app icons */}
-          <div className="flex items-center justify-around px-3 text-black">
-            {/* Receipt Button */}
-            <button 
-              id="btn-action-receipt"
-              onClick={() => setShowDetailedModal(true)}
-              className="flex items-center gap-2 text-[13.5px] font-medium text-black hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2 rounded-xl"
-            >
-              {/* Document with 2 top-left horizontal lines, folded top-right corner, and $ sign icon */}
-              <div className="relative w-4 h-[18px] bg-black rounded-[2.5px] flex flex-col justify-between p-[2px] text-white flex-shrink-0 overflow-hidden">
-                {/* Folded top-right corner */}
-                <div className="absolute -top-[0.5px] -right-[0.5px] w-[5.5px] h-[5.5px] bg-[#f8f9fa] border-b border-l border-black" />
-                
-                {/* Top-left two horizontal lines */}
-                <div className="flex flex-col gap-[1.5px] w-[7px] pt-[0.5px] pl-[0.5px]">
-                  <div className="h-[1.2px] w-full bg-white rounded-full" />
-                  <div className="h-[1.2px] w-4/5 bg-white rounded-full" />
-                </div>
+        {/* Bottom Actions Section - Hidden on double-tap screen or toggle button */}
+        {!hideUiElements && !isCapturing && (
+          <div className="mt-4 space-y-3.5 flex-shrink-0">
+            {/* 3 Action Buttons matching exact app icons */}
+            <div className="flex items-center justify-around px-3 text-black">
+              {/* Receipt Button */}
+              <button 
+                id="btn-action-receipt"
+                onClick={() => setShowDetailedModal(true)}
+                className="flex items-center gap-2 text-[13.5px] font-medium text-black hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2 rounded-xl"
+              >
+                {/* Document with 2 top-left horizontal lines, folded top-right corner, and $ sign icon */}
+                <div className="relative w-4 h-[18px] bg-black rounded-[2.5px] flex flex-col justify-between p-[2px] text-white flex-shrink-0 overflow-hidden">
+                  {/* Folded top-right corner */}
+                  <div className="absolute -top-[0.5px] -right-[0.5px] w-[5.5px] h-[5.5px] bg-[#f8f9fa] border-b border-l border-black" />
+                  
+                  {/* Top-left two horizontal lines */}
+                  <div className="flex flex-col gap-[1.5px] w-[7px] pt-[0.5px] pl-[0.5px]">
+                    <div className="h-[1.2px] w-full bg-white rounded-full" />
+                    <div className="h-[1.2px] w-4/5 bg-white rounded-full" />
+                  </div>
 
-                {/* Centered $ symbol */}
-                <div className="flex items-center justify-center flex-1">
-                  <span className="text-[9px] font-black font-sans leading-none mt-0.5">$</span>
+                  {/* Centered $ symbol */}
+                  <div className="flex items-center justify-center flex-1">
+                    <span className="text-[9px] font-black font-sans leading-none mt-0.5">$</span>
+                  </div>
                 </div>
-              </div>
-              <span>Receipt</span>
-            </button>
+                <span>Receipt</span>
+              </button>
 
-            {/* Screenshot Button */}
-            <button 
-              id="btn-action-screenshot"
-              onClick={handleScreenshot}
-              disabled={isCapturing}
-              className="flex items-center gap-2 text-[13.5px] font-medium text-black hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2 rounded-xl disabled:opacity-50"
-            >
-              {isCapturing ? (
-                <Loader2 className="w-[18px] h-[18px] stroke-[2.2] animate-spin text-[#68137e]" />
-              ) : (
+              {/* Screenshot Button (toggles hiding elements as requested) */}
+              <button 
+                id="btn-action-screenshot"
+                onClick={toggleUiElements}
+                className="flex items-center gap-2 text-[13.5px] font-medium text-black hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2 rounded-xl"
+                title="Hide action buttons, Close button & iPhone bar (Double-tap screen to restore)"
+              >
                 <ScreenshotViewfinderIcon className="w-[18px] h-[18px] text-black" strokeWidth={1.8} />
-              )}
-              <span>{isCapturing ? 'Saving...' : 'Screenshot'}</span>
-            </button>
+                <span>Screenshot</span>
+              </button>
 
-            {/* Share Button */}
+              {/* Share Button */}
+              <button 
+                id="btn-action-share"
+                onClick={handleShare}
+                className="flex items-center gap-2 text-[13.5px] font-medium text-black hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2 rounded-xl"
+              >
+                <Share2 className="w-[18px] h-[18px] stroke-[2.2] fill-black text-black" />
+                <span>Share</span>
+              </button>
+            </div>
+
+            {/* Full-width Close Pill Button */}
             <button 
-              id="btn-action-share"
-              onClick={handleShare}
-              className="flex items-center gap-2 text-[13.5px] font-medium text-black hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2 rounded-xl"
+              id="btn-action-close"
+              onClick={onBack}
+              className="w-full bg-[#d7d7db] hover:bg-[#ceced3] active:bg-[#c4c4c9] text-[#333333] font-bold py-3.5 rounded-full text-[15px] transition active:scale-[0.99] cursor-pointer shadow-xs"
             >
-              <Share2 className="w-[18px] h-[18px] stroke-[2.2] fill-black text-black" />
-              <span>Share</span>
+              Close
             </button>
-          </div>
 
-          {/* Full-width Close Pill Button */}
-          <button 
-            id="btn-action-close"
-            onClick={onBack}
-            className="w-full bg-[#d7d7db] hover:bg-[#ceced3] active:bg-[#c4c4c9] text-[#333333] font-bold py-3.5 rounded-full text-[15px] transition active:scale-[0.99] cursor-pointer shadow-xs"
-          >
-            Close
-          </button>
-
-          {/* iPhone 17 Native Home Navigation Bar Indicator */}
-          <div className="pt-2.5 pb-0.5 flex justify-center items-center">
-            <div className="w-32 sm:w-36 h-[4.5px] bg-[#1a1a1a] rounded-full shadow-xs" />
+            {/* iPhone 17 Native Home Navigation Bar Indicator */}
+            <div className="pt-2.5 pb-0.5 flex justify-center items-center">
+              <div className="w-32 sm:w-36 h-[4.5px] bg-[#1a1a1a] rounded-full shadow-xs" />
+            </div>
           </div>
-        </div>
+        )}
 
       </div>
 

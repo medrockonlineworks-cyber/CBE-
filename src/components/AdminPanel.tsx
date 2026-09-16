@@ -1,5 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { LocalDb, DEFAULT_CBE_LOGO, OFFICIAL_CBE_STAMP_LOGO } from '../lib/mockData';
+import React, { useState, useEffect, useMemo } from 'react';
+import { 
+  LocalDb, 
+  DEFAULT_CBE_LOGO, 
+  OFFICIAL_CBE_STAMP_LOGO, 
+  OFFICIAL_CBE_QR_PRESET,
+  getAuthenticCbeQrSvgDataUri,
+  formatTo12CharTxId 
+} from '../lib/mockData';
 import { UserProfile, Transaction, AuditLog } from '../types';
 import { CbeLogo } from './CbeLogo';
 import { compressImageFile } from '../lib/imageUtils';
@@ -26,7 +33,8 @@ import {
   Sparkles,
   ExternalLink,
   Stamp,
-  CheckCircle2
+  CheckCircle2,
+  QrCode
 } from 'lucide-react';
 
 interface AdminPanelProps {
@@ -41,9 +49,18 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [customBankLogo, setCustomBankLogo] = useState<string | null>(null);
   const [customBankStamp, setCustomBankStamp] = useState<string | null>(null);
+  const [customQrCode, setCustomQrCode] = useState<string | null>(null);
   const [stampProcessing, setStampProcessing] = useState(false);
+  const [qrProcessing, setQrProcessing] = useState(false);
   const [stampUrlInput, setStampUrlInput] = useState('');
+  const [qrUrlInput, setQrUrlInput] = useState('');
   const [showLogoModal, setShowLogoModal] = useState(false);
+
+  // Dynamic QR tester state to test different transactions
+  const [testTxId, setTestTxId] = useState('FT263211VK07');
+  const testTxQr = useMemo(() => {
+    return getAuthenticCbeQrSvgDataUri(testTxId);
+  }, [testTxId]);
   
   // Search / Filters
   const [userSearch, setUserSearch] = useState('');
@@ -61,6 +78,7 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
     setAuditLogs(LocalDb.getAuditLogs());
     setCustomBankLogo(LocalDb.getCustomBankLogo());
     setCustomBankStamp(LocalDb.getCustomBankStamp());
+    setCustomQrCode(LocalDb.getCustomQrCode());
   };
 
   useEffect(() => {
@@ -71,15 +89,22 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
     const handleSyncStamp = () => {
       setCustomBankStamp(LocalDb.getCustomBankStamp());
     };
+    const handleSyncQr = () => {
+      setCustomQrCode(LocalDb.getCustomQrCode());
+    };
     window.addEventListener('cbe_logo_updated', handleSyncLogo);
     window.addEventListener('cbe_stamp_updated', handleSyncStamp);
+    window.addEventListener('cbe_qr_updated', handleSyncQr);
     window.addEventListener('storage', handleSyncLogo);
     window.addEventListener('storage', handleSyncStamp);
+    window.addEventListener('storage', handleSyncQr);
     return () => {
       window.removeEventListener('cbe_logo_updated', handleSyncLogo);
       window.removeEventListener('cbe_stamp_updated', handleSyncStamp);
+      window.removeEventListener('cbe_qr_updated', handleSyncQr);
       window.removeEventListener('storage', handleSyncLogo);
       window.removeEventListener('storage', handleSyncStamp);
+      window.removeEventListener('storage', handleSyncQr);
     };
   }, []);
 
@@ -168,6 +193,47 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
     LocalDb.setCustomBankStamp(null);
     setCustomBankStamp(null);
     LocalDb.addAuditLog(currentUser.id, currentUser.email, 'REMOVE_BANK_STAMP', 'Removed custom bank stamp. Web receipts will display without any stamp.');
+  };
+
+  // QR Code custom sample handlers
+  const handleQrUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setQrProcessing(true);
+      const dataUrl = await compressImageFile(file, 500, 0.95);
+      LocalDb.setCustomQrCode(dataUrl);
+      setCustomQrCode(dataUrl);
+      LocalDb.addAuditLog(currentUser.id, currentUser.email, 'UPLOAD_CUSTOM_QR', 'Uploaded a sample QR code image for transaction receipts.');
+    } catch (err) {
+      console.error('Failed to compress QR image:', err);
+      alert('Failed to process QR code image. Please try another image file.');
+    } finally {
+      setQrProcessing(false);
+    }
+  };
+
+  const handleApplyQrUrl = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!qrUrlInput.trim()) return;
+    LocalDb.setCustomQrCode(qrUrlInput.trim());
+    setCustomQrCode(qrUrlInput.trim());
+    setQrUrlInput('');
+    LocalDb.addAuditLog(currentUser.id, currentUser.email, 'UPLOAD_CUSTOM_QR', 'Applied sample QR code from URL.');
+  };
+
+  const handleApplyQrPreset = () => {
+    LocalDb.setCustomQrCode(null);
+    setCustomQrCode(null);
+    setTestTxId('FT263211VK07');
+    LocalDb.addAuditLog(currentUser.id, currentUser.email, 'APPLY_PRESET_QR', 'Activated dynamic authentic CBE receipt QR code generation matching template (IMG_20260916_103244_278).');
+  };
+
+  const handleResetQrCode = () => {
+    LocalDb.setCustomQrCode(null);
+    setCustomQrCode(null);
+    LocalDb.addAuditLog(currentUser.id, currentUser.email, 'RESET_CUSTOM_QR', 'Reset receipt QR code to auto-generated dynamic CBE QR code.');
   };
 
   // Metrics
@@ -289,7 +355,7 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
             activeTab === 'feedback_settings' ? 'border-amber-400 text-amber-400' : 'border-transparent text-slate-400 hover:text-slate-200'
           }`}
         >
-          Feedback Assets Customization
+          Receipt Assets (Logo, Stamp &amp; QR)
         </button>
         <button 
           id="tab-admin-ethiopian-names"
@@ -631,171 +697,370 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
               </div>
             </div>
 
-            {/* 2. Custom Bank Stamp Uploader (Placed directly below Logo upload) */}
-            <div className="bg-slate-800/30 border border-slate-800 p-6 rounded-3xl space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-purple-500/10 text-purple-400 rounded-xl">
-                    <Stamp className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-white text-base">Custom Bank Stamp</h4>
-                    <p className="text-slate-400 text-xs">Official circular rubber stamp overlaid onto the CBE Web Receipt</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
-                    customBankStamp 
-                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                      : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                  }`}>
-                    {customBankStamp ? (
-                      <>
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                        <span>Uploaded Stamp Active</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                        <span>No Stamp (Web receipt has no stamp)</span>
-                      </>
-                    )}
-                  </span>
-                </div>
-              </div>
-
-              {/* Policy Banner */}
-              <div className="bg-purple-950/30 border border-purple-800/40 rounded-2xl p-3.5 flex items-start gap-3 text-xs text-purple-200">
-                <Stamp className="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5" />
-                <p className="leading-relaxed">
-                  <strong className="text-purple-300">Web Receipt Policy:</strong> The CBE Web Receipt displays <span className="underline decoration-purple-400 font-bold">only uploaded stamps</span>. If no stamp is uploaded, web receipts will display without any stamp.
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Upload & URL Field */}
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="block text-xs font-mono uppercase text-slate-400 font-bold">Upload Custom Stamp Image</label>
-                    <div className="relative border-2 border-dashed border-slate-700 hover:border-purple-400/50 rounded-2xl p-4 transition flex flex-col items-center justify-center text-center cursor-pointer bg-slate-950/40">
-                      <input 
-                        id="input-bank-stamp-upload"
-                        type="file" 
-                        accept="image/*" 
-                        onChange={handleBankStampUpload}
-                        disabled={stampProcessing}
-                        className="absolute inset-0 opacity-0 cursor-pointer"
-                      />
-                      {stampProcessing ? (
-                        <div className="flex flex-col items-center py-2">
-                          <Loader2 className="w-7 h-7 text-purple-400 animate-spin mb-1" />
-                          <p className="text-xs text-purple-300 font-semibold">Processing &amp; Optimizing Stamp...</p>
-                        </div>
-                      ) : (
-                        <>
-                          <Upload className="w-8 h-8 text-purple-400/70 mb-2" />
-                          <p className="text-xs text-slate-300 font-semibold">Click to browse or drag stamp image here</p>
-                          <p className="text-[10px] text-slate-500 mt-1 font-mono">PNG (transparent), SVG, or JPG up to 2MB</p>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Or Enter Stamp URL */}
-                  <form onSubmit={handleApplyStampUrl} className="space-y-1.5">
-                    <label className="block text-[11px] font-mono uppercase text-slate-400 font-bold">Or Enter Stamp Image URL</label>
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
-                        <LinkIcon className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
-                        <input
-                          id="input-bank-stamp-url"
-                          type="url"
-                          placeholder="https://.../cbe-stamp.png"
-                          value={stampUrlInput}
-                          onChange={(e) => setStampUrlInput(e.target.value)}
-                          className="w-full bg-slate-950/40 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-purple-400"
-                        />
+            {/* Stamp and Sample QR Code Uploaders Side-by-Side ("beside stamps uploader") */}
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-stretch">
+              {/* 2. Custom Bank Stamp Uploader */}
+              <div className="bg-slate-800/30 border border-slate-800 p-6 rounded-3xl space-y-6 flex flex-col justify-between">
+                <div>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 bg-purple-500/10 text-purple-400 rounded-xl">
+                        <Stamp className="w-5 h-5" />
                       </div>
-                      <button
-                        id="btn-apply-stamp-url"
-                        type="submit"
-                        disabled={!stampUrlInput.trim()}
-                        className="bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer"
-                      >
-                        Apply
-                      </button>
+                      <div>
+                        <h4 className="font-bold text-white text-base">Custom Bank Stamp</h4>
+                        <p className="text-slate-400 text-xs">Official circular rubber stamp for CBE Web Receipt</p>
+                      </div>
                     </div>
-                  </form>
-                </div>
 
-                {/* Stamp Preview & Actions */}
-                <div className="space-y-4 flex flex-col justify-between">
-                  <div>
-                    <p className="text-xs font-mono uppercase text-slate-400 font-bold mb-2">Web Receipt Stamp Preview</p>
-                    <div className="flex items-center gap-4 bg-slate-950/40 p-3.5 rounded-2xl border border-slate-800">
-                      {/* Realistic paper simulation container with multiply blend preview */}
-                      <div className="w-20 h-20 rounded-2xl bg-white flex items-center justify-center shadow-inner border border-slate-200 flex-shrink-0 overflow-hidden relative">
-                        {/* Background faint lines simulating receipt paper */}
-                        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:6px_6px]" />
-                        
+                    <div className="flex items-center gap-2">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
+                        customBankStamp 
+                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                          : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                      }`}>
                         {customBankStamp ? (
-                          <img 
-                            src={customBankStamp} 
-                            alt="Custom CBE Stamp Preview" 
-                            className="w-full h-full object-contain pointer-events-none select-none relative z-10 p-1"
-                            style={{
-                              mixBlendMode: 'multiply',
-                              filter: 'contrast(1.15)',
-                              transform: 'rotate(-13deg)'
-                            }}
-                          />
+                          <>
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                            <span>Uploaded Stamp Active</span>
+                          </>
                         ) : (
-                          <div className="flex flex-col items-center justify-center text-slate-400 p-2 text-center">
-                            <Stamp className="w-6 h-6 stroke-1 text-slate-300 mb-0.5" />
-                            <span className="text-[9px] font-bold text-slate-400">No Stamp</span>
+                          <>
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                            <span>No Stamp Active</span>
+                          </>
+                        )}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Policy Banner */}
+                  <div className="bg-purple-950/30 border border-purple-800/40 rounded-2xl p-3 flex items-start gap-2.5 text-xs text-purple-200 mb-5">
+                    <Stamp className="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5" />
+                    <p className="leading-relaxed">
+                      <strong className="text-purple-300">Web Receipt:</strong> Displays <span className="underline decoration-purple-400 font-bold">only uploaded stamps</span>. Web receipts display without stamp if none is uploaded.
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    {/* Upload Field */}
+                    <div className="space-y-1.5">
+                      <label className="block text-xs font-mono uppercase text-slate-400 font-bold">Upload Stamp Image</label>
+                      <div className="relative border-2 border-dashed border-slate-700 hover:border-purple-400/50 rounded-2xl p-3.5 transition flex flex-col items-center justify-center text-center cursor-pointer bg-slate-950/40">
+                        <input 
+                          id="input-bank-stamp-upload"
+                          type="file" 
+                          accept="image/*" 
+                          onChange={handleBankStampUpload}
+                          disabled={stampProcessing}
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                        />
+                        {stampProcessing ? (
+                          <div className="flex flex-col items-center py-2">
+                            <Loader2 className="w-6 h-6 text-purple-400 animate-spin mb-1" />
+                            <p className="text-xs text-purple-300 font-semibold">Processing Stamp...</p>
                           </div>
+                        ) : (
+                          <>
+                            <Upload className="w-6 h-6 text-purple-400/70 mb-1.5" />
+                            <p className="text-xs text-slate-300 font-semibold">Click to browse or drag stamp image</p>
+                            <p className="text-[10px] text-slate-500 mt-0.5 font-mono">PNG (transparent) or JPG up to 2MB</p>
+                          </>
                         )}
                       </div>
+                    </div>
 
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold text-white text-sm truncate">
-                          {customBankStamp ? 'Custom Uploaded Stamp' : 'No Stamp Uploaded'}
-                        </p>
-                        <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
-                          {customBankStamp 
-                            ? 'Actively stamped on CBE Web Receipts' 
-                            : 'Web receipt will render cleanly with NO stamp.'
-                          }
-                        </p>
+                    {/* Or Enter Stamp URL */}
+                    <form onSubmit={handleApplyStampUrl} className="space-y-1.5">
+                      <label className="block text-[11px] font-mono uppercase text-slate-400 font-bold">Or Enter Stamp Image URL</label>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <LinkIcon className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
+                          <input
+                            id="input-bank-stamp-url"
+                            type="url"
+                            placeholder="https://.../cbe-stamp.png"
+                            value={stampUrlInput}
+                            onChange={(e) => setStampUrlInput(e.target.value)}
+                            className="w-full bg-slate-950/40 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-purple-400"
+                          />
+                        </div>
+                        <button
+                          id="btn-apply-stamp-url"
+                          type="submit"
+                          disabled={!stampUrlInput.trim()}
+                          className="bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer"
+                        >
+                          Apply
+                        </button>
+                      </div>
+                    </form>
+
+                    {/* Stamp Preview */}
+                    <div className="pt-1">
+                      <p className="text-xs font-mono uppercase text-slate-400 font-bold mb-2">Web Receipt Stamp Preview</p>
+                      <div className="flex items-center gap-3.5 bg-slate-950/40 p-3 rounded-2xl border border-slate-800">
+                        <div className="w-18 h-18 rounded-2xl bg-white flex items-center justify-center shadow-inner border border-slate-200 flex-shrink-0 overflow-hidden relative">
+                          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:6px_6px]" />
+                          {customBankStamp ? (
+                            <img 
+                              src={customBankStamp} 
+                              alt="Custom CBE Stamp Preview" 
+                              className="w-full h-full object-contain pointer-events-none select-none relative z-10 p-1"
+                              style={{
+                                mixBlendMode: 'multiply',
+                                filter: 'contrast(1.15)',
+                                transform: 'rotate(-13deg)'
+                              }}
+                            />
+                          ) : (
+                            <div className="flex flex-col items-center justify-center text-slate-400 p-2 text-center">
+                              <Stamp className="w-5 h-5 stroke-1 text-slate-300 mb-0.5" />
+                              <span className="text-[9px] font-bold text-slate-400">No Stamp</span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-white text-xs truncate">
+                            {customBankStamp ? 'Custom Uploaded Stamp' : 'No Stamp Uploaded'}
+                          </p>
+                          <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
+                            {customBankStamp 
+                              ? 'Actively stamped on CBE Web Receipts.' 
+                              : 'Web receipt will render cleanly with NO stamp.'
+                            }
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  {/* Stamp Actions */}
-                  <div className="space-y-2">
-                    {customBankStamp ? (
-                      <button
-                        id="btn-reset-bank-stamp"
-                        type="button"
-                        onClick={handleResetBankStamp}
-                        className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl border border-rose-900/50 bg-rose-950/30 hover:bg-rose-900/40 text-xs font-bold text-rose-300 transition cursor-pointer"
-                      >
-                        <RefreshCw className="w-3.5 h-3.5 text-rose-400" />
-                        <span>Remove Uploaded Stamp (Clear Receipt Stamp)</span>
-                      </button>
-                    ) : (
-                      <button
-                        id="btn-apply-cbe-stamp-preset"
-                        type="button"
-                        onClick={handleApplyStampPreset}
-                        className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl border border-purple-800/60 bg-purple-950/40 hover:bg-purple-900/40 text-xs font-bold text-purple-300 transition cursor-pointer"
-                      >
-                        <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-                        <span>Apply Authentic CBE Purple Stamp Template</span>
-                      </button>
-                    )}
+                {/* Stamp Actions */}
+                <div className="pt-4 space-y-2">
+                  {customBankStamp ? (
+                    <button
+                      id="btn-reset-bank-stamp"
+                      type="button"
+                      onClick={handleResetBankStamp}
+                      className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl border border-rose-900/50 bg-rose-950/30 hover:bg-rose-900/40 text-xs font-bold text-rose-300 transition cursor-pointer"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5 text-rose-400" />
+                      <span>Remove Uploaded Stamp (Clear Receipt Stamp)</span>
+                    </button>
+                  ) : (
+                    <button
+                      id="btn-apply-cbe-stamp-preset"
+                      type="button"
+                      onClick={handleApplyStampPreset}
+                      className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl border border-purple-800/60 bg-purple-950/40 hover:bg-purple-900/40 text-xs font-bold text-purple-300 transition cursor-pointer"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                      <span>Apply Authentic CBE Purple Stamp Template</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* 3. Custom Sample QR Code Uploader (Beside stamps uploader) */}
+              <div className="bg-slate-800/30 border border-slate-800 p-6 rounded-3xl space-y-6 flex flex-col justify-between">
+                <div>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 bg-blue-500/10 text-blue-400 rounded-xl">
+                        <QrCode className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-white text-base">Sample QR Code</h4>
+                        <p className="text-slate-400 text-xs">Official transaction QR code template &amp; custom sample uploader</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${
+                        customQrCode 
+                          ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' 
+                          : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                      }`}>
+                        {customQrCode ? (
+                          <>
+                            <CheckCircle2 className="w-3.5 h-3.5 text-amber-400" />
+                            <span>Static Override Active</span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                            <span>Dynamic QR Active (Different per Tx)</span>
+                          </>
+                        )}
+                      </span>
+                    </div>
                   </div>
+
+                  {/* QR Policy Banner */}
+                  <div className="bg-blue-950/30 border border-blue-800/40 rounded-2xl p-3 flex items-start gap-2.5 text-xs text-blue-200 mb-5">
+                    <QrCode className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
+                    <p className="leading-relaxed">
+                      <strong className="text-blue-300">Authentic Dynamic Generation:</strong> According to the uploaded QR code standard (IMG_20260916_103244_278.png), every transaction generates its own unique 29x29 Version 3 QR code with rounded grey border (#737373) and official payload (<code className="text-blue-300 bg-blue-950/80 px-1 py-0.5 rounded">https://apps.cbe.com.et/v/&#123;txId&#125;</code>).
+                    </p>
+                  </div>
+
+                  <div className="space-y-4">
+                    {/* Live Tester for Different Transactions */}
+                    <div className="bg-slate-950/60 p-3.5 rounded-2xl border border-slate-800 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-[11px] font-mono uppercase text-blue-400 font-bold">
+                          Test QR Code For Different Transactions
+                        </label>
+                        <span className="text-[10px] text-slate-400 font-mono">Version 3 (29x29)</span>
+                      </div>
+
+                      {/* Quick Transaction Chips */}
+                      <div className="flex flex-wrap gap-1.5">
+                        {[
+                          { id: 'FT263211VK07', label: 'Sample Ref (FT263211VK07)' },
+                          { id: 'FT262451AA99', label: 'Tx 1 (FT262451AA99)' },
+                          { id: 'FT262438BB88', label: 'Tx 2 (FT262438BB88)' },
+                          { id: 'FT262331BC12', label: 'Tx 3 (FT262331BC12)' }
+                        ].map(tx => (
+                          <button
+                            key={tx.id}
+                            type="button"
+                            onClick={() => setTestTxId(tx.id)}
+                            className={`px-2.5 py-1 rounded-lg text-xs font-mono transition cursor-pointer ${
+                              testTxId === tx.id 
+                                ? 'bg-blue-600 text-white font-bold shadow-xs' 
+                                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                            }`}
+                          >
+                            {tx.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Custom Tx ID Input */}
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <input
+                            type="text"
+                            value={testTxId}
+                            onChange={(e) => setTestTxId(e.target.value.trim().toUpperCase())}
+                            placeholder="Enter Transaction ID (e.g. FT263211VK07)"
+                            className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white font-mono placeholder-slate-500 focus:outline-none focus:border-blue-400"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Live QR Display */}
+                      <div className="flex items-center gap-3.5 bg-slate-900/80 p-3 rounded-xl border border-slate-700/60">
+                        <div className="w-20 h-20 rounded-[18px] bg-white p-2 border-[2.5px] border-[#737373] flex items-center justify-center shadow-xs flex-shrink-0 overflow-hidden">
+                          <img 
+                            src={customQrCode || testTxQr} 
+                            alt={`Preview QR for ${testTxId}`} 
+                            className="w-full h-full object-contain pointer-events-none select-none block"
+                          />
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-white text-xs font-mono truncate">
+                              {testTxId}
+                            </span>
+                            <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-1.5 py-0.5 rounded font-bold">
+                              {customQrCode ? 'Static Custom' : 'Unique QR'}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-slate-400 mt-1 font-mono break-all leading-tight">
+                            https://apps.cbe.com.et/v/{formatTo12CharTxId(testTxId)}
+                          </p>
+                          <p className="text-[10px] text-slate-500 mt-1">
+                            {customQrCode 
+                              ? '⚠️ Overridden by static custom upload.' 
+                              : 'Each transaction automatically generates its own distinct QR pattern.'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Upload QR Image */}
+                    <div className="space-y-1.5 pt-2">
+                      <label className="block text-xs font-mono uppercase text-slate-400 font-bold">Upload Custom QR Code (Optional Override)</label>
+                      <div className="relative border-2 border-dashed border-slate-700 hover:border-blue-400/50 rounded-2xl p-3.5 transition flex flex-col items-center justify-center text-center cursor-pointer bg-slate-950/40">
+                        <input 
+                          id="input-qr-code-upload"
+                          type="file" 
+                          accept="image/*" 
+                          onChange={handleQrUpload}
+                          disabled={qrProcessing}
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                        />
+                        {qrProcessing ? (
+                          <div className="flex flex-col items-center py-2">
+                            <Loader2 className="w-6 h-6 text-blue-400 animate-spin mb-1" />
+                            <p className="text-xs text-blue-300 font-semibold">Processing QR Code...</p>
+                          </div>
+                        ) : (
+                          <>
+                            <Upload className="w-6 h-6 text-blue-400/70 mb-1.5" />
+                            <p className="text-xs text-slate-300 font-semibold">Click to browse or drag QR code here</p>
+                            <p className="text-[10px] text-slate-500 mt-0.5 font-mono">PNG, JPG, SVG, WebP up to 5MB</p>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Or Enter QR Image URL */}
+                    <form onSubmit={handleApplyQrUrl} className="space-y-1.5">
+                      <label className="block text-[11px] font-mono uppercase text-slate-400 font-bold">Or Enter QR Image URL</label>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <LinkIcon className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
+                          <input
+                            id="input-qr-code-url"
+                            type="url"
+                            placeholder="https://.../sample-qr.png"
+                            value={qrUrlInput}
+                            onChange={(e) => setQrUrlInput(e.target.value)}
+                            className="w-full bg-slate-950/40 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-blue-400"
+                          />
+                        </div>
+                        <button
+                          id="btn-apply-qr-url"
+                          type="submit"
+                          disabled={!qrUrlInput.trim()}
+                          className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer"
+                        >
+                          Apply
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+
+                {/* QR Actions */}
+                <div className="pt-4 space-y-2">
+                  <button
+                    id="btn-apply-cbe-qr-preset"
+                    type="button"
+                    onClick={handleApplyQrPreset}
+                    className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-blue-800/60 bg-blue-950/40 hover:bg-blue-900/40 text-xs font-bold text-blue-300 transition cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+                    <span>Apply Dynamic QR Generation For All Transactions</span>
+                  </button>
+
+                  {customQrCode && (
+                    <button
+                      id="btn-reset-qr-code"
+                      type="button"
+                      onClick={handleResetQrCode}
+                      className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-rose-900/50 bg-rose-950/30 hover:bg-rose-900/40 text-xs font-bold text-rose-300 transition cursor-pointer"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5 text-rose-400" />
+                      <span>Reset to Dynamic Unique CBE QR Code (Remove Static Override)</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

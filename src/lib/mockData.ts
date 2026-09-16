@@ -11,6 +11,7 @@ import {
   BankAccountType,
   RegisteredAccountInfo
 } from '../types';
+import QRCode from 'qrcode';
 import { calculateCbeFee } from './cbeTariff';
 import { firebaseService } from '../services/firebaseService';
 import { SmsService } from '../services/smsService';
@@ -991,6 +992,96 @@ export function getOfficialCbeStampSvg(weight: StampWeight = 'normal'): string {
 }
 
 export const OFFICIAL_CBE_STAMP_LOGO = getOfficialCbeStampSvg('normal');
+
+// Authentic CBE Receipt QR Code Template (matching reference IMG_20260916_103244_278.png)
+export const OFFICIAL_CBE_QR_PRESET = `data:image/svg+xml;utf8,${encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 31 31" shape-rendering="crispEdges">
+  <path fill="#ffffff" d="M0 0h31v31H0z"/>
+  <path stroke="#000000" d="M1 1.5h7m4 0h1m1 0h2m1 0h1m2 0h1m2 0h7M1 2.5h1m5 0h1m1 0h1m1 0h2m2 0h2m1 0h4m1 0h1m5 0h1M1 3.5h1m1 0h3m1 0h1m6 0h2m1 0h1m1 0h1m3 0h1m1 0h3m1 0h1M1 4.5h1m1 0h3m1 0h1m3 0h1m2 0h2m1 0h1m2 0h1m2 0h1m1 0h3m1 0h1M1 5.5h1m1 0h3m1 0h1m1 0h3m1 0h1m1 0h6m2 0h1m1 0h3m1 0h1M1 6.5h1m5 0h1m5 0h2m1 0h1m2 0h2m2 0h1m5 0h1M1 7.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M10 8.5h2m1 0h4m1 0h2m1 0h1M1 9.5h1m1 0h1m1 0h1m1 0h1m2 0h1m4 0h4m1 0h2m3 0h1m2 0h1M6 10.5h1m2 0h4m2 0h2m1 0h2m2 0h3m1 0h1m2 0h1M1 11.5h5m1 0h2m2 0h1m2 0h1m3 0h1m3 0h1m1 0h1m2 0h3M5 12.5h1m4 0h2m1 0h1m3 0h2m1 0h5m3 0h1M1 13.5h2m2 0h1m1 0h2m2 0h3m3 0h8m1 0h1m1 0h2M1 14.5h1m1 0h4m2 0h2m1 0h3m1 0h3m2 0h3m2 0h1m2 0h1M4 15.5h5m2 0h1m3 0h3m1 0h1m3 0h1m1 0h2m1 0h2M3 16.5h1m4 0h1m4 0h6m2 0h1m1 0h2m1 0h1m1 0h1M3 17.5h2m2 0h3m1 0h2m2 0h1m1 0h2m1 0h5m1 0h1m1 0h2M2 18.5h1m3 0h1m2 0h3m1 0h1m1 0h2m4 0h3m2 0h2m1 0h1M1 19.5h1m1 0h2m1 0h3m1 0h5m1 0h1m1 0h1m4 0h1m1 0h1m2 0h2M2 20.5h2m1 0h2m2 0h1m1 0h2m3 0h2m1 0h1m2 0h3m1 0h1m1 0h1M1 21.5h1m1 0h5m2 0h1m2 0h1m2 0h2m1 0h1m1 0h5M9 22.5h6m4 0h3m3 0h1m1 0h3M1 23.5h7m3 0h1m1 0h1m1 0h1m1 0h2m1 0h2m1 0h1m1 0h2m1 0h2M1 24.5h1m5 0h1m2 0h1m2 0h5m3 0h1m3 0h2M1 25.5h1m1 0h3m1 0h1m1 0h1m2 0h1m2 0h1m1 0h3m1 0h5M1 26.5h1m1 0h3m1 0h1m3 0h1m3 0h4m1 0h2m3 0h1m1 0h1M1 27.5h1m1 0h3m1 0h1m1 0h2m2 0h1m3 0h4m3 0h3m2 0h1M1 28.5h1m5 0h1m3 0h1m2 0h1m1 0h6m6 0h1M1 29.5h7m1 0h2m1 0h2m3 0h2m2 0h3m1 0h1m2 0h2"/>
+</svg>
+`)}`;
+
+/**
+ * Authentic CBE Transaction QR Code Generator
+ * Generates distinct, scannable, Version 3 (29x29 matrix) QR codes for different transactions
+ * matching the authentic CBE Mobile Banking receipt reference (IMG_20260916_103244_278.png).
+ */
+export function getAuthenticCbeQrSvg(txId: string): string {
+  const normalizedId = formatTo12CharTxId(txId);
+  const payload = `https://apps.cbe.com.et/v/${normalizedId}`;
+  let qr;
+  try {
+    qr = QRCode.create(payload, { version: 3, errorCorrectionLevel: 'M' });
+  } catch {
+    qr = QRCode.create(payload, { errorCorrectionLevel: 'M' });
+  }
+  const size = qr.modules.size;
+  const margin = 1;
+  const totalSize = size + margin * 2;
+  
+  let pathD = '';
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      if (qr.modules.get(r, c)) {
+        let width = 1;
+        while (c + 1 < size && qr.modules.get(r, c + 1)) {
+          width++;
+          c++;
+        }
+        pathD += `M${(c - width + 1) + margin} ${r + margin + 0.5}h${width}`;
+      }
+    }
+  }
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${totalSize} ${totalSize}" shape-rendering="crispEdges"><path fill="#ffffff" d="M0 0h${totalSize}v${totalSize}H0z"/><path stroke="#000000" stroke-width="1" d="${pathD}"/></svg>`;
+}
+
+export function getAuthenticCbeQrSvgDataUri(txId: string): string {
+  const svg = getAuthenticCbeQrSvg(txId);
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+
+export function getAuthenticCbeQrMatrix(txId: string): boolean[][] {
+  const normalizedId = formatTo12CharTxId(txId);
+  const payload = `https://apps.cbe.com.et/v/${normalizedId}`;
+  let qr;
+  try {
+    qr = QRCode.create(payload, { version: 3, errorCorrectionLevel: 'M' });
+  } catch {
+    qr = QRCode.create(payload, { errorCorrectionLevel: 'M' });
+  }
+  const size = qr.modules.size;
+  const matrix: boolean[][] = [];
+  for (let r = 0; r < size; r++) {
+    const row: boolean[] = [];
+    for (let c = 0; c < size; c++) {
+      row.push(Boolean(qr.modules.get(r, c)));
+    }
+    matrix.push(row);
+  }
+  return matrix;
+}
+
+export async function getAuthenticCbeQrPngDataUrl(txId: string, width: number = 450): Promise<string> {
+  const normalizedId = formatTo12CharTxId(txId);
+  const payload = `https://apps.cbe.com.et/v/${normalizedId}`;
+  try {
+    return await QRCode.toDataURL(payload, {
+      width,
+      margin: 1,
+      version: 3,
+      errorCorrectionLevel: 'M',
+      color: { dark: '#000000', light: '#ffffff' }
+    });
+  } catch {
+    return await QRCode.toDataURL(payload, {
+      width,
+      margin: 1,
+      errorCorrectionLevel: 'M',
+      color: { dark: '#000000', light: '#ffffff' }
+    });
+  }
+}
 
 // Official CBE Purple Brand Logo with crisp white CBE Symbol
 export const OFFICIAL_CBE_PURPLE_LOGO = `data:image/svg+xml;utf8,${encodeURIComponent(`
@@ -2150,6 +2241,38 @@ export class LocalDb {
 
   static setBankStampWidth(width: number): void {
     this.setBankStampSize(width);
+  }
+
+  static getCustomQrCode(): string | null {
+    try {
+      const val = localStorage.getItem('tana_custom_qr_code');
+      // The preset template represents the dynamic CBE reference; ignore static preset so every transaction gets unique QR code
+      if (!val || val === OFFICIAL_CBE_QR_PRESET || val.trim().length === 0) {
+        return null;
+      }
+      return val;
+    } catch {
+      return null;
+    }
+  }
+
+  static isDynamicQrMode(): boolean {
+    return this.getCustomQrCode() === null;
+  }
+
+  static setCustomQrCode(qr: string | null): void {
+    try {
+      if (!qr || qr.trim().length === 0) {
+        localStorage.removeItem('tana_custom_qr_code');
+      } else {
+        localStorage.setItem('tana_custom_qr_code', qr);
+      }
+    } catch (err) {
+      console.warn('[LocalDb] Failed writing custom qr code to localStorage:', err);
+    }
+    
+    // Broadcast across windows and local components
+    window.dispatchEvent(new CustomEvent('cbe_qr_updated', { detail: { qr } }));
   }
 
   static getBankStampWeight(): StampWeight {

@@ -305,14 +305,14 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
           </div>
         </div>
 
-        {/* Right: QR Code */}
-        <div style={{ width: '80px', height: '80px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {/* Right: QR Code without frame */}
+        <div style={{ width: '84px', height: '84px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {qrCodeDataUrl ? (
             <img 
               src={qrCodeDataUrl} 
               alt="Receipt Verification QR" 
               crossOrigin="anonymous"
-              style={{ width: '80px', height: '80px', objectFit: 'contain' }} 
+              style={{ width: '80px', height: '80px', objectFit: 'contain', display: 'block' }} 
             />
           ) : (
             <div style={{ width: '80px', height: '80px', backgroundColor: '#e5e7eb' }} />
