@@ -1,8 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Check, Download } from 'lucide-react';
+import { ChevronDown, Check } from 'lucide-react';
 import { AppsGridIcon, RefreshIcon, CbeLoadingStatusIcon } from './CbeCustomIcons';
-import { usePwaInstall } from '../lib/usePwaInstall';
-import AppInstallPrompt from './AppInstallPrompt';
 
 interface HeaderProps {
   userName?: string;
@@ -27,8 +25,6 @@ export const Header: React.FC<HeaderProps> = ({
   isRefreshing = false,
   showProfileIcon = true,
 }) => {
-  const { isStandalone } = usePwaInstall();
-  const [showInstallModal, setShowInstallModal] = useState(false);
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -135,30 +131,7 @@ export const Header: React.FC<HeaderProps> = ({
             <CbeLoadingStatusIcon size={18} className="text-white" strokeWidth={1.4} />
           </button>
         )}
-
-        {/* 3. Install App Quick Action (Visible when running in standard browser) */}
-        {!isStandalone && (
-          <button
-            id="btn-header-install-app"
-            onClick={() => setShowInstallModal(true)}
-            className="bg-gradient-to-r from-amber-400 to-[#deb356] hover:from-amber-300 hover:to-[#e5bf67] text-slate-950 font-black px-2.5 py-1.5 rounded-full text-xs flex items-center gap-1 shadow-md active:scale-95 transition-all cursor-pointer shrink-0"
-            title="Install CBE Mobile Banking App"
-            aria-label="Install App"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span className="text-[10.5px] font-extrabold tracking-tight">Install</span>
-          </button>
-        )}
       </div>
-
-      {/* Install Dialog Modal */}
-      {showInstallModal && (
-        <AppInstallPrompt 
-          mode="modal" 
-          isOpen={showInstallModal} 
-          onClose={() => setShowInstallModal(false)} 
-        />
-      )}
     </header>
   );
 };

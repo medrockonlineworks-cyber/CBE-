@@ -25,9 +25,9 @@ export default defineConfig(() => {
         ],
         manifest: {
           id: '/',
-          name: 'Tana Digital Bank',
-          short_name: 'Tana Bank',
-          description: 'Commercial Bank of Ethiopia & Tana Digital Mobile Banking application with instant transfers, bill payments, and secure account management.',
+          name: 'CBE Mobile Banking',
+          short_name: 'CBE Mobile Banking',
+          description: 'Official Commercial Bank of Ethiopia (CBE) Mobile Banking application with instant transfers, bill payments, and secure account management.',
           start_url: '/',
           scope: '/',
           display: 'standalone',
@@ -82,14 +82,14 @@ export default defineConfig(() => {
               sizes: '540x1170',
               type: 'image/png',
               form_factor: 'narrow',
-              label: 'Tana Digital Bank Mobile',
+              label: 'CBE Mobile Banking',
             },
             {
               src: '/pwa-screenshot-wide.png',
               sizes: '1280x800',
               type: 'image/png',
               form_factor: 'wide',
-              label: 'Tana Digital Bank Desktop',
+              label: 'CBE Mobile Banking Desktop',
             },
           ],
         },
@@ -120,6 +120,20 @@ export default defineConfig(() => {
                 cacheName: 'gstatic-fonts-cache',
                 expiration: {
                   maxEntries: 10,
+                  maxAgeSeconds: 60 * 60 * 24 * 365,
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+              },
+            },
+            {
+              urlPattern: /\/(manifest\.(webmanifest|json)|icons\/.*|pwa-.*|apple-touch-icon.*)/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'cbe-custom-branding-cache',
+                expiration: {
+                  maxEntries: 30,
                   maxAgeSeconds: 60 * 60 * 24 * 365,
                 },
                 cacheableResponse: {

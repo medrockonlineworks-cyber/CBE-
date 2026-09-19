@@ -468,7 +468,7 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
         )}
 
         {/* Android PWA Installation & App Details */}
-        <AppInstallPrompt mode="card" />
+        <AppInstallPrompt mode="settings" />
 
         {/* Security & Access Section */}
         <div className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 space-y-4">

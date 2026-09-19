@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { usePwaInstall } from '../lib/usePwaInstall';
 import { CbeLogo } from './CbeLogo';
+import { LocalDb } from '../lib/mockData';
 import { 
   Download, 
   Smartphone, 
@@ -9,13 +10,15 @@ import {
   HelpCircle, 
   ExternalLink,
   ShieldCheck, 
-  Maximize2,
+  Maximize2, 
   ChevronRight,
-  Info
+  Info,
+  Sparkles,
+  Layers
 } from 'lucide-react';
 
-interface AppInstallPromptProps {
-  mode?: 'modal' | 'card' | 'button' | 'banner';
+export interface AppInstallPromptProps {
+  mode?: 'modal' | 'card' | 'button' | 'banner' | 'settings';
   isOpen?: boolean;
   onClose?: () => void;
   className?: string;
@@ -25,7 +28,7 @@ const SNOOZE_STORAGE_KEY = 'tana_pwa_banner_snooze_until';
 const FIVE_MINUTES_MS = 5 * 60 * 1000;
 
 export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
-  mode = 'card',
+  mode = 'settings',
   isOpen = true,
   onClose,
   className = ''
@@ -44,14 +47,15 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
   const [showManualGuide, setShowManualGuide] = useState(false);
   const [showNativeInfo, setShowNativeInfo] = useState(false);
 
-  // Initialize dismissed state based on 5-minute snooze cooldown
+  // Initialize dismissed state based on 5-minute snooze cooldown (only for banner mode)
   const [dismissed, setDismissed] = useState<boolean>(() => {
+    if (mode === 'settings') return false; // Never dismiss inside Settings
     try {
       const snoozeUntil = localStorage.getItem(SNOOZE_STORAGE_KEY);
       if (snoozeUntil) {
         const remaining = Number(snoozeUntil) - Date.now();
         if (remaining > 0) {
-          return true; // Still waiting / snoozed for 5 minutes
+          return true;
         }
       }
     } catch {}
@@ -60,7 +64,7 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
 
   // Check and automatically restore banner once the 5-minute snooze expires
   useEffect(() => {
-    if (!dismissed) return;
+    if (mode === 'settings' || !dismissed) return;
     try {
       const snoozeUntil = localStorage.getItem(SNOOZE_STORAGE_KEY);
       if (snoozeUntil) {
@@ -75,7 +79,7 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
         }
       }
     } catch {}
-  }, [dismissed]);
+  }, [dismissed, mode]);
 
   // Auto-dismiss banner after 5 minutes of continuous display if user neither installs nor cancels
   useEffect(() => {
@@ -86,7 +90,215 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
     return () => clearTimeout(autoDismissTimer);
   }, [mode, dismissed]);
 
-  // If already running inside installed standalone window, hide prompt unless in card mode in Profile
+  // Dismiss / Cancel handler for banner or card
+  const handleDismiss = () => {
+    try {
+      localStorage.setItem(SNOOZE_STORAGE_KEY, (Date.now() + FIVE_MINUTES_MS).toString());
+    } catch {}
+    setDismissed(true);
+    if (onClose) onClose();
+  };
+
+  const handleInstallClick = async () => {
+    setInstalling(true);
+    try {
+      const result = await promptInstall();
+      if (result.outcome === 'manual_required') {
+        setShowManualGuide(true);
+      }
+    } catch (err) {
+      console.error('Install prompt error:', err);
+      setShowManualGuide(true);
+    } finally {
+      setInstalling(false);
+    }
+  };
+
+  // 1. Settings Page Dedicated Install Section
+  if (mode === 'settings') {
+    return (
+      <div 
+        id="settings-install-section"
+        className={`bg-white rounded-3xl p-5 shadow-sm border border-gray-100 space-y-4 ${className}`}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-purple-50 text-purple-900 rounded-xl">
+              <Download className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-extrabold text-gray-900 tracking-tight">Application &amp; Device Installation</h3>
+              <p className="text-[11px] text-gray-500">Install CBE Mobile Banking to your home screen</p>
+            </div>
+          </div>
+
+          <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+            isStandalone 
+              ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
+              : 'bg-amber-50 text-amber-900 border border-amber-200/80'
+          }`}>
+            {isStandalone ? 'Installed' : 'PWA Ready'}
+          </span>
+        </div>
+
+        {/* Preview Card with Admin-Uploaded CBE Logo Icon */}
+        <div className="bg-gradient-to-br from-slate-900 via-purple-950 to-slate-900 rounded-2xl p-4 text-white border border-purple-900/40 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
+
+          <div className="flex items-start gap-3.5 relative z-10">
+            {/* App Icon preview using Admin-Uploaded Logo */}
+            <div className="w-14 h-14 rounded-2xl bg-black/60 border border-amber-400/40 p-2 flex items-center justify-center flex-shrink-0 shadow-lg group relative">
+              <CbeLogo className="w-full h-full object-contain" />
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-slate-900 flex items-center justify-center" title="Admin Logo Verified">
+                <CheckCircle2 className="w-2.5 h-2.5 text-white stroke-[3]" />
+              </div>
+            </div>
+
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <h4 className="text-base font-black text-white tracking-tight">CBE Mobile Banking</h4>
+                <span className="px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-300 border border-amber-400/30 text-[9.5px] font-bold">
+                  Official
+                </span>
+              </div>
+              <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                Commercial Bank of Ethiopia Mobile Banking application. Installed app will use this verified CBE emblem on your device's home screen.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-300">
+            <div className="flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <span>CBE Secure Encrypted</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Maximize2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <span>Fullscreen App Experience</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Action button: Install or Active status */}
+        {isStandalone ? (
+          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3.5 flex items-center justify-between gap-3 text-emerald-900">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-700 shrink-0">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-emerald-950">App Installed &amp; Active</p>
+                <p className="text-[11px] text-emerald-700">Running as CBE Mobile Banking in standalone mode.</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowManualGuide(true)}
+              className="text-xs font-bold text-emerald-800 hover:underline shrink-0 cursor-pointer"
+            >
+              Details
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-2.5">
+            <button
+              id="btn-settings-install-app"
+              onClick={handleInstallClick}
+              disabled={installing}
+              className="w-full py-3.5 px-5 bg-gradient-to-r from-amber-400 via-[#deb356] to-amber-500 hover:from-amber-300 hover:to-[#e5bf67] active:scale-[0.99] text-slate-950 font-black rounded-2xl text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+            >
+              <Download className="w-4 h-4" />
+              <span>{installing ? 'Opening Install Prompt...' : 'Install CBE Mobile Banking'}</span>
+            </button>
+
+            <div className="flex items-center justify-between px-1">
+              <button
+                type="button"
+                onClick={() => setShowManualGuide(true)}
+                className="text-[11px] font-semibold text-purple-900 hover:text-purple-700 flex items-center gap-1 cursor-pointer transition-colors"
+              >
+                <HelpCircle className="w-3.5 h-3.5" />
+                <span>Manual install instructions (Android &amp; iOS)</span>
+              </button>
+              <span className="text-[10px] text-gray-400 font-mono">v2.6.4 CBE PWA</span>
+            </div>
+          </div>
+        )}
+
+        {/* Guided Step-by-Step Modal */}
+        {showManualGuide && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in">
+            <div className="bg-slate-900 border border-amber-400/40 rounded-3xl max-w-sm w-full p-5 text-white space-y-4 shadow-2xl">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <Smartphone className="w-5 h-5 text-amber-400" />
+                  <h4 className="font-bold text-sm text-white">
+                    {isIos ? 'Install on iPhone / iPad' : 'Install on Your Device'}
+                  </h4>
+                </div>
+                <button 
+                  onClick={() => setShowManualGuide(false)}
+                  className="p-1 rounded-full text-slate-400 hover:text-white"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="flex items-center gap-3 p-3 bg-black/40 rounded-xl border border-white/10">
+                <div className="w-10 h-10 rounded-xl bg-purple-950/80 p-1.5 flex items-center justify-center flex-shrink-0">
+                  <CbeLogo className="w-full h-full object-contain" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-white">CBE Mobile Banking</p>
+                  <p className="text-[10.5px] text-amber-300/90">Installs with this custom CBE logo</p>
+                </div>
+              </div>
+
+              {isIos ? (
+                <ol className="space-y-3 text-xs text-slate-200">
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-5 h-5 rounded-full bg-amber-400 text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">1</span>
+                    <span>Tap the <strong>Share</strong> button at the bottom of Safari.</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-5 h-5 rounded-full bg-amber-400 text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">2</span>
+                    <span>Scroll down and select <strong>"Add to Home Screen"</strong>.</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-5 h-5 rounded-full bg-amber-400 text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">3</span>
+                    <span>Tap <strong>"Add"</strong>. The app will launch with the CBE emblem in fullscreen mode.</span>
+                  </li>
+                </ol>
+              ) : (
+                <ol className="space-y-3 text-xs text-slate-200">
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-5 h-5 rounded-full bg-amber-400 text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">1</span>
+                    <span>Tap the <strong>three dots (⋮)</strong> menu in the top right of Chrome or your browser.</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-5 h-5 rounded-full bg-amber-400 text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">2</span>
+                    <span>Select <strong>"Install app"</strong> or <strong>"Install CBE Mobile Banking"</strong>.</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-5 h-5 rounded-full bg-amber-400 text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">3</span>
+                    <span>Tap <strong>"Install"</strong> to confirm.</span>
+                  </li>
+                </ol>
+              )}
+
+              <button
+                onClick={() => setShowManualGuide(false)}
+                className="w-full py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+              >
+                Got It
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // If already running inside installed standalone window, hide prompt for banner or card
   if (isStandalone) {
     if (mode === 'card') {
       return (
@@ -114,69 +326,25 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
     return null;
   }
 
-  // Dismiss / Cancel handler: saves 5-minute cooldown and immediately removes from UI
-  const handleDismiss = () => {
-    try {
-      localStorage.setItem(SNOOZE_STORAGE_KEY, (Date.now() + FIVE_MINUTES_MS).toString());
-    } catch {}
-    setDismissed(true);
-    if (onClose) onClose();
-  };
-
-  const handleInstallClick = async () => {
-    setInstalling(true);
-    // User requested: "And after clicking install button the the bottom must disappear and have clean CBE UI"
-    // Set dismissed to true immediately so the bottom card/banner vanishes instantly
-    setDismissed(true);
-    try {
-      localStorage.setItem(SNOOZE_STORAGE_KEY, (Date.now() + FIVE_MINUTES_MS).toString());
-    } catch {}
-    if (onClose) onClose();
-
-    try {
-      const result = await promptInstall();
-      if (result.outcome === 'manual_required') {
-        setShowManualGuide(true);
-      }
-    } catch (err) {
-      console.error('Install prompt error:', err);
-      setShowManualGuide(true);
-    } finally {
-      setInstalling(false);
-    }
-  };
-
-  // 1. Compact Header/Button Mode
-  if (mode === 'button') {
-    return (
-      <button
-        id="btn-install-app-compact"
-        onClick={handleInstallClick}
-        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#deb356] hover:bg-[#dfa04c] text-slate-950 text-xs font-bold shadow-md transition-all active:scale-95 touch-manipulation ${className}`}
-      >
-        <Smartphone className="w-3.5 h-3.5" />
-        <span>Install App</span>
-      </button>
-    );
-  }
-
-  // 2. Banner Mode (Top popdown alert when open in browser)
+  // 2. Banner Mode
   if (mode === 'banner') {
     return (
       <>
         {!dismissed && (
           <div 
             id="pwa-install-banner"
-            className={`bg-gradient-to-r from-[#2a053b] via-[#3d0856] to-[#1a0126] border-b border-[#deb356]/40 text-white px-3 py-2 shadow-xl flex items-center justify-between gap-2.5 text-xs z-50 transition-all duration-300 transform translate-y-0 ${className}`}
+            className={`w-full bg-gradient-to-r from-slate-900 via-[#260534] to-slate-900 border-b border-[#deb356]/40 px-3.5 py-2.5 flex items-center justify-between gap-2 shadow-lg z-40 transition-all ${className}`}
           >
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-xl bg-black/40 border border-[#deb356]/40 p-1 flex items-center justify-center shrink-0 shadow-sm">
-                <CbeLogo className="w-6 h-6 object-contain" />
+            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+              <div className="w-9 h-9 rounded-xl bg-black/50 border border-[#deb356]/40 p-1 flex items-center justify-center shrink-0">
+                <CbeLogo className="w-full h-full object-contain" />
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-1.5">
-                  <p className="font-extrabold text-[#deb356] text-xs truncate">Install CBE Mobile Banking</p>
-                  <span className="text-[9px] font-bold px-1.5 py-0.2 bg-[#deb356]/20 text-[#deb356] rounded-sm border border-[#deb356]/30">Official</span>
+                  <span className="text-xs font-bold text-white truncate">CBE Mobile Banking</span>
+                  <span className="px-1.5 py-0.2 bg-[#deb356]/20 text-[#deb356] border border-[#deb356]/30 text-[9px] font-bold rounded">
+                    Official
+                  </span>
                 </div>
                 <p className="text-[10.5px] text-slate-300 truncate">Commercial Bank of Ethiopia</p>
               </div>
@@ -190,83 +358,16 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
                 className="px-3 py-1.5 bg-gradient-to-r from-[#dfa04c] to-[#deb356] hover:from-[#c9903f] hover:to-[#c99f47] active:scale-95 text-slate-950 font-black rounded-lg text-xs shadow-md flex items-center gap-1.5 transition-all touch-manipulation cursor-pointer"
               >
                 <Download className="w-3.5 h-3.5" />
-                <span>{installing ? 'Installing...' : 'Install Now'}</span>
+                <span>{installing ? 'Installing...' : 'Install'}</span>
               </button>
 
-              {/* High-visibility X Cancel Button to immediately remove from UI & wait 5 minutes */}
               <button 
                 id="btn-pwa-banner-dismiss"
                 onClick={handleDismiss} 
                 className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/10 hover:bg-red-500/25 active:bg-red-500/40 text-slate-300 hover:text-white border border-white/15 transition-all cursor-pointer active:scale-95 shrink-0"
-                aria-label="Cancel and remove install banner (hide for 5 minutes)"
-                title="Cancel / Hide for 5 minutes"
+                aria-label="Cancel and remove install banner"
               >
                 <X className="w-4 h-4 stroke-[2.5]" />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Guided Modal for Safari / Browsers requiring manual action */}
-        {showManualGuide && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in">
-            <div className="bg-slate-900 border border-[#deb356]/40 rounded-3xl max-w-sm w-full p-5 text-white space-y-4 shadow-2xl">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <div className="flex items-center gap-2">
-                  <Smartphone className="w-5 h-5 text-[#deb356]" />
-                  <h4 className="font-bold text-sm text-white">
-                    {isIos ? 'Install on iPhone / iPad' : 'Install on Your Device'}
-                  </h4>
-                </div>
-                <button 
-                  onClick={() => setShowManualGuide(false)}
-                  className="p-1 rounded-full text-slate-400 hover:text-white"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Follow these simple steps to install the app on your home screen for full-screen offline access:
-              </p>
-
-              {isIos ? (
-                <ol className="space-y-3 text-xs text-slate-200">
-                  <li className="flex items-start gap-2.5">
-                    <span className="w-5 h-5 rounded-full bg-[#deb356] text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">1</span>
-                    <span>Tap the <strong>Share</strong> button in the Safari navigation bar at the bottom.</span>
-                  </li>
-                  <li className="flex items-start gap-2.5">
-                    <span className="w-5 h-5 rounded-full bg-[#deb356] text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">2</span>
-                    <span>Scroll down and select <strong>"Add to Home Screen"</strong>.</span>
-                  </li>
-                  <li className="flex items-start gap-2.5">
-                    <span className="w-5 h-5 rounded-full bg-[#deb356] text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">3</span>
-                    <span>Tap <strong>"Add"</strong> in the top right. <strong>CBE Mobile Banking</strong> will appear on your home screen as a standalone app with the CBE logo.</span>
-                  </li>
-                </ol>
-              ) : (
-                <ol className="space-y-3 text-xs text-slate-200">
-                  <li className="flex items-start gap-2.5">
-                    <span className="w-5 h-5 rounded-full bg-[#deb356] text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">1</span>
-                    <span>Tap the <strong>three dots (⋮)</strong> menu in the top right corner of Chrome.</span>
-                  </li>
-                  <li className="flex items-start gap-2.5">
-                    <span className="w-5 h-5 rounded-full bg-[#deb356] text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">2</span>
-                    <span>Select <strong>"Install app"</strong> (or <strong>"Install CBE Mobile Banking"</strong>).</span>
-                  </li>
-                  <li className="flex items-start gap-2.5">
-                    <span className="w-5 h-5 rounded-full bg-[#deb356] text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">3</span>
-                    <span>Tap <strong>"Install"</strong> in the confirmation dialog to install the real application.</span>
-                  </li>
-                </ol>
-              )}
-
-              <button
-                onClick={() => setShowManualGuide(false)}
-                className="w-full py-2.5 bg-[#deb356] hover:bg-[#c99f47] text-slate-950 font-bold rounded-xl text-xs transition-colors"
-              >
-                Done
               </button>
             </div>
           </div>
@@ -275,30 +376,25 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
     );
   }
 
-  // 3. Card Mode (Embedded in Login, Dashboard, or Profile)
+  // 3. Card Mode
   if (mode === 'card') {
     return (
       <div 
         id="pwa-install-card"
         className={`bg-gradient-to-b from-slate-900 to-[#1e042b] border border-[#deb356]/30 rounded-3xl p-5 text-white shadow-xl relative overflow-hidden ${className}`}
       >
-        {/* Ambient glow */}
-        <div className="absolute top-0 right-0 w-32 h-32 bg-[#deb356]/10 rounded-full blur-2xl pointer-events-none" />
-
-        {/* Dismiss Button on Card */}
         <button
           id="btn-pwa-card-dismiss"
           onClick={handleDismiss}
           className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors z-10"
           aria-label="Dismiss install card"
-          title="Dismiss"
         >
           <X className="w-4 h-4" />
         </button>
 
         <div className="flex items-start gap-3.5 mb-4 pr-6">
           <div className="w-12 h-12 rounded-2xl bg-black/40 border border-[#deb356]/40 p-1 flex items-center justify-center flex-shrink-0 shadow-inner">
-            <CbeLogo className="w-9 h-9" />
+            <CbeLogo className="w-9 h-9 object-contain" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
@@ -316,133 +412,17 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
           </div>
         </div>
 
-        {/* Features badges */}
-        <div className="grid grid-cols-2 gap-2 my-3 text-[11px] text-slate-300">
-          <div className="flex items-center gap-1.5 bg-black/30 px-2.5 py-1.5 rounded-xl border border-white/5">
-            <ShieldCheck className="w-3.5 h-3.5 text-[#deb356] shrink-0" />
-            <span className="truncate">CBE Encrypted</span>
-          </div>
-          <div className="flex items-center gap-1.5 bg-black/30 px-2.5 py-1.5 rounded-xl border border-white/5">
-            <Smartphone className="w-3.5 h-3.5 text-[#deb356] shrink-0" />
-            <span className="truncate">Clean App UI</span>
-          </div>
-        </div>
-
-        {/* Buttons */}
         <div className="space-y-2 mt-4">
           <button
             id="btn-pwa-install-action"
             onClick={handleInstallClick}
             disabled={installing}
-            className="w-full py-3.5 px-4 bg-gradient-to-r from-[#dfa04c] to-[#deb356] hover:from-[#c9903f] hover:to-[#c99f47] active:scale-[0.99] text-slate-950 font-black rounded-2xl text-xs uppercase tracking-wider shadow-lg shadow-[#deb356]/20 flex items-center justify-center gap-2 transition-all touch-manipulation disabled:opacity-50"
+            className="w-full py-3.5 px-4 bg-gradient-to-r from-[#dfa04c] to-[#deb356] hover:from-[#c9903f] hover:to-[#c99f47] active:scale-[0.99] text-slate-950 font-black rounded-2xl text-xs uppercase tracking-wider shadow-lg shadow-[#deb356]/20 flex items-center justify-center gap-2 transition-all touch-manipulation disabled:opacity-50 cursor-pointer"
           >
             <Download className="w-4 h-4" />
             <span>{installing ? 'Preparing Install...' : 'INSTALL CBE MOBILE BANKING'}</span>
           </button>
-
-          <div className="flex items-center justify-between pt-1">
-            <button
-              onClick={() => setShowManualGuide(true)}
-              className="text-[11px] text-slate-400 hover:text-[#deb356] flex items-center gap-1 transition-colors"
-            >
-              <HelpCircle className="w-3.5 h-3.5" />
-              <span>How to install on Chrome?</span>
-            </button>
-            <button
-              onClick={handleDismiss}
-              className="text-[11px] text-slate-400 hover:text-slate-200 transition-colors"
-            >
-              Dismiss
-            </button>
-          </div>
         </div>
-
-        {/* Step-by-step Manual Guide Modal if Native prompt wasn't triggered */}
-        {showManualGuide && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-sm w-full p-5 text-white space-y-4 shadow-2xl animate-fade-in">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <div className="flex items-center gap-2">
-                  <Smartphone className="w-5 h-5 text-[#deb356]" />
-                  <h4 className="font-bold text-sm text-white">How to Install on Android</h4>
-                </div>
-                <button 
-                  onClick={() => setShowManualGuide(false)}
-                  className="p-1 rounded-full text-slate-400 hover:text-white"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <p className="text-xs text-slate-300 leading-relaxed">
-                If the automatic install dialog didn't appear, you can install the app directly in 3 easy steps:
-              </p>
-
-              <ol className="space-y-3 text-xs text-slate-200">
-                <li className="flex items-start gap-2.5">
-                  <span className="w-5 h-5 rounded-full bg-[#deb356] text-slate-950 font-black text-[11px] flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
-                  <span>Open your browser menu (tap the <strong>three dots ⋮</strong> in the top right of Chrome or Samsung Internet).</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <span className="w-5 h-5 rounded-full bg-[#deb356] text-slate-950 font-black text-[11px] flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
-                  <span>Tap <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong>.</span>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <span className="w-5 h-5 rounded-full bg-[#deb356] text-slate-950 font-black text-[11px] flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
-                  <span>Tap <strong>"Install"</strong> to confirm. The app will launch in genuine fullscreen mode from your home screen.</span>
-                </li>
-              </ol>
-
-              <button
-                onClick={() => setShowManualGuide(false)}
-                className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-xs transition-colors"
-              >
-                Got It
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Native Capacitor APK compilation info */}
-        {showNativeInfo && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-slate-900 border border-slate-700 rounded-3xl max-w-sm w-full p-5 text-white space-y-4 shadow-2xl animate-fade-in">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <div className="flex items-center gap-2">
-                  <Info className="w-5 h-5 text-[#deb356]" />
-                  <h4 className="font-bold text-sm text-white">Native Android Build (Capacitor)</h4>
-                </div>
-                <button 
-                  onClick={() => setShowNativeInfo(false)}
-                  className="p-1 rounded-full text-slate-400 hover:text-white"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="text-xs text-slate-300 space-y-2 leading-relaxed">
-                <p>This project includes a complete <code className="text-[#deb356]">capacitor.config.ts</code> configuration ready for Android Studio packaging:</p>
-                <div className="bg-slate-950 p-2.5 rounded-xl border border-slate-800 font-mono text-[11px] text-emerald-400 space-y-1 overflow-x-auto">
-                  <p className="text-slate-400"># To compile as native APK/AAB:</p>
-                  <p>npx cap add android</p>
-                  <p>npm run build</p>
-                  <p>npx cap sync</p>
-                  <p>npx cap open android</p>
-                </div>
-                <p className="text-[11px] text-slate-400">
-                  Both PWA installation and native Android builds use the same secure backend and business logic without code duplication.
-                </p>
-              </div>
-
-              <button
-                onClick={() => setShowNativeInfo(false)}
-                className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-xl text-xs transition-colors"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     );
   }
@@ -458,7 +438,7 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
           {onClose && (
             <button 
               onClick={handleDismiss}
-              className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-white rounded-full bg-slate-800/80"
+              className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-white rounded-full bg-slate-800/80 cursor-pointer"
               aria-label="Close"
             >
               <X className="w-4 h-4" />
@@ -466,7 +446,7 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
           )}
 
           <div className="mx-auto w-16 h-16 rounded-2xl bg-black/40 border border-[#deb356]/40 p-2 flex items-center justify-center shadow-lg">
-            <CbeLogo className="w-12 h-12" />
+            <CbeLogo className="w-12 h-12 object-contain" />
           </div>
 
           <div className="space-y-2">
@@ -481,7 +461,7 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
               id="btn-modal-install-confirm"
               onClick={handleInstallClick}
               disabled={installing}
-              className="w-full py-3.5 px-4 bg-gradient-to-r from-[#dfa04c] to-[#deb356] hover:from-[#c9903f] hover:to-[#c99f47] active:scale-[0.98] text-slate-950 font-black rounded-2xl text-xs uppercase tracking-wider shadow-lg shadow-[#deb356]/20 transition-all touch-manipulation disabled:opacity-50"
+              className="w-full py-3.5 px-4 bg-gradient-to-r from-[#dfa04c] to-[#deb356] hover:from-[#c9903f] hover:to-[#c99f47] active:scale-[0.98] text-slate-950 font-black rounded-2xl text-xs uppercase tracking-wider shadow-lg shadow-[#deb356]/20 transition-all touch-manipulation disabled:opacity-50 cursor-pointer"
             >
               {installing ? 'Installing...' : 'INSTALL CBE MOBILE BANKING'}
             </button>
@@ -489,7 +469,7 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
             <button
               id="btn-modal-install-cancel"
               onClick={handleDismiss}
-              className="w-full py-2.5 px-4 text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors"
+              className="w-full py-2.5 px-4 text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
             >
               Not Now
             </button>

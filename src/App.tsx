@@ -20,7 +20,6 @@ import { PhoneCallService } from './services/phoneCallService';
 import { SmsService } from './services/smsService';
 import Navigation, { TabType } from './components/Navigation';
 import OfflineBanner from './components/OfflineBanner';
-import AppInstallPrompt from './components/AppInstallPrompt';
 import PhoneStatusBar from './components/PhoneStatusBar';
 import PhoneSettingsModal from './components/PhoneSettingsModal';
 
@@ -405,9 +404,6 @@ export default function App() {
       >
         {/* Real-time Offline Warning Banner */}
         <OfflineBanner />
-
-        {/* Global PWA Install Actions Popdown Banner */}
-        <AppInstallPrompt mode="banner" />
 
         {/* Dynamic View Panel Router */}
         <main className={`flex-1 flex flex-col scrollbar-none ${

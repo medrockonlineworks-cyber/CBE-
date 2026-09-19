@@ -3,6 +3,7 @@ import { LocalDb, DEFAULT_CBE_LOGO, OFFICIAL_CBE_STAMP_LOGO, OFFICIAL_CBE_PURPLE
 import { UserProfile } from '../types';
 import { CbeLogo } from './CbeLogo';
 import { compressImageFile } from '../lib/imageUtils';
+import { updatePwaBranding } from '../utils/pwaBranding';
 import { 
   Image as ImageIcon, 
   Upload, 
@@ -124,6 +125,8 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
     LocalDb.setCustomBankLogo(logo);
     setCurrentLogo(logo);
     setLogoSaveSuccess(true);
+    // Instantly sync PWA icons and dynamic manifest with new custom logo
+    updatePwaBranding(logo);
     LocalDb.addAuditLog(
       currentUser.id, 
       currentUser.email, 
@@ -142,6 +145,8 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
     setCurrentLogo(null);
     setPreviewLogo(DEFAULT_CBE_LOGO);
     setLogoSaveSuccess(true);
+    // Reset PWA icons and manifest back to default CBE emblem
+    updatePwaBranding(DEFAULT_CBE_LOGO);
     LocalDb.addAuditLog(
       currentUser.id, 
       currentUser.email, 
