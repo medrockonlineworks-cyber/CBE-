@@ -16,6 +16,14 @@ export function usePwaInstall() {
   const [isStandalone, setIsStandalone] = useState<boolean>(false);
   const [isAndroid, setIsAndroid] = useState<boolean>(false);
   const [isIos, setIsIos] = useState<boolean>(false);
+  const [isInIframe, setIsInIframe] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      return window.self !== window.top;
+    } catch {
+      return true;
+    }
+  });
   const [installOutcome, setInstallOutcome] = useState<'accepted' | 'dismissed' | null>(null);
 
   // Check if currently running in standalone / fullscreen / native PWA mode
@@ -168,14 +176,22 @@ export function usePwaInstall() {
     }
   };
 
+  const openInBrowserTab = () => {
+    if (typeof window !== 'undefined') {
+      window.open(window.location.href, '_blank', 'noopener,noreferrer');
+    }
+  };
+
   return {
     isInstallable,
     isInstalled,
     isStandalone,
     isAndroid,
     isIos,
+    isInIframe,
     hasPrompt: !!deferredPrompt,
     installOutcome,
-    promptInstall
+    promptInstall,
+    openInBrowserTab
   };
 }

@@ -39,8 +39,10 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
     isStandalone, 
     isAndroid, 
     isIos, 
+    isInIframe,
     hasPrompt, 
-    promptInstall 
+    promptInstall,
+    openInBrowserTab
   } = usePwaInstall();
 
   const [installing, setInstalling] = useState(false);
@@ -188,7 +190,7 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
               </div>
               <div>
                 <p className="text-xs font-bold text-emerald-950">App Installed &amp; Active</p>
-                <p className="text-[11px] text-emerald-700">Running as CBE Mobile Banking in standalone mode.</p>
+                <p className="text-[11px] text-emerald-700">Running as CBE Mobile Banking in standalone application mode.</p>
               </div>
             </div>
             <button
@@ -200,6 +202,28 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
           </div>
         ) : (
           <div className="space-y-2.5">
+            {isInIframe && (
+              <div className="bg-purple-50/90 border border-purple-200 rounded-2xl p-3 flex items-start justify-between gap-2.5 text-purple-950">
+                <div className="text-xs space-y-0.5 min-w-0">
+                  <p className="font-extrabold text-purple-900 flex items-center gap-1.5">
+                    <Info className="w-3.5 h-3.5 text-purple-800 shrink-0" />
+                    <span>Install as Native App (Not Shortcut)</span>
+                  </p>
+                  <p className="text-[11px] text-purple-800/90 leading-relaxed">
+                    Browsers only allow full standalone application installation (WebAPK) in a direct browser tab. Open directly in Chrome/Safari:
+                  </p>
+                </div>
+                <button
+                  id="btn-open-tab-install"
+                  onClick={openInBrowserTab}
+                  className="px-3 py-1.5 bg-purple-900 hover:bg-purple-800 text-amber-300 font-bold rounded-xl text-[11px] flex items-center gap-1 shrink-0 shadow-sm cursor-pointer transition-colors"
+                >
+                  <span>Open Tab</span>
+                  <ExternalLink className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+
             <button
               id="btn-settings-install-app"
               onClick={handleInstallClick}
@@ -217,7 +241,7 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
                 className="text-[11px] font-semibold text-purple-900 hover:text-purple-700 flex items-center gap-1 cursor-pointer transition-colors"
               >
                 <HelpCircle className="w-3.5 h-3.5" />
-                <span>Manual install instructions (Android &amp; iOS)</span>
+                <span>Install as Application guide (Android &amp; iOS)</span>
               </button>
               <span className="text-[10px] text-gray-400 font-mono">v2.6.4 CBE PWA</span>
             </div>
@@ -232,12 +256,12 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
                 <div className="flex items-center gap-2">
                   <Smartphone className="w-5 h-5 text-amber-400" />
                   <h4 className="font-bold text-sm text-white">
-                    {isIos ? 'Install on iPhone / iPad' : 'Install on Your Device'}
+                    {isIos ? 'Install on iPhone / iPad' : 'Install as Standalone Application'}
                   </h4>
                 </div>
                 <button 
                   onClick={() => setShowManualGuide(false)}
-                  className="p-1 rounded-full text-slate-400 hover:text-white"
+                  className="p-1 rounded-full text-slate-400 hover:text-white cursor-pointer"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -265,32 +289,55 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
                   </li>
                   <li className="flex items-start gap-2.5">
                     <span className="w-5 h-5 rounded-full bg-amber-400 text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">3</span>
-                    <span>Tap <strong>"Add"</strong>. The app will launch with the CBE emblem in fullscreen mode.</span>
+                    <span>Tap <strong>"Add"</strong>. It launches as a dedicated fullscreen application without Safari address bars.</span>
                   </li>
                 </ol>
               ) : (
                 <ol className="space-y-3 text-xs text-slate-200">
                   <li className="flex items-start gap-2.5">
                     <span className="w-5 h-5 rounded-full bg-amber-400 text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">1</span>
-                    <span>Tap the <strong>three dots (⋮)</strong> menu in the top right of Chrome or your browser.</span>
+                    <div>
+                      <span>Tap the <strong>three dots (⋮)</strong> menu in the top right of Chrome.</span>
+                      {isInIframe && (
+                        <p className="text-[10.5px] text-amber-300 mt-0.5 font-medium">
+                          Note: Open in a direct tab first if viewing inside a preview iframe.
+                        </p>
+                      )}
+                    </div>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <span className="w-5 h-5 rounded-full bg-amber-400 text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">2</span>
-                    <span>Select <strong>"Install app"</strong> or <strong>"Install CBE Mobile Banking"</strong>.</span>
+                    <div>
+                      <span>Select <strong>"Install app"</strong> or <strong>"Install CBE Mobile Banking"</strong>.</span>
+                      <p className="text-[10px] text-slate-400 mt-0.5">
+                        Avoid selecting "Create shortcut" to ensure a genuine WebAPK application is installed in your app drawer.
+                      </p>
+                    </div>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <span className="w-5 h-5 rounded-full bg-amber-400 text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">3</span>
-                    <span>Tap <strong>"Install"</strong> to confirm.</span>
+                    <span>Tap <strong>"Install"</strong>. Android will mint and install CBE Mobile Banking as an independent app.</span>
                   </li>
                 </ol>
               )}
 
-              <button
-                onClick={() => setShowManualGuide(false)}
-                className="w-full py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold rounded-xl text-xs transition-colors cursor-pointer"
-              >
-                Got It
-              </button>
+              <div className="flex gap-2">
+                {isInIframe && (
+                  <button
+                    onClick={openInBrowserTab}
+                    className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer border border-amber-400/30"
+                  >
+                    <span>Open in Direct Tab</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowManualGuide(false)}
+                  className="flex-1 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+                >
+                  Got It
+                </button>
+              </div>
             </div>
           </div>
         )}

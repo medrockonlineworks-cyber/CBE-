@@ -92,6 +92,8 @@ export default defineConfig(() => {
               label: 'CBE Mobile Banking Desktop',
             },
           ],
+          prefer_related_applications: false,
+          related_applications: [],
         },
         workbox: {
           maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,

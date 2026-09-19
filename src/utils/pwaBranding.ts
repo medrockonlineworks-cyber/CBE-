@@ -19,7 +19,9 @@ export const BASE_MANIFEST = {
   background_color: '#0f172a',
   lang: 'en',
   dir: 'ltr',
-  categories: ['finance', 'business', 'utilities']
+  categories: ['finance', 'business', 'utilities'],
+  prefer_related_applications: false,
+  related_applications: []
 };
 
 /**
@@ -191,13 +193,14 @@ export async function updatePwaBranding(customLogoUrl?: string | null): Promise<
       ]
     };
 
-    // 6. Set <link rel="manifest"> to inline data URI so browsers immediately read the custom logo manifest
+    // 6. Ensure <link rel="manifest"> always points to standard HTTP path /manifest.webmanifest
+    // CRITICAL: A data: or blob: URI breaks Chromium PWA installability and WebAPK generation,
+    // which causes Chrome to downgrade from "Install Application" to "Create Shortcut only"!
     const manifestJsonString = JSON.stringify(dynamicManifest, null, 2);
-    const dataUri = `data:application/manifest+json;charset=utf-8,${encodeURIComponent(manifestJsonString)}`;
     
     let manifestLink = document.querySelector('link[rel="manifest"]') as HTMLLinkElement | null;
     if (manifestLink) {
-      manifestLink.setAttribute('href', dataUri);
+      manifestLink.setAttribute('href', '/manifest.webmanifest');
     }
 
     // 7. Store in Cache Storage so HTTP requests to /manifest.webmanifest and /icons/* return the custom logo
