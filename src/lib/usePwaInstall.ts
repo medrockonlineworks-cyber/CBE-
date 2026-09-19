@@ -28,12 +28,7 @@ export function usePwaInstall() {
       document.referrer.includes('android-app://');
 
     setIsStandalone(isStandaloneMode);
-    
-    // Also check saved installed state
-    const savedInstalled = localStorage.getItem('tana_pwa_installed') === 'true';
-    if (isStandaloneMode || savedInstalled) {
-      setIsInstalled(true);
-    }
+    setIsInstalled(isStandaloneMode);
   }, []);
 
   useEffect(() => {
@@ -122,7 +117,27 @@ export function usePwaInstall() {
 
   // Trigger real native installation prompt
   const promptInstall = async (): Promise<{ outcome: 'accepted' | 'dismissed' | 'manual_required' }> => {
-    const activePrompt = deferredPrompt || (typeof window !== 'undefined' ? (window as any).__deferredPrompt : null);
+    let activePrompt = deferredPrompt || (typeof window !== 'undefined' ? (window as any).__deferredPrompt : null);
+
+    // If prompt is not ready immediately, wait up to 2.5s for beforeinstallprompt event
+    if (!activePrompt && typeof window !== 'undefined') {
+      activePrompt = await new Promise<BeforeInstallPromptEvent | null>((resolve) => {
+        const timeout = setTimeout(() => resolve(null), 2500);
+        const onReady = () => {
+          clearTimeout(timeout);
+          window.removeEventListener('pwa_prompt_ready', onReady);
+          window.removeEventListener('beforeinstallprompt', onReady);
+          const p = (window as any).__deferredPrompt || null;
+          if (p) {
+            setDeferredPrompt(p);
+            setIsInstallable(true);
+          }
+          resolve(p);
+        };
+        window.addEventListener('pwa_prompt_ready', onReady, { once: true });
+        window.addEventListener('beforeinstallprompt', onReady, { once: true });
+      });
+    }
 
     if (!activePrompt) {
       console.log('[PWA] No deferred prompt available; manual installation flow required');

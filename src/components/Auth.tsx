@@ -734,11 +734,13 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
               ))}
             </div>
           </div>
-
-          {/* Android PWA Installation Card */}
-          <AppInstallPrompt mode="card" className="text-left" />
         </div>
       )}
+
+      {/* Android & Desktop PWA Installation Card */}
+      <div className="w-full max-w-sm mx-auto mt-4 px-1">
+        <AppInstallPrompt mode="card" className="text-left" />
+      </div>
 
       {/* Bottom Legal Notice */}
       <div className="text-center text-[10px] text-emerald-300/40 mt-6 relative z-10 font-mono">

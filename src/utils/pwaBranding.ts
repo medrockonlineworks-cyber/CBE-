@@ -29,68 +29,33 @@ let dynamicManifestObjectUrl: string | null = null;
  */
 export function updatePwaBranding(customLogoUrl?: string | null): void {
   const customLogo = customLogoUrl ?? LocalDb.getCustomBankLogo();
+  
+  // Ensure manifest link always points to valid static /manifest.webmanifest (never a blob: URL which breaks Chrome PWA installation)
+  let manifestLink = document.querySelector('link[rel="manifest"]') as HTMLLinkElement | null;
+  if (manifestLink && (!manifestLink.href.endsWith('/manifest.webmanifest') || manifestLink.href.startsWith('blob:'))) {
+    manifestLink.href = '/manifest.webmanifest';
+  }
+
   if (!customLogo) {
-    // If no custom logo uploaded, keep the standard pre-configured /manifest.webmanifest
-    let manifestLink = document.querySelector('link[rel="manifest"]') as HTMLLinkElement | null;
-    if (manifestLink && manifestLink.href.startsWith('blob:')) {
-      manifestLink.href = '/manifest.webmanifest';
-    }
     return;
   }
 
   const activeLogo = customLogo;
 
   try {
-    // 1. Build the updated manifest payload
-    const dynamicManifest = {
-      ...BASE_MANIFEST,
-      icons: [
-        {
-          src: activeLogo,
-          sizes: '192x192 512x512',
-          type: activeLogo.startsWith('data:image/svg') || activeLogo.endsWith('.svg') 
-            ? 'image/svg+xml' 
-            : (activeLogo.startsWith('data:image/png') ? 'image/png' : 'image/png'),
-          purpose: 'any'
-        },
-        {
-          src: activeLogo,
-          sizes: '512x512',
-          type: activeLogo.startsWith('data:image/svg') || activeLogo.endsWith('.svg') 
-            ? 'image/svg+xml' 
-            : 'image/png',
-          purpose: 'maskable'
-        }
-      ]
-    };
-
-    // 2. Revoke previous blob URL if created
+    // Revoke any legacy blob URL if present
     if (dynamicManifestObjectUrl) {
       URL.revokeObjectURL(dynamicManifestObjectUrl);
       dynamicManifestObjectUrl = null;
     }
 
-    const manifestBlob = new Blob([JSON.stringify(dynamicManifest, null, 2)], {
-      type: 'application/manifest+json'
-    });
-    dynamicManifestObjectUrl = URL.createObjectURL(manifestBlob);
-
-    // 3. Update or insert <link rel="manifest"> in document head
-    let manifestLink = document.querySelector('link[rel="manifest"]') as HTMLLinkElement | null;
-    if (!manifestLink) {
-      manifestLink = document.createElement('link');
-      manifestLink.rel = 'manifest';
-      document.head.appendChild(manifestLink);
-    }
-    manifestLink.href = dynamicManifestObjectUrl;
-
-    // 4. Update <link rel="icon">
+    // Update <link rel="icon">
     let faviconLink = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
     if (faviconLink) {
       faviconLink.href = activeLogo;
     }
 
-    // 5. Update <link rel="apple-touch-icon"> for iOS Safari & Home Screen
+    // Update <link rel="apple-touch-icon"> for iOS Safari & Home Screen
     let appleTouchLink = document.querySelector('link[rel="apple-touch-icon"]') as HTMLLinkElement | null;
     if (!appleTouchLink) {
       appleTouchLink = document.createElement('link');
@@ -99,15 +64,15 @@ export function updatePwaBranding(customLogoUrl?: string | null): void {
     }
     appleTouchLink.href = activeLogo;
 
-    // 6. Update mask icon if exists
+    // Update mask icon if exists
     let maskIconLink = document.querySelector('link[rel="mask-icon"]') as HTMLLinkElement | null;
     if (maskIconLink) {
       maskIconLink.href = activeLogo;
     }
 
-    console.info('[PWA Branding] Updated manifest and icons with admin logo.');
+    console.info('[PWA Branding] Updated icons with active bank logo.');
   } catch (err) {
-    console.warn('[PWA Branding] Failed to dynamically update manifest:', err);
+    console.warn('[PWA Branding] Failed to update icons:', err);
   }
 }
 

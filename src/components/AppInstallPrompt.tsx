@@ -86,8 +86,8 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
     return () => clearTimeout(autoDismissTimer);
   }, [mode, dismissed]);
 
-  // If already running as standalone or installed, hide prompt unless in card mode in Profile
-  if (isStandalone || isInstalled) {
+  // If already running inside installed standalone window, hide prompt unless in card mode in Profile
+  if (isStandalone) {
     if (mode === 'card') {
       return (
         <div className={`bg-emerald-950/30 border border-emerald-800/40 rounded-2xl p-4 flex items-center justify-between gap-3 text-emerald-300 ${className}`}>
