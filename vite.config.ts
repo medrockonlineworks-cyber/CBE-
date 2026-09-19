@@ -1,14 +1,149 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import fs from 'fs';
+import { exec } from 'child_process';
 import {defineConfig} from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
+
+function pwaBrandingSyncPlugin() {
+  return {
+    name: 'pwa-branding-server-sync',
+    configureServer(server: any) {
+      server.middlewares.use((req: any, res: any, next: any) => {
+        const url = req.url || '';
+        // Set strict no-cache headers for all manifest and PWA icon files
+        if (
+          url.startsWith('/manifest.') || 
+          url.includes('pwa-') || 
+          url.includes('apple-touch-icon') || 
+          url.includes('/icons/icon-')
+        ) {
+          res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+          res.setHeader('Pragma', 'no-cache');
+          res.setHeader('Expires', '0');
+        }
+
+        // Endpoint: Update PWA icons with custom uploaded logo
+        if (url === '/api/pwa/update-icon' && req.method === 'POST') {
+          let body = '';
+          req.on('data', (chunk: any) => { body += chunk; });
+          req.on('end', () => {
+            try {
+              const payload = JSON.parse(body);
+              const { icon192, icon512, iconMaskable, appleTouchIcon, splashMobile, splashWide, rawLogo } = payload;
+              const publicDir = path.resolve(__dirname, 'public');
+              const iconsDir = path.resolve(publicDir, 'icons');
+              if (!fs.existsSync(iconsDir)) fs.mkdirSync(iconsDir, { recursive: true });
+
+              const saveBase64Png = (dataUrl: string, filePath: string) => {
+                if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.includes('base64,')) return;
+                const b64 = dataUrl.split('base64,')[1];
+                const buf = Buffer.from(b64, 'base64');
+                fs.writeFileSync(filePath, buf);
+              };
+
+              if (icon192) {
+                saveBase64Png(icon192, path.resolve(publicDir, 'pwa-192x192.png'));
+                saveBase64Png(icon192, path.resolve(iconsDir, 'icon-192.png'));
+              }
+              if (icon512) {
+                saveBase64Png(icon512, path.resolve(publicDir, 'pwa-512x512.png'));
+                saveBase64Png(icon512, path.resolve(iconsDir, 'icon-512.png'));
+              }
+              if (iconMaskable) {
+                saveBase64Png(iconMaskable, path.resolve(publicDir, 'pwa-maskable-512x512.png'));
+                saveBase64Png(iconMaskable, path.resolve(iconsDir, 'icon-maskable-512.png'));
+              }
+              if (appleTouchIcon || icon192) {
+                saveBase64Png(appleTouchIcon || icon192, path.resolve(publicDir, 'apple-touch-icon.png'));
+              }
+              if (splashMobile) {
+                saveBase64Png(splashMobile, path.resolve(publicDir, 'pwa-screenshot-mobile.png'));
+              }
+              if (splashWide) {
+                saveBase64Png(splashWide, path.resolve(publicDir, 'pwa-screenshot-wide.png'));
+              }
+              if (rawLogo) {
+                saveBase64Png(rawLogo, path.resolve(publicDir, 'custom-bank-logo.png'));
+              }
+
+              const timestamp = Date.now();
+              fs.writeFileSync(
+                path.resolve(publicDir, 'custom-pwa-branding.json'),
+                JSON.stringify({ updated: timestamp, hasCustomLogo: true }, null, 2)
+              );
+
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ success: true, timestamp }));
+            } catch (err) {
+              res.statusCode = 500;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ success: false, error: String(err) }));
+            }
+          });
+          return;
+        }
+
+        // Endpoint: Reset to official CBE golden logo
+        if (url === '/api/pwa/reset-icon' && req.method === 'POST') {
+          try {
+            const publicDir = path.resolve(__dirname, 'public');
+            const markerPath = path.resolve(publicDir, 'custom-pwa-branding.json');
+            if (fs.existsSync(markerPath)) fs.unlinkSync(markerPath);
+            const logoPath = path.resolve(publicDir, 'custom-bank-logo.png');
+            if (fs.existsSync(logoPath)) fs.unlinkSync(logoPath);
+
+            const scriptPath = path.resolve(__dirname, 'scripts/generate-cbe-pwa-assets.cjs');
+            if (fs.existsSync(scriptPath)) {
+              exec(`node "${scriptPath}"`, (error) => {
+                if (error) console.warn('[PWA] Reset script note:', error);
+              });
+            }
+
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ success: true, reset: true, timestamp: Date.now() }));
+          } catch (err) {
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ success: false, error: String(err) }));
+          }
+          return;
+        }
+
+        // Endpoint: Get status
+        if (url === '/api/pwa/status' && req.method === 'GET') {
+          try {
+            const publicDir = path.resolve(__dirname, 'public');
+            const markerPath = path.resolve(publicDir, 'custom-pwa-branding.json');
+            const logoPath = path.resolve(publicDir, 'custom-bank-logo.png');
+            const hasCustom = fs.existsSync(markerPath) && fs.existsSync(logoPath);
+            let rawLogo = null;
+            if (hasCustom) {
+              const buf = fs.readFileSync(logoPath);
+              rawLogo = `data:image/png;base64,${buf.toString('base64')}`;
+            }
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ hasCustom, rawLogo, timestamp: Date.now() }));
+          } catch {
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ hasCustom: false }));
+          }
+          return;
+        }
+
+        next();
+      });
+    }
+  };
+}
 
 export default defineConfig(() => {
   return {
     plugins: [
       react(),
       tailwindcss(),
+      pwaBrandingSyncPlugin(),
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: [

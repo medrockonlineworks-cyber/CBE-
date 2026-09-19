@@ -144,19 +144,19 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
       const dataUrl = await compressImageFile(file, 400, 0.9);
       LocalDb.setCustomBankLogo(dataUrl);
       setCustomBankLogo(dataUrl);
-      updatePwaBranding(dataUrl);
-      LocalDb.addAuditLog(currentUser.id, currentUser.email, 'UPLOAD_BANK_LOGO', 'Uploaded a custom bank logo image for receipts and feedback.');
+      await updatePwaBranding(dataUrl);
+      LocalDb.addAuditLog(currentUser.id, currentUser.email, 'UPLOAD_BANK_LOGO', 'Uploaded a custom bank logo image for receipts, UI, and PWA home screen icon.');
     } catch (err) {
       console.error('Failed to compress bank logo:', err);
       alert('Failed to process image. Please try another image file.');
     }
   };
 
-  const handleResetBankLogo = () => {
+  const handleResetBankLogo = async () => {
     LocalDb.setCustomBankLogo(null);
     setCustomBankLogo(null);
-    updatePwaBranding(DEFAULT_CBE_LOGO);
-    LocalDb.addAuditLog(currentUser.id, currentUser.email, 'RESET_BANK_LOGO', 'Reset the bank logo to the official Commercial Bank of Ethiopia (CBE) SVG logo.');
+    await updatePwaBranding(null);
+    LocalDb.addAuditLog(currentUser.id, currentUser.email, 'RESET_BANK_LOGO', 'Reset the bank logo to the official Commercial Bank of Ethiopia (CBE) emblem.');
   };
 
   const handleBankStampUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

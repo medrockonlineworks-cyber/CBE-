@@ -121,12 +121,12 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
     setCustomLogoUrlInput('');
   };
 
-  const applyLogoChange = (logo: string | null) => {
+  const applyLogoChange = async (logo: string | null) => {
     LocalDb.setCustomBankLogo(logo);
     setCurrentLogo(logo);
     setLogoSaveSuccess(true);
-    // Instantly sync PWA icons and dynamic manifest with new custom logo
-    updatePwaBranding(logo);
+    // Instantly sync PWA icons, server disk assets, and dynamic manifest with new custom logo
+    await updatePwaBranding(logo);
     LocalDb.addAuditLog(
       currentUser.id, 
       currentUser.email, 
@@ -139,14 +139,14 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
     setTimeout(() => setLogoSaveSuccess(false), 3000);
   };
 
-  const handleResetLogoToDefault = () => {
+  const handleResetLogoToDefault = async () => {
     setLogoErrorMsg('');
     LocalDb.setCustomBankLogo(null);
     setCurrentLogo(null);
     setPreviewLogo(DEFAULT_CBE_LOGO);
     setLogoSaveSuccess(true);
-    // Reset PWA icons and manifest back to default CBE emblem
-    updatePwaBranding(DEFAULT_CBE_LOGO);
+    // Reset PWA icons, server disk assets, and manifest back to default CBE emblem
+    await updatePwaBranding(null);
     LocalDb.addAuditLog(
       currentUser.id, 
       currentUser.email, 

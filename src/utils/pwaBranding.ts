@@ -208,14 +208,49 @@ function dataUrlToBlob(dataUrl: string): Blob {
 }
 
 /**
- * Generates and applies dynamic manifest and branding icons
+ * Generates and applies dynamic manifest and branding icons.
+ * Automatically synchronizes high-resolution PNG assets to the server disk
+ * so that PWA installation, Android WebAPK, iOS Add to Home Screen, and Chrome
+ * directly use the administrator's uploaded custom image.
  */
 export async function updatePwaBranding(customLogoUrl?: string | null): Promise<void> {
-  const activeLogo = customLogoUrl ?? LocalDb.getCustomBankLogo() ?? DEFAULT_CBE_LOGO;
-
   if (typeof window === 'undefined' || typeof document === 'undefined') {
     return;
   }
+
+  // Handle explicit reset to default official CBE logo
+  if (customLogoUrl === null) {
+    try {
+      await fetch('/api/pwa/reset-icon', { method: 'POST' }).catch(() => {});
+    } catch {}
+
+    const ts = Date.now();
+    const manifestLink = document.getElementById('pwa-manifest-link') as HTMLLinkElement | null || document.querySelector('link[rel="manifest"]') as HTMLLinkElement | null;
+    if (manifestLink) {
+      manifestLink.setAttribute('href', `/manifest.webmanifest?v=${ts}`);
+    }
+    const appleTouchLink = document.getElementById('app-apple-touch-icon') as HTMLLinkElement | null || document.querySelector('link[rel="apple-touch-icon"]') as HTMLLinkElement | null;
+    if (appleTouchLink) {
+      appleTouchLink.setAttribute('href', `/apple-touch-icon.png?v=${ts}`);
+    }
+    const faviconPng = document.getElementById('app-favicon-png') as HTMLLinkElement | null;
+    if (faviconPng) {
+      faviconPng.setAttribute('href', `/pwa-192x192.png?v=${ts}`);
+    }
+
+    // Clean custom caches
+    if ('caches' in window) {
+      try {
+        await caches.delete('cbe-custom-branding-cache');
+      } catch {}
+    }
+
+    window.dispatchEvent(new CustomEvent('pwa_branding_synced', { detail: { reset: true, timestamp: ts } }));
+    console.info('[PWA Branding] Reset to default CBE branding completed.');
+    return;
+  }
+
+  const activeLogo = customLogoUrl ?? LocalDb.getCustomBankLogo() ?? DEFAULT_CBE_LOGO;
 
   try {
     // Generate icons & splash screens at standard PWA resolutions using active CBE logo
@@ -227,34 +262,60 @@ export async function updatePwaBranding(customLogoUrl?: string | null): Promise<
       createSplashScreenshotDataUrl(activeLogo, 1280, 800),
     ]);
 
+    // Send rendered assets to server so public/pwa-512x512.png, public/pwa-192x192.png,
+    // public/apple-touch-icon.png, etc. on disk are updated for native PWA installation & WebAPK
+    let serverTimestamp = Date.now();
+    try {
+      const resp = await fetch('/api/pwa/update-icon', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          icon192,
+          icon512,
+          iconMaskable,
+          appleTouchIcon: icon192,
+          splashMobile,
+          splashWide,
+          rawLogo: activeLogo
+        })
+      });
+      if (resp.ok) {
+        const json = await resp.json();
+        if (json.timestamp) serverTimestamp = json.timestamp;
+      }
+    } catch (apiErr) {
+      console.warn('[PWA Branding] Server asset sync note:', apiErr);
+    }
+
+    const versionParam = `?v=${serverTimestamp}`;
+
     // 1. Update <link rel="icon">
-    let faviconLink = document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
+    let faviconLink = document.getElementById('app-favicon-png') as HTMLLinkElement | null || document.querySelector('link[rel="icon"]') as HTMLLinkElement | null;
     if (faviconLink) {
-      faviconLink.href = icon192;
+      faviconLink.type = 'image/png';
+      faviconLink.href = `/pwa-192x192.png${versionParam}`;
     }
 
     // 2. Update <link rel="apple-touch-icon"> for iOS Safari & Home Screen
-    let appleTouchLink = document.querySelector('link[rel="apple-touch-icon"]') as HTMLLinkElement | null;
+    let appleTouchLink = document.getElementById('app-apple-touch-icon') as HTMLLinkElement | null || document.querySelector('link[rel="apple-touch-icon"]') as HTMLLinkElement | null;
     if (!appleTouchLink) {
       appleTouchLink = document.createElement('link');
+      appleTouchLink.id = 'app-apple-touch-icon';
       appleTouchLink.rel = 'apple-touch-icon';
       document.head.appendChild(appleTouchLink);
     }
-    appleTouchLink.href = icon192;
+    appleTouchLink.href = `/apple-touch-icon.png${versionParam}`;
 
     // 3. Update apple-touch-icon-precomposed if present
     let appleTouchPrecomposed = document.querySelector('link[rel="apple-touch-icon-precomposed"]') as HTMLLinkElement | null;
-    if (!appleTouchPrecomposed) {
-      appleTouchPrecomposed = document.createElement('link');
-      appleTouchPrecomposed.rel = 'apple-touch-icon-precomposed';
-      document.head.appendChild(appleTouchPrecomposed);
+    if (appleTouchPrecomposed) {
+      appleTouchPrecomposed.href = `/apple-touch-icon.png${versionParam}`;
     }
-    appleTouchPrecomposed.href = icon192;
 
     // 4. Update mask-icon if exists
-    let maskIconLink = document.querySelector('link[rel="mask-icon"]') as HTMLLinkElement | null;
+    let maskIconLink = document.getElementById('app-mask-icon') as HTMLLinkElement | null || document.querySelector('link[rel="mask-icon"]') as HTMLLinkElement | null;
     if (maskIconLink) {
-      maskIconLink.href = icon512;
+      maskIconLink.href = `/pwa-maskable-512x512.png${versionParam}`;
     }
 
     // 5. Update theme-color and tile meta tags to official CBE purple
@@ -268,7 +329,7 @@ export async function updatePwaBranding(customLogoUrl?: string | null): Promise<
     }
     let tileImageMeta = document.querySelector('meta[name="msapplication-TileImage"]') as HTMLMetaElement | null;
     if (tileImageMeta) {
-      tileImageMeta.content = icon512;
+      tileImageMeta.content = `/pwa-512x512.png${versionParam}`;
     }
 
     // 6. Construct full dynamic manifest with active logo and splash screens
@@ -278,37 +339,37 @@ export async function updatePwaBranding(customLogoUrl?: string | null): Promise<
       theme_color: '#300642',
       icons: [
         {
-          src: '/pwa-192x192.png',
+          src: `/pwa-192x192.png${versionParam}`,
           sizes: '192x192',
           type: 'image/png',
           purpose: 'any'
         },
         {
-          src: '/pwa-512x512.png',
+          src: `/pwa-512x512.png${versionParam}`,
           sizes: '512x512',
           type: 'image/png',
           purpose: 'any'
         },
         {
-          src: '/pwa-maskable-512x512.png',
+          src: `/pwa-maskable-512x512.png${versionParam}`,
           sizes: '512x512',
           type: 'image/png',
           purpose: 'maskable'
         },
         {
-          src: '/icons/icon-192.png',
+          src: `/icons/icon-192.png${versionParam}`,
           sizes: '192x192',
           type: 'image/png',
           purpose: 'any'
         },
         {
-          src: '/icons/icon-512.png',
+          src: `/icons/icon-512.png${versionParam}`,
           sizes: '512x512',
           type: 'image/png',
           purpose: 'any'
         },
         {
-          src: '/icons/icon-maskable-512.png',
+          src: `/icons/icon-maskable-512.png${versionParam}`,
           sizes: '512x512',
           type: 'image/png',
           purpose: 'maskable'
@@ -316,14 +377,14 @@ export async function updatePwaBranding(customLogoUrl?: string | null): Promise<
       ],
       screenshots: [
         {
-          src: '/pwa-screenshot-mobile.png',
+          src: `/pwa-screenshot-mobile.png${versionParam}`,
           sizes: '540x1170',
           type: 'image/png',
           form_factor: 'narrow',
           label: 'CBE Mobile Banking'
         },
         {
-          src: '/pwa-screenshot-wide.png',
+          src: `/pwa-screenshot-wide.png${versionParam}`,
           sizes: '1280x800',
           type: 'image/png',
           form_factor: 'wide',
@@ -332,15 +393,15 @@ export async function updatePwaBranding(customLogoUrl?: string | null): Promise<
       ]
     };
 
-    // 7. Ensure <link rel="manifest"> always points to standard HTTP path /manifest.webmanifest
+    // 7. Update <link rel="manifest"> with cache-busting version so browser immediately invalidates cached manifest
     const manifestJsonString = JSON.stringify(dynamicManifest, null, 2);
     
-    let manifestLink = document.querySelector('link[rel="manifest"]') as HTMLLinkElement | null;
+    let manifestLink = document.getElementById('pwa-manifest-link') as HTMLLinkElement | null || document.querySelector('link[rel="manifest"]') as HTMLLinkElement | null;
     if (manifestLink) {
-      manifestLink.setAttribute('href', '/manifest.webmanifest');
+      manifestLink.setAttribute('href', `/manifest.webmanifest${versionParam}`);
     }
 
-    // 8. Store in Cache Storage so HTTP requests to /manifest.webmanifest, icons, and screensplash return the custom logo
+    // 8. Store in Cache Storage so HTTP requests to manifest and icons return the custom logo even offline
     if ('caches' in window) {
       try {
         const blob192 = dataUrlToBlob(icon192);
@@ -356,9 +417,26 @@ export async function updatePwaBranding(customLogoUrl?: string | null): Promise<
           if (!targetCacheNames.includes(name)) targetCacheNames.push(name);
         }
 
-        const iconUrls192 = ['/icons/icon-192.png', '/pwa-192x192.png', '/apple-touch-icon.png', '/favicon.svg'];
-        const iconUrls512 = ['/icons/icon-512.png', '/pwa-512x512.png'];
-        const iconUrlsMaskable = ['/icons/icon-maskable-512.png', '/pwa-maskable-512x512.png'];
+        const iconUrls192 = [
+          '/icons/icon-192.png',
+          `/icons/icon-192.png${versionParam}`,
+          '/pwa-192x192.png',
+          `/pwa-192x192.png${versionParam}`,
+          '/apple-touch-icon.png',
+          `/apple-touch-icon.png${versionParam}`
+        ];
+        const iconUrls512 = [
+          '/icons/icon-512.png',
+          `/icons/icon-512.png${versionParam}`,
+          '/pwa-512x512.png',
+          `/pwa-512x512.png${versionParam}`
+        ];
+        const iconUrlsMaskable = [
+          '/icons/icon-maskable-512.png',
+          `/icons/icon-maskable-512.png${versionParam}`,
+          '/pwa-maskable-512x512.png',
+          `/pwa-maskable-512x512.png${versionParam}`
+        ];
 
         for (const cacheName of targetCacheNames) {
           try {
@@ -366,41 +444,53 @@ export async function updatePwaBranding(customLogoUrl?: string | null): Promise<
             for (const u of iconUrls192) {
               await cache.put(u, new Response(blob192, {
                 status: 200,
-                headers: { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=31536000' }
+                headers: { 'Content-Type': 'image/png', 'Cache-Control': 'no-cache, no-store, must-revalidate' }
               }));
             }
             for (const u of iconUrls512) {
               await cache.put(u, new Response(blob512, {
                 status: 200,
-                headers: { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=31536000' }
+                headers: { 'Content-Type': 'image/png', 'Cache-Control': 'no-cache, no-store, must-revalidate' }
               }));
             }
             for (const u of iconUrlsMaskable) {
               await cache.put(u, new Response(blobMaskable, {
                 status: 200,
-                headers: { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=31536000' }
+                headers: { 'Content-Type': 'image/png', 'Cache-Control': 'no-cache, no-store, must-revalidate' }
               }));
             }
             if (blobSplashMobile) {
               await cache.put('/pwa-screenshot-mobile.png', new Response(blobSplashMobile, {
                 status: 200,
-                headers: { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=31536000' }
+                headers: { 'Content-Type': 'image/png', 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+              }));
+              await cache.put(`/pwa-screenshot-mobile.png${versionParam}`, new Response(blobSplashMobile, {
+                status: 200,
+                headers: { 'Content-Type': 'image/png', 'Cache-Control': 'no-cache, no-store, must-revalidate' }
               }));
             }
             if (blobSplashWide) {
               await cache.put('/pwa-screenshot-wide.png', new Response(blobSplashWide, {
                 status: 200,
-                headers: { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=31536000' }
+                headers: { 'Content-Type': 'image/png', 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+              }));
+              await cache.put(`/pwa-screenshot-wide.png${versionParam}`, new Response(blobSplashWide, {
+                status: 200,
+                headers: { 'Content-Type': 'image/png', 'Cache-Control': 'no-cache, no-store, must-revalidate' }
               }));
             }
             // Put manifest
             await cache.put('/manifest.webmanifest', new Response(manifestBlob, {
               status: 200,
-              headers: { 'Content-Type': 'application/manifest+json', 'Cache-Control': 'public, max-age=31536000' }
+              headers: { 'Content-Type': 'application/manifest+json', 'Cache-Control': 'no-cache, no-store, must-revalidate' }
+            }));
+            await cache.put(`/manifest.webmanifest${versionParam}`, new Response(manifestBlob, {
+              status: 200,
+              headers: { 'Content-Type': 'application/manifest+json', 'Cache-Control': 'no-cache, no-store, must-revalidate' }
             }));
             await cache.put('/manifest.json', new Response(manifestBlob, {
               status: 200,
-              headers: { 'Content-Type': 'application/manifest+json', 'Cache-Control': 'public, max-age=31536000' }
+              headers: { 'Content-Type': 'application/manifest+json', 'Cache-Control': 'no-cache, no-store, must-revalidate' }
             }));
           } catch (cacheWriteErr) {
             console.warn(`[PWA Branding] Cache write note (${cacheName}):`, cacheWriteErr);
@@ -411,7 +501,10 @@ export async function updatePwaBranding(customLogoUrl?: string | null): Promise<
       }
     }
 
-    console.info('[PWA Branding] Successfully updated PWA branding with active CBE logo.');
+    window.dispatchEvent(new CustomEvent('pwa_branding_synced', { 
+      detail: { timestamp: serverTimestamp, logo: activeLogo } 
+    }));
+    console.info('[PWA Branding] Successfully updated and synced PWA branding with active CBE logo.');
   } catch (err) {
     console.warn('[PWA Branding] Error updating PWA branding:', err);
   }
@@ -420,9 +513,25 @@ export async function updatePwaBranding(customLogoUrl?: string | null): Promise<
 /**
  * Initializes PWA dynamic manifest on app load and listens for logo change events.
  */
-export function initPwaDynamicManifest(): void {
-  // Initial update on app bootstrap
-  updatePwaBranding();
+export async function initPwaDynamicManifest(): Promise<void> {
+  const localLogo = LocalDb.getCustomBankLogo();
+
+  if (localLogo) {
+    // Synchronize the existing uploaded logo to server so server files match localStorage immediately
+    await updatePwaBranding(localLogo);
+  } else {
+    // Check if the server already has a custom logo stored from another session
+    try {
+      const res = await fetch('/api/pwa/status');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.hasCustom && data.rawLogo) {
+          LocalDb.setCustomBankLogo(data.rawLogo);
+          await updatePwaBranding(data.rawLogo);
+        }
+      }
+    } catch {}
+  }
 
   // Listen for admin logo updates across the application and windows
   const handleLogoUpdate = (e: Event) => {
@@ -434,7 +543,8 @@ export function initPwaDynamicManifest(): void {
   window.addEventListener('bank_logo_updated', handleLogoUpdate);
   window.addEventListener('storage', (e) => {
     if (e.key === 'tana_custom_bank_logo') {
-      updatePwaBranding();
+      const newLogo = LocalDb.getCustomBankLogo();
+      updatePwaBranding(newLogo);
     }
   });
 }
