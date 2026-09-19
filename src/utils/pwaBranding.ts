@@ -6,13 +6,14 @@ import { LocalDb, DEFAULT_CBE_LOGO } from '../lib/mockData';
  */
 
 const BASE_MANIFEST = {
+  id: '/',
   short_name: 'Tana Bank',
-  name: 'Tana Digital Bank - Mobile Banking',
+  name: 'Tana Digital Bank',
   description: 'Commercial Bank of Ethiopia & Tana Digital Mobile Banking application with instant transfers, bill payments, and secure account management.',
   start_url: '/',
   scope: '/',
-  display: 'fullscreen',
-  display_override: ['fullscreen', 'standalone', 'minimal-ui', 'browser'],
+  display: 'standalone',
+  display_override: ['standalone', 'minimal-ui', 'fullscreen', 'browser'],
   orientation: 'portrait-primary',
   theme_color: '#300642',
   background_color: '#0f172a',
@@ -24,10 +25,20 @@ const BASE_MANIFEST = {
 let dynamicManifestObjectUrl: string | null = null;
 
 /**
- * Generates and applies a dynamic Web App Manifest with the admin-uploaded logo.
+ * Generates and applies a dynamic Web App Manifest if a custom admin logo is set.
  */
 export function updatePwaBranding(customLogoUrl?: string | null): void {
-  const activeLogo = customLogoUrl ?? LocalDb.getCustomBankLogo() ?? DEFAULT_CBE_LOGO;
+  const customLogo = customLogoUrl ?? LocalDb.getCustomBankLogo();
+  if (!customLogo) {
+    // If no custom logo uploaded, keep the standard pre-configured /manifest.webmanifest
+    let manifestLink = document.querySelector('link[rel="manifest"]') as HTMLLinkElement | null;
+    if (manifestLink && manifestLink.href.startsWith('blob:')) {
+      manifestLink.href = '/manifest.webmanifest';
+    }
+    return;
+  }
+
+  const activeLogo = customLogo;
 
   try {
     // 1. Build the updated manifest payload

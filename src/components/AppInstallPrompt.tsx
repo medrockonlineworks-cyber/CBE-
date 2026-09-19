@@ -40,9 +40,7 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
   const [installing, setInstalling] = useState(false);
   const [showManualGuide, setShowManualGuide] = useState(false);
   const [showNativeInfo, setShowNativeInfo] = useState(false);
-  const [dismissed, setDismissed] = useState<boolean>(() => {
-    return sessionStorage.getItem('tana_install_dismissed') === 'true';
-  });
+  const [dismissed, setDismissed] = useState(false);
 
   // If already running as standalone or installed, hide prompt unless in card mode in Profile
   if (isStandalone || isInstalled) {
@@ -67,13 +65,12 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
     return null;
   }
 
-  // If dismissed in this session and not a manually invoked modal/card
-  if (dismissed && mode === 'banner') {
+  // If dismissed during this session view
+  if (dismissed && mode === 'banner' && !showManualGuide) {
     return null;
   }
 
   const handleDismiss = () => {
-    sessionStorage.setItem('tana_install_dismissed', 'true');
     setDismissed(true);
     if (onClose) onClose();
   };
@@ -109,36 +106,115 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
     );
   }
 
-  // 2. Banner Mode (Top or bottom alert)
+  // 2. Banner Mode (Top popdown alert when open in browser)
   if (mode === 'banner') {
     return (
-      <div 
-        id="pwa-install-banner"
-        className={`bg-gradient-to-r from-[#2a053b] via-[#3a0852] to-[#1a0126] border-b border-[#deb356]/30 text-white px-4 py-2.5 shadow-md flex items-center justify-between gap-3 text-xs z-40 animate-fade-in ${className}`}
-      >
-        <div className="flex items-center gap-2.5 min-w-0">
-          <CbeLogo className="w-7 h-7 flex-shrink-0" />
-          <div className="min-w-0">
-            <p className="font-bold text-[#deb356] text-xs truncate">Install Tana Bank</p>
-            <p className="text-[10px] text-slate-300 truncate">Fullscreen app-like mobile experience</p>
+      <>
+        {!dismissed && (
+          <div 
+            id="pwa-install-banner"
+            className={`bg-gradient-to-r from-[#2a053b] via-[#3d0856] to-[#1a0126] border-b border-[#deb356]/40 text-white px-3.5 py-2.5 shadow-xl flex items-center justify-between gap-3 text-xs z-50 transition-all duration-300 transform translate-y-0 ${className}`}
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-black/40 border border-[#deb356]/40 p-1 flex items-center justify-center shrink-0 shadow-sm">
+                <CbeLogo className="w-6 h-6 object-contain" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <p className="font-extrabold text-[#deb356] text-xs truncate">Install Tana Bank</p>
+                  <span className="text-[9px] font-bold px-1.5 py-0.2 bg-[#deb356]/20 text-[#deb356] rounded-sm border border-[#deb356]/30">App</span>
+                </div>
+                <p className="text-[10.5px] text-slate-300 truncate">Tap to install on device home screen</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                id="btn-pwa-banner-install"
+                onClick={handleInstallClick}
+                disabled={installing}
+                className="px-3 py-1.5 bg-gradient-to-r from-[#dfa04c] to-[#deb356] hover:from-[#c9903f] hover:to-[#c99f47] active:scale-95 text-slate-950 font-black rounded-lg text-xs shadow-md flex items-center gap-1.5 transition-all touch-manipulation cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>{installing ? 'Installing...' : 'Install Now'}</span>
+              </button>
+              <button 
+                id="btn-pwa-banner-dismiss"
+                onClick={handleDismiss} 
+                className="p-1.5 text-slate-400 hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-white/10"
+                aria-label="Dismiss banner"
+                title="Dismiss"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <button
-            onClick={handleInstallClick}
-            className="px-3 py-1 bg-[#deb356] hover:bg-[#c99f47] active:bg-[#b88f39] text-slate-950 font-bold rounded-lg text-xs shadow-sm transition-all touch-manipulation"
-          >
-            Install
-          </button>
-          <button 
-            onClick={handleDismiss} 
-            className="p-1 text-slate-400 hover:text-white transition-colors"
-            aria-label="Dismiss banner"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
+        )}
+
+        {/* Guided Modal for Safari / Browsers requiring manual action */}
+        {showManualGuide && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade-in">
+            <div className="bg-slate-900 border border-[#deb356]/40 rounded-3xl max-w-sm w-full p-5 text-white space-y-4 shadow-2xl">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div className="flex items-center gap-2">
+                  <Smartphone className="w-5 h-5 text-[#deb356]" />
+                  <h4 className="font-bold text-sm text-white">
+                    {isIos ? 'Install on iPhone / iPad' : 'Install on Your Device'}
+                  </h4>
+                </div>
+                <button 
+                  onClick={() => setShowManualGuide(false)}
+                  className="p-1 rounded-full text-slate-400 hover:text-white"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <p className="text-xs text-slate-300 leading-relaxed">
+                Follow these simple steps to install the app on your home screen for full-screen offline access:
+              </p>
+
+              {isIos ? (
+                <ol className="space-y-3 text-xs text-slate-200">
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-5 h-5 rounded-full bg-[#deb356] text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">1</span>
+                    <span>Tap the <strong>Share</strong> button in the Safari navigation bar at the bottom.</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-5 h-5 rounded-full bg-[#deb356] text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">2</span>
+                    <span>Scroll down and select <strong>"Add to Home Screen"</strong>.</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-5 h-5 rounded-full bg-[#deb356] text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">3</span>
+                    <span>Tap <strong>"Add"</strong> in the top right. Tana Bank will appear on your home screen as a standalone app.</span>
+                  </li>
+                </ol>
+              ) : (
+                <ol className="space-y-3 text-xs text-slate-200">
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-5 h-5 rounded-full bg-[#deb356] text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">1</span>
+                    <span>Open browser menu (tap the <strong>three dots ⋮</strong> in the top right).</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-5 h-5 rounded-full bg-[#deb356] text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">2</span>
+                    <span>Tap <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong>.</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <span className="w-5 h-5 rounded-full bg-[#deb356] text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">3</span>
+                    <span>Confirm by tapping <strong>"Install"</strong>.</span>
+                  </li>
+                </ol>
+              )}
+
+              <button
+                onClick={() => setShowManualGuide(false)}
+                className="w-full py-2.5 bg-[#deb356] hover:bg-[#c99f47] text-slate-950 font-bold rounded-xl text-xs transition-colors"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        )}
+      </>
     );
   }
 

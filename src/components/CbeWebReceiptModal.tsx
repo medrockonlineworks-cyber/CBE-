@@ -2414,20 +2414,20 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
           <main className="w-full flex-1 overflow-y-auto px-2 pt-2.5 pb-24 bg-[#f0f2f5] flex justify-center">
         <div 
           ref={receiptCardRef}
-          className={`bg-white w-full max-w-[460px] shadow-sm border border-gray-200 rounded-sm overflow-hidden text-gray-900 self-start transition-opacity ${
+          className={`bg-white w-full max-w-[460px] shadow-sm border border-gray-200/90 rounded-xl overflow-hidden text-gray-900 self-start transition-opacity ${
             isRefreshing ? 'opacity-40 scale-[0.99]' : 'opacity-100'
           }`}
           style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
         >
           
-          {/* Header Banner: Deep Royal CBE Purple (#781d77) matching IMG_20260906_111256_173.png */}
-          <div className="bg-[#781d77] relative px-3 py-3.5 sm:px-4 sm:py-4 rounded-t-sm flex items-center justify-center min-h-[76px] overflow-hidden">
+          {/* Header Banner: Deep Royal CBE Purple (#781d77) */}
+          <div className="bg-[#781d77] relative px-3 py-3.5 sm:px-4 sm:py-4 rounded-t-xl flex items-center justify-center min-h-[76px] overflow-hidden">
             {/* Admin Uploaded Logo or Official Golden Emblem positioned on left */}
             <div className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-12 sm:h-12 shrink-0 flex items-center justify-center select-none">
               <CbeLogo className="w-11 h-11 sm:w-12 sm:h-12 object-contain" src={adminLogo} />
             </div>
 
-            {/* Header Text: Exact font size, weights, colors and centered alignment matching IMG_20260906_111256_173.png */}
+            {/* Header Text: Exact font size, weights, colors and centered alignment */}
             <div className="text-center px-12 sm:px-14 select-none">
               <h1 className="text-white font-bold text-[17.5px] sm:text-[19px] leading-tight tracking-tight whitespace-nowrap">
                 Commercial Bank of Ethiopia
@@ -2442,63 +2442,63 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
           </div>
 
           {/* Body Information: 2 Columns with exact text style, weights and layout */}
-          <div className="p-3 sm:p-4 border-b border-gray-200">
+          <div className="p-3 sm:p-4">
             <div className="grid grid-cols-2 gap-3 sm:gap-4 text-[11px] leading-[1.38]">
               
               {/* Left Column: Company Address & Other Information */}
               <div className="space-y-0.5 text-[#111827]">
                 <h2 className="font-bold text-black text-[12px] leading-tight mb-1">
-                  Company Address & Other Information
+                  Company Address &amp; Other<br />Information
                 </h2>
                 
                 <div className="flex justify-between">
                   <span className="text-gray-700 font-normal">Country:</span>
-                  <span className="font-normal text-right">Ethiopia</span>
+                  <span className="font-normal text-right text-black">Ethiopia</span>
                 </div>
                 
                 <div className="flex justify-between">
                   <span className="text-gray-700 font-normal">City:</span>
-                  <span className="font-normal text-right">Addis Ababa</span>
+                  <span className="font-normal text-right text-black">Addis Ababa</span>
                 </div>
 
                 <div className="flex flex-col">
                   <span className="text-gray-700 font-normal">Address: Ras Desta Damtew</span>
-                  <span className="font-normal text-right">St, 01, Kirkos</span>
+                  <span className="font-normal text-right text-black">St, 01, Kirkos</span>
                 </div>
 
                 <div className="flex justify-between">
                   <span className="text-gray-700 font-normal">Postal code:</span>
-                  <span className="font-normal text-right">255</span>
+                  <span className="font-normal text-right text-black">255</span>
                 </div>
 
                 <div className="flex justify-between">
                   <span className="text-gray-700 font-normal">SWIFT Code:</span>
-                  <span className="font-normal text-right">CBETETAA</span>
+                  <span className="font-normal text-right text-black">CBETETAA</span>
                 </div>
 
                 <div className="flex justify-between">
                   <span className="text-gray-700 font-normal">Email:</span>
-                  <span className="font-normal text-right truncate">info@cbe.com.et</span>
+                  <span className="font-normal text-right text-black truncate">info@cbe.com.et</span>
                 </div>
 
                 <div className="flex justify-between">
                   <span className="text-gray-700 font-normal">Tel:</span>
-                  <span className="font-normal text-right">+251-551-50-04</span>
+                  <span className="font-normal text-right text-black">+251-551-50-04</span>
                 </div>
 
                 <div className="flex justify-between">
                   <span className="text-gray-700 font-normal">Fax:</span>
-                  <span className="font-normal text-right">+251-551-45-22</span>
+                  <span className="font-normal text-right text-black">+251-551-45-22</span>
                 </div>
 
                 <div className="flex justify-between">
                   <span className="text-gray-700 font-normal">Tin:</span>
-                  <span className="font-normal text-right">0000006966</span>
+                  <span className="font-normal text-right text-black">0000006966</span>
                 </div>
 
                 <div className="flex justify-between items-baseline">
                   <span className="text-gray-700 font-normal">VAT Receipt</span>
-                  <span className="font-normal text-right">{receiptData.refId}</span>
+                  <span className="font-normal text-right text-black">{receiptData.refId}</span>
                 </div>
                 <div className="text-gray-700 font-normal -mt-0.5">
                   No:
@@ -2506,12 +2506,12 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
 
                 <div className="flex justify-between">
                   <span className="text-gray-700 font-normal">VAT Registration No:</span>
-                  <span className="font-normal text-right">011140</span>
+                  <span className="font-normal text-right text-black">011140</span>
                 </div>
 
                 <div className="flex justify-between items-baseline">
                   <span className="text-gray-700 font-normal">VAT Registration</span>
-                  <span className="font-normal text-right">01/01/2003</span>
+                  <span className="font-normal text-right text-black">01/01/2003</span>
                 </div>
                 <div className="text-gray-700 font-normal -mt-0.5">
                   Date:
@@ -2519,14 +2519,14 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
               </div>
 
               {/* Right Column: Customer Information */}
-              <div className="space-y-0.5 text-[#111827]">
+              <div className="space-y-0.5 text-black">
                 <h2 className="font-bold text-black text-[12px] leading-tight mb-1">
                   Customer Information
                 </h2>
 
                 <div className="flex justify-between items-start">
                   <span className="text-gray-700 font-normal shrink-0">Customer</span>
-                  <span className="font-normal text-right leading-tight max-w-[130px]">
+                  <span className="font-normal text-right text-black leading-tight max-w-[130px]">
                     {receiptData.customerName}
                   </span>
                 </div>
@@ -2536,42 +2536,42 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
 
                 <div className="flex justify-between">
                   <span className="text-gray-700 font-normal">Region:</span>
-                  <span className="font-normal text-right">-</span>
+                  <span className="font-normal text-right text-black">-</span>
                 </div>
 
                 <div className="flex justify-between">
                   <span className="text-gray-700 font-normal">City:</span>
-                  <span className="font-normal text-right">-</span>
+                  <span className="font-normal text-right text-black">-</span>
                 </div>
 
                 <div className="flex justify-between">
                   <span className="text-gray-700 font-normal">Sub City:</span>
-                  <span className="font-normal text-right">-</span>
+                  <span className="font-normal text-right text-black">-</span>
                 </div>
 
                 <div className="flex justify-between">
                   <span className="text-gray-700 font-normal">Wereda/Kebele:</span>
-                  <span className="font-normal text-right">-</span>
+                  <span className="font-normal text-right text-black">-</span>
                 </div>
 
                 <div className="flex justify-between">
                   <span className="text-gray-700 font-normal">VAT Registration No:</span>
-                  <span className="font-normal text-right">-</span>
+                  <span className="font-normal text-right text-black">-</span>
                 </div>
 
                 <div className="flex justify-between">
                   <span className="text-gray-700 font-normal">VAT Registration Date:</span>
-                  <span className="font-normal text-right">-</span>
+                  <span className="font-normal text-right text-black">-</span>
                 </div>
 
                 <div className="flex justify-between">
                   <span className="text-gray-700 font-normal">TIN (TAX ID):</span>
-                  <span className="font-normal text-right">-</span>
+                  <span className="font-normal text-right text-black">-</span>
                 </div>
 
                 <div className="flex justify-between">
                   <span className="text-gray-700 font-normal">Branch:</span>
-                  <span className="font-normal text-right">-</span>
+                  <span className="font-normal text-right text-black">-</span>
                 </div>
               </div>
 
@@ -2664,11 +2664,11 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
               </div>
 
               {/* Total Amount Debited Row: Bold label and bold value matching screenshot */}
-              <div className="flex justify-between items-center px-3 py-2.5 border-t border-[#d1d5db]">
-                <span className="font-bold text-black text-[12.5px] max-w-[200px] leading-snug">
-                  Total amount debited from customer's account:
+              <div className="flex justify-between items-center px-3 py-2.5 bg-white">
+                <span className="font-bold text-black text-[12px] sm:text-[12.5px] max-w-[200px] leading-snug">
+                  Total Amount Debited:
                 </span>
-                <span className="font-bold text-black text-[13.5px] text-right">
+                <span className="font-bold text-black text-right text-[12.5px] sm:text-[13px] self-center">
                   {receiptData.totalDebited.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
                 </span>
               </div>

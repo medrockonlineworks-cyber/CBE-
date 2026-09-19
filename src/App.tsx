@@ -406,6 +406,9 @@ export default function App() {
         {/* Real-time Offline Warning Banner */}
         <OfflineBanner />
 
+        {/* Global PWA Install Actions Popdown Banner */}
+        <AppInstallPrompt mode="banner" />
+
         {/* Dynamic View Panel Router */}
         <main className={`flex-1 flex flex-col scrollbar-none ${
           activeView === 'sms' 
@@ -431,9 +434,6 @@ export default function App() {
 
           {activeView === 'main' && (
             <div className={`flex-1 flex flex-col relative ${activeTab === 'home' || activeTab === 'history' ? 'h-full overflow-hidden' : 'pb-28'}`}>
-              {/* Optional Top PWA Banner when installable */}
-              <AppInstallPrompt mode="banner" />
-
               {renderTabContent()}
               
               {/* Floating bottom navigation for secondary sub-tabs */}

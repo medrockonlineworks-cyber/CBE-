@@ -3,25 +3,19 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 import './index.css';
 import { initPwaDynamicManifest } from './utils/pwaBranding';
+import { registerSW } from 'virtual:pwa-register';
 
-// Clean up any stale service workers or caches in development/preview to prevent hook/React chunk mismatches
-if (typeof window !== 'undefined') {
-  const isDev = window.location.hostname === 'localhost' || 
-                window.location.hostname === '127.0.0.1' || 
-                window.location.hostname.includes('run.app') ||
-                window.location.hostname.includes('ais-');
-  if (isDev) {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then((regs) => {
-        regs.forEach((r) => r.unregister());
-      }).catch(() => {});
-    }
-    if ('caches' in window) {
-      caches.keys().then((names) => {
-        names.forEach((n) => caches.delete(n));
-      }).catch(() => {});
-    }
-  }
+// Register PWA Service Worker for offline capability & installability
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+  registerSW({
+    immediate: true,
+    onNeedRefresh() {
+      console.log('[PWA] New version ready, updating in background');
+    },
+    onOfflineReady() {
+      console.log('[PWA] App is cached and ready for offline use');
+    },
+  });
 }
 
 // Safe PWA manifest dynamic loader
