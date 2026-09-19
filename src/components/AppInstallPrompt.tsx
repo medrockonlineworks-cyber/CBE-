@@ -192,15 +192,15 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
                 <ol className="space-y-3 text-xs text-slate-200">
                   <li className="flex items-start gap-2.5">
                     <span className="w-5 h-5 rounded-full bg-[#deb356] text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">1</span>
-                    <span>Open browser menu (tap the <strong>three dots ⋮</strong> in the top right).</span>
+                    <span>Tap the <strong>three dots (⋮)</strong> menu in the top right corner of Chrome.</span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <span className="w-5 h-5 rounded-full bg-[#deb356] text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">2</span>
-                    <span>Tap <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong>.</span>
+                    <span>Select <strong>"Install app"</strong> (or <strong>"Install Tana Digital Bank"</strong>).</span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <span className="w-5 h-5 rounded-full bg-[#deb356] text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">3</span>
-                    <span>Confirm by tapping <strong>"Install"</strong>.</span>
+                    <span>Tap <strong>"Install"</strong> in the confirmation dialog to install the real application.</span>
                   </li>
                 </ol>
               )}

@@ -26,6 +26,17 @@
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="mask-icon" href="/icons/icon-maskable.svg" color="#deb356" />
 
+    <!-- Early PWA Install Prompt Capture -->
+    <script>
+      window.__deferredPrompt = null;
+      window.addEventListener('beforeinstallprompt', function(e) {
+        e.preventDefault();
+        window.__deferredPrompt = e;
+        window.dispatchEvent(new CustomEvent('pwa_prompt_ready'));
+        console.log('[PWA] Early beforeinstallprompt captured and saved');
+      });
+    </script>
+
     <!-- Typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

@@ -78,21 +78,37 @@
       "short_name": "Send",
       "description": "Transfer funds instantly to any bank account",
       "url": "/?tab=transfer&sub=send",
-      "icons": [{ "src": "/icons/icon-192.svg", "sizes": "192x192" }]
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "Pay Bills & Airtime",
       "short_name": "Pay Bills",
       "description": "Pay utility bills, telecom, and merchant payments",
       "url": "/?tab=payments",
-      "icons": [{ "src": "/icons/icon-192.svg", "sizes": "192x192" }]
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     },
     {
       "name": "Transaction History",
       "short_name": "History",
       "description": "View recent transaction records and receipts",
       "url": "/?tab=history",
-      "icons": [{ "src": "/icons/icon-192.svg", "sizes": "192x192" }]
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/pwa-screenshot-mobile.png",
+      "sizes": "540x1170",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Tana Digital Bank Mobile"
+    },
+    {
+      "src": "/pwa-screenshot-wide.png",
+      "sizes": "1280x800",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Tana Digital Bank Desktop"
     }
   ],
   "related_applications": [],

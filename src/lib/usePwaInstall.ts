@@ -48,6 +48,13 @@ export function usePwaInstall() {
     // 2. Initial display mode check
     checkDisplayMode();
 
+    // Check if early beforeinstallprompt was captured in index.html
+    if (typeof window !== 'undefined' && (window as any).__deferredPrompt) {
+      setDeferredPrompt((window as any).__deferredPrompt);
+      setIsInstallable(true);
+      console.log('[PWA] Restored early beforeinstallprompt event from window.__deferredPrompt');
+    }
+
     // 3. Listen for display-mode media query changes
     const standaloneMatcher = window.matchMedia('(display-mode: standalone)');
     const fullscreenMatcher = window.matchMedia('(display-mode: fullscreen)');
@@ -68,9 +75,18 @@ export function usePwaInstall() {
       // Prevent automatic mini-infobar on mobile Chrome
       e.preventDefault();
       const promptEvent = e as BeforeInstallPromptEvent;
+      (window as any).__deferredPrompt = promptEvent;
       setDeferredPrompt(promptEvent);
       setIsInstallable(true);
       console.log('[PWA] beforeinstallprompt event captured and ready');
+    };
+
+    const handleEarlyPromptReady = () => {
+      if ((window as any).__deferredPrompt) {
+        setDeferredPrompt((window as any).__deferredPrompt);
+        setIsInstallable(true);
+        console.log('[PWA] pwa_prompt_ready received, updated deferredPrompt');
+      }
     };
 
     // 5. Capture appinstalled event
@@ -79,15 +95,20 @@ export function usePwaInstall() {
       setIsInstalled(true);
       setIsInstallable(false);
       setDeferredPrompt(null);
+      if (typeof window !== 'undefined') {
+        (window as any).__deferredPrompt = null;
+      }
       localStorage.setItem('tana_pwa_installed', 'true');
       setInstallOutcome('accepted');
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('pwa_prompt_ready', handleEarlyPromptReady);
     window.addEventListener('appinstalled', handleAppInstalled);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('pwa_prompt_ready', handleEarlyPromptReady);
       window.removeEventListener('appinstalled', handleAppInstalled);
       try {
         standaloneMatcher.removeEventListener('change', handleDisplayChange);
@@ -101,14 +122,16 @@ export function usePwaInstall() {
 
   // Trigger real native installation prompt
   const promptInstall = async (): Promise<{ outcome: 'accepted' | 'dismissed' | 'manual_required' }> => {
-    if (!deferredPrompt) {
+    const activePrompt = deferredPrompt || (typeof window !== 'undefined' ? (window as any).__deferredPrompt : null);
+
+    if (!activePrompt) {
       console.log('[PWA] No deferred prompt available; manual installation flow required');
       return { outcome: 'manual_required' };
     }
 
     try {
-      await deferredPrompt.prompt();
-      const choiceResult = await deferredPrompt.userChoice;
+      await activePrompt.prompt();
+      const choiceResult = await activePrompt.userChoice;
       
       console.log(`[PWA] User choice: ${choiceResult.outcome}`);
       setInstallOutcome(choiceResult.outcome);
@@ -120,6 +143,9 @@ export function usePwaInstall() {
       }
 
       setDeferredPrompt(null);
+      if (typeof window !== 'undefined') {
+        (window as any).__deferredPrompt = null;
+      }
       return { outcome: choiceResult.outcome };
     } catch (err) {
       console.error('[PWA] Error executing install prompt:', err);
