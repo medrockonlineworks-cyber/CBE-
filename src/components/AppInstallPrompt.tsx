@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePwaInstall } from '../lib/usePwaInstall';
 import { CbeLogo } from './CbeLogo';
 import { 
@@ -21,6 +21,9 @@ interface AppInstallPromptProps {
   className?: string;
 }
 
+const SNOOZE_STORAGE_KEY = 'tana_pwa_banner_snooze_until';
+const FIVE_MINUTES_MS = 5 * 60 * 1000;
+
 export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
   mode = 'card',
   isOpen = true,
@@ -40,7 +43,48 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
   const [installing, setInstalling] = useState(false);
   const [showManualGuide, setShowManualGuide] = useState(false);
   const [showNativeInfo, setShowNativeInfo] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
+
+  // Initialize dismissed state based on 5-minute snooze cooldown
+  const [dismissed, setDismissed] = useState<boolean>(() => {
+    try {
+      const snoozeUntil = localStorage.getItem(SNOOZE_STORAGE_KEY);
+      if (snoozeUntil) {
+        const remaining = Number(snoozeUntil) - Date.now();
+        if (remaining > 0) {
+          return true; // Still waiting / snoozed for 5 minutes
+        }
+      }
+    } catch {}
+    return false;
+  });
+
+  // Check and automatically restore banner once the 5-minute snooze expires
+  useEffect(() => {
+    if (!dismissed) return;
+    try {
+      const snoozeUntil = localStorage.getItem(SNOOZE_STORAGE_KEY);
+      if (snoozeUntil) {
+        const remaining = Number(snoozeUntil) - Date.now();
+        if (remaining > 0) {
+          const timer = setTimeout(() => {
+            setDismissed(false);
+          }, remaining);
+          return () => clearTimeout(timer);
+        } else {
+          setDismissed(false);
+        }
+      }
+    } catch {}
+  }, [dismissed]);
+
+  // Auto-dismiss banner after 5 minutes of continuous display if user neither installs nor cancels
+  useEffect(() => {
+    if (mode !== 'banner' || dismissed) return;
+    const autoDismissTimer = setTimeout(() => {
+      handleDismiss();
+    }, FIVE_MINUTES_MS);
+    return () => clearTimeout(autoDismissTimer);
+  }, [mode, dismissed]);
 
   // If already running as standalone or installed, hide prompt unless in card mode in Profile
   if (isStandalone || isInstalled) {
@@ -70,7 +114,11 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
     return null;
   }
 
+  // Dismiss / Cancel handler: saves 5-minute cooldown and immediately removes from UI
   const handleDismiss = () => {
+    try {
+      localStorage.setItem(SNOOZE_STORAGE_KEY, (Date.now() + FIVE_MINUTES_MS).toString());
+    } catch {}
     setDismissed(true);
     if (onClose) onClose();
   };
@@ -113,7 +161,7 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
         {!dismissed && (
           <div 
             id="pwa-install-banner"
-            className={`bg-gradient-to-r from-[#2a053b] via-[#3d0856] to-[#1a0126] border-b border-[#deb356]/40 text-white px-3.5 py-2.5 shadow-xl flex items-center justify-between gap-3 text-xs z-50 transition-all duration-300 transform translate-y-0 ${className}`}
+            className={`bg-gradient-to-r from-[#2a053b] via-[#3d0856] to-[#1a0126] border-b border-[#deb356]/40 text-white px-3 py-2 shadow-xl flex items-center justify-between gap-2.5 text-xs z-50 transition-all duration-300 transform translate-y-0 ${className}`}
           >
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-8 h-8 rounded-xl bg-black/40 border border-[#deb356]/40 p-1 flex items-center justify-center shrink-0 shadow-sm">
@@ -127,7 +175,8 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
                 <p className="text-[10.5px] text-slate-300 truncate">Tap to install on device home screen</p>
               </div>
             </div>
-            <div className="flex items-center gap-1.5 shrink-0">
+
+            <div className="flex items-center gap-2 shrink-0">
               <button
                 id="btn-pwa-banner-install"
                 onClick={handleInstallClick}
@@ -137,14 +186,16 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
                 <Download className="w-3.5 h-3.5" />
                 <span>{installing ? 'Installing...' : 'Install Now'}</span>
               </button>
+
+              {/* High-visibility X Cancel Button to immediately remove from UI & wait 5 minutes */}
               <button 
                 id="btn-pwa-banner-dismiss"
                 onClick={handleDismiss} 
-                className="p-1.5 text-slate-400 hover:text-white transition-colors cursor-pointer rounded-lg hover:bg-white/10"
-                aria-label="Dismiss banner"
-                title="Dismiss"
+                className="w-7 h-7 flex items-center justify-center rounded-lg bg-white/10 hover:bg-red-500/25 active:bg-red-500/40 text-slate-300 hover:text-white border border-white/15 transition-all cursor-pointer active:scale-95 shrink-0"
+                aria-label="Cancel and remove install banner (hide for 5 minutes)"
+                title="Cancel / Hide for 5 minutes"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4 stroke-[2.5]" />
               </button>
             </div>
           </div>
