@@ -517,20 +517,30 @@ export async function initPwaDynamicManifest(): Promise<void> {
   const localLogo = LocalDb.getCustomBankLogo();
 
   if (localLogo) {
-    // Synchronize the existing uploaded logo to server so server files match localStorage immediately
+    // Only if admin explicitly set a custom logo in LocalDb
     await updatePwaBranding(localLogo);
   } else {
-    // Check if the server already has a custom logo stored from another session
-    try {
-      const res = await fetch('/api/pwa/status');
-      if (res.ok) {
-        const data = await res.json();
-        if (data.hasCustom && data.rawLogo) {
-          LocalDb.setCustomBankLogo(data.rawLogo);
-          await updatePwaBranding(data.rawLogo);
-        }
-      }
-    } catch {}
+    // Enforce official CBE Golden Emblem branding found inside the application
+    const ts = Date.now();
+    const manifestLink = document.getElementById('pwa-manifest-link') as HTMLLinkElement | null || document.querySelector('link[rel="manifest"]') as HTMLLinkElement | null;
+    if (manifestLink) {
+      manifestLink.setAttribute('href', `/manifest.webmanifest?v=${ts}`);
+    }
+    const appleTouchLink = document.getElementById('app-apple-touch-icon') as HTMLLinkElement | null || document.querySelector('link[rel="apple-touch-icon"]') as HTMLLinkElement | null;
+    if (appleTouchLink) {
+      appleTouchLink.setAttribute('href', `/apple-touch-icon.png?v=${ts}`);
+    }
+    const faviconPng = document.getElementById('app-favicon-png') as HTMLLinkElement | null;
+    if (faviconPng) {
+      faviconPng.setAttribute('href', `/pwa-192x192.png?v=${ts}`);
+    }
+
+    // Clean any old custom branding cache
+    if ('caches' in window) {
+      try {
+        await caches.delete('cbe-custom-branding-cache');
+      } catch {}
+    }
   }
 
   // Listen for admin logo updates across the application and windows
