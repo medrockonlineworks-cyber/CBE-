@@ -34,7 +34,7 @@ export default defineConfig(() => {
           display_override: ['standalone', 'minimal-ui', 'fullscreen', 'browser'],
           orientation: 'portrait-primary',
           theme_color: '#300642',
-          background_color: '#0f172a',
+          background_color: '#300642',
           lang: 'en',
           dir: 'ltr',
           categories: ['finance', 'business', 'utilities'],

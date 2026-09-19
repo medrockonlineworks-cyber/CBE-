@@ -12,6 +12,7 @@ import { CbeLogo } from './CbeLogo';
 import { compressImageFile } from '../lib/imageUtils';
 import BankLogoModal from './BankLogoModal';
 import AdminEthiopianNames from '../pages/AdminEthiopianNames';
+import { updatePwaBranding } from '../utils/pwaBranding';
 import { 
   Users, 
   TrendingUp, 
@@ -143,6 +144,7 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
       const dataUrl = await compressImageFile(file, 400, 0.9);
       LocalDb.setCustomBankLogo(dataUrl);
       setCustomBankLogo(dataUrl);
+      updatePwaBranding(dataUrl);
       LocalDb.addAuditLog(currentUser.id, currentUser.email, 'UPLOAD_BANK_LOGO', 'Uploaded a custom bank logo image for receipts and feedback.');
     } catch (err) {
       console.error('Failed to compress bank logo:', err);
@@ -153,6 +155,7 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
   const handleResetBankLogo = () => {
     LocalDb.setCustomBankLogo(null);
     setCustomBankLogo(null);
+    updatePwaBranding(DEFAULT_CBE_LOGO);
     LocalDb.addAuditLog(currentUser.id, currentUser.email, 'RESET_BANK_LOGO', 'Reset the bank logo to the official Commercial Bank of Ethiopia (CBE) SVG logo.');
   };
 
