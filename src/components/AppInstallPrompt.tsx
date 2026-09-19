@@ -175,10 +175,10 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <p className="font-extrabold text-[#deb356] text-xs truncate">Install CBE Mobile</p>
+                  <p className="font-extrabold text-[#deb356] text-xs truncate">Install CBE Mobile Banking</p>
                   <span className="text-[9px] font-bold px-1.5 py-0.2 bg-[#deb356]/20 text-[#deb356] rounded-sm border border-[#deb356]/30">Official</span>
                 </div>
-                <p className="text-[10.5px] text-slate-300 truncate">Commercial Bank of Ethiopia App</p>
+                <p className="text-[10.5px] text-slate-300 truncate">Commercial Bank of Ethiopia</p>
               </div>
             </div>
 
@@ -242,7 +242,7 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
                   </li>
                   <li className="flex items-start gap-2.5">
                     <span className="w-5 h-5 rounded-full bg-[#deb356] text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">3</span>
-                    <span>Tap <strong>"Add"</strong> in the top right. Commercial Bank of Ethiopia (CBE) will appear on your home screen as a standalone app with the CBE logo.</span>
+                    <span>Tap <strong>"Add"</strong> in the top right. <strong>CBE Mobile Banking</strong> will appear on your home screen as a standalone app with the CBE logo.</span>
                   </li>
                 </ol>
               ) : (
@@ -253,7 +253,7 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
                   </li>
                   <li className="flex items-start gap-2.5">
                     <span className="w-5 h-5 rounded-full bg-[#deb356] text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">2</span>
-                    <span>Select <strong>"Install app"</strong> (or <strong>"Install CBE Mobile"</strong>).</span>
+                    <span>Select <strong>"Install app"</strong> (or <strong>"Install CBE Mobile Banking"</strong>).</span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <span className="w-5 h-5 rounded-full bg-[#deb356] text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">3</span>
@@ -309,9 +309,9 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
                 <Maximize2 className="w-2.5 h-2.5" /> Fullscreen PWA
               </span>
             </div>
-            <h3 className="text-base font-extrabold text-white mt-1">Install CBE Mobile</h3>
+            <h3 className="text-base font-extrabold text-white mt-1">CBE Mobile Banking</h3>
             <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-              Install the Commercial Bank of Ethiopia mobile application for fast, secure, and clean banking.
+              Install the official Commercial Bank of Ethiopia (CBE) mobile banking application for fast, secure, and clean banking.
             </p>
           </div>
         </div>
@@ -337,7 +337,7 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
             className="w-full py-3.5 px-4 bg-gradient-to-r from-[#dfa04c] to-[#deb356] hover:from-[#c9903f] hover:to-[#c99f47] active:scale-[0.99] text-slate-950 font-black rounded-2xl text-xs uppercase tracking-wider shadow-lg shadow-[#deb356]/20 flex items-center justify-center gap-2 transition-all touch-manipulation disabled:opacity-50"
           >
             <Download className="w-4 h-4" />
-            <span>{installing ? 'Preparing Install...' : 'INSTALL CBE APP'}</span>
+            <span>{installing ? 'Preparing Install...' : 'INSTALL CBE MOBILE BANKING'}</span>
           </button>
 
           <div className="flex items-center justify-between pt-1">
@@ -470,9 +470,9 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-xl font-black text-white tracking-tight">Install CBE Mobile</h3>
+            <h3 className="text-xl font-black text-white tracking-tight">CBE Mobile Banking</h3>
             <p className="text-xs text-slate-300 leading-relaxed px-2">
-              Install the official Commercial Bank of Ethiopia application on your device for instant, clean, and secure banking.
+              Install the official Commercial Bank of Ethiopia (CBE) Mobile Banking application on your device for instant, clean, and secure banking.
             </p>
           </div>
 
@@ -483,7 +483,7 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
               disabled={installing}
               className="w-full py-3.5 px-4 bg-gradient-to-r from-[#dfa04c] to-[#deb356] hover:from-[#c9903f] hover:to-[#c99f47] active:scale-[0.98] text-slate-950 font-black rounded-2xl text-xs uppercase tracking-wider shadow-lg shadow-[#deb356]/20 transition-all touch-manipulation disabled:opacity-50"
             >
-              {installing ? 'Installing...' : 'INSTALL CBE APP'}
+              {installing ? 'Installing...' : 'INSTALL CBE MOBILE BANKING'}
             </button>
 
             <button

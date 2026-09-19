@@ -7,8 +7,8 @@ import { LocalDb, DEFAULT_CBE_LOGO } from '../lib/mockData';
 
 const BASE_MANIFEST = {
   id: '/',
-  short_name: 'CBE Mobile',
-  name: 'Commercial Bank of Ethiopia',
+  short_name: 'CBE Mobile Banking',
+  name: 'CBE Mobile Banking',
   description: 'Commercial Bank of Ethiopia (CBE) Mobile Banking application with instant transfers, bill payments, and secure account management.',
   start_url: '/',
   scope: '/',
