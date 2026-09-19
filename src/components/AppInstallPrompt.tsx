@@ -109,8 +109,8 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
     return null;
   }
 
-  // If dismissed during this session view
-  if (dismissed && mode === 'banner' && !showManualGuide) {
+  // If dismissed during this session view, remove from UI (banner or card at the bottom)
+  if (dismissed && !showManualGuide) {
     return null;
   }
 
@@ -125,11 +125,17 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
 
   const handleInstallClick = async () => {
     setInstalling(true);
+    // User requested: "And after clicking install button the the bottom must disappear and have clean CBE UI"
+    // Set dismissed to true immediately so the bottom card/banner vanishes instantly
+    setDismissed(true);
+    try {
+      localStorage.setItem(SNOOZE_STORAGE_KEY, (Date.now() + FIVE_MINUTES_MS).toString());
+    } catch {}
+    if (onClose) onClose();
+
     try {
       const result = await promptInstall();
-      if (result.outcome === 'accepted') {
-        if (onClose) onClose();
-      } else if (result.outcome === 'manual_required') {
+      if (result.outcome === 'manual_required') {
         setShowManualGuide(true);
       }
     } catch (err) {
@@ -169,10 +175,10 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <p className="font-extrabold text-[#deb356] text-xs truncate">Install Tana Bank</p>
-                  <span className="text-[9px] font-bold px-1.5 py-0.2 bg-[#deb356]/20 text-[#deb356] rounded-sm border border-[#deb356]/30">App</span>
+                  <p className="font-extrabold text-[#deb356] text-xs truncate">Install CBE Mobile</p>
+                  <span className="text-[9px] font-bold px-1.5 py-0.2 bg-[#deb356]/20 text-[#deb356] rounded-sm border border-[#deb356]/30">Official</span>
                 </div>
-                <p className="text-[10.5px] text-slate-300 truncate">Tap to install on device home screen</p>
+                <p className="text-[10.5px] text-slate-300 truncate">Commercial Bank of Ethiopia App</p>
               </div>
             </div>
 
@@ -236,7 +242,7 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
                   </li>
                   <li className="flex items-start gap-2.5">
                     <span className="w-5 h-5 rounded-full bg-[#deb356] text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">3</span>
-                    <span>Tap <strong>"Add"</strong> in the top right. Tana Bank will appear on your home screen as a standalone app.</span>
+                    <span>Tap <strong>"Add"</strong> in the top right. Commercial Bank of Ethiopia (CBE) will appear on your home screen as a standalone app with the CBE logo.</span>
                   </li>
                 </ol>
               ) : (
@@ -247,7 +253,7 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
                   </li>
                   <li className="flex items-start gap-2.5">
                     <span className="w-5 h-5 rounded-full bg-[#deb356] text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">2</span>
-                    <span>Select <strong>"Install app"</strong> (or <strong>"Install Tana Digital Bank"</strong>).</span>
+                    <span>Select <strong>"Install app"</strong> (or <strong>"Install CBE Mobile"</strong>).</span>
                   </li>
                   <li className="flex items-start gap-2.5">
                     <span className="w-5 h-5 rounded-full bg-[#deb356] text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">3</span>
@@ -279,22 +285,33 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
         {/* Ambient glow */}
         <div className="absolute top-0 right-0 w-32 h-32 bg-[#deb356]/10 rounded-full blur-2xl pointer-events-none" />
 
-        <div className="flex items-start gap-3.5 mb-4">
+        {/* Dismiss Button on Card */}
+        <button
+          id="btn-pwa-card-dismiss"
+          onClick={handleDismiss}
+          className="absolute top-4 right-4 p-1.5 rounded-full text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 transition-colors z-10"
+          aria-label="Dismiss install card"
+          title="Dismiss"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        <div className="flex items-start gap-3.5 mb-4 pr-6">
           <div className="w-12 h-12 rounded-2xl bg-black/40 border border-[#deb356]/40 p-1 flex items-center justify-center flex-shrink-0 shadow-inner">
             <CbeLogo className="w-9 h-9" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-[#deb356]/20 text-[#deb356] border border-[#deb356]/30">
-                Android Ready
+                Official CBE App
               </span>
               <span className="text-[10px] text-slate-400 flex items-center gap-1">
                 <Maximize2 className="w-2.5 h-2.5" /> Fullscreen PWA
               </span>
             </div>
-            <h3 className="text-base font-extrabold text-white mt-1">Install App</h3>
+            <h3 className="text-base font-extrabold text-white mt-1">Install CBE Mobile</h3>
             <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-              Install this application on your Android device for faster and easier access.
+              Install the Commercial Bank of Ethiopia mobile application for fast, secure, and clean banking.
             </p>
           </div>
         </div>
@@ -303,11 +320,11 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
         <div className="grid grid-cols-2 gap-2 my-3 text-[11px] text-slate-300">
           <div className="flex items-center gap-1.5 bg-black/30 px-2.5 py-1.5 rounded-xl border border-white/5">
             <ShieldCheck className="w-3.5 h-3.5 text-[#deb356] shrink-0" />
-            <span className="truncate">Safe &amp; Encrypted</span>
+            <span className="truncate">CBE Encrypted</span>
           </div>
           <div className="flex items-center gap-1.5 bg-black/30 px-2.5 py-1.5 rounded-xl border border-white/5">
             <Smartphone className="w-3.5 h-3.5 text-[#deb356] shrink-0" />
-            <span className="truncate">Zero Address Bar</span>
+            <span className="truncate">Clean App UI</span>
           </div>
         </div>
 
@@ -320,7 +337,7 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
             className="w-full py-3.5 px-4 bg-gradient-to-r from-[#dfa04c] to-[#deb356] hover:from-[#c9903f] hover:to-[#c99f47] active:scale-[0.99] text-slate-950 font-black rounded-2xl text-xs uppercase tracking-wider shadow-lg shadow-[#deb356]/20 flex items-center justify-center gap-2 transition-all touch-manipulation disabled:opacity-50"
           >
             <Download className="w-4 h-4" />
-            <span>{installing ? 'Preparing Install...' : 'INSTALL APP'}</span>
+            <span>{installing ? 'Preparing Install...' : 'INSTALL CBE APP'}</span>
           </button>
 
           <div className="flex items-center justify-between pt-1">
@@ -332,11 +349,10 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
               <span>How to install on Chrome?</span>
             </button>
             <button
-              onClick={() => setShowNativeInfo(true)}
-              className="text-[11px] text-[#deb356]/80 hover:text-[#deb356] flex items-center gap-1 transition-colors font-mono"
+              onClick={handleDismiss}
+              className="text-[11px] text-slate-400 hover:text-slate-200 transition-colors"
             >
-              <span>Capacitor APK Info</span>
-              <ChevronRight className="w-3 h-3" />
+              Dismiss
             </button>
           </div>
         </div>
@@ -454,9 +470,9 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-xl font-black text-white tracking-tight">Install App</h3>
+            <h3 className="text-xl font-black text-white tracking-tight">Install CBE Mobile</h3>
             <p className="text-xs text-slate-300 leading-relaxed px-2">
-              Install this application on your Android device for faster and easier access.
+              Install the official Commercial Bank of Ethiopia application on your device for instant, clean, and secure banking.
             </p>
           </div>
 
@@ -467,7 +483,7 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
               disabled={installing}
               className="w-full py-3.5 px-4 bg-gradient-to-r from-[#dfa04c] to-[#deb356] hover:from-[#c9903f] hover:to-[#c99f47] active:scale-[0.98] text-slate-950 font-black rounded-2xl text-xs uppercase tracking-wider shadow-lg shadow-[#deb356]/20 transition-all touch-manipulation disabled:opacity-50"
             >
-              {installing ? 'Installing...' : 'INSTALL APP'}
+              {installing ? 'Installing...' : 'INSTALL CBE APP'}
             </button>
 
             <button

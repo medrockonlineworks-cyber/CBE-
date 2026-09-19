@@ -142,7 +142,7 @@ export const Header: React.FC<HeaderProps> = ({
             id="btn-header-install-app"
             onClick={() => setShowInstallModal(true)}
             className="bg-gradient-to-r from-amber-400 to-[#deb356] hover:from-amber-300 hover:to-[#e5bf67] text-slate-950 font-black px-2.5 py-1.5 rounded-full text-xs flex items-center gap-1 shadow-md active:scale-95 transition-all cursor-pointer shrink-0"
-            title="Install Tana Bank Mobile App"
+            title="Install CBE Mobile Banking App"
             aria-label="Install App"
           >
             <Download className="w-3.5 h-3.5" />

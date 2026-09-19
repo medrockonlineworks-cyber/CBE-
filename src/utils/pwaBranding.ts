@@ -7,9 +7,9 @@ import { LocalDb, DEFAULT_CBE_LOGO } from '../lib/mockData';
 
 const BASE_MANIFEST = {
   id: '/',
-  short_name: 'Tana Bank',
-  name: 'Tana Digital Bank',
-  description: 'Commercial Bank of Ethiopia & Tana Digital Mobile Banking application with instant transfers, bill payments, and secure account management.',
+  short_name: 'CBE Mobile',
+  name: 'Commercial Bank of Ethiopia',
+  description: 'Commercial Bank of Ethiopia (CBE) Mobile Banking application with instant transfers, bill payments, and secure account management.',
   start_url: '/',
   scope: '/',
   display: 'standalone',

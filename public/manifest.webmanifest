@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "short_name": "Tana Bank",
-  "name": "Tana Digital Bank",
-  "description": "Commercial Bank of Ethiopia & Tana Digital Mobile Banking application with instant transfers, bill payments, and secure account management.",
+  "short_name": "CBE Mobile",
+  "name": "Commercial Bank of Ethiopia",
+  "description": "Commercial Bank of Ethiopia (CBE) Mobile Banking application with instant transfers, bill payments, and secure account management.",
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -101,14 +101,14 @@
       "sizes": "540x1170",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Tana Digital Bank Mobile"
+      "label": "Commercial Bank of Ethiopia Mobile"
     },
     {
       "src": "/pwa-screenshot-wide.png",
       "sizes": "1280x800",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Tana Digital Bank Desktop"
+      "label": "Commercial Bank of Ethiopia Desktop"
     }
   ],
   "related_applications": [],
