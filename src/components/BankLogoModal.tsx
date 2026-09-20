@@ -122,20 +122,20 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
 
   const handleResetLogoToDefault = async () => {
     setLogoErrorMsg('');
-    LocalDb.setCustomBankLogo(null);
-    setCurrentLogo(null);
-    setPreviewLogo(DEFAULT_CBE_LOGO);
+    LocalDb.setCustomBankLogo('/custom-bank-logo.png');
+    setCurrentLogo('/custom-bank-logo.png');
+    setPreviewLogo('/custom-bank-logo.png');
     setLogoSaveSuccess(true);
-    // Reset PWA icons, server disk assets, and manifest back to default CBE emblem
-    await updatePwaBranding(null);
+    // Reset PWA icons, server disk assets, and manifest back to uploaded PNG logo
+    await updatePwaBranding('/custom-bank-logo.png');
     LocalDb.addAuditLog(
       currentUser.id, 
       currentUser.email, 
       'RESET_BANK_LOGO', 
-      `Administrator ${currentUser.name} reset the bank logo to official default CBE emblem.`
+      `Administrator ${currentUser.name} reset the bank logo to recently uploaded PNG logo.`
     );
     if (onLogoUpdated) {
-      onLogoUpdated(null);
+      onLogoUpdated('/custom-bank-logo.png');
     }
     setTimeout(() => setLogoSaveSuccess(false), 3000);
   };
@@ -368,7 +368,7 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
 
             {/* Footer Actions */}
             <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
-              {currentLogo ? (
+              {currentLogo && currentLogo !== '/custom-bank-logo.png' ? (
                 <button
                   id="btn-reset-logo-in-modal"
                   type="button"
@@ -376,10 +376,13 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
                   className="text-xs font-semibold text-rose-600 hover:text-rose-700 transition flex items-center gap-1.5 cursor-pointer py-1.5 px-2 rounded-lg hover:bg-rose-50"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Remove Custom Logo</span>
+                  <span>Reset to Uploaded PNG Logo</span>
                 </button>
               ) : (
-                <span className="text-[11px] text-gray-400 italic">No custom logo active</span>
+                <span className="text-[11px] text-gray-500 font-medium flex items-center gap-1">
+                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                  Active: Recently uploaded PNG logo
+                </span>
               )}
 
               <button

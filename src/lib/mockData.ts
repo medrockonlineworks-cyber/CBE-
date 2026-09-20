@@ -872,8 +872,8 @@ const saveData = <T>(key: string, value: T): void => {
   localStorage.setItem(key, JSON.stringify(value));
 };
 
-// Self-contained, zero-network, reliable CBE Golden Emblem SVG data URI
-export const DEFAULT_CBE_LOGO = `data:image/svg+xml;utf8,${encodeURIComponent(`
+// Official CBE Golden Emblem SVG (kept for vector reference if needed)
+export const CBE_OFFICIAL_EMBLEM_SVG = `data:image/svg+xml;utf8,${encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
   <defs>
     <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -916,6 +916,9 @@ export const DEFAULT_CBE_LOGO = `data:image/svg+xml;utf8,${encodeURIComponent(`
   </g>
 </svg>
 `)}`;
+
+// Primary Bank Logo: points directly to the recently uploaded PNG logo
+export const DEFAULT_CBE_LOGO = '/custom-bank-logo.png';
 
 export type StampWeight = 'light' | 'normal' | 'medium' | 'bold' | 'heavy';
 
@@ -2186,10 +2189,11 @@ export class LocalDb {
   static getCustomBankLogo(): string | null {
     try {
       const val = localStorage.getItem('tana_custom_bank_logo');
-      return (val && val.trim().length > 0) ? val : null;
+      if (val && val.trim().length > 0) return val;
     } catch {
-      return null;
+      // ignore
     }
+    return '/custom-bank-logo.png';
   }
 
   static setCustomBankLogo(logo: string | null): void {
@@ -2204,16 +2208,17 @@ export class LocalDb {
     }
     
     // Broadcast across windows and local components
-    window.dispatchEvent(new CustomEvent('cbe_logo_updated', { detail: { logo } }));
+    window.dispatchEvent(new CustomEvent('cbe_logo_updated', { detail: { logo: logo || '/custom-bank-logo.png' } }));
   }
 
   static getCustomPdfLogo(): string | null {
     try {
       const val = localStorage.getItem('cbe_custom_pdf_logo');
-      return (val && val.trim().length > 0) ? val : null;
+      if (val && val.trim().length > 0) return val;
     } catch {
-      return null;
+      // ignore
     }
+    return LocalDb.getCustomBankLogo() || '/custom-bank-logo.png';
   }
 
   static setCustomPdfLogo(logo: string | null): void {

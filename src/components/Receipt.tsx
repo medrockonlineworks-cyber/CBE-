@@ -886,16 +886,18 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     // 8. Commercial Bank of Ethiopia Footer Inset
     const logoX = boxX + 36;
     const logoY = qrBoxY + qrBoxSize + 36;
-    const activeLogoUrl = customBankLogo || LocalDb.getCustomBankLogo() || DEFAULT_CBE_LOGO;
+    const activeLogoUrl = customBankLogo || LocalDb.getCustomBankLogo() || DEFAULT_CBE_LOGO || '/custom-bank-logo.png';
 
     let logoImageLoaded = false;
-    if (activeLogoUrl) {
+    const candidates = Array.from(new Set([activeLogoUrl, '/custom-bank-logo.png'].filter(Boolean))) as string[];
+    for (const url of candidates) {
+      if (logoImageLoaded) break;
       try {
-        const logoImg = await loadImageAsync(activeLogoUrl);
+        const logoImg = await loadImageAsync(url);
         ctx.drawImage(logoImg, logoX, logoY - 4, 46, 46);
         logoImageLoaded = true;
       } catch (err) {
-        console.warn('Custom logo load failed for canvas, rendering default emblem:', err);
+        console.warn(`Custom logo candidate ${url} load failed for canvas:`, err);
       }
     }
     

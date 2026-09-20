@@ -130,8 +130,13 @@ export const CbeLogo: React.FC<CbeLogoProps> = ({
       className={`${className} object-contain`} 
       referrerPolicy="no-referrer"
       onError={() => {
-        console.warn('[CbeLogo] Failed to render image, falling back to SVG emblem');
-        setImgError(true);
+        if (finalSrc !== '/custom-bank-logo.png') {
+          console.warn('[CbeLogo] Custom URL failed to load, falling back to uploaded PNG logo');
+          setActiveUrl('/custom-bank-logo.png');
+        } else {
+          console.warn('[CbeLogo] Uploaded PNG failed, falling back to SVG emblem');
+          setImgError(true);
+        }
       }}
     />
   );

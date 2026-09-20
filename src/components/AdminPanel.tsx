@@ -154,10 +154,10 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
   };
 
   const handleResetBankLogo = async () => {
-    LocalDb.setCustomBankLogo(null);
-    setCustomBankLogo(null);
-    await updatePwaBranding(null);
-    LocalDb.addAuditLog(currentUser.id, currentUser.email, 'RESET_BANK_LOGO', 'Reset the bank logo to the official Commercial Bank of Ethiopia (CBE) emblem.');
+    LocalDb.setCustomBankLogo('/custom-bank-logo.png');
+    setCustomBankLogo('/custom-bank-logo.png');
+    await updatePwaBranding('/custom-bank-logo.png');
+    LocalDb.addAuditLog(currentUser.id, currentUser.email, 'RESET_BANK_LOGO', 'Reset the bank logo to recently uploaded PNG logo.');
   };
 
   const handleBankStampUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -812,16 +812,16 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-bold text-white text-sm truncate">
-                          {customBankLogo ? 'Custom Uploaded Logo' : 'Official CBE Logo (Default)'}
+                          {customBankLogo && customBankLogo !== '/custom-bank-logo.png' ? 'Custom Uploaded Logo' : 'Uploaded Bank Logo (PNG)'}
                         </p>
                         <p className="text-[10px] text-slate-400 mt-0.5">
-                          {customBankLogo ? 'Stored as persistent base64 data' : 'Standard SVG vector path asset'}
+                          {customBankLogo && customBankLogo !== '/custom-bank-logo.png' ? 'Active custom PNG/HTTPS branding' : 'Active: /custom-bank-logo.png'}
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  {customBankLogo && (
+                  {customBankLogo && customBankLogo !== '/custom-bank-logo.png' && (
                     <button
                       id="btn-reset-bank-logo"
                       type="button"
@@ -829,7 +829,7 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
                       className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl border border-slate-700 bg-slate-850 hover:bg-slate-750 text-xs font-bold text-slate-300 transition cursor-pointer"
                     >
                       <RefreshCw className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Reset to Default CBE Logo</span>
+                      <span>Reset to Uploaded PNG Logo</span>
                     </button>
                   )}
                 </div>

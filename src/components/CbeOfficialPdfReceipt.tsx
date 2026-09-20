@@ -109,18 +109,26 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
             position: 'relative'
           }}
         >
-          {/* Left: CBE Emblem or Custom PDF Logo */}
+          {/* Left: CBE Official Bank Logo (Uploaded PNG or HTTPS) */}
           <div style={{ width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
-            {customPdfLogo ? (
-              <img 
-                src={customPdfLogo} 
-                alt="PDF Bank Logo" 
-                style={{ width: '48px', height: '48px', objectFit: 'contain' }} 
-                crossOrigin="anonymous" 
-              />
-            ) : (
-              <CbeGoldenEmblemSvg className="w-12 h-12" />
-            )}
+            {(() => {
+              const effectiveLogo = customPdfLogo || LocalDb.getCustomBankLogo() || '/custom-bank-logo.png';
+              return (
+                <img 
+                  src={effectiveLogo} 
+                  alt="Bank Logo" 
+                  style={{ width: '48px', height: '48px', objectFit: 'contain' }} 
+                  crossOrigin="anonymous" 
+                  onError={(e) => {
+                    // Fallback to /custom-bank-logo.png or SVG if remote URL fails
+                    const target = e.currentTarget;
+                    if (target.src !== window.location.origin + '/custom-bank-logo.png') {
+                      target.src = '/custom-bank-logo.png';
+                    }
+                  }}
+                />
+              );
+            })()}
           </div>
 
           {/* Center: Official CBE Title, Subtitle, and Status */}
