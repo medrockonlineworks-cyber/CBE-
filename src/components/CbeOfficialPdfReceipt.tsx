@@ -220,8 +220,8 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
           ref={tableRef}
           style={{ 
             marginTop: '16px', 
-            border: '1.2px solid #77126a', 
-            borderRadius: '4px',
+            border: '1.5px solid #852d76', 
+            borderRadius: '6px',
             position: 'relative',
             overflow: 'hidden',
             backgroundColor: '#ffffff'
@@ -235,14 +235,14 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
               fontSize: '11.5px', 
               color: '#000000',
               padding: '6px 0', 
-              borderBottom: '1.2px solid #77126a',
+              borderBottom: '1px solid #4a5568',
               backgroundColor: '#ffffff'
             }}
           >
             Payment / Transaction Information
           </div>
 
-          {/* Data Rows: Crisp 1px solid #77126a dividers matching IMG_20260907_191152_295.jpg */}
+          {/* Data Rows: Dark charcoal/slate horizontal row dividers matching IMG_20260920_113448_873.png */}
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10.5px' }}>
             <tbody>
               {[
@@ -263,7 +263,7 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
                 <tr 
                   key={idx} 
                   style={{ 
-                    borderBottom: idx < arr.length - 1 ? '1px solid #77126a' : 'none',
+                    borderBottom: idx < arr.length - 1 ? '1px solid #4a5568' : 'none',
                     height: '24px'
                   }}
                 >
