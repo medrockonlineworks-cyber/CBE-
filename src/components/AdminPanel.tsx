@@ -26,6 +26,7 @@ import {
   ChevronRight, 
   Database,
   ArrowLeft,
+  ArrowLeftRight,
   Image as ImageIcon,
   Upload,
   RefreshCw,
@@ -251,23 +252,48 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
   const activeUsersCount = users.filter(u => u.status === 'active').length;
   const suspendedUsersCount = users.filter(u => u.status === 'suspended').length;
 
+  const filteredUsers = useMemo(() => {
+    return users.filter(u => 
+      u.name.toLowerCase().includes(userSearch.toLowerCase()) ||
+      u.phone.includes(userSearch) ||
+      u.email.toLowerCase().includes(userSearch.toLowerCase()) ||
+      u.accountNumber.includes(userSearch)
+    );
+  }, [users, userSearch]);
+
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter(t => 
+      t.recipientName.toLowerCase().includes(txSearch.toLowerCase()) ||
+      t.reference.toLowerCase().includes(txSearch.toLowerCase()) ||
+      t.id.toLowerCase().includes(txSearch.toLowerCase()) ||
+      (t.senderName && t.senderName.toLowerCase().includes(txSearch.toLowerCase()))
+    );
+  }, [transactions, txSearch]);
+
   return (
-    <div id="admin-panel-container" className="max-w-6xl mx-auto p-4 md:p-6 bg-slate-900 text-slate-100 min-h-screen pb-24 rounded-3xl shadow-2xl border border-slate-800">
+    <div 
+      id="admin-panel-container" 
+      className="w-full max-w-6xl mx-auto px-3 py-4 sm:p-5 md:p-6 bg-slate-900 text-slate-100 min-h-screen pb-24 rounded-2xl md:rounded-3xl shadow-2xl border border-slate-800/80 overflow-x-hidden min-w-0 box-border"
+    >
       {/* Admin Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6 mb-6">
-        <div>
-          <div className="flex items-center gap-2 text-amber-400 font-mono text-xs uppercase tracking-widest font-semibold">
-            <ShieldCheck className="w-4 h-4 text-amber-500" />
-            <span>Root Administrator Security Node</span>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4 mb-4 sm:pb-6 sm:mb-6">
+        <div className="min-w-0">
+          <div className="flex items-center gap-1.5 text-amber-400 font-mono text-[11px] uppercase tracking-wider font-semibold">
+            <ShieldCheck className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+            <span className="truncate">Root Administrator Node</span>
           </div>
-          <h1 className="text-3xl font-black mt-1 tracking-tight text-white">Tana Admin Dashboard</h1>
-          <p className="text-slate-400 text-sm mt-0.5">Control simulation ledger state, user accounts, &amp; security policies.</p>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-black mt-0.5 tracking-tight text-white truncate">
+            Tana Admin Dashboard
+          </h1>
+          <p className="text-slate-400 text-xs mt-0.5 leading-tight line-clamp-2">
+            Control simulation ledger state, user accounts, &amp; security policies.
+          </p>
         </div>
 
         <button 
           id="btn-back-admin"
           onClick={onBack}
-          className="flex items-center gap-2 self-start md:self-center bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2 rounded-xl transition border border-slate-700 font-semibold"
+          className="flex items-center justify-center gap-2 w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-slate-200 px-3.5 py-2 rounded-xl transition border border-slate-700 text-xs sm:text-sm font-semibold shrink-0 cursor-pointer active:scale-95"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Exit Admin Mode</span>
@@ -275,122 +301,176 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
       </div>
 
       {/* Metrics Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-800/80">
-          <div className="flex justify-between items-start">
-            <Users className="w-5 h-5 text-emerald-400" />
-            <span className="text-[10px] font-mono bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/10">Active</span>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 mb-5 sm:mb-7">
+        <div className="bg-slate-800/60 p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-800 min-w-0 flex flex-col justify-between overflow-hidden shadow-xs">
+          <div className="flex justify-between items-center gap-1">
+            <Users className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 shrink-0" />
+            <span className="text-[9px] sm:text-[10px] font-mono bg-emerald-500/10 text-emerald-400 px-1.5 sm:px-2 py-0.5 rounded-full border border-emerald-500/10 shrink-0">
+              Active
+            </span>
           </div>
-          <p className="text-slate-400 text-xs mt-3 font-semibold uppercase tracking-wider">Total Users</p>
-          <h2 className="text-2xl font-black mt-1 font-mono text-white">{users.length} <span className="text-xs text-slate-400 font-normal">({activeUsersCount} Live)</span></h2>
+          <p className="text-slate-400 text-[10px] sm:text-xs mt-2 font-semibold uppercase tracking-wider truncate">
+            Total Users
+          </p>
+          <h2 className="text-base sm:text-xl md:text-2xl font-black mt-0.5 font-mono text-white truncate">
+            {users.length} <span className="text-[10px] sm:text-xs text-slate-400 font-normal">({activeUsersCount} Live)</span>
+          </h2>
         </div>
 
-        <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-800/80">
-          <div className="flex justify-between items-start">
-            <TrendingUp className="w-5 h-5 text-amber-400" />
-            <span className="text-[10px] font-mono bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full border border-amber-500/10">Volume</span>
+        <div className="bg-slate-800/60 p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-800 min-w-0 flex flex-col justify-between overflow-hidden shadow-xs">
+          <div className="flex justify-between items-center gap-1">
+            <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-amber-400 shrink-0" />
+            <span className="text-[9px] sm:text-[10px] font-mono bg-amber-500/10 text-amber-400 px-1.5 sm:px-2 py-0.5 rounded-full border border-amber-500/10 shrink-0">
+              Volume
+            </span>
           </div>
-          <p className="text-slate-400 text-xs mt-3 font-semibold uppercase tracking-wider">Tx Volume</p>
-          <h2 className="text-2xl font-black mt-1 font-mono text-white">ETB {totalVolume.toLocaleString(undefined, { maximumFractionDigits: 0 })}</h2>
+          <p className="text-slate-400 text-[10px] sm:text-xs mt-2 font-semibold uppercase tracking-wider truncate">
+            Tx Volume
+          </p>
+          <h2 className="text-base sm:text-xl md:text-2xl font-black mt-0.5 font-mono text-white truncate" title={`ETB ${totalVolume.toLocaleString()}`}>
+            ETB {totalVolume >= 1000000 ? `${(totalVolume / 1000000).toFixed(1)}M` : totalVolume.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+          </h2>
         </div>
 
-        <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-800/80">
-          <div className="flex justify-between items-start">
-            <Activity className="w-5 h-5 text-blue-400" />
-            <span className="text-[10px] font-mono bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded-full border border-blue-500/10">Collected</span>
+        <div className="bg-slate-800/60 p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-800 min-w-0 flex flex-col justify-between overflow-hidden shadow-xs">
+          <div className="flex justify-between items-center gap-1">
+            <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400 shrink-0" />
+            <span className="text-[9px] sm:text-[10px] font-mono bg-blue-500/10 text-blue-400 px-1.5 sm:px-2 py-0.5 rounded-full border border-blue-500/10 shrink-0">
+              Collected
+            </span>
           </div>
-          <p className="text-slate-400 text-xs mt-3 font-semibold uppercase tracking-wider">Simulated Fees</p>
-          <h2 className="text-2xl font-black mt-1 font-mono text-white">ETB {totalFees.toFixed(2)}</h2>
+          <p className="text-slate-400 text-[10px] sm:text-xs mt-2 font-semibold uppercase tracking-wider truncate">
+            Simulated Fees
+          </p>
+          <h2 className="text-base sm:text-xl md:text-2xl font-black mt-0.5 font-mono text-white truncate">
+            ETB {totalFees.toFixed(2)}
+          </h2>
         </div>
 
-        <div className="bg-slate-800/50 p-4 rounded-2xl border border-slate-800/80">
-          <div className="flex justify-between items-start">
-            <AlertOctagon className="w-5 h-5 text-rose-500" />
-            <span className="text-[10px] font-mono bg-rose-500/10 text-rose-400 px-2 py-0.5 rounded-full border border-rose-500/10">Alerts</span>
+        <div className="bg-slate-800/60 p-3 sm:p-4 rounded-xl sm:rounded-2xl border border-slate-800 min-w-0 flex flex-col justify-between overflow-hidden shadow-xs">
+          <div className="flex justify-between items-center gap-1">
+            <AlertOctagon className="w-4 h-4 sm:w-5 sm:h-5 text-rose-500 shrink-0" />
+            <span className="text-[9px] sm:text-[10px] font-mono bg-rose-500/10 text-rose-400 px-1.5 sm:px-2 py-0.5 rounded-full border border-rose-500/10 shrink-0">
+              Alerts
+            </span>
           </div>
-          <p className="text-slate-400 text-xs mt-3 font-semibold uppercase tracking-wider">Suspended Users</p>
-          <h2 className="text-2xl font-black mt-1 font-mono text-white">{suspendedUsersCount} <span className="text-xs text-rose-400 font-normal">Flagged</span></h2>
+          <p className="text-slate-400 text-[10px] sm:text-xs mt-2 font-semibold uppercase tracking-wider truncate">
+            Suspended
+          </p>
+          <h2 className="text-base sm:text-xl md:text-2xl font-black mt-0.5 font-mono text-white truncate">
+            {suspendedUsersCount} <span className="text-[10px] sm:text-xs text-rose-400 font-normal">Flagged</span>
+          </h2>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-slate-800 gap-1 overflow-x-auto mb-6">
-        <button 
-          id="tab-admin-users"
-          onClick={() => setActiveTab('users')}
-          className={`px-5 py-3 text-sm font-bold border-b-2 transition whitespace-nowrap ${
-            activeTab === 'users' ? 'border-amber-400 text-amber-400' : 'border-transparent text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          User Management
-        </button>
-        <button 
-          id="tab-admin-txs"
-          onClick={() => setActiveTab('transactions')}
-          className={`px-5 py-3 text-sm font-bold border-b-2 transition whitespace-nowrap ${
-            activeTab === 'transactions' ? 'border-amber-400 text-amber-400' : 'border-transparent text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          Transaction Monitoring
-        </button>
-        <button 
-          id="tab-admin-audit"
-          onClick={() => setActiveTab('audit')}
-          className={`px-5 py-3 text-sm font-bold border-b-2 transition whitespace-nowrap ${
-            activeTab === 'audit' ? 'border-amber-400 text-amber-400' : 'border-transparent text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          Security Audit Logs
-        </button>
-        <button 
-          id="tab-admin-reports"
-          onClick={() => setActiveTab('reports')}
-          className={`px-5 py-3 text-sm font-bold border-b-2 transition whitespace-nowrap ${
-            activeTab === 'reports' ? 'border-amber-400 text-amber-400' : 'border-transparent text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          System Health Reports
-        </button>
-        <button 
-          id="tab-admin-feedback"
-          onClick={() => setActiveTab('feedback_settings')}
-          className={`px-5 py-3 text-sm font-bold border-b-2 transition whitespace-nowrap ${
-            activeTab === 'feedback_settings' ? 'border-amber-400 text-amber-400' : 'border-transparent text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          Receipt Assets (Logo, Stamp &amp; QR)
-        </button>
-        <button 
-          id="tab-admin-ethiopian-names"
-          onClick={() => setActiveTab('ethiopian_names')}
-          className={`px-5 py-3 text-sm font-bold border-b-2 transition whitespace-nowrap flex items-center gap-1.5 ${
-            activeTab === 'ethiopian_names' ? 'border-amber-400 text-amber-400' : 'border-transparent text-slate-400 hover:text-slate-200'
-          }`}
-        >
-          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-          <span>Ethiopian Names Database</span>
-        </button>
+      {/* Contained Horizontal Scroll Tabs Bar */}
+      <div className="w-full max-w-full overflow-x-auto scrollbar-none mb-5 sm:mb-6 border-b border-slate-800 pb-2 -mx-3 px-3 sm:mx-0 sm:px-0">
+        <div className="flex gap-1.5 min-w-max">
+          {[
+            { id: 'users', label: 'Users', icon: Users },
+            { id: 'transactions', label: 'Transactions', icon: ArrowLeftRight },
+            { id: 'audit', label: 'Audit Logs', icon: Database },
+            { id: 'reports', label: 'System Health', icon: Activity },
+            { id: 'feedback_settings', label: 'Receipt Assets', icon: ImageIcon },
+            { id: 'ethiopian_names', label: 'Ethiopian Names', icon: Sparkles },
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                id={`tab-admin-${tab.id}`}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`flex items-center gap-1.5 px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold rounded-xl transition whitespace-nowrap cursor-pointer shrink-0 ${
+                  isActive
+                    ? 'bg-amber-400 text-slate-950 shadow-md'
+                    : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800 hover:text-white border border-slate-700/60'
+                }`}
+              >
+                <Icon className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isActive ? 'text-slate-950' : 'text-amber-400'}`} />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Tab Panels */}
       {activeTab === 'users' && (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6 w-full max-w-full">
           {/* Search bar */}
-          <div className="relative">
-            <Search className="absolute left-4 top-3.5 w-5 h-5 text-slate-500" />
+          <div className="relative w-full">
+            <Search className="absolute left-3.5 top-3 w-4 h-4 text-slate-500" />
             <input 
               id="input-search-users"
               type="text"
               placeholder="Search by name, phone, account or email..."
               value={userSearch}
               onChange={(e) => setUserSearch(e.target.value)}
-              className="w-full bg-slate-800/80 border border-slate-700/80 rounded-2xl pl-12 pr-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-400/50"
+              className="w-full bg-slate-800/80 border border-slate-700/80 rounded-xl pl-10 pr-3 py-2.5 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-400/50"
             />
           </div>
 
-          {/* Users Table */}
-          <div className="bg-slate-800/30 rounded-2xl border border-slate-800 overflow-hidden">
-            <div className="overflow-x-auto">
+          {/* Mobile User Cards (Fit phone screen without side scrolling) */}
+          <div className="space-y-3 block md:hidden">
+            {filteredUsers.length === 0 ? (
+              <div className="p-6 text-center text-slate-400 text-xs bg-slate-800/30 rounded-2xl border border-slate-800">
+                No users found matching "{userSearch}"
+              </div>
+            ) : (
+              filteredUsers.map(u => (
+                <div key={u.id} className="bg-slate-800/50 border border-slate-700/70 p-3.5 rounded-2xl space-y-2.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-bold text-white text-sm truncate">{u.name}</p>
+                      <p className="text-[11px] text-slate-400 font-mono truncate">{u.email}</p>
+                      <p className="text-[11px] text-slate-500 font-mono">{u.phone}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <span className="text-[9px] font-mono font-semibold uppercase bg-slate-700 px-2 py-0.5 rounded text-slate-200">
+                        {u.role}
+                      </span>
+                      <span className={`text-[9px] font-mono font-semibold uppercase px-2 py-0.5 rounded ${
+                        u.status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                      }`}>
+                        {u.status}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-900/80 p-2.5 rounded-xl border border-slate-800/90 flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] text-slate-400 uppercase font-mono">A/C Number</p>
+                      <p className="font-mono text-xs text-slate-200 font-bold">{u.accountNumber}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] text-slate-400 uppercase font-mono">Balance</p>
+                      <p className="font-mono text-xs sm:text-sm font-bold text-amber-300">
+                        ETB {u.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    id={`btn-edit-user-m-${u.id}`}
+                    onClick={() => {
+                      setEditingUser(u);
+                      setNewBalance(u.balance.toString());
+                      setNewStatus(u.status);
+                    }}
+                    className="w-full flex items-center justify-center gap-2 py-2 bg-slate-700/80 hover:bg-slate-700 text-amber-300 rounded-xl text-xs font-bold transition border border-slate-600/60 cursor-pointer active:scale-98"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span>Adjust Balance &amp; Status</span>
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Desktop Users Table */}
+          <div className="hidden md:block bg-slate-800/30 rounded-2xl border border-slate-800 overflow-hidden w-full max-w-full">
+            <div className="overflow-x-auto w-full max-w-full">
               <table className="w-full text-left text-sm text-slate-300">
                 <thead className="bg-slate-800/80 text-xs uppercase text-slate-400 font-mono">
                   <tr>
@@ -402,53 +482,46 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800">
-                  {users
-                    .filter(u => 
-                      u.name.toLowerCase().includes(userSearch.toLowerCase()) ||
-                      u.phone.includes(userSearch) ||
-                      u.email.toLowerCase().includes(userSearch.toLowerCase()) ||
-                      u.accountNumber.includes(userSearch)
-                    )
-                    .map(u => (
-                      <tr key={u.id} className="hover:bg-slate-800/20 transition">
-                        <td className="px-6 py-4">
-                          <div>
-                            <p className="font-bold text-white text-base">{u.name}</p>
-                            <p className="text-xs text-slate-400 font-mono mt-0.5">{u.email}</p>
-                            <p className="text-xs text-slate-500 font-mono">{u.phone}</p>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 font-mono text-xs">{u.accountNumber}</td>
-                        <td className="px-6 py-4 text-right font-mono font-bold text-amber-300">
-                          ETB {u.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex flex-col gap-1 items-start">
-                            <span className="text-[10px] font-mono font-semibold uppercase bg-slate-700 px-2 py-0.5 rounded text-slate-200">
-                              {u.role}
-                            </span>
-                            <span className={`text-[10px] font-mono font-semibold uppercase px-2 py-0.5 rounded ${
-                              u.status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'
-                            }`}>
-                              {u.status}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <button 
-                            id={`btn-edit-user-${u.id}`}
-                            onClick={() => {
-                              setEditingUser(u);
-                              setNewBalance(u.balance.toString());
-                              setNewStatus(u.status);
-                            }}
-                            className="bg-slate-800 hover:bg-slate-700 text-amber-300 hover:text-amber-200 p-2 rounded-lg border border-slate-700 transition"
-                          >
-                            <Edit3 className="w-4 h-4" />
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                  {filteredUsers.map(u => (
+                    <tr key={u.id} className="hover:bg-slate-800/20 transition">
+                      <td className="px-6 py-4">
+                        <div>
+                          <p className="font-bold text-white text-base">{u.name}</p>
+                          <p className="text-xs text-slate-400 font-mono mt-0.5">{u.email}</p>
+                          <p className="text-xs text-slate-500 font-mono">{u.phone}</p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 font-mono text-xs">{u.accountNumber}</td>
+                      <td className="px-6 py-4 text-right font-mono font-bold text-amber-300">
+                        ETB {u.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-1 items-start">
+                          <span className="text-[10px] font-mono font-semibold uppercase bg-slate-700 px-2 py-0.5 rounded text-slate-200">
+                            {u.role}
+                          </span>
+                          <span className={`text-[10px] font-mono font-semibold uppercase px-2 py-0.5 rounded ${
+                            u.status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'
+                          }`}>
+                            {u.status}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <button 
+                          id={`btn-edit-user-${u.id}`}
+                          onClick={() => {
+                            setEditingUser(u);
+                            setNewBalance(u.balance.toString());
+                            setNewStatus(u.status);
+                          }}
+                          className="bg-slate-800 hover:bg-slate-700 text-amber-300 hover:text-amber-200 p-2 rounded-lg border border-slate-700 transition cursor-pointer"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -457,21 +530,91 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
       )}
 
       {activeTab === 'transactions' && (
-        <div className="space-y-6">
-          <div className="relative">
-            <Search className="absolute left-4 top-3.5 w-5 h-5 text-slate-500" />
+        <div className="space-y-4 sm:space-y-6 w-full max-w-full">
+          {/* Search bar */}
+          <div className="relative w-full">
+            <Search className="absolute left-3.5 top-3 w-4 h-4 text-slate-500" />
             <input 
               id="input-search-txs"
               type="text"
               placeholder="Search by sender, recipient, reference, ID..."
               value={txSearch}
               onChange={(e) => setTxSearch(e.target.value)}
-              className="w-full bg-slate-800/80 border border-slate-700/80 rounded-2xl pl-12 pr-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-400/50"
+              className="w-full bg-slate-800/80 border border-slate-700/80 rounded-xl pl-10 pr-3 py-2.5 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-400/50"
             />
           </div>
 
-          <div className="bg-slate-800/30 rounded-2xl border border-slate-800 overflow-hidden">
-            <div className="overflow-x-auto">
+          {/* Mobile Transaction Cards (Fit phone screen without side scrolling) */}
+          <div className="space-y-3 block md:hidden">
+            {filteredTransactions.length === 0 ? (
+              <div className="p-6 text-center text-slate-400 text-xs bg-slate-800/30 rounded-2xl border border-slate-800">
+                No transactions found matching "{txSearch}"
+              </div>
+            ) : (
+              filteredTransactions.map(t => (
+                <div key={t.id} className="bg-slate-800/50 border border-slate-700/70 p-3.5 rounded-2xl space-y-2.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="font-bold text-white text-xs font-mono truncate">{t.id}</span>
+                        <span className={`text-[9px] font-mono font-bold uppercase px-1.5 py-0.5 rounded ${
+                          t.type === 'receive' ? 'bg-emerald-500/10 text-emerald-400' :
+                          t.type === 'send' ? 'bg-blue-500/10 text-blue-400' : 'bg-purple-500/10 text-purple-400'
+                        }`}>
+                          {t.type}
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                        {new Date(t.createdAt).toLocaleDateString()} {new Date(t.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+
+                    <button 
+                      id={`btn-toggle-status-m-${t.id}`}
+                      onClick={() => handleToggleTxStatus(t.id, t.status)}
+                      className={`px-2.5 py-1 rounded-lg font-mono text-[10px] font-bold uppercase transition flex items-center gap-1 border shrink-0 cursor-pointer active:scale-95 ${
+                        t.status === 'success' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                        t.status === 'failed' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' :
+                        'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                      }`}
+                    >
+                      {t.status === 'success' && <CheckCircle className="w-3 h-3" />}
+                      {t.status === 'failed' && <Ban className="w-3 h-3" />}
+                      <span>{t.status}</span>
+                    </button>
+                  </div>
+
+                  <div className="bg-slate-900/70 p-2.5 rounded-xl border border-slate-800/80 text-xs space-y-1">
+                    <div className="flex justify-between text-slate-400">
+                      <span>From: <strong className="text-slate-200">{t.senderName || 'Self'}</strong></span>
+                    </div>
+                    <div className="flex justify-between text-slate-400">
+                      <span className="truncate">To: <strong className="text-slate-200">{t.recipientName}</strong></span>
+                    </div>
+                    <div className="text-[10px] text-slate-500 font-mono truncate">
+                      A/C: {t.recipientAccount} ({t.recipientBank})
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-0.5">
+                    <div>
+                      <p className="text-[10px] text-slate-400 uppercase font-mono">Ref: {t.reference}</p>
+                      <p className="text-[10px] text-slate-500 font-mono">Fee: ETB {t.fee.toFixed(2)}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-mono text-sm sm:text-base font-bold text-white">
+                        ETB {t.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Desktop Transactions Table */}
+          <div className="hidden md:block bg-slate-800/30 rounded-2xl border border-slate-800 overflow-hidden w-full max-w-full">
+            <div className="overflow-x-auto w-full max-w-full">
               <table className="w-full text-left text-sm text-slate-300">
                 <thead className="bg-slate-800/80 text-xs uppercase text-slate-400 font-mono">
                   <tr>
@@ -483,56 +626,49 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800">
-                  {transactions
-                    .filter(t => 
-                      t.recipientName.toLowerCase().includes(txSearch.toLowerCase()) ||
-                      t.reference.toLowerCase().includes(txSearch.toLowerCase()) ||
-                      t.id.toLowerCase().includes(txSearch.toLowerCase()) ||
-                      (t.senderName && t.senderName.toLowerCase().includes(txSearch.toLowerCase()))
-                    )
-                    .map(t => (
-                      <tr key={t.id} className="hover:bg-slate-800/20 transition">
-                        <td className="px-6 py-4 font-mono text-xs">
-                          <p className="font-bold text-white">{t.id}</p>
-                          <p className="text-[10px] text-slate-400 mt-1">{new Date(t.createdAt).toLocaleString()}</p>
-                          <p className="text-[9px] text-slate-500 mt-0.5">Ref: {t.reference}</p>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className={`text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded-full ${
-                            t.type === 'receive' ? 'bg-emerald-500/10 text-emerald-400' :
-                            t.type === 'send' ? 'bg-blue-500/10 text-blue-400' : 'bg-purple-500/10 text-purple-400'
-                          }`}>
-                            {t.type}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-xs">
-                          <div>
-                            <p className="text-slate-400">From: <span className="font-bold text-slate-200">{t.senderName || 'Self'}</span></p>
-                            <p className="text-slate-400 mt-0.5">To: <span className="font-bold text-slate-200">{t.recipientName}</span></p>
-                            <p className="text-[10px] text-slate-500 font-mono mt-0.5">A/C: {t.recipientAccount} ({t.recipientBank})</p>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-right font-mono">
-                          <p className="font-bold text-white">ETB {t.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
-                          <p className="text-[10px] text-slate-400">Fee: ETB {t.fee.toFixed(2)}</p>
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <button 
-                            id={`btn-toggle-status-${t.id}`}
-                            onClick={() => handleToggleTxStatus(t.id, t.status)}
-                            className={`px-3 py-1.5 rounded-xl font-mono text-xs font-bold uppercase transition flex items-center gap-1.5 mx-auto border ${
-                              t.status === 'success' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                              t.status === 'failed' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' :
-                              'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                            }`}
-                          >
-                            {t.status === 'success' && <CheckCircle className="w-3.5 h-3.5" />}
-                            {t.status === 'failed' && <Ban className="w-3.5 h-3.5" />}
-                            <span>{t.status}</span>
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
+                  {filteredTransactions.map(t => (
+                    <tr key={t.id} className="hover:bg-slate-800/20 transition">
+                      <td className="px-6 py-4 font-mono text-xs">
+                        <p className="font-bold text-white">{t.id}</p>
+                        <p className="text-[10px] text-slate-400 mt-1">{new Date(t.createdAt).toLocaleString()}</p>
+                        <p className="text-[9px] text-slate-500 mt-0.5">Ref: {t.reference}</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded-full ${
+                          t.type === 'receive' ? 'bg-emerald-500/10 text-emerald-400' :
+                          t.type === 'send' ? 'bg-blue-500/10 text-blue-400' : 'bg-purple-500/10 text-purple-400'
+                        }`}>
+                          {t.type}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-xs">
+                        <div>
+                          <p className="text-slate-400">From: <span className="font-bold text-slate-200">{t.senderName || 'Self'}</span></p>
+                          <p className="text-slate-400 mt-0.5">To: <span className="font-bold text-slate-200">{t.recipientName}</span></p>
+                          <p className="text-[10px] text-slate-500 font-mono mt-0.5">A/C: {t.recipientAccount} ({t.recipientBank})</p>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-right font-mono">
+                        <p className="font-bold text-white">ETB {t.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                        <p className="text-[10px] text-slate-400">Fee: ETB {t.fee.toFixed(2)}</p>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <button 
+                          id={`btn-toggle-status-${t.id}`}
+                          onClick={() => handleToggleTxStatus(t.id, t.status)}
+                          className={`px-3 py-1.5 rounded-xl font-mono text-xs font-bold uppercase transition flex items-center gap-1.5 mx-auto border cursor-pointer active:scale-95 ${
+                            t.status === 'success' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                            t.status === 'failed' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' :
+                            'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                          }`}
+                        >
+                          {t.status === 'success' && <CheckCircle className="w-3.5 h-3.5" />}
+                          {t.status === 'failed' && <Ban className="w-3.5 h-3.5" />}
+                          <span>{t.status}</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>

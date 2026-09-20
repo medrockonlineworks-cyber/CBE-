@@ -257,37 +257,37 @@ export default function AdminEthiopianNames({ onBack }: AdminEthiopianNamesProps
   const totalVolumeUsage = names.reduce((sum, n) => sum + (n.usage_count || 0), 0);
 
   return (
-    <div id="admin-ethiopian-names-container" className="max-w-6xl mx-auto space-y-6">
+    <div id="admin-ethiopian-names-container" className="w-full max-w-full space-y-4 sm:space-y-6 overflow-x-hidden min-w-0">
       {/* Header Bar */}
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-amber-400 font-mono text-xs uppercase font-bold tracking-widest">
-            <Database className="w-4 h-4 text-amber-400" />
-            <span>Ethiopian Naming Intelligence &amp; Registry</span>
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl md:rounded-3xl p-4 sm:p-6 shadow-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="min-w-0">
+          <div className="flex items-center gap-1.5 text-amber-400 font-mono text-[11px] uppercase font-bold tracking-wider flex-wrap">
+            <Database className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span className="truncate">Ethiopian Naming Registry</span>
             {isSupabaseConfigured() ? (
-              <span className="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded text-[10px] border border-emerald-500/30">
-                Supabase Connected
+              <span className="bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded text-[9px] border border-emerald-500/30 font-sans font-bold">
+                Supabase
               </span>
             ) : (
-              <span className="bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded text-[10px] border border-purple-500/30">
-                Client LocalDB Active
+              <span className="bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded text-[9px] border border-purple-500/30 font-sans font-bold">
+                LocalDB
               </span>
             )}
           </div>
-          <h1 className="text-2xl md:text-3xl font-black text-white mt-1">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-white mt-1 tracking-tight">
             Ethiopian Name Suggestion Database
           </h1>
-          <p className="text-slate-400 text-xs md:text-sm mt-0.5">
+          <p className="text-slate-400 text-xs mt-0.5 leading-relaxed">
             Strict Latin/English script dictionary for instant banking name autocompletion &amp; verification.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
           {onBack && (
             <button
               id="btn-back-names"
               onClick={onBack}
-              className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition"
+              className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition cursor-pointer"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back</span>
@@ -300,7 +300,7 @@ export default function AdminEthiopianNames({ onBack }: AdminEthiopianNamesProps
               setImportResult(null);
               setShowImportModal(true);
             }}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition"
+            className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition cursor-pointer"
           >
             <Upload className="w-3.5 h-3.5 text-amber-400" />
             <span>Import CSV</span>
@@ -308,7 +308,7 @@ export default function AdminEthiopianNames({ onBack }: AdminEthiopianNamesProps
           <button
             id="btn-export-csv"
             onClick={handleExportCsv}
-            className="flex items-center gap-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition"
+            className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 transition cursor-pointer"
           >
             <Download className="w-3.5 h-3.5 text-emerald-400" />
             <span>Export CSV</span>
@@ -316,7 +316,7 @@ export default function AdminEthiopianNames({ onBack }: AdminEthiopianNamesProps
           <button
             id="btn-add-ethiopian-name"
             onClick={handleOpenAdd}
-            className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-emerald-950 text-xs font-black rounded-xl shadow-lg transition"
+            className="flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-emerald-950 text-xs font-black rounded-xl shadow-lg transition cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Add Name</span>
@@ -325,39 +325,39 @@ export default function AdminEthiopianNames({ onBack }: AdminEthiopianNamesProps
       </div>
 
       {/* Metrics Banner */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-        <div className="bg-slate-900/90 border border-slate-800 p-4 rounded-2xl">
-          <span className="text-[10px] font-mono text-slate-400 uppercase font-bold">Total Curated Names</span>
-          <p className="text-2xl font-black text-white font-mono mt-1">{totalCount}</p>
-          <span className="text-[10px] text-emerald-400 font-mono">100% Latin-Script</span>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4">
+        <div className="bg-slate-900/90 border border-slate-800 p-3 sm:p-4 rounded-xl sm:rounded-2xl min-w-0 overflow-hidden">
+          <span className="text-[10px] font-mono text-slate-400 uppercase font-bold truncate block">Curated Names</span>
+          <p className="text-xl sm:text-2xl font-black text-white font-mono mt-1">{totalCount}</p>
+          <span className="text-[10px] text-emerald-400 font-mono truncate block">100% Latin-Script</span>
         </div>
-        <div className="bg-slate-900/90 border border-slate-800 p-4 rounded-2xl">
-          <span className="text-[10px] font-mono text-slate-400 uppercase font-bold">Male / Female / Unisex</span>
-          <p className="text-2xl font-black text-amber-300 font-mono mt-1">
-            {maleCount} <span className="text-xs text-slate-500 font-normal">/ {femaleCount} / {unisexCount}</span>
+        <div className="bg-slate-900/90 border border-slate-800 p-3 sm:p-4 rounded-xl sm:rounded-2xl min-w-0 overflow-hidden">
+          <span className="text-[10px] font-mono text-slate-400 uppercase font-bold truncate block">M / F / Unisex</span>
+          <p className="text-base sm:text-xl md:text-2xl font-black text-amber-300 font-mono mt-1 truncate">
+            {maleCount} <span className="text-[10px] sm:text-xs text-slate-500 font-normal">/ {femaleCount} / {unisexCount}</span>
           </p>
-          <span className="text-[10px] text-slate-400 font-mono">Categorized registry</span>
+          <span className="text-[10px] text-slate-400 font-mono truncate block">Categorized registry</span>
         </div>
-        <div className="bg-slate-900/90 border border-slate-800 p-4 rounded-2xl">
-          <span className="text-[10px] font-mono text-slate-400 uppercase font-bold">Total Usage Frequency</span>
-          <p className="text-2xl font-black text-blue-400 font-mono mt-1">
+        <div className="bg-slate-900/90 border border-slate-800 p-3 sm:p-4 rounded-xl sm:rounded-2xl min-w-0 overflow-hidden">
+          <span className="text-[10px] font-mono text-slate-400 uppercase font-bold truncate block">Usage Frequency</span>
+          <p className="text-xl sm:text-2xl font-black text-blue-400 font-mono mt-1 truncate">
             {totalVolumeUsage.toLocaleString()}
           </p>
-          <span className="text-[10px] text-blue-300/80 font-mono">Weighted ranking</span>
+          <span className="text-[10px] text-blue-300/80 font-mono truncate block">Weighted ranking</span>
         </div>
-        <div className="bg-slate-900/90 border border-slate-800 p-4 rounded-2xl flex flex-col justify-between">
+        <div className="bg-slate-900/90 border border-slate-800 p-3 sm:p-4 rounded-xl sm:rounded-2xl min-w-0 overflow-hidden flex flex-col justify-between">
           <div>
-            <span className="text-[10px] font-mono text-slate-400 uppercase font-bold">Registry State</span>
-            <p className="text-sm font-bold text-emerald-400 mt-1 flex items-center gap-1">
-              <CheckCircle className="w-4 h-4" /> Ready for Banking
+            <span className="text-[10px] font-mono text-slate-400 uppercase font-bold truncate block">Registry State</span>
+            <p className="text-xs sm:text-sm font-bold text-emerald-400 mt-1 flex items-center gap-1 truncate">
+              <CheckCircle className="w-3.5 h-3.5 shrink-0" /> <span className="truncate">Ready for Banking</span>
             </p>
           </div>
           <button
             id="btn-reset-curated"
             onClick={handleResetDatabase}
-            className="text-[10px] text-slate-400 hover:text-amber-300 transition text-left underline font-mono mt-2"
+            className="text-[10px] text-slate-400 hover:text-amber-300 transition text-left underline font-mono mt-2 cursor-pointer"
           >
-            Reset to default 200+ names
+            Reset to default
           </button>
         </div>
       </div>
@@ -522,8 +522,93 @@ export default function AdminEthiopianNames({ onBack }: AdminEthiopianNamesProps
         </div>
       </div>
 
-      {/* Database Names Table */}
-      <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
+      {/* Database Names: Mobile Cards (< md) */}
+      <div className="block md:hidden space-y-3 w-full">
+        {names.length === 0 && !isLoading ? (
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-center text-slate-500 text-xs">
+            No Ethiopian names matched your query. Click &quot;Add Name&quot; to register new names.
+          </div>
+        ) : (
+          names.map((item) => (
+            <div 
+              key={`m-${item.id}`}
+              className="bg-slate-900 border border-slate-800/90 rounded-2xl p-3.5 space-y-2.5 shadow-sm"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold text-white text-base truncate">{item.name}</p>
+                  <p className="text-[10px] text-slate-500 font-mono truncate">norm: {item.normalized_name}</p>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span
+                    className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded-full uppercase border ${
+                      item.gender === 'male'
+                        ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                        : item.gender === 'female'
+                        ? 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                        : 'bg-purple-500/10 text-purple-300 border-purple-500/20'
+                    }`}
+                  >
+                    {item.gender || 'unisex'}
+                  </span>
+                  <button
+                    onClick={() => handleToggleStatus(item)}
+                    className={`text-[9px] font-mono font-bold px-2 py-0.5 rounded-full uppercase border transition ${
+                      item.is_active
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                        : 'bg-slate-800 text-slate-500 border-slate-700'
+                    }`}
+                  >
+                    {item.is_active ? 'Active' : 'Off'}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between text-xs bg-slate-950/60 px-3 py-2 rounded-xl border border-slate-800/80">
+                <div className="min-w-0">
+                  <span className="text-slate-300 font-medium text-[11px] block truncate">{item.name_type}</span>
+                  {item.category && (
+                    <span className="text-[10px] text-slate-500 block font-mono truncate">{item.category}</span>
+                  )}
+                </div>
+
+                <div className="inline-flex items-center gap-1 bg-slate-900 px-2 py-1 rounded-lg border border-slate-800 shrink-0">
+                  <Flame className="w-3 h-3 text-amber-400" />
+                  <span className="font-mono font-bold text-[11px] text-amber-300">{item.usage_count}</span>
+                  <button
+                    onClick={() => handleIncrementUsage(item.id)}
+                    className="text-[9px] bg-slate-800 hover:bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded ml-0.5 cursor-pointer"
+                    title="Increment usage count"
+                  >
+                    +1
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-800/60">
+                <button
+                  onClick={() => handleOpenEdit(item)}
+                  className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 rounded-xl text-xs font-semibold border border-slate-700 cursor-pointer"
+                >
+                  <Edit2 className="w-3 h-3" />
+                  <span>Edit</span>
+                </button>
+                <button
+                  onClick={() => handleDelete(item.id, item.name)}
+                  className="flex items-center gap-1 px-2.5 py-1.5 bg-slate-800 hover:bg-rose-950 text-rose-400 rounded-xl text-xs font-semibold border border-slate-700 cursor-pointer"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  <span>Delete</span>
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Database Names Table: Desktop (>= md) */}
+      <div className="hidden md:block bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-slate-300">
             <thead className="bg-slate-950/80 text-[11px] uppercase text-slate-400 font-mono border-b border-slate-800">

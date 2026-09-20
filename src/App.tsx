@@ -407,7 +407,9 @@ export default function App() {
 
         {/* Dynamic View Panel Router */}
         <main className={`flex-1 flex flex-col scrollbar-none ${
-          activeView === 'sms' 
+          activeView === 'admin'
+            ? 'h-full overflow-y-auto overflow-x-hidden bg-slate-900 w-full max-w-full min-w-0'
+            : activeView === 'sms' 
             ? 'h-full overflow-hidden bg-[#121212]' 
             : activeView === 'truecaller'
               ? 'h-full overflow-hidden bg-slate-950'
