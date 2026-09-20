@@ -187,7 +187,6 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
           <div>
             <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#000000', lineHeight: 1.25, marginBottom: '5px', paddingBottom: '3px', borderBottom: '1px solid #4a5568' }}>
               <div>Customer Information</div>
-              <div style={{ visibility: 'hidden' }}>&nbsp;</div>
             </div>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <tbody>

@@ -2521,7 +2521,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
               {/* Right Column: Customer Information */}
               <div className="space-y-0.5 text-black">
                 <h2 className="font-bold text-black text-[12px] leading-tight pb-1 mb-1 border-b border-gray-200">
-                  Customer Information<br /><span className="invisible select-none">&nbsp;</span>
+                  Customer Information
                 </h2>
 
                 <div className="flex justify-between items-start">
