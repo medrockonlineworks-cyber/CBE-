@@ -150,7 +150,7 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
         >
           {/* Left Column: Company Address & Other Information */}
           <div>
-            <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#000000', lineHeight: 1.25, marginBottom: '6px' }}>
+            <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#000000', lineHeight: 1.25, marginBottom: '5px', paddingBottom: '3px', borderBottom: '1px solid #4a5568' }}>
               <div>Company Address &amp; Other</div>
               <div>Information</div>
             </div>
@@ -185,7 +185,7 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
 
           {/* Right Column: Customer Information */}
           <div>
-            <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#000000', lineHeight: 1.25, marginBottom: '6px' }}>
+            <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#000000', lineHeight: 1.25, marginBottom: '5px', paddingBottom: '3px', borderBottom: '1px solid #4a5568' }}>
               <div>Customer Information</div>
               <div style={{ visibility: 'hidden' }}>&nbsp;</div>
             </div>

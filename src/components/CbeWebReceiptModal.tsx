@@ -2414,14 +2414,14 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
           <main className="w-full flex-1 overflow-y-auto px-2 pt-2.5 pb-24 bg-[#f0f2f5] flex justify-center">
         <div 
           ref={receiptCardRef}
-          className={`bg-white w-full max-w-[460px] shadow-sm border border-gray-200/90 rounded-xl overflow-hidden text-gray-900 self-start transition-opacity ${
+          className={`bg-white w-full max-w-[460px] shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-gray-200/90 rounded-2xl overflow-hidden text-gray-900 self-start transition-opacity ${
             isRefreshing ? 'opacity-40 scale-[0.99]' : 'opacity-100'
           }`}
           style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
         >
           
           {/* Header Banner: Deep Royal CBE Purple (#781d77) */}
-          <div className="bg-[#781d77] relative px-3 py-3.5 sm:px-4 sm:py-4 rounded-t-xl flex items-center justify-center min-h-[76px] overflow-hidden">
+          <div className="bg-[#781d77] relative px-3 py-3.5 sm:px-4 sm:py-4 rounded-t-2xl flex items-center justify-center min-h-[76px] overflow-hidden">
             {/* Admin Uploaded Logo or Official Golden Emblem positioned on left */}
             <div className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-12 sm:h-12 shrink-0 flex items-center justify-center select-none">
               <CbeLogo className="w-11 h-11 sm:w-12 sm:h-12 object-contain" src={adminLogo} />
@@ -2447,7 +2447,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
               
               {/* Left Column: Company Address & Other Information */}
               <div className="space-y-0.5 text-[#111827]">
-                <h2 className="font-bold text-black text-[12px] leading-tight mb-1">
+                <h2 className="font-bold text-black text-[12px] leading-tight pb-1 mb-1 border-b border-gray-200">
                   Company Address &amp; Other<br />Information
                 </h2>
                 
@@ -2520,8 +2520,8 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
 
               {/* Right Column: Customer Information */}
               <div className="space-y-0.5 text-black">
-                <h2 className="font-bold text-black text-[12px] leading-tight mb-1">
-                  Customer Information
+                <h2 className="font-bold text-black text-[12px] leading-tight pb-1 mb-1 border-b border-gray-200">
+                  Customer Information<br /><span className="invisible select-none">&nbsp;</span>
                 </h2>
 
                 <div className="flex justify-between items-start">
@@ -2582,14 +2582,14 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
           <div className="p-3 sm:p-4 relative">
             
             {/* Table Header Bar with bordered card top */}
-            <div className="border border-[#d1d5db] rounded-t-sm bg-white py-1.5 px-3">
+            <div className="border border-[#d1d5db] rounded-t-md bg-white py-1.5 px-3">
               <h2 className="text-center font-bold text-black text-[13px] sm:text-[13.5px]">
                 Payment / Transaction Informations
               </h2>
             </div>
 
             {/* Structured Table matching Screenshot_20260904-124119.png and Screenshot_20260904-124126.png */}
-            <div ref={transactionTableRef} className="border-x border-b border-[#d1d5db] text-[11.5px] leading-tight relative">
+            <div ref={transactionTableRef} className="border-x border-b border-[#d1d5db] rounded-b-md overflow-hidden text-[11.5px] leading-tight relative">
               
               <div className="flex justify-between items-center px-3 py-2 border-b border-gray-200">
                 <span className="text-gray-800 font-normal">Payer:</span>
@@ -2666,7 +2666,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
               {/* Total Amount Debited Row: Bold label and bold value matching screenshot */}
               <div className="flex justify-between items-center px-3 py-2.5 bg-white">
                 <span className="font-bold text-black text-[12px] sm:text-[12.5px] max-w-[200px] leading-snug">
-                  Total Amount Debited:
+                  Total amount debited from customer&apos;s account:
                 </span>
                 <span className="font-bold text-black text-right text-[12.5px] sm:text-[13px] self-center">
                   {receiptData.totalDebited.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
@@ -2724,31 +2724,37 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
 
             </div>
 
-            {/* Amount in Word Box: Light gray card matching Screenshot_20260904-124126.png */}
-            <div className="mt-3.5 bg-[#f8f9fa] border border-[#d1d5db] rounded-md p-3 text-center">
-              <div className="font-bold text-black text-[12px]">
-                Amount in Word:
+            {/* Combined Amount in Word & QR Code Box matching reference screenshot */}
+            <div className="mt-3.5 bg-white border border-[#d1d5db] rounded-xl overflow-hidden shadow-xs">
+              {/* Top Section: Light gray Amount in Word */}
+              <div className="bg-[#f8f9fa] pt-3 pb-3.5 px-3.5 text-center border-b border-gray-200/70">
+                <div className="font-bold text-black text-[12px] sm:text-[12.5px]">
+                  Amount in Word:
+                </div>
+                <div className="text-[#1f2937] text-[11.5px] sm:text-[12px] font-normal mt-1 leading-relaxed max-w-[340px] mx-auto">
+                  {receiptData.words}
+                </div>
               </div>
-              <div className="text-[#1f2937] text-[11.5px] font-normal mt-1">
-                {receiptData.words}
+
+              {/* Bottom Section: Centered QR Code */}
+              <div className="py-4 px-3 flex flex-col items-center justify-center bg-white">
+                {qrCodeDataUrl ? (
+                  <img 
+                    src={qrCodeDataUrl} 
+                    alt="Official CBE Receipt QR" 
+                    className="w-24 h-24 sm:w-26 sm:h-26 object-contain block"
+                  />
+                ) : (
+                  <div className="w-24 h-24 sm:w-26 sm:h-26 bg-gray-100 animate-pulse" />
+                )}
               </div>
             </div>
 
-            {/* Centered QR Code without frame */}
-            <div className="mt-3.5 flex flex-col items-center justify-center">
-              {qrCodeDataUrl ? (
-                <img 
-                  src={qrCodeDataUrl} 
-                  alt="Official CBE Receipt QR" 
-                  className="w-28 h-28 object-contain block"
-                />
-              ) : (
-                <div className="w-28 h-28 bg-gray-100 animate-pulse" />
-              )}
-            </div>
+            {/* Horizontal Line separating Card and Footer Text */}
+            <div className="w-full border-t border-gray-200 mt-4 mb-3" />
 
             {/* Footer Text */}
-            <div className="mt-3 text-center pb-2">
+            <div className="text-center pb-2">
               <p className="text-[#781d77] font-bold text-[12px]">
                 The Bank you can always rely on.
               </p>
@@ -2762,8 +2768,8 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
         </div>
       </main>
 
-      {/* Floating Download PDF Button matching Screenshot_20260904-124119.png */}
-          <div className="fixed bottom-3 inset-x-0 flex flex-col items-center gap-1.5 z-20 pointer-events-auto px-4">
+      {/* Floating Download PDF Button matching reference screenshot */}
+          <div className="fixed bottom-3.5 inset-x-0 flex flex-col items-center gap-1.5 z-20 pointer-events-auto px-4">
             {downloadError && (
               <div className="bg-red-900/90 border border-red-500 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg max-w-sm text-center">
                 {downloadError}
@@ -2772,12 +2778,9 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
             <button
               type="button"
               onClick={handleOpenPdfView}
-              className="bg-[#781d77] hover:bg-[#68137e] active:bg-[#580f68] text-white font-bold text-[13px] py-2 px-6 rounded-lg shadow-xl flex items-center justify-center transition active:scale-95 cursor-pointer"
+              className="bg-[#781d77] hover:bg-[#68137e] active:bg-[#580f68] text-white font-semibold text-[13px] sm:text-[13.5px] py-2 px-7 rounded-xl shadow-lg shadow-purple-950/25 flex items-center justify-center transition active:scale-95 cursor-pointer"
             >
-              <span className="flex items-center gap-2">
-                <Download className="w-4 h-4" />
-                <span>Download PDF</span>
-              </span>
+              <span>Download PDF</span>
             </button>
           </div>
         </>
