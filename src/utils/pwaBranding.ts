@@ -296,6 +296,11 @@ export async function updatePwaBranding(customLogoUrl?: string | null): Promise<
       faviconLink.href = `/pwa-192x192.png${versionParam}`;
     }
 
+    let faviconSvgLink = document.getElementById('app-favicon-svg') as HTMLLinkElement | null;
+    if (faviconSvgLink) {
+      faviconSvgLink.href = `/favicon.svg${versionParam}`;
+    }
+
     // 2. Update <link rel="apple-touch-icon"> for iOS Safari & Home Screen
     let appleTouchLink = document.getElementById('app-apple-touch-icon') as HTMLLinkElement | null || document.querySelector('link[rel="apple-touch-icon"]') as HTMLLinkElement | null;
     if (!appleTouchLink) {
@@ -514,13 +519,30 @@ export async function updatePwaBranding(customLogoUrl?: string | null): Promise<
  * Initializes PWA dynamic manifest on app load and listens for logo change events.
  */
 export async function initPwaDynamicManifest(): Promise<void> {
-  const localLogo = LocalDb.getCustomBankLogo();
+  let localLogo = LocalDb.getCustomBankLogo();
+
+  // If not in local storage (e.g. fresh session, new device, or standalone installed app),
+  // sync with server PWA status to see if administrator uploaded a custom bank logo
+  if (!localLogo) {
+    try {
+      const res = await fetch('/api/pwa/status');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.hasCustom && data.rawLogo) {
+          localLogo = data.rawLogo;
+          LocalDb.setCustomBankLogo(localLogo);
+        }
+      }
+    } catch (statusErr) {
+      console.warn('[PWA Branding] Status fetch skipped:', statusErr);
+    }
+  }
 
   if (localLogo) {
-    // Only if admin explicitly set a custom logo in LocalDb
+    // Apply custom uploaded logo to manifest, icons, and Apple touch icon
     await updatePwaBranding(localLogo);
   } else {
-    // Enforce official CBE Golden Emblem branding found inside the application
+    // If no custom logo uploaded, use default PWA assets
     const ts = Date.now();
     const manifestLink = document.getElementById('pwa-manifest-link') as HTMLLinkElement | null || document.querySelector('link[rel="manifest"]') as HTMLLinkElement | null;
     if (manifestLink) {
@@ -533,13 +555,6 @@ export async function initPwaDynamicManifest(): Promise<void> {
     const faviconPng = document.getElementById('app-favicon-png') as HTMLLinkElement | null;
     if (faviconPng) {
       faviconPng.setAttribute('href', `/pwa-192x192.png?v=${ts}`);
-    }
-
-    // Clean any old custom branding cache
-    if ('caches' in window) {
-      try {
-        await caches.delete('cbe-custom-branding-cache');
-      } catch {}
     }
   }
 

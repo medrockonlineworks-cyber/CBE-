@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { usePwaInstall } from '../lib/usePwaInstall';
+import { LocalDb } from '../lib/mockData';
 import { CbeLogo } from './CbeLogo';
 import { 
   Download, 
@@ -42,6 +43,18 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
 
   const [installing, setInstalling] = useState(false);
   const [showManualGuide, setShowManualGuide] = useState(false);
+  const [customLogo, setCustomLogo] = useState<string | null>(() => LocalDb.getCustomBankLogo());
+
+  // Keep custom logo synchronized
+  useEffect(() => {
+    const handleUpdate = () => setCustomLogo(LocalDb.getCustomBankLogo());
+    window.addEventListener('cbe_logo_updated', handleUpdate);
+    window.addEventListener('bank_logo_updated', handleUpdate);
+    return () => {
+      window.removeEventListener('cbe_logo_updated', handleUpdate);
+      window.removeEventListener('bank_logo_updated', handleUpdate);
+    };
+  }, []);
 
   // Initialize dismissed state based on 5-minute snooze cooldown (for banner mode)
   const [dismissed, setDismissed] = useState<boolean>(() => {
@@ -139,7 +152,7 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
           <div>
             <p className="text-xs font-bold text-white">CBE Mobile Banking</p>
             <p className="text-[10.5px] text-amber-300/90">
-              Installs with official CBE Gold Emblem
+              {customLogo ? 'Installs with your uploaded app icon' : 'Installs with official CBE Gold Emblem'}
             </p>
           </div>
         </div>
@@ -254,11 +267,13 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
               <div className="flex items-center gap-1.5 flex-wrap">
                 <h4 className="text-base font-black text-white tracking-tight">CBE Mobile Banking</h4>
                 <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold border bg-amber-400/20 text-amber-300 border-amber-400/30">
-                  Official CBE App
+                  {customLogo ? 'Custom Uploaded Icon' : 'Official CBE App'}
                 </span>
               </div>
               <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-                Commercial Bank of Ethiopia Mobile Banking. Install the official application on your device&apos;s home screen for fast, secure, and clean banking.
+                {customLogo 
+                  ? 'Commercial Bank of Ethiopia Mobile Banking. Installs with your custom uploaded app icon on your device home screen for fast, secure banking.'
+                  : 'Commercial Bank of Ethiopia Mobile Banking. Install the official application on your device\'s home screen for fast, secure, and clean banking.'}
               </p>
             </div>
           </div>
@@ -396,7 +411,7 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
                 <div className="flex items-center gap-1.5">
                   <span className="text-xs font-bold text-white truncate">CBE Mobile Banking</span>
                   <span className="px-1.5 py-0.2 bg-[#deb356]/20 text-[#deb356] border border-[#deb356]/30 text-[9px] font-bold rounded">
-                    Official
+                    {customLogo ? 'Custom Icon' : 'Official'}
                   </span>
                 </div>
                 <p className="text-[10.5px] text-slate-300 truncate">Commercial Bank of Ethiopia</p>
@@ -458,7 +473,7 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <span className="px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-[#deb356]/20 text-[#deb356] border border-[#deb356]/30">
-                  Official CBE App
+                  {customLogo ? 'Custom Uploaded Icon' : 'Official CBE App'}
                 </span>
                 <span className="text-[10px] text-slate-400 flex items-center gap-1">
                   <Maximize2 className="w-2.5 h-2.5" /> Fullscreen PWA
@@ -466,7 +481,9 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
               </div>
               <h3 className="text-base font-extrabold text-white mt-1">CBE Mobile Banking</h3>
               <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-                Install the official Commercial Bank of Ethiopia (CBE) mobile banking application for fast, secure, and clean banking.
+                {customLogo 
+                  ? 'Install CBE Mobile Banking on your device with your uploaded app icon for fast, clean, and secure banking.'
+                  : 'Install the official Commercial Bank of Ethiopia (CBE) mobile banking application for fast, secure, and clean banking.'}
               </p>
             </div>
           </div>

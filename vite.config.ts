@@ -65,7 +65,22 @@ function pwaBrandingSyncPlugin() {
                 saveBase64Png(splashWide, path.resolve(publicDir, 'pwa-screenshot-wide.png'));
               }
               if (rawLogo) {
-                saveBase64Png(rawLogo, path.resolve(publicDir, 'custom-bank-logo.png'));
+                if (typeof rawLogo === 'string' && rawLogo.startsWith('data:')) {
+                  saveBase64Png(rawLogo, path.resolve(publicDir, 'custom-bank-logo.png'));
+                } else if (typeof rawLogo === 'string' && rawLogo.startsWith('https://')) {
+                  fetch(rawLogo)
+                    .then(r => r.arrayBuffer())
+                    .then(ab => {
+                      fs.writeFileSync(path.resolve(publicDir, 'custom-bank-logo.png'), Buffer.from(ab));
+                      const genScript = path.resolve(__dirname, 'scripts/generate-uploaded-pwa-assets.cjs');
+                      if (fs.existsSync(genScript)) {
+                        exec(`node "${genScript}"`, () => {});
+                      }
+                    })
+                    .catch((fetchErr) => {
+                      console.warn('[PWA] Error fetching remote HTTPS logo:', fetchErr);
+                    });
+                }
               }
 
               const timestamp = Date.now();
@@ -73,6 +88,18 @@ function pwaBrandingSyncPlugin() {
                 path.resolve(publicDir, 'custom-pwa-branding.json'),
                 JSON.stringify({ updated: timestamp, hasCustomLogo: true }, null, 2)
               );
+
+              // Run asset generator to build high-res PWA icons from uploaded image
+              const genScript = path.resolve(__dirname, 'scripts/generate-uploaded-pwa-assets.cjs');
+              if (fs.existsSync(genScript)) {
+                try {
+                  exec(`node "${genScript}"`, (genErr) => {
+                    if (genErr) console.warn('[PWA] Asset generator note:', genErr);
+                  });
+                } catch (e) {
+                  console.warn('[PWA] Asset generator exec note:', e);
+                }
+              }
 
               res.setHeader('Content-Type', 'application/json');
               res.end(JSON.stringify({ success: true, timestamp }));
