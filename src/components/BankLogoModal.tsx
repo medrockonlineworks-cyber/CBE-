@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LocalDb, DEFAULT_CBE_LOGO, OFFICIAL_CBE_STAMP_LOGO, OFFICIAL_CBE_PURPLE_LOGO, getOfficialCbeStampSvg, StampWeight } from '../lib/mockData';
+import { LocalDb, DEFAULT_CBE_LOGO, StampWeight } from '../lib/mockData';
 import { UserProfile } from '../types';
 import { CbeLogo } from './CbeLogo';
 import { compressImageFile } from '../lib/imageUtils';
@@ -12,7 +12,6 @@ import {
   Check, 
   X, 
   ShieldCheck, 
-  Sparkles,
   Eye,
   Loader2,
   Stamp,
@@ -28,29 +27,6 @@ interface BankLogoModalProps {
   currentUser: UserProfile;
   onLogoUpdated?: (newLogo: string | null) => void;
 }
-
-const PRESET_LOGOS = [
-  {
-    name: 'Official CBE Purple Logo (White Symbol)',
-    url: OFFICIAL_CBE_PURPLE_LOGO,
-    description: 'Authentic CBE brand purple disc with pure white CBE monument emblem'
-  },
-  {
-    name: 'Official CBE Rubber Stamp (Purple)',
-    url: OFFICIAL_CBE_STAMP_LOGO,
-    description: 'Authentic circular purple rubber stamp with Amharic & English arcs'
-  },
-  {
-    name: 'Official CBE Golden Emblem',
-    url: DEFAULT_CBE_LOGO,
-    description: 'Commercial Bank of Ethiopia traditional golden coin emblem'
-  },
-  {
-    name: 'CBE Birr Vector Emblem',
-    url: 'https://upload.wikimedia.org/wikipedia/commons/c/c5/Commercial_Bank_of_Ethiopia_Logo.svg',
-    description: 'High-resolution SVG CBE emblem'
-  }
-];
 
 export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpdated }: BankLogoModalProps) {
   const [activeTab, setActiveTab] = useState<'logo' | 'stamp'>('logo');
@@ -81,7 +57,7 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
 
       const savedStamp = LocalDb.getCustomBankStamp();
       setCurrentStamp(savedStamp);
-      setPreviewStamp(savedStamp || getOfficialCbeStampSvg(LocalDb.getBankStampWeight()));
+      setPreviewStamp(savedStamp || null);
       setStampSize(LocalDb.getBankStampSize());
       setStampWeight(LocalDb.getBankStampWeight());
       setStampSaveSuccess(false);
@@ -112,12 +88,17 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
   const handleLogoUrlApply = (e: React.FormEvent) => {
     e.preventDefault();
     setLogoErrorMsg('');
-    if (!customLogoUrlInput.trim()) {
-      setLogoErrorMsg('Please enter a valid image URL.');
+    const trimmed = customLogoUrlInput.trim();
+    if (!trimmed) {
+      setLogoErrorMsg('Please enter an image URL.');
       return;
     }
-    setPreviewLogo(customLogoUrlInput.trim());
-    applyLogoChange(customLogoUrlInput.trim());
+    if (!trimmed.toLowerCase().startsWith('https://')) {
+      setLogoErrorMsg('Only secure HTTPS URLs are allowed (must start with https://).');
+      return;
+    }
+    setPreviewLogo(trimmed);
+    applyLogoChange(trimmed);
     setCustomLogoUrlInput('');
   };
 
@@ -181,12 +162,17 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
   const handleStampUrlApply = (e: React.FormEvent) => {
     e.preventDefault();
     setStampErrorMsg('');
-    if (!customStampUrlInput.trim()) {
-      setStampErrorMsg('Please enter a valid stamp image URL.');
+    const trimmed = customStampUrlInput.trim();
+    if (!trimmed) {
+      setStampErrorMsg('Please enter a stamp image URL.');
       return;
     }
-    setPreviewStamp(customStampUrlInput.trim());
-    applyStampChange(customStampUrlInput.trim());
+    if (!trimmed.toLowerCase().startsWith('https://')) {
+      setStampErrorMsg('Only secure HTTPS URLs are allowed (must start with https://).');
+      return;
+    }
+    setPreviewStamp(trimmed);
+    applyStampChange(trimmed);
     setCustomStampUrlInput('');
   };
 
@@ -353,7 +339,7 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
             {/* Direct Image Web URL */}
             <div className="space-y-2">
               <label className="block text-xs font-bold text-gray-800">
-                2. Or Enter Direct Image Web URL
+                2. Or Enter Direct HTTPS Image URL
               </label>
               <form onSubmit={handleLogoUrlApply} className="flex gap-2">
                 <div className="relative flex-1">
@@ -361,7 +347,7 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
                   <input 
                     id="input-bank-logo-url-modal"
                     type="url" 
-                    placeholder="https://example.com/cbe-logo.png" 
+                    placeholder="https://example.com/logo.png" 
                     value={customLogoUrlInput}
                     onChange={(e) => setCustomLogoUrlInput(e.target.value)}
                     className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-3 py-2 text-xs font-mono text-gray-800 focus:outline-none focus:border-[#68137e] focus:bg-white"
@@ -375,53 +361,26 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
                   Apply
                 </button>
               </form>
+              <p className="text-[10px] text-gray-400">
+                Supports uploaded files from device or secure HTTPS image URLs only.
+              </p>
             </div>
 
-            {/* Presets */}
-            <div className="space-y-2 pt-2 border-t border-gray-100">
-              <label className="block text-xs font-bold text-gray-800">
-                3. Official Presets
-              </label>
-              <div className="space-y-2">
-                {PRESET_LOGOS.map((preset, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => {
-                      setPreviewLogo(preset.url);
-                      applyLogoChange(preset.url);
-                    }}
-                    className="w-full p-2.5 rounded-xl border border-gray-100 hover:border-[#68137e]/40 hover:bg-purple-50/30 transition text-left flex items-center justify-between cursor-pointer"
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <img 
-                        src={preset.url} 
-                        alt={preset.name} 
-                        className="w-7 h-7 object-contain bg-white rounded p-0.5 border border-gray-200" 
-                        referrerPolicy="no-referrer"
-                      />
-                      <div>
-                        <p className="text-xs font-bold text-gray-800">{preset.name}</p>
-                        <p className="text-[10px] text-gray-400">{preset.description}</p>
-                      </div>
-                    </div>
-                    <Sparkles className="w-3.5 h-3.5 text-[#deb356]" />
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Reset Button */}
+            {/* Footer Actions */}
             <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
-              <button
-                id="btn-reset-logo-in-modal"
-                type="button"
-                onClick={handleResetLogoToDefault}
-                className="text-xs font-semibold text-gray-500 hover:text-rose-600 transition flex items-center gap-1.5 cursor-pointer py-1.5 px-2 rounded-lg hover:bg-rose-50"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset to Official Default</span>
-              </button>
+              {currentLogo ? (
+                <button
+                  id="btn-reset-logo-in-modal"
+                  type="button"
+                  onClick={handleResetLogoToDefault}
+                  className="text-xs font-semibold text-rose-600 hover:text-rose-700 transition flex items-center gap-1.5 cursor-pointer py-1.5 px-2 rounded-lg hover:bg-rose-50"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Remove Custom Logo</span>
+                </button>
+              ) : (
+                <span className="text-[11px] text-gray-400 italic">No custom logo active</span>
+              )}
 
               <button
                 id="btn-done-logo-modal"
@@ -607,9 +566,6 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
                       onClick={() => {
                         LocalDb.setBankStampWeight(w);
                         setStampWeight(w);
-                        if (!currentStamp) {
-                          setPreviewStamp(getOfficialCbeStampSvg(w));
-                        }
                         setStampSaveSuccess(true);
                         setTimeout(() => setStampSaveSuccess(false), 2000);
                       }}
@@ -658,7 +614,7 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
             {/* 2. Direct Stamp Web URL */}
             <div className="space-y-2">
               <label className="block text-xs font-bold text-gray-800">
-                2. Or Enter Direct Stamp Image URL
+                2. Or Enter Direct HTTPS Stamp Image URL
               </label>
               <form onSubmit={handleStampUrlApply} className="flex gap-2">
                 <div className="relative flex-1">
@@ -680,36 +636,9 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
                   Apply
                 </button>
               </form>
-            </div>
-
-            {/* 3. Official Preset Rubber Stamp */}
-            <div className="space-y-2 pt-2 border-t border-gray-100">
-              <label className="block text-xs font-bold text-gray-800">
-                3. Official CBE Stamp Template
-              </label>
-              <button
-                id="btn-load-official-cbe-stamp"
-                type="button"
-                onClick={() => {
-                  setPreviewStamp(OFFICIAL_CBE_STAMP_LOGO);
-                  applyStampChange(OFFICIAL_CBE_STAMP_LOGO);
-                }}
-                className="w-full p-2.5 rounded-xl border border-purple-200 hover:border-purple-400 hover:bg-purple-50/50 transition text-left flex items-center justify-between cursor-pointer"
-              >
-                <div className="flex items-center gap-2.5">
-                  <img 
-                    src={OFFICIAL_CBE_STAMP_LOGO} 
-                    alt="Official CBE Rubber Stamp" 
-                    className="w-8 h-8 object-contain bg-white rounded p-0.5 border border-purple-200" 
-                    referrerPolicy="no-referrer"
-                  />
-                  <div>
-                    <p className="text-xs font-bold text-gray-800">Official CBE Circular Purple Rubber Stamp</p>
-                    <p className="text-[10px] text-gray-400">Authentic double-ring branch stamp with Amharic &amp; English markings</p>
-                  </div>
-                </div>
-                <Sparkles className="w-4 h-4 text-purple-600" />
-              </button>
+              <p className="text-[10px] text-gray-400">
+                Supports uploaded files from device or secure HTTPS image URLs only.
+              </p>
             </div>
 
             {/* Stamp Footer Actions */}
