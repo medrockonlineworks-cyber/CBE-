@@ -1878,22 +1878,14 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
     }
   };
 
-  // Bottom hardware navigation bar matching phone type
+  // Bottom hardware navigation bar matching phone type (Edge-to-edge uses device native navigation)
   const renderPhoneFooter = (type: TruecallerPhoneType) => {
     switch (type) {
       case 'iphone':
-        return (
-          <div className="w-full py-2 bg-black/80 flex items-center justify-center z-40">
-            <div className="w-32 h-1 bg-white/80 rounded-full"></div>
-          </div>
-        );
+        return null; // Device native edge-to-edge bar is used
       case 'samsung':
       case 'pixel':
-        return (
-          <div className="w-full py-1.5 bg-black/80 flex items-center justify-center z-40">
-            <div className="w-24 h-1 bg-white/60 rounded-full"></div>
-          </div>
-        );
+        return null; // Device native gesture navigation is used
       case 'tecno':
       default:
         // Android 3-button bar matching screenshot: ≡, ○, ⊃
@@ -2466,9 +2458,6 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
 
           {/* Modal: Choose Phone Screen & Phone Type */}
           {renderPickerModal()}
-
-          {/* Bottom iOS Home Indicator */}
-          <div className="w-32 h-1 bg-white/25 rounded-full mx-auto my-2 shrink-0 pointer-events-none" />
         </div>
       );
     }
@@ -2866,9 +2855,6 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
           <div className="w-full bg-black text-center text-[12px] text-[#8e9aa8] py-1 select-none pointer-events-auto">
             Replying is not supported by this sender
           </div>
-
-          {/* iOS Home Indicator Bar */}
-          <div className="w-32 h-1 bg-white/25 rounded-full mx-auto my-2 shrink-0 pointer-events-none" />
         </div>
 
         {/* =================================================================== */}

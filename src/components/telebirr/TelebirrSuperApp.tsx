@@ -195,10 +195,6 @@ const TelebirrSuperAppContent: React.FC<TelebirrSuperAppContentProps> = ({
             onScanQr={() => setActiveSubView('/qr-scanner')} 
           />
         )}
-        {/* iOS Home Indicator Bar */}
-        {isIPhone && (
-          <div className="w-32 h-1 bg-white/40 rounded-full mx-auto my-1 pointer-events-none" />
-        )}
       </div>
 
       {/* 4. ANDROID RECENT APPS SWITCHER MODAL */}

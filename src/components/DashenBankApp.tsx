@@ -1860,13 +1860,6 @@ export default function DashenBankApp({ currentUser, onBack, onOpenTelebirr }: D
         </button>
       </div>
 
-      {/* iOS Home Indicator Bar */}
-      {isIPhone && (
-        <div className="w-full bg-[#02060e] py-1.5 flex items-center justify-center shrink-0">
-          <div className="w-32 h-1 bg-white/25 rounded-full pointer-events-none" />
-        </div>
-      )}
-
       {/* =================================================================== */}
       {/* ACCOUNTS & REGISTERED DIRECTORY MODAL                              */}
       {/* =================================================================== */}

@@ -325,9 +325,6 @@ export const AppleMessagesThread: React.FC<AppleMessagesThreadProps> = ({
             )}
           </div>
         </form>
-
-        {/* Bottom iOS Home Indicator Bar */}
-        <div className="w-32 h-1 bg-white/25 rounded-full mx-auto mt-2 mb-0.5 shrink-0 pointer-events-none" />
       </div>
     </div>
   );

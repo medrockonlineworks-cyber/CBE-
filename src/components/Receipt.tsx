@@ -1563,15 +1563,10 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
               type="button"
               id="btn-action-close"
               onClick={onBack}
-              className="w-full bg-[#d7d7db] hover:bg-[#ceced3] active:bg-[#c4c4c9] text-[#333333] font-bold py-3.5 rounded-full text-[15px] transition active:scale-[0.99] cursor-pointer shadow-xs"
+              className="w-full bg-[#d7d7db] hover:bg-[#ceced3] active:bg-[#c4c4c9] text-[#333333] font-bold py-3.5 rounded-full text-[15px] transition active:scale-[0.99] cursor-pointer shadow-xs mb-1"
             >
               Close
             </button>
-
-            {/* iPhone Native Home Navigation Bar Indicator */}
-            <div className="pt-2.5 pb-0.5 flex justify-center items-center">
-              <div className="w-32 sm:w-36 h-[4.5px] bg-[#1a1a1a] rounded-full shadow-xs" />
-            </div>
           </div>
         )}
 

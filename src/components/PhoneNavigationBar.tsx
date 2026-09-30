@@ -34,21 +34,9 @@ export const PhoneNavigationBar: React.FC<PhoneNavigationBarProps> = ({
   const borderCol = isDark ? 'border-neutral-900/80' : 'border-neutral-200';
   const iconColor = isDark ? 'text-neutral-400 hover:text-white' : 'text-neutral-500 hover:text-neutral-900';
 
-  // 1. Gesture Navigation Bar Style (Horizontal pill bar)
-  if (settings.navBarStyle === 'gesture' || settings.phoneModel === 'iphone' || settings.phoneModel === 'pixel') {
-    return (
-      <div className={`w-full py-2 flex items-center justify-center ${navBg} select-none ${className}`}>
-        <button
-          type="button"
-          aria-label="Home Gesture Bar"
-          onClick={onHome || onBack}
-          className={`w-32 h-1.5 rounded-full cursor-pointer hover:opacity-80 active:scale-95 transition ${
-            isDark ? 'bg-white/60 hover:bg-white/80' : 'bg-neutral-800/60 hover:bg-neutral-900'
-          }`}
-          title="Gesture Home Bar (Tap to go Home/Back)"
-        />
-      </div>
-    );
+  // 1. Gesture Navigation Bar Style (Edge-to-edge uses device native navigation bar)
+  if (settings.navBarStyle === 'gesture' || settings.phoneModel === 'iphone') {
+    return null;
   }
 
   // 2. 3-Button Navigation Bar (|||, ○, <) matching screenshot

@@ -1,11 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { 
   Home, 
   Landmark, 
   Settings 
 } from 'lucide-react';
 import { UserProfile } from '../types';
-import { PhoneSettingsService } from '../services/phoneSettingsService';
 
 export type TabType = 'home' | 'transfer' | 'payments' | 'history' | 'profile';
 
@@ -24,13 +23,6 @@ export default function Navigation({
   onOpenScanQr,
   showScanQr = false 
 }: NavigationProps) {
-  const [isIPhone, setIsIPhone] = useState<boolean>(() => PhoneSettingsService.isIPhoneMode());
-
-  useEffect(() => {
-    return PhoneSettingsService.subscribe(() => {
-      setIsIPhone(PhoneSettingsService.isIPhoneMode());
-    });
-  }, []);
   const isHomeActive = activeTab === 'home';
   const isTransactionActive = activeTab === 'history' || activeTab === 'transfer' || activeTab === 'payments';
   const isSettingActive = activeTab === 'profile';
@@ -154,13 +146,6 @@ export default function Navigation({
           </span>
         </button>
       </nav>
-
-      {/* iOS Home Indicator Bar */}
-      {isIPhone && (
-        <div className="w-full bg-white pb-1.5 flex items-center justify-center shrink-0">
-          <div className="w-32 h-1 bg-black/25 rounded-full pointer-events-none" />
-        </div>
-      )}
 
     </div>
   );

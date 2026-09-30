@@ -386,9 +386,6 @@ export const ApplePhoneApp: React.FC<ApplePhoneAppProps> = ({
             );
           })}
         </div>
-
-        {/* Bottom iOS Home Indicator */}
-        <div className="w-32 h-1 bg-white/25 rounded-full mx-auto mt-1.5 pointer-events-none" />
       </footer>
 
       {/* ------------------------------------------------------------- */}
