@@ -110,6 +110,31 @@ input, select, textarea {
   animation: progressShrink 5s linear forwards;
 }
 
+/* Telebirr continuous marquee animations */
+@keyframes marqueeScroll {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes tickerMarquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee-scroll {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: marqueeScroll 18s linear infinite;
+}
+
+.animate-ticker-marquee {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: tickerMarquee 8s linear infinite;
+}
+
 /* Printable layout styling to omit background controls and preserve dark headers */
 @media print {
   body {

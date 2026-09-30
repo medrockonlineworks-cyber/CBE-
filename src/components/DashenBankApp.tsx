@@ -297,15 +297,6 @@ export default function DashenBankApp({ currentUser, onBack, onOpenTelebirr }: D
       {/* Authentic Mount Dashen Background matching Screenshot 123028 (with optional custom image overlay) */}
       <DashenMountainBackdrop customBgImage={customBgImage} />
 
-      {/* 1. Phone Top Status Bar (Interactive & Phone Model customizable) */}
-      <div className="relative z-10 shrink-0">
-        <PhoneStatusBar 
-          theme="dark" 
-          onClick={() => setShowPhoneSettings(true)}
-          showEditHint={true}
-        />
-      </div>
-
       {/* Floating Toast Notification */}
       {copyToast && (
         <div className="absolute top-12 left-1/2 -translate-x-1/2 z-50 bg-[#172544] text-white border border-[#2b3e6c] px-4 py-1.5 rounded-full shadow-2xl text-xs font-medium animate-in fade-in slide-in-from-top-2 flex items-center gap-1.5">

@@ -331,13 +331,6 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-[#121212] text-[#e3e3e3]' : 'bg-[#f4f5f7] text-[#1f2328]'} flex flex-col font-sans select-text antialiased transition-colors duration-150`}>
       
-      {/* 1. Android Native Simulated Status Bar (Tappable to customize) */}
-      <PhoneStatusBar 
-        theme={isDarkMode ? 'dark' : 'light'} 
-        onClick={() => setShowPhoneSettingsModal(true)} 
-        showEditHint={true} 
-      />
-
       {/* 2. Google Messages CBE Header Bar (Matching screenshot) */}
       <header className={`w-full ${isDarkMode ? 'bg-[#121212] border-neutral-900/80 text-white' : 'bg-white border-neutral-200 text-neutral-900 shadow-sm'} border-b px-2 py-2 flex items-center justify-between relative z-40`}>
         <div className="flex items-center space-x-3">

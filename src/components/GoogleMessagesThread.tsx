@@ -73,9 +73,6 @@ export default function GoogleMessagesThread({
       isDarkMode ? 'bg-[#121316] text-white' : 'bg-[#f8f9fa] text-neutral-900'
     } font-sans select-none`}>
       
-      {/* Phone Status Bar */}
-      <PhoneStatusBar theme={isDarkMode ? 'dark' : 'light'} />
-      
       {/* Top App Bar */}
       <header className={`px-3 py-2.5 flex items-center justify-between sticky top-0 z-20 border-b ${
         isDarkMode ? 'bg-[#1a1b1e] border-neutral-800' : 'bg-white border-neutral-200'

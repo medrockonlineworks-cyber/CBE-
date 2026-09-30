@@ -30,11 +30,11 @@ export default function Navigation({
   const shouldRenderScanQr = showScanQr && isHomeActive;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto z-40 pointer-events-none select-none">
+    <div className="w-full relative z-40 select-none shrink-0">
       
       {/* 1. Upper Floating Center Scan QR Pill (Only on Home tab) */}
       {shouldRenderScanQr && (
-        <div className="flex justify-center items-center pb-2 pointer-events-auto">
+        <div className="absolute -top-10 sm:-top-11 left-0 right-0 flex justify-center items-center pointer-events-auto z-50">
           <button
             id="btn-nav-scan-qr"
             type="button"
@@ -87,7 +87,7 @@ export default function Navigation({
       <nav 
         id="cbe-bottom-navbar" 
         aria-label="Main Navigation"
-        className="pointer-events-auto bg-white border-t border-gray-100 px-6 pt-2 pb-[max(env(safe-area-inset-bottom,0px),10px)] flex justify-between items-center shadow-[0_-4px_20px_rgba(0,0,0,0.05)]"
+        className="pointer-events-auto bg-white border-t border-gray-100 px-6 pt-2 pb-[max(env(safe-area-inset-bottom,0px),12px)] flex justify-between items-center shadow-[0_-4px_20px_rgba(0,0,0,0.05)]"
       >
         {/* Item 1: Home */}
         <button

@@ -20,8 +20,7 @@ import { PhoneCallService } from './services/phoneCallService';
 import { SmsService } from './services/smsService';
 import Navigation, { TabType } from './components/Navigation';
 import OfflineBanner from './components/OfflineBanner';
-import PhoneStatusBar from './components/PhoneStatusBar';
-import PhoneSettingsModal from './components/PhoneSettingsModal';
+import PhoneRecentAppsModal, { AppViewId } from './components/PhoneRecentAppsModal';
 
 export default function App() {
   // Authentication & View Session States
@@ -63,11 +62,11 @@ export default function App() {
         // Ignore storage errors
       }
     }
-    return 'telegram';
+    return 'main';
   });
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [returnTab, setReturnTab] = useState<TabType>('home');
-  const [isPhoneSettingsOpen, setIsPhoneSettingsOpen] = useState<boolean>(false);
+  const [isRecentAppsOpen, setIsRecentAppsOpen] = useState<boolean>(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [initialTxTab, setInitialTxTab] = useState<'send' | 'transfer' | 'merchant' | 'receive' | 'airtime'>('send');
   const [smsActiveAccountId, setSmsActiveAccountId] = useState<string | undefined>(undefined);
@@ -105,7 +104,80 @@ export default function App() {
     } catch {
       // Ignore if history state fails in sandboxed iframe
     }
-  }, [activeTab]);
+  }, [activeTab, activeView]);
+
+  // Phone Navigation Bar Handlers for CBE Main App
+  const handlePhoneBack = useCallback(() => {
+    // 1. Give active modals / sub-views first priority to handle back
+    let handledBySubView = false;
+    const customBackEvent = new CustomEvent('cbe_phone_back', {
+      cancelable: true,
+      detail: {
+        setHandled: () => {
+          handledBySubView = true;
+        },
+      },
+    });
+    window.dispatchEvent(customBackEvent);
+    if (customBackEvent.defaultPrevented || handledBySubView) {
+      return;
+    }
+
+    // 2. If viewing a receipt, return to main CBE view
+    if (activeView === 'receipt') {
+      setActiveView('main');
+      return;
+    }
+
+    // 3. If in admin panel, return to main profile
+    if (activeView === 'admin') {
+      setActiveView('main');
+      setActiveTab('profile');
+      return;
+    }
+
+    // 4. If in secondary app, return to CBE main app
+    if (activeView !== 'main') {
+      navigateTo('main', returnTab || 'home');
+      return;
+    }
+
+    // 5. If in CBE main app and on secondary tab (transfer, payments, history, profile), return to 'home' tab
+    if (activeTab !== 'home') {
+      setActiveTab('home');
+      try {
+        window.history.pushState({ view: 'main', tab: 'home' }, '', '/');
+      } catch {}
+      return;
+    }
+
+    // 6. If already on Home tab at the root:
+    // If navigation history has a previous app (e.g. Telebirr, Dashen, SMS), go back to it
+    if (navHistoryRef.current.length > 1) {
+      navHistoryRef.current.pop(); // current
+      const prev = navHistoryRef.current.pop();
+      if (prev && prev.view && prev.view !== 'main') {
+        navigateTo(prev.view as any, (prev.tab as any) || 'home');
+        return;
+      }
+    }
+
+    // Otherwise open Recent Apps Switcher
+    setIsRecentAppsOpen(true);
+  }, [activeView, activeTab, returnTab, navigateTo]);
+
+  const handlePhoneHome = useCallback(() => {
+    window.dispatchEvent(new CustomEvent('cbe_phone_home'));
+    if (activeView !== 'main') {
+      navigateTo('main', 'home');
+    } else {
+      setActiveTab('home');
+    }
+  }, [activeView, navigateTo]);
+
+  const handlePhoneRecents = useCallback(() => {
+    setIsRecentAppsOpen(true);
+  }, []);
 
   // Android Back Navigation handler
   useEffect(() => {
@@ -400,13 +472,13 @@ export default function App() {
       {/* Main Responsive Android-Ready App Canvas */}
       <div 
         id="app-main-canvas"
-        className="w-full max-w-md bg-gray-50 h-[100dvh] max-h-[100dvh] md:h-[840px] md:max-h-[880px] md:rounded-3xl md:shadow-2xl relative flex flex-col overflow-hidden border-0 md:border md:border-slate-800/60 pt-safe pb-safe"
+        className="w-full max-w-full md:max-w-[430px] bg-gray-50 h-[100dvh] max-h-[100dvh] md:h-[880px] md:max-h-[920px] md:rounded-[44px] md:shadow-[0_25px_70px_rgba(0,0,0,0.65)] relative flex flex-col overflow-hidden border-0 md:border md:border-slate-800/90"
       >
         {/* Real-time Offline Warning Banner */}
         <OfflineBanner />
 
         {/* Dynamic View Panel Router */}
-        <main className={`flex-1 flex flex-col scrollbar-none ${
+        <main className={`flex-1 flex flex-col min-h-0 scrollbar-none ${
           activeView === 'admin'
             ? 'h-full overflow-y-auto overflow-x-hidden bg-slate-900 w-full max-w-full min-w-0'
             : activeView === 'sms' 
@@ -421,9 +493,7 @@ export default function App() {
                     ? 'h-full overflow-hidden bg-white'
                     : activeView === 'telegram'
                       ? 'h-full overflow-hidden bg-slate-900'
-                      : activeTab === 'home' || activeTab === 'history' 
-                      ? 'overflow-hidden h-full' 
-                      : 'overflow-y-auto bg-gray-50'
+                      : 'h-full overflow-hidden'
         }`}>
           
           {activeView === 'auth' && (
@@ -431,10 +501,13 @@ export default function App() {
           )}
 
           {activeView === 'main' && (
-            <div className={`flex-1 flex flex-col relative ${activeTab === 'home' || activeTab === 'history' ? 'h-full overflow-hidden' : 'pb-28'}`}>
-              {renderTabContent()}
-              
-              {/* Floating bottom navigation for secondary sub-tabs */}
+            <div className="flex-1 flex flex-col h-full w-full overflow-hidden relative">
+              {/* Main Tab Content: Home, Transfer, Payments, History, Profile */}
+              <div className="flex-1 min-h-0 w-full overflow-hidden relative flex flex-col">
+                {renderTabContent()}
+              </div>
+
+              {/* Bottom navigation for secondary sub-tabs (transfer, payments, profile) */}
               {activeTab !== 'home' && activeTab !== 'history' && (
                 <Navigation 
                   activeTab={activeTab}
@@ -461,12 +534,16 @@ export default function App() {
           )}
 
           {activeView === 'receipt' && selectedTransaction && (
-            <Receipt 
-              transaction={selectedTransaction}
-              onBack={() => {
-                setActiveView('main');
-              }}
-            />
+            <div className="flex-1 flex flex-col h-full w-full overflow-hidden relative">
+              <div className="flex-1 min-h-0 w-full overflow-hidden relative">
+                <Receipt 
+                  transaction={selectedTransaction}
+                  onBack={() => {
+                    setActiveView('main');
+                  }}
+                />
+              </div>
+            </div>
           )}
 
           {activeView === 'admin' && currentUser && (
@@ -564,13 +641,16 @@ export default function App() {
         </main>
       </div>
 
-      {/* Unified Phone Model & Status Bar Settings Modal */}
-      {isPhoneSettingsOpen && (
-        <PhoneSettingsModal 
-          isOpen={isPhoneSettingsOpen}
-          onClose={() => setIsPhoneSettingsOpen(false)}
-        />
-      )}
+      {/* Android / iPhone Recent Multitasking Apps Modal */}
+      <PhoneRecentAppsModal 
+        isOpen={isRecentAppsOpen}
+        onClose={() => setIsRecentAppsOpen(false)}
+        activeView={activeView as any}
+        onSelectApp={(appId) => {
+          setIsRecentAppsOpen(false);
+          navigateTo(appId as any, 'home');
+        }}
+      />
     </div>
   );
 }

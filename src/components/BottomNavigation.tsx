@@ -30,11 +30,11 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   const shouldRenderScanQr = showScanQr && isHomeActive;
 
   return (
-    <div className={`fixed bottom-0 left-0 right-0 max-w-md mx-auto z-50 pointer-events-none ${className}`}>
+    <div className={`w-full relative z-40 select-none shrink-0 ${className}`}>
       
       {/* 1. Floating Center "Scan QR" Pill Button (Only shown on Home tab when no detail/modal is open) */}
       {shouldRenderScanQr && (
-        <div className="flex justify-center items-center pb-2 pointer-events-auto select-none">
+        <div className="absolute -top-10 sm:-top-11 left-0 right-0 flex justify-center items-center pointer-events-auto select-none z-50">
           <button
             id="btn-nav-scan-qr"
             type="button"
@@ -46,7 +46,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
                 onChangeTab?.('transfer');
               }
             }}
-            className="bg-[#7d17a3] hover:bg-[#6c128e] active:scale-95 text-white h-[34px] sm:h-[36px] px-2 rounded-full flex items-center justify-center gap-1 shadow-[0_4px_16px_rgba(125,23,163,0.45)] transition-all cursor-pointer border border-white/20 select-none group"
+            className="bg-[#7d17a3] hover:bg-[#6c128e] active:scale-95 text-white h-[34px] sm:h-[36px] px-3.5 rounded-full flex items-center justify-center gap-1.5 shadow-[0_4px_16px_rgba(125,23,163,0.45)] transition-all cursor-pointer border border-white/20 select-none group"
           >
             {/* Left Corner Scanner Brackets (Top & Bottom) */}
             <svg 
@@ -67,7 +67,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
             </svg>
 
             {/* Centered Text snug against the corner reticles */}
-            <span className="text-[12.5px] sm:text-[13px] font-bold tracking-tight text-white whitespace-nowrap leading-none">
+            <span className="text-[12px] sm:text-[13px] font-bold tracking-tight text-white whitespace-nowrap leading-none">
               Scan QR
             </span>
 
@@ -96,7 +96,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
       <nav 
         id="cbe-bottom-navbar" 
         aria-label="Main Navigation"
-        className="pointer-events-auto bg-white border-t border-gray-100 px-6 pt-2 pb-[max(env(safe-area-inset-bottom,0px),10px)] flex justify-between items-center shadow-[0_-4px_20px_rgba(0,0,0,0.05)] select-none"
+        className="w-full pointer-events-auto bg-white border-t border-gray-100 px-6 pt-2 pb-[max(env(safe-area-inset-bottom,0px),12px)] flex justify-between items-center shadow-[0_-4px_20px_rgba(0,0,0,0.05)] select-none"
       >
         {/* Item 1: Home */}
         <button

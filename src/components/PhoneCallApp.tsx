@@ -1193,13 +1193,6 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
       className="relative w-full h-full max-w-md mx-auto bg-black text-white flex flex-col overflow-hidden font-sans select-none"
       style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
     >
-      {/* 1. Phone Status Bar (Tappable to customize phone model & status bar) */}
-      <PhoneStatusBar 
-        theme="dark" 
-        onClick={() => setIsPhoneSettingsOpen(true)} 
-        showEditHint={true} 
-      />
-
       {/* 2. Top Header Row: Search & Settings Hexagon (Right-aligned matching Screenshot 1) */}
       <div className="w-full px-4 pt-1 pb-1 flex items-center justify-between shrink-0 z-10">
         <div>
@@ -1715,12 +1708,6 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
       {ussdStep !== 'idle' && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-[1px] flex flex-col justify-between animate-in fade-in duration-150">
           
-          {/* Top Status Bar in USSD mode */}
-          <PhoneStatusBar 
-            theme="dark" 
-            onClick={() => setIsPhoneSettingsOpen(true)} 
-          />
-
           {/* Upper/Center Section: Floating USSD Card */}
           <div className="flex-1 flex flex-col items-center justify-center px-4 py-2">
             {/* Running Spinner */}
@@ -1806,10 +1793,6 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
       {/* 9. Active Calling Full-Screen Overlay */}
       {activeCall && (
         <div className="fixed inset-0 z-50 bg-[#121316] text-white flex flex-col items-center justify-between p-6 animate-in fade-in duration-200">
-          {/* Top Phone Status Bar */}
-          <div className="w-full">
-            <PhoneStatusBar theme="dark" onClick={() => setIsPhoneSettingsOpen(true)} />
-          </div>
           {/* Top Call Info */}
           <div className="flex flex-col items-center pt-8 text-center">
             {/* Contact Avatar Circle */}

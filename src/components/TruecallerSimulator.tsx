@@ -2514,13 +2514,6 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
           </div>
         )}
 
-        {/* Phone Status Bar with direct tap to customize */}
-        <PhoneStatusBar 
-          theme="dark" 
-          onClick={() => setShowPhoneSettingsModal(true)} 
-          showEditHint={true} 
-        />
-
         {/* Bank Thread App Bar matching screenshot */}
         <header className="w-full bg-black border-b border-neutral-900 px-3 py-2 flex items-center justify-between sticky top-0 z-30">
           <div className="flex items-center space-x-3">
@@ -3855,13 +3848,6 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
       {/* PHONE DEVICE FRAME CONTAINER */}
       <div className="relative w-full h-full max-w-[440px] max-h-[920px] bg-black sm:rounded-[38px] overflow-hidden sm:border-[5px] sm:border-neutral-800 shadow-[0_25px_70px_rgba(0,0,0,0.8)] flex flex-col">
         
-        {/* Selected Phone Hardware Status Bar */}
-        <PhoneStatusBar 
-          theme="dark" 
-          onClick={() => setShowPhoneSettingsModal(true)} 
-          showEditHint={true} 
-        />
-
         {/* Selected Phone Screen (TikTok, YouTube, Telegram, Instagram, WhatsApp, LockScreen) */}
         <div className="relative w-full flex-1 overflow-hidden">
           {renderBackgroundScreen(selectedPhoneScreen)}

@@ -141,6 +141,53 @@ export const Home: React.FC<HomeProps> = ({
     }, 650);
   };
 
+  // Listen to Phone Navigation Bar Back and Home actions
+  useEffect(() => {
+    const handlePhoneBack = (e: any) => {
+      if (activeModal) {
+        setActiveModal(null);
+        e?.detail?.setHandled?.();
+        e?.preventDefault?.();
+        return;
+      }
+      if (selectedDetailTx) {
+        setSelectedDetailTx(null);
+        e?.detail?.setHandled?.();
+        e?.preventDefault?.();
+        return;
+      }
+      if (isHistorySearchOpen) {
+        setIsHistorySearchOpen(false);
+        setHistorySearchText('');
+        e?.detail?.setHandled?.();
+        e?.preventDefault?.();
+        return;
+      }
+      if (activeNavTab !== 'home') {
+        setActiveNavTab('home');
+        onNavigateToTab?.('home');
+        e?.detail?.setHandled?.();
+        e?.preventDefault?.();
+        return;
+      }
+    };
+
+    const handlePhoneHome = () => {
+      setActiveModal(null);
+      setSelectedDetailTx(null);
+      setIsHistorySearchOpen(false);
+      setActiveNavTab('home');
+      onNavigateToTab?.('home');
+    };
+
+    window.addEventListener('cbe_phone_back', handlePhoneBack);
+    window.addEventListener('cbe_phone_home', handlePhoneHome);
+    return () => {
+      window.removeEventListener('cbe_phone_back', handlePhoneBack);
+      window.removeEventListener('cbe_phone_home', handlePhoneHome);
+    };
+  }, [activeModal, selectedDetailTx, isHistorySearchOpen, activeNavTab, onNavigateToTab]);
+
   // Nav handler for bottom bar
   const handleNavTabChange = (tab: NavTabId) => {
     if (tab === 'home') {
@@ -316,7 +363,7 @@ export const Home: React.FC<HomeProps> = ({
       {/* ========================================================
           SCROLLABLE CONTENT AREA (From Yellow Line Downwards)
           ======================================================== */}
-      <main className="flex-1 min-h-0 overflow-y-auto overscroll-contain overflow-x-hidden scrollbar-none relative z-10 w-full pb-32">
+      <main className="flex-1 min-h-0 overflow-y-auto overscroll-contain overflow-x-hidden scrollbar-none relative z-10 w-full pb-6 sm:pb-8">
         {/* DYNAMIC CONTENT UNDER CARD BASED ON ACTIVE TAB */}
         {activeNavTab === 'history' ? (
           /* ========================================================

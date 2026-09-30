@@ -89,13 +89,6 @@ export default function GoogleMessagesInbox({
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-[#121316] text-white' : 'bg-[#f8f9fa] text-neutral-900'} flex flex-col font-sans transition-colors duration-150 select-none`}>
       
-      {/* 📱 Phone Status Bar (Tappable to customize) */}
-      <PhoneStatusBar 
-        theme={isDarkMode ? 'dark' : 'light'} 
-        onClick={() => setShowPhoneSettingsModal(true)} 
-        showEditHint={true} 
-      />
-
       {/* 🔍 Google Messages Top App Bar */}
       <header className={`px-4 pt-3 pb-2 flex items-center justify-between sticky top-0 z-30 ${isDarkMode ? 'bg-[#121316]' : 'bg-[#f8f9fa]'}`}>
         {!isSearching ? (

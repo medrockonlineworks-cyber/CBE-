@@ -37,13 +37,15 @@ export const PhoneNavigationBar: React.FC<PhoneNavigationBarProps> = ({
   // 1. Gesture Navigation Bar Style (Horizontal pill bar)
   if (settings.navBarStyle === 'gesture' || settings.phoneModel === 'iphone' || settings.phoneModel === 'pixel') {
     return (
-      <div className={`w-full py-2.5 flex items-center justify-center ${navBg} select-none ${className}`}>
-        <div 
+      <div className={`w-full py-2 flex items-center justify-center ${navBg} select-none ${className}`}>
+        <button
+          type="button"
+          aria-label="Home Gesture Bar"
           onClick={onHome || onBack}
-          className={`w-32 h-1 rounded-full cursor-pointer hover:opacity-80 active:scale-95 transition ${
-            isDark ? 'bg-white/60' : 'bg-neutral-800/60'
+          className={`w-32 h-1.5 rounded-full cursor-pointer hover:opacity-80 active:scale-95 transition ${
+            isDark ? 'bg-white/60 hover:bg-white/80' : 'bg-neutral-800/60 hover:bg-neutral-900'
           }`}
-          title="Gesture Home Bar"
+          title="Gesture Home Bar (Tap to go Home/Back)"
         />
       </div>
     );
@@ -52,36 +54,51 @@ export const PhoneNavigationBar: React.FC<PhoneNavigationBarProps> = ({
   // 2. 3-Button Navigation Bar (|||, ○, <) matching screenshot
   return (
     <div 
-      className={`w-full py-2.5 px-16 flex items-center justify-between text-base font-light ${navBg} border-t ${borderCol} select-none ${className}`}
+      className={`w-full py-2 px-8 sm:px-14 md:px-16 flex items-center justify-between text-base font-light ${navBg} border-t ${borderCol} select-none ${className}`}
     >
-      {/* Recents Button: ||| */}
+      {/* Recents Button: 三 */}
       <button
         type="button"
+        id="phone-nav-recents"
+        aria-label="Recent Apps"
         onClick={onRecents}
-        className={`${iconColor} cursor-pointer tracking-tighter text-sm font-bold opacity-75 active:scale-90 transition p-1`}
+        className={`${iconColor} cursor-pointer opacity-80 hover:opacity-100 active:scale-85 transition p-2 flex items-center justify-center`}
         title="Recent Apps"
       >
-        |||
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+          <line x1="4" y1="7" x2="20" y2="7" />
+          <line x1="4" y1="12" x2="20" y2="12" />
+          <line x1="4" y1="17" x2="20" y2="17" />
+        </svg>
       </button>
 
       {/* Home Button: ○ */}
       <button
         type="button"
+        id="phone-nav-home"
+        aria-label="Home"
         onClick={onHome}
-        className={`${iconColor} cursor-pointer text-base opacity-75 active:scale-90 transition p-1`}
+        className={`${iconColor} cursor-pointer opacity-80 hover:opacity-100 active:scale-85 transition p-2 flex items-center justify-center`}
         title="Home"
       >
-        ○
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3">
+          <circle cx="12" cy="12" r="8.5" />
+        </svg>
       </button>
 
-      {/* Back Button: < */}
+      {/* Back Button: ⮌ (curved return arrow matching screenshot) */}
       <button 
-        type="button" 
+        type="button"
+        id="phone-nav-back"
+        aria-label="Back"
         onClick={onBack}
-        className={`${iconColor} cursor-pointer text-base opacity-75 active:scale-90 transition p-1`}
-        title="Back"
+        className={`${iconColor} cursor-pointer opacity-80 hover:opacity-100 active:scale-85 transition p-2 flex items-center justify-center`}
+        title="Back to Previous Screen / CBE"
       >
-        &lt;
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M19 16V13a5 5 0 0 0-5-5H6" />
+          <polyline points="10 4 6 8 10 12" />
+        </svg>
       </button>
     </div>
   );
