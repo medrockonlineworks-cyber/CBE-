@@ -39,6 +39,7 @@ import {
   Zap
 } from 'lucide-react';
 import { maskAccountNumber } from '../services/smsService';
+import { PhoneSettingsService } from '../services/phoneSettingsService';
 
 /**
  * Viewfinder focus screenshot icon matching exact reference (IMG_20260913_140907_194.jpg)
@@ -201,6 +202,14 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     return `${hours}:${mins}`;
   });
 
+  const [isIPhone, setIsIPhone] = useState<boolean>(() => PhoneSettingsService.isIPhoneMode());
+
+  useEffect(() => {
+    return PhoneSettingsService.subscribe(() => {
+      setIsIPhone(PhoneSettingsService.isIPhoneMode());
+    });
+  }, []);
+
   useEffect(() => {
     const timer = setInterval(() => {
       const now = new Date();
@@ -261,33 +270,39 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   const toggleUiElements = () => {
     setHideUiElements(prev => {
       const next = !prev;
-      showBarsToast(next ? 'Controls hidden (Double-tap screen to restore)' : 'Controls restored');
+      showBarsToast(next ? 'Controls hidden (Tap screen to return)' : 'Controls restored');
       return next;
     });
   };
 
-  // Double-tap/click to hide status bar
+  // Double-tap/click to hide status bar (on iPhone, status bar is always hidden by default)
   const [hideStatusBar, setHideStatusBar] = useState<boolean>(() => {
     try {
+      if (PhoneSettingsService.isIPhoneMode()) return true;
       return localStorage.getItem('cbe_hide_status_bar') === 'true' || localStorage.getItem('cbe_hide_phone_bars') === 'true';
     } catch {
-      return false;
+      return PhoneSettingsService.isIPhoneMode();
     }
   });
+
   const toggleStatusBar = () => {
     setHideStatusBar(prev => {
       const next = !prev;
       try {
         localStorage.setItem('cbe_hide_status_bar', String(next));
       } catch {}
-      showBarsToast(next ? 'Status bar hidden (Double-tap to restore)' : 'Status bar restored');
+      showBarsToast(next ? 'Status bar hidden' : 'Status bar restored');
       return next;
     });
   };
 
+  const shouldShowStatusBar = !isIPhone && !hideStatusBar && !isCapturing && !hideUiElements;
+
   const [barsToast, setBarsToast] = useState<string | null>(null);
   const barsToastTimerRef = useRef<any>(null);
   const lastTapRef = useRef<{ time: number; x: number; y: number }>({ time: 0, x: 0, y: 0 });
+  const touchStartXRef = useRef<number>(0);
+  const touchStartYRef = useRef<number>(0);
   const isTouchRef = useRef<boolean>(false);
 
   const showBarsToast = (msg: string) => {
@@ -299,8 +314,18 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   };
 
   const handleDoubleAction = () => {
-    // In receipt double tap hides/shows header phone status bar
-    toggleStatusBar();
+    if (isIPhone) {
+      onBack();
+    } else {
+      toggleStatusBar();
+    }
+  };
+
+  const handleScreenTouchStart = (e: React.TouchEvent) => {
+    if (e.touches && e.touches[0]) {
+      touchStartXRef.current = e.touches[0].clientX;
+      touchStartYRef.current = e.touches[0].clientY;
+    }
   };
 
   const handleScreenClick = (e: React.MouseEvent) => {
@@ -312,6 +337,13 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     if (target.closest('button') || target.closest('a') || target.closest('input')) {
       return;
     }
+
+    // When in clean screenshot view mode (like Image 1), clicking anywhere navigates back to Home
+    if (hideUiElements) {
+      onBack();
+      return;
+    }
+
     const now = Date.now();
     const timeDiff = now - lastTapRef.current.time;
     const dist = Math.hypot(e.clientX - lastTapRef.current.x, e.clientY - lastTapRef.current.y);
@@ -332,6 +364,21 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     }
     const touch = e.changedTouches[0];
     if (!touch) return;
+
+    const deltaX = touch.clientX - touchStartXRef.current;
+    const deltaY = touch.clientY - touchStartYRef.current;
+
+    // Edge swipe back gesture (standard iOS back swipe)
+    if (touchStartXRef.current < 50 && deltaX > 60 && Math.abs(deltaY) < 60) {
+      onBack();
+      return;
+    }
+
+    // When in clean screenshot view mode (like Image 1), tapping anywhere navigates back to Home
+    if (hideUiElements) {
+      onBack();
+      return;
+    }
 
     const now = Date.now();
     const timeDiff = now - lastTapRef.current.time;
@@ -492,10 +539,11 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     ctx.imageSmoothingEnabled = true;
 
     // 1. Phone Top Status Bar & Purple Background (iPhone Dynamic Island Header)
+    const hasStatusBar = !hideButtons && !hideStatusBar && !isIPhone;
     ctx.fillStyle = '#68137e';
-    ctx.fillRect(0, 0, width, 220);
+    ctx.fillRect(0, 0, width, hasStatusBar ? 220 : 180);
 
-    if (!hideStatusBar) {
+    if (hasStatusBar) {
       // Current Time for Status Bar (iOS standard format)
       const now = new Date();
       let statusHours = now.getHours();
@@ -587,7 +635,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     // 2. Top Purple Header: "Thank you / Success" & Top Scan Button
     // White Shield with Purple Checkmark (sharp crisp edges matching reference)
     const shieldX = 36;
-    const shieldY = 106;
+    const shieldY = hasStatusBar ? 106 : 56;
     ctx.save();
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
@@ -686,7 +734,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     }
 
     // 3. Main White Card
-    const cardTop = 180;
+    const cardTop = hasStatusBar ? 180 : 136;
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
     ctx.roundRect(0, cardTop, width, height - cardTop - 60, [36, 36, 0, 0]);
@@ -1040,18 +1088,29 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     return canvas.toDataURL('image/png');
   };
 
+  // Handle screenshot button or icon click: takes screenshot without status bar & navigates to clean view
+  const handleScreenshotAction = async (e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    await handleScreenshot();
+  };
+
   // Screenshot / Save handle - behaves like a real native phone screenshot
   const handleScreenshot = async () => {
     if (isCapturing) return;
 
     try {
       setIsCapturing(true);
-      // 1. Trigger realistic camera shutter flash effect
+      setHideUiElements(true);
+      setHideStatusBar(true);
+
+      // 1. Shutter flash effect
       setFlashAnimation(true);
       setTimeout(() => setFlashAnimation(false), 250);
 
       // Allow React state update to flush so elements hidden by isCapturing are removed from DOM
-      await new Promise(resolve => setTimeout(resolve, 80));
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       const receiptEl = document.getElementById('receipt-screen-wrapper');
       let dataUrl: string | null = null;
@@ -1064,6 +1123,12 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             allowTaint: true,
             backgroundColor: '#68137e',
             logging: false,
+            ignoreElements: (element) => {
+              return element.getAttribute('data-html2canvas-ignore') === 'true' ||
+                element.id === 'receipt-status-bar' ||
+                element.id === 'btn-action-close' ||
+                element.id === 'btn-action-screenshot';
+            }
           });
           dataUrl = canvas.toDataURL('image/png');
         } catch (captureErr) {
@@ -1075,9 +1140,9 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         dataUrl = await generateCanvasReceipt(true);
       }
 
-      // 2. Trigger instant download to user device
+      // 2. Trigger instant download to user device with native filename matching reference
       const downloadLink = document.createElement('a');
-      const filename = `CBE_Receipt_${txId}.png`;
+      const filename = `screenshot_${Date.now()}.png`;
       downloadLink.href = dataUrl;
       downloadLink.download = filename;
       document.body.appendChild(downloadLink);
@@ -1085,12 +1150,12 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       document.body.removeChild(downloadLink);
 
       // 3. Show clean phone-style screenshot notification toast
-      setCopiedToast('Screenshot captured & saved');
-      setTimeout(() => setCopiedToast(null), 2500);
+      setCopiedToast('Screenshot captured • Tap anywhere to return');
+      setTimeout(() => setCopiedToast(null), 3000);
     } catch (err) {
       console.error('Screenshot capture error:', err);
-      setCopiedToast('Screenshot saved');
-      setTimeout(() => setCopiedToast(null), 2500);
+      setCopiedToast('Screenshot saved • Tap anywhere to return');
+      setTimeout(() => setCopiedToast(null), 3000);
     } finally {
       setIsCapturing(false);
     }
@@ -1122,13 +1187,31 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       id="receipt-screen-wrapper" 
       onClick={handleScreenClick}
       onDoubleClick={handleScreenDoubleClick}
+      onTouchStart={handleScreenTouchStart}
       onTouchEnd={handleScreenTouchEnd}
       className="h-full min-h-[100dvh] max-w-md mx-auto bg-[#68137e] text-slate-800 flex flex-col justify-between relative overflow-y-auto scrollbar-none select-none cursor-pointer"
     >
       
+      {/* Floating Home Back Button when in clean screenshot view mode (like Image 1) */}
+      {hideUiElements && (
+        <button
+          type="button"
+          data-html2canvas-ignore="true"
+          onClick={onBack}
+          className="fixed top-3 left-3 z-50 px-3 py-1.5 rounded-full bg-black/40 hover:bg-black/60 text-white text-xs font-semibold backdrop-blur-md border border-white/20 transition active:scale-95 flex items-center gap-1 cursor-pointer animate-in fade-in"
+          title="Return to Home"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Home</span>
+        </button>
+      )}
+
       {/* Camera Flash Animation Overlay */}
       {flashAnimation && (
-        <div className="fixed inset-0 bg-white z-[100] pointer-events-none opacity-90 transition-opacity duration-300" />
+        <div 
+          data-html2canvas-ignore="true"
+          className="fixed inset-0 bg-white z-[100] pointer-events-none opacity-90 transition-opacity duration-300" 
+        />
       )}
 
       {/* Double Tap Floating Notification Toast */}
@@ -1153,72 +1236,78 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         </div>
       )}
 
-      {/* 1. Phone Top Status Bar (Time, Cellular, Wi-Fi, Battery) - Hidden on double click without shifting receipt */}
-      <div className={`w-full pt-2.5 pb-1 px-5 flex items-center justify-between text-white select-none z-20 flex-shrink-0 transition-opacity duration-200 ${hideStatusBar ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-        {/* Left: Time */}
-        <div className="text-left">
-          <span className="font-semibold text-[13px] sm:text-[14px] tracking-tight font-sans text-white/95 drop-shadow-xs">
-            {statusTime}
-          </span>
-        </div>
-
-        {/* Right: Cellular 4-Bars, Wi-Fi, and Battery Indicator */}
-        <div className="w-16 sm:w-20 flex items-center justify-end gap-1.5 text-white">
-          {/* Cellular 4-Bars */}
-          <div className="flex items-end gap-[1.5px] h-3" title="Cellular Full Signal">
-            <div className="w-[3px] h-1.5 bg-white rounded-[0.5px]" />
-            <div className="w-[3px] h-2 bg-white rounded-[0.5px]" />
-            <div className="w-[3px] h-2.5 bg-white rounded-[0.5px]" />
-            <div className="w-[3px] h-3 bg-white rounded-[0.5px]" />
-          </div>
-
-          {/* Wi-Fi Icon */}
-          <span title="Wi-Fi Connected" className="flex items-center">
-            <Wifi className="w-3.5 h-3.5 text-white stroke-[2.4]" />
-          </span>
-
-          {/* iOS Battery with Real Phone Battery Percentage & Charging State */}
-          <div 
-            className="flex items-center gap-[2px]" 
-            title={`Phone Battery: ${batteryLevel}% ${isPhoneCharging ? '(Charging ⚡)' : ''}`}
-          >
-            {/* Battery Body with Dynamic Real Phone Power Fill */}
-            <div className={`h-3 rounded-[3.5px] border-[1.5px] p-[1px] flex items-center relative transition-colors ${
-              isPhoneCharging 
-                ? 'border-emerald-400 bg-emerald-950/40' 
-                : (batteryLevel <= 20 ? 'border-red-400 bg-red-950/30' : 'border-white bg-black/15')
-            } ${batteryLevel === 100 ? 'w-6' : 'w-5.5'}`}>
-              <div 
-                className={`h-full rounded-[1px] transition-all duration-500 ${
-                  isPhoneCharging 
-                    ? 'bg-emerald-400' 
-                    : (batteryLevel <= 20 ? 'bg-red-400' : 'bg-white')
-                }`}
-                style={{ width: `${Math.max(8, Math.min(100, batteryLevel))}%` }}
-              />
-              {isPhoneCharging && (
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <Zap className="w-2.5 h-2.5 text-white fill-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" />
-                </div>
-              )}
-            </div>
-            {/* Battery Terminal Knob */}
-            <div className={`w-[1.5px] h-1.5 rounded-r-[1px] ${
-              isPhoneCharging 
-                ? 'bg-emerald-400' 
-                : (batteryLevel <= 20 ? 'bg-red-400' : 'bg-white')
-            }`} />
-
-            {/* Battery Percentage Number */}
-            <span className="text-[10px] font-bold text-white leading-none ml-0.5 tracking-tight select-none">
-              {batteryLevel}%
+      {/* 1. Phone Top Status Bar (Time, Cellular, Wi-Fi, Battery) - Excluded on iPhone & during screenshot capture */}
+      {shouldShowStatusBar && (
+        <div 
+          id="receipt-status-bar"
+          data-html2canvas-ignore="true"
+          className="w-full pt-2.5 pb-1 px-5 flex items-center justify-between text-white select-none z-20 flex-shrink-0 transition-opacity duration-200"
+        >
+          {/* Left: Time */}
+          <div className="text-left">
+            <span className="font-semibold text-[13px] sm:text-[14px] tracking-tight font-sans text-white/95 drop-shadow-xs">
+              {statusTime}
             </span>
           </div>
+
+          {/* Right: Cellular 4-Bars, Wi-Fi, and Battery Indicator */}
+          <div className="w-16 sm:w-20 flex items-center justify-end gap-1.5 text-white">
+            {/* Cellular 4-Bars */}
+            <div className="flex items-end gap-[1.5px] h-3" title="Cellular Full Signal">
+              <div className="w-[3px] h-1.5 bg-white rounded-[0.5px]" />
+              <div className="w-[3px] h-2 bg-white rounded-[0.5px]" />
+              <div className="w-[3px] h-2.5 bg-white rounded-[0.5px]" />
+              <div className="w-[3px] h-3 bg-white rounded-[0.5px]" />
+            </div>
+
+            {/* Wi-Fi Icon */}
+            <span title="Wi-Fi Connected" className="flex items-center">
+              <Wifi className="w-3.5 h-3.5 text-white stroke-[2.4]" />
+            </span>
+
+            {/* iOS Battery with Real Phone Battery Percentage & Charging State */}
+            <div 
+              className="flex items-center gap-[2px]" 
+              title={`Phone Battery: ${batteryLevel}% ${isPhoneCharging ? '(Charging ⚡)' : ''}`}
+            >
+              {/* Battery Body with Dynamic Real Phone Power Fill */}
+              <div className={`h-3 rounded-[3.5px] border-[1.5px] p-[1px] flex items-center relative transition-colors ${
+                isPhoneCharging 
+                  ? 'border-emerald-400 bg-emerald-950/40' 
+                  : (batteryLevel <= 20 ? 'border-red-400 bg-red-950/30' : 'border-white bg-black/15')
+              } ${batteryLevel === 100 ? 'w-6' : 'w-5.5'}`}>
+                <div 
+                  className={`h-full rounded-[1px] transition-all duration-500 ${
+                    isPhoneCharging 
+                      ? 'bg-emerald-400' 
+                      : (batteryLevel <= 20 ? 'bg-red-400' : 'bg-white')
+                  }`}
+                  style={{ width: `${Math.max(8, Math.min(100, batteryLevel))}%` }}
+                />
+                {isPhoneCharging && (
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <Zap className="w-2.5 h-2.5 text-white fill-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" />
+                  </div>
+                )}
+              </div>
+              {/* Battery Terminal Knob */}
+              <div className={`w-[1.5px] h-1.5 rounded-r-[1px] ${
+                isPhoneCharging 
+                  ? 'bg-emerald-400' 
+                  : (batteryLevel <= 20 ? 'bg-red-400' : 'bg-white')
+              }`} />
+
+              {/* Battery Percentage Number */}
+              <span className="text-[10px] font-bold text-white leading-none ml-0.5 tracking-tight select-none">
+                {batteryLevel}%
+              </span>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* 2. Top Purple Navigation / App Header */}
-      <div className="pt-6 sm:pt-7 pb-8 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0">
+      <div className={`${isIPhone ? 'pt-[max(env(safe-area-inset-top,0px),24px)]' : (shouldShowStatusBar ? 'pt-2 sm:pt-3' : 'pt-7 sm:pt-8')} pb-8 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0`}>
         <div className="flex items-center gap-3">
           {/* Solid White Shield with Purple Checkmark Icon perfectly fitted matching reference image */}
           <div className="w-8.5 h-8.5 flex-shrink-0 flex items-center justify-center">
@@ -1244,12 +1333,14 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           </div>
         </div>
 
-        {/* Screenshot Button (Translucent circular badge with enlarged focus viewfinder - clicking hides the controls, double tap also toggles) */}
+        {/* Screenshot Button (Translucent circular badge with enlarged focus viewfinder) */}
         {!hideUiElements && !isCapturing && (
           <button 
-            onClick={toggleUiElements}
+            type="button"
+            data-html2canvas-ignore="true"
+            onClick={handleScreenshotAction}
             className="w-11 h-11 rounded-full bg-white/20 hover:bg-white/30 active:scale-95 flex items-center justify-center transition text-white cursor-pointer shadow-xs"
-            title="Hide action buttons & icon (Double-tap anywhere to restore)"
+            title="Take screenshot without status bar"
           >
             <ScreenshotViewfinderIcon className="w-7 h-7 text-white" strokeWidth={1.8} />
           </button>
@@ -1386,11 +1477,12 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
         {/* Bottom Actions Section - Hidden on double-tap screen or toggle button */}
         {!hideUiElements && !isCapturing && (
-          <div className="mt-4 space-y-3.5 flex-shrink-0">
+          <div data-html2canvas-ignore="true" className="mt-4 space-y-3.5 flex-shrink-0">
             {/* 3 Action Buttons matching exact app icons */}
             <div className="flex items-center justify-around px-3 text-black">
               {/* Receipt Button */}
               <button 
+                type="button"
                 id="btn-action-receipt"
                 onClick={() => setShowDetailedModal(true)}
                 className="flex items-center gap-2 text-[13.5px] font-medium text-black hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2 rounded-xl"
@@ -1414,12 +1506,13 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 <span>Receipt</span>
               </button>
 
-              {/* Screenshot Button (toggles hiding elements as requested) */}
+              {/* Screenshot Button: takes screenshot without status bar and navigates to clean view */}
               <button 
+                type="button"
                 id="btn-action-screenshot"
-                onClick={toggleUiElements}
+                onClick={handleScreenshotAction}
                 className="flex items-center gap-2 text-[13.5px] font-medium text-black hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2 rounded-xl"
-                title="Hide action buttons, Close button & iPhone bar (Double-tap screen to restore)"
+                title="Take screenshot without status bar"
               >
                 <ScreenshotViewfinderIcon className="w-[18px] h-[18px] text-black" strokeWidth={1.8} />
                 <span>Screenshot</span>
@@ -1427,6 +1520,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
               {/* Share Button */}
               <button 
+                type="button"
                 id="btn-action-share"
                 onClick={handleShare}
                 className="flex items-center gap-2 text-[13.5px] font-medium text-black hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2 rounded-xl"
@@ -1438,6 +1532,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
             {/* Full-width Close Pill Button */}
             <button 
+              type="button"
               id="btn-action-close"
               onClick={onBack}
               className="w-full bg-[#d7d7db] hover:bg-[#ceced3] active:bg-[#c4c4c9] text-[#333333] font-bold py-3.5 rounded-full text-[15px] transition active:scale-[0.99] cursor-pointer shadow-xs"
@@ -1445,10 +1540,23 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
               Close
             </button>
 
-            {/* iPhone 17 Native Home Navigation Bar Indicator */}
+            {/* iPhone Native Home Navigation Bar Indicator */}
             <div className="pt-2.5 pb-0.5 flex justify-center items-center">
               <div className="w-32 sm:w-36 h-[4.5px] bg-[#1a1a1a] rounded-full shadow-xs" />
             </div>
+          </div>
+        )}
+
+        {/* When in Clean Screenshot Mode (matching Image 1) */}
+        {hideUiElements && (
+          <div data-html2canvas-ignore="true" className="pt-4 pb-2 flex flex-col items-center justify-center shrink-0">
+            <button
+              type="button"
+              onClick={onBack}
+              className="text-xs text-neutral-400 hover:text-neutral-700 transition flex items-center gap-1.5 py-1.5 px-4 rounded-full bg-neutral-100 hover:bg-neutral-200 cursor-pointer shadow-2xs active:scale-95"
+            >
+              <span>Tap anywhere to return to Home</span>
+            </button>
           </div>
         )}
 
