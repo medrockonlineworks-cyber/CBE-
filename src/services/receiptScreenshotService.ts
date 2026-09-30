@@ -2,7 +2,7 @@ import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import html2canvas from 'html2canvas';
-import { toPng } from 'html-to-image';
+import { LocalDb } from '../lib/mockData';
 
 /**
  * Sanitizes transaction ID for safe cross-platform file naming.
@@ -17,8 +17,85 @@ export function getSafeReceiptFilename(txId: string): string {
 }
 
 /**
+ * Converts any image element inside the receipt into a self-contained Base64 Data URL
+ * and ensures the browser decodes it before html2canvas runs.
+ */
+async function inlineImageElement(img: HTMLImageElement): Promise<void> {
+  // If this image is the CBE bank logo, check if an uploaded custom logo exists in LocalDb
+  const isCbeLogo = img.getAttribute('data-cbe-logo') === 'true' || 
+                    img.alt?.toLowerCase().includes('commercial bank') ||
+                    img.id?.includes('cbe-logo');
+  
+  if (isCbeLogo) {
+    const savedCustomLogo = LocalDb.getCustomBankLogo();
+    if (savedCustomLogo && savedCustomLogo.startsWith('data:image/')) {
+      img.src = savedCustomLogo;
+      if ('decode' in img) {
+        await img.decode().catch(() => {});
+      }
+      return;
+    }
+  }
+
+  // If already a base64 data URL, ensure it is decoded
+  if (img.src && img.src.startsWith('data:')) {
+    if ('decode' in img) {
+      await img.decode().catch(() => {});
+    }
+    return;
+  }
+
+  if (!img.src) return;
+
+  // Fetch image data as blob and convert to Base64 Data URL
+  try {
+    const resp = await fetch(img.src, { mode: 'cors' });
+    if (resp.ok) {
+      const blob = await resp.blob();
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (typeof reader.result === 'string') resolve(reader.result);
+          else reject(new Error('Reader result not string'));
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+
+      img.src = dataUrl;
+      if ('decode' in img) {
+        await img.decode().catch(() => {});
+      }
+      return;
+    }
+  } catch {
+    // If fetch failed, try offscreen canvas drawing
+  }
+
+  try {
+    if (img.complete && img.naturalWidth > 0) {
+      const offCanvas = document.createElement('canvas');
+      offCanvas.width = img.naturalWidth;
+      offCanvas.height = img.naturalHeight;
+      const offCtx = offCanvas.getContext('2d');
+      if (offCtx) {
+        offCtx.drawImage(img, 0, 0);
+        const inlinedSrc = offCanvas.toDataURL('image/png');
+        img.src = inlinedSrc;
+        if ('decode' in img) {
+          await img.decode().catch(() => {});
+        }
+      }
+    }
+  } catch (canvasErr) {
+    console.warn('[ScreenshotService] Canvas inlining note:', canvasErr);
+  }
+}
+
+/**
  * Captures ONLY the existing rendered receipt DOM element.
- * Waits for full render, images, SVGs, QR code, and fonts before taking a high-res PNG.
+ * Waits for full render, images (including CBE logo), SVGs, QR code, and fonts
+ * before taking a crisp, high-resolution PNG.
  */
 export async function captureReceiptElement(element: HTMLElement): Promise<string> {
   // 1. Wait until receipt is fully rendered and pending microtasks / layout complete
@@ -42,41 +119,12 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
         });
       }
 
-      // Convert remote/relative image source to data URL so html2canvas and html-to-image render it 100% reliably
-      if (img.complete && img.naturalWidth > 0 && img.src && !img.src.startsWith('data:')) {
-        try {
-          const offCanvas = document.createElement('canvas');
-          offCanvas.width = img.naturalWidth;
-          offCanvas.height = img.naturalHeight;
-          const offCtx = offCanvas.getContext('2d');
-          if (offCtx) {
-            offCtx.drawImage(img, 0, 0);
-            const inlinedSrc = offCanvas.toDataURL('image/png');
-            img.src = inlinedSrc;
-          }
-        } catch {
-          // If canvas was tainted, try fetching blob
-          try {
-            const resp = await fetch(img.src);
-            const blob = await resp.blob();
-            const reader = new FileReader();
-            await new Promise<void>((res) => {
-              reader.onloadend = () => {
-                if (typeof reader.result === 'string') {
-                  img.src = reader.result;
-                }
-                res();
-              };
-              reader.onerror = () => res();
-              reader.readAsDataURL(blob);
-            });
-          } catch (fetchErr) {
-            console.warn('[ScreenshotService] Could not inline image:', img.src, fetchErr);
-          }
-        }
-      }
+      await inlineImageElement(img);
     })
   );
+
+  // Allow layout and GPU rasterization to settle
+  await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
   // 3. Ensure fonts are loaded
   if (typeof document !== 'undefined' && 'fonts' in document && document.fonts.ready) {
@@ -98,33 +146,18 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
     );
   };
 
-  // Primary capture: html2canvas with scale and ignore rules
-  try {
-    const canvas = await html2canvas(element, {
-      scale: pixelRatio,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#68137e',
-      logging: false,
-      imageTimeout: 10000,
-      ignoreElements: isExcluded,
-    });
-    return canvas.toDataURL('image/png');
-  } catch (canvasErr) {
-    console.warn('html2canvas capture warning, falling back to html-to-image toPng:', canvasErr);
-    // Fallback: html-to-image toPng
-    return await toPng(element, {
-      pixelRatio,
-      quality: 1,
-      backgroundColor: '#68137e',
-      filter: (node) => {
-        if (node instanceof HTMLElement) {
-          return !isExcluded(node);
-        }
-        return true;
-      },
-    });
-  }
+  // 5. Capture existing rendered receipt DOM element using html2canvas with CORS and no taint
+  const canvas = await html2canvas(element, {
+    scale: pixelRatio,
+    useCORS: true,
+    allowTaint: false,
+    backgroundColor: '#68137e',
+    logging: false,
+    imageTimeout: 15000,
+    ignoreElements: isExcluded,
+  });
+
+  return canvas.toDataURL('image/png');
 }
 
 /**

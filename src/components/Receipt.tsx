@@ -873,27 +873,27 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             </h1>
 
             {/* Main Transaction Summary Gray Card */}
-            <div className="bg-[#f2f3f5] rounded-[24px] p-4 sm:p-5 space-y-3.5 border border-gray-200/50 shadow-xs">
+            <div className="bg-[#f2f3f5] rounded-[24px] p-4 sm:p-5 space-y-3 border border-gray-200/50 shadow-xs">
               <p className="text-[#8e8e93] font-normal text-[13.5px] sm:text-[14px]">Transaction Summary</p>
 
               {/* Paragraph Text with bold highlights matching CBE reference */}
               {isCredit ? (
-                <p className="text-[14px] sm:text-[15px] leading-[1.62] text-[#1a1a1a] font-normal select-text">
+                <p className="text-[14px] sm:text-[14.5px] leading-[1.58] text-[#1a1a1a] font-normal select-text">
                   ETB <span className="font-bold text-black">{amountFormatted}</span> has been credited to <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} from <span className="font-bold text-black">{senderName}</span> {senderSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason}
                 </p>
               ) : (
-                <p className="text-[14px] sm:text-[15px] leading-[1.62] text-[#1a1a1a] font-normal select-text">
+                <p className="text-[14px] sm:text-[14.5px] leading-[1.58] text-[#1a1a1a] font-normal select-text">
                   ETB <span className="font-bold text-black">{amountFormatted}</span> has been debited from <span className="font-bold text-black">{senderName}</span> {senderSuffix} for <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason} Total Amount Debited: ETB{totalDebitedFormatted} with Service Charge of ETB{serviceChargeFormatted}, VAT (15%) of ETB{vatFormatted} and Disaster Recovery (5%) of ETB{disasterRecoveryFormatted}.
                 </p>
               )}
 
               {/* Realistic QR Code Centered with authentic rounded grey frame */}
-              <div className="flex justify-center py-1.5">
+              <div className="flex justify-center pt-3 sm:pt-3.5 pb-2">
                 <div 
                   id="receipt-qr-container"
-                  className="bg-white p-2.5 sm:p-3 rounded-[24px] border-[3px] border-[#737373] shadow-xs inline-flex items-center justify-center select-none"
+                  className="bg-white p-2 sm:p-2.5 rounded-[22px] border-[2.8px] border-[#737373] shadow-xs inline-flex items-center justify-center select-none"
                 >
-                  <div className="w-36 h-36 sm:w-40 sm:h-40 flex items-center justify-center">
+                  <div className="w-34 h-34 sm:w-38 sm:h-38 flex items-center justify-center">
                     {customQrCode ? (
                       <img 
                         src={customQrCode} 
@@ -934,14 +934,24 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 </div>
               </div>
 
-              {/* Commercial Bank of Ethiopia Footer Inset */}
-              <div className="flex items-center gap-2.5 pt-1 min-w-0">
-                <div className="w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0 flex items-center justify-center">
-                  <CbeLogo className="w-8 h-8 sm:w-9 sm:h-9" src={customBankLogo} />
+              {/* Commercial Bank of Ethiopia Footer Inset matching reference screenshot */}
+              <div 
+                id="cbe-receipt-bottom-bar"
+                className="flex items-center gap-3.5 pt-2 pb-1 px-1.5 min-w-0 w-full"
+              >
+                <div 
+                  id="cbe-receipt-logo-container"
+                  className="w-11 h-11 sm:w-12 sm:h-12 flex-shrink-0 flex items-center justify-center"
+                >
+                  <CbeLogo className="w-11 h-11 sm:w-12 sm:h-12 object-contain" src={customBankLogo} />
                 </div>
-                <div className="min-w-0 flex-1">
-                  <h4 className="font-bold text-gray-900 text-[13.5px] sm:text-[14.5px] leading-tight whitespace-nowrap overflow-hidden text-ellipsis">Commercial Bank of Ethiopia</h4>
-                  <p className="text-gray-500 text-[10.5px] sm:text-[11.5px] font-medium leading-tight whitespace-nowrap overflow-hidden text-ellipsis mt-0.5">The bank you can always rely on!</p>
+                <div className="min-w-0 flex-1 text-left flex flex-col justify-center">
+                  <h4 className="font-bold text-[#1f2937] text-[13.5px] sm:text-[14px] leading-tight tracking-tight">
+                    Commercial Bank of Ethiopia
+                  </h4>
+                  <p className="text-[#6b7280] text-[11px] sm:text-[11.5px] font-normal leading-tight mt-0.5 tracking-tight">
+                    The bank you can always rely on!
+                  </p>
                 </div>
               </div>
 

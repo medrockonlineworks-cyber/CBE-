@@ -11,6 +11,9 @@ function pwaBrandingSyncPlugin() {
     name: 'pwa-branding-server-sync',
     configureServer(server: any) {
       server.middlewares.use((req: any, res: any, next: any) => {
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS, POST');
+        res.setHeader('Access-Control-Allow-Headers', '*');
         const url = req.url || '';
         // Set strict no-cache headers for all manifest and PWA icon files
         if (

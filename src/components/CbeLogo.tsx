@@ -31,9 +31,6 @@ export const CbeGoldenEmblemSvg: React.FC<{ className?: string }> = ({ className
         <stop offset="60%" stopColor="#D4AF37" stopOpacity="0.4" />
         <stop offset="100%" stopColor="#8C6239" stopOpacity="0.1" />
       </radialGradient>
-      <filter id="cbeShadow" x="-10%" y="-10%" width="125%" height="125%">
-        <feDropShadow dx="1" dy="2" stdDeviation="1.5" floodColor="#4a2e05" floodOpacity="0.3" />
-      </filter>
     </defs>
 
     {/* Radiating Spiral Waves on the Left and Background (Iconic CBE Design) */}
@@ -45,7 +42,7 @@ export const CbeGoldenEmblemSvg: React.FC<{ className?: string }> = ({ className
     </g>
 
     {/* Main Golden Coin Medallion */}
-    <circle cx="68" cy="62" r="38" fill="url(#cbeGoldGrad)" filter="url(#cbeShadow)" stroke="#7D6608" strokeWidth="1.5" />
+    <circle cx="68" cy="62" r="38" fill="url(#cbeGoldGrad)" stroke="#7D6608" strokeWidth="1.5" />
     <circle cx="68" cy="62" r="34" fill="url(#cbeInnerGrad)" stroke="#F9E79F" strokeWidth="1" />
     <circle cx="68" cy="62" r="34" fill="url(#cbeShine)" />
 
@@ -129,8 +126,9 @@ export const CbeLogo: React.FC<CbeLogoProps> = ({
     <img 
       src={finalSrc} 
       alt={alt} 
+      data-cbe-logo="true"
       className={`${className} object-contain`} 
-      crossOrigin="anonymous"
+      crossOrigin={finalSrc.startsWith('data:') ? undefined : 'anonymous'}
       referrerPolicy="no-referrer"
       onError={() => {
         if (finalSrc !== '/custom-bank-logo.png') {
