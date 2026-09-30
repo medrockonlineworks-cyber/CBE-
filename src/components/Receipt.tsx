@@ -269,10 +269,24 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     };
   }, []);
 
-  // Dynamic customized feedback assets
-  const [customBankLogo, setCustomBankLogo] = useState<string | null>(null);
+  // Dynamic customized feedback assets (uploaded CBE logo & QR code)
+  const [customBankLogo, setCustomBankLogo] = useState<string | null>(() => LocalDb.getCustomBankLogo());
   const [customQrCode, setCustomQrCode] = useState<string | null>(() => LocalDb.getCustomQrCode());
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
+
+  useEffect(() => {
+    const handleLogoSync = () => {
+      setCustomBankLogo(LocalDb.getCustomBankLogo());
+    };
+    window.addEventListener('cbe_logo_updated', handleLogoSync);
+    window.addEventListener('bank_logo_updated', handleLogoSync);
+    window.addEventListener('storage', handleLogoSync);
+    return () => {
+      window.removeEventListener('cbe_logo_updated', handleLogoSync);
+      window.removeEventListener('bank_logo_updated', handleLogoSync);
+      window.removeEventListener('storage', handleLogoSync);
+    };
+  }, []);
 
   // Screenshot capture & preview modal states
   const [capturedScreenshotUrl, setCapturedScreenshotUrl] = useState<string | null>(null);

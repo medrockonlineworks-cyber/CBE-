@@ -2190,6 +2190,10 @@ export class LocalDb {
     try {
       const val = localStorage.getItem('tana_custom_bank_logo');
       if (val && val.trim().length > 0) return val;
+      const val2 = localStorage.getItem('cbe_custom_bank_logo');
+      if (val2 && val2.trim().length > 0) return val2;
+      const val3 = localStorage.getItem('custom_bank_logo');
+      if (val3 && val3.trim().length > 0) return val3;
     } catch {
       // ignore
     }

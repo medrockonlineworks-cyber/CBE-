@@ -110,14 +110,16 @@ export const CbeLogo: React.FC<CbeLogoProps> = ({
     };
 
     window.addEventListener('cbe_logo_updated', handleUpdate);
+    window.addEventListener('bank_logo_updated', handleUpdate);
     window.addEventListener('storage', handleUpdate);
     return () => {
       window.removeEventListener('cbe_logo_updated', handleUpdate);
+      window.removeEventListener('bank_logo_updated', handleUpdate);
       window.removeEventListener('storage', handleUpdate);
     };
   }, [src]);
 
-  const finalSrc = activeUrl || DEFAULT_CBE_LOGO;
+  const finalSrc = activeUrl || LocalDb.getCustomBankLogo() || DEFAULT_CBE_LOGO;
 
   if (imgError || !finalSrc) {
     return <CbeGoldenEmblemSvg className={className} />;
@@ -128,6 +130,7 @@ export const CbeLogo: React.FC<CbeLogoProps> = ({
       src={finalSrc} 
       alt={alt} 
       className={`${className} object-contain`} 
+      crossOrigin="anonymous"
       referrerPolicy="no-referrer"
       onError={() => {
         if (finalSrc !== '/custom-bank-logo.png') {

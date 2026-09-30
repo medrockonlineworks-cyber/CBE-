@@ -24,22 +24,57 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
   // 1. Wait until receipt is fully rendered and pending microtasks / layout complete
   await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
-  // 2. Wait for all images inside the receipt container to finish loading
+  // 2. Wait for all images inside the receipt container to finish loading and inline them as Data URLs
   const images = Array.from(element.querySelectorAll('img'));
   await Promise.all(
-    images.map((img) => {
-      if (img.complete && img.naturalHeight !== 0) return Promise.resolve();
-      return new Promise<void>((resolve) => {
-        const onDone = () => {
-          img.removeEventListener('load', onDone);
-          img.removeEventListener('error', onDone);
-          resolve();
-        };
-        img.addEventListener('load', onDone);
-        img.addEventListener('error', onDone);
-        // Safety timeout so slow network images don't hang screenshot
-        setTimeout(resolve, 800);
-      });
+    images.map(async (img) => {
+      // Await loading if not yet complete
+      if (!img.complete || img.naturalHeight === 0) {
+        await new Promise<void>((resolve) => {
+          const onDone = () => {
+            img.removeEventListener('load', onDone);
+            img.removeEventListener('error', onDone);
+            resolve();
+          };
+          img.addEventListener('load', onDone);
+          img.addEventListener('error', onDone);
+          setTimeout(resolve, 800);
+        });
+      }
+
+      // Convert remote/relative image source to data URL so html2canvas and html-to-image render it 100% reliably
+      if (img.complete && img.naturalWidth > 0 && img.src && !img.src.startsWith('data:')) {
+        try {
+          const offCanvas = document.createElement('canvas');
+          offCanvas.width = img.naturalWidth;
+          offCanvas.height = img.naturalHeight;
+          const offCtx = offCanvas.getContext('2d');
+          if (offCtx) {
+            offCtx.drawImage(img, 0, 0);
+            const inlinedSrc = offCanvas.toDataURL('image/png');
+            img.src = inlinedSrc;
+          }
+        } catch {
+          // If canvas was tainted, try fetching blob
+          try {
+            const resp = await fetch(img.src);
+            const blob = await resp.blob();
+            const reader = new FileReader();
+            await new Promise<void>((res) => {
+              reader.onloadend = () => {
+                if (typeof reader.result === 'string') {
+                  img.src = reader.result;
+                }
+                res();
+              };
+              reader.onerror = () => res();
+              reader.readAsDataURL(blob);
+            });
+          } catch (fetchErr) {
+            console.warn('[ScreenshotService] Could not inline image:', img.src, fetchErr);
+          }
+        }
+      }
     })
   );
 
