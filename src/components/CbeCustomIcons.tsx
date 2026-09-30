@@ -42,7 +42,7 @@ export const AppsGridIcon: React.FC<IconProps> = ({
 );
 
 /**
- * 2. Refresh / Reload Icon (Uses Material Symbols 'rotate_left' with thin line weight)
+ * 2. Refresh / Reload Icon (Clean SVG circular reload arrow)
  */
 export const RefreshIcon: React.FC<ReceiptIconProps> = ({
   size = 20,
@@ -51,21 +51,23 @@ export const RefreshIcon: React.FC<ReceiptIconProps> = ({
   style,
   ...props
 }) => (
-  <span
-    className={`material-symbols-outlined select-none inline-flex items-center justify-center leading-none ${className}`}
-    style={{
-      fontSize: typeof size === 'number' ? `${size}px` : size,
-      fontWeight: 200,
-      fontVariationSettings: "'wght' 200, 'opsz' 20",
-      color,
-      display: 'inline-flex',
-      ...style,
-    }}
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`select-none inline-flex items-center justify-center ${className}`}
+    style={style}
     aria-hidden="true"
     {...props}
   >
-    rotate_left
-  </span>
+    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+    <path d="M3 3v5h5" />
+  </svg>
 );
 
 export const ReloadIcon = RefreshIcon;
@@ -193,7 +195,7 @@ export const EyeOpenIcon: React.FC<IconProps> = ({
 );
 
 /**
- * 5. Copy Account Number Icon (Uses Material Symbols 'copy_all')
+ * 5. Copy Account Number Icon (Clean SVG double document copy)
  */
 export const CopyIcon: React.FC<ReceiptIconProps> = ({
   size = 16,
@@ -202,19 +204,23 @@ export const CopyIcon: React.FC<ReceiptIconProps> = ({
   style,
   ...props
 }) => (
-  <span
-    className={`material-symbols-outlined select-none inline-flex items-center justify-center leading-none ${className}`}
-    style={{
-      fontSize: typeof size === 'number' ? `${size}px` : size,
-      color,
-      display: 'inline-flex',
-      ...style,
-    }}
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`select-none inline-flex items-center justify-center ${className}`}
+    style={style}
     aria-hidden="true"
     {...props}
   >
-    copy_all
-  </span>
+    <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+  </svg>
 );
 
 /**
@@ -314,7 +320,7 @@ export const CardsIcon: React.FC<IconProps> = ({
 
 /**
  * 8. Bill Share Icon
- * Uses Material Symbols Outlined 'arrow_split' rotated 90 degrees counter-clockwise (or -90deg) so the stem comes from the bottom and arrows point upwards / splits up.
+ * Pure SVG representing an arrow splitting into two branches
  */
 export const BillShareIcon: React.FC<ReceiptIconProps> = ({
   size = 24,
@@ -323,20 +329,26 @@ export const BillShareIcon: React.FC<ReceiptIconProps> = ({
   style,
   ...props
 }) => (
-  <span
-    className={`material-symbols-outlined select-none inline-flex items-center justify-center leading-none text-[#70189F] ${className}`}
-    style={{
-      fontSize: typeof size === 'number' ? `${size}px` : size,
-      color: color === 'currentColor' ? undefined : (color || '#70189F'),
-      transform: 'rotate(-90deg)',
-      display: 'inline-flex',
-      ...style,
-    }}
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color === 'currentColor' ? 'currentColor' : (color || '#70189F')}
+    strokeWidth="2.2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`select-none inline-flex items-center justify-center ${className}`}
+    style={style}
     aria-hidden="true"
     {...props}
   >
-    arrow_split
-  </span>
+    <path d="M12 21V12" />
+    <path d="M12 12C12 8.5 7.5 7 5 7" />
+    <path d="M12 12C12 8.5 16.5 7 19 7" />
+    <path d="M8 4L5 7L8 10" />
+    <path d="M16 4L19 7L16 10" />
+  </svg>
 );
 
 /**
@@ -399,7 +411,7 @@ export const RightChevronIcon: React.FC<IconProps> = ({
 /**
  * 11. View Receipt Icon - Material Symbols Outlined 'receipt_long'
  */
-export interface ReceiptIconProps extends React.HTMLAttributes<HTMLSpanElement> {
+export interface ReceiptIconProps extends React.SVGProps<SVGSVGElement> {
   size?: number | string;
   className?: string;
   color?: string;
@@ -410,18 +422,29 @@ export const ViewReceiptIcon: React.FC<ReceiptIconProps> = ({
   size = 20,
   className = '',
   color = 'currentColor',
-  strokeWidth,
+  strokeWidth = 2,
   style,
   ...props
 }) => (
-  <span 
-    className={`material-symbols-outlined select-none inline-flex items-center justify-center leading-none ${className}`}
-    style={{ fontSize: typeof size === 'number' ? `${size}px` : size, color, ...style }}
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color}
+    strokeWidth={strokeWidth}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`select-none inline-flex items-center justify-center ${className}`}
+    style={style}
     aria-hidden="true"
     {...props}
   >
-    receipt_long
-  </span>
+    <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" />
+    <path d="M8 7h8" />
+    <path d="M8 11h8" />
+    <path d="M8 15h6" />
+  </svg>
 );
 
 /**

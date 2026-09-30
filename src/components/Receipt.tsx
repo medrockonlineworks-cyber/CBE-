@@ -606,10 +606,14 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         setShowScreenshotModal(true);
 
         // 4. Cross-platform save / share workflow (Android, iOS, Browser/PWA)
-        const result = await saveAndShareReceiptImage(dataUrl, txId, true);
-        if (result.saved) {
-          setCopiedToast('Receipt saved to Photos / Gallery');
-          setTimeout(() => setCopiedToast(null), 3000);
+        try {
+          const result = await saveAndShareReceiptImage(dataUrl, txId, true);
+          if (result.saved) {
+            setCopiedToast('Receipt saved to Photos / Gallery');
+            setTimeout(() => setCopiedToast(null), 3000);
+          }
+        } catch (saveErr) {
+          console.warn('[Screenshot] Save/share background notice:', saveErr);
         }
       }
     } catch (err) {

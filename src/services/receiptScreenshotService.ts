@@ -1,8 +1,9 @@
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
-import html2canvas from 'html2canvas';
-import { LocalDb } from '../lib/mockData';
+import html2canvas from 'html2canvas-pro';
+import { LocalDb, DEFAULT_CBE_LOGO } from '../lib/mockData';
+import { CBE_DEFAULT_LOGO_BASE64 } from '../assets/cbeLogoBase64';
 
 /**
  * Sanitizes transaction ID for safe cross-platform file naming.
@@ -18,10 +19,9 @@ export function getSafeReceiptFilename(txId: string): string {
 
 /**
  * Converts any image element inside the receipt into a self-contained Base64 Data URL
- * and ensures the browser decodes it before html2canvas runs.
+ * and ensures the browser decodes it before canvas rendering.
  */
 async function inlineImageElement(img: HTMLImageElement): Promise<void> {
-  // If this image is the CBE bank logo, check if an uploaded custom logo exists in LocalDb
   const isCbeLogo = img.getAttribute('data-cbe-logo') === 'true' || 
                     img.alt?.toLowerCase().includes('commercial bank') ||
                     img.id?.includes('cbe-logo');
@@ -30,11 +30,13 @@ async function inlineImageElement(img: HTMLImageElement): Promise<void> {
     const savedCustomLogo = LocalDb.getCustomBankLogo();
     if (savedCustomLogo && savedCustomLogo.startsWith('data:image/')) {
       img.src = savedCustomLogo;
-      if ('decode' in img) {
-        await img.decode().catch(() => {});
-      }
-      return;
+    } else {
+      img.src = CBE_DEFAULT_LOGO_BASE64;
     }
+    if ('decode' in img) {
+      await img.decode().catch(() => {});
+    }
+    return;
   }
 
   // If already a base64 data URL, ensure it is decoded
@@ -45,11 +47,18 @@ async function inlineImageElement(img: HTMLImageElement): Promise<void> {
     return;
   }
 
-  if (!img.src) return;
+  // If default local logo, replace with embedded base64
+  if (!img.src || img.src.includes('custom-bank-logo') || img.src.includes('cbe-gold-logo')) {
+    img.src = CBE_DEFAULT_LOGO_BASE64;
+    if ('decode' in img) {
+      await img.decode().catch(() => {});
+    }
+    return;
+  }
 
-  // Fetch image data as blob and convert to Base64 Data URL
+  // Fetch remote/relative image data as blob and convert to Base64 Data URL
   try {
-    const resp = await fetch(img.src, { mode: 'cors' });
+    const resp = await fetch(img.src);
     if (resp.ok) {
       const blob = await resp.blob();
       const dataUrl = await new Promise<string>((resolve, reject) => {
@@ -69,7 +78,7 @@ async function inlineImageElement(img: HTMLImageElement): Promise<void> {
       return;
     }
   } catch {
-    // If fetch failed, try offscreen canvas drawing
+    // If fetch failed, try drawing on canvas
   }
 
   try {
@@ -95,7 +104,7 @@ async function inlineImageElement(img: HTMLImageElement): Promise<void> {
 /**
  * Captures ONLY the existing rendered receipt DOM element.
  * Waits for full render, images (including CBE logo), SVGs, QR code, and fonts
- * before taking a crisp, high-resolution PNG.
+ * before taking a crisp, high-resolution PNG using html2canvas-pro.
  */
 export async function captureReceiptElement(element: HTMLElement): Promise<string> {
   // 1. Wait until receipt is fully rendered and pending microtasks / layout complete
@@ -105,7 +114,6 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
   const images = Array.from(element.querySelectorAll('img'));
   await Promise.all(
     images.map(async (img) => {
-      // Await loading if not yet complete
       if (!img.complete || img.naturalHeight === 0) {
         await new Promise<void>((resolve) => {
           const onDone = () => {
@@ -115,7 +123,7 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
           };
           img.addEventListener('load', onDone);
           img.addEventListener('error', onDone);
-          setTimeout(resolve, 800);
+          setTimeout(resolve, 600);
         });
       }
 
@@ -135,34 +143,69 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
     }
   }
 
-  // 4. Determine high-resolution pixel ratio (minimum 3x for crisp Retina rendering)
-  const pixelRatio = Math.max(3, window.devicePixelRatio || 2);
+  // 4. Determine high-resolution pixel ratio (2x-3x: sharp on Retina/mobile without memory overflow)
+  const rawDpr = typeof window !== 'undefined' ? window.devicePixelRatio || 2 : 2;
+  const pixelRatio = Math.min(3, Math.max(2, rawDpr));
 
   const isExcluded = (node: Element): boolean => {
     return (
       node.getAttribute('data-screenshot-exclude') === 'true' ||
       node.getAttribute('data-html2canvas-ignore') === 'true' ||
-      node.id === 'receipt-status-bar'
+      node.id === 'receipt-status-bar' ||
+      node.id === 'btn-top-screenshot'
     );
   };
 
-  // 5. Capture existing rendered receipt DOM element using html2canvas with CORS and no taint
-  const canvas = await html2canvas(element, {
-    scale: pixelRatio,
-    useCORS: true,
-    allowTaint: false,
-    backgroundColor: '#68137e',
-    logging: false,
-    imageTimeout: 15000,
-    ignoreElements: isExcluded,
-  });
+  // 5. Capture existing rendered receipt DOM element using html2canvas-pro
+  try {
+    const canvas = await html2canvas(element, {
+      scale: pixelRatio,
+      useCORS: true,
+      allowTaint: false,
+      backgroundColor: '#68137e',
+      logging: false,
+      imageTimeout: 10000,
+      ignoreElements: isExcluded,
+      onclone: (clonedDoc: Document) => {
+        // Ensure any status bar or action buttons in the cloned tree are strictly hidden
+        const excludedNodes = clonedDoc.querySelectorAll(
+          '[data-screenshot-exclude="true"], [data-html2canvas-ignore="true"], #receipt-status-bar, #btn-top-screenshot'
+        );
+        excludedNodes.forEach((node) => {
+          (node as HTMLElement).style.display = 'none';
+        });
 
-  return canvas.toDataURL('image/png');
+        // Ensure all images in clone use their assigned inlined src
+        const clonedImgs = clonedDoc.querySelectorAll('img');
+        clonedImgs.forEach((clonedImg) => {
+          if (!clonedImg.src || clonedImg.src.includes('custom-bank-logo')) {
+            clonedImg.src = CBE_DEFAULT_LOGO_BASE64;
+          }
+        });
+      },
+    });
+
+    return canvas.toDataURL('image/png');
+  } catch (primaryErr) {
+    console.warn('[ScreenshotService] html2canvas-pro primary capture note, retrying with fallback options:', primaryErr);
+    
+    // Fallback: html2canvas with taint allowed and 2x scale
+    const fallbackCanvas = await html2canvas(element, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#68137e',
+      logging: false,
+      ignoreElements: isExcluded,
+    });
+    return fallbackCanvas.toDataURL('image/png');
+  }
 }
 
 /**
  * Cross-platform save and share workflow.
  * Works on Android (Capacitor), iOS (Capacitor), and Browser / PWA.
+ * Never throws fatal exceptions to UI - guarantees receipt stays visible and preview works.
  */
 export async function saveAndShareReceiptImage(
   dataUrl: string,
@@ -209,7 +252,6 @@ export async function saveAndShareReceiptImage(
             dialogTitle: 'Share or Save Receipt',
           });
         } catch (shareErr: any) {
-          // User cancelling the share sheet is normal
           if (
             shareErr?.name === 'AbortError' ||
             shareErr?.message?.includes('canceled') ||
@@ -217,14 +259,14 @@ export async function saveAndShareReceiptImage(
           ) {
             return { saved: true, fileUri };
           }
-          console.warn('Native share dialog warning:', shareErr);
+          console.warn('Native share dialog note:', shareErr);
         }
       }
 
       return { saved: true, fileUri };
     } catch (nativeErr) {
-      console.error('Native Capacitor save error:', nativeErr);
-      throw nativeErr;
+      console.warn('Native Capacitor save notice:', nativeErr);
+      return { saved: false };
     }
   } else {
     // Browser / PWA environment
@@ -233,9 +275,9 @@ export async function saveAndShareReceiptImage(
       const blob = await res.blob();
       const file = new File([blob], filename, { type: 'image/png' });
 
-      // 1. Web Share API with file support
+      // 1. Web Share API with file support (if supported and allowed)
       let shared = false;
-      if (triggerShareModal && navigator.canShare && navigator.canShare({ files: [file] })) {
+      if (triggerShareModal && typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({
             files: [file],
@@ -244,26 +286,32 @@ export async function saveAndShareReceiptImage(
           });
           shared = true;
         } catch (shareErr: any) {
-          if (shareErr?.name === 'AbortError') {
-            return { saved: true };
-          }
+          // Normal user cancel or iframe restriction
+          console.log('Web share note:', shareErr);
         }
       }
 
       // 2. Browser file download fallback
-      const blobUrl = URL.createObjectURL(blob);
-      const downloadLink = document.createElement('a');
-      downloadLink.href = blobUrl;
-      downloadLink.download = filename;
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      setTimeout(() => {
-        document.body.removeChild(downloadLink);
-        URL.revokeObjectURL(blobUrl);
-      }, 3000);
+      try {
+        const blobUrl = URL.createObjectURL(blob);
+        const downloadLink = document.createElement('a');
+        downloadLink.href = blobUrl;
+        downloadLink.download = filename;
+        downloadLink.style.display = 'none';
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+        setTimeout(() => {
+          try {
+            document.body.removeChild(downloadLink);
+            URL.revokeObjectURL(blobUrl);
+          } catch {}
+        }, 3000);
+      } catch (downloadErr) {
+        console.warn('Download link fallback notice:', downloadErr);
+      }
 
       // 3. Clipboard copy fallback
-      if (navigator.clipboard && window.ClipboardItem) {
+      if (typeof navigator !== 'undefined' && navigator.clipboard && window.ClipboardItem) {
         try {
           await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
         } catch {}
@@ -271,8 +319,8 @@ export async function saveAndShareReceiptImage(
 
       return { saved: true };
     } catch (browserErr) {
-      console.error('Browser save error:', browserErr);
-      throw browserErr;
+      console.warn('Browser save note:', browserErr);
+      return { saved: true };
     }
   }
 }

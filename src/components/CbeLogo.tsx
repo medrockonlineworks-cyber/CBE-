@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { LocalDb, DEFAULT_CBE_LOGO } from '../lib/mockData';
+import { CBE_DEFAULT_LOGO_BASE64 } from '../assets/cbeLogoBase64';
 
 interface CbeLogoProps {
   className?: string;
@@ -116,7 +117,11 @@ export const CbeLogo: React.FC<CbeLogoProps> = ({
     };
   }, [src]);
 
-  const finalSrc = activeUrl || LocalDb.getCustomBankLogo() || DEFAULT_CBE_LOGO;
+  const rawSrc = activeUrl || LocalDb.getCustomBankLogo() || DEFAULT_CBE_LOGO;
+  // If default path, use the instant Base64 Data URL to guarantee 100% offline & canvas availability
+  const finalSrc = (!rawSrc || rawSrc === DEFAULT_CBE_LOGO || rawSrc === '/custom-bank-logo.png')
+    ? CBE_DEFAULT_LOGO_BASE64
+    : rawSrc;
 
   if (imgError || !finalSrc) {
     return <CbeGoldenEmblemSvg className={className} />;
@@ -131,11 +136,11 @@ export const CbeLogo: React.FC<CbeLogoProps> = ({
       crossOrigin={finalSrc.startsWith('data:') ? undefined : 'anonymous'}
       referrerPolicy="no-referrer"
       onError={() => {
-        if (finalSrc !== '/custom-bank-logo.png') {
-          console.warn('[CbeLogo] Custom URL failed to load, falling back to uploaded PNG logo');
-          setActiveUrl('/custom-bank-logo.png');
+        if (finalSrc !== CBE_DEFAULT_LOGO_BASE64) {
+          console.warn('[CbeLogo] Custom URL failed to load, falling back to embedded CBE logo');
+          setActiveUrl(CBE_DEFAULT_LOGO_BASE64);
         } else {
-          console.warn('[CbeLogo] Uploaded PNG failed, falling back to SVG emblem');
+          console.warn('[CbeLogo] Base64 logo fallback to SVG emblem');
           setImgError(true);
         }
       }}
