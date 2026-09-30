@@ -42,6 +42,14 @@ import {
 } from 'lucide-react';
 import { maskAccountNumber } from '../services/smsService';
 import { PhoneSettingsService } from '../services/phoneSettingsService';
+import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
+import { 
+  captureReceiptElement, 
+  saveAndShareReceiptImage, 
+  getSafeReceiptFilename 
+} from '../services/receiptScreenshotService';
 
 /**
  * Viewfinder focus screenshot icon matching exact reference (IMG_20260913_140907_194.jpg)
@@ -531,650 +539,71 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     window.print();
   };
 
-  // Generate pixel-perfect CBE Mobile Phone Screenshot identical to user's uploaded reference (Image 1)
-  const generateCanvasReceipt = async (hideButtons: boolean = false, forceHideStatusBar: boolean = true): Promise<string> => {
-    const width = 720;
-    const height = 1520;
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Canvas 2D context not available');
-
-    // Smooth rendering
-    ctx.imageSmoothingEnabled = true;
-
-    // 1. Phone Top Status Bar & Purple Background (iPhone Dynamic Island Header)
-    // When capturing a screenshot, status bar is always excluded matching Image 1
-    const hasStatusBar = !forceHideStatusBar && !hideButtons && !hideStatusBar && !isIPhone;
-    ctx.fillStyle = '#68137e';
-    ctx.fillRect(0, 0, width, hasStatusBar ? 220 : 180);
-
-    if (hasStatusBar) {
-      // Current Time for Status Bar (iOS standard format)
-      const now = new Date();
-      let statusHours = now.getHours();
-      const statusMinutes = now.getMinutes().toString().padStart(2, '0');
-      const statusTimeStr = `${statusHours % 12 || 12}:${statusMinutes}`;
-
-      // 1A. Status Bar - Left: Time
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '600 18px -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", system-ui, sans-serif';
-      ctx.textAlign = 'left';
-      ctx.fillText(statusTimeStr, 44, 42);
-
-      // 1B. Status Bar - Right: Cellular 4-Bars, Wi-Fi, and iOS Battery
-      // 4 Cellular Bars (iOS Stepped Rounded Bars)
-      const cellX = width - 136;
-      for (let b = 0; b < 4; b++) {
-        ctx.fillStyle = '#ffffff';
-        const bHeight = 4 + b * 3.5;
-        ctx.beginPath();
-        ctx.roundRect(cellX + b * 4.5, 42 - bHeight, 3, bHeight, 1);
-        ctx.fill();
+  // Save receipt image directly to device gallery / camera roll
+  const saveImageToGallery = async (dataUrl: string) => {
+    try {
+      const result = await saveAndShareReceiptImage(dataUrl, txId, false);
+      if (result.saved) {
+        setCopiedToast('Saved to device Photos / Gallery');
+        setTimeout(() => setCopiedToast(null), 3000);
       }
-
-    // iOS Wi-Fi Icon (3 concentric curved arcs)
-    const wifiX = width - 105;
-    const wifiY = 40;
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1.8;
-    ctx.lineCap = 'round';
-    
-    // Outer Arc
-    ctx.beginPath();
-    ctx.arc(wifiX, wifiY, 8.5, -Math.PI * 0.75, -Math.PI * 0.25);
-    ctx.stroke();
-    // Middle Arc
-    ctx.beginPath();
-    ctx.arc(wifiX, wifiY, 5.5, -Math.PI * 0.75, -Math.PI * 0.25);
-    ctx.stroke();
-    // Center Dot
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(wifiX, wifiY - 0.5, 1.5, 0, Math.PI * 2);
-    ctx.fill();
-
-    // iOS Battery Icon (Dynamic Real Device Battery Fill + Charging condition)
-    const battX = width - 82;
-    const battY = 28;
-    const battW = 30;
-    const battH = 15;
-    
-    // Battery Outer Border
-    ctx.strokeStyle = isPhoneCharging ? '#4ade80' : '#ffffff';
-    ctx.lineWidth = 1.8;
-    ctx.beginPath();
-    ctx.roundRect(battX, battY, battW, battH, 4);
-    ctx.stroke();
-
-    // Battery Positive Terminal Knob on Right
-    ctx.fillStyle = isPhoneCharging ? '#4ade80' : '#ffffff';
-    ctx.beginPath();
-    ctx.roundRect(battX + battW + 1.5, battY + 4, 2, 7, 1);
-    ctx.fill();
-
-    // Battery Inner Charge Level (Dynamically computed from actual device battery level)
-    const fillMaxW = battW - 5;
-    const fillW = Math.max(3, (fillMaxW * Math.min(100, Math.max(4, batteryLevel))) / 100);
-    ctx.fillStyle = isPhoneCharging ? '#4ade80' : (batteryLevel <= 20 ? '#ef4444' : '#ffffff');
-    ctx.beginPath();
-    ctx.roundRect(battX + 2.5, battY + 2.5, fillW, battH - 5, 2.5);
-    ctx.fill();
-
-    // If device is currently plugged in & charging, draw iOS lightning bolt in canvas
-    if (isPhoneCharging) {
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      const zX = battX + battW / 2;
-      const zY = battY + battH / 2;
-      ctx.moveTo(zX + 1, zY - 5);
-      ctx.lineTo(zX - 3.5, zY);
-      ctx.lineTo(zX, zY);
-      ctx.lineTo(zX - 1, zY + 5);
-      ctx.lineTo(zX + 3.5, zY);
-      ctx.lineTo(zX, zY);
-      ctx.closePath();
-      ctx.fill();
+    } catch (err) {
+      console.warn('Save to gallery issue:', err);
+      setCopiedToast('Could not save image to gallery');
+      setTimeout(() => setCopiedToast(null), 3000);
     }
-  }
-
-    // 2. Top Purple Header: "Thank you / Success" & Top Scan Button
-    // White Shield with Purple Checkmark (sharp crisp edges matching reference)
-    const shieldX = 36;
-    const shieldY = hasStatusBar ? 106 : 56;
-    ctx.save();
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    const sX = shieldX;
-    const sY = shieldY;
-    ctx.moveTo(sX + 18, sY + 2);
-    ctx.lineTo(sX + 33, sY + 7);
-    ctx.lineTo(sX + 33, sY + 18);
-    ctx.bezierCurveTo(sX + 33, sY + 28, sX + 24, sY + 34, sX + 18, sY + 39);
-    ctx.bezierCurveTo(sX + 12, sY + 34, sX + 3, sY + 28, sX + 3, sY + 18);
-    ctx.lineTo(sX + 3, sY + 7);
-    ctx.closePath();
-    ctx.fill();
-
-    // Purple checkmark inside shield with sharp edges and miter corner (reduced weight matching reference)
-    ctx.strokeStyle = '#68137e';
-    ctx.lineWidth = 2.6;
-    ctx.lineCap = 'butt';
-    ctx.lineJoin = 'miter';
-    ctx.miterLimit = 4;
-    ctx.beginPath();
-    ctx.moveTo(sX + 12.0, sY + 18.3);
-    ctx.lineTo(sX + 16.5, sY + 22.8);
-    ctx.lineTo(sX + 25.8, sY + 13.5);
-    ctx.stroke();
-    ctx.restore();
-
-    // "Thank you" & "Success" text
-    ctx.textAlign = 'left';
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 24px system-ui, -apple-system, sans-serif';
-    ctx.fillText('Thank you', shieldX + 46, shieldY + 18);
-    ctx.fillStyle = '#f3e8ff';
-    ctx.font = '400 16px system-ui, -apple-system, sans-serif';
-    ctx.fillText('Success', shieldX + 46, shieldY + 38);
-
-    // Top Right Viewfinder / Scan Button (hidden when taking screenshot)
-    if (!hideButtons) {
-      const scanBtnX = width - 82;
-      const scanBtnY = 96;
-      const btnRadius = 22;
-      const btnCx = scanBtnX + btnRadius;
-      const btnCy = scanBtnY + btnRadius;
-
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
-      ctx.beginPath();
-      ctx.arc(btnCx, btnCy, btnRadius, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Map 24x24 SVG coordinates to 28px icon inside canvas button
-      const s = 28 / 24;
-      const toCanvasX = (svgX: number) => btnCx + (svgX - 12) * s;
-      const toCanvasY = (svgY: number) => btnCy + (svgY - 12) * s;
-
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 1.8 * s;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-
-      // Top-left bracket
-      ctx.beginPath();
-      ctx.moveTo(toCanvasX(3.8), toCanvasY(8.2));
-      ctx.lineTo(toCanvasX(3.8), toCanvasY(6.0));
-      ctx.arcTo(toCanvasX(3.8), toCanvasY(3.8), toCanvasX(6.0), toCanvasY(3.8), 2.2 * s);
-      ctx.lineTo(toCanvasX(8.2), toCanvasY(3.8));
-      ctx.stroke();
-
-      // Top-right bracket
-      ctx.beginPath();
-      ctx.moveTo(toCanvasX(15.8), toCanvasY(3.8));
-      ctx.lineTo(toCanvasX(18.0), toCanvasY(3.8));
-      ctx.arcTo(toCanvasX(20.2), toCanvasY(3.8), toCanvasX(20.2), toCanvasY(6.0), 2.2 * s);
-      ctx.lineTo(toCanvasX(20.2), toCanvasY(8.2));
-      ctx.stroke();
-
-      // Bottom-right bracket
-      ctx.beginPath();
-      ctx.moveTo(toCanvasX(20.2), toCanvasY(15.8));
-      ctx.lineTo(toCanvasX(20.2), toCanvasY(18.0));
-      ctx.arcTo(toCanvasX(20.2), toCanvasY(20.2), toCanvasX(18.0), toCanvasY(20.2), 2.2 * s);
-      ctx.lineTo(toCanvasX(15.8), toCanvasY(20.2));
-      ctx.stroke();
-
-      // Bottom-left bracket
-      ctx.beginPath();
-      ctx.moveTo(toCanvasX(8.2), toCanvasY(20.2));
-      ctx.lineTo(toCanvasX(6.0), toCanvasY(20.2));
-      ctx.arcTo(toCanvasX(3.8), toCanvasY(20.2), toCanvasX(3.8), toCanvasY(18.0), 2.2 * s);
-      ctx.lineTo(toCanvasX(3.8), toCanvasY(15.8));
-      ctx.stroke();
-
-      // Center circle ring - enlarged matching second image with uniform gap
-      ctx.beginPath();
-      ctx.arc(btnCx, btnCy, 4.4 * s, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-
-    // 3. Main White Card
-    const cardTop = hasStatusBar ? 180 : 136;
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.roundRect(0, cardTop, width, height - cardTop - 60, [36, 36, 0, 0]);
-    ctx.fill();
-
-    // 4. Overlapping Large Success Checkmark Circle (Sharp edge, white half-circle on top only, no bottom circle, no shadow)
-    const badgeX = width / 2;
-    const badgeY = cardTop;
-    const badgeR = 60;
-    const archWidth = 10;
-    ctx.save();
-    
-    // Solid purple base circle
-    ctx.fillStyle = '#68137e';
-    ctx.beginPath();
-    ctx.arc(badgeX, badgeY, badgeR, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Top-half white semi-circle arch ONLY (flat base on cardTop, sharp corner with card edge)
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(badgeX, badgeY, badgeR + archWidth, Math.PI, 2 * Math.PI, false);
-    ctx.lineTo(badgeX + badgeR, badgeY);
-    ctx.arc(badgeX, badgeY, badgeR, 2 * Math.PI, Math.PI, true);
-    ctx.closePath();
-    ctx.fill();
-
-    // Big Bold Crisp White Checkmark with sharp ends and miter elbow (extended right arm matching reference)
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 11;
-    ctx.lineCap = 'butt';
-    ctx.lineJoin = 'miter';
-    ctx.miterLimit = 4;
-    ctx.beginPath();
-    ctx.moveTo(badgeX - 32.4, badgeY + 0.8);
-    ctx.lineTo(badgeX - 9.5, badgeY + 23.7);
-    ctx.lineTo(badgeX + 41.1, badgeY - 26.8);
-    ctx.stroke();
-    ctx.restore();
-
-    // 5. Headline Text (Normal weight as requested)
-    ctx.fillStyle = '#111827';
-    ctx.font = 'normal 21px system-ui, -apple-system, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('Transaction Completed Successfully!', width / 2, cardTop + 90);
-
-    // 6. Gray Transaction Summary Box
-    const boxX = 32;
-    const boxY = cardTop + 120;
-    const boxW = width - 64;
-    const boxH = 920;
-
-    ctx.fillStyle = '#ededf0';
-    ctx.beginPath();
-    ctx.roundRect(boxX, boxY, boxW, boxH, 26);
-    ctx.fill();
-
-    // "Transaction Summary" Subtitle
-    ctx.textAlign = 'left';
-    ctx.fillStyle = '#8e8e93';
-    ctx.font = 'normal 17px system-ui, -apple-system, sans-serif';
-    ctx.fillText('Transaction Summary', boxX + 26, boxY + 40);
-
-    // Structured Rich Text Rendering with bolding support
-    type TextFragment = { text: string; bold: boolean };
-    const fragments: TextFragment[] = isCredit ? [
-      { text: 'ETB ', bold: false },
-      { text: `${amountFormatted}`, bold: true },
-      { text: ' has been credited to ', bold: false },
-      { text: `${recipientName}`, bold: true },
-      { text: ` ${recipientSuffix} from `, bold: false },
-      { text: `${senderName}`, bold: true },
-      { text: ` ${senderSuffix} on `, bold: false },
-      { text: `${formattedDate}`, bold: true },
-      { text: ' with transaction ID: ', bold: false },
-      { text: `${txId}.`, bold: true },
-      { text: ` Reason: ${reason}`, bold: false }
-    ] : [
-      { text: 'ETB ', bold: false },
-      { text: `${amountFormatted}`, bold: true },
-      { text: ' has been debited from ', bold: false },
-      { text: `${senderName}`, bold: true },
-      { text: ` ${senderSuffix} for `, bold: false },
-      { text: `${recipientName}`, bold: true },
-      { text: ` ${recipientSuffix} on `, bold: false },
-      { text: `${formattedDate}`, bold: true },
-      { text: ' with transaction ID: ', bold: false },
-      { text: `${txId}.`, bold: true },
-      { text: ` Reason: ${reason} `, bold: false },
-      { text: `Total Amount Debited: ETB${totalDebitedFormatted} with Service Charge of ETB${serviceChargeFormatted}, VAT (15%) of ETB${vatFormatted} and Disaster Recovery (5%) of ETB${disasterRecoveryFormatted}.`, bold: false }
-    ];
-
-    let cursorX = boxX + 26;
-    let cursorY = boxY + 75;
-    const textMaxWidth = boxW - 52;
-    const lineHeight = 30;
-
-    for (const frag of fragments) {
-      if (frag.text.includes('\n')) {
-        const parts = frag.text.split('\n');
-        for (let p = 0; p < parts.length; p++) {
-          if (p > 0) {
-            cursorX = boxX + 26;
-            cursorY += lineHeight;
-          }
-          if (parts[p]) {
-            renderWordWrapped(parts[p], frag.bold);
-          }
-        }
-      } else {
-        renderWordWrapped(frag.text, frag.bold);
-      }
-    }
-
-    function renderWordWrapped(str: string, isBold: boolean) {
-      const words = str.split(' ');
-      for (let i = 0; i < words.length; i++) {
-        const w = (i === 0 ? '' : ' ') + words[i];
-        ctx.font = isBold 
-          ? 'bold 19px system-ui, -apple-system, sans-serif' 
-          : 'normal 18px system-ui, -apple-system, sans-serif';
-        ctx.fillStyle = '#111827';
-
-        const metrics = ctx.measureText(w);
-        if (cursorX + metrics.width > boxX + 26 + textMaxWidth) {
-          cursorX = boxX + 26;
-          cursorY += lineHeight;
-        }
-        ctx.fillText(w, cursorX, cursorY);
-        cursorX += metrics.width;
-      }
-    }
-
-    // Helper to load image for canvas
-    const loadImageAsync = (url: string): Promise<HTMLImageElement> => {
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => resolve(img);
-        img.onerror = () => reject(new Error('Failed to load image for canvas'));
-        img.src = url;
-      });
-    };
-
-    // 7. Authentic Centered QR Code with rounded grey border matching reference (IMG_20260916_103244_278.png)
-    const qrInnerSize = 208;
-    const qrPadding = 18;
-    const qrBoxSize = qrInnerSize + qrPadding * 2; // 244px
-    const qrBoxX = (width - qrBoxSize) / 2;
-    const qrBoxY = boxY + 355;
-    const qrInnerX = qrBoxX + qrPadding;
-    const qrInnerY = qrBoxY + qrPadding;
-
-    // Draw outer rounded rectangle container with grey border
-    ctx.save();
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.roundRect(qrBoxX, qrBoxY, qrBoxSize, qrBoxSize, 34);
-    ctx.fill();
-
-    ctx.strokeStyle = '#737373';
-    ctx.lineWidth = 5.5;
-    ctx.stroke();
-    ctx.restore();
-
-    let qrImageLoaded = false;
-    const activeQrUrl = customQrCode || qrDataUrl || (await getAuthenticCbeQrPngDataUrl(txId, 450));
-
-    if (activeQrUrl) {
-      try {
-        const qrImg = await loadImageAsync(activeQrUrl);
-        ctx.drawImage(qrImg, qrInnerX, qrInnerY, qrInnerSize, qrInnerSize);
-        qrImageLoaded = true;
-      } catch (err) {
-        console.warn('QR image load failed for canvas, rendering fallback matrix:', err);
-      }
-    }
-
-    if (!qrImageLoaded) {
-      // Draw authentic 29x29 Version 3 QR Code Modules for this specific transaction
-      const matrix = qrMatrix;
-      const gridSize = matrix.length; // 29
-      const cellSize = qrInnerSize / gridSize;
-      ctx.fillStyle = '#000000';
-
-      for (let r = 0; r < gridSize; r++) {
-        for (let c = 0; c < gridSize; c++) {
-          if (matrix[r][c]) {
-            ctx.beginPath();
-            ctx.rect(qrInnerX + c * cellSize, qrInnerY + r * cellSize, cellSize, cellSize);
-            ctx.fill();
-          }
-        }
-      }
-    }
-
-    // 8. Commercial Bank of Ethiopia Footer Inset
-    const logoX = boxX + 36;
-    const logoY = qrBoxY + qrBoxSize + 36;
-    const activeLogoUrl = customBankLogo || LocalDb.getCustomBankLogo() || DEFAULT_CBE_LOGO || '/custom-bank-logo.png';
-
-    let logoImageLoaded = false;
-    const candidates = Array.from(new Set([activeLogoUrl, '/custom-bank-logo.png'].filter(Boolean))) as string[];
-    for (const url of candidates) {
-      if (logoImageLoaded) break;
-      try {
-        const logoImg = await loadImageAsync(url);
-        ctx.drawImage(logoImg, logoX, logoY - 4, 46, 46);
-        logoImageLoaded = true;
-      } catch (err) {
-        console.warn(`Custom logo candidate ${url} load failed for canvas:`, err);
-      }
-    }
-    
-    if (!logoImageLoaded) {
-      // Draw Golden CBE Coin Logo
-      ctx.save();
-      ctx.fillStyle = '#d4af37';
-      ctx.beginPath();
-      ctx.arc(logoX + 22, logoY + 16, 22, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#996515';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-
-      // Spiral/Coin internal concentric lines
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 1.8;
-      for (let r = 5; r <= 16; r += 5) {
-        ctx.beginPath();
-        ctx.arc(logoX + 22, logoY + 16, r, 0, Math.PI * 1.8);
-        ctx.stroke();
-      }
-      ctx.restore();
-    }
-
-    // Branding text
-    ctx.textAlign = 'left';
-    ctx.fillStyle = '#1e293b';
-    ctx.font = 'bold 20px system-ui, -apple-system, sans-serif';
-    ctx.fillText('Commercial Bank of Ethiopia', logoX + 56, logoY + 12);
-
-    ctx.fillStyle = '#64748b';
-    ctx.font = 'italic 15px system-ui, -apple-system, sans-serif';
-    ctx.fillText('The bank you can always rely on!', logoX + 56, logoY + 34);
-
-    // 9. Bottom Action Buttons: Receipt, Screenshot, Share (hidden when taking screenshot)
-    const actY = boxY + boxH + 34;
-
-    if (!hideButtons) {
-      // Button 1: Receipt
-      const b1X = 90;
-      ctx.strokeStyle = '#1e293b';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(b1X - 24, actY - 14, 16, 20);
-      ctx.font = 'bold 12px system-ui, -apple-system, sans-serif';
-      ctx.fillStyle = '#1e293b';
-      ctx.fillText('$', b1X - 19, actY + 1);
-      ctx.font = 'bold 17px system-ui, -apple-system, sans-serif';
-      ctx.fillText('Receipt', b1X, actY);
-
-      // Button 2: Screenshot
-      const b2X = width / 2 - 40;
-      const sIcoX = b2X - 22;
-      const sIcoY = actY - 14;
-      const sz = 18;
-      const cr = 4;
-      ctx.strokeStyle = '#1e293b';
-      ctx.lineWidth = 2.2;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      // 4 rounded corners
-      // Top-left
-      ctx.beginPath();
-      ctx.moveTo(sIcoX, sIcoY + cr + 1);
-      ctx.lineTo(sIcoX, sIcoY + 2);
-      ctx.arcTo(sIcoX, sIcoY, sIcoX + 2, sIcoY, 2);
-      ctx.lineTo(sIcoX + cr + 1, sIcoY);
-      ctx.stroke();
-      // Top-right
-      ctx.beginPath();
-      ctx.moveTo(sIcoX + sz - cr - 1, sIcoY);
-      ctx.lineTo(sIcoX + sz - 2, sIcoY);
-      ctx.arcTo(sIcoX + sz, sIcoY, sIcoX + sz, sIcoY + 2, 2);
-      ctx.lineTo(sIcoX + sz, sIcoY + cr + 1);
-      ctx.stroke();
-      // Bottom-left
-      ctx.beginPath();
-      ctx.moveTo(sIcoX, sIcoY + sz - cr - 1);
-      ctx.lineTo(sIcoX, sIcoY + sz - 2);
-      ctx.arcTo(sIcoX, sIcoY + sz, sIcoX + 2, sIcoY + sz, 2);
-      ctx.lineTo(sIcoX + cr + 1, sIcoY + sz);
-      ctx.stroke();
-      // Bottom-right
-      ctx.beginPath();
-      ctx.moveTo(sIcoX + sz - cr - 1, sIcoY + sz);
-      ctx.lineTo(sIcoX + sz - 2, sIcoY + sz);
-      ctx.arcTo(sIcoX + sz, sIcoY + sz, sIcoX + sz, sIcoY + sz - 2, 2);
-      ctx.lineTo(sIcoX + sz, sIcoY + sz - cr - 1);
-      ctx.stroke();
-      // Center circle
-      ctx.beginPath();
-      ctx.arc(sIcoX + sz / 2, sIcoY + sz / 2, 3.5, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.fillStyle = '#1e293b';
-      ctx.font = 'bold 17px system-ui, -apple-system, sans-serif';
-      ctx.fillText('Screenshot', b2X + 4, actY);
-
-      // Button 3: Share
-      const b3X = width - 150;
-      ctx.strokeStyle = '#1e293b';
-      ctx.lineWidth = 2;
-      // 3 share nodes
-      ctx.beginPath();
-      ctx.arc(b3X - 18, actY - 4, 3, 0, Math.PI * 2);
-      ctx.arc(b3X - 8, actY - 11, 3, 0, Math.PI * 2);
-      ctx.arc(b3X - 8, actY + 3, 3, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(b3X - 18, actY - 4); ctx.lineTo(b3X - 8, actY - 11);
-      ctx.moveTo(b3X - 18, actY - 4); ctx.lineTo(b3X - 8, actY + 3);
-      ctx.stroke();
-      ctx.font = 'bold 17px system-ui, -apple-system, sans-serif';
-      ctx.fillText('Share', b3X, actY);
-    }
-
-    // 10. Close Button (Pill) & 11. iPhone Bottom Home Indicator (hidden when taking screenshot)
-    if (!hideButtons) {
-      const closeBtnY = actY + 28;
-      ctx.fillStyle = '#d7d7db';
-      ctx.beginPath();
-      ctx.roundRect(32, closeBtnY, width - 64, 58, 29);
-      ctx.fill();
-      ctx.fillStyle = '#1e293b';
-      ctx.font = 'bold 19px system-ui, -apple-system, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('Close', width / 2, closeBtnY + 36);
-
-      // 11. iPhone Bottom Home Indicator
-      const navY = height - 48;
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, navY, width, 48);
-
-      // Centered iOS Home Indicator Bar
-      ctx.fillStyle = '#1e293b';
-      ctx.beginPath();
-      ctx.roundRect((width - 200) / 2, height - 24, 200, 7, 3.5);
-      ctx.fill();
-    }
-
-    return canvas.toDataURL('image/png');
   };
 
-  // Handle screenshot button or icon click: takes screenshot without status bar & navigates to clean view
-  const handleScreenshotAction = async (e?: React.MouseEvent) => {
+  // Share captured receipt screenshot image
+  const handleShareScreenshotImage = async (dataUrl: string) => {
+    try {
+      await saveAndShareReceiptImage(dataUrl, txId, true);
+    } catch (err) {
+      console.warn('Share image issue:', err);
+      handleShare();
+    }
+  };
+
+  // Screenshot handler: captures ONLY receiptRef (the existing rendered receipt)
+  const handleScreenshot = async (e?: React.MouseEvent) => {
     if (e) {
       e.stopPropagation();
     }
-    await handleScreenshot();
-  };
-
-  // Screenshot / Save handle - takes complete clean receipt without status bar (matching Image 1)
-  const handleScreenshot = async () => {
     if (isCapturing) return;
 
     try {
       setIsCapturing(true);
 
-      // 1. Shutter flash effect
+      // 1. Shutter camera flash animation overlay
       setFlashAnimation(true);
       setTimeout(() => setFlashAnimation(false), 250);
 
-      // Generate pristine canvas receipt without phone status bar, including complete authentic elements (Image 1)
-      let dataUrl: string | null = null;
-      try {
-        dataUrl = await generateCanvasReceipt(false, true);
-      } catch (canvasErr) {
-        console.warn('Direct canvas render issue, trying DOM capture:', canvasErr);
+      // 2. Locate receiptRef
+      const element = receiptRef.current;
+      if (!element) {
+        throw new Error('Receipt container element not found');
       }
 
-      if (!dataUrl) {
-        const receiptEl = document.getElementById('receipt-screen-wrapper');
-        if (receiptEl) {
-          try {
-            const canvas = await html2canvas(receiptEl, {
-              scale: 2,
-              useCORS: true,
-              allowTaint: true,
-              backgroundColor: '#68137e',
-              logging: false,
-              ignoreElements: (element) => {
-                return element.getAttribute('data-html2canvas-ignore') === 'true' ||
-                  element.id === 'receipt-status-bar';
-              }
-            });
-            dataUrl = canvas.toDataURL('image/png');
-          } catch (captureErr) {
-            console.warn('html2canvas capture issue:', captureErr);
-          }
-        }
-      }
-
-      if (!dataUrl) {
-        dataUrl = await generateCanvasReceipt(false, true);
-      }
+      // 3. Capture ONLY receiptRef (waits for full render, images, SVGs, QR code, and fonts)
+      const dataUrl = await captureReceiptElement(element);
 
       if (dataUrl) {
         setCapturedScreenshotUrl(dataUrl);
         setShowScreenshotModal(true);
 
-        // Instant download to device with native screenshot filename
-        try {
-          const downloadLink = document.createElement('a');
-          const filename = `screenshot_${Date.now()}.png`;
-          downloadLink.href = dataUrl;
-          downloadLink.download = filename;
-          document.body.appendChild(downloadLink);
-          downloadLink.click();
-          document.body.removeChild(downloadLink);
-        } catch (dlErr) {
-          console.warn('Direct download anchor failed:', dlErr);
+        // 4. Cross-platform save / share workflow (Android, iOS, Browser/PWA)
+        const result = await saveAndShareReceiptImage(dataUrl, txId, true);
+        if (result.saved) {
+          setCopiedToast('Receipt saved to Photos / Gallery');
+          setTimeout(() => setCopiedToast(null), 3000);
         }
       }
-
-      setCopiedToast('Screenshot captured • Tap Close to return');
-      setTimeout(() => setCopiedToast(null), 3000);
     } catch (err) {
       console.error('Screenshot capture error:', err);
-      setCopiedToast('Screenshot captured');
-      setTimeout(() => setCopiedToast(null), 2500);
+      setCopiedToast('Could not capture receipt. Please try again.');
+      setTimeout(() => setCopiedToast(null), 3000);
     } finally {
       setIsCapturing(false);
-      setHideUiElements(false);
     }
   };
 
@@ -1323,268 +752,274 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         </div>
       )}
 
-      {/* 2. Top Purple Navigation / App Header */}
-      <div className={`${isIPhone ? 'pt-[max(env(safe-area-inset-top,0px),24px)]' : (shouldShowStatusBar ? 'pt-2 sm:pt-3' : 'pt-7 sm:pt-8')} pb-8 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0`}>
-        <div className="flex items-center gap-2.5">
-          {/* iOS Top Back Button to navigate like the first image */}
-          <button
-            type="button"
-            data-html2canvas-ignore="true"
-            onClick={onBack}
-            className="p-1.5 -ml-1.5 text-white hover:text-purple-200 active:opacity-70 transition flex items-center cursor-pointer rounded-full"
-            title="Return to Home"
-          >
-            <ChevronLeft className="w-6 h-6 stroke-[2.5]" />
-          </button>
-
-          {/* Solid White Shield with Purple Checkmark Icon perfectly fitted matching reference image */}
-          <div className="w-8.5 h-8.5 flex-shrink-0 flex items-center justify-center">
-            <svg className="w-8.5 h-8.5 drop-shadow-xs" viewBox="0 0 24 24" fill="none">
-              <path 
-                d="M12 2.2c0.3 0 0.6 0.1 0.9 0.2l6.5 2.6c0.5 0.2 0.8 0.7 0.8 1.2v5.6c0 4.8-3.0 9.2-7.5 10.7-.5 0.2-1.0 0.2-1.4 0-4.5-1.5-7.5-5.9-7.5-10.7V6.2c0-.5.3-1 .8-1.2l6.5-2.6c.3-.1.6-.2.9-.2z" 
-                fill="#ffffff" 
-              />
-              <path 
-                d="M8.0 12.2L11.0 15.2L17.2 9.0" 
-                stroke="#68137e" 
-                strokeWidth="1.9" 
-                strokeLinecap="butt" 
-                strokeLinejoin="miter" 
-                strokeMiterlimit="4"
-                shapeRendering="geometricPrecision"
-              />
-            </svg>
-          </div>
-          <div>
-            <h2 className="font-bold text-[16px] sm:text-[17px] leading-tight text-white tracking-tight">Thank you</h2>
-            <p className="text-[12px] sm:text-[13px] text-purple-100 font-normal leading-tight mt-0.5">Success</p>
-          </div>
-        </div>
-
-        {/* Screenshot Button (Translucent circular badge with enlarged focus viewfinder) */}
-        {!hideUiElements && !isCapturing && (
-          <button 
-            type="button"
-            data-html2canvas-ignore="true"
-            onClick={handleScreenshotAction}
-            className="w-11 h-11 rounded-full bg-white/20 hover:bg-white/30 active:scale-95 flex items-center justify-center transition text-white cursor-pointer shadow-xs"
-            title="Take screenshot without status bar"
-          >
-            <ScreenshotViewfinderIcon className="w-7 h-7 text-white" strokeWidth={1.8} />
-          </button>
-        )}
-      </div>
-
-      {/* Main White Sheet Container */}
-      <div className="bg-white rounded-t-[32px] sm:rounded-t-[36px] flex-1 px-4 sm:px-5 pt-0 pb-5 flex flex-col justify-between shadow-none relative">
-        
-        {/* Overlapping Large Success Checkmark Badge (Sharp edge, white half-circle on top only, no bottom circle, no shadow) */}
-        <div className="relative flex justify-center flex-shrink-0">
-          <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 top-0 w-[90px] h-[90px] sm:w-[98px] sm:h-[98px] pointer-events-none select-none z-10">
-            <svg 
-              viewBox="0 0 90 90" 
-              className="w-full h-full block" 
-              fill="none" 
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              {/* 1. Purple Base Circle (radius 38, centered at 45, 45) */}
-              <circle cx="45" cy="45" r="38" fill="#68137e" />
-
-              {/* 2. Top-Half White Semi-Circle Arch Only:
-                  Outer radius = 45 (touches horizontal line at x=0 and x=90, y=45)
-                  Inner radius = 38 (touches purple circle)
-                  Only on top (y <= 45). Flat base at y=45 forms sharp 90-degree corners with the white card edge!
-              */}
-              <path 
-                d="M 0,45 A 45,45 0 0,1 90,45 L 83,45 A 38,38 0 0,0 7,45 Z" 
-                fill="#ffffff" 
-              />
-
-              {/* 3. Bold Crisp White Checkmark with extended right arm and sharp ends matching reference image */}
-              <path
-                d="M 24.5 45.5 L 39.0 60.0 L 71.0 28.0"
-                fill="none"
-                stroke="#ffffff"
-                strokeWidth="7.2"
-                strokeLinecap="butt"
-                strokeLinejoin="miter"
-                strokeMiterlimit="4"
-                shapeRendering="geometricPrecision"
-              />
-            </svg>
-          </div>
-        </div>
-
-        {/* Spacer for the overlapping badge */}
-        <div className="h-12 sm:h-13 flex-shrink-0" />
-
-        <div className="space-y-3 flex-1 flex flex-col justify-center">
-          {/* Headline */}
-          <h1 className="text-center text-[15px] sm:text-[16px] font-medium text-black tracking-tight">
-            Transaction Completed Successfully!
-          </h1>
-
-          {/* Main Transaction Summary Gray Card */}
-          <div 
-            ref={receiptRef}
-            className="bg-[#f2f3f5] rounded-[24px] p-4 sm:p-5 space-y-3.5 border border-gray-200/50 shadow-xs"
-          >
-            <p className="text-[#8e8e93] font-normal text-[13.5px] sm:text-[14px]">Transaction Summary</p>
-
-            {/* Paragraph Text with bold highlights matching CBE reference */}
-            {isCredit ? (
-              <p className="text-[14px] sm:text-[15px] leading-[1.62] text-[#1a1a1a] font-normal select-text">
-                ETB <span className="font-bold text-black">{amountFormatted}</span> has been credited to <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} from <span className="font-bold text-black">{senderName}</span> {senderSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason}
-              </p>
-            ) : (
-              <p className="text-[14px] sm:text-[15px] leading-[1.62] text-[#1a1a1a] font-normal select-text">
-                ETB <span className="font-bold text-black">{amountFormatted}</span> has been debited from <span className="font-bold text-black">{senderName}</span> {senderSuffix} for <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason} Total Amount Debited: ETB{totalDebitedFormatted} with Service Charge of ETB{serviceChargeFormatted}, VAT (15%) of ETB{vatFormatted} and Disaster Recovery (5%) of ETB{disasterRecoveryFormatted}.
-              </p>
-            )}
-
-            {/* Realistic QR Code Centered with authentic rounded grey frame */}
-            <div className="flex justify-center py-1.5">
-              <div 
-                id="receipt-qr-container"
-                className="bg-white p-2.5 sm:p-3 rounded-[24px] border-[3px] border-[#737373] shadow-xs inline-flex items-center justify-center select-none"
-              >
-                <div className="w-36 h-36 sm:w-40 sm:h-40 flex items-center justify-center">
-                  {customQrCode ? (
-                    <img 
-                      src={customQrCode} 
-                      alt={`Transaction ${txId} QR Code`} 
-                      className="w-full h-full object-contain block"
-                    />
-                  ) : txQrSvgDataUri ? (
-                    <img 
-                      src={txQrSvgDataUri} 
-                      alt={`Transaction ${txId} QR Code`} 
-                      className="w-full h-full object-contain block"
-                    />
-                  ) : qrDataUrl ? (
-                    <img 
-                      src={qrDataUrl} 
-                      alt={`Transaction ${txId} QR Code`} 
-                      className="w-full h-full object-contain block"
-                    />
-                  ) : (
-                    /* Authentic 29x29 Version 3 Matrix fallback */
-                    <div 
-                      className="grid gap-[1px] w-full h-full bg-white p-0.5"
-                      style={{ gridTemplateColumns: `repeat(${qrMatrix.length}, minmax(0, 1fr))` }}
-                    >
-                      {qrMatrix.flatMap((row, rIdx) =>
-                        row.map((filled, cIdx) => (
-                          <div 
-                            key={`${rIdx}-${cIdx}`} 
-                            className={`rounded-[0.2px] ${
-                              filled ? 'bg-black' : 'bg-transparent'
-                            }`}
-                          />
-                        ))
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Commercial Bank of Ethiopia Footer Inset */}
-            <div className="flex items-center gap-2.5 pt-1 min-w-0">
-              <div className="w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0 flex items-center justify-center">
-                <CbeLogo className="w-8 h-8 sm:w-9 sm:h-9" src={customBankLogo} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <h4 className="font-bold text-gray-900 text-[13.5px] sm:text-[14.5px] leading-tight whitespace-nowrap overflow-hidden text-ellipsis">Commercial Bank of Ethiopia</h4>
-                <p className="text-gray-500 text-[10.5px] sm:text-[11.5px] font-medium leading-tight whitespace-nowrap overflow-hidden text-ellipsis mt-0.5">The bank you can always rely on!</p>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        {/* Bottom Actions Section - Hidden on double-tap screen or toggle button */}
-        {!hideUiElements && !isCapturing && (
-          <div data-html2canvas-ignore="true" className="mt-4 space-y-3.5 flex-shrink-0">
-            {/* 3 Action Buttons matching exact app icons */}
-            <div className="flex items-center justify-around px-3 text-black">
-              {/* Receipt Button */}
-              <button 
-                type="button"
-                id="btn-action-receipt"
-                onClick={() => setShowDetailedModal(true)}
-                className="flex items-center gap-2 text-[13.5px] font-medium text-black hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2 rounded-xl"
-              >
-                {/* Document with 2 top-left horizontal lines, folded top-right corner, and $ sign icon */}
-                <div className="relative w-4 h-[18px] bg-black rounded-[2.5px] flex flex-col justify-between p-[2px] text-white flex-shrink-0 overflow-hidden">
-                  {/* Folded top-right corner */}
-                  <div className="absolute -top-[0.5px] -right-[0.5px] w-[5.5px] h-[5.5px] bg-[#f8f9fa] border-b border-l border-black" />
-                  
-                  {/* Top-left two horizontal lines */}
-                  <div className="flex flex-col gap-[1.5px] w-[7px] pt-[0.5px] pl-[0.5px]">
-                    <div className="h-[1.2px] w-full bg-white rounded-full" />
-                    <div className="h-[1.2px] w-4/5 bg-white rounded-full" />
-                  </div>
-
-                  {/* Centered $ symbol */}
-                  <div className="flex items-center justify-center flex-1">
-                    <span className="text-[9px] font-black font-sans leading-none mt-0.5">$</span>
-                  </div>
-                </div>
-                <span>Receipt</span>
-              </button>
-
-              {/* Screenshot Button: takes screenshot without status bar and navigates to clean view */}
-              <button 
-                type="button"
-                id="btn-action-screenshot"
-                onClick={handleScreenshotAction}
-                className="flex items-center gap-2 text-[13.5px] font-medium text-black hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2 rounded-xl"
-                title="Take screenshot without status bar"
-              >
-                <ScreenshotViewfinderIcon className="w-[18px] h-[18px] text-black" strokeWidth={1.8} />
-                <span>Screenshot</span>
-              </button>
-
-              {/* Share Button */}
-              <button 
-                type="button"
-                id="btn-action-share"
-                onClick={handleShare}
-                className="flex items-center gap-2 text-[13.5px] font-medium text-black hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2 rounded-xl"
-              >
-                <Share2 className="w-[18px] h-[18px] stroke-[2.2] fill-black text-black" />
-                <span>Share</span>
-              </button>
-            </div>
-
-            {/* Full-width Close Pill Button */}
-            <button 
-              type="button"
-              id="btn-action-close"
-              onClick={onBack}
-              className="w-full bg-[#d7d7db] hover:bg-[#ceced3] active:bg-[#c4c4c9] text-[#333333] font-bold py-3.5 rounded-full text-[15px] transition active:scale-[0.99] cursor-pointer shadow-xs mb-1"
-            >
-              Close
-            </button>
-          </div>
-        )}
-
-        {/* When in Clean Screenshot Mode (matching Image 1) */}
-        {hideUiElements && (
-          <div data-html2canvas-ignore="true" className="pt-4 pb-2 flex flex-col items-center justify-center shrink-0">
+      {/* 2. EXISTING RECEIPT CONTAINER (Captures ONLY receiptRef) */}
+      <div 
+        ref={receiptRef}
+        id="cbe-existing-receipt"
+        className="w-full flex-1 flex flex-col bg-[#68137e] relative select-none"
+      >
+        {/* Top Purple Navigation / App Header */}
+        <div className={`${isIPhone ? 'pt-[max(env(safe-area-inset-top,0px),24px)]' : (shouldShowStatusBar ? 'pt-2 sm:pt-3' : 'pt-7 sm:pt-8')} pb-8 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0`}>
+          <div className="flex items-center gap-2.5">
+            {/* iOS Top Back Button - excluded from screenshot */}
             <button
               type="button"
+              data-html2canvas-ignore="true"
+              data-screenshot-exclude="true"
               onClick={onBack}
-              className="text-xs text-neutral-400 hover:text-neutral-700 transition flex items-center gap-1.5 py-1.5 px-4 rounded-full bg-neutral-100 hover:bg-neutral-200 cursor-pointer shadow-2xs active:scale-95"
+              className="p-1.5 -ml-1.5 text-white hover:text-purple-200 active:opacity-70 transition flex items-center cursor-pointer rounded-full"
+              title="Return to Home"
             >
-              <span>Tap anywhere to return to Home</span>
+              <ChevronLeft className="w-6 h-6 stroke-[2.5]" />
             </button>
-          </div>
-        )}
 
+            {/* Solid White Shield with Purple Checkmark Icon perfectly fitted matching reference image */}
+            <div className="w-8.5 h-8.5 flex-shrink-0 flex items-center justify-center">
+              <svg className="w-8.5 h-8.5 drop-shadow-xs" viewBox="0 0 24 24" fill="none">
+                <path 
+                  d="M12 2.2c0.3 0 0.6 0.1 0.9 0.2l6.5 2.6c0.5 0.2 0.8 0.7 0.8 1.2v5.6c0 4.8-3.0 9.2-7.5 10.7-.5 0.2-1.0 0.2-1.4 0-4.5-1.5-7.5-5.9-7.5-10.7V6.2c0-.5.3-1 .8-1.2l6.5-2.6c.3-.1.6-.2.9-.2z" 
+                  fill="#ffffff" 
+                />
+                <path 
+                  d="M8.0 12.2L11.0 15.2L17.2 9.0" 
+                  stroke="#68137e" 
+                  strokeWidth="1.9" 
+                  strokeLinecap="butt" 
+                  strokeLinejoin="miter" 
+                  strokeMiterlimit="4"
+                  shapeRendering="geometricPrecision"
+                />
+              </svg>
+            </div>
+            <div>
+              <h2 className="font-bold text-[16px] sm:text-[17px] leading-tight text-white tracking-tight">Thank you</h2>
+              <p className="text-[12px] sm:text-[13px] text-purple-100 font-normal leading-tight mt-0.5">Success</p>
+            </div>
+          </div>
+
+          {/* Screenshot Button (Translucent circular badge with enlarged focus viewfinder) - excluded from screenshot */}
+          {!hideUiElements && !isCapturing && (
+            <button 
+              type="button"
+              id="btn-top-screenshot"
+              data-html2canvas-ignore="true"
+              data-screenshot-exclude="true"
+              onClick={handleScreenshot}
+              className="w-11 h-11 rounded-full bg-white/20 hover:bg-white/30 active:scale-95 flex items-center justify-center transition text-white cursor-pointer shadow-xs"
+              title="Take screenshot of receipt"
+            >
+              <ScreenshotViewfinderIcon className="w-7 h-7 text-white" strokeWidth={1.8} />
+            </button>
+          )}
+        </div>
+
+        {/* Main White Sheet Container */}
+        <div className="bg-white rounded-t-[32px] sm:rounded-t-[36px] flex-1 px-4 sm:px-5 pt-0 pb-6 flex flex-col justify-between shadow-none relative">
+          
+          {/* Overlapping Large Success Checkmark Badge (Sharp edge, white half-circle on top only, no bottom circle, no shadow) */}
+          <div className="relative flex justify-center flex-shrink-0">
+            <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 top-0 w-[90px] h-[90px] sm:w-[98px] sm:h-[98px] pointer-events-none select-none z-10">
+              <svg 
+                viewBox="0 0 90 90" 
+                className="w-full h-full block" 
+                fill="none" 
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                {/* 1. Purple Base Circle (radius 38, centered at 45, 45) */}
+                <circle cx="45" cy="45" r="38" fill="#68137e" />
+
+                {/* 2. Top-Half White Semi-Circle Arch Only */}
+                <path 
+                  d="M 0,45 A 45,45 0 0,1 90,45 L 83,45 A 38,38 0 0,0 7,45 Z" 
+                  fill="#ffffff" 
+                />
+
+                {/* 3. Bold Crisp White Checkmark with extended right arm and sharp ends matching reference image */}
+                <path
+                  d="M 24.5 45.5 L 39.0 60.0 L 71.0 28.0"
+                  fill="none"
+                  stroke="#ffffff"
+                  strokeWidth="7.2"
+                  strokeLinecap="butt"
+                  strokeLinejoin="miter"
+                  strokeMiterlimit="4"
+                  shapeRendering="geometricPrecision"
+                />
+              </svg>
+            </div>
+          </div>
+
+          {/* Spacer for the overlapping badge */}
+          <div className="h-12 sm:h-13 flex-shrink-0" />
+
+          <div className="space-y-3 flex-1 flex flex-col justify-center">
+            {/* Headline */}
+            <h1 className="text-center text-[15px] sm:text-[16px] font-medium text-black tracking-tight">
+              Transaction Completed Successfully!
+            </h1>
+
+            {/* Main Transaction Summary Gray Card */}
+            <div className="bg-[#f2f3f5] rounded-[24px] p-4 sm:p-5 space-y-3.5 border border-gray-200/50 shadow-xs">
+              <p className="text-[#8e8e93] font-normal text-[13.5px] sm:text-[14px]">Transaction Summary</p>
+
+              {/* Paragraph Text with bold highlights matching CBE reference */}
+              {isCredit ? (
+                <p className="text-[14px] sm:text-[15px] leading-[1.62] text-[#1a1a1a] font-normal select-text">
+                  ETB <span className="font-bold text-black">{amountFormatted}</span> has been credited to <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} from <span className="font-bold text-black">{senderName}</span> {senderSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason}
+                </p>
+              ) : (
+                <p className="text-[14px] sm:text-[15px] leading-[1.62] text-[#1a1a1a] font-normal select-text">
+                  ETB <span className="font-bold text-black">{amountFormatted}</span> has been debited from <span className="font-bold text-black">{senderName}</span> {senderSuffix} for <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason} Total Amount Debited: ETB{totalDebitedFormatted} with Service Charge of ETB{serviceChargeFormatted}, VAT (15%) of ETB{vatFormatted} and Disaster Recovery (5%) of ETB{disasterRecoveryFormatted}.
+                </p>
+              )}
+
+              {/* Realistic QR Code Centered with authentic rounded grey frame */}
+              <div className="flex justify-center py-1.5">
+                <div 
+                  id="receipt-qr-container"
+                  className="bg-white p-2.5 sm:p-3 rounded-[24px] border-[3px] border-[#737373] shadow-xs inline-flex items-center justify-center select-none"
+                >
+                  <div className="w-36 h-36 sm:w-40 sm:h-40 flex items-center justify-center">
+                    {customQrCode ? (
+                      <img 
+                        src={customQrCode} 
+                        alt={`Transaction ${txId} QR Code`} 
+                        className="w-full h-full object-contain block"
+                      />
+                    ) : txQrSvgDataUri ? (
+                      <img 
+                        src={txQrSvgDataUri} 
+                        alt={`Transaction ${txId} QR Code`} 
+                        className="w-full h-full object-contain block"
+                      />
+                    ) : qrDataUrl ? (
+                      <img 
+                        src={qrDataUrl} 
+                        alt={`Transaction ${txId} QR Code`} 
+                        className="w-full h-full object-contain block"
+                      />
+                    ) : (
+                      /* Authentic 29x29 Version 3 Matrix fallback */
+                      <div 
+                        className="grid gap-[1px] w-full h-full bg-white p-0.5"
+                        style={{ gridTemplateColumns: `repeat(${qrMatrix.length}, minmax(0, 1fr))` }}
+                      >
+                        {qrMatrix.flatMap((row, rIdx) =>
+                          row.map((filled, cIdx) => (
+                            <div 
+                              key={`${rIdx}-${cIdx}`} 
+                              className={`rounded-[0.2px] ${
+                                filled ? 'bg-black' : 'bg-transparent'
+                              }`}
+                            />
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Commercial Bank of Ethiopia Footer Inset */}
+              <div className="flex items-center gap-2.5 pt-1 min-w-0">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0 flex items-center justify-center">
+                  <CbeLogo className="w-8 h-8 sm:w-9 sm:h-9" src={customBankLogo} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h4 className="font-bold text-gray-900 text-[13.5px] sm:text-[14.5px] leading-tight whitespace-nowrap overflow-hidden text-ellipsis">Commercial Bank of Ethiopia</h4>
+                  <p className="text-gray-500 text-[10.5px] sm:text-[11.5px] font-medium leading-tight whitespace-nowrap overflow-hidden text-ellipsis mt-0.5">The bank you can always rely on!</p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
       </div>
 
+      {/* 3. Bottom Actions Section (OUTSIDE receiptRef, so NEVER in the screenshot!) */}
+      {!hideUiElements && !isCapturing && (
+        <div 
+          data-html2canvas-ignore="true" 
+          data-screenshot-exclude="true" 
+          className="bg-white px-4 sm:px-5 pb-5 space-y-3.5 flex-shrink-0 select-none"
+        >
+          {/* 3 Action Buttons matching exact app icons */}
+          <div className="flex items-center justify-around px-3 text-black">
+            {/* Receipt Button */}
+            <button 
+              type="button"
+              id="btn-action-receipt"
+              onClick={() => setShowDetailedModal(true)}
+              className="flex items-center gap-2 text-[13.5px] font-medium text-black hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2 rounded-xl"
+            >
+              {/* Document with 2 top-left horizontal lines, folded top-right corner, and $ sign icon */}
+              <div className="relative w-4 h-[18px] bg-black rounded-[2.5px] flex flex-col justify-between p-[2px] text-white flex-shrink-0 overflow-hidden">
+                {/* Folded top-right corner */}
+                <div className="absolute -top-[0.5px] -right-[0.5px] w-[5.5px] h-[5.5px] bg-[#f8f9fa] border-b border-l border-black" />
+                
+                {/* Top-left two horizontal lines */}
+                <div className="flex flex-col gap-[1.5px] w-[7px] pt-[0.5px] pl-[0.5px]">
+                  <div className="h-[1.2px] w-full bg-white rounded-full" />
+                  <div className="h-[1.2px] w-4/5 bg-white rounded-full" />
+                </div>
+
+                {/* Centered $ symbol */}
+                <div className="flex items-center justify-center flex-1">
+                  <span className="text-[9px] font-black font-sans leading-none mt-0.5">$</span>
+                </div>
+              </div>
+              <span>Receipt</span>
+            </button>
+
+            {/* Screenshot Button: takes screenshot of existing receipt */}
+            <button 
+              type="button"
+              id="btn-action-screenshot"
+              onClick={handleScreenshot}
+              className="flex items-center gap-2 text-[13.5px] font-medium text-black hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2 rounded-xl"
+              title="Take screenshot"
+            >
+              <ScreenshotViewfinderIcon className="w-[18px] h-[18px] text-black" strokeWidth={1.8} />
+              <span>Screenshot</span>
+            </button>
+
+            {/* Share Button */}
+            <button 
+              type="button"
+              id="btn-action-share"
+              onClick={handleShare}
+              className="flex items-center gap-2 text-[13.5px] font-medium text-black hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2 rounded-xl"
+            >
+              <Share2 className="w-[18px] h-[18px] stroke-[2.2] fill-black text-black" />
+              <span>Share</span>
+            </button>
+          </div>
+
+          {/* Full-width Close Pill Button */}
+          <button 
+            type="button"
+            id="btn-action-close"
+            onClick={onBack}
+            className="w-full bg-[#d7d7db] hover:bg-[#ceced3] active:bg-[#c4c4c9] text-[#333333] font-bold py-3.5 rounded-full text-[15px] transition active:scale-[0.99] cursor-pointer shadow-xs mb-1"
+          >
+            Close
+          </button>
+        </div>
+      )}
+
+      {/* When in Clean Screenshot Mode (matching Image 1) */}
+      {hideUiElements && (
+        <div data-html2canvas-ignore="true" data-screenshot-exclude="true" className="pt-4 pb-2 flex flex-col items-center justify-center shrink-0 bg-white">
+          <button
+            type="button"
+            onClick={onBack}
+            className="text-xs text-neutral-400 hover:text-neutral-700 transition flex items-center gap-1.5 py-1.5 px-4 rounded-full bg-neutral-100 hover:bg-neutral-200 cursor-pointer shadow-2xs active:scale-95"
+          >
+            <span>Tap anywhere to return to Home</span>
+          </button>
+        </div>
+      )}
       {/* Official CBE Customer Receipt Web Page when User Clicks 'Receipt' */}
       {showDetailedModal && (
         <CbeWebReceiptModal 
@@ -1634,37 +1069,25 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             />
           </div>
 
-          {/* Bottom Actions: Save to Photos, Share, and Return to Home */}
-          <div className="space-y-2.5 pt-3 pb-safe max-w-sm mx-auto w-full">
+          {/* Bottom Actions: Save to Gallery, Share, and Return to Home */}
+          <div className="space-y-2.5 pt-2 pb-safe max-w-sm mx-auto w-full">
+            {/* Gallery Save Hint */}
+            <p className="text-[11px] text-center text-white/80 font-medium tracking-tight">
+              📸 Saved to device. Tap below to re-save to Photos / Gallery or Share.
+            </p>
+
             <div className="grid grid-cols-2 gap-2.5">
-              <a
-                href={capturedScreenshotUrl}
-                download={`screenshot_${Date.now()}.png`}
-                className="w-full bg-[#70189F] hover:bg-[#8320b9] text-white font-bold py-3 rounded-2xl text-xs transition flex items-center justify-center gap-2 shadow-lg active:scale-95 cursor-pointer"
-              >
-                <Download className="w-4 h-4" />
-                <span>Save to Photos</span>
-              </a>
               <button
                 type="button"
-                onClick={async () => {
-                  try {
-                    const res = await fetch(capturedScreenshotUrl);
-                    const blob = await res.blob();
-                    const file = new File([blob], `cbe_receipt_${txId}.png`, { type: 'image/png' });
-                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                      await navigator.share({
-                        files: [file],
-                        title: `CBE Receipt ${txId}`,
-                        text: `CBE Transaction Receipt ${txId}`
-                      });
-                    } else {
-                      await handleShare();
-                    }
-                  } catch {
-                    handleShare();
-                  }
-                }}
+                onClick={() => saveImageToGallery(capturedScreenshotUrl)}
+                className="w-full bg-[#70189F] hover:bg-[#8320b9] text-white font-bold py-3 rounded-2xl text-xs transition flex items-center justify-center gap-2 shadow-lg active:scale-95 cursor-pointer"
+              >
+                <ImageIcon className="w-4 h-4 text-amber-300" />
+                <span>Save to Gallery</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleShareScreenshotImage(capturedScreenshotUrl)}
                 className="w-full bg-white/15 hover:bg-white/25 text-white font-bold py-3 rounded-2xl text-xs transition flex items-center justify-center gap-2 border border-white/20 active:scale-95 cursor-pointer"
               >
                 <Share2 className="w-4 h-4" />
