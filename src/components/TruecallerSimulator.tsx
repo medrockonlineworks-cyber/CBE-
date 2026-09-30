@@ -34,6 +34,7 @@ import {
   Download, 
   Tv, 
   ChevronRight, 
+  ChevronLeft,
   CheckCircle2, 
   RotateCcw,
   Wifi,
@@ -76,7 +77,6 @@ import {
   PopdownFontFamily,
   PopdownFontSize
 } from '../types/truecaller';
-import PhoneStatusBar from './PhoneStatusBar';
 import PhoneSettingsModal from './PhoneSettingsModal';
 import { PhoneSettingsService, PhoneModelType } from '../services/phoneSettingsService';
 import { 
@@ -297,6 +297,17 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
   const [showHolidayCardModal, setShowHolidayCardModal] = useState<boolean>(false);
   const [useLiveClock, setUseLiveClock] = useState<boolean>(false);
   const [bubbleActionTx, setBubbleActionTx] = useState<any>(null);
+  const [isIPhone, setIsIPhone] = useState<boolean>(() => PhoneSettingsService.isIPhoneMode());
+
+  useEffect(() => {
+    return PhoneSettingsService.subscribe(() => {
+      const isIos = PhoneSettingsService.isIPhoneMode();
+      setIsIPhone(isIos);
+      if (isIos) {
+        setSelectedPhoneType('iphone');
+      }
+    });
+  }, []);
 
   // Popdown Typography Settings (Font Family & Text Size)
   const [popdownFontFamily, setPopdownFontFamily] = useState<PopdownFontFamily>(() => {
@@ -485,7 +496,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
 
   // Picker selection states
   const [selectedPhoneScreen, setSelectedPhoneScreen] = useState<TruecallerBackgroundApp>('tiktok');
-  const [selectedPhoneType, setSelectedPhoneType] = useState<TruecallerPhoneType>('tecno');
+  const [selectedPhoneType, setSelectedPhoneType] = useState<TruecallerPhoneType>(() => PhoneSettingsService.isIPhoneMode() ? 'iphone' : 'tecno');
   const [pickerRole, setPickerRole] = useState<TruecallerRole>('receiver');
   const [pickerAmount, setPickerAmount] = useState<string>('450.00');
 
@@ -508,7 +519,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
     txId: 'FT26248MK0913',
     read: false,
     backgroundApp: 'tiktok',
-    phoneType: 'tecno',
+    phoneType: PhoneSettingsService.isIPhoneMode() ? 'iphone' : 'tecno',
   }));
   const [isPopdownVisible, setIsPopdownVisible] = useState<boolean>(true);
   const [isPopdownAnimating, setIsPopdownAnimating] = useState<boolean>(false);
@@ -2285,39 +2296,195 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
   // 3. MAIN INTERFACE: GOOGLE MESSAGES INBOX (Matches Screenshot_20260904-132804.png)
   // =========================================================================
   if (view === 'inbox') {
-    return (
-      <div className="min-h-screen bg-[#121316] text-white flex flex-col font-sans select-none relative">
-        
-        {/* Android Native Status Bar (Exact match to user's screenshot) */}
-        <div className="w-full px-5 pt-2.5 pb-1 flex items-center justify-between text-xs text-neutral-300">
-          <div className="flex items-center space-x-1.5 font-medium tracking-tight">
-            <span>1:28</span>
-            <svg className="w-3.5 h-3.5 fill-current opacity-85" viewBox="0 0 24 24">
-              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-            </svg>
-          </div>
+    // -------------------------------------------------------------
+    // TRUECALLER FOR IPHONE (iOS Native Navigation & Design System)
+    // -------------------------------------------------------------
+    if (isIPhone) {
+      return (
+        <div className="min-h-screen bg-black text-white flex flex-col font-sans select-none relative pb-safe">
+          {/* iOS Top Navigation Bar for Truecaller */}
+          <header className="sticky top-0 z-30 px-4 pt-[max(env(safe-area-inset-top,0px),10px)] pb-2 backdrop-blur-xl bg-black/90 border-b border-[#38383A]">
+            <div className="flex items-center justify-between h-11">
+              {/* Back to CBE */}
+              <button
+                type="button"
+                onClick={onBack}
+                className="text-[#007AFF] hover:opacity-80 active:opacity-60 text-[17px] font-normal flex items-center gap-0.5 cursor-pointer"
+              >
+                <ChevronLeft className="w-5 h-5 -ml-1.5 stroke-[2.5]" />
+                <span>CBE</span>
+              </button>
 
-          <div className="flex items-center space-x-2.5 text-[11px]">
-            <span className="text-[11px] opacity-80">ᛒ</span>
-            <span className="font-mono text-[10px] opacity-85">19.2 KB/s</span>
-            <span className="font-semibold text-[10.5px]">H+</span>
-            <span className="font-semibold text-[10.5px]">3G</span>
-            <Wifi className="w-3.5 h-3.5" />
-            <div className="flex items-center space-x-0.5">
-              <div className="w-6 h-3.5 border border-white/80 rounded-xs p-0.5 flex items-center justify-center">
-                <span className="text-[9.5px] font-bold leading-none">68</span>
+              {/* Center Truecaller Brand */}
+              <div className="flex items-center gap-1.5">
+                <div className="w-6 h-6 rounded-full bg-[#0066FF] flex items-center justify-center text-white shadow-xs">
+                  <Phone className="w-3.5 h-3.5 fill-white" />
+                </div>
+                <span className="font-bold text-[17px] tracking-tight">
+                  Truecaller
+                </span>
+                <ShieldCheck className="w-4 h-4 text-[#0066FF] fill-[#0066FF] text-black" />
+              </div>
+
+              {/* Right: Quick Pop-down Alert trigger */}
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedPhoneType('iphone');
+                  handleRetriggerAlert();
+                }}
+                className="text-[#007AFF] hover:opacity-80 text-[15px] font-medium cursor-pointer flex items-center gap-1"
+                title="Test Popdown Alert"
+              >
+                <Sparkles className="w-4 h-4 text-amber-400 fill-amber-400" />
+                <span>Alert</span>
+              </button>
+            </div>
+
+            {/* iOS Truecaller Title & Status */}
+            <div className="pt-1 pb-1.5 flex items-center justify-between">
+              <h1 className="text-[28px] font-bold tracking-tight leading-none text-white">
+                Messages
+              </h1>
+              <span className="text-[12px] font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                Caller ID Active
+              </span>
+            </div>
+
+            {/* iOS Rounded Search Bar */}
+            <div className="pt-1 pb-1">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#1C1C1E] text-white">
+                <Search className="w-4 h-4 text-[#8E8E93]" />
+                <input
+                  type="text"
+                  placeholder="Search SMS, banks, senders..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="bg-transparent text-[14px] outline-none flex-1 placeholder:text-[#8E8E93]"
+                />
+                {searchQuery && (
+                  <button onClick={() => setSearchQuery('')} className="text-[#8E8E93] hover:text-white cursor-pointer">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
             </div>
-          </div>
-        </div>
 
-        {/* Google Messages Top App Bar */}
-        <header className="px-4 pt-3 pb-2 flex items-center justify-between sticky top-0 z-30 bg-[#121316]">
+            {/* iOS Segmented Control */}
+            <div className="mt-1.5 p-0.5 bg-[#1C1C1E] rounded-lg flex items-center text-xs font-semibold">
+              <button
+                type="button"
+                className="flex-1 py-1 text-center bg-[#636366] text-white rounded-md shadow-xs transition cursor-pointer"
+              >
+                Banking &amp; SMS
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveBankKey('cbe');
+                  setActiveBankSenderName('CBE');
+                  setView('bank_thread');
+                }}
+                className="flex-1 py-1 text-center text-[#8E8E93] hover:text-white transition cursor-pointer"
+              >
+                CBE Thread
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedPhoneType('iphone');
+                  handleRetriggerAlert();
+                }}
+                className="flex-1 py-1 text-center text-[#007AFF] hover:opacity-80 transition cursor-pointer"
+              >
+                Pop-down ⚡
+              </button>
+            </div>
+          </header>
+
+          {/* iOS Conversation List */}
+          <div className="flex-1 overflow-y-auto px-4 divide-y divide-[#38383A]/60 pb-20">
+            {filteredThreads.map(thread => {
+              const isCbe = thread.id === 'CBE';
+              return (
+                <div
+                  key={thread.id}
+                  onClick={() => handleSelectThread(thread)}
+                  className={`py-3 flex items-center gap-3.5 cursor-pointer active:bg-neutral-900 transition-colors group ${
+                    isCbe ? 'bg-[#70189F]/10 rounded-2xl px-2 my-1 border border-purple-500/20' : ''
+                  }`}
+                >
+                  <div 
+                    className="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center text-white font-bold text-sm shadow-xs"
+                    style={{ backgroundColor: isCbe ? '#70189F' : thread.avatarColor }}
+                  >
+                    {isCbe ? 'CBE' : (thread.sender.charAt(0).toUpperCase())}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline justify-between mb-0.5">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="font-semibold text-[16px] truncate text-white">
+                          {thread.sender}
+                        </span>
+                        {isCbe && (
+                          <span className="px-1.5 py-0.2 bg-[#007AFF] text-white text-[9.5px] font-bold rounded-full">
+                            VERIFIED
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[12px] text-[#8E8E93] shrink-0">
+                        {thread.timeLabel}
+                      </span>
+                    </div>
+
+                    <p className="text-[13.5px] text-[#8E8E93] truncate leading-snug">
+                      {thread.snippet}
+                    </p>
+                  </div>
+
+                  <ChevronRight className="w-4 h-4 text-[#8E8E93]/60 shrink-0" />
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Floating Test Alert Action */}
+          <div className="fixed bottom-10 right-4 z-30">
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedPhoneType('iphone');
+                handleRetriggerAlert();
+              }}
+              className="px-5 py-3 rounded-full bg-[#007AFF] hover:bg-blue-600 active:scale-95 text-white font-bold text-sm flex items-center gap-2 shadow-2xl cursor-pointer transition border border-white/20"
+            >
+              <Smartphone className="w-4 h-4" />
+              <span>Simulate Pop-down ⚡</span>
+            </button>
+          </div>
+
+          {/* Modal: Choose Phone Screen & Phone Type */}
+          {renderPickerModal()}
+
+          {/* Bottom iOS Home Indicator */}
+          <div className="w-32 h-1 bg-white/25 rounded-full mx-auto my-2 shrink-0 pointer-events-none" />
+        </div>
+      );
+    }
+
+    // -------------------------------------------------------------
+    // TRUECALLER FOR ANDROID (Clean edge-to-edge layout without fake bars)
+    // -------------------------------------------------------------
+    return (
+      <div className="min-h-screen bg-[#121316] text-white flex flex-col font-sans select-none relative pb-safe">
+        {/* Google Messages Top App Bar with safe-area spacing */}
+        <header className="px-4 pt-[max(env(safe-area-inset-top,0px),10px)] pb-2 flex items-center justify-between sticky top-0 z-30 bg-[#121316]">
           {!isSearching ? (
             <>
               <div className="flex items-center space-x-2">
                 <h1 className="text-[22px] sm:text-[24px] font-medium tracking-normal text-white">
-                  Google Messages
+                  Messages
                 </h1>
               </div>
 
@@ -2326,17 +2493,17 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                 <button 
                   type="button"
                   onClick={() => setIsSearching(true)}
-                  className="p-2 rounded-full hover:bg-neutral-800 text-neutral-200 transition-colors"
+                  className="p-2 rounded-full hover:bg-neutral-800 text-neutral-200 transition-colors cursor-pointer"
                   title="Search conversations"
                 >
                   <Search className="w-5 h-5" />
                 </button>
 
-                {/* User Profile Avatar with Cyan Ring matching screenshot */}
+                {/* User Profile Avatar with Cyan Ring */}
                 <button
                   type="button"
                   onClick={onBack}
-                  className="relative flex items-center justify-center p-[2px] rounded-full border-2 border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                  className="relative flex items-center justify-center p-[2px] rounded-full border-2 border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 cursor-pointer"
                   title="Back to Banking App"
                 >
                   <div className="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center text-white font-semibold text-sm shadow-sm">
@@ -2358,7 +2525,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                 className="bg-transparent border-none outline-none w-full text-sm placeholder-neutral-400"
               />
               {searchQuery && (
-                <button type="button" onClick={() => setSearchQuery('')} className="p-1">
+                <button type="button" onClick={() => setSearchQuery('')} className="p-1 cursor-pointer">
                   <X className="w-4 h-4 text-neutral-400" />
                 </button>
               )}
@@ -2368,7 +2535,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                   setIsSearching(false);
                   setSearchQuery('');
                 }}
-                className="text-xs font-semibold text-blue-400 px-2 py-1"
+                className="text-xs font-semibold text-blue-400 px-2 py-1 cursor-pointer"
               >
                 Cancel
               </button>
@@ -2385,9 +2552,9 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
           <button
             type="button"
             onClick={onBack}
-            className="text-cyan-400 hover:text-cyan-300 font-semibold text-[11px] flex items-center space-x-1"
+            className="text-cyan-400 hover:text-cyan-300 font-semibold text-[11px] flex items-center space-x-1 cursor-pointer"
           >
-            <span>Return to App</span>
+            <span>Return to CBE</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -2408,7 +2575,6 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
               >
                 {/* Left Column: Silhouette Avatar & Sender details */}
                 <div className="flex items-center space-x-3.5 min-w-0 pr-3 flex-1">
-                  {/* Contact Silhouette Avatar with Solid Background Color */}
                   <div 
                     className="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center shadow-sm overflow-hidden"
                     style={{ backgroundColor: thread.avatarColor }}
@@ -2418,7 +2584,6 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                     </div>
                   </div>
 
-                  {/* Sender Title and Snippet text */}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center space-x-2">
                       <h2 className="text-[15.5px] font-semibold truncate text-neutral-100">
@@ -2438,7 +2603,6 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                   </div>
                 </div>
 
-                {/* Right Column: Time and Unread Blue Badge */}
                 <div className="flex flex-col items-end flex-shrink-0 space-y-1.5 pl-2">
                   <span className={`text-[12px] font-normal ${
                     thread.unreadCount > 0 ? 'text-blue-400 font-medium' : 'text-neutral-400'
@@ -2458,13 +2622,11 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
         </div>
 
         {/* Floating Action Buttons: Start Chat + Gemini sparkle */}
-        <div className="fixed bottom-14 right-5 flex flex-col items-end space-y-3 z-30">
-          {/* Gemini sparkle floating button matching screenshot */}
+        <div className="fixed bottom-10 right-5 flex flex-col items-end space-y-3 z-30">
           <div className="w-11 h-11 rounded-full bg-neutral-800/90 text-cyan-400 border border-neutral-700 flex items-center justify-center shadow-xl cursor-pointer hover:bg-neutral-700 transition">
             <Sparkles className="w-5 h-5" />
           </div>
 
-          {/* Start Chat Blue Pill Button */}
           <div 
             onClick={() => {
               setActiveBankKey('cbe');
@@ -2476,20 +2638,6 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
             <MessageSquare className="w-4 h-4 fill-white" />
             <span>Start chat</span>
           </div>
-        </div>
-
-        {/* Bottom Android System Navigation Bar matching screenshot (≡, ○, ⊃) */}
-        <div className="w-full py-2 px-14 flex items-center justify-between text-neutral-500 text-lg font-light bg-[#121316] border-t border-neutral-800/80 sticky bottom-0 z-20">
-          <span className="hover:text-white cursor-pointer">≡</span>
-          <span className="hover:text-white cursor-pointer">○</span>
-          <button 
-            type="button" 
-            onClick={onBack}
-            className="hover:text-white cursor-pointer focus:outline-none"
-            title="Return to Banking App"
-          >
-            ⊃
-          </button>
         </div>
 
         {/* Modal: Choose Phone Screen & Phone Type */}
@@ -2504,7 +2652,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
   // =========================================================================
   if (view === 'bank_thread') {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col font-sans select-none relative overflow-x-hidden">
+      <div className="min-h-screen bg-black text-white flex flex-col font-sans select-none relative overflow-x-hidden pb-safe">
         
         {/* Toast popup */}
         {toastMessage && (
@@ -2515,16 +2663,25 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
         )}
 
         {/* Bank Thread App Bar matching screenshot */}
-        <header className="w-full bg-black border-b border-neutral-900 px-3 py-2 flex items-center justify-between sticky top-0 z-30">
+        <header className="w-full bg-black border-b border-neutral-900 px-3 py-2 flex items-center justify-between sticky top-0 z-30 pt-[max(env(safe-area-inset-top,0px),8px)]">
           <div className="flex items-center space-x-3">
             {/* Back Button */}
             <button
               type="button"
-              onClick={() => setView('inbox')}
-              className="p-1 rounded-full hover:bg-neutral-900 text-white transition-colors active:scale-95 cursor-pointer"
-              title="Back"
+              onClick={() => {
+                setView('inbox');
+              }}
+              className="p-1 rounded-full hover:bg-neutral-900 text-white transition-colors active:scale-95 cursor-pointer flex items-center gap-1"
+              title="Back to Messages"
             >
-              <ArrowLeft className="w-6 h-6 text-white" />
+              {isIPhone ? (
+                <div className="text-[#007AFF] text-[17px] font-normal flex items-center gap-0.5">
+                  <ChevronLeft className="w-5 h-5 -ml-1 stroke-[2.5]" />
+                  <span>Messages</span>
+                </div>
+              ) : (
+                <ArrowLeft className="w-6 h-6 text-white" />
+              )}
             </button>
 
             {/* Bank Avatar: Dark Navy Circle with Bank Facade Columns Pediment Icon */}
@@ -2709,6 +2866,9 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
           <div className="w-full bg-black text-center text-[12px] text-[#8e9aa8] py-1 select-none pointer-events-auto">
             Replying is not supported by this sender
           </div>
+
+          {/* iOS Home Indicator Bar */}
+          <div className="w-32 h-1 bg-white/25 rounded-full mx-auto my-2 shrink-0 pointer-events-none" />
         </div>
 
         {/* =================================================================== */}

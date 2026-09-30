@@ -18,9 +18,11 @@ import TelebirrApp from './components/TelebirrApp';
 import TelegramSimulatorApp from './components/telegram/TelegramSimulatorApp';
 import { PhoneCallService } from './services/phoneCallService';
 import { SmsService } from './services/smsService';
+import { PhoneSettingsService } from './services/phoneSettingsService';
 import Navigation, { TabType } from './components/Navigation';
 import OfflineBanner from './components/OfflineBanner';
 import PhoneRecentAppsModal, { AppViewId } from './components/PhoneRecentAppsModal';
+import { ChevronLeft } from 'lucide-react';
 
 export default function App() {
   // Authentication & View Session States
@@ -70,6 +72,13 @@ export default function App() {
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [initialTxTab, setInitialTxTab] = useState<'send' | 'transfer' | 'merchant' | 'receive' | 'airtime'>('send');
   const [smsActiveAccountId, setSmsActiveAccountId] = useState<string | undefined>(undefined);
+  const [isIPhone, setIsIPhone] = useState<boolean>(() => PhoneSettingsService.isIPhoneMode());
+
+  useEffect(() => {
+    return PhoneSettingsService.subscribe(() => {
+      setIsIPhone(PhoneSettingsService.isIPhoneMode());
+    });
+  }, []);
 
   // Track navigation state to manage Android / browser history correctly
   const navHistoryRef = useRef<{ view: string; tab: string }[]>([]);
@@ -208,6 +217,40 @@ export default function App() {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, [activeView, activeTab]);
+
+  // iOS Native Edge Swipe-to-Back Gesture
+  useEffect(() => {
+    let startX = 0;
+    let startY = 0;
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+      }
+    };
+
+    const onTouchEnd = (e: TouchEvent) => {
+      if (e.changedTouches.length === 1) {
+        const endX = e.changedTouches[0].clientX;
+        const endY = e.changedTouches[0].clientY;
+        const diffX = endX - startX;
+        const diffY = Math.abs(endY - startY);
+
+        // Swiped from left edge (startX < 35) horizontally towards right (> 50px)
+        if (startX < 35 && diffX > 50 && diffY < 45) {
+          handlePhoneBack();
+        }
+      }
+    };
+
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchend', onTouchEnd, { passive: true });
+    return () => {
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [handlePhoneBack]);
 
   // Try auto restoring session on mount
   useEffect(() => {
@@ -466,10 +509,23 @@ export default function App() {
         >
           Truecaller
         </button>
+
+        <div className="h-4 w-px bg-slate-700 mx-1" />
+        <button
+          onClick={() => {
+            const newModel = isIPhone ? 'tecno' : 'iphone';
+            PhoneSettingsService.applyPreset(newModel);
+          }}
+          className={`px-3 py-1 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+            isIPhone ? 'bg-sky-600 text-white shadow-xs' : 'bg-emerald-700 text-white shadow-xs'
+          }`}
+          title="Toggle between iPhone (iOS) and Android modes"
+        >
+          <span>{isIPhone ? '🍎 iPhone Mode' : '🤖 Android Mode'}</span>
+        </button>
       </nav>
 
-
-      {/* Main Responsive Android-Ready App Canvas */}
+      {/* Main Responsive Android/iPhone App Canvas */}
       <div 
         id="app-main-canvas"
         className="w-full max-w-full md:max-w-[430px] bg-gray-50 h-[100dvh] max-h-[100dvh] md:h-[880px] md:max-h-[920px] md:rounded-[44px] md:shadow-[0_25px_70px_rgba(0,0,0,0.65)] relative flex flex-col overflow-hidden border-0 md:border md:border-slate-800/90"
@@ -502,6 +558,24 @@ export default function App() {
 
           {activeView === 'main' && (
             <div className="flex-1 flex flex-col h-full w-full overflow-hidden relative">
+              {/* iPhone Sub-page Top Navigation Bar */}
+              {isIPhone && activeTab !== 'home' && (
+                <div className="w-full bg-[#70189F] text-white px-4 pt-[max(env(safe-area-inset-top,0px),10px)] pb-2.5 flex items-center justify-between shrink-0 z-30 shadow-xs">
+                  <button
+                    type="button"
+                    onClick={handlePhoneBack}
+                    className="text-white hover:text-purple-200 active:opacity-70 text-[16px] font-normal flex items-center gap-0.5 cursor-pointer"
+                  >
+                    <ChevronLeft className="w-5 h-5 -ml-1.5 stroke-[2.5]" />
+                    <span>Home</span>
+                  </button>
+                  <span className="font-bold text-sm capitalize">
+                    {activeTab === 'transfer' ? 'Transfer & Send' : activeTab === 'payments' ? 'Bill Payments' : activeTab === 'profile' ? 'Settings' : activeTab}
+                  </span>
+                  <div className="w-10" />
+                </div>
+              )}
+
               {/* Main Tab Content: Home, Transfer, Payments, History, Profile */}
               <div className="flex-1 min-h-0 w-full overflow-hidden relative flex flex-col">
                 {renderTabContent()}

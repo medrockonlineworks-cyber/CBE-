@@ -16,6 +16,7 @@ import {
   Copy,
   Check,
   ChevronRight,
+  ChevronLeft,
   QrCode,
   Home,
   LayoutGrid,
@@ -38,8 +39,8 @@ import {
   RotateCcw,
   Upload
 } from 'lucide-react';
-import PhoneStatusBar from './PhoneStatusBar';
 import PhoneSettingsModal from './PhoneSettingsModal';
+import { PhoneSettingsService } from '../services/phoneSettingsService';
 import { DashenBankService, DashenAccount, DashenTransaction, DashenRegisteredAccount } from '../services/dashenBankService';
 import { 
   DashenMountainBackdrop, 
@@ -100,6 +101,13 @@ export default function DashenBankApp({ currentUser, onBack, onOpenTelebirr }: D
   const [customLogo, setCustomLogo] = useState<string | null>(() => DashenBankService.getCustomLogo());
   const [customBgImage, setCustomBgImage] = useState<string | null>(() => DashenBankService.getCustomBgImage());
   const [showLogoModal, setShowLogoModal] = useState(false);
+  const [isIPhone, setIsIPhone] = useState<boolean>(() => PhoneSettingsService.isIPhoneMode());
+
+  useEffect(() => {
+    return PhoneSettingsService.subscribe(() => {
+      setIsIPhone(PhoneSettingsService.isIPhoneMode());
+    });
+  }, []);
 
   // Form states for "Send To Dashen Account"
   const [targetAccountInput, setTargetAccountInput] = useState('');
@@ -799,11 +807,22 @@ export default function DashenBankApp({ currentUser, onBack, onOpenTelebirr }: D
               {/* Top Header Row matching Screenshot 123028 */}
               <div className="flex items-center justify-between pt-1 pb-1">
                 {/* Dashen Bank Logo Box & Hello Leykun */}
-                <div className="flex items-center gap-2.5">
+                <div className="flex items-center gap-2">
+                  {isIPhone && (
+                    <button
+                      type="button"
+                      onClick={onBack}
+                      className="text-[#38bdf8] hover:opacity-80 active:opacity-60 text-[15px] font-normal flex items-center gap-0.5 cursor-pointer -ml-1 mr-1"
+                      title="Back to CBE"
+                    >
+                      <ChevronLeft className="w-5 h-5 -ml-1 stroke-[2.5]" />
+                      <span>CBE</span>
+                    </button>
+                  )}
                   <DashenLogo 
                     src={customLogo} 
                     onClick={() => setShowLogoModal(true)} 
-                    className="w-10 h-10 cursor-pointer" 
+                    className="w-10 h-10 cursor-pointer shrink-0" 
                   />
 
                   <div>
@@ -1841,36 +1860,12 @@ export default function DashenBankApp({ currentUser, onBack, onOpenTelebirr }: D
         </button>
       </div>
 
-      {/* 7. Android Soft-Keys Bar (Back, Home, Recents) matching Screenshot bottoms */}
-      <div className="w-full bg-[#02060e] py-1.5 px-10 flex items-center justify-between text-neutral-600 select-none border-t border-neutral-900/60 shrink-0">
-        <button 
-          onClick={onBack}
-          className="p-1 text-neutral-500 hover:text-neutral-300 active:scale-90 transition"
-          title="App Switcher"
-        >
-          <span className="text-base font-mono">≡</span>
-        </button>
-        <button 
-          onClick={onBack}
-          className="p-1 text-neutral-500 hover:text-neutral-300 active:scale-90 transition"
-          title="Home"
-        >
-          <span className="text-sm font-mono">○</span>
-        </button>
-        <button 
-          onClick={() => {
-            if (subScreen !== 'none') {
-              setSubScreen('none');
-            } else {
-              onBack();
-            }
-          }}
-          className="p-1 text-neutral-500 hover:text-neutral-300 active:scale-90 transition"
-          title="Back"
-        >
-          <span className="text-base">‹</span>
-        </button>
-      </div>
+      {/* iOS Home Indicator Bar */}
+      {isIPhone && (
+        <div className="w-full bg-[#02060e] py-1.5 flex items-center justify-center shrink-0">
+          <div className="w-32 h-1 bg-white/25 rounded-full pointer-events-none" />
+        </div>
+      )}
 
       {/* =================================================================== */}
       {/* ACCOUNTS & REGISTERED DIRECTORY MODAL                              */}

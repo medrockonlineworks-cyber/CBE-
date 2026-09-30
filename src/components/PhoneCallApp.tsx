@@ -36,13 +36,14 @@ import {
   ArrowUpRight
 } from 'lucide-react';
 import GboardKeyboard from './GboardKeyboard';
-import PhoneStatusBar from './PhoneStatusBar';
 import PhoneSettingsModal from './PhoneSettingsModal';
 import { PhoneCallService, CallLogItem, ContactItem, CallerAccount, AccountTransactionItem, formatUssdTxAmount, SENDER_PRESET_BALANCES } from '../services/phoneCallService';
 import { LocalDb } from '../lib/mockData';
 import { UserProfile, Transaction } from '../types';
 import { SmsService } from '../services/smsService';
 import { TruecallerService } from '../services/truecallerService';
+import ApplePhoneApp from './ApplePhoneApp';
+import { PhoneSettingsService } from '../services/phoneSettingsService';
 
 interface PhoneCallAppProps {
   currentUser?: UserProfile | null;
@@ -105,6 +106,17 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
   const [accountFilter, setAccountFilter] = useState<'all' | 'sender' | 'receiver'>('all');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isPhoneSettingsOpen, setIsPhoneSettingsOpen] = useState(false);
+  const [isIPhone, setIsIPhone] = useState<boolean>(() => PhoneSettingsService.isIPhoneMode());
+
+  useEffect(() => {
+    return PhoneSettingsService.subscribe(() => {
+      setIsIPhone(PhoneSettingsService.isIPhoneMode());
+    });
+  }, []);
+
+  if (isIPhone) {
+    return <ApplePhoneApp currentUser={currentUser} onBack={onBack || (() => {})} />;
+  }
 
   // Active Calling Screen (outgoing and incoming)
   const [activeCall, setActiveCall] = useState<{

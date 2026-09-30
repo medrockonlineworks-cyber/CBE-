@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ChevronRight, ChevronLeft } from 'lucide-react';
 import { WalletProvider, useWallet } from '../../context/WalletContext';
+import { PhoneSettingsService } from '../../services/phoneSettingsService';
 import WalletHeader from './WalletHeader';
 import PromoBanner from './PromoBanner';
 import TelebirrServiceGrid from './ServiceGrid';
@@ -38,6 +39,14 @@ const TelebirrSuperAppContent: React.FC<TelebirrSuperAppContentProps> = ({
   } = useWallet();
 
   const [showAppSwitcher, setShowAppSwitcher] = useState<boolean>(false);
+  const [isIPhone, setIsIPhone] = useState<boolean>(() => PhoneSettingsService.isIPhoneMode());
+
+  useEffect(() => {
+    return PhoneSettingsService.subscribe(() => {
+      setIsIPhone(PhoneSettingsService.isIPhoneMode());
+    });
+  }, []);
+
   const isHome = activeSubView === 'home';
 
   // Bottom Phone Navigation Bar Handlers
@@ -71,13 +80,26 @@ const TelebirrSuperAppContent: React.FC<TelebirrSuperAppContentProps> = ({
       {/* 1. TOP BRAND HEADER (Clean Ethio Telecom Left, Telebirr Right matching Screenshot 1-4) */}
       {isHome && (
         <div className="w-full bg-white px-3.5 py-1.5 flex items-center justify-between border-b border-gray-100 z-20 shrink-0 shadow-2xs">
-          {/* Ethio Telecom Logo */}
-          <div className="flex items-center h-6 max-w-[160px] overflow-hidden">
-            {customEthioLogo ? (
-              <img src={customEthioLogo} alt="Ethio telecom" className="h-6 object-contain" />
-            ) : (
-              <EthioTelecomLogo className="h-5.5" />
+          {/* Ethio Telecom Logo & Back to CBE */}
+          <div className="flex items-center gap-1.5 h-6">
+            {isIPhone && (
+              <button
+                type="button"
+                onClick={handlePhoneBack}
+                className="text-[#0072ce] hover:opacity-80 active:opacity-60 text-[14px] font-medium flex items-center gap-0.5 cursor-pointer -ml-1 mr-1"
+                title="Back to CBE"
+              >
+                <ChevronLeft className="w-4.5 h-4.5 -ml-1 stroke-[2.5]" />
+                <span>CBE</span>
+              </button>
             )}
+            <div className="flex items-center h-6 max-w-[140px] overflow-hidden">
+              {customEthioLogo ? (
+                <img src={customEthioLogo} alt="Ethio telecom" className="h-6 object-contain" />
+              ) : (
+                <EthioTelecomLogo className="h-5.5" />
+              )}
+            </div>
           </div>
 
           {/* Telebirr Logo */}
@@ -172,6 +194,10 @@ const TelebirrSuperAppContent: React.FC<TelebirrSuperAppContentProps> = ({
           <TelebirrBottomNav 
             onScanQr={() => setActiveSubView('/qr-scanner')} 
           />
+        )}
+        {/* iOS Home Indicator Bar */}
+        {isIPhone && (
+          <div className="w-32 h-1 bg-white/40 rounded-full mx-auto my-1 pointer-events-none" />
         )}
       </div>
 

@@ -1,6 +1,7 @@
 export interface MessageThread {
   id: string;
   sender: string;
+  phoneNumber?: string;
   avatarColor: string;
   avatarLetter?: string;
   snippet: string;
@@ -14,5 +15,6 @@ export interface MessageThread {
     timestamp: string;
     sender: string;
     isSender?: boolean;
+    isOutgoing?: boolean;
   }[];
 }

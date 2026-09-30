@@ -112,17 +112,34 @@ export const PHONE_PRESETS: Record<PhoneModelType, PhoneSettings> = {
 export class PhoneSettingsService {
   private static cachedSettings: PhoneSettings | null = null;
 
+  public static isIPhoneDevice(): boolean {
+    if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
+    const ua = navigator.userAgent || '';
+    const isIos = /iPhone|iPad|iPod/i.test(ua);
+    const isMacTouch = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+    return isIos || isMacTouch;
+  }
+
+  public static isIPhoneMode(): boolean {
+    const current = this.getSettings();
+    if (current.phoneModel === 'iphone') return true;
+    if (this.isIPhoneDevice()) return true;
+    return false;
+  }
+
   public static getSettings(): PhoneSettings {
     if (this.cachedSettings) {
       return { ...this.cachedSettings };
     }
+
+    const defaultPreset = this.isIPhoneDevice() ? PHONE_PRESETS.iphone : PHONE_PRESETS.tecno;
 
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
         this.cachedSettings = {
-          ...PHONE_PRESETS.tecno,
+          ...defaultPreset,
           ...parsed,
         };
         return { ...this.cachedSettings };
@@ -131,7 +148,7 @@ export class PhoneSettingsService {
       // Fallback
     }
 
-    this.cachedSettings = { ...PHONE_PRESETS.tecno };
+    this.cachedSettings = { ...defaultPreset };
     return { ...this.cachedSettings };
   }
 

@@ -6,6 +6,7 @@ export interface SmsAccount {
   bankName: string;      // e.g. "CBE" or "Commercial Bank of Ethiopia"
   balance: number;
   lastUpdated: string;
+  currency?: string;
 }
 
 export interface SmsMessage {

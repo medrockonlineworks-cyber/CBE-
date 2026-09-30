@@ -16,7 +16,6 @@ import {
   ChevronRight,
   Smartphone
 } from 'lucide-react';
-import PhoneStatusBar from './PhoneStatusBar';
 import PhoneSettingsModal from './PhoneSettingsModal';
 import { MessageThread } from '../types/messages';
 import { GoogleMessagesService } from '../services/googleMessagesData';

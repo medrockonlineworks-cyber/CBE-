@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   BottomNavHomeIcon, 
   BottomNavTransactionsIcon, 
   BottomNavSettingsIcon 
 } from './CbeCustomIcons';
+import { PhoneSettingsService } from '../services/phoneSettingsService';
 
 export type NavTabId = 'home' | 'transfer' | 'payments' | 'history' | 'profile' | 'transactions' | 'settings';
 
@@ -22,6 +23,14 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   showScanQr = true,
   className = '',
 }) => {
+  const [isIPhone, setIsIPhone] = useState<boolean>(() => PhoneSettingsService.isIPhoneMode());
+
+  useEffect(() => {
+    return PhoneSettingsService.subscribe(() => {
+      setIsIPhone(PhoneSettingsService.isIPhoneMode());
+    });
+  }, []);
+
   const isHomeActive = activeTab === 'home';
   const isTransactionActive = activeTab === 'history' || activeTab === 'transactions' || activeTab === 'transaction' || activeTab === 'transfer';
   const isSettingActive = activeTab === 'profile' || activeTab === 'settings' || activeTab === 'setting';
@@ -168,6 +177,13 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
           </span>
         </button>
       </nav>
+
+      {/* iOS Home Indicator Bar */}
+      {isIPhone && (
+        <div className="w-full bg-white pb-1.5 flex items-center justify-center shrink-0">
+          <div className="w-32 h-1 bg-black/25 rounded-full pointer-events-none" />
+        </div>
+      )}
 
     </div>
   );

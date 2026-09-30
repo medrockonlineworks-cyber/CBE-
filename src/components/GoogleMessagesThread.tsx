@@ -16,7 +16,6 @@ import {
 } from 'lucide-react';
 import { MessageThread } from '../types/messages';
 import { GoogleMessagesService } from '../services/googleMessagesData';
-import PhoneStatusBar from './PhoneStatusBar';
 import { CbeHolidayCardModal } from './CbeHolidayCardModal';
 import { CbeWebReceiptModal } from './CbeWebReceiptModal';
 

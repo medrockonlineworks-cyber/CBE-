@@ -22,9 +22,8 @@ import {
   Sliders,
   ChevronRight
 } from 'lucide-react';
-import PhoneStatusBar from '../components/PhoneStatusBar';
-import PhoneSettingsModal from '../components/PhoneSettingsModal';
 import { SmsMessage, SmsAccount } from '../types/sms';
+import PhoneSettingsModal from '../components/PhoneSettingsModal';
 import { 
   SmsService, 
   maskAccountNumber, 
@@ -36,6 +35,9 @@ import {
 import { LocalDb } from '../lib/mockData';
 import GoogleMessagesInbox from '../components/GoogleMessagesInbox';
 import GoogleMessagesThread from '../components/GoogleMessagesThread';
+import AppleMessagesInbox from '../components/AppleMessagesInbox';
+import AppleMessagesThread from '../components/AppleMessagesThread';
+import { PhoneSettingsService } from '../services/phoneSettingsService';
 import { MessageThread } from '../types/messages';
 import { GoogleMessagesService } from '../services/googleMessagesData';
 import { CbeWebReceiptModal } from '../components/CbeWebReceiptModal';
@@ -67,6 +69,13 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
     return SmsService.getSmsMessages(acc);
   });
   const [showPhoneSettingsModal, setShowPhoneSettingsModal] = useState<boolean>(false);
+  const [isIPhone, setIsIPhone] = useState<boolean>(() => PhoneSettingsService.isIPhoneMode());
+
+  useEffect(() => {
+    return PhoneSettingsService.subscribe(() => {
+      setIsIPhone(PhoneSettingsService.isIPhoneMode());
+    });
+  }, []);
 
   // Theme State (Persisted in localStorage, defaults to dark)
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -298,7 +307,89 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
     return messages.findIndex(m => !m.read);
   }, [messages]);
 
-  // Main Google Messages Inbox View (Matches user's screenshot)
+  // Apple Messages for iPhone Mobile
+  if (isIPhone) {
+    if (pageView === 'inbox') {
+      return (
+        <AppleMessagesInbox
+          threads={threads}
+          onSelectThread={handleSelectThread}
+          onOpenCbeThread={() => setPageView('cbe')}
+          onBackToApp={onBack}
+          isDarkMode={isDarkMode}
+        />
+      );
+    }
+
+    if (pageView === 'cbe') {
+      const currentAcc: SmsAccount = accounts.find(a => a.accountNumber === activeAccountNum) || accounts[0] || {
+        accountNumber: '1000419524747',
+        accountName: 'Leykun Jemaneh Ylma',
+        bankName: 'Commercial Bank of Ethiopia',
+        currency: 'ETB',
+        balance: 25430.00,
+        lastUpdated: new Date().toISOString(),
+      };
+
+      return (
+        <>
+          <AppleMessagesThread
+            messages={messages}
+            accounts={accounts}
+            activeAccount={currentAcc}
+            onSelectAccount={(acc) => {
+              setActiveAccountNum(acc.accountNumber);
+              setMessages(SmsService.getSmsMessages(acc.accountNumber));
+            }}
+            onBack={() => {
+              refreshThreads();
+              setPageView('inbox');
+            }}
+            onClearMessages={() => {
+              SmsService.clearAccountMessages(activeAccountNum);
+              setMessages([]);
+            }}
+            onOpenWebReceipt={(msg) => setShowReceiptModal(msg)}
+            onOpenHolidayCard={() => setShowHolidayCardModal(true)}
+            isDarkMode={isDarkMode}
+          />
+          {showReceiptModal && (
+            <CbeWebReceiptModal 
+              smsMessage={showReceiptModal} 
+              onClose={() => setShowReceiptModal(null)} 
+            />
+          )}
+          {showHolidayCardModal && (
+            <CbeHolidayCardModal 
+              onClose={() => setShowHolidayCardModal(false)} 
+            />
+          )}
+        </>
+      );
+    }
+
+    if (pageView === 'generic_thread' && selectedGenericThread) {
+      return (
+        <AppleMessagesThread
+          messages={[]}
+          thread={selectedGenericThread}
+          onBack={() => {
+            refreshThreads();
+            setPageView('inbox');
+          }}
+          onSendMessage={(txt) => {
+            GoogleMessagesService.sendMessage(selectedGenericThread.id, txt);
+            refreshThreads();
+            const updated = GoogleMessagesService.getThreads().find(t => t.id === selectedGenericThread.id);
+            if (updated) setSelectedGenericThread(updated);
+          }}
+          isDarkMode={isDarkMode}
+        />
+      );
+    }
+  }
+
+  // Main Google Messages Inbox View (Matches Android screenshot)
   if (pageView === 'inbox') {
     return (
       <GoogleMessagesInbox
