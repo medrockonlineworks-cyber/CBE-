@@ -36,6 +36,8 @@ import {
   RotateCcw,
   User,
   ExternalLink,
+  ChevronLeft,
+  ChevronRight,
   Zap
 } from 'lucide-react';
 import { maskAccountNumber } from '../services/smsService';
@@ -263,6 +265,10 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   const [customBankLogo, setCustomBankLogo] = useState<string | null>(null);
   const [customQrCode, setCustomQrCode] = useState<string | null>(() => LocalDb.getCustomQrCode());
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
+
+  // Screenshot capture & preview modal states
+  const [capturedScreenshotUrl, setCapturedScreenshotUrl] = useState<string | null>(null);
+  const [showScreenshotModal, setShowScreenshotModal] = useState<boolean>(false);
 
   // Double-tap/click to toggle hiding action controls (top-right icon and bottom action buttons: receipt, screenshot, share)
   const [hideUiElements, setHideUiElements] = useState<boolean>(false);
@@ -525,8 +531,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     window.print();
   };
 
-  // Generate pixel-perfect CBE Mobile Phone Screenshot identical to user's uploaded reference
-  const generateCanvasReceipt = async (hideButtons: boolean = false): Promise<string> => {
+  // Generate pixel-perfect CBE Mobile Phone Screenshot identical to user's uploaded reference (Image 1)
+  const generateCanvasReceipt = async (hideButtons: boolean = false, forceHideStatusBar: boolean = true): Promise<string> => {
     const width = 720;
     const height = 1520;
     const canvas = document.createElement('canvas');
@@ -539,7 +545,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     ctx.imageSmoothingEnabled = true;
 
     // 1. Phone Top Status Bar & Purple Background (iPhone Dynamic Island Header)
-    const hasStatusBar = !hideButtons && !hideStatusBar && !isIPhone;
+    // When capturing a screenshot, status bar is always excluded matching Image 1
+    const hasStatusBar = !forceHideStatusBar && !hideButtons && !hideStatusBar && !isIPhone;
     ctx.fillStyle = '#68137e';
     ctx.fillRect(0, 0, width, hasStatusBar ? 220 : 180);
 
@@ -1096,68 +1103,78 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     await handleScreenshot();
   };
 
-  // Screenshot / Save handle - behaves like a real native phone screenshot
+  // Screenshot / Save handle - takes complete clean receipt without status bar (matching Image 1)
   const handleScreenshot = async () => {
     if (isCapturing) return;
 
     try {
       setIsCapturing(true);
-      setHideUiElements(true);
-      setHideStatusBar(true);
 
       // 1. Shutter flash effect
       setFlashAnimation(true);
       setTimeout(() => setFlashAnimation(false), 250);
 
-      // Allow React state update to flush so elements hidden by isCapturing are removed from DOM
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      const receiptEl = document.getElementById('receipt-screen-wrapper');
+      // Generate pristine canvas receipt without phone status bar, including complete authentic elements (Image 1)
       let dataUrl: string | null = null;
+      try {
+        dataUrl = await generateCanvasReceipt(false, true);
+      } catch (canvasErr) {
+        console.warn('Direct canvas render issue, trying DOM capture:', canvasErr);
+      }
 
-      if (receiptEl) {
-        try {
-          const canvas = await html2canvas(receiptEl, {
-            scale: 2,
-            useCORS: true,
-            allowTaint: true,
-            backgroundColor: '#68137e',
-            logging: false,
-            ignoreElements: (element) => {
-              return element.getAttribute('data-html2canvas-ignore') === 'true' ||
-                element.id === 'receipt-status-bar' ||
-                element.id === 'btn-action-close' ||
-                element.id === 'btn-action-screenshot';
-            }
-          });
-          dataUrl = canvas.toDataURL('image/png');
-        } catch (captureErr) {
-          console.warn('html2canvas capture issue, falling back to direct canvas renderer:', captureErr);
+      if (!dataUrl) {
+        const receiptEl = document.getElementById('receipt-screen-wrapper');
+        if (receiptEl) {
+          try {
+            const canvas = await html2canvas(receiptEl, {
+              scale: 2,
+              useCORS: true,
+              allowTaint: true,
+              backgroundColor: '#68137e',
+              logging: false,
+              ignoreElements: (element) => {
+                return element.getAttribute('data-html2canvas-ignore') === 'true' ||
+                  element.id === 'receipt-status-bar';
+              }
+            });
+            dataUrl = canvas.toDataURL('image/png');
+          } catch (captureErr) {
+            console.warn('html2canvas capture issue:', captureErr);
+          }
         }
       }
 
       if (!dataUrl) {
-        dataUrl = await generateCanvasReceipt(true);
+        dataUrl = await generateCanvasReceipt(false, true);
       }
 
-      // 2. Trigger instant download to user device with native filename matching reference
-      const downloadLink = document.createElement('a');
-      const filename = `screenshot_${Date.now()}.png`;
-      downloadLink.href = dataUrl;
-      downloadLink.download = filename;
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
+      if (dataUrl) {
+        setCapturedScreenshotUrl(dataUrl);
+        setShowScreenshotModal(true);
 
-      // 3. Show clean phone-style screenshot notification toast
-      setCopiedToast('Screenshot captured • Tap anywhere to return');
+        // Instant download to device with native screenshot filename
+        try {
+          const downloadLink = document.createElement('a');
+          const filename = `screenshot_${Date.now()}.png`;
+          downloadLink.href = dataUrl;
+          downloadLink.download = filename;
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          document.body.removeChild(downloadLink);
+        } catch (dlErr) {
+          console.warn('Direct download anchor failed:', dlErr);
+        }
+      }
+
+      setCopiedToast('Screenshot captured • Tap Close to return');
       setTimeout(() => setCopiedToast(null), 3000);
     } catch (err) {
       console.error('Screenshot capture error:', err);
-      setCopiedToast('Screenshot saved • Tap anywhere to return');
-      setTimeout(() => setCopiedToast(null), 3000);
+      setCopiedToast('Screenshot captured');
+      setTimeout(() => setCopiedToast(null), 2500);
     } finally {
       setIsCapturing(false);
+      setHideUiElements(false);
     }
   };
 
@@ -1308,7 +1325,18 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
       {/* 2. Top Purple Navigation / App Header */}
       <div className={`${isIPhone ? 'pt-[max(env(safe-area-inset-top,0px),24px)]' : (shouldShowStatusBar ? 'pt-2 sm:pt-3' : 'pt-7 sm:pt-8')} pb-8 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0`}>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
+          {/* iOS Top Back Button to navigate like the first image */}
+          <button
+            type="button"
+            data-html2canvas-ignore="true"
+            onClick={onBack}
+            className="p-1.5 -ml-1.5 text-white hover:text-purple-200 active:opacity-70 transition flex items-center cursor-pointer rounded-full"
+            title="Return to Home"
+          >
+            <ChevronLeft className="w-6 h-6 stroke-[2.5]" />
+          </button>
+
           {/* Solid White Shield with Purple Checkmark Icon perfectly fitted matching reference image */}
           <div className="w-8.5 h-8.5 flex-shrink-0 flex items-center justify-center">
             <svg className="w-8.5 h-8.5 drop-shadow-xs" viewBox="0 0 24 24" fill="none">
@@ -1569,6 +1597,98 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           initialQrCode={customQrCode || txQrSvgDataUri || qrDataUrl}
           onClose={() => setShowDetailedModal(false)} 
         />
+      )}
+
+      {/* iOS Screenshot Preview Sheet Modal */}
+      {showScreenshotModal && capturedScreenshotUrl && (
+        <div 
+          data-html2canvas-ignore="true"
+          className="fixed inset-0 z-[120] bg-black/85 backdrop-blur-md flex flex-col justify-between p-4 sm:p-6 animate-in fade-in duration-200 select-none"
+        >
+          {/* Top Bar: Done & Navigation Title */}
+          <div className="flex items-center justify-between text-white pt-safe pb-2">
+            <button
+              type="button"
+              onClick={() => setShowScreenshotModal(false)}
+              className="text-base font-semibold text-white/90 hover:text-white px-3.5 py-1.5 rounded-full bg-white/10 active:scale-95 transition cursor-pointer"
+            >
+              Done
+            </button>
+            <span className="text-xs font-bold uppercase tracking-wider text-purple-200">
+              Clean Screenshot
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                setShowScreenshotModal(false);
+                onBack();
+              }}
+              className="text-sm font-semibold text-amber-300 hover:text-amber-200 px-3 py-1.5 rounded-full bg-amber-400/20 active:scale-95 transition flex items-center gap-1 cursor-pointer"
+            >
+              <span>Home</span>
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Screenshot Preview Image */}
+          <div className="flex-1 flex items-center justify-center p-2 min-h-0 overflow-hidden">
+            <img 
+              src={capturedScreenshotUrl} 
+              alt="CBE Clean Receipt Screenshot" 
+              className="max-h-full max-w-full object-contain rounded-2xl shadow-2xl border border-white/20"
+            />
+          </div>
+
+          {/* Bottom Actions: Save to Photos, Share, and Return to Home */}
+          <div className="space-y-2.5 pt-3 pb-safe max-w-sm mx-auto w-full">
+            <div className="grid grid-cols-2 gap-2.5">
+              <a
+                href={capturedScreenshotUrl}
+                download={`screenshot_${Date.now()}.png`}
+                className="w-full bg-[#70189F] hover:bg-[#8320b9] text-white font-bold py-3 rounded-2xl text-xs transition flex items-center justify-center gap-2 shadow-lg active:scale-95 cursor-pointer"
+              >
+                <Download className="w-4 h-4" />
+                <span>Save to Photos</span>
+              </a>
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    const res = await fetch(capturedScreenshotUrl);
+                    const blob = await res.blob();
+                    const file = new File([blob], `cbe_receipt_${txId}.png`, { type: 'image/png' });
+                    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                      await navigator.share({
+                        files: [file],
+                        title: `CBE Receipt ${txId}`,
+                        text: `CBE Transaction Receipt ${txId}`
+                      });
+                    } else {
+                      await handleShare();
+                    }
+                  } catch {
+                    handleShare();
+                  }
+                }}
+                className="w-full bg-white/15 hover:bg-white/25 text-white font-bold py-3 rounded-2xl text-xs transition flex items-center justify-center gap-2 border border-white/20 active:scale-95 cursor-pointer"
+              >
+                <Share2 className="w-4 h-4" />
+                <span>Share</span>
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setShowScreenshotModal(false);
+                onBack();
+              }}
+              className="w-full bg-white hover:bg-gray-100 text-purple-950 font-extrabold py-3.5 rounded-2xl text-xs transition flex items-center justify-center gap-1.5 shadow-md active:scale-95 cursor-pointer"
+            >
+              <span>Return to Home Screen</span>
+            </button>
+          </div>
+        </div>
       )}
 
     </div>

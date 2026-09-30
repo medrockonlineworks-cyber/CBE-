@@ -44,6 +44,27 @@ export const PhoneSettingsModal: React.FC<PhoneSettingsModalProps> = ({
     }
   }, [isOpen]);
 
+  // Handle hardware / phone back event and escape key to close cleanly
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleBack = (e: any) => {
+      e?.detail?.setHandled?.();
+      e?.preventDefault?.();
+      onClose();
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('cbe_phone_back', handleBack);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('cbe_phone_back', handleBack);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const handleUpdate = (partial: Partial<PhoneSettings>) => {
@@ -102,7 +123,14 @@ export const PhoneSettingsModal: React.FC<PhoneSettingsModalProps> = ({
   const networkOptions: NetworkTech[] = ['H+', '4G', '5G', 'LTE', '3G', 'None'];
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-fadeIn select-none">
+    <div 
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
+      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-fadeIn select-none"
+    >
       <div className="bg-neutral-900 border border-neutral-800 text-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col my-auto max-h-[92vh]">
         
         {/* Header */}

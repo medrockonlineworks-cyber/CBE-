@@ -416,6 +416,7 @@ export default function App() {
             onLogout={handleLogout}
             onUpdateUser={handleUpdateUserProfile}
             onOpenAdmin={() => navigateTo('admin', 'profile')}
+            onBack={() => setActiveTab('home')}
             onOpenSmsSimulator={() => navigateTo('sms', 'profile')}
             onOpenTruecallerSimulator={() => navigateTo('truecaller', 'profile')}
             onOpenPhoneApp={() => navigateTo('phone', 'profile')}
@@ -559,7 +560,7 @@ export default function App() {
           {activeView === 'main' && (
             <div className="flex-1 flex flex-col h-full w-full overflow-hidden relative">
               {/* iPhone Sub-page Top Navigation Bar */}
-              {isIPhone && activeTab !== 'home' && (
+              {isIPhone && activeTab !== 'home' && activeTab !== 'profile' && (
                 <div className="w-full bg-[#70189F] text-white px-4 pt-[max(env(safe-area-inset-top,0px),10px)] pb-2.5 flex items-center justify-between shrink-0 z-30 shadow-xs">
                   <button
                     type="button"
@@ -570,14 +571,14 @@ export default function App() {
                     <span>Home</span>
                   </button>
                   <span className="font-bold text-sm capitalize">
-                    {activeTab === 'transfer' ? 'Transfer & Send' : activeTab === 'payments' ? 'Bill Payments' : activeTab === 'profile' ? 'Settings' : activeTab}
+                    {activeTab === 'transfer' ? 'Transfer & Send' : activeTab === 'payments' ? 'Bill Payments' : activeTab}
                   </span>
                   <div className="w-10" />
                 </div>
               )}
 
               {/* Main Tab Content: Home, Transfer, Payments, History, Profile */}
-              <div className="flex-1 min-h-0 w-full overflow-hidden relative flex flex-col">
+              <div className="flex-1 min-h-0 w-full overflow-y-auto overscroll-contain relative flex flex-col">
                 {renderTabContent()}
               </div>
 

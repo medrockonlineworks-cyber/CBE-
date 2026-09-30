@@ -141,10 +141,10 @@ export default function Payments({ currentUser, onPaymentComplete }: PaymentsPro
   };
 
   return (
-    <div id="payments-screen" className="max-w-md mx-auto bg-gray-50 min-h-screen pb-28 font-sans">
-      
-      {/* Banner */}
-      <div className="bg-[#68137e] text-white px-5 pt-7 pb-8 rounded-b-[2rem] shadow-md">
+    <div id="payments-screen" className="w-full h-full overflow-y-auto overscroll-contain bg-gray-50 pb-28 font-sans">
+      <div className="max-w-md mx-auto min-h-full">
+        {/* Banner */}
+        <div className="bg-[#68137e] text-white px-5 pt-7 pb-8 rounded-b-[2rem] shadow-md">
         <h2 className="text-xl font-extrabold">Bill Payments &amp; Utilities</h2>
         <p className="text-purple-200 text-xs mt-0.5">Pay electric, water, internet and TV bills directly via CBE.</p>
       </div>
@@ -336,6 +336,7 @@ export default function Payments({ currentUser, onPaymentComplete }: PaymentsPro
         </div>
       )}
 
+      </div>
     </div>
   );
 }

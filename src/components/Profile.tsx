@@ -17,6 +17,7 @@ import {
   CheckCircle2, 
   Bell, 
   ChevronRight,
+  ChevronLeft,
   ShieldAlert,
   Image as ImageIcon,
   Upload,
@@ -41,6 +42,7 @@ interface ProfileProps {
   onLogout: () => void;
   onUpdateUser: (user: UserProfile) => void;
   onOpenAdmin: () => void;
+  onBack?: () => void;
   onOpenSmsSimulator?: () => void;
   onOpenTruecallerSimulator?: () => void;
   onOpenPhoneApp?: () => void;
@@ -56,7 +58,19 @@ const LANGUAGES = [
   { code: 'ti', label: 'Tigrinya (ትግርኛ)' }
 ];
 
-export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdmin, onOpenSmsSimulator, onOpenTruecallerSimulator, onOpenPhoneApp, onOpenDashenApp, onOpenTelebirrApp, onOpenTelegramApp }: ProfileProps) {
+export default function Profile({ 
+  currentUser, 
+  onLogout, 
+  onUpdateUser, 
+  onOpenAdmin, 
+  onBack,
+  onOpenSmsSimulator, 
+  onOpenTruecallerSimulator, 
+  onOpenPhoneApp, 
+  onOpenDashenApp, 
+  onOpenTelebirrApp, 
+  onOpenTelegramApp 
+}: ProfileProps) {
   const [activeLang, setActiveLang] = useState('en');
   const [showLogoModal, setShowLogoModal] = useState(false);
   const [customBankLogo, setCustomBankLogo] = useState<string | null>(() => LocalDb.getCustomBankLogo());
@@ -112,6 +126,59 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
 
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+
+  // Handle hardware / phone back event: close any open sub-modals or navigate back to Home
+  useEffect(() => {
+    const handlePhoneBack = (e: any) => {
+      if (showEditProfileModal) {
+        setShowEditProfileModal(false);
+        e?.detail?.setHandled?.();
+        e?.preventDefault?.();
+        return;
+      }
+      if (showAccountsModal) {
+        setShowAccountsModal(false);
+        setShowNewAccountForm(false);
+        e?.detail?.setHandled?.();
+        e?.preventDefault?.();
+        return;
+      }
+      if (showPinForm) {
+        setShowPinForm(false);
+        e?.detail?.setHandled?.();
+        e?.preventDefault?.();
+        return;
+      }
+      if (showPassForm) {
+        setShowPassForm(false);
+        e?.detail?.setHandled?.();
+        e?.preventDefault?.();
+        return;
+      }
+      if (showTerms) {
+        setShowTerms(false);
+        e?.detail?.setHandled?.();
+        e?.preventDefault?.();
+        return;
+      }
+      if (showLogoModal) {
+        setShowLogoModal(false);
+        e?.detail?.setHandled?.();
+        e?.preventDefault?.();
+        return;
+      }
+      if (onBack) {
+        e?.detail?.setHandled?.();
+        e?.preventDefault?.();
+        onBack();
+      }
+    };
+
+    window.addEventListener('cbe_phone_back', handlePhoneBack);
+    return () => {
+      window.removeEventListener('cbe_phone_back', handlePhoneBack);
+    };
+  }, [showEditProfileModal, showAccountsModal, showPinForm, showPassForm, showTerms, showLogoModal, onBack]);
 
   const generateRandomCbeAccount = () => {
     return '1000' + Math.floor(100000000 + Math.random() * 900000000).toString();
@@ -283,14 +350,43 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
     if (code === 'ti') welcome = 'ምርጫ ቋንቋኹም ተስተካኪሉ ኣሎ!';
     
     LocalDb.addNotification(currentUser.id, 'Language Altered', welcome, 'info');
-    alert(welcome);
+    setSuccessMsg(welcome);
+    setTimeout(() => setSuccessMsg(''), 3500);
   };
 
   return (
-    <div id="profile-screen" className="max-w-md mx-auto bg-gray-50 min-h-screen pb-28 font-sans">
+    <div id="profile-screen" className="w-full h-full overflow-y-auto overscroll-contain bg-gray-50 pb-36 font-sans select-none">
       
-      {/* Profile Header */}
-      <div className="bg-[#68137e] text-white px-5 pt-7 pb-8 rounded-b-[2rem] shadow-md text-center space-y-3 relative">
+      {/* Settings Top Header Bar */}
+      <div className="sticky top-0 z-30 bg-[#68137e] text-white px-4 pt-[max(env(safe-area-inset-top,0px),10px)] pb-3 flex items-center justify-between shadow-xs">
+        <button
+          type="button"
+          onClick={() => {
+            if (onBack) onBack();
+            else window.history.back();
+          }}
+          className="flex items-center gap-0.5 text-white hover:text-purple-200 active:opacity-70 transition text-[15px] font-normal cursor-pointer"
+        >
+          <ChevronLeft className="w-5 h-5 -ml-1.5 stroke-[2.5]" />
+          <span>Home</span>
+        </button>
+        <span className="font-bold text-base text-white">Settings</span>
+        <div className="w-12 flex justify-end">
+          {isAdmin && (
+            <button
+              onClick={onOpenAdmin}
+              className="text-xs bg-amber-400 text-purple-950 px-2 py-0.5 rounded-full font-bold hover:bg-amber-300 transition cursor-pointer"
+              title="Admin Panel"
+            >
+              Admin
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="max-w-md mx-auto min-h-full">
+        {/* Profile Header */}
+        <div className="bg-[#68137e] text-white px-5 pt-5 pb-8 rounded-b-[2rem] shadow-md text-center space-y-3 relative">
         <div className="w-20 h-20 rounded-full bg-white/15 border-2 border-[#deb356] mx-auto flex items-center justify-center font-black text-[#deb356] text-3xl shadow-lg relative">
           {currentUser.name.split(' ').map(n => n[0]).join('')}
           <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-[#68137e] border border-white/20 rounded-full flex items-center justify-center">
@@ -919,6 +1015,7 @@ export default function Profile({ currentUser, onLogout, onUpdateUser, onOpenAdm
         </button>
 
       </div>
+    </div>
 
       {/* ================= TERMS & CONDITIONS POPUP MODAL ================= */}
       {showTerms && (
