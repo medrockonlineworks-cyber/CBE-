@@ -624,6 +624,71 @@ export const CbeBirrIcon: React.FC<IconProps> = ({
   </svg>
 );
 
+/**
+ * 17. Account Input Viewfinder Scan Icon
+ * Exact match to green scan button in reference image (IMG_20261001_102840_360.png)
+ * Four corner brackets with horizontal center scan bar
+ */
+export const AccountScanIcon: React.FC<IconProps> = ({
+  size = 20,
+  className = 'w-5 h-5 text-[#16a34a]',
+  strokeWidth = 2.4,
+  color = 'currentColor',
+  ...props
+}) => (
+  <svg 
+    width={size} 
+    height={size} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke={color} 
+    strokeWidth={strokeWidth} 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+    {...props}
+  >
+    <path d="M7 3H5a2 2 0 0 0-2 2v2" />
+    <path d="M17 3h2a2 2 0 0 1 2 2v2" />
+    <path d="M21 17v2a2 2 0 0 1-2 2h-2" />
+    <path d="M3 17v2a2 2 0 0 0 2 2h2" />
+    <line x1="8" y1="12" x2="16" y2="12" strokeWidth={strokeWidth} />
+  </svg>
+);
+
+/**
+ * 18. Account Searching / Directory Contacts Book Icon
+ * Exact match to green contact notebook icon in reference image (IMG_20261001_102840_360.png)
+ * Rounded contact ID card/binder with person profile silhouette inside
+ */
+export const AccountSearchDirectoryIcon: React.FC<IconProps> = ({
+  size = 20,
+  className = 'w-5 h-5 text-[#16a34a]',
+  strokeWidth = 2,
+  color = 'currentColor',
+  ...props
+}) => (
+  <svg 
+    width={size} 
+    height={size} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke={color} 
+    strokeWidth={strokeWidth} 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+    {...props}
+  >
+    <rect x="4" y="4" width="16" height="17" rx="3" strokeWidth={strokeWidth} />
+    <circle cx="12" cy="10.5" r="3.2" strokeWidth={strokeWidth} />
+    <path d="M7 19c0-2.8 2.2-4.5 5-4.5s5 1.7 5 4.5" strokeWidth={strokeWidth} />
+    <line x1="8.5" y1="2" x2="8.5" y2="4.5" strokeWidth={strokeWidth} />
+    <line x1="15.5" y1="2" x2="15.5" y2="4.5" strokeWidth={strokeWidth} />
+  </svg>
+);
+
+
 
 
 

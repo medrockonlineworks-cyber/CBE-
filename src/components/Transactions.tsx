@@ -5,7 +5,8 @@ import { calculateCbeFee, CBE_TO_CBE_SERVICE_CHARGES } from '../lib/cbeTariff';
 import EthiopianNameAutocomplete, { EthiopianThreePartNameInput } from './EthiopianNameAutocomplete';
 import AccountCard from './AccountCard';
 import TransactionDetailModal from './TransactionDetailModal';
-import { RefreshIcon } from './CbeCustomIcons';
+import { RegisteredAccountsModal } from './RegisteredAccountsModal';
+import { RefreshIcon, AccountScanIcon, AccountSearchDirectoryIcon } from './CbeCustomIcons';
 import { 
   Send, 
   ArrowLeftRight, 
@@ -213,7 +214,7 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
     { id: 'rt_3', name: 'Desta Kassahun', accountNumber: '1000234059681', initial: 'DK', color: 'bg-rose-100 text-rose-700 border border-rose-200' }
   ]);
 
-  // Select a registered recipient from search/recent
+  // Select a registered recipient from search/recent/directory modal
   const handleSelectRecipient = (recip: RegisteredAccountInfo | { name?: string; accountName?: string; accountNumber: string; bankName?: string }) => {
     const accName = ('accountName' in recip && recip.accountName) ? recip.accountName : ('name' in recip && recip.name) ? recip.name : 'Registered CBE Recipient';
     const fullInfo: RegisteredAccountInfo = {
@@ -226,10 +227,17 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
     setTransferAccount(fullInfo.accountNumber);
     setTransferRecipientName(fullInfo.accountName);
     setTransferBank(fullInfo.bankName);
+    setSendRecipient(fullInfo.accountNumber);
+    setSendRecipientName(fullInfo.accountName);
     setSearchRecipientQuery('');
     setIsSearchFocused(false);
     setErrorMsg('');
+    setSuccessMsg(`Selected registered account: ${fullInfo.accountName} (${fullInfo.accountNumber})`);
+    setTimeout(() => setSuccessMsg(''), 3500);
   };
+
+  // Registered Accounts Directory Modal State
+  const [showRegisteredDirectoryModal, setShowRegisteredDirectoryModal] = useState(false);
 
   // Form Fields - Pay Merchant (Screenshot 1 Alignment)
   const [merchantSubTab, setMerchantSubTab] = useState<'customer' | 'dynamic'>('customer');
@@ -1085,23 +1093,46 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
               {/* Recipient Account Number or Phone */}
               <div className="space-y-1">
                 <label className="text-xs text-gray-500 font-bold">Recipient Account / Phone</label>
-                <input 
-                  id="input-send-recipient"
-                  type="text" 
-                  placeholder="Enter A/C or phone (e.g. 1000246810121 or 0911234567)"
-                  value={sendRecipient}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    setSendRecipient(val);
-                    // If matched beneficiary, auto-suggest name if empty
-                    const matched = beneficiaries.find(b => b.accountNumber === val || b.phone === val);
-                    if (matched && !sendRecipientName) {
-                      setSendRecipientName(matched.name);
-                    }
-                  }}
-                  className="w-full bg-gray-50 border border-gray-100 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-emerald-800 focus:bg-white transition"
-                  required
-                />
+                <div className="relative">
+                  <input 
+                    id="input-send-recipient"
+                    type="text" 
+                    placeholder="Enter A/C or phone (e.g. 1000246810121 or 0911234567)"
+                    value={sendRecipient}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSendRecipient(val);
+                      // If matched beneficiary, auto-suggest name if empty
+                      const matched = beneficiaries.find(b => b.accountNumber === val || b.phone === val) ||
+                                      LocalDb.findRegisteredAccount(val);
+                      if (matched && !sendRecipientName) {
+                        setSendRecipientName('name' in matched ? matched.name : matched.accountName);
+                      }
+                    }}
+                    className="w-full bg-gray-50 border border-emerald-500/80 focus:border-emerald-600 rounded-xl px-4 py-2.5 pr-24 text-sm focus:outline-none focus:bg-white transition"
+                    required
+                  />
+                  {/* Dual action icons matching reference image IMG_20261001_102840_360.png */}
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 z-10">
+                    <div className="h-5 w-[1.5px] bg-gray-200/90 mx-0.5 flex-shrink-0" />
+                    <button
+                      type="button"
+                      onClick={() => setShowScanner(true)}
+                      className="p-1.5 rounded-lg hover:bg-emerald-50 text-[#16a34a] hover:text-[#15803d] active:scale-95 transition cursor-pointer"
+                      title="Scan QR Code / Barcode"
+                    >
+                      <AccountScanIcon className="w-5 h-5 text-[#16a34a]" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowRegisteredDirectoryModal(true)}
+                      className="p-1.5 rounded-lg hover:bg-emerald-50 text-[#16a34a] hover:text-[#15803d] active:scale-95 transition cursor-pointer"
+                      title="Search & Choose from Registered Accounts"
+                    >
+                      <AccountSearchDirectoryIcon className="w-5 h-5 text-[#16a34a]" />
+                    </button>
+                  </div>
+                </div>
               </div>
 
               {/* Recipient Name / Account Holder Name Input (Self, Father, Grandfather with Multiple Input Methods) */}
@@ -1574,7 +1605,7 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
                           </div>
 
                           <div className="relative">
-                            <div className="absolute left-3.5 top-[13px] text-gray-400">
+                            <div className="absolute left-3.5 top-[14px] text-gray-400">
                               <Building className="w-4 h-4" />
                             </div>
                             <input 
@@ -1583,32 +1614,37 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
                               inputMode="numeric"
                               pattern="[0-9]*"
                               maxLength={13}
-                              placeholder="1000XXXXXXXXX (13 digits)"
+                              placeholder="XXXXXXXXXXXXX"
                               value={transferAccount}
                               onChange={(e) => setTransferAccount(e.target.value.replace(/\D/g, '').slice(0, 13))}
-                              className={`w-full bg-gray-50 border rounded-2xl px-4 py-3 pl-10 pr-10 text-sm focus:outline-none focus:bg-white transition font-mono font-semibold ${
+                              className={`w-full bg-gray-50 border rounded-2xl px-4 py-3 pl-10 pr-24 text-sm focus:outline-none focus:bg-white transition font-mono font-semibold ${
                                 transferAccount.length === 13
-                                  ? 'border-emerald-500 focus:border-emerald-700 ring-1 ring-emerald-500/20'
+                                  ? 'border-[#22c55e] focus:border-[#16a34a] ring-2 ring-[#22c55e]/20'
                                   : transferAccount.length > 0
                                     ? 'border-amber-400 focus:border-amber-500'
-                                    : 'border-gray-100 focus:border-emerald-800'
+                                    : 'border-[#22c55e]/80 focus:border-[#16a34a] ring-1 ring-[#22c55e]/15'
                               }`}
                             />
-                            <button
-                              type="button"
-                              onClick={() => {
-                                handleSelectRecipient({
-                                  name: 'Selamawit Tekle Haile',
-                                  accountNumber: '1000246810121',
-                                  bankName: 'Commercial Bank of Ethiopia (CBE)'
-                                });
-                                setSuccessMsg('Scanned & selected Selamawit Tekle Haile!');
-                              }}
-                              className="absolute right-3 top-[11px] p-1 rounded-lg bg-gray-100 hover:bg-gray-200 text-emerald-800 transition cursor-pointer"
-                              title="Simulate Scan"
-                            >
-                              <Scan className="w-4 h-4" />
-                            </button>
+                            {/* Dual action icons matching reference image IMG_20261001_102840_360.png */}
+                            <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1 z-10">
+                              <div className="h-6 w-[1.5px] bg-gray-200/90 mx-1 flex-shrink-0" />
+                              <button
+                                type="button"
+                                onClick={() => setShowScanner(true)}
+                                className="p-1.5 rounded-lg hover:bg-emerald-50 text-[#16a34a] hover:text-[#15803d] active:scale-95 transition cursor-pointer"
+                                title="Scan QR Code / Barcode"
+                              >
+                                <AccountScanIcon className="w-5 h-5 text-[#16a34a]" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setShowRegisteredDirectoryModal(true)}
+                                className="p-1.5 rounded-lg hover:bg-emerald-50 text-[#16a34a] hover:text-[#15803d] active:scale-95 transition cursor-pointer"
+                                title="Search & Choose from Registered Accounts"
+                              >
+                                <AccountSearchDirectoryIcon className="w-5 h-5 text-[#16a34a]" />
+                              </button>
+                            </div>
                           </div>
 
                           {/* Account verification indicator */}
@@ -2545,6 +2581,15 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
           </div>
         </div>
       )}
+
+      {/* Registered Accounts Directory Selection Modal */}
+      <RegisteredAccountsModal
+        isOpen={showRegisteredDirectoryModal}
+        onClose={() => setShowRegisteredDirectoryModal(false)}
+        onSelect={handleSelectRecipient}
+        currentSelectedAccount={transferAccount || sendRecipient}
+        title="Registered Accounts Directory"
+      />
 
     </div>
   );
