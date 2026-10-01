@@ -349,6 +349,7 @@ export default function App() {
         return (
           <Home 
             currentUser={activeUser}
+            onUpdateCurrentUser={handleUpdateUserProfile}
             onNavigateToTab={(tab, subTab) => {
               setActiveTab(tab);
               if (tab === 'transfer' && subTab) {
@@ -389,6 +390,7 @@ export default function App() {
         return (
           <Home 
             currentUser={activeUser}
+            onUpdateCurrentUser={handleUpdateUserProfile}
             initialNavTab="history"
             onNavigateToTab={(tab, subTab) => {
               setActiveTab(tab);

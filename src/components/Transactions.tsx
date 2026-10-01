@@ -229,6 +229,8 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
     setTransferBank(fullInfo.bankName);
     setSendRecipient(fullInfo.accountNumber);
     setSendRecipientName(fullInfo.accountName);
+    setVerifiedAccountName(fullInfo.accountName);
+    setIsAccountVerifying(false);
     setSearchRecipientQuery('');
     setIsSearchFocused(false);
     setErrorMsg('');

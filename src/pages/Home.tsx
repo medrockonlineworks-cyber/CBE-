@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Header from '../components/Header';
 import AccountCard from '../components/AccountCard';
 import QuickActions from '../components/QuickActions';
@@ -6,7 +6,8 @@ import ServiceGrid from '../components/ServiceGrid';
 import QRButton from '../components/QRButton';
 import BottomNavigation, { NavTabId } from '../components/BottomNavigation';
 import TransactionDetailModal from '../components/TransactionDetailModal';
-import { CardsIcon, CopyIcon } from '../components/CbeCustomIcons';
+import { RegisteredAccountsModal } from '../components/RegisteredAccountsModal';
+import { CardsIcon, CopyIcon, RefreshIcon, AccountSearchDirectoryIcon } from '../components/CbeCustomIcons';
 import { 
   X, 
   Check, 
@@ -31,11 +32,12 @@ import {
   Smartphone,
   PhoneCall
 } from 'lucide-react';
-import { UserProfile, Transaction } from '../types';
+import { UserProfile, Transaction, RegisteredAccountInfo } from '../types';
 import { LocalDb } from '../lib/mockData';
 
 interface HomeProps {
   currentUser?: UserProfile | null;
+  onUpdateCurrentUser?: (user: UserProfile) => void;
   initialNavTab?: 'home' | 'history';
   onNavigateToTab?: (tab: 'home' | 'transfer' | 'payments' | 'history' | 'profile', subTab?: string) => void;
   onSelectTransaction?: (tx: Transaction) => void;
@@ -50,6 +52,7 @@ interface HomeProps {
 
 export const Home: React.FC<HomeProps> = ({
   currentUser: propUser,
+  onUpdateCurrentUser,
   initialNavTab = 'home',
   onNavigateToTab,
   onSelectTransaction,
@@ -61,8 +64,8 @@ export const Home: React.FC<HomeProps> = ({
   onOpenTelebirrApp,
   onOpenTelegramSimulator,
 }) => {
-  // Fallback demo user if none passed in
-  const currentUser: UserProfile = propUser || {
+  // Active user state to reflect balance and account changes in real time
+  const [activeUser, setActiveUser] = useState<UserProfile>(() => propUser || {
     id: 'demo-user-1',
     name: 'Leykun Jemaneh',
     email: 'leykunjemaneh3@gmail.com',
@@ -75,13 +78,37 @@ export const Home: React.FC<HomeProps> = ({
     role: 'user',
     status: 'active',
     createdAt: new Date().toISOString(),
-  };
+  });
+
+  useEffect(() => {
+    if (propUser) {
+      setActiveUser(propUser);
+    }
+  }, [propUser]);
 
   const [activeNavTab, setActiveNavTab] = useState<NavTabId>(initialNavTab);
   const [selectedLanguage, setSelectedLanguage] = useState('English');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [currentDateTime, setCurrentDateTime] = useState('01 Jul 2026 • 10:14 AM');
   const [customLogoUrl, setCustomLogoUrl] = useState<string | null>(null);
+
+  // Pull-To-Refresh States
+  const [pullDistance, setPullDistance] = useState(0);
+  const [pullState, setPullState] = useState<'idle' | 'pulling' | 'threshold' | 'refreshing' | 'success'>('idle');
+  const mainScrollRef = useRef<HTMLElement | null>(null);
+  const touchStartYRef = useRef(0);
+  const touchStartXRef = useRef(0);
+  const canPullRef = useRef(false);
+  const thresholdHapticRef = useRef(false);
+  const isMouseDownRef = useRef(false);
+  const mouseStartYRef = useRef(0);
+
+  const PULL_THRESHOLD = 60;
+  const MAX_PULL = 90;
+
+  // Registered Accounts Directory Modal State & Toast
+  const [showRegisteredAccountsModal, setShowRegisteredAccountsModal] = useState(false);
+  const [accountActionToast, setAccountActionToast] = useState<string | null>(null);
 
   // Transaction history filter state
   const [historyFilter, setHistoryFilter] = useState<'all' | 'debited' | 'credited'>('all');
@@ -103,42 +130,193 @@ export const Home: React.FC<HomeProps> = ({
     setActiveNavTab(initialNavTab);
   }, [initialNavTab]);
 
+  const updateTime = useCallback(() => {
+    const now = new Date();
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const day = now.getDate().toString().padStart(2, '0');
+    const mon = months[now.getMonth()];
+    const yr = now.getFullYear();
+    let hours = now.getHours();
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const hourStr = hours.toString().padStart(2, '0');
+    setCurrentDateTime(`${day} ${mon} ${yr} • ${hourStr}:${minutes} ${ampm}`);
+  }, []);
+
+  const loadTransactions = useCallback(() => {
+    const txs = LocalDb.getTransactions();
+    setAllTransactions(txs);
+    setRecentTransactions(txs.slice(0, 6));
+  }, []);
+
   useEffect(() => {
     setCustomLogoUrl(LocalDb.getCustomBankLogo());
     loadTransactions();
 
-    const updateTime = () => {
-      const now = new Date();
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      const day = now.getDate().toString().padStart(2, '0');
-      const mon = months[now.getMonth()];
-      const yr = now.getFullYear();
-      let hours = now.getHours();
-      const minutes = now.getMinutes().toString().padStart(2, '0');
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      hours = hours % 12;
-      hours = hours ? hours : 12;
-      const hourStr = hours.toString().padStart(2, '0');
-      setCurrentDateTime(`${day} ${mon} ${yr} • ${hourStr}:${minutes} ${ampm}`);
-    };
-
     updateTime();
     const interval = setInterval(updateTime, 60000);
     return () => clearInterval(interval);
-  }, []);
+  }, [loadTransactions, updateTime]);
 
-  const loadTransactions = () => {
+  // Pull-to-refresh execution
+  const triggerPullRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    setPullState('refreshing');
+    setPullDistance(48);
+
+    // 1. Fetch freshest user data from LocalDb
+    const users = LocalDb.getUsers();
+    const freshUser = users.find(u => u.id === activeUser.id || u.accountNumber === activeUser.accountNumber) || activeUser;
+    
+    // 2. Refresh transactions & update statuses
     const txs = LocalDb.getTransactions();
+    
+    // 3. Update live clock
+    updateTime();
+
+    // Natural delay so user perceives the refresh animation smoothly
+    await new Promise(r => setTimeout(r, 650));
+
+    setActiveUser({ ...freshUser });
     setAllTransactions(txs);
     setRecentTransactions(txs.slice(0, 6));
+    onUpdateCurrentUser?.(freshUser);
+
+    // Notify other components if needed
+    window.dispatchEvent(new CustomEvent('cbe_balance_refreshed', { detail: { balance: freshUser.balance } }));
+
+    // Show success feedback
+    setPullState('success');
+    await new Promise(r => setTimeout(r, 600));
+
+    // Smooth return to resting state
+    setPullDistance(0);
+    setIsRefreshing(false);
+    setPullState('idle');
+    thresholdHapticRef.current = false;
+  }, [activeUser, onUpdateCurrentUser, updateTime]);
+
+  const handleRefresh = useCallback(() => {
+    triggerPullRefresh();
+  }, [triggerPullRefresh]);
+
+  // Touch handlers for pull to refresh
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (pullState === 'refreshing' || pullState === 'success') return;
+    if (e.touches.length === 1) {
+      const mainEl = mainScrollRef.current;
+      const atTop = !mainEl || mainEl.scrollTop <= 0;
+      if (atTop) {
+        touchStartYRef.current = e.touches[0].clientY;
+        touchStartXRef.current = e.touches[0].clientX;
+        canPullRef.current = true;
+        thresholdHapticRef.current = false;
+      } else {
+        canPullRef.current = false;
+      }
+    }
   };
 
-  const handleRefresh = () => {
-    setIsRefreshing(true);
-    loadTransactions();
-    setTimeout(() => {
-      setIsRefreshing(false);
-    }, 650);
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!canPullRef.current || pullState === 'refreshing' || pullState === 'success') return;
+    const mainEl = mainScrollRef.current;
+    if (mainEl && mainEl.scrollTop > 0) {
+      canPullRef.current = false;
+      setPullDistance(0);
+      setPullState('idle');
+      return;
+    }
+
+    const currentY = e.touches[0].clientY;
+    const currentX = e.touches[0].clientX;
+    const deltaY = currentY - touchStartYRef.current;
+    const deltaX = Math.abs(currentX - touchStartXRef.current);
+
+    if (deltaY > 0 && deltaY > deltaX) {
+      const distance = Math.min(MAX_PULL, Math.pow(deltaY, 0.85) * 1.8);
+      setPullDistance(distance);
+
+      if (distance >= PULL_THRESHOLD) {
+        setPullState('threshold');
+        if (!thresholdHapticRef.current) {
+          thresholdHapticRef.current = true;
+          if (typeof navigator !== 'undefined' && navigator.vibrate) {
+            try { navigator.vibrate(12); } catch {}
+          }
+        }
+      } else {
+        setPullState('pulling');
+        thresholdHapticRef.current = false;
+      }
+    } else if (deltaY < 0) {
+      setPullDistance(0);
+      setPullState('idle');
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (!canPullRef.current || pullState === 'refreshing' || pullState === 'success') return;
+    canPullRef.current = false;
+
+    if (pullDistance >= PULL_THRESHOLD) {
+      triggerPullRefresh();
+    } else {
+      setPullDistance(0);
+      setPullState('idle');
+    }
+  };
+
+  // Mouse handlers for desktop preview
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (pullState === 'refreshing' || pullState === 'success') return;
+    const mainEl = mainScrollRef.current;
+    if (!mainEl || mainEl.scrollTop <= 0) {
+      isMouseDownRef.current = true;
+      mouseStartYRef.current = e.clientY;
+    }
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isMouseDownRef.current || pullState === 'refreshing' || pullState === 'success') return;
+    const deltaY = e.clientY - mouseStartYRef.current;
+    if (deltaY > 5) {
+      const distance = Math.min(MAX_PULL, Math.pow(deltaY, 0.85) * 1.8);
+      setPullDistance(distance);
+      setPullState(distance >= PULL_THRESHOLD ? 'threshold' : 'pulling');
+    }
+  };
+
+  const handleMouseUp = () => {
+    if (!isMouseDownRef.current) return;
+    isMouseDownRef.current = false;
+    if (pullDistance >= PULL_THRESHOLD) {
+      triggerPullRefresh();
+    } else {
+      setPullDistance(0);
+      setPullState('idle');
+    }
+  };
+
+  // Handle choosing account from Registered Accounts Directory
+  const handleSelectAccountFromDirectory = (account: RegisteredAccountInfo) => {
+    const rawAccount = account as any;
+    const targetBalance = rawAccount.balance !== undefined ? rawAccount.balance : (activeUser.accountNumber === account.accountNumber ? activeUser.balance : 34850.00);
+    const targetType = (rawAccount.accountType as any) || (account.bankName.toLowerCase().includes('cbe') ? 'wadiah' : 'savings');
+
+    const updatedUser: UserProfile = {
+      ...activeUser,
+      accountNumber: account.accountNumber,
+      accountType: targetType,
+      balance: targetBalance,
+      availableBalance: targetBalance,
+    };
+
+    setActiveUser(updatedUser);
+    onUpdateCurrentUser?.(updatedUser);
+    setAccountActionToast(`Switched active account to ${account.accountName} (${account.accountNumber})`);
+    setTimeout(() => setAccountActionToast(null), 4000);
   };
 
   // Listen to Phone Navigation Bar Back and Home actions
@@ -270,16 +448,71 @@ export const Home: React.FC<HomeProps> = ({
   });
 
   // Extract first name for greeting
-  const firstName = currentUser.name.split(' ')[0] || 'Leykun';
+  const firstName = activeUser.name.split(' ')[0] || 'Leykun';
 
   return (
-    <div className="h-full w-full bg-[#F7F7F7] font-sans relative flex flex-col overflow-hidden text-gray-900 select-none">
+    <div 
+      className="h-full w-full bg-[#F7F7F7] font-sans relative flex flex-col overflow-hidden text-gray-900 select-none"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onMouseDown={handleMouseDown}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+    >
+      {/* PULL-TO-REFRESH FLOATING PILL INDICATOR */}
+      <div 
+        className="w-full flex justify-center pointer-events-none transition-all duration-200 ease-out z-50 absolute left-0 right-0 px-4"
+        style={{
+          top: '12px',
+          transform: `translateY(${pullState === 'refreshing' ? 36 : Math.min(pullDistance, 50)}px)`,
+          opacity: pullDistance > 6 || pullState === 'refreshing' || pullState === 'success' ? 1 : 0
+        }}
+      >
+        <div className="bg-[#18191c]/95 text-white px-4 py-2 rounded-full shadow-2xl border border-white/20 backdrop-blur-md flex items-center gap-2.5 text-xs font-semibold">
+          {pullState === 'refreshing' ? (
+            <>
+              <RefreshIcon size={16} className="text-[#deb356] animate-spin" />
+              <span className="text-[#deb356] tracking-tight">Refreshing wallet balance &amp; status...</span>
+            </>
+          ) : pullState === 'success' ? (
+            <>
+              <div className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                <Check className="w-3 h-3 stroke-[3]" />
+              </div>
+              <span className="text-emerald-400 tracking-tight">Wallet balance &amp; status updated!</span>
+            </>
+          ) : pullState === 'threshold' ? (
+            <>
+              <div className="w-4 h-4 text-[#deb356] rotate-180 transition-transform duration-150">
+                <RefreshIcon size={16} />
+              </div>
+              <span className="text-white font-bold tracking-tight">Release to refresh</span>
+            </>
+          ) : (
+            <>
+              <div 
+                className="w-4 h-4 text-white/80 transition-transform duration-75"
+                style={{ transform: `rotate(${Math.min(180, (pullDistance / PULL_THRESHOLD) * 180)}deg)` }}
+              >
+                <RefreshIcon size={16} />
+              </div>
+              <span className="text-white/80 tracking-tight">Pull down to refresh</span>
+            </>
+          )}
+        </div>
+      </div>
       
       {/* ========================================================
           STATIC / UNSCROLLABLE TOP SECTION (Above Yellow Line)
           Includes Purple Hero Background, Top Header, Black Account Card, and Gold Line
           ======================================================== */}
-      <div className="flex-shrink-0 w-full relative z-20 touch-none overscroll-none select-none">
+      <div 
+        className="flex-shrink-0 w-full relative z-20 select-none transition-transform duration-200 ease-out"
+        style={{
+          transform: `translateY(${Math.min(pullDistance * 0.35, 24)}px)`
+        }}
+      >
         {/* HERO BACKGROUND WITH SMOOTH CURVED WAVE TRANSITION */}
         <div 
           className={`hero-background absolute top-0 left-0 right-0 pointer-events-none z-0 overflow-hidden transition-all duration-200 ${
@@ -334,13 +567,14 @@ export const Home: React.FC<HomeProps> = ({
               <AccountCard
                 bankName="Commercial Bank of Ethiopia"
                 slogan="The bank you can always rely on!"
-                balance={currentUser.balance}
-                currency={currentUser.currency || 'ETB'}
-                accountType="Saving Account"
-                accountNumber={currentUser.accountNumber}
+                balance={activeUser.balance}
+                currency={activeUser.currency || 'ETB'}
+                accountType={activeUser.accountType === 'checking' ? 'Current Account' : activeUser.accountType === 'cbe_birr' ? 'CBE Birr Wallet' : 'Saving Account'}
+                accountNumber={activeUser.accountNumber}
                 dateTimeString={currentDateTime}
                 showBalanceDefault={false}
                 customLogoUrl={customLogoUrl}
+                onOpenAccountSearch={() => setShowRegisteredAccountsModal(true)}
               />
             </div>
 
@@ -363,7 +597,7 @@ export const Home: React.FC<HomeProps> = ({
       {/* ========================================================
           SCROLLABLE CONTENT AREA (From Yellow Line Downwards)
           ======================================================== */}
-      <main className="flex-1 min-h-0 overflow-y-auto overscroll-contain overflow-x-hidden scrollbar-none relative z-10 w-full pb-6 sm:pb-8">
+      <main ref={mainScrollRef as any} className="flex-1 min-h-0 overflow-y-auto overscroll-contain overflow-x-hidden scrollbar-none relative z-10 w-full pb-6 sm:pb-8">
         {/* DYNAMIC CONTENT UNDER CARD BASED ON ACTIVE TAB */}
         {activeNavTab === 'history' ? (
           /* ========================================================
@@ -617,7 +851,7 @@ export const Home: React.FC<HomeProps> = ({
             <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between text-xs text-gray-600">
               <div className="flex items-center gap-2">
                 <QrCode className="w-4 h-4 text-[#711A9F]" />
-                <span className="font-semibold">My Account: {currentUser.accountNumber.slice(-4)}</span>
+                <span className="font-semibold">My Account: {activeUser.accountNumber.slice(-4)}</span>
               </div>
               <button 
                 onClick={() => setActiveModal('receive')} 
@@ -647,15 +881,101 @@ export const Home: React.FC<HomeProps> = ({
             <div className="mt-3 relative">
               <input
                 type="text"
-                placeholder="Search transfer, bill, account..."
+                placeholder="Search registered accounts, transfer, bill..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 autoFocus
                 className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-2.5 pl-4 pr-10 text-xs font-semibold focus:outline-none focus:border-[#711A9F] focus:bg-white"
               />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
 
-            <div className="mt-4 space-y-2">
+            {/* REGISTERED ACCOUNTS SECTION */}
+            <div className="mt-3.5 border-t border-gray-100 pt-3">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[11px] font-bold text-gray-700 flex items-center gap-1.5 uppercase tracking-wider">
+                  <AccountSearchDirectoryIcon size={14} className="text-[#16a34a]" />
+                  <span>Registered Accounts</span>
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveModal(null);
+                    setShowRegisteredAccountsModal(true);
+                  }}
+                  className="text-[11px] font-bold text-[#711A9F] hover:underline cursor-pointer"
+                >
+                  View All Directory →
+                </button>
+              </div>
+
+              {/* Filtered Registered Accounts List */}
+              <div className="max-h-48 overflow-y-auto space-y-1.5 pr-0.5 scrollbar-thin">
+                {(() => {
+                  const registeredMatches = LocalDb.searchRegisteredAccounts(searchQuery).slice(0, 5);
+                  if (registeredMatches.length === 0) {
+                    return (
+                      <p className="text-[11px] text-gray-400 py-2 text-center">
+                        No registered accounts matching "{searchQuery}"
+                      </p>
+                    );
+                  }
+                  return registeredMatches.map((acc, i) => (
+                    <div
+                      key={`${acc.accountNumber}-${i}`}
+                      className="p-2 rounded-xl bg-gray-50 hover:bg-purple-50/60 border border-gray-100 flex items-center justify-between gap-2 transition"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1">
+                          <p className="text-xs font-bold text-gray-900 truncate">{acc.accountName}</p>
+                          {acc.isVerified && (
+                            <span className="text-[9px] font-bold text-emerald-700 bg-emerald-100 px-1 rounded">Verified</span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-gray-500 font-mono">
+                          {acc.accountNumber} • {acc.bankName.includes('Commercial Bank') ? 'CBE' : acc.bankName}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleSelectAccountFromDirectory(acc);
+                            setActiveModal(null);
+                          }}
+                          className="px-2 py-1 bg-white hover:bg-amber-100 text-[#deb356] hover:text-amber-800 text-[10px] font-bold rounded-lg border border-amber-200 transition cursor-pointer shadow-2xs"
+                          title="Switch active account on card"
+                        >
+                          Switch
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setActiveModal(null);
+                            onNavigateToTab?.('transfer', 'send');
+                          }}
+                          className="px-2 py-1 bg-[#711A9F] hover:bg-[#5b1480] text-white text-[10px] font-bold rounded-lg transition cursor-pointer shadow-2xs"
+                          title="Transfer to this account"
+                        >
+                          Send
+                        </button>
+                      </div>
+                    </div>
+                  ));
+                })()}
+              </div>
+            </div>
+
+            <div className="mt-3.5 border-t border-gray-100 pt-3 space-y-2">
               <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Quick Shortcuts</p>
               {[
                 { name: 'Send Money to CBE Account', tab: 'transfer', sub: 'send' },
@@ -670,7 +990,7 @@ export const Home: React.FC<HomeProps> = ({
                     if (item.tab) onNavigateToTab?.(item.tab as any, item.sub);
                     else if (item.modal) setActiveModal(item.modal as any);
                   }}
-                  className="w-full p-2.5 rounded-xl hover:bg-purple-50 text-left text-xs font-semibold text-gray-800 flex items-center justify-between transition cursor-pointer"
+                  className="w-full p-2 rounded-xl hover:bg-purple-50 text-left text-xs font-semibold text-gray-800 flex items-center justify-between transition cursor-pointer"
                 >
                   <span>{item.name}</span>
                   <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
@@ -878,8 +1198,8 @@ export const Home: React.FC<HomeProps> = ({
             </div>
 
             <div className="py-2.5 border-b border-gray-100 text-xs flex justify-between items-center text-gray-600">
-              <span>A/C: {currentUser.accountNumber}</span>
-              <span className="font-bold text-[#711A9F]">{currentUser.balance.toLocaleString()} ETB</span>
+              <span>A/C: {activeUser.accountNumber}</span>
+              <span className="font-bold text-[#711A9F]">{activeUser.balance.toLocaleString()} ETB</span>
             </div>
 
             <div className="flex-1 overflow-y-auto divide-y divide-gray-50 my-2">
@@ -897,9 +1217,9 @@ export const Home: React.FC<HomeProps> = ({
                   >
                     <div className="flex items-center gap-2.5">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        tx.senderId === currentUser.id ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'
+                        tx.senderId === activeUser.id ? 'bg-red-50 text-red-600' : 'bg-emerald-50 text-emerald-600'
                       }`}>
-                        {tx.senderId === currentUser.id ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownLeft className="w-4 h-4" />}
+                        {tx.senderId === activeUser.id ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownLeft className="w-4 h-4" />}
                       </div>
                       <div>
                         <div className="flex items-center gap-1.5">
@@ -914,8 +1234,8 @@ export const Home: React.FC<HomeProps> = ({
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className={`text-xs font-extrabold ${tx.senderId === currentUser.id ? 'text-red-600' : 'text-emerald-600'}`}>
-                        {tx.senderId === currentUser.id ? '-' : '+'}{tx.amount.toLocaleString()} ETB
+                      <p className={`text-xs font-extrabold ${tx.senderId === activeUser.id ? 'text-red-600' : 'text-emerald-600'}`}>
+                        {tx.senderId === activeUser.id ? '-' : '+'}{tx.amount.toLocaleString()} ETB
                       </p>
                       <p className="text-[9px] text-gray-400 uppercase font-mono">{(tx.reference || tx.id).slice(-6)}</p>
                     </div>
@@ -989,7 +1309,7 @@ export const Home: React.FC<HomeProps> = ({
               <div className="flex justify-between items-end text-[11px]">
                 <div>
                   <span className="text-gray-400 text-[9px] block">CARD HOLDER</span>
-                  <span className="font-bold uppercase">{currentUser.name}</span>
+                  <span className="font-bold uppercase">{activeUser.name}</span>
                 </div>
                 <div>
                   <span className="text-gray-400 text-[9px] block">EXPIRES</span>
@@ -1119,14 +1439,14 @@ export const Home: React.FC<HomeProps> = ({
             </div>
 
             <div className="space-y-1">
-              <p className="text-sm font-bold text-gray-900">{currentUser.name}</p>
-              <p className="text-xs font-mono text-[#711A9F] font-bold">A/C: {currentUser.accountNumber}</p>
+              <p className="text-sm font-bold text-gray-900">{activeUser.name}</p>
+              <p className="text-xs font-mono text-[#711A9F] font-bold">A/C: {activeUser.accountNumber}</p>
               <p className="text-[11px] text-gray-400">Commercial Bank of Ethiopia</p>
             </div>
 
             <button
               onClick={() => {
-                navigator.clipboard.writeText(currentUser.accountNumber);
+                navigator.clipboard.writeText(activeUser.accountNumber);
                 alert('Account number copied to clipboard!');
               }}
               className="w-full mt-4 bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-bold py-2.5 rounded-xl flex items-center justify-center gap-1.5 transition cursor-pointer"
@@ -1152,7 +1472,7 @@ export const Home: React.FC<HomeProps> = ({
               <div className="p-3.5 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-between">
                 <div>
                   <p className="text-xs font-bold text-gray-800">Linked CBEBirr Mobile</p>
-                  <p className="text-xs font-mono text-[#711A9F] font-bold">{currentUser.phone || '+251 91 123 4567'}</p>
+                  <p className="text-xs font-mono text-[#711A9F] font-bold">{activeUser.phone || '+251 91 123 4567'}</p>
                 </div>
                 <span className="text-[10px] bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded-full">Linked</span>
               </div>
@@ -1415,9 +1735,40 @@ export const Home: React.FC<HomeProps> = ({
             setSelectedDetailTx(null);
             onSelectTransaction?.(tx);
           }}
-          currentUserId={currentUser.id}
-          currentUserAccount={currentUser.accountNumber}
+          currentUserId={activeUser.id}
+          currentUserAccount={activeUser.accountNumber}
         />
+      )}
+
+      {/* REGISTERED ACCOUNTS DIRECTORY SELECTION MODAL */}
+      <RegisteredAccountsModal
+        isOpen={showRegisteredAccountsModal}
+        onClose={() => setShowRegisteredAccountsModal(false)}
+        onSelect={handleSelectAccountFromDirectory}
+        currentSelectedAccount={activeUser.accountNumber}
+        title="Registered Accounts Directory"
+      />
+
+      {/* TOAST ACTION BANNER */}
+      {accountActionToast && (
+        <div className="fixed top-14 left-1/2 -translate-x-1/2 z-[100] max-w-sm w-11/12 animate-in slide-in-from-top duration-300">
+          <div className="bg-[#18191c] text-white px-4 py-3 rounded-2xl shadow-2xl border border-emerald-500/40 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0">
+                <Check className="w-4 h-4 stroke-[2.5]" />
+              </div>
+              <p className="text-xs font-semibold text-gray-100 truncate">
+                {accountActionToast}
+              </p>
+            </div>
+            <button
+              onClick={() => setAccountActionToast(null)}
+              className="text-gray-400 hover:text-white p-1"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
       )}
 
     </div>

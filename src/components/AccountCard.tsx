@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Check } from 'lucide-react';
+import { Check, ChevronDown } from 'lucide-react';
 import DottedWorldMap from './DottedWorldMap';
 import { CbeGoldenEmblemSvg } from './CbeLogo';
-import { EyeOffIcon, EyeOpenIcon, CopyIcon } from './CbeCustomIcons';
+import { EyeOffIcon, EyeOpenIcon, CopyIcon, AccountSearchDirectoryIcon } from './CbeCustomIcons';
 
 interface AccountCardProps {
   bankName?: string;
@@ -16,6 +16,7 @@ interface AccountCardProps {
   onToggleBalance?: () => void;
   customLogoUrl?: string | null;
   className?: string;
+  onOpenAccountSearch?: () => void;
 }
 
 export const AccountCard: React.FC<AccountCardProps> = ({
@@ -30,6 +31,7 @@ export const AccountCard: React.FC<AccountCardProps> = ({
   onToggleBalance,
   customLogoUrl = null,
   className = '',
+  onOpenAccountSearch,
 }) => {
   const [showBalance, setShowBalance] = useState(showBalanceDefault);
   const [copied, setCopied] = useState(false);
@@ -108,6 +110,21 @@ export const AccountCard: React.FC<AccountCardProps> = ({
               </p>
             </div>
           </div>
+
+          {/* Multi-Account / Registered Accounts Search Button */}
+          {onOpenAccountSearch && (
+            <button
+              id="btn-account-search-card"
+              type="button"
+              onClick={onOpenAccountSearch}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 active:scale-95 border border-white/15 text-[#deb356] text-[11px] font-bold transition cursor-pointer flex-shrink-0 shadow-xs backdrop-blur-xs group"
+              title="Search & Choose Registered Accounts"
+            >
+              <AccountSearchDirectoryIcon size={14} className="text-[#deb356] group-hover:scale-110 transition-transform" />
+              <span className="text-[10.5px] tracking-tight">Accounts</span>
+              <ChevronDown className="w-3 h-3 text-[#deb356]/80" />
+            </button>
+          )}
         </div>
 
         {/* MIDDLE SECTION: Horizontally Centered Balance & Right Eye Toggle */}
@@ -158,6 +175,18 @@ export const AccountCard: React.FC<AccountCardProps> = ({
               <CopyIcon size={15} className="text-gray-300 hover:text-white" strokeWidth={1.6} />
             )}
           </button>
+          {onOpenAccountSearch && (
+            <button
+              id="btn-account-search-inline"
+              type="button"
+              aria-label="Search & Switch Accounts"
+              onClick={onOpenAccountSearch}
+              className="ml-2 p-1 rounded-lg bg-white/10 hover:bg-white/20 text-[#deb356] hover:text-white transition cursor-pointer flex items-center active:scale-95 border border-white/10"
+              title="Search & Choose Registered Accounts"
+            >
+              <AccountSearchDirectoryIcon size={13} className="text-[#deb356]" />
+            </button>
+          )}
         </div>
 
         {/* Date & Time display */}
