@@ -314,7 +314,7 @@ export const CardsIcon: React.FC<IconProps> = ({
 );
 
 /**
- * 8. Bill Share Icon (Material Symbols arrow_split)
+ * 8. Bill Share Icon (Material Symbols call_split with arrow side pointing upward)
  */
 export const BillShareIcon: React.FC<ReceiptIconProps> = ({
   size = 24,
@@ -333,7 +333,7 @@ export const BillShareIcon: React.FC<ReceiptIconProps> = ({
     aria-hidden="true"
     {...(props as any)}
   >
-    arrow_split
+    call_split
   </span>
 );
 
