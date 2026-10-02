@@ -2,6 +2,7 @@ import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import html2canvas from 'html2canvas-pro';
+import { toPng } from 'html-to-image';
 import { LocalDb, DEFAULT_CBE_LOGO } from '../lib/mockData';
 import { CBE_DEFAULT_LOGO_BASE64 } from '../assets/cbeLogoBase64';
 
@@ -225,18 +226,18 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
   }
 
   // 5. Measure full content bounds
-  const fullWidth = Math.max(element.scrollWidth, element.offsetWidth, 360);
-  const fullHeight = Math.max(element.scrollHeight, element.offsetHeight);
+  const rect = element.getBoundingClientRect();
+  const fullWidth = Math.max(element.scrollWidth, element.offsetWidth, Math.ceil(rect.width), 360);
+  const fullHeight = Math.max(element.scrollHeight, element.offsetHeight, Math.ceil(rect.height), 700);
 
-  // Safe pixel ratio for mobile devices (2.0x to 2.5x: razor-sharp without exceeding Android canvas memory limits)
+  // Safe pixel ratio for mobile devices (2.0x is razor-sharp without exceeding Android canvas memory limits)
   const rawDpr = typeof window !== 'undefined' ? window.devicePixelRatio || 2 : 2;
   const pixelRatio = Math.min(2.5, Math.max(2, rawDpr));
 
   const isExcluded = (node: Element): boolean => {
     return (
       node.getAttribute('data-screenshot-exclude') === 'true' ||
-      node.getAttribute('data-html2canvas-ignore') === 'true' ||
-      node.id === 'receipt-status-bar' ||
+      node.getAttribute('data-screenshot-temporary') === 'true' ||
       node.id === 'btn-top-screenshot'
     );
   };
@@ -251,16 +252,21 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
       imageTimeout: 15000,
       scrollX: 0,
       scrollY: 0,
-      x: 0,
-      y: 0,
-      width: fullWidth,
-      height: fullHeight,
-      windowWidth: fullWidth,
-      windowHeight: fullHeight,
       ignoreElements: isExcluded,
       onclone: (clonedDoc: Document, clonedElement: HTMLElement) => {
         // Reset scroll position on clone
         clonedDoc.defaultView?.scrollTo(0, 0);
+        
+        // Ensure root and body do not constrain layout in clone
+        if (clonedDoc.documentElement) {
+          clonedDoc.documentElement.style.overflow = 'visible';
+          clonedDoc.documentElement.style.height = 'auto';
+        }
+        if (clonedDoc.body) {
+          clonedDoc.body.style.overflow = 'visible';
+          clonedDoc.body.style.height = 'auto';
+        }
+
         const clonedWrapper = clonedDoc.getElementById('receipt-screen-wrapper');
         if (clonedWrapper) {
           clonedWrapper.scrollTop = 0;
@@ -273,6 +279,7 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
         // Expand clonedElement to full content height with zero clipping
         clonedElement.style.overflow = 'visible';
         clonedElement.style.height = 'auto';
+        clonedElement.style.minHeight = '100%';
         clonedElement.style.maxHeight = 'none';
         clonedElement.style.transform = 'none';
 
@@ -281,47 +288,85 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
         if (whiteSheet) {
           (whiteSheet as HTMLElement).style.overflow = 'visible';
           (whiteSheet as HTMLElement).style.height = 'auto';
-          (whiteSheet as HTMLElement).style.flex = '1 0 auto';
         }
 
-        // Ensure any status bar or action buttons in the cloned tree are strictly hidden
-        const excludedNodes = clonedDoc.querySelectorAll(
-          '[data-screenshot-exclude="true"], [data-html2canvas-ignore="true"], #receipt-status-bar, #btn-top-screenshot, #btn-action-close, #btn-action-receipt, #btn-action-screenshot, #btn-action-share'
+        // Ensure status bar and bottom action bar are fully visible in the cloned DOM
+        const statusBar = clonedDoc.getElementById('receipt-status-bar');
+        if (statusBar) {
+          statusBar.style.display = 'flex';
+          statusBar.style.visibility = 'visible';
+          statusBar.style.opacity = '1';
+        }
+        const bottomBar = clonedDoc.getElementById('cbe-receipt-bottom-actions-container');
+        if (bottomBar) {
+          bottomBar.style.display = 'block';
+          bottomBar.style.visibility = 'visible';
+          bottomBar.style.opacity = '1';
+        }
+
+        // Only hide temporary trigger buttons or overlays
+        const temporaryNodes = clonedDoc.querySelectorAll(
+          '[data-screenshot-exclude="true"], [data-screenshot-temporary="true"], #btn-top-screenshot'
         );
-        excludedNodes.forEach((node) => {
+        temporaryNodes.forEach((node) => {
           (node as HTMLElement).style.display = 'none';
         });
 
         // Ensure all images in clone use their assigned inlined src
         const clonedImgs = clonedDoc.querySelectorAll('img');
         clonedImgs.forEach((clonedImg) => {
-          if (!clonedImg.src || clonedImg.src.includes('custom-bank-logo')) {
+          if (!clonedImg.src || clonedImg.src.includes('custom-bank-logo') || clonedImg.src.includes('cbe-gold-logo')) {
             clonedImg.src = CBE_DEFAULT_LOGO_BASE64;
           }
         });
       },
     });
 
-    return canvas.toDataURL('image/png');
+    const dataUrl = canvas.toDataURL('image/png');
+    if (dataUrl && dataUrl.length > 1000) {
+      return dataUrl;
+    }
+    throw new Error('html2canvas canvas data was empty');
   } catch (primaryErr) {
-    console.warn('[ScreenshotService] html2canvas-pro primary capture note, retrying with fallback options:', primaryErr);
+    console.warn('[ScreenshotService] html2canvas-pro primary capture note, retrying with html-to-image:', primaryErr);
     
-    // Fallback: html2canvas with standard scale 2 and zero scroll
-    const fallbackCanvas = await html2canvas(element, {
-      scale: 2,
-      useCORS: true,
-      allowTaint: false,
-      backgroundColor: '#68137e',
-      logging: false,
-      scrollX: 0,
-      scrollY: 0,
-      x: 0,
-      y: 0,
-      width: fullWidth,
-      height: fullHeight,
-      ignoreElements: isExcluded,
-    });
-    return fallbackCanvas.toDataURL('image/png');
+    // Fallback 1: html-to-image native SVG foreignObject rasterization
+    try {
+      const h2iDataUrl = await toPng(element, {
+        cacheBust: true,
+        backgroundColor: '#68137e',
+        pixelRatio: Math.min(2, pixelRatio),
+        filter: (node: HTMLElement) => {
+          if (node && typeof node.getAttribute === 'function') {
+            return !isExcluded(node);
+          }
+          return true;
+        },
+      });
+      if (h2iDataUrl && h2iDataUrl.length > 1000) {
+        return h2iDataUrl;
+      }
+    } catch (h2iErr) {
+      console.warn('[ScreenshotService] html-to-image note:', h2iErr);
+    }
+
+    // Fallback 2: html2canvas with standard options
+    try {
+      const fallbackCanvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: '#68137e',
+        logging: false,
+        scrollX: 0,
+        scrollY: 0,
+        ignoreElements: isExcluded,
+      });
+      return fallbackCanvas.toDataURL('image/png');
+    } catch (fallbackErr) {
+      console.error('[ScreenshotService] All capture methods failed:', fallbackErr);
+      throw fallbackErr;
+    }
   } finally {
     // Restore user scroll position so viewport does not jump
     if (scrollWrapper) {

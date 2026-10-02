@@ -80,16 +80,34 @@ export const DEFAULT_THREADS: MessageThread[] = [
   {
     id: 'safaricom',
     sender: 'Safaricom',
-    avatarColor: '#f97316',
-    snippet: 'አስደሳች ዜና!...',
-    timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-    timeLabel: '8:25 AM',
-    unreadCount: 0,
+    avatarColor: '#545458',
+    snippet: 'ዕለታዊ የተመረጡ መረጃዎች እንዳያመልጦ! አስተማማኝ እና እውነተኛ የቴክኖሎጂ ዜናዎችን...',
+    timestamp: new Date().toISOString(),
+    timeLabel: '9:30 AM',
+    unreadCount: 1,
     messages: [
       {
         id: 'msg-saf-1',
-        text: 'አስደሳች ዜና! በሳፋሪኮም ኔትወርክ ፈጣን የ4G ኢንተርኔት እና ያልተገደበ ጥሪ ይጠቀሙ። ለበለጠ መረጃ *700# ይደውሉ።',
-        timestamp: '8:25 AM',
+        text: 'አስደሳች ዜና!\nበአንድ ጥቅል ውስጥ የተለያዩ የቴሌ ቁጥሮች ይደውሉ!\nወደ *777# ይደውሉና "ቴሌ ደቂቃ"ን ይምረጡ::',
+        timestamp: 'Yesterday 10:40 AM',
+        sender: 'Safaricom'
+      },
+      {
+        id: 'msg-saf-2',
+        text: '<#> 4463 is your verification code. NEVER share your M-PESA Safaricom verification code. undefined',
+        timestamp: 'Yesterday 10:40 AM',
+        sender: 'Safaricom'
+      },
+      {
+        id: 'msg-saf-3',
+        text: 'ዕለታዊ የተመረጡ መረጃዎች እንዳያመልጦ! አስተማማኝ እና እውነተኛ የቴክኖሎጂ ዜናዎችን ለማግኘት ዛሬውኑ ይቀላቀሉ::አገልግሎት ለማግኘት "A" ብለው 30000 ላይ በአጭር መልዕክት ይላኩ ወደ *799# ይደውሉ!',
+        timestamp: 'Today 9:30 AM',
+        sender: 'Safaricom'
+      },
+      {
+        id: 'msg-saf-4',
+        text: 'ዕለታዊ የተመረጡ መረጃዎች እንዳያመልጦ! አስተማማኝ እና እውነተኛ የቴክኖሎጂ ዜናዎችን ለማግኘት ዛሬውኑ ይቀላቀሉ::አገልግሎት ለማግኘት "A" ብለው 30000 ላይ በአጭር መልዕክት ይላኩ ወደ *799# ይደውሉ!',
+        timestamp: 'Today 9:30 AM',
         sender: 'Safaricom'
       }
     ]
@@ -97,17 +115,52 @@ export const DEFAULT_THREADS: MessageThread[] = [
   {
     id: 'mpesa-info',
     sender: 'MPESA Info',
-    avatarColor: '#16a34a',
-    snippet: 'ውድ Yeshiwalem በብሔራዊ ባንክ መመሪያ መሰረት እባክዎ የሂ...',
-    timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-    timeLabel: '7:38 AM',
-    unreadCount: 6,
+    avatarColor: '#545458',
+    tag: 'Unknown Sender',
+    snippet: 'ውድ Yeshiwalem በብሔራዊ ባንክ መመሪያ መሰረት እባክዎ የሂሳብ ቁጥርዎን ከፋይዳ ጋር...',
+    timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+    timeLabel: '9:30 AM',
+    unreadCount: 1,
     messages: [
       {
         id: 'msg-mpesa-1',
-        text: 'ውድ Yeshiwalem በብሔራዊ ባንክ መመሪያ መሰረት እባክዎ የሂሳብ መረጃዎን በአቅራቢያዎ በሚገኝ የM-PESA ወኪል ወይም ቅርንጫፍ በኩል ያረጋግጡ። ሳፋሪኮም M-PESA!',
-        timestamp: '7:38 AM',
+        text: 'ውድ Yeshiwalem በብሔራዊ ባንክ መመሪያ መሰረት እባክዎ የሂሳብ ቁጥርዎን ከፋይዳ ጋር ያገናኙ። ለተጨማሪ መረጃ ወደ 733 ይደውሉ። M-PESA Safaricom!',
+        timestamp: '9:30 AM',
         sender: 'MPESA Info'
+      }
+    ]
+  },
+  {
+    id: '7822235877',
+    sender: '+1 (782) 223-5877',
+    avatarColor: '#545458',
+    snippet: 'Send this message without editing. (ohUQzHIXpKaA)',
+    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    timeLabel: 'Yesterday',
+    unreadCount: 0,
+    messages: [
+      {
+        id: 'msg-782-1',
+        text: 'Send this message without editing. (ohUQzHIXpKaA)',
+        timestamp: 'Yesterday',
+        sender: '+1 (782) 223-5877'
+      }
+    ]
+  },
+  {
+    id: '7822235875',
+    sender: '+1 (782) 223-5875',
+    avatarColor: '#545458',
+    snippet: 'Send this message without editing. (XdTg9Kn1Ijm1)',
+    timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+    timeLabel: 'Yesterday',
+    unreadCount: 0,
+    messages: [
+      {
+        id: 'msg-782-2',
+        text: 'Send this message without editing. (XdTg9Kn1Ijm1)',
+        timestamp: 'Yesterday',
+        sender: '+1 (782) 223-5875'
       }
     ]
   },

@@ -1,21 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   ChevronLeft, 
-  Info, 
+  ChevronRight, 
   Plus, 
   ArrowUp, 
-  Smile, 
-  Camera, 
-  Send,
-  CheckCheck,
-  CheckCircle2,
-  Trash2,
-  ExternalLink,
-  ChevronDown
+  Mic, 
+  User, 
+  CheckCircle2, 
+  ExternalLink 
 } from 'lucide-react';
 import { SmsMessage, SmsAccount } from '../types/sms';
 import { formatBubbleTime, maskAccountNumber } from '../services/smsService';
 import { MessageThread } from '../types/messages';
+import AppleProfileSettingsModal from './AppleProfileSettingsModal';
+import { PhoneSettingsService } from '../services/phoneSettingsService';
 
 interface AppleMessagesThreadProps {
   messages: SmsMessage[];
@@ -29,6 +27,7 @@ interface AppleMessagesThreadProps {
   isDarkMode?: boolean;
   thread?: MessageThread | null;
   onSendMessage?: (text: string) => void;
+  onBackToApp?: () => void;
 }
 
 export const AppleMessagesThread: React.FC<AppleMessagesThreadProps> = ({
@@ -43,26 +42,22 @@ export const AppleMessagesThread: React.FC<AppleMessagesThreadProps> = ({
   isDarkMode = true,
   thread = null,
   onSendMessage,
+  onBackToApp,
 }) => {
   const [inputText, setInputText] = useState('');
-  const [showAccountDropdown, setShowAccountDropdown] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const phoneSettings = PhoneSettingsService.getSettings();
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length, thread?.messages?.length]);
 
-  const bgClass = isDarkMode ? 'bg-black text-white' : 'bg-white text-black';
-  const headerBg = isDarkMode ? 'bg-[#1C1C1E]/90' : 'bg-[#F2F2F7]/90';
-  const bubbleReceivedBg = isDarkMode ? 'bg-[#26252A] text-white' : 'bg-[#E9E9EB] text-black';
-  const bubbleSentBg = 'bg-[#007AFF] text-white';
-  const subtextClass = isDarkMode ? 'text-[#8E8E93]' : 'text-[#8E8E93]';
-  const inputBg = isDarkMode ? 'bg-[#1C1C1E] border-[#38383A]' : 'bg-white border-[#C6C6C8]';
-
   const isGeneric = !!thread;
   const senderTitle = isGeneric ? thread.sender : 'Commercial Bank of Ethiopia';
-  const avatarLetter = isGeneric ? (thread.avatarLetter || thread.sender.charAt(0).toUpperCase()) : 'CBE';
-  const avatarBg = isGeneric ? (thread.avatarColor || '#007AFF') : '#70189F';
+  const senderSubtitle = isGeneric
+    ? (thread.phoneNumber || 'SMS Notification')
+    : `127 • ${activeAccount ? maskAccountNumber(activeAccount.accountNumber) : 'Saving Account'}`;
 
   const handleSend = () => {
     if (!inputText.trim()) return;
@@ -72,260 +67,221 @@ export const AppleMessagesThread: React.FC<AppleMessagesThreadProps> = ({
     setInputText('');
   };
 
-  return (
-    <div className={`min-h-full flex flex-col font-sans select-none ${bgClass} pb-safe relative`}>
-      {/* iOS Top App Bar */}
-      <header className={`sticky top-0 z-30 px-3 pt-[max(env(safe-area-inset-top,0px),10px)] pb-2 backdrop-blur-xl ${headerBg} border-b border-black/10 dark:border-white/10`}>
-        <div className="flex items-center justify-between h-11">
-          {/* Back button: < Messages */}
-          <button
-            type="button"
-            onClick={onBack}
-            className="text-[#007AFF] hover:opacity-80 active:opacity-60 text-[17px] font-normal flex items-center gap-0.5 cursor-pointer"
-          >
-            <ChevronLeft className="w-5 h-5 -ml-1 stroke-[2.5]" />
-            <span>Messages</span>
-          </button>
+  // Helper to highlight phone numbers, shortcodes, and URLs in light blue matching IMG_0092.png
+  const renderFormattedText = (text: string, rawMsg?: SmsMessage) => {
+    // Regex matches URLs, shortcodes like 30000, USSD like *799# or *777#
+    const pattern = /(https?:\/\/[^\s]+|\*\d+#|\b\d{4,6}\b)/g;
+    const parts = text.split(pattern);
 
-          {/* Center Contact Info */}
-          <div 
-            className={`flex flex-col items-center ${!isGeneric && onSelectAccount ? 'cursor-pointer' : ''}`}
-            onClick={() => {
-              if (!isGeneric && onSelectAccount) {
-                setShowAccountDropdown(!showAccountDropdown);
-              }
-            }}
-          >
-            <div 
-              className="w-7 h-7 rounded-full text-white flex items-center justify-center text-xs font-bold shadow-xs mb-0.5"
-              style={{ backgroundColor: avatarBg }}
-            >
-              {avatarLetter}
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="font-semibold text-[13px] leading-tight flex items-center gap-1 max-w-[190px] truncate">
-                {senderTitle}
-                {!isGeneric && (
-                  <CheckCircle2 className="w-3 h-3 text-[#007AFF] fill-[#007AFF] text-black shrink-0" />
-                )}
+    return (
+      <span className="whitespace-pre-line leading-relaxed">
+        {parts.map((part, idx) => {
+          if (part.match(pattern)) {
+            const isHoliday = part.includes('combanketh.et/holidays');
+            const isReceipt = !isHoliday && (part.includes('mbreceipt') || part.includes('receipt') || part.includes('mreciept') || part.includes('cbe.com.et'));
+
+            return (
+              <span
+                key={idx}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (isHoliday && onOpenHolidayCard) {
+                    onOpenHolidayCard(rawMsg);
+                  } else if (isReceipt && onOpenWebReceipt && rawMsg) {
+                    onOpenWebReceipt(rawMsg);
+                  }
+                }}
+                className="text-[#2997ff] underline cursor-pointer hover:opacity-80 active:opacity-60 inline"
+              >
+                {part}
               </span>
-              {!isGeneric && onSelectAccount && (
-                <ChevronDown className="w-3 h-3 text-[#8E8E93]" />
-              )}
-            </div>
-            <span className="text-[10px] text-[#8E8E93]">
-              {isGeneric 
-                ? (thread.phoneNumber || 'SMS Notification')
-                : `127 • ${activeAccount ? maskAccountNumber(activeAccount.accountNumber) : 'All Accounts'}`}
-            </span>
-          </div>
+            );
+          }
+          return <span key={idx}>{part}</span>;
+        })}
+      </span>
+    );
+  };
 
-          {/* Right Action: Info */}
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                if (!isGeneric && onSelectAccount) {
-                  setShowAccountDropdown(!showAccountDropdown);
-                }
-              }}
-              className="text-[#007AFF] hover:opacity-80 p-1 cursor-pointer"
-              title="Details & Info"
-            >
-              <Info className="w-5 h-5 stroke-[2.2]" />
-            </button>
-          </div>
+  return (
+    <div className="h-full min-h-[100dvh] flex flex-col font-sans select-none bg-black text-white relative">
+      {/* 1. iOS Top Status Bar (Matching IMG_0092.png with Green Call Pill & Signal/Battery) */}
+      <div className="pt-2 px-6 pb-1 flex items-center justify-between text-white text-xs select-none z-20">
+        {/* Left: Green call active pill with time */}
+        <div className="bg-[#34c759] text-white px-2.5 py-0.5 rounded-full font-bold text-[13px] tracking-tight shadow-xs flex items-center">
+          {phoneSettings.timeString || '10:57'}
         </div>
 
-        {/* Account Selector Dropdown Sheet (Only for CBE) */}
-        {!isGeneric && showAccountDropdown && accounts.length > 0 && (
-          <div className="mt-2 p-3 bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-2 mb-2 border-b border-neutral-800 text-xs font-bold text-neutral-400 uppercase tracking-wider">
-              <span>Select Bank Account</span>
-              {onClearMessages && (
-                <button 
-                  onClick={() => {
-                    onClearMessages();
-                    setShowAccountDropdown(false);
-                  }}
-                  className="text-rose-400 hover:text-rose-300 normal-case flex items-center gap-1 cursor-pointer"
-                >
-                  <Trash2 className="w-3 h-3" />
-                  Clear
-                </button>
-              )}
-            </div>
-            <div className="space-y-1.5 max-h-48 overflow-y-auto">
-              {accounts.map(acc => (
-                <button
-                  key={acc.accountNumber}
-                  type="button"
-                  onClick={() => {
-                    if (onSelectAccount) onSelectAccount(acc);
-                    setShowAccountDropdown(false);
-                  }}
-                  className={`w-full px-3 py-2 rounded-xl text-left text-xs flex items-center justify-between transition cursor-pointer ${
-                    activeAccount?.accountNumber === acc.accountNumber 
-                      ? 'bg-[#007AFF] text-white font-bold' 
-                      : 'hover:bg-neutral-800 text-neutral-300'
-                  }`}
-                >
-                  <div className="flex flex-col">
-                    <span>{acc.accountName}</span>
-                    <span className="text-[10px] opacity-75 font-mono">{maskAccountNumber(acc.accountNumber)}</span>
-                  </div>
-                  <span className="text-[11px] font-bold">
-                    {acc.currency} {acc.balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                  </span>
-                </button>
-              ))}
-            </div>
+        {/* Right: Signal bars, LTE, Battery 53 */}
+        <div className="flex items-center gap-1.5 text-white">
+          <div className="flex items-end gap-[1.5px] h-3">
+            <div className="w-[3px] h-1.5 bg-white rounded-[0.5px]" />
+            <div className="w-[3px] h-2 bg-white rounded-[0.5px]" />
+            <div className="w-[3px] h-2.5 bg-white rounded-[0.5px]" />
+            <div className="w-[3px] h-3 bg-white rounded-[0.5px]" />
           </div>
-        )}
-      </header>
 
-      {/* Messages Stream */}
-      <div className="flex-1 overflow-y-auto px-3.5 py-4 space-y-3">
-        {/* Date Stamp */}
-        <div className="text-center my-2">
-          <span className="text-[11px] font-semibold text-[#8E8E93] uppercase tracking-wider">
-            Today
+          <span className="text-[11px] font-semibold tracking-tight ml-0.5">LTE</span>
+
+          <div className="flex items-center ml-0.5">
+            <div className="h-3 w-5 rounded-[3px] border border-white/80 p-[1px] flex items-center justify-center bg-black/40">
+              <span className="text-[9px] font-extrabold leading-none text-white">
+                {phoneSettings.batteryPercent ?? 53}
+              </span>
+            </div>
+            <div className="w-[1.5px] h-1 bg-white/80 rounded-r-[0.5px]" />
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Top Navigation Bar (Back pill on left, Large Avatar & Contact Pill in center) */}
+      <div className="px-3 pt-1 pb-3 flex items-center justify-between relative border-b border-[#2c2c2e]/60">
+        {/* Left: Back button in dark pill with count 1 */}
+        <button
+          type="button"
+          onClick={onBack}
+          className="bg-[#2c2c2e] hover:bg-[#3a3a3c] active:scale-95 px-3 py-1.5 rounded-full flex items-center gap-1.5 text-white transition-transform cursor-pointer shadow-sm z-10"
+          title="Back to Messages"
+        >
+          <ChevronLeft className="w-5 h-5 -ml-1 stroke-[2.5]" />
+          <span className="w-4 h-4 bg-white text-black text-[11px] font-bold rounded-full flex items-center justify-center">
+            1
           </span>
+        </button>
+
+        {/* Center: Profile Icon & Contact Pill (Tapping opens Profile & Settings!) */}
+        <div 
+          onClick={() => setShowProfileModal(true)}
+          className="absolute inset-x-0 top-0 flex flex-col items-center justify-center cursor-pointer group pt-1"
+          title="Open Profile and Settings"
+        >
+          {/* Large Circular Avatar (#545458 with white User silhouette) */}
+          <div className="w-14 h-14 bg-[#545458] rounded-full flex items-center justify-center text-white shadow-md group-hover:scale-105 active:scale-95 transition-transform">
+            <User className="w-8 h-8 text-white stroke-[2.2]" />
+          </div>
+
+          {/* Contact Pill with Chevron > */}
+          <div className="bg-[#2c2c2e]/90 hover:bg-[#3a3a3c] px-3.5 py-1 rounded-full text-white font-semibold text-[13px] flex items-center gap-1 mt-1 shadow-xs transition-colors">
+            <span className="truncate max-w-[200px]">{senderTitle}</span>
+            <ChevronRight className="w-3.5 h-3.5 text-[#8e8e93]" />
+          </div>
         </div>
 
-        {isGeneric ? (
-          /* Render Generic Thread Messages */
-          (!thread.messages || thread.messages.length === 0) ? (
-            <div className="py-20 text-center text-xs text-[#8E8E93]">
-              No messages in this conversation.
-            </div>
-          ) : (
-            thread.messages.map((m) => {
-              const isSent = !!(m.isOutgoing ?? m.isSender);
-              return (
-                <div 
-                  key={m.id} 
-                  className={`flex flex-col ${isSent ? 'items-end' : 'items-start'} max-w-[85%] ${isSent ? 'ml-auto' : 'mr-auto'}`}
-                >
-                  <div 
-                    className={`px-3.5 py-2.5 rounded-[18px] text-[14px] leading-relaxed shadow-xs whitespace-pre-wrap break-words ${
-                      isSent ? bubbleSentBg : bubbleReceivedBg
-                    } ${isSent ? 'rounded-br-[4px]' : 'rounded-bl-[4px]'}`}
-                  >
-                    {m.text}
+        {/* Right spacing anchor */}
+        <div className="w-12 h-6" />
+      </div>
+
+      {/* 3. Messages Stream (Matching IMG_0092.png) */}
+      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-24 space-y-4">
+        {/* Generic Thread Messages (e.g. Safaricom from screenshot) */}
+        {isGeneric && thread?.messages && thread.messages.length > 0 ? (
+          thread.messages.map((msg, index) => {
+            const isOutgoing = msg.isOutgoing;
+            // Show timestamp header when appropriate
+            const showTimestamp = index === 0 || msg.timestamp.includes('Yesterday') || msg.timestamp.includes('Today');
+
+            return (
+              <div key={msg.id || index} className="space-y-1">
+                {showTimestamp && (
+                  <div className="text-center text-[12px] font-medium text-[#8e8e93] my-2.5">
+                    {msg.timestamp.includes('Yesterday') || msg.timestamp.includes('Today') 
+                      ? msg.timestamp 
+                      : `Today ${msg.timestamp}`}
                   </div>
-                  <span className={`text-[10px] mt-1 px-1 ${subtextClass}`}>
-                    {m.timestamp}
-                  </span>
+                )}
+
+                <div className={`flex ${isOutgoing ? 'justify-end' : 'justify-start'}`}>
+                  <div 
+                    className={`p-3.5 rounded-[20px] max-w-[85%] text-[15px] leading-relaxed select-text shadow-xs ${
+                      isOutgoing 
+                        ? 'bg-[#007aff] text-white rounded-br-[4px]' 
+                        : 'bg-[#26252a] text-white rounded-bl-[4px]'
+                    }`}
+                  >
+                    {renderFormattedText(msg.text)}
+                  </div>
                 </div>
-              );
-            })
-          )
+              </div>
+            );
+          })
         ) : (
-          /* Render CBE SMS Messages */
-          messages.length === 0 ? (
-            <div className="py-20 text-center text-xs text-[#8E8E93]">
-              No messages yet. Complete a transaction in CBE to receive real-time SMS alerts here.
-            </div>
-          ) : (
-            messages.map((msg) => {
-              const isSent = msg.role === 'sender' || msg.type === 'DEBIT';
-              const isWebReceipt = (msg.message && (msg.message.includes('cbe.et/r/') || msg.message.includes('receipt') || msg.message.includes('FT'))) || !!msg.receiptUrl;
-              const isHoliday = msg.message && (msg.message.includes('Happy') || msg.message.includes('Eid') || msg.message.includes('New Year'));
+          /* CBE Banking SMS Messages */
+          messages.map((msg, index) => {
+            const timeHeader = formatBubbleTime(msg.timestamp);
 
-              return (
-                <div 
-                  key={msg.id} 
-                  className={`flex flex-col ${isSent ? 'items-end' : 'items-start'} max-w-[85%] ${isSent ? 'ml-auto' : 'mr-auto'}`}
-                >
-                  {/* iMessage Bubble */}
-                  <div 
-                    className={`px-3.5 py-2.5 rounded-[18px] text-[14px] leading-relaxed shadow-xs whitespace-pre-wrap break-words ${
-                      isSent ? bubbleSentBg : bubbleReceivedBg
-                    } ${isSent ? 'rounded-br-[4px]' : 'rounded-bl-[4px]'}`}
-                  >
-                    {msg.message}
-
-                    {/* Interactive Button Chips for Receipts & Cards */}
-                    {(isWebReceipt || isHoliday) && (
-                      <div className="mt-2.5 pt-2 border-t border-black/10 dark:border-white/10 flex flex-wrap gap-1.5">
-                        {isWebReceipt && onOpenWebReceipt && (
-                          <button
-                            type="button"
-                            onClick={() => onOpenWebReceipt(msg)}
-                            className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#007AFF] text-white hover:opacity-90 transition active:scale-95 flex items-center gap-1 cursor-pointer"
-                          >
-                            <ExternalLink className="w-3 h-3" />
-                            View Official Receipt
-                          </button>
-                        )}
-                        {isHoliday && onOpenHolidayCard && (
-                          <button
-                            type="button"
-                            onClick={() => onOpenHolidayCard(msg)}
-                            className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500 text-black hover:opacity-90 transition active:scale-95 flex items-center gap-1 cursor-pointer"
-                          >
-                            <span>🎉 View Holiday Card</span>
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Timestamp */}
-                  <span className={`text-[10px] mt-1 px-1 ${subtextClass}`}>
-                    {formatBubbleTime(msg.timestamp)}
-                  </span>
+            return (
+              <div key={msg.id || index} className="space-y-1">
+                <div className="text-center text-[12px] font-medium text-[#8e8e93] my-2.5">
+                  {timeHeader}
                 </div>
-              );
-            })
-          )
+
+                <div className="flex justify-start">
+                  <div className="bg-[#26252a] text-white p-3.5 rounded-[20px] rounded-bl-[4px] max-w-[85%] text-[15px] leading-relaxed select-text shadow-xs">
+                    {renderFormattedText(msg.message, msg)}
+                  </div>
+                </div>
+              </div>
+            );
+          })
         )}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* iOS iMessage Input Bar */}
-      <div className={`p-2.5 border-t border-black/10 dark:border-white/10 ${bgClass} shrink-0`}>
-        <form 
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSend();
-          }}
-          className="flex items-center gap-2 max-w-md mx-auto"
+      {/* 4. Fixed Bottom Bar (+ button and Text Message input pill) */}
+      <div className="fixed bottom-0 inset-x-0 bg-black px-3 pt-2 pb-safe z-30 flex items-center gap-2 border-t border-[#1c1c1e]">
+        {/* Circular Plus Button */}
+        <button
+          type="button"
+          onClick={() => setShowProfileModal(true)}
+          className="w-9 h-9 bg-[#2c2c2e] hover:bg-[#3a3a3c] active:scale-95 rounded-full flex items-center justify-center text-white text-xl font-light shrink-0 transition-transform cursor-pointer"
+          title="Attach or Settings"
         >
-          {/* iOS Plus Circle Button */}
-          <button
-            type="button"
-            className="w-8 h-8 rounded-full bg-[#8E8E93]/20 hover:bg-[#8E8E93]/30 flex items-center justify-center text-[#007AFF] transition shrink-0 active:scale-95 cursor-pointer"
-            title="Add Attachment"
-          >
-            <Plus className="w-5 h-5 stroke-[2.5]" />
-          </button>
+          <Plus className="w-5 h-5 stroke-[2.5]" />
+        </button>
 
-          {/* Capsule Text Input */}
-          <div className={`flex-1 flex items-center rounded-full px-3.5 py-1.5 border ${inputBg} transition-colors`}>
-            <input
-              type="text"
-              placeholder="iMessage"
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              className="bg-transparent text-[14px] outline-none flex-1 placeholder:text-[#8E8E93]"
-            />
-            {inputText ? (
-              <button
-                type="submit"
-                className="w-6 h-6 rounded-full bg-[#007AFF] text-white flex items-center justify-center active:scale-95 transition cursor-pointer"
-              >
-                <ArrowUp className="w-3.5 h-3.5 stroke-[3]" />
-              </button>
-            ) : (
-              <span className="text-[11px] font-bold text-[#8E8E93]/60 uppercase">
-                {isGeneric ? 'SMS' : '127'}
-              </span>
-            )}
-          </div>
-        </form>
+        {/* Input Bar Pill */}
+        <div className="flex-1 bg-[#1c1c1e] border border-[#2c2c2e] rounded-full px-4 py-2 flex items-center justify-between text-[15px]">
+          <input
+            type="text"
+            placeholder="Text Message • SMS"
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+            className="bg-transparent text-white placeholder:text-[#8e8e93] outline-none flex-1 min-w-0"
+          />
+
+          {inputText.trim() ? (
+            <button
+              type="button"
+              onClick={handleSend}
+              className="w-7 h-7 bg-[#007aff] hover:bg-[#006ee6] active:scale-95 rounded-full flex items-center justify-center text-white shrink-0 ml-1.5 transition-transform cursor-pointer"
+            >
+              <ArrowUp className="w-4 h-4 stroke-[2.5]" />
+            </button>
+          ) : (
+            <Mic className="w-4 h-4 text-[#8e8e93] hover:text-white shrink-0 cursor-pointer ml-1.5" />
+          )}
+        </div>
       </div>
+
+      {/* 5. Profile & Settings Modal (Opens when Profile Avatar is tapped!) */}
+      <AppleProfileSettingsModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        senderName={senderTitle}
+        senderSubtitle={senderSubtitle}
+        accounts={accounts}
+        activeAccountNumber={activeAccount?.accountNumber}
+        onSelectAccount={(accNum) => {
+          const acc = accounts.find(a => a.accountNumber === accNum);
+          if (acc && onSelectAccount) {
+            onSelectAccount(acc);
+          }
+        }}
+        onClearMessages={onClearMessages}
+        onBackToApp={onBackToApp || onBack}
+        isDarkMode={isDarkMode}
+      />
     </div>
   );
 };

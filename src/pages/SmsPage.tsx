@@ -345,6 +345,7 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
               refreshThreads();
               setPageView('inbox');
             }}
+            onBackToApp={onBack}
             onClearMessages={() => {
               SmsService.clearAccountMessages(activeAccountNum);
               setMessages([]);
@@ -377,6 +378,7 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
             refreshThreads();
             setPageView('inbox');
           }}
+          onBackToApp={onBack}
           onSendMessage={(txt) => {
             GoogleMessagesService.sendMessage(selectedGenericThread.id, txt);
             refreshThreads();

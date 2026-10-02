@@ -8,6 +8,7 @@ export interface MessageThread {
   timestamp: string;
   timeLabel: string;
   unreadCount: number;
+  tag?: string;
   isCbe?: boolean;
   messages?: {
     id: string;

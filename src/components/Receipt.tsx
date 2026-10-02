@@ -700,341 +700,342 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         </div>
       )}
 
-      {/* 1. Phone Top Status Bar (Time, Cellular, Wi-Fi, Battery) - Excluded on iPhone & during screenshot capture */}
-      {shouldShowStatusBar && (
-        <div 
-          id="receipt-status-bar"
-          data-html2canvas-ignore="true"
-          className="w-full pt-2.5 pb-1 px-5 flex items-center justify-between text-white select-none z-20 flex-shrink-0 transition-opacity duration-200"
-        >
-          {/* Left: Time */}
-          <div className="text-left">
-            <span className="font-semibold text-[13px] sm:text-[14px] tracking-tight font-sans text-white/95 drop-shadow-xs">
-              {statusTime}
-            </span>
-          </div>
-
-          {/* Right: Cellular 4-Bars, Wi-Fi, and Battery Indicator */}
-          <div className="w-16 sm:w-20 flex items-center justify-end gap-1.5 text-white">
-            {/* Cellular 4-Bars */}
-            <div className="flex items-end gap-[1.5px] h-3" title="Cellular Full Signal">
-              <div className="w-[3px] h-1.5 bg-white rounded-[0.5px]" />
-              <div className="w-[3px] h-2 bg-white rounded-[0.5px]" />
-              <div className="w-[3px] h-2.5 bg-white rounded-[0.5px]" />
-              <div className="w-[3px] h-3 bg-white rounded-[0.5px]" />
-            </div>
-
-            {/* Wi-Fi Icon */}
-            <span title="Wi-Fi Connected" className="flex items-center">
-              <Wifi className="w-3.5 h-3.5 text-white stroke-[2.4]" />
-            </span>
-
-            {/* iOS Battery with Real Phone Battery Percentage & Charging State */}
-            <div 
-              className="flex items-center gap-[2px]" 
-              title={`Phone Battery: ${batteryLevel}% ${isPhoneCharging ? '(Charging ⚡)' : ''}`}
-            >
-              {/* Battery Body with Dynamic Real Phone Power Fill */}
-              <div className={`h-3 rounded-[3.5px] border-[1.5px] p-[1px] flex items-center relative transition-colors ${
-                isPhoneCharging 
-                  ? 'border-emerald-400 bg-emerald-950/40' 
-                  : (batteryLevel <= 20 ? 'border-red-400 bg-red-950/30' : 'border-white bg-black/15')
-              } ${batteryLevel === 100 ? 'w-6' : 'w-5.5'}`}>
-                <div 
-                  className={`h-full rounded-[1px] transition-all duration-500 ${
-                    isPhoneCharging 
-                      ? 'bg-emerald-400' 
-                      : (batteryLevel <= 20 ? 'bg-red-400' : 'bg-white')
-                  }`}
-                  style={{ width: `${Math.max(8, Math.min(100, batteryLevel))}%` }}
-                />
-                {isPhoneCharging && (
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <Zap className="w-2.5 h-2.5 text-white fill-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" />
-                  </div>
-                )}
-              </div>
-              {/* Battery Terminal Knob */}
-              <div className={`w-[1.5px] h-1.5 rounded-r-[1px] ${
-                isPhoneCharging 
-                  ? 'bg-emerald-400' 
-                  : (batteryLevel <= 20 ? 'bg-red-400' : 'bg-white')
-              }`} />
-
-              {/* Battery Percentage Number */}
-              <span className="text-[10px] font-bold text-white leading-none ml-0.5 tracking-tight select-none">
-                {batteryLevel}%
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 2. EXISTING RECEIPT CONTAINER (Captures ONLY receiptRef) */}
+      {/* 1. Phone Top Status Bar & Receipt Master Container (Captures EXACT receipt view matching Image 2 on Android & iOS) */}
       <div 
         ref={receiptRef}
-        id="cbe-existing-receipt"
-        className="w-full flex-1 flex flex-col bg-[#68137e] relative select-none"
+        id="cbe-full-receipt-capture-target"
+        className="w-full flex-1 flex flex-col justify-between bg-[#68137e] relative select-none"
       >
-        {/* Top Purple Navigation / App Header */}
-        <div className={`${isIPhone ? 'pt-[max(env(safe-area-inset-top,0px),24px)]' : (shouldShowStatusBar ? 'pt-2 sm:pt-3' : 'pt-7 sm:pt-8')} pb-8 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0`}>
-          <div className="flex items-center gap-2.5">
-            {/* iOS Top Back Button - excluded from screenshot */}
-            <button
-              type="button"
-              data-html2canvas-ignore="true"
-              data-screenshot-exclude="true"
-              onClick={onBack}
-              className="p-1.5 -ml-1.5 text-white hover:text-purple-200 active:opacity-70 transition flex items-center cursor-pointer rounded-full"
-              title="Return to Home"
-            >
-              <ChevronLeft className="w-6 h-6 stroke-[2.5]" />
-            </button>
-
-            {/* Solid White Shield with Purple Checkmark Icon perfectly fitted matching reference image */}
-            <div className="w-8.5 h-8.5 flex-shrink-0 flex items-center justify-center">
-              <svg className="w-8.5 h-8.5 drop-shadow-xs" viewBox="0 0 24 24" fill="none">
-                <path 
-                  d="M12 2.2c0.3 0 0.6 0.1 0.9 0.2l6.5 2.6c0.5 0.2 0.8 0.7 0.8 1.2v5.6c0 4.8-3.0 9.2-7.5 10.7-.5 0.2-1.0 0.2-1.4 0-4.5-1.5-7.5-5.9-7.5-10.7V6.2c0-.5.3-1 .8-1.2l6.5-2.6c.3-.1.6-.2.9-.2z" 
-                  fill="#ffffff" 
-                />
-                <path 
-                  d="M8.0 12.2L11.0 15.2L17.2 9.0" 
-                  stroke="#68137e" 
-                  strokeWidth="1.9" 
-                  strokeLinecap="butt" 
-                  strokeLinejoin="miter" 
-                  strokeMiterlimit="4"
-                  shapeRendering="geometricPrecision"
-                />
-              </svg>
+        {/* Phone Top Status Bar (Time, Cellular, Wi-Fi, Battery) - Authentic Android / iOS phone bar */}
+        {shouldShowStatusBar && (
+          <div 
+            id="receipt-status-bar"
+            className="w-full pt-2.5 pb-1 px-5 flex items-center justify-between text-white select-none z-20 flex-shrink-0 transition-opacity duration-200"
+          >
+            {/* Left: Time */}
+            <div className="text-left">
+              <span className="font-semibold text-[13px] sm:text-[14px] tracking-tight font-sans text-white/95 drop-shadow-xs">
+                {statusTime}
+              </span>
             </div>
-            <div>
-              <h2 className="font-bold text-[16px] sm:text-[17px] leading-tight text-white tracking-tight">Thank you</h2>
-              <p className="text-[12px] sm:text-[13px] text-purple-100 font-normal leading-tight mt-0.5">Success</p>
-            </div>
-          </div>
 
-          {/* Screenshot Button (Translucent circular badge with enlarged focus viewfinder) - excluded from screenshot */}
-          {!hideUiElements && !isCapturing && (
-            <button 
-              type="button"
-              id="btn-top-screenshot"
-              data-html2canvas-ignore="true"
-              data-screenshot-exclude="true"
-              onClick={handleScreenshot}
-              className="w-11 h-11 rounded-full bg-white/20 hover:bg-white/30 active:scale-95 flex items-center justify-center transition text-white cursor-pointer shadow-xs"
-              title="Take screenshot of receipt"
-            >
-              <ScreenshotViewfinderIcon className="w-7 h-7 text-white" strokeWidth={1.8} />
-            </button>
-          )}
-        </div>
+            {/* Right: Cellular 4-Bars, Wi-Fi, and Battery Indicator */}
+            <div className="w-16 sm:w-20 flex items-center justify-end gap-1.5 text-white">
+              {/* Cellular 4-Bars */}
+              <div className="flex items-end gap-[1.5px] h-3" title="Cellular Full Signal">
+                <div className="w-[3px] h-1.5 bg-white rounded-[0.5px]" />
+                <div className="w-[3px] h-2 bg-white rounded-[0.5px]" />
+                <div className="w-[3px] h-2.5 bg-white rounded-[0.5px]" />
+                <div className="w-[3px] h-3 bg-white rounded-[0.5px]" />
+              </div>
 
-        {/* Main White Sheet Container */}
-        <div className="bg-white rounded-t-[32px] sm:rounded-t-[36px] flex-1 px-4 sm:px-5 pt-0 pb-6 flex flex-col justify-between shadow-none relative">
-          
-          {/* Overlapping Large Success Checkmark Badge (Sharp edge, white half-circle on top only, no bottom circle, no shadow) */}
-          <div className="relative flex justify-center flex-shrink-0">
-            <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 top-0 w-[90px] h-[90px] sm:w-[98px] sm:h-[98px] pointer-events-none select-none z-10">
-              <svg 
-                viewBox="0 0 90 90" 
-                className="w-full h-full block" 
-                fill="none" 
-                xmlns="http://www.w3.org/2000/svg"
+              {/* Wi-Fi Icon */}
+              <span title="Wi-Fi Connected" className="flex items-center">
+                <Wifi className="w-3.5 h-3.5 text-white stroke-[2.4]" />
+              </span>
+
+              {/* iOS Battery with Real Phone Battery Percentage & Charging State */}
+              <div 
+                className="flex items-center gap-[2px]" 
+                title={`Phone Battery: ${batteryLevel}% ${isPhoneCharging ? '(Charging ⚡)' : ''}`}
               >
-                {/* 1. Purple Base Circle (radius 38, centered at 45, 45) */}
-                <circle cx="45" cy="45" r="38" fill="#68137e" />
+                {/* Battery Body with Dynamic Real Phone Power Fill */}
+                <div className={`h-3 rounded-[3.5px] border-[1.5px] p-[1px] flex items-center relative transition-colors ${
+                  isPhoneCharging 
+                    ? 'border-emerald-400 bg-emerald-950/40' 
+                    : (batteryLevel <= 20 ? 'border-red-400 bg-red-950/30' : 'border-white bg-black/15')
+                } ${batteryLevel === 100 ? 'w-6' : 'w-5.5'}`}>
+                  <div 
+                    className={`h-full rounded-[1px] transition-all duration-500 ${
+                      isPhoneCharging 
+                        ? 'bg-emerald-400' 
+                        : (batteryLevel <= 20 ? 'bg-red-400' : 'bg-white')
+                    }`}
+                    style={{ width: `${Math.max(8, Math.min(100, batteryLevel))}%` }}
+                  />
+                  {isPhoneCharging && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <Zap className="w-2.5 h-2.5 text-white fill-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" />
+                    </div>
+                  )}
+                </div>
+                {/* Battery Terminal Knob */}
+                <div className={`w-[1.5px] h-1.5 rounded-r-[1px] ${
+                  isPhoneCharging 
+                    ? 'bg-emerald-400' 
+                    : (batteryLevel <= 20 ? 'bg-red-400' : 'bg-white')
+                }`} />
 
-                {/* 2. Top-Half White Semi-Circle Arch Only */}
-                <path 
-                  d="M 0,45 A 45,45 0 0,1 90,45 L 83,45 A 38,38 0 0,0 7,45 Z" 
-                  fill="#ffffff" 
-                />
-
-                {/* 3. Bold Crisp White Checkmark with extended right arm and sharp ends matching reference image */}
-                <path
-                  d="M 24.5 45.5 L 39.0 60.0 L 71.0 28.0"
-                  fill="none"
-                  stroke="#ffffff"
-                  strokeWidth="7.2"
-                  strokeLinecap="butt"
-                  strokeLinejoin="miter"
-                  strokeMiterlimit="4"
-                  shapeRendering="geometricPrecision"
-                />
-              </svg>
+                {/* Battery Percentage Number */}
+                <span className="text-[10px] font-bold text-white leading-none ml-0.5 tracking-tight select-none">
+                  {batteryLevel}%
+                </span>
+              </div>
             </div>
           </div>
+        )}
 
-          {/* Spacer for the overlapping badge */}
-          <div className="h-12 sm:h-13 flex-shrink-0" />
+        {/* 2. RECEIPT CONTENT CONTAINER */}
+        <div 
+          id="cbe-existing-receipt"
+          className="w-full flex-1 flex flex-col bg-[#68137e] relative select-none"
+        >
+          {/* Top Purple Navigation / App Header */}
+          <div className={`${isIPhone ? 'pt-[max(env(safe-area-inset-top,0px),24px)]' : (shouldShowStatusBar ? 'pt-2 sm:pt-3' : 'pt-7 sm:pt-8')} pb-8 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0`}>
+            <div className="flex items-center gap-2.5">
+              {/* Top Back Button */}
+              <button
+                type="button"
+                onClick={onBack}
+                className="p-1.5 -ml-1.5 text-white hover:text-purple-200 active:opacity-70 transition flex items-center cursor-pointer rounded-full"
+                title="Return to Home"
+              >
+                <ChevronLeft className="w-6 h-6 stroke-[2.5]" />
+              </button>
 
-          <div className="space-y-3 flex-1 flex flex-col justify-center">
-            {/* Headline */}
-            <h1 className="text-center text-[15px] sm:text-[16px] font-medium text-black tracking-tight">
-              Transaction Completed Successfully!
-            </h1>
+              {/* Solid White Shield with Purple Checkmark Icon perfectly fitted matching reference image */}
+              <div className="w-8.5 h-8.5 flex-shrink-0 flex items-center justify-center">
+                <svg className="w-8.5 h-8.5 drop-shadow-xs" viewBox="0 0 24 24" fill="none">
+                  <path 
+                    d="M12 2.2c0.3 0 0.6 0.1 0.9 0.2l6.5 2.6c0.5 0.2 0.8 0.7 0.8 1.2v5.6c0 4.8-3.0 9.2-7.5 10.7-.5 0.2-1.0 0.2-1.4 0-4.5-1.5-7.5-5.9-7.5-10.7V6.2c0-.5.3-1 .8-1.2l6.5-2.6c.3-.1.6-.2.9-.2z" 
+                    fill="#ffffff" 
+                  />
+                  <path 
+                    d="M8.0 12.2L11.0 15.2L17.2 9.0" 
+                    stroke="#68137e" 
+                    strokeWidth="1.9" 
+                    strokeLinecap="butt" 
+                    strokeLinejoin="miter" 
+                    strokeMiterlimit="4" 
+                    shapeRendering="geometricPrecision"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h2 className="font-bold text-[16px] sm:text-[17px] leading-tight text-white tracking-tight">Thank you</h2>
+                <p className="text-[12px] sm:text-[13px] text-purple-100 font-normal leading-tight mt-0.5">Success</p>
+              </div>
+            </div>
 
-            {/* Main Transaction Summary Gray Card */}
-            <div className="bg-[#f2f3f5] rounded-[24px] p-4 sm:p-5 space-y-3 border border-gray-200/50 shadow-xs">
-              <p className="text-[#8e8e93] font-normal text-[13.5px] sm:text-[14px]">Transaction Summary</p>
+            {/* Screenshot Button (Translucent circular badge with enlarged focus viewfinder) - hidden during screenshot capture */}
+            {!hideUiElements && !isCapturing && (
+              <button 
+                type="button"
+                id="btn-top-screenshot"
+                data-screenshot-exclude="true"
+                onClick={handleScreenshot}
+                className="w-11 h-11 rounded-full bg-white/20 hover:bg-white/30 active:scale-95 flex items-center justify-center transition text-white cursor-pointer shadow-xs"
+                title="Take screenshot of receipt"
+              >
+                <ScreenshotViewfinderIcon className="w-7 h-7 text-white" strokeWidth={1.8} />
+              </button>
+            )}
+          </div>
 
-              {/* Paragraph Text with bold highlights matching CBE reference */}
-              {isCredit ? (
-                <p className="text-[14px] sm:text-[14.5px] leading-[1.58] text-[#1a1a1a] font-normal select-text">
-                  ETB <span className="font-bold text-black">{amountFormatted}</span> has been credited to <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} from <span className="font-bold text-black">{senderName}</span> {senderSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason}
-                </p>
-              ) : (
-                <p className="text-[14px] sm:text-[14.5px] leading-[1.58] text-[#1a1a1a] font-normal select-text">
-                  ETB <span className="font-bold text-black">{amountFormatted}</span> has been debited from <span className="font-bold text-black">{senderName}</span> {senderSuffix} for <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason} Total Amount Debited: ETB{totalDebitedFormatted} with Service Charge of ETB{serviceChargeFormatted}, VAT (15%) of ETB{vatFormatted} and Disaster Recovery (5%) of ETB{disasterRecoveryFormatted}.
-                </p>
-              )}
-
-              {/* Realistic QR Code Centered with authentic rounded grey frame */}
-              <div className="flex justify-center pt-3 sm:pt-3.5 pb-2">
-                <div 
-                  id="receipt-qr-container"
-                  className="bg-white p-2 sm:p-2.5 rounded-[22px] border-[2.8px] border-[#737373] shadow-xs inline-flex items-center justify-center select-none"
+          {/* Main White Sheet Container */}
+          <div className="bg-white rounded-t-[32px] sm:rounded-t-[36px] flex-1 px-4 sm:px-5 pt-0 pb-6 flex flex-col justify-between shadow-none relative">
+            
+            {/* Overlapping Large Success Checkmark Badge (Sharp edge, white half-circle on top only, no bottom circle, no shadow) */}
+            <div className="relative flex justify-center flex-shrink-0">
+              <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 top-0 w-[90px] h-[90px] sm:w-[98px] sm:h-[98px] pointer-events-none select-none z-10">
+                <svg 
+                  viewBox="0 0 90 90" 
+                  className="w-full h-full block" 
+                  fill="none" 
+                  xmlns="http://www.w3.org/2000/svg"
                 >
-                  <div className="w-34 h-34 sm:w-38 sm:h-38 flex items-center justify-center">
-                    {customQrCode ? (
-                      <img 
-                        src={customQrCode} 
-                        alt={`Transaction ${txId} QR Code`} 
-                        className="w-full h-full object-contain block"
-                      />
-                    ) : qrDataUrl ? (
-                      <img 
-                        src={qrDataUrl} 
-                        alt={`Transaction ${txId} QR Code`} 
-                        className="w-full h-full object-contain block"
-                      />
-                    ) : txQrSvgDataUri ? (
-                      <img 
-                        src={txQrSvgDataUri} 
-                        alt={`Transaction ${txId} QR Code`} 
-                        className="w-full h-full object-contain block"
-                      />
-                    ) : (
-                      /* Authentic 29x29 Version 3 Matrix fallback */
-                      <div 
-                        className="grid gap-[1px] w-full h-full bg-white p-0.5"
-                        style={{ gridTemplateColumns: `repeat(${qrMatrix.length}, minmax(0, 1fr))` }}
-                      >
-                        {qrMatrix.flatMap((row, rIdx) =>
-                          row.map((filled, cIdx) => (
-                            <div 
-                              key={`${rIdx}-${cIdx}`} 
-                              className={`rounded-[0.2px] ${
-                                filled ? 'bg-black' : 'bg-transparent'
-                              }`}
-                            />
-                          ))
-                        )}
-                      </div>
-                    )}
+                  {/* 1. Purple Base Circle (radius 38, centered at 45, 45) */}
+                  <circle cx="45" cy="45" r="38" fill="#68137e" />
+
+                  {/* 2. Top-Half White Semi-Circle Arch Only */}
+                  <path 
+                    d="M 0,45 A 45,45 0 0,1 90,45 L 83,45 A 38,38 0 0,0 7,45 Z" 
+                    fill="#ffffff" 
+                  />
+
+                  {/* 3. Bold Crisp White Checkmark with extended right arm and sharp ends matching reference image */}
+                  <path
+                    d="M 24.5 45.5 L 39.0 60.0 L 71.0 28.0"
+                    fill="none"
+                    stroke="#ffffff"
+                    strokeWidth="7.2"
+                    strokeLinecap="butt"
+                    strokeLinejoin="miter"
+                    strokeMiterlimit="4"
+                    shapeRendering="geometricPrecision"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            {/* Spacer for the overlapping badge */}
+            <div className="h-12 sm:h-13 flex-shrink-0" />
+
+            <div className="space-y-3 flex-1 flex flex-col justify-center">
+              {/* Headline */}
+              <h1 className="text-center text-[15px] sm:text-[16px] font-medium text-black tracking-tight">
+                Transaction Completed Successfully!
+              </h1>
+
+              {/* Main Transaction Summary Gray Card */}
+              <div className="bg-[#f2f3f5] rounded-[24px] p-4 sm:p-5 space-y-3 border border-gray-200/50 shadow-xs">
+                <p className="text-[#8e8e93] font-normal text-[13.5px] sm:text-[14px]">Transaction Summary</p>
+
+                {/* Paragraph Text with bold highlights matching CBE reference */}
+                {isCredit ? (
+                  <p className="text-[14px] sm:text-[14.5px] leading-[1.58] text-[#1a1a1a] font-normal select-text">
+                    ETB <span className="font-bold text-black">{amountFormatted}</span> has been credited to <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} from <span className="font-bold text-black">{senderName}</span> {senderSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason}
+                  </p>
+                ) : (
+                  <p className="text-[14px] sm:text-[14.5px] leading-[1.58] text-[#1a1a1a] font-normal select-text">
+                    ETB <span className="font-bold text-black">{amountFormatted}</span> has been debited from <span className="font-bold text-black">{senderName}</span> {senderSuffix} for <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason} Total Amount Debited: ETB{totalDebitedFormatted} with Service Charge of ETB{serviceChargeFormatted}, VAT (15%) of ETB{vatFormatted} and Disaster Recovery (5%) of ETB{disasterRecoveryFormatted}.
+                  </p>
+                )}
+
+                {/* Realistic QR Code Centered with authentic rounded grey frame */}
+                <div className="flex justify-center pt-3 sm:pt-3.5 pb-2">
+                  <div 
+                    id="receipt-qr-container"
+                    className="bg-white p-2 sm:p-2.5 rounded-[22px] border-[2.8px] border-[#737373] shadow-xs inline-flex items-center justify-center select-none"
+                  >
+                    <div className="w-34 h-34 sm:w-38 sm:h-38 flex items-center justify-center">
+                      {customQrCode ? (
+                        <img 
+                          src={customQrCode} 
+                          alt={`Transaction ${txId} QR Code`} 
+                          className="w-full h-full object-contain block"
+                        />
+                      ) : qrDataUrl ? (
+                        <img 
+                          src={qrDataUrl} 
+                          alt={`Transaction ${txId} QR Code`} 
+                          className="w-full h-full object-contain block"
+                        />
+                      ) : txQrSvgDataUri ? (
+                        <img 
+                          src={txQrSvgDataUri} 
+                          alt={`Transaction ${txId} QR Code`} 
+                          className="w-full h-full object-contain block"
+                        />
+                      ) : (
+                        /* Authentic 29x29 Version 3 Matrix fallback */
+                        <div 
+                          className="grid gap-[1px] w-full h-full bg-white p-0.5"
+                          style={{ gridTemplateColumns: `repeat(${qrMatrix.length}, minmax(0, 1fr))` }}
+                        >
+                          {qrMatrix.flatMap((row, rIdx) =>
+                            row.map((filled, cIdx) => (
+                              <div 
+                                key={`${rIdx}-${cIdx}`} 
+                                className={`rounded-[0.2px] ${
+                                  filled ? 'bg-black' : 'bg-transparent'
+                                }`}
+                              />
+                            ))
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Commercial Bank of Ethiopia Footer Inset matching reference screenshot */}
-              <div 
-                id="cbe-receipt-bottom-bar"
-                className="flex items-center gap-3.5 pt-2 pb-1 px-1.5 min-w-0 w-full"
-              >
+                {/* Commercial Bank of Ethiopia Footer Inset matching reference screenshot */}
                 <div 
-                  id="cbe-receipt-logo-container"
-                  className="w-11 h-11 sm:w-12 sm:h-12 flex-shrink-0 flex items-center justify-center"
+                  id="cbe-receipt-bottom-bar"
+                  className="flex items-center gap-3.5 pt-2 pb-1 px-1.5 min-w-0 w-full"
                 >
-                  <CbeLogo className="w-11 h-11 sm:w-12 sm:h-12 object-contain" src={customBankLogo} />
+                  <div 
+                    id="cbe-receipt-logo-container"
+                    className="w-11 h-11 sm:w-12 sm:h-12 flex-shrink-0 flex items-center justify-center"
+                  >
+                    <CbeLogo className="w-11 h-11 sm:w-12 sm:h-12 object-contain" src={customBankLogo} />
+                  </div>
+                  <div className="min-w-0 flex-1 text-left flex flex-col justify-center">
+                    <h4 className="font-bold text-[#1f2937] text-[13.5px] sm:text-[14px] leading-tight tracking-tight">
+                      Commercial Bank of Ethiopia
+                    </h4>
+                    <p className="text-[#6b7280] text-[11px] sm:text-[11.5px] font-normal leading-tight mt-0.5 tracking-tight">
+                      The bank you can always rely on!
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1 text-left flex flex-col justify-center">
-                  <h4 className="font-bold text-[#1f2937] text-[13.5px] sm:text-[14px] leading-tight tracking-tight">
-                    Commercial Bank of Ethiopia
-                  </h4>
-                  <p className="text-[#6b7280] text-[11px] sm:text-[11.5px] font-normal leading-tight mt-0.5 tracking-tight">
-                    The bank you can always rely on!
-                  </p>
-                </div>
-              </div>
 
+              </div>
             </div>
-          </div>
 
+          </div>
         </div>
-      </div>
 
-      {/* 3. Bottom Actions Section (OUTSIDE receiptRef, so NEVER in the screenshot!) */}
-      {!hideUiElements && !isCapturing && (
-        <div 
-          data-html2canvas-ignore="true" 
-          data-screenshot-exclude="true" 
-          className="bg-white px-4 sm:px-5 pb-5 space-y-3.5 flex-shrink-0 select-none"
-        >
-          {/* 3 Action Buttons matching exact app icons */}
-          <div className="flex items-center justify-around px-3 text-black">
-            {/* Receipt Button */}
-            <button 
-              type="button"
-              id="btn-action-receipt"
-              onClick={() => setShowDetailedModal(true)}
-              className="flex items-center gap-2 text-[13.5px] font-medium text-black hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2 rounded-xl"
-            >
-              {/* Document with 2 top-left horizontal lines, folded top-right corner, and $ sign icon */}
-              <div className="relative w-4 h-[18px] bg-black rounded-[2.5px] flex flex-col justify-between p-[2px] text-white flex-shrink-0 overflow-hidden">
-                {/* Folded top-right corner */}
-                <div className="absolute -top-[0.5px] -right-[0.5px] w-[5.5px] h-[5.5px] bg-[#f8f9fa] border-b border-l border-black" />
-                
-                {/* Top-left two horizontal lines */}
-                <div className="flex flex-col gap-[1.5px] w-[7px] pt-[0.5px] pl-[0.5px]">
-                  <div className="h-[1.2px] w-full bg-white rounded-full" />
-                  <div className="h-[1.2px] w-4/5 bg-white rounded-full" />
-                </div>
-
-                {/* Centered $ symbol */}
-                <div className="flex items-center justify-center flex-1">
-                  <span className="text-[9px] font-black font-sans leading-none mt-0.5">$</span>
-                </div>
-              </div>
-              <span>Receipt</span>
-            </button>
-
-            {/* Screenshot Button: takes screenshot of existing receipt */}
-            <button 
-              type="button"
-              id="btn-action-screenshot"
-              onClick={handleScreenshot}
-              className="flex items-center gap-2 text-[13.5px] font-medium text-black hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2 rounded-xl"
-              title="Take screenshot"
-            >
-              <ScreenshotViewfinderIcon className="w-[18px] h-[18px] text-black" strokeWidth={1.8} />
-              <span>Screenshot</span>
-            </button>
-
-            {/* Share Button */}
-            <button 
-              type="button"
-              id="btn-action-share"
-              onClick={handleShare}
-              className="flex items-center gap-2 text-[13.5px] font-medium text-black hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2 rounded-xl"
-            >
-              <Share2 className="w-[18px] h-[18px] stroke-[2.2] fill-black text-black" />
-              <span>Share</span>
-            </button>
-          </div>
-
-          {/* Full-width Close Pill Button */}
-          <button 
-            type="button"
-            id="btn-action-close"
-            onClick={onBack}
-            className="w-full bg-[#d7d7db] hover:bg-[#ceced3] active:bg-[#c4c4c9] text-[#333333] font-bold py-3.5 rounded-full text-[15px] transition active:scale-[0.99] cursor-pointer shadow-xs mb-1"
+        {/* 3. Bottom Actions Section (Receipt, Screenshot, Share, Close) - Included in screenshot matching Image 2 */}
+        {!hideUiElements && (
+          <div 
+            id="cbe-receipt-bottom-actions-container"
+            className="bg-white px-4 sm:px-5 pb-5 space-y-3.5 flex-shrink-0 select-none"
           >
-            Close
-          </button>
-        </div>
-      )}
+            {/* 3 Action Buttons matching exact app icons */}
+            <div className="flex items-center justify-around px-3 text-black">
+              {/* Receipt Button */}
+              <button 
+                type="button"
+                id="btn-action-receipt"
+                onClick={() => setShowDetailedModal(true)}
+                className="flex items-center gap-2 text-[13.5px] font-medium text-black hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2 rounded-xl"
+              >
+                {/* Document with 2 top-left horizontal lines, folded top-right corner, and $ sign icon */}
+                <div className="relative w-4 h-[18px] bg-black rounded-[2.5px] flex flex-col justify-between p-[2px] text-white flex-shrink-0 overflow-hidden">
+                  {/* Folded top-right corner */}
+                  <div className="absolute -top-[0.5px] -right-[0.5px] w-[5.5px] h-[5.5px] bg-[#f8f9fa] border-b border-l border-black" />
+                  
+                  {/* Top-left two horizontal lines */}
+                  <div className="flex flex-col gap-[1.5px] w-[7px] pt-[0.5px] pl-[0.5px]">
+                    <div className="h-[1.2px] w-full bg-white rounded-full" />
+                    <div className="h-[1.2px] w-4/5 bg-white rounded-full" />
+                  </div>
+
+                  {/* Centered $ symbol */}
+                  <div className="flex items-center justify-center flex-1">
+                    <span className="text-[9px] font-black font-sans leading-none mt-0.5">$</span>
+                  </div>
+                </div>
+                <span>Receipt</span>
+              </button>
+
+              {/* Screenshot Button: takes screenshot of existing receipt */}
+              <button 
+                type="button"
+                id="btn-action-screenshot"
+                onClick={handleScreenshot}
+                className="flex items-center gap-2 text-[13.5px] font-medium text-black hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2 rounded-xl"
+                title="Take screenshot"
+              >
+                <ScreenshotViewfinderIcon className="w-[18px] h-[18px] text-black" strokeWidth={1.8} />
+                <span>Screenshot</span>
+              </button>
+
+              {/* Share Button */}
+              <button 
+                type="button"
+                id="btn-action-share"
+                onClick={handleShare}
+                className="flex items-center gap-2 text-[13.5px] font-medium text-black hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2 rounded-xl"
+              >
+                <Share2 className="w-[18px] h-[18px] stroke-[2.2] fill-black text-black" />
+                <span>Share</span>
+              </button>
+            </div>
+
+            {/* Full-width Close Pill Button */}
+            <button 
+              type="button"
+              id="btn-action-close"
+              onClick={onBack}
+              className="w-full bg-[#d7d7db] hover:bg-[#ceced3] active:bg-[#c4c4c9] text-[#333333] font-bold py-3.5 rounded-full text-[15px] transition active:scale-[0.99] cursor-pointer shadow-xs mb-1"
+            >
+              Close
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* When in Clean Screenshot Mode (matching Image 1) */}
       {hideUiElements && (
