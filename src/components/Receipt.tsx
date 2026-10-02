@@ -605,15 +605,15 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         setCapturedScreenshotUrl(dataUrl);
         setShowScreenshotModal(true);
 
-        // 4. Cross-platform save / share workflow (Android, iOS, Browser/PWA)
+        // 4. Cross-platform safe preparation (Android, iOS, Browser/PWA)
         try {
-          const result = await saveAndShareReceiptImage(dataUrl, txId, true);
+          const result = await saveAndShareReceiptImage(dataUrl, txId, false);
           if (result.saved) {
-            setCopiedToast('Receipt saved to Photos / Gallery');
+            setCopiedToast('Full receipt screenshot captured!');
             setTimeout(() => setCopiedToast(null), 3000);
           }
         } catch (saveErr) {
-          console.warn('[Screenshot] Save/share background notice:', saveErr);
+          console.warn('[Screenshot] Background save notice:', saveErr);
         }
       }
     } catch (err) {
@@ -904,15 +904,15 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                         alt={`Transaction ${txId} QR Code`} 
                         className="w-full h-full object-contain block"
                       />
-                    ) : txQrSvgDataUri ? (
-                      <img 
-                        src={txQrSvgDataUri} 
-                        alt={`Transaction ${txId} QR Code`} 
-                        className="w-full h-full object-contain block"
-                      />
                     ) : qrDataUrl ? (
                       <img 
                         src={qrDataUrl} 
+                        alt={`Transaction ${txId} QR Code`} 
+                        className="w-full h-full object-contain block"
+                      />
+                    ) : txQrSvgDataUri ? (
+                      <img 
+                        src={txQrSvgDataUri} 
                         alt={`Transaction ${txId} QR Code`} 
                         className="w-full h-full object-contain block"
                       />
@@ -1057,11 +1057,11 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         />
       )}
 
-      {/* iOS Screenshot Preview Sheet Modal */}
+      {/* Android & iOS Screenshot Preview Sheet Modal */}
       {showScreenshotModal && capturedScreenshotUrl && (
         <div 
           data-html2canvas-ignore="true"
-          className="fixed inset-0 z-[120] bg-black/85 backdrop-blur-md flex flex-col justify-between p-4 sm:p-6 animate-in fade-in duration-200 select-none"
+          className="fixed inset-0 z-[120] bg-black/90 backdrop-blur-md flex flex-col justify-between p-4 sm:p-6 animate-in fade-in duration-200 select-none"
         >
           {/* Top Bar: Done & Navigation Title */}
           <div className="flex items-center justify-between text-white pt-safe pb-2">
@@ -1073,7 +1073,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
               Done
             </button>
             <span className="text-xs font-bold uppercase tracking-wider text-purple-200">
-              Clean Screenshot
+              Receipt Screenshot
             </span>
             <button
               type="button"
@@ -1088,35 +1088,38 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             </button>
           </div>
 
-          {/* Screenshot Preview Image */}
-          <div className="flex-1 flex items-center justify-center p-2 min-h-0 overflow-hidden">
+          {/* Screenshot Preview Image: Touch & Long-press enabled for Android & iOS */}
+          <div className="flex-1 flex items-center justify-center p-2 min-h-0 overflow-auto">
             <img 
               src={capturedScreenshotUrl} 
-              alt="CBE Clean Receipt Screenshot" 
-              className="max-h-full max-w-full object-contain rounded-2xl shadow-2xl border border-white/20"
+              alt="CBE Full Receipt Screenshot" 
+              className="max-h-full max-w-full object-contain rounded-2xl shadow-2xl border border-white/20 select-auto pointer-events-auto touch-manipulation cursor-pointer"
+              title="Touch & hold on Android or iOS to save image"
             />
           </div>
 
           {/* Bottom Actions: Save to Gallery, Share, and Return to Home */}
           <div className="space-y-2.5 pt-2 pb-safe max-w-sm mx-auto w-full">
             {/* Gallery Save Hint */}
-            <p className="text-[11px] text-center text-white/80 font-medium tracking-tight">
-              📸 Saved to device. Tap below to re-save to Photos / Gallery or Share.
+            <p className="text-[11px] text-center text-white/90 font-medium tracking-tight">
+              📸 Full receipt captured! Tap below to Save to Gallery or Share. (On mobile, you can also touch &amp; hold the image to save)
             </p>
 
             <div className="grid grid-cols-2 gap-2.5">
               <button
                 type="button"
+                id="btn-modal-save-gallery"
                 onClick={() => saveImageToGallery(capturedScreenshotUrl)}
-                className="w-full bg-[#70189F] hover:bg-[#8320b9] text-white font-bold py-3 rounded-2xl text-xs transition flex items-center justify-center gap-2 shadow-lg active:scale-95 cursor-pointer"
+                className="w-full bg-[#70189F] hover:bg-[#8320b9] active:bg-[#5b1082] text-white font-bold py-3 rounded-2xl text-xs transition flex items-center justify-center gap-2 shadow-lg active:scale-95 cursor-pointer"
               >
-                <ImageIcon className="w-4 h-4 text-amber-300" />
+                <Download className="w-4 h-4 text-amber-300" />
                 <span>Save to Gallery</span>
               </button>
               <button
                 type="button"
+                id="btn-modal-share-image"
                 onClick={() => handleShareScreenshotImage(capturedScreenshotUrl)}
-                className="w-full bg-white/15 hover:bg-white/25 text-white font-bold py-3 rounded-2xl text-xs transition flex items-center justify-center gap-2 border border-white/20 active:scale-95 cursor-pointer"
+                className="w-full bg-white/15 hover:bg-white/25 active:bg-white/30 text-white font-bold py-3 rounded-2xl text-xs transition flex items-center justify-center gap-2 border border-white/20 active:scale-95 cursor-pointer"
               >
                 <Share2 className="w-4 h-4" />
                 <span>Share</span>

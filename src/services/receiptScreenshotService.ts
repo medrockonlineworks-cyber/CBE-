@@ -18,7 +18,63 @@ export function getSafeReceiptFilename(txId: string): string {
 }
 
 /**
- * Converts any image element inside the receipt into a self-contained Base64 Data URL
+ * Safely converts a Base64 or Data URL to a native binary Blob without using fetch()
+ * (which can fail in Android WebViews / iframes).
+ */
+export function dataUrlToBlob(dataUrl: string): Blob {
+  const parts = dataUrl.split(',');
+  const mime = parts[0].match(/:(.*?);/)?.[1] || 'image/png';
+  const bstr = atob(parts[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new Blob([u8arr], { type: mime });
+}
+
+/**
+ * Converts an SVG Data URL (e.g. data:image/svg+xml...) to a rasterized PNG Data URL
+ * to avoid tainted canvas or blank image issues on Android Chrome / WebKit.
+ */
+async function rasterizeSvgToPngDataUrl(svgDataUrl: string, width = 450, height = 450): Promise<string> {
+  return new Promise((resolve) => {
+    try {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      const timer = setTimeout(() => resolve(svgDataUrl), 1500);
+
+      img.onload = () => {
+        clearTimeout(timer);
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return resolve(svgDataUrl);
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, width, height);
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/png'));
+        } catch {
+          resolve(svgDataUrl);
+        }
+      };
+
+      img.onerror = () => {
+        clearTimeout(timer);
+        resolve(svgDataUrl);
+      };
+
+      img.src = svgDataUrl;
+    } catch {
+      resolve(svgDataUrl);
+    }
+  });
+}
+
+/**
+ * Converts any image element inside the receipt into a self-contained Base64 PNG Data URL
  * and ensures the browser decodes it before canvas rendering.
  */
 async function inlineImageElement(img: HTMLImageElement): Promise<void> {
@@ -39,7 +95,21 @@ async function inlineImageElement(img: HTMLImageElement): Promise<void> {
     return;
   }
 
-  // If already a base64 data URL, ensure it is decoded
+  // If already an SVG Data URL, rasterize to PNG to prevent Android Chrome canvas taint
+  if (img.src && img.src.startsWith('data:image/svg')) {
+    try {
+      const pngData = await rasterizeSvgToPngDataUrl(img.src, 450, 450);
+      img.src = pngData;
+      if ('decode' in img) {
+        await img.decode().catch(() => {});
+      }
+      return;
+    } catch {
+      // Continue
+    }
+  }
+
+  // If already a PNG/JPEG base64 data URL, ensure it is decoded
   if (img.src && img.src.startsWith('data:')) {
     if ('decode' in img) {
       await img.decode().catch(() => {});
@@ -102,15 +172,29 @@ async function inlineImageElement(img: HTMLImageElement): Promise<void> {
 }
 
 /**
- * Captures ONLY the existing rendered receipt DOM element.
- * Waits for full render, images (including CBE logo), SVGs, QR code, and fonts
- * before taking a crisp, high-resolution PNG using html2canvas-pro.
+ * Captures the FULL rendered receipt DOM element.
+ * Specially optimized for Android and iOS phones:
+ * - Resets and restores scroll offsets so scrolled views don't cut off or shift
+ * - Expands full content height and width without clipping
+ * - Inlines all assets and rasterizes SVGs
+ * - Uses memory-safe scale for high-DPI Android/Retina screens
  */
 export async function captureReceiptElement(element: HTMLElement): Promise<string> {
-  // 1. Wait until receipt is fully rendered and pending microtasks / layout complete
+  // 1. Capture initial scroll position of scroll wrapper so we can restore it afterwards
+  const scrollWrapper = document.getElementById('receipt-screen-wrapper') || 
+                        element.closest('.overflow-y-auto') || 
+                        element.parentElement;
+  const initialScrollTop = scrollWrapper ? scrollWrapper.scrollTop : window.scrollY;
+
+  // Temporarily reset scroll to 0 for flawless viewport bounding calculation
+  if (scrollWrapper) {
+    scrollWrapper.scrollTop = 0;
+  }
+
+  // 2. Allow DOM and layout microtasks to settle
   await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
-  // 2. Wait for all images inside the receipt container to finish loading and inline them as Data URLs
+  // 3. Wait for all images inside the receipt container to finish loading and inline them as Data URLs
   const images = Array.from(element.querySelectorAll('img'));
   await Promise.all(
     images.map(async (img) => {
@@ -123,7 +207,7 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
           };
           img.addEventListener('load', onDone);
           img.addEventListener('error', onDone);
-          setTimeout(resolve, 600);
+          setTimeout(resolve, 800);
         });
       }
 
@@ -131,10 +215,7 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
     })
   );
 
-  // Allow layout and GPU rasterization to settle
-  await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-
-  // 3. Ensure fonts are loaded
+  // 4. Ensure web fonts are completely ready
   if (typeof document !== 'undefined' && 'fonts' in document && document.fonts.ready) {
     try {
       await document.fonts.ready;
@@ -143,9 +224,13 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
     }
   }
 
-  // 4. Determine high-resolution pixel ratio (2x-3x: sharp on Retina/mobile without memory overflow)
+  // 5. Measure full content bounds
+  const fullWidth = Math.max(element.scrollWidth, element.offsetWidth, 360);
+  const fullHeight = Math.max(element.scrollHeight, element.offsetHeight);
+
+  // Safe pixel ratio for mobile devices (2.0x to 2.5x: razor-sharp without exceeding Android canvas memory limits)
   const rawDpr = typeof window !== 'undefined' ? window.devicePixelRatio || 2 : 2;
-  const pixelRatio = Math.min(3, Math.max(2, rawDpr));
+  const pixelRatio = Math.min(2.5, Math.max(2, rawDpr));
 
   const isExcluded = (node: Element): boolean => {
     return (
@@ -156,7 +241,6 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
     );
   };
 
-  // 5. Capture existing rendered receipt DOM element using html2canvas-pro
   try {
     const canvas = await html2canvas(element, {
       scale: pixelRatio,
@@ -164,12 +248,45 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
       allowTaint: false,
       backgroundColor: '#68137e',
       logging: false,
-      imageTimeout: 10000,
+      imageTimeout: 15000,
+      scrollX: 0,
+      scrollY: 0,
+      x: 0,
+      y: 0,
+      width: fullWidth,
+      height: fullHeight,
+      windowWidth: fullWidth,
+      windowHeight: fullHeight,
       ignoreElements: isExcluded,
-      onclone: (clonedDoc: Document) => {
+      onclone: (clonedDoc: Document, clonedElement: HTMLElement) => {
+        // Reset scroll position on clone
+        clonedDoc.defaultView?.scrollTo(0, 0);
+        const clonedWrapper = clonedDoc.getElementById('receipt-screen-wrapper');
+        if (clonedWrapper) {
+          clonedWrapper.scrollTop = 0;
+          clonedWrapper.scrollLeft = 0;
+          clonedWrapper.style.overflow = 'visible';
+          clonedWrapper.style.height = 'auto';
+          clonedWrapper.style.maxHeight = 'none';
+        }
+
+        // Expand clonedElement to full content height with zero clipping
+        clonedElement.style.overflow = 'visible';
+        clonedElement.style.height = 'auto';
+        clonedElement.style.maxHeight = 'none';
+        clonedElement.style.transform = 'none';
+
+        // Ensure white sheet container does not clip or shrink
+        const whiteSheet = clonedElement.querySelector('.bg-white');
+        if (whiteSheet) {
+          (whiteSheet as HTMLElement).style.overflow = 'visible';
+          (whiteSheet as HTMLElement).style.height = 'auto';
+          (whiteSheet as HTMLElement).style.flex = '1 0 auto';
+        }
+
         // Ensure any status bar or action buttons in the cloned tree are strictly hidden
         const excludedNodes = clonedDoc.querySelectorAll(
-          '[data-screenshot-exclude="true"], [data-html2canvas-ignore="true"], #receipt-status-bar, #btn-top-screenshot'
+          '[data-screenshot-exclude="true"], [data-html2canvas-ignore="true"], #receipt-status-bar, #btn-top-screenshot, #btn-action-close, #btn-action-receipt, #btn-action-screenshot, #btn-action-share'
         );
         excludedNodes.forEach((node) => {
           (node as HTMLElement).style.display = 'none';
@@ -189,22 +306,33 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
   } catch (primaryErr) {
     console.warn('[ScreenshotService] html2canvas-pro primary capture note, retrying with fallback options:', primaryErr);
     
-    // Fallback: html2canvas with taint allowed and 2x scale
+    // Fallback: html2canvas with standard scale 2 and zero scroll
     const fallbackCanvas = await html2canvas(element, {
       scale: 2,
       useCORS: true,
-      allowTaint: true,
+      allowTaint: false,
       backgroundColor: '#68137e',
       logging: false,
+      scrollX: 0,
+      scrollY: 0,
+      x: 0,
+      y: 0,
+      width: fullWidth,
+      height: fullHeight,
       ignoreElements: isExcluded,
     });
     return fallbackCanvas.toDataURL('image/png');
+  } finally {
+    // Restore user scroll position so viewport does not jump
+    if (scrollWrapper) {
+      scrollWrapper.scrollTop = initialScrollTop;
+    }
   }
 }
 
 /**
  * Cross-platform save and share workflow.
- * Works on Android (Capacitor), iOS (Capacitor), and Browser / PWA.
+ * Full support for Android (Capacitor & Web Chrome) and iOS (Capacitor & Safari).
  * Never throws fatal exceptions to UI - guarantees receipt stays visible and preview works.
  */
 export async function saveAndShareReceiptImage(
@@ -269,34 +397,36 @@ export async function saveAndShareReceiptImage(
       return { saved: false };
     }
   } else {
-    // Browser / PWA environment
+    // Browser / PWA environment (Android Chrome, iOS Safari, etc.)
     try {
-      const res = await fetch(dataUrl);
-      const blob = await res.blob();
+      const blob = dataUrlToBlob(dataUrl);
       const file = new File([blob], filename, { type: 'image/png' });
 
-      // 1. Web Share API with file support (if supported and allowed)
-      let shared = false;
+      // 1. Web Share API with file support (works on Android Chrome and iOS Safari when user gesture is present)
       if (triggerShareModal && typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({
             files: [file],
-            title: 'CBE Receipt',
+            title: `CBE Receipt - ${txId}`,
             text: `Commercial Bank of Ethiopia Transaction Receipt #${txId}`,
           });
-          shared = true;
+          return { saved: true };
         } catch (shareErr: any) {
-          // Normal user cancel or iframe restriction
-          console.log('Web share note:', shareErr);
+          if (shareErr?.name === 'AbortError') {
+            return { saved: true };
+          }
+          console.log('Web share note (falling back to download):', shareErr);
         }
       }
 
-      // 2. Browser file download fallback
+      // 2. Direct browser file download (Saves directly to Android Downloads/Gallery and iOS Files/Photos)
       try {
         const blobUrl = URL.createObjectURL(blob);
         const downloadLink = document.createElement('a');
         downloadLink.href = blobUrl;
         downloadLink.download = filename;
+        downloadLink.target = '_blank';
+        downloadLink.rel = 'noopener noreferrer';
         downloadLink.style.display = 'none';
         document.body.appendChild(downloadLink);
         downloadLink.click();
