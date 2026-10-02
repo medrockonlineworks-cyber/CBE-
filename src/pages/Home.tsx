@@ -6,8 +6,7 @@ import ServiceGrid from '../components/ServiceGrid';
 import QRButton from '../components/QRButton';
 import BottomNavigation, { NavTabId } from '../components/BottomNavigation';
 import TransactionDetailModal from '../components/TransactionDetailModal';
-import { RegisteredAccountsModal } from '../components/RegisteredAccountsModal';
-import { CardsIcon, CopyIcon, RefreshIcon, AccountSearchDirectoryIcon } from '../components/CbeCustomIcons';
+import { CardsIcon, CopyIcon, RefreshIcon } from '../components/CbeCustomIcons';
 import { 
   X, 
   Check, 
@@ -32,7 +31,7 @@ import {
   Smartphone,
   PhoneCall
 } from 'lucide-react';
-import { UserProfile, Transaction, RegisteredAccountInfo } from '../types';
+import { UserProfile, Transaction } from '../types';
 import { LocalDb } from '../lib/mockData';
 
 interface HomeProps {
@@ -105,10 +104,6 @@ export const Home: React.FC<HomeProps> = ({
 
   const PULL_THRESHOLD = 60;
   const MAX_PULL = 90;
-
-  // Registered Accounts Directory Modal State & Toast
-  const [showRegisteredAccountsModal, setShowRegisteredAccountsModal] = useState(false);
-  const [accountActionToast, setAccountActionToast] = useState<string | null>(null);
 
   // Transaction history filter state
   const [historyFilter, setHistoryFilter] = useState<'all' | 'debited' | 'credited'>('all');
@@ -297,26 +292,6 @@ export const Home: React.FC<HomeProps> = ({
       setPullDistance(0);
       setPullState('idle');
     }
-  };
-
-  // Handle choosing account from Registered Accounts Directory
-  const handleSelectAccountFromDirectory = (account: RegisteredAccountInfo) => {
-    const rawAccount = account as any;
-    const targetBalance = rawAccount.balance !== undefined ? rawAccount.balance : (activeUser.accountNumber === account.accountNumber ? activeUser.balance : 34850.00);
-    const targetType = (rawAccount.accountType as any) || (account.bankName.toLowerCase().includes('cbe') ? 'wadiah' : 'savings');
-
-    const updatedUser: UserProfile = {
-      ...activeUser,
-      accountNumber: account.accountNumber,
-      accountType: targetType,
-      balance: targetBalance,
-      availableBalance: targetBalance,
-    };
-
-    setActiveUser(updatedUser);
-    onUpdateCurrentUser?.(updatedUser);
-    setAccountActionToast(`Switched active account to ${account.accountName} (${account.accountNumber})`);
-    setTimeout(() => setAccountActionToast(null), 4000);
   };
 
   // Listen to Phone Navigation Bar Back and Home actions
@@ -574,7 +549,6 @@ export const Home: React.FC<HomeProps> = ({
                 dateTimeString={currentDateTime}
                 showBalanceDefault={false}
                 customLogoUrl={customLogoUrl}
-                onOpenAccountSearch={() => setShowRegisteredAccountsModal(true)}
               />
             </div>
 
@@ -898,84 +872,7 @@ export const Home: React.FC<HomeProps> = ({
               )}
             </div>
 
-            {/* REGISTERED ACCOUNTS SECTION */}
-            <div className="mt-3.5 border-t border-gray-100 pt-3">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-[11px] font-bold text-gray-700 flex items-center gap-1.5 uppercase tracking-wider">
-                  <AccountSearchDirectoryIcon size={14} className="text-[#16a34a]" />
-                  <span>Registered Accounts</span>
-                </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveModal(null);
-                    setShowRegisteredAccountsModal(true);
-                  }}
-                  className="text-[11px] font-bold text-[#711A9F] hover:underline cursor-pointer"
-                >
-                  View All Directory →
-                </button>
-              </div>
-
-              {/* Filtered Registered Accounts List */}
-              <div className="max-h-48 overflow-y-auto space-y-1.5 pr-0.5 scrollbar-thin">
-                {(() => {
-                  const registeredMatches = LocalDb.searchRegisteredAccounts(searchQuery).slice(0, 5);
-                  if (registeredMatches.length === 0) {
-                    return (
-                      <p className="text-[11px] text-gray-400 py-2 text-center">
-                        No registered accounts matching "{searchQuery}"
-                      </p>
-                    );
-                  }
-                  return registeredMatches.map((acc, i) => (
-                    <div
-                      key={`${acc.accountNumber}-${i}`}
-                      className="p-2 rounded-xl bg-gray-50 hover:bg-purple-50/60 border border-gray-100 flex items-center justify-between gap-2 transition"
-                    >
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1">
-                          <p className="text-xs font-bold text-gray-900 truncate">{acc.accountName}</p>
-                          {acc.isVerified && (
-                            <span className="text-[9px] font-bold text-emerald-700 bg-emerald-100 px-1 rounded">Verified</span>
-                          )}
-                        </div>
-                        <p className="text-[10px] text-gray-500 font-mono">
-                          {acc.accountNumber} • {acc.bankName.includes('Commercial Bank') ? 'CBE' : acc.bankName}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            handleSelectAccountFromDirectory(acc);
-                            setActiveModal(null);
-                          }}
-                          className="px-2 py-1 bg-white hover:bg-amber-100 text-[#deb356] hover:text-amber-800 text-[10px] font-bold rounded-lg border border-amber-200 transition cursor-pointer shadow-2xs"
-                          title="Switch active account on card"
-                        >
-                          Switch
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setActiveModal(null);
-                            onNavigateToTab?.('transfer', 'send');
-                          }}
-                          className="px-2 py-1 bg-[#711A9F] hover:bg-[#5b1480] text-white text-[10px] font-bold rounded-lg transition cursor-pointer shadow-2xs"
-                          title="Transfer to this account"
-                        >
-                          Send
-                        </button>
-                      </div>
-                    </div>
-                  ));
-                })()}
-              </div>
-            </div>
-
-            <div className="mt-3.5 border-t border-gray-100 pt-3 space-y-2">
+            <div className="mt-4 space-y-2">
               <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Quick Shortcuts</p>
               {[
                 { name: 'Send Money to CBE Account', tab: 'transfer', sub: 'send' },
@@ -990,7 +887,7 @@ export const Home: React.FC<HomeProps> = ({
                     if (item.tab) onNavigateToTab?.(item.tab as any, item.sub);
                     else if (item.modal) setActiveModal(item.modal as any);
                   }}
-                  className="w-full p-2 rounded-xl hover:bg-purple-50 text-left text-xs font-semibold text-gray-800 flex items-center justify-between transition cursor-pointer"
+                  className="w-full p-2.5 rounded-xl hover:bg-purple-50 text-left text-xs font-semibold text-gray-800 flex items-center justify-between transition cursor-pointer"
                 >
                   <span>{item.name}</span>
                   <ChevronRight className="w-3.5 h-3.5 text-gray-400" />
@@ -1738,37 +1635,6 @@ export const Home: React.FC<HomeProps> = ({
           currentUserId={activeUser.id}
           currentUserAccount={activeUser.accountNumber}
         />
-      )}
-
-      {/* REGISTERED ACCOUNTS DIRECTORY SELECTION MODAL */}
-      <RegisteredAccountsModal
-        isOpen={showRegisteredAccountsModal}
-        onClose={() => setShowRegisteredAccountsModal(false)}
-        onSelect={handleSelectAccountFromDirectory}
-        currentSelectedAccount={activeUser.accountNumber}
-        title="Registered Accounts Directory"
-      />
-
-      {/* TOAST ACTION BANNER */}
-      {accountActionToast && (
-        <div className="fixed top-14 left-1/2 -translate-x-1/2 z-[100] max-w-sm w-11/12 animate-in slide-in-from-top duration-300">
-          <div className="bg-[#18191c] text-white px-4 py-3 rounded-2xl shadow-2xl border border-emerald-500/40 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-7 h-7 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0">
-                <Check className="w-4 h-4 stroke-[2.5]" />
-              </div>
-              <p className="text-xs font-semibold text-gray-100 truncate">
-                {accountActionToast}
-              </p>
-            </div>
-            <button
-              onClick={() => setAccountActionToast(null)}
-              className="text-gray-400 hover:text-white p-1"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        </div>
       )}
 
     </div>

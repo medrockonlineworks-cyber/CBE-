@@ -42,7 +42,7 @@ export const AppsGridIcon: React.FC<IconProps> = ({
 );
 
 /**
- * 2. Refresh / Reload Icon (Clean SVG circular reload arrow)
+ * 2. Refresh / Reload Icon (Material Symbols rotate_left)
  */
 export const RefreshIcon: React.FC<ReceiptIconProps> = ({
   size = 20,
@@ -51,23 +51,18 @@ export const RefreshIcon: React.FC<ReceiptIconProps> = ({
   style,
   ...props
 }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke={color}
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={`select-none inline-flex items-center justify-center ${className}`}
-    style={style}
+  <span
+    className={`material-symbols-outlined select-none inline-flex items-center justify-center leading-none ${className}`}
+    style={{
+      fontSize: typeof size === 'number' ? `${size}px` : size,
+      color: color === 'currentColor' ? undefined : color,
+      ...style,
+    }}
     aria-hidden="true"
-    {...props}
+    {...(props as any)}
   >
-    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-    <path d="M3 3v5h5" />
-  </svg>
+    rotate_left
+  </span>
 );
 
 export const ReloadIcon = RefreshIcon;
@@ -319,8 +314,7 @@ export const CardsIcon: React.FC<IconProps> = ({
 );
 
 /**
- * 8. Bill Share Icon
- * Pure SVG representing an arrow splitting into two branches
+ * 8. Bill Share Icon (Material Symbols arrow_split)
  */
 export const BillShareIcon: React.FC<ReceiptIconProps> = ({
   size = 24,
@@ -329,26 +323,18 @@ export const BillShareIcon: React.FC<ReceiptIconProps> = ({
   style,
   ...props
 }) => (
-  <svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke={color === 'currentColor' ? 'currentColor' : (color || '#70189F')}
-    strokeWidth="2.2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className={`select-none inline-flex items-center justify-center ${className}`}
-    style={style}
+  <span
+    className={`material-symbols-outlined select-none inline-flex items-center justify-center leading-none ${className}`}
+    style={{
+      fontSize: typeof size === 'number' ? `${size}px` : size,
+      color: color === 'currentColor' ? undefined : (color || '#70189F'),
+      ...style,
+    }}
     aria-hidden="true"
-    {...props}
+    {...(props as any)}
   >
-    <path d="M12 21V12" />
-    <path d="M12 12C12 8.5 7.5 7 5 7" />
-    <path d="M12 12C12 8.5 16.5 7 19 7" />
-    <path d="M8 4L5 7L8 10" />
-    <path d="M16 4L19 7L16 10" />
-  </svg>
+    arrow_split
+  </span>
 );
 
 /**
