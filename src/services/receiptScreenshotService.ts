@@ -2,7 +2,6 @@ import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import html2canvas from 'html2canvas-pro';
-import { toPng } from 'html-to-image';
 import { LocalDb, DEFAULT_CBE_LOGO } from '../lib/mockData';
 import { CBE_DEFAULT_LOGO_BASE64 } from '../assets/cbeLogoBase64';
 
@@ -246,7 +245,7 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
     const canvas = await html2canvas(element, {
       scale: pixelRatio,
       useCORS: true,
-      allowTaint: false,
+      allowTaint: true,
       backgroundColor: '#ffffff',
       logging: false,
       imageTimeout: 15000,
@@ -344,34 +343,14 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
     }
     throw new Error('html2canvas canvas data was empty');
   } catch (primaryErr) {
-    console.warn('[ScreenshotService] html2canvas-pro primary capture note, retrying with html-to-image:', primaryErr);
+    console.warn('[ScreenshotService] html2canvas-pro capture retry with standard options:', primaryErr);
     
-    // Fallback 1: html-to-image native SVG foreignObject rasterization
-    try {
-      const h2iDataUrl = await toPng(element, {
-        cacheBust: true,
-        backgroundColor: '#ffffff',
-        pixelRatio: Math.min(2, pixelRatio),
-        filter: (node: HTMLElement) => {
-          if (node && typeof node.getAttribute === 'function') {
-            return !isExcluded(node);
-          }
-          return true;
-        },
-      });
-      if (h2iDataUrl && h2iDataUrl.length > 1000) {
-        return h2iDataUrl;
-      }
-    } catch (h2iErr) {
-      console.warn('[ScreenshotService] html-to-image note:', h2iErr);
-    }
-
-    // Fallback 2: html2canvas with standard options
+    // Fallback: html2canvas with standard options and white background
     try {
       const fallbackCanvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
-        allowTaint: false,
+        allowTaint: true,
         backgroundColor: '#ffffff',
         logging: false,
         scrollX: 0,

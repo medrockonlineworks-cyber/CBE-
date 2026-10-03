@@ -50,6 +50,7 @@ import {
   saveAndShareReceiptImage, 
   getSafeReceiptFilename 
 } from '../services/receiptScreenshotService';
+import { renderAuthenticReceiptToCanvas } from '../services/receiptCanvasService';
 
 /**
  * Viewfinder focus screenshot icon matching exact reference (IMG_20260913_140907_194.jpg)
@@ -579,7 +580,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     }
   };
 
-  // Screenshot handler: captures ONLY receiptRef (the existing rendered receipt)
+  // Screenshot handler: captures EXACT receipt matching Image 1 (transaction-receipt-FT261701JD29.png)
   const handleScreenshot = async (e?: React.MouseEvent) => {
     if (e) {
       e.stopPropagation();
@@ -593,20 +594,41 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       setFlashAnimation(true);
       setTimeout(() => setFlashAnimation(false), 250);
 
-      // 2. Locate screenshotExportRef (strictly matches IMG_0135.png with zero extra icons or bars)
-      const element = screenshotExportRef.current || receiptRef.current;
-      if (!element) {
-        throw new Error('Receipt container element not found');
+      // 2. Generate authentic receipt screenshot matching Image 1
+      let dataUrl: string | null = null;
+      try {
+        const qrUrl = customQrCode || qrDataUrl || txQrSvgDataUri;
+        dataUrl = await renderAuthenticReceiptToCanvas({
+          transaction,
+          amountFormatted,
+          senderName,
+          senderSuffix,
+          recipientName,
+          recipientSuffix,
+          formattedDate,
+          txId,
+          reason,
+          totalDebitedFormatted,
+          serviceChargeFormatted,
+          vatFormatted,
+          disasterRecoveryFormatted,
+          isCredit,
+          qrDataUrl: qrUrl,
+          customBankLogo
+        });
+      } catch (canvasErr) {
+        console.warn('[Screenshot] Canvas direct rendering note, falling back to captureReceiptElement:', canvasErr);
+        const element = screenshotExportRef.current || receiptRef.current;
+        if (element) {
+          dataUrl = await captureReceiptElement(element);
+        }
       }
-
-      // 3. Capture exact receipt image (waits for full render, images, SVGs, QR code, and fonts)
-      const dataUrl = await captureReceiptElement(element);
 
       if (dataUrl) {
         setCapturedScreenshotUrl(dataUrl);
         setShowScreenshotModal(true);
 
-        // 4. Cross-platform safe preparation (Android, iOS, Browser/PWA)
+        // 3. Cross-platform safe preparation (Android, iOS, Browser/PWA)
         try {
           const result = await saveAndShareReceiptImage(dataUrl, txId, false);
           if (result.saved) {
