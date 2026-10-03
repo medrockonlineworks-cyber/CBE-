@@ -136,16 +136,19 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, width, height);
 
-  // 2. Top Purple Header: #68137e
-  const headerHeight = 112 * scale;
+  // 2. Top Purple Header: #68137e with generous top space matching IMG_0135.png
+  const topPurplePadding = 64 * scale; // Clean purple area above shield
+  const shieldSize = 34 * scale;
+  const shieldX = 22 * scale;
+  const shieldY = topPurplePadding;
+  const headerBottomPadding = 36 * scale;
+  const sheetTop = shieldY + shieldSize + headerBottomPadding; // ~134 * scale
+  const headerHeight = sheetTop;
+
   ctx.fillStyle = '#68137e';
   ctx.fillRect(0, 0, width, headerHeight);
 
-  // 3. Exact Solid White Shield with Purple Checkmark (matching original SVG path)
-  const shieldSize = 34 * scale;
-  const shieldX = 20 * scale;
-  const shieldY = 28 * scale;
-
+  // 3. Exact Solid White Shield with Purple Checkmark (matching exact SVG in IMG_0135.png)
   ctx.save();
   ctx.translate(shieldX, shieldY);
   ctx.scale(shieldSize / 24, shieldSize / 24);
@@ -156,13 +159,13 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   ctx.fill(shieldPath);
 
   // Purple checkmark inside shield
-  const checkmarkPath = new Path2D('M8.0 12.2L11.0 15.2L17.2 9.0');
+  const shieldCheckmarkPath = new Path2D('M8.0 12.2L11.0 15.2L17.2 9.0');
   ctx.strokeStyle = '#68137e';
   ctx.lineWidth = 1.9;
   ctx.lineCap = 'butt';
   ctx.lineJoin = 'miter';
   ctx.miterLimit = 4;
-  ctx.stroke(checkmarkPath);
+  ctx.stroke(shieldCheckmarkPath);
   ctx.restore();
 
   // 4. Header Titles: "Thank you" and "Success" (matching exact original typography)
@@ -174,21 +177,20 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   ctx.textBaseline = 'alphabetic';
   ctx.fillText('Thank you', shieldX + shieldSize + (10 * scale), shieldY + (17 * scale));
 
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.88)';
   ctx.font = `normal ${12 * scale}px ${fontSans}`;
   ctx.fillText('Success', shieldX + shieldSize + (10 * scale), shieldY + (32 * scale));
 
   // 5. Main White Sheet Container:
   // Starts at sheetTop with rounded top corners (36px) and extends completely flat to canvas bottom!
-  const sheetTop = 104 * scale;
   ctx.fillStyle = '#ffffff';
   roundRect(ctx, 0, sheetTop, width, height - sheetTop, [36 * scale, 36 * scale, 0, 0]);
   ctx.fill();
 
-  // 6. Overlapping Success Checkmark Badge (matching Image 1)
+  // 6. Overlapping Success Checkmark Badge (matching exact SVG in IMG_0135.png)
   const badgeCenterX = width / 2;
   const badgeCenterY = sheetTop;
-  const badgeRadius = 42 * scale;
+  const badgeRadius = 41.5 * scale;
 
   ctx.save();
   // Purple circle with thick white outer ring
@@ -200,17 +202,16 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   ctx.strokeStyle = '#ffffff';
   ctx.stroke();
 
-  // Crisp white checkmark inside badge
-  ctx.beginPath();
-  ctx.moveTo(badgeCenterX - (18 * scale), badgeCenterY - (1 * scale));
-  ctx.lineTo(badgeCenterX - (5 * scale), badgeCenterY + (12 * scale));
-  ctx.lineTo(badgeCenterX + (21 * scale), badgeCenterY - (14 * scale));
+  // Exact Crisp White Checkmark inside badge (matching SVG viewBox 0 0 90 90)
+  ctx.translate(badgeCenterX - (45 * scale), badgeCenterY - (45 * scale));
+  ctx.scale(scale, scale);
+  const badgeCheckmark = new Path2D('M 25.5 45.5 L 39.0 59.0 L 68.0 30.0');
   ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 6.8 * scale;
+  ctx.lineWidth = 7.2;
   ctx.lineCap = 'butt';
   ctx.lineJoin = 'miter';
   ctx.miterLimit = 4;
-  ctx.stroke();
+  ctx.stroke(badgeCheckmark);
   ctx.restore();
 
   // 7. Headline: "Transaction Completed Successfully!"

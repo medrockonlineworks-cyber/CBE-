@@ -1109,8 +1109,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         aria-hidden="true"
       >
         <div className="w-full bg-white text-slate-800 flex flex-col font-sans select-none">
-          {/* Top Purple Header: Exact original top design matching live screen */}
-          <div className="pt-7 pb-8 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0">
+          {/* Top Purple Header: Exact original top design matching live screen with clean top purple space */}
+          <div className="pt-16 pb-8 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0">
             <div className="flex items-center gap-2.5">
               {/* Solid White Shield with Purple Checkmark */}
               <div className="w-8.5 h-8.5 flex-shrink-0 flex items-center justify-center">
