@@ -283,6 +283,16 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
         clonedElement.style.maxHeight = 'none';
         clonedElement.style.transform = 'none';
 
+        if (clonedElement.id === 'cbe-screenshot-exact-target') {
+          clonedElement.style.position = 'relative';
+          clonedElement.style.top = '0';
+          clonedElement.style.left = '0';
+          clonedElement.style.zIndex = '1';
+          clonedElement.style.opacity = '1';
+          clonedElement.style.width = '420px';
+          clonedElement.style.margin = '0 auto';
+        }
+
         // Ensure white sheet container does not clip or shrink
         const whiteSheet = clonedElement.querySelector('.bg-white');
         if (whiteSheet) {

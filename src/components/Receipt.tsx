@@ -201,6 +201,7 @@ interface ReceiptProps {
 
 export default function Receipt({ transaction, onBack }: ReceiptProps) {
   const receiptRef = useRef<HTMLDivElement>(null);
+  const screenshotExportRef = useRef<HTMLDivElement>(null);
   const [showDetailedModal, setShowDetailedModal] = useState(false);
   const [copiedToast, setCopiedToast] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
@@ -592,13 +593,13 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       setFlashAnimation(true);
       setTimeout(() => setFlashAnimation(false), 250);
 
-      // 2. Locate receiptRef
-      const element = receiptRef.current;
+      // 2. Locate screenshotExportRef (strictly matches IMG_0135.png with zero extra icons or bars)
+      const element = screenshotExportRef.current || receiptRef.current;
       if (!element) {
         throw new Error('Receipt container element not found');
       }
 
-      // 3. Capture ONLY receiptRef (waits for full render, images, SVGs, QR code, and fonts)
+      // 3. Capture exact receipt image (waits for full render, images, SVGs, QR code, and fonts)
       const dataUrl = await captureReceiptElement(element);
 
       if (dataUrl) {
@@ -835,27 +836,20 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           {/* Main White Sheet Container */}
           <div className="bg-white rounded-t-[32px] sm:rounded-t-[36px] flex-1 px-4 sm:px-5 pt-0 pb-6 flex flex-col justify-between shadow-none relative">
             
-            {/* Overlapping Large Success Checkmark Badge (Sharp edge, white half-circle on top only, no bottom circle, no shadow) */}
+            {/* Overlapping Large Success Checkmark Badge (matching IMG_0135.png) */}
             <div className="relative flex justify-center flex-shrink-0">
-              <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 top-0 w-[90px] h-[90px] sm:w-[98px] sm:h-[98px] pointer-events-none select-none z-10">
+              <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 top-0 w-[90px] h-[90px] pointer-events-none select-none z-10">
                 <svg 
                   viewBox="0 0 90 90" 
                   className="w-full h-full block" 
                   fill="none" 
                   xmlns="http://www.w3.org/2000/svg"
                 >
-                  {/* 1. Purple Base Circle (radius 38, centered at 45, 45) */}
-                  <circle cx="45" cy="45" r="38" fill="#68137e" />
-
-                  {/* 2. Top-Half White Semi-Circle Arch Only */}
-                  <path 
-                    d="M 0,45 A 45,45 0 0,1 90,45 L 83,45 A 38,38 0 0,0 7,45 Z" 
-                    fill="#ffffff" 
-                  />
-
-                  {/* 3. Bold Crisp White Checkmark with extended right arm and sharp ends matching reference image */}
+                  {/* Purple Circle with crisp White Outer Ring */}
+                  <circle cx="45" cy="45" r="41.5" stroke="#ffffff" strokeWidth="6" fill="#68137e" />
+                  {/* Bold Crisp White Checkmark */}
                   <path
-                    d="M 24.5 45.5 L 39.0 60.0 L 71.0 28.0"
+                    d="M 25.5 45.5 L 39.0 59.0 L 68.0 30.0"
                     fill="none"
                     stroke="#ffffff"
                     strokeWidth="7.2"
@@ -1057,6 +1051,193 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           onClose={() => setShowDetailedModal(false)} 
         />
       )}
+
+      {/* 
+        ========================================================================
+        AUTHENTIC CBE RECEIPT SCREENSHOT EXPORT TARGET (EXACT MATCH TO IMG_0135.png)
+        - Pure CBE purple top with white shield + "Thank you" / "Success" on left
+        - NO status bar, NO back arrow (<), NO viewfinder camera button
+        - Floating white card with rounded top AND rounded bottom (rounded-[36px])
+        - Overlapping large purple checkmark badge with crisp white outer ring
+        - "Transaction Completed Successfully!"
+        - Light gray card (#f2f3f5) with Transaction Summary, debited details,
+          authentic QR code with rounded frame, and CBE Gold Emblem + slogan
+        - Purple bottom strip completing the canvas
+        - ZERO bottom buttons (NO Receipt, NO Screenshot, NO Share, NO Close)
+        ========================================================================
+      */}
+      <div 
+        ref={screenshotExportRef}
+        id="cbe-screenshot-exact-target"
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '420px',
+          zIndex: -100,
+          pointerEvents: 'none',
+          opacity: 1,
+          backgroundColor: '#68137e',
+          overflow: 'hidden',
+        }}
+        aria-hidden="true"
+      >
+        <div className="w-full bg-[#68137e] text-slate-800 flex flex-col font-sans select-none">
+          {/* Top Purple Header: Only White Shield + "Thank you" / "Success" on the left */}
+          <div className="pt-10 pb-7 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0">
+            <div className="flex items-center gap-2.5">
+              {/* Solid White Shield with Purple Checkmark */}
+              <div className="w-8 h-8 flex-shrink-0 flex items-center justify-center">
+                <svg className="w-8 h-8 drop-shadow-xs" viewBox="0 0 24 24" fill="none">
+                  <path 
+                    d="M12 2.2c0.3 0 0.6 0.1 0.9 0.2l6.5 2.6c0.5 0.2 0.8 0.7 0.8 1.2v5.6c0 4.8-3.0 9.2-7.5 10.7-.5 0.2-1.0 0.2-1.4 0-4.5-1.5-7.5-5.9-7.5-10.7V6.2c0-.5.3-1 .8-1.2l6.5-2.6c.3-.1.6-.2.9-.2z" 
+                    fill="#ffffff" 
+                  />
+                  <path 
+                    d="M8.0 12.2L11.0 15.2L17.2 9.0" 
+                    stroke="#68137e" 
+                    strokeWidth="2.0" 
+                    strokeLinecap="butt" 
+                    strokeLinejoin="miter" 
+                    strokeMiterlimit="4" 
+                    shapeRendering="geometricPrecision"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h2 className="font-bold text-[17px] leading-tight text-white tracking-tight">Thank you</h2>
+                <p className="text-[12.5px] text-purple-100 font-normal leading-tight mt-0.5">Success</p>
+              </div>
+            </div>
+            {/* Top right is clean: NO status bar, NO camera icon */}
+          </div>
+
+          {/* Main White Sheet Container with rounded top AND rounded bottom matching IMG_0135.png */}
+          <div className="bg-white rounded-t-[36px] rounded-b-[36px] mx-0 px-4 sm:px-5 pt-0 pb-6 flex flex-col shadow-none relative">
+            
+            {/* Overlapping Large Success Checkmark Badge (with full outer white ring matching IMG_0135.png) */}
+            <div className="relative flex justify-center flex-shrink-0">
+              <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 top-0 w-[90px] h-[90px] pointer-events-none select-none z-10">
+                <svg 
+                  viewBox="0 0 90 90" 
+                  className="w-full h-full block" 
+                  fill="none" 
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  {/* Purple Circle with crisp White Outer Ring */}
+                  <circle cx="45" cy="45" r="41.5" stroke="#ffffff" strokeWidth="6" fill="#68137e" />
+                  {/* Bold Crisp White Checkmark */}
+                  <path
+                    d="M 25.5 45.5 L 39.0 59.0 L 68.0 30.0"
+                    fill="none"
+                    stroke="#ffffff"
+                    strokeWidth="7.2"
+                    strokeLinecap="butt"
+                    strokeLinejoin="miter"
+                    strokeMiterlimit="4"
+                    shapeRendering="geometricPrecision"
+                  />
+                </svg>
+              </div>
+            </div>
+
+            {/* Spacer for the overlapping badge */}
+            <div className="h-13 flex-shrink-0" />
+
+            <div className="space-y-3 flex flex-col justify-center">
+              {/* Headline */}
+              <h1 className="text-center text-[15.5px] sm:text-[16px] font-medium text-black tracking-tight mb-1">
+                Transaction Completed Successfully!
+              </h1>
+
+              {/* Main Transaction Summary Gray Card */}
+              <div className="bg-[#f2f3f5] rounded-[26px] p-4 sm:p-5 space-y-3 border border-gray-200/50 shadow-xs">
+                <p className="text-[#8e8e93] font-normal text-[13.5px]">Transaction Summary</p>
+
+                {/* Paragraph Text with bold highlights matching CBE reference */}
+                {isCredit ? (
+                  <p className="text-[14px] sm:text-[14.5px] leading-[1.58] text-[#1a1a1a] font-normal select-text">
+                    ETB <span className="font-bold text-black">{amountFormatted}</span> has been credited to <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} from <span className="font-bold text-black">{senderName}</span> {senderSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason}
+                  </p>
+                ) : (
+                  <p className="text-[14px] sm:text-[14.5px] leading-[1.58] text-[#1a1a1a] font-normal select-text">
+                    ETB <span className="font-bold text-black">{amountFormatted}</span> has been debited from <span className="font-bold text-black">{senderName}</span> {senderSuffix} for <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason} Total Amount Debited: ETB{totalDebitedFormatted} with Service Charge of ETB{serviceChargeFormatted}, VAT (15%) of ETB{vatFormatted} and Disaster Recovery (5%) of ETB{disasterRecoveryFormatted}.
+                  </p>
+                )}
+
+                {/* Realistic QR Code Centered with authentic rounded grey frame */}
+                <div className="flex justify-center pt-3 pb-2">
+                  <div 
+                    className="bg-white p-2.5 rounded-[22px] border-[2.8px] border-[#737373] shadow-xs inline-flex items-center justify-center select-none"
+                  >
+                    <div className="w-36 h-36 flex items-center justify-center">
+                      {customQrCode ? (
+                        <img 
+                          src={customQrCode} 
+                          alt={`Transaction ${txId} QR Code`} 
+                          className="w-full h-full object-contain block"
+                        />
+                      ) : qrDataUrl ? (
+                        <img 
+                          src={qrDataUrl} 
+                          alt={`Transaction ${txId} QR Code`} 
+                          className="w-full h-full object-contain block"
+                        />
+                      ) : txQrSvgDataUri ? (
+                        <img 
+                          src={txQrSvgDataUri} 
+                          alt={`Transaction ${txId} QR Code`} 
+                          className="w-full h-full object-contain block"
+                        />
+                      ) : (
+                        <div 
+                          className="grid gap-[1px] w-full h-full bg-white p-0.5"
+                          style={{ gridTemplateColumns: `repeat(${qrMatrix.length}, minmax(0, 1fr))` }}
+                        >
+                          {qrMatrix.flatMap((row, rIdx) =>
+                            row.map((filled, cIdx) => (
+                              <div 
+                                key={`export-qr-${rIdx}-${cIdx}`} 
+                                className={`rounded-[0.2px] ${
+                                  filled ? 'bg-black' : 'bg-transparent'
+                                }`}
+                              />
+                            ))
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Commercial Bank of Ethiopia Footer Inset matching IMG_0135.png */}
+                <div 
+                  className="flex items-center gap-3.5 pt-2 pb-1 px-1 min-w-0 w-full"
+                >
+                  <div 
+                    className="w-11 h-11 flex-shrink-0 flex items-center justify-center"
+                  >
+                    <CbeLogo className="w-11 h-11 object-contain" src={customBankLogo} />
+                  </div>
+                  <div className="min-w-0 flex-1 text-left flex flex-col justify-center">
+                    <h4 className="font-bold text-[#1f2937] text-[13.5px] leading-tight tracking-tight">
+                      Commercial Bank of Ethiopia
+                    </h4>
+                    <p className="text-[#6b7280] text-[11px] font-normal leading-tight mt-0.5 tracking-tight">
+                      The bank you can always rely on!
+                    </p>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+          </div>
+
+          {/* Purple bottom strip completing canvas below the rounded white card */}
+          <div className="h-8 w-full bg-[#68137e] flex-shrink-0" />
+        </div>
+      </div>
 
       {/* Android & iOS Screenshot Preview Sheet Modal */}
       {showScreenshotModal && capturedScreenshotUrl && (
