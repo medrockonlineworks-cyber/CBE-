@@ -594,9 +594,19 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       setFlashAnimation(true);
       setTimeout(() => setFlashAnimation(false), 250);
 
-      // 2. Generate authentic receipt screenshot matching Image 1
+      // 2. Capture exact receipt with original top design and completely white bottom
       let dataUrl: string | null = null;
-      try {
+      const element = screenshotExportRef.current || receiptRef.current;
+      if (element) {
+        try {
+          dataUrl = await captureReceiptElement(element);
+        } catch (captureErr) {
+          console.warn('[Screenshot] DOM capture error, running high-fidelity canvas fallback:', captureErr);
+        }
+      }
+
+      // Fallback if needed: high-fidelity canvas renderer
+      if (!dataUrl) {
         const qrUrl = customQrCode || qrDataUrl || txQrSvgDataUri;
         dataUrl = await renderAuthenticReceiptToCanvas({
           transaction,
@@ -616,12 +626,6 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           qrDataUrl: qrUrl,
           customBankLogo
         });
-      } catch (canvasErr) {
-        console.warn('[Screenshot] Canvas direct rendering note, falling back to captureReceiptElement:', canvasErr);
-        const element = screenshotExportRef.current || receiptRef.current;
-        if (element) {
-          dataUrl = await captureReceiptElement(element);
-        }
       }
 
       if (dataUrl) {
@@ -1105,12 +1109,12 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         aria-hidden="true"
       >
         <div className="w-full bg-white text-slate-800 flex flex-col font-sans select-none">
-          {/* Top Purple Header: Only White Shield + "Thank you" / "Success" on the left */}
-          <div className="pt-10 pb-7 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0">
+          {/* Top Purple Header: Exact original top design matching live screen */}
+          <div className="pt-7 pb-8 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0">
             <div className="flex items-center gap-2.5">
               {/* Solid White Shield with Purple Checkmark */}
-              <div className="w-8 h-8 flex-shrink-0 flex items-center justify-center">
-                <svg className="w-8 h-8 drop-shadow-xs" viewBox="0 0 24 24" fill="none">
+              <div className="w-8.5 h-8.5 flex-shrink-0 flex items-center justify-center">
+                <svg className="w-8.5 h-8.5 drop-shadow-xs" viewBox="0 0 24 24" fill="none">
                   <path 
                     d="M12 2.2c0.3 0 0.6 0.1 0.9 0.2l6.5 2.6c0.5 0.2 0.8 0.7 0.8 1.2v5.6c0 4.8-3.0 9.2-7.5 10.7-.5 0.2-1.0 0.2-1.4 0-4.5-1.5-7.5-5.9-7.5-10.7V6.2c0-.5.3-1 .8-1.2l6.5-2.6c.3-.1.6-.2.9-.2z" 
                     fill="#ffffff" 
@@ -1118,7 +1122,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                   <path 
                     d="M8.0 12.2L11.0 15.2L17.2 9.0" 
                     stroke="#68137e" 
-                    strokeWidth="2.0" 
+                    strokeWidth="1.9" 
                     strokeLinecap="butt" 
                     strokeLinejoin="miter" 
                     strokeMiterlimit="4" 
@@ -1127,8 +1131,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 </svg>
               </div>
               <div>
-                <h2 className="font-bold text-[17px] leading-tight text-white tracking-tight">Thank you</h2>
-                <p className="text-[12.5px] text-purple-100 font-normal leading-tight mt-0.5">Success</p>
+                <h2 className="font-bold text-[16px] sm:text-[17px] leading-tight text-white tracking-tight">Thank you</h2>
+                <p className="text-[12px] sm:text-[13px] text-purple-100 font-normal leading-tight mt-0.5">Success</p>
               </div>
             </div>
             {/* Top right is clean: NO status bar, NO camera icon */}

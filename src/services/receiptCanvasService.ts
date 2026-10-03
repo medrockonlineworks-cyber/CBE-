@@ -141,60 +141,42 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   ctx.fillStyle = '#68137e';
   ctx.fillRect(0, 0, width, headerHeight);
 
-  // 3. Shield Icon with Checkmark
-  const shieldX = 24 * scale;
-  const shieldY = 40 * scale;
-  const shieldW = 28 * scale;
-  const shieldH = 30 * scale;
+  // 3. Exact Solid White Shield with Purple Checkmark (matching original SVG path)
+  const shieldSize = 34 * scale;
+  const shieldX = 20 * scale;
+  const shieldY = 28 * scale;
 
   ctx.save();
+  ctx.translate(shieldX, shieldY);
+  ctx.scale(shieldSize / 24, shieldSize / 24);
+
+  // White shield body
+  const shieldPath = new Path2D('M12 2.2c0.3 0 0.6 0.1 0.9 0.2l6.5 2.6c0.5 0.2 0.8 0.7 0.8 1.2v5.6c0 4.8-3.0 9.2-7.5 10.7-.5 0.2-1.0 0.2-1.4 0-4.5-1.5-7.5-5.9-7.5-10.7V6.2c0-.5.3-1 .8-1.2l6.5-2.6c.3-.1.6-.2.9-.2z');
   ctx.fillStyle = '#ffffff';
-  ctx.beginPath();
-  // Shield shape path
-  const sx = shieldX;
-  const sy = shieldY;
-  ctx.moveTo(sx + shieldW * 0.5, sy);
-  ctx.lineTo(sx + shieldW * 0.94, sy + shieldH * 0.16);
-  ctx.lineTo(sx + shieldW * 0.94, sy + shieldH * 0.54);
-  ctx.bezierCurveTo(
-    sx + shieldW * 0.94, sy + shieldH * 0.82,
-    sx + shieldW * 0.5, sy + shieldH,
-    sx + shieldW * 0.5, sy + shieldH
-  );
-  ctx.bezierCurveTo(
-    sx + shieldW * 0.5, sy + shieldH,
-    sx + shieldW * 0.06, sy + shieldH * 0.82,
-    sx + shieldW * 0.06, sy + shieldH * 0.54
-  );
-  ctx.lineTo(sx + shieldW * 0.06, sy + shieldH * 0.16);
-  ctx.closePath();
-  ctx.fill();
+  ctx.fill(shieldPath);
 
   // Purple checkmark inside shield
+  const checkmarkPath = new Path2D('M8.0 12.2L11.0 15.2L17.2 9.0');
   ctx.strokeStyle = '#68137e';
-  ctx.lineWidth = 2.4 * scale;
+  ctx.lineWidth = 1.9;
   ctx.lineCap = 'butt';
   ctx.lineJoin = 'miter';
   ctx.miterLimit = 4;
-  ctx.beginPath();
-  ctx.moveTo(sx + shieldW * 0.30, sy + shieldH * 0.50);
-  ctx.lineTo(sx + shieldW * 0.46, sy + shieldH * 0.65);
-  ctx.lineTo(sx + shieldW * 0.74, sy + shieldH * 0.35);
-  ctx.stroke();
+  ctx.stroke(checkmarkPath);
   ctx.restore();
 
-  // 4. Header Titles: "Thank you" and "Success"
+  // 4. Header Titles: "Thank you" and "Success" (matching exact original typography)
   const fontSans = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
   
   ctx.fillStyle = '#ffffff';
-  ctx.font = `bold ${17 * scale}px ${fontSans}`;
+  ctx.font = `bold ${16.5 * scale}px ${fontSans}`;
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
-  ctx.fillText('Thank you', shieldX + shieldW + (10 * scale), shieldY + (17 * scale));
+  ctx.fillText('Thank you', shieldX + shieldSize + (10 * scale), shieldY + (17 * scale));
 
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
-  ctx.font = `normal ${12.5 * scale}px ${fontSans}`;
-  ctx.fillText('Success', shieldX + shieldW + (10 * scale), shieldY + (33 * scale));
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+  ctx.font = `normal ${12 * scale}px ${fontSans}`;
+  ctx.fillText('Success', shieldX + shieldSize + (10 * scale), shieldY + (32 * scale));
 
   // 5. Main White Sheet Container:
   // Starts at sheetTop with rounded top corners (36px) and extends completely flat to canvas bottom!

@@ -285,7 +285,9 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
         clonedElement.style.transform = 'none';
 
         if (clonedElement.id === 'cbe-screenshot-exact-target') {
-          clonedElement.style.position = 'relative';
+          clonedDoc.body.innerHTML = '';
+          clonedDoc.body.appendChild(clonedElement);
+          clonedElement.style.position = 'static';
           clonedElement.style.top = '0';
           clonedElement.style.left = '0';
           clonedElement.style.zIndex = '1';
@@ -293,6 +295,9 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
           clonedElement.style.width = '420px';
           clonedElement.style.margin = '0 auto';
           clonedElement.style.backgroundColor = '#ffffff';
+          clonedDoc.body.style.backgroundColor = '#ffffff';
+          clonedDoc.body.style.margin = '0';
+          clonedDoc.body.style.padding = '0';
         }
 
         // Ensure white sheet container does not clip or shrink and has clean white bottom
