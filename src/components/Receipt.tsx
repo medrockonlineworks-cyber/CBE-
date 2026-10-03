@@ -1054,15 +1054,15 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
       {/* 
         ========================================================================
-        AUTHENTIC CBE RECEIPT SCREENSHOT EXPORT TARGET (EXACT MATCH TO IMG_0135.png)
-        - Pure CBE purple top with white shield + "Thank you" / "Success" on left
+        AUTHENTIC CBE RECEIPT SCREENSHOT EXPORT TARGET (EXACT MATCH TO IMAGE 1)
+        - Pure CBE purple top (#68137e) with white shield + "Thank you" / "Success" on left
         - NO status bar, NO back arrow (<), NO viewfinder camera button
-        - Floating white card with rounded top AND rounded bottom (rounded-[36px])
+        - Main white sheet with rounded top ONLY (rounded-t-[36px], rounded-b-none)
         - Overlapping large purple checkmark badge with crisp white outer ring
         - "Transaction Completed Successfully!"
         - Light gray card (#f2f3f5) with Transaction Summary, debited details,
           authentic QR code with rounded frame, and CBE Gold Emblem + slogan
-        - Purple bottom strip completing the canvas
+        - BOTTOM PART IS COMPLETELY WHITE LIKE IMAGE ONE (NO purple strip, NO rounded bottom)
         - ZERO bottom buttons (NO Receipt, NO Screenshot, NO Share, NO Close)
         ========================================================================
       */}
@@ -1077,12 +1077,12 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           zIndex: -100,
           pointerEvents: 'none',
           opacity: 1,
-          backgroundColor: '#68137e',
+          backgroundColor: '#ffffff',
           overflow: 'hidden',
         }}
         aria-hidden="true"
       >
-        <div className="w-full bg-[#68137e] text-slate-800 flex flex-col font-sans select-none">
+        <div className="w-full bg-white text-slate-800 flex flex-col font-sans select-none">
           {/* Top Purple Header: Only White Shield + "Thank you" / "Success" on the left */}
           <div className="pt-10 pb-7 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0">
             <div className="flex items-center gap-2.5">
@@ -1112,10 +1112,10 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             {/* Top right is clean: NO status bar, NO camera icon */}
           </div>
 
-          {/* Main White Sheet Container with rounded top AND rounded bottom matching IMG_0135.png */}
-          <div className="bg-white rounded-t-[36px] rounded-b-[36px] mx-0 px-4 sm:px-5 pt-0 pb-6 flex flex-col shadow-none relative">
+          {/* Main White Sheet Container with rounded top ONLY and completely white bottom matching Image 1 */}
+          <div className="bg-white rounded-t-[36px] rounded-b-none mx-0 px-4 sm:px-5 pt-0 pb-12 flex flex-col shadow-none relative">
             
-            {/* Overlapping Large Success Checkmark Badge (with full outer white ring matching IMG_0135.png) */}
+            {/* Overlapping Large Success Checkmark Badge (with full outer white ring matching Image 1) */}
             <div className="relative flex justify-center flex-shrink-0">
               <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 top-0 w-[90px] h-[90px] pointer-events-none select-none z-10">
                 <svg 
@@ -1210,7 +1210,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                   </div>
                 </div>
 
-                {/* Commercial Bank of Ethiopia Footer Inset matching IMG_0135.png */}
+                {/* Commercial Bank of Ethiopia Footer Inset matching Image 1 */}
                 <div 
                   className="flex items-center gap-3.5 pt-2 pb-1 px-1 min-w-0 w-full"
                 >
@@ -1234,8 +1234,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
           </div>
 
-          {/* Purple bottom strip completing canvas below the rounded white card */}
-          <div className="h-8 w-full bg-[#68137e] flex-shrink-0" />
+          {/* Completely white bottom matching Image 1 (ZERO purple strip) */}
         </div>
       </div>
 

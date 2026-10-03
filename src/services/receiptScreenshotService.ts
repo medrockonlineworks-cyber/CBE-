@@ -247,7 +247,7 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
       scale: pixelRatio,
       useCORS: true,
       allowTaint: false,
-      backgroundColor: '#68137e',
+      backgroundColor: '#ffffff',
       logging: false,
       imageTimeout: 15000,
       scrollX: 0,
@@ -257,14 +257,16 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
         // Reset scroll position on clone
         clonedDoc.defaultView?.scrollTo(0, 0);
         
-        // Ensure root and body do not constrain layout in clone
+        // Ensure root and body do not constrain layout in clone and use white background
         if (clonedDoc.documentElement) {
           clonedDoc.documentElement.style.overflow = 'visible';
           clonedDoc.documentElement.style.height = 'auto';
+          clonedDoc.documentElement.style.backgroundColor = '#ffffff';
         }
         if (clonedDoc.body) {
           clonedDoc.body.style.overflow = 'visible';
           clonedDoc.body.style.height = 'auto';
+          clonedDoc.body.style.backgroundColor = '#ffffff';
         }
 
         const clonedWrapper = clonedDoc.getElementById('receipt-screen-wrapper');
@@ -291,27 +293,31 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
           clonedElement.style.opacity = '1';
           clonedElement.style.width = '420px';
           clonedElement.style.margin = '0 auto';
+          clonedElement.style.backgroundColor = '#ffffff';
         }
 
-        // Ensure white sheet container does not clip or shrink
+        // Ensure white sheet container does not clip or shrink and has clean white bottom
         const whiteSheet = clonedElement.querySelector('.bg-white');
         if (whiteSheet) {
           (whiteSheet as HTMLElement).style.overflow = 'visible';
           (whiteSheet as HTMLElement).style.height = 'auto';
+          (whiteSheet as HTMLElement).style.backgroundColor = '#ffffff';
         }
 
-        // Ensure status bar and bottom action bar are fully visible in the cloned DOM
-        const statusBar = clonedDoc.getElementById('receipt-status-bar');
-        if (statusBar) {
-          statusBar.style.display = 'flex';
-          statusBar.style.visibility = 'visible';
-          statusBar.style.opacity = '1';
-        }
-        const bottomBar = clonedDoc.getElementById('cbe-receipt-bottom-actions-container');
-        if (bottomBar) {
-          bottomBar.style.display = 'block';
-          bottomBar.style.visibility = 'visible';
-          bottomBar.style.opacity = '1';
+        // Only restore status bar or action buttons if capturing live on-screen view
+        if (clonedElement.id !== 'cbe-screenshot-exact-target') {
+          const statusBar = clonedDoc.getElementById('receipt-status-bar');
+          if (statusBar) {
+            statusBar.style.display = 'flex';
+            statusBar.style.visibility = 'visible';
+            statusBar.style.opacity = '1';
+          }
+          const bottomBar = clonedDoc.getElementById('cbe-receipt-bottom-actions-container');
+          if (bottomBar) {
+            bottomBar.style.display = 'block';
+            bottomBar.style.visibility = 'visible';
+            bottomBar.style.opacity = '1';
+          }
         }
 
         // Only hide temporary trigger buttons or overlays
@@ -344,7 +350,7 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
     try {
       const h2iDataUrl = await toPng(element, {
         cacheBust: true,
-        backgroundColor: '#68137e',
+        backgroundColor: '#ffffff',
         pixelRatio: Math.min(2, pixelRatio),
         filter: (node: HTMLElement) => {
           if (node && typeof node.getAttribute === 'function') {
@@ -366,7 +372,7 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
         scale: 2,
         useCORS: true,
         allowTaint: false,
-        backgroundColor: '#68137e',
+        backgroundColor: '#ffffff',
         logging: false,
         scrollX: 0,
         scrollY: 0,
