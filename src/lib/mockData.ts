@@ -1275,8 +1275,10 @@ export class LocalDb {
       u1.accountNumber = '1000419524747';
       u1.name = 'Leykun Jemaneh Ylma';
       u1.email = 'leykunjemaneh3@gmail.com';
-      u1.balance = 10000000000.00;
-      u1.availableBalance = 10000000000.00;
+      if (u1.balance === undefined || u1.balance === null || isNaN(u1.balance)) {
+        u1.balance = 10000000000.00;
+        u1.availableBalance = 10000000000.00;
+      }
       modified = true;
     }
     
@@ -1287,8 +1289,10 @@ export class LocalDb {
         users[adminIndex].role = 'admin';
         users[adminIndex].status = 'active';
         users[adminIndex].accountNumber = '1000419524747';
-        users[adminIndex].balance = 10000000000.00;
-        users[adminIndex].availableBalance = 10000000000.00;
+        if (users[adminIndex].balance === undefined || users[adminIndex].balance === null || isNaN(users[adminIndex].balance)) {
+          users[adminIndex].balance = 10000000000.00;
+          users[adminIndex].availableBalance = 10000000000.00;
+        }
         modified = true;
       }
     } else {
@@ -1311,7 +1315,7 @@ export class LocalDb {
       modified = true;
     }
 
-    // Ensure all 8 requested accounts exist with their exact balances & roles
+    // Ensure all 8 requested accounts exist with their exact roles and seeded balances if not set
     for (const seed of REGISTERED_ACCOUNTS_SEED) {
       const idx = users.findIndex(u => 
         u.accountNumber === seed.accountNumber || 
@@ -1322,7 +1326,7 @@ export class LocalDb {
         let changed = false;
         if (seed.id === 'user_global_market' || seed.name === 'Global Online Market') {
           if (users[idx].role !== 'admin') { users[idx].role = 'admin'; changed = true; }
-          if (users[idx].balance !== 10000000000.00) { 
+          if (users[idx].balance === undefined || users[idx].balance === null || isNaN(users[idx].balance)) { 
             users[idx].balance = 10000000000.00; 
             users[idx].availableBalance = 10000000000.00; 
             changed = true; 
@@ -1332,7 +1336,7 @@ export class LocalDb {
             changed = true;
           }
         } else {
-          if (!users[idx].balance || users[idx].balance < 10000 || users[idx].balance > 690000) {
+          if (users[idx].balance === undefined || users[idx].balance === null || isNaN(users[idx].balance)) {
             users[idx].balance = seed.balance;
             users[idx].availableBalance = seed.availableBalance;
             changed = true;
@@ -1349,12 +1353,12 @@ export class LocalDb {
       }
     }
 
-    // Ensure all 124 additional registered accounts exist in users list with balance up to 50,000 ETB
+    // Ensure all 124 additional registered accounts exist in users list
     for (const seed of ADDITIONAL_USERS_SEED) {
       const idx = users.findIndex(u => u.id === seed.id || (u.accountNumber === seed.accountNumber && u.name.toLowerCase() === seed.name.toLowerCase()));
       if (idx !== -1) {
         let changed = false;
-        if (!users[idx].balance || users[idx].balance > 50000) {
+        if (users[idx].balance === undefined || users[idx].balance === null || isNaN(users[idx].balance)) {
           users[idx].balance = seed.balance;
           users[idx].availableBalance = seed.availableBalance;
           changed = true;
@@ -1470,7 +1474,7 @@ export class LocalDb {
       });
       modified = true;
     } else {
-      if (acc4747.balance < 1000000) {
+      if (acc4747.balance === undefined || acc4747.balance === null || isNaN(acc4747.balance)) {
         acc4747.balance = 10000000000.00;
         acc4747.availableBalance = 10000000000.00;
         modified = true;
@@ -1501,13 +1505,13 @@ export class LocalDb {
         modified = true;
       } else {
         if (seed.id === 'user_global_market') {
-          if (existingAcc.balance !== 10000000000.00) {
+          if (existingAcc.balance === undefined || existingAcc.balance === null || isNaN(existingAcc.balance)) {
             existingAcc.balance = 10000000000.00;
             existingAcc.availableBalance = 10000000000.00;
             modified = true;
           }
         } else {
-          if (!existingAcc.balance || existingAcc.balance < 10000 || existingAcc.balance > 690000) {
+          if (existingAcc.balance === undefined || existingAcc.balance === null || isNaN(existingAcc.balance)) {
             existingAcc.balance = seed.balance;
             existingAcc.availableBalance = seed.availableBalance ?? seed.balance;
             modified = true;
@@ -1516,14 +1520,14 @@ export class LocalDb {
       }
     }
 
-    // Ensure all unique additional accounts exist in BankAccount registry with starting balance up to 50,000 ETB
+    // Ensure all unique additional accounts exist in BankAccount registry
     for (const seed of ADDITIONAL_BANK_ACCOUNTS) {
       const existingAcc = accounts.find(a => a.accountNumber === seed.accountNumber);
       if (!existingAcc) {
         accounts.push({ ...seed });
         modified = true;
       } else {
-        if (!existingAcc.balance || existingAcc.balance > 50000) {
+        if (existingAcc.balance === undefined || existingAcc.balance === null || isNaN(existingAcc.balance)) {
           existingAcc.balance = seed.balance;
           existingAcc.availableBalance = seed.availableBalance;
           modified = true;
@@ -1738,6 +1742,24 @@ export class LocalDb {
     txs.unshift(tx);
     this.setTransactions(txs);
 
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cbe_balance_updated', {
+        detail: {
+          userId,
+          newBalance: users[uIdx]?.balance,
+          transaction: tx,
+          user: users[uIdx]
+        }
+      }));
+      window.dispatchEvent(new CustomEvent('cbe_transaction_completed', {
+        detail: {
+          transaction: tx,
+          balance: users[uIdx]?.balance,
+          user: users[uIdx]
+        }
+      }));
+    }
+
     this.addNotification(
       userId,
       'Internal Transfer Completed',
@@ -1939,9 +1961,14 @@ export class LocalDb {
         const accIdx = allAccs.findIndex(a => a.id === fromAcc!.id);
         if (accIdx !== -1) allAccs[accIdx] = fromAcc;
         this.setAccounts(allAccs);
-        if (fromAcc.isPrimary) {
+        
+        // Ensure user balance is always updated to reflect deduction
+        if (fromAcc.isPrimary || fromAcc.accountNumber === user.accountNumber || !userAccs.some(a => a.isPrimary)) {
           user.balance = fromAcc.balance;
           user.availableBalance = fromAcc.balance;
+        } else {
+          user.balance = Number((user.balance - totalCost).toFixed(2));
+          user.availableBalance = user.balance;
         }
       } else {
         user.balance = Number((user.balance - totalCost).toFixed(2));
@@ -1954,9 +1981,13 @@ export class LocalDb {
         const accIdx = allAccs.findIndex(a => a.id === fromAcc!.id);
         if (accIdx !== -1) allAccs[accIdx] = fromAcc;
         this.setAccounts(allAccs);
-        if (fromAcc.isPrimary) {
+        
+        if (fromAcc.isPrimary || fromAcc.accountNumber === user.accountNumber || !userAccs.some(a => a.isPrimary)) {
           user.balance = fromAcc.balance;
           user.availableBalance = fromAcc.balance;
+        } else {
+          user.balance = Number((user.balance + amount).toFixed(2));
+          user.availableBalance = user.balance;
         }
       } else {
         user.balance = Number((user.balance + amount).toFixed(2));
@@ -1981,9 +2012,12 @@ export class LocalDb {
       const recUserIdx = users.findIndex(u => u.id === matchedRecipAcc.userId);
       if (recUserIdx !== -1) {
         const recUser = users[recUserIdx];
-        if (matchedRecipAcc.isPrimary) {
+        if (matchedRecipAcc.isPrimary || matchedRecipAcc.accountNumber === recUser.accountNumber || !allAccs.some(a => a.userId === recUser.id && a.isPrimary)) {
           recUser.balance = matchedRecipAcc.balance;
           recUser.availableBalance = matchedRecipAcc.balance;
+        } else {
+          recUser.balance = Number((recUser.balance + amount).toFixed(2));
+          recUser.availableBalance = recUser.balance;
         }
         users[recUserIdx] = recUser;
         this.setUsers(users);
@@ -2026,6 +2060,26 @@ export class LocalDb {
 
     txs.unshift(newTx);
     this.setTransactions(txs);
+
+    // Broadcast instant balance update event to all UI cards and listeners
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cbe_balance_updated', {
+        detail: {
+          userId: user.id,
+          accountNumber: user.accountNumber,
+          newBalance: user.balance,
+          transaction: newTx,
+          user
+        }
+      }));
+      window.dispatchEvent(new CustomEvent('cbe_transaction_completed', {
+        detail: {
+          transaction: newTx,
+          balance: user.balance,
+          user
+        }
+      }));
+    }
 
     // Add notification
     const directionWord = type === 'receive' ? 'credited' : 'debited';

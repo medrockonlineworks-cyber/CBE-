@@ -146,6 +146,29 @@ export const Home: React.FC<HomeProps> = ({
     setRecentTransactions(txs.slice(0, 6));
   }, []);
 
+  // Sync balance and transactions anytime any transaction is made
+  useEffect(() => {
+    const handleSync = (e: any) => {
+      const users = LocalDb.getUsers();
+      const freshUser = users.find(u => u.id === (activeUser.id || 'user_1') || u.accountNumber === activeUser.accountNumber);
+      if (freshUser) {
+        setActiveUser({ ...freshUser });
+      } else if (e?.detail?.user) {
+        setActiveUser(e.detail.user);
+      }
+      loadTransactions();
+    };
+
+    window.addEventListener('cbe_balance_updated' as any, handleSync);
+    window.addEventListener('cbe_transaction_completed' as any, handleSync);
+    window.addEventListener('cbe_accounts_updated' as any, handleSync);
+    return () => {
+      window.removeEventListener('cbe_balance_updated' as any, handleSync);
+      window.removeEventListener('cbe_transaction_completed' as any, handleSync);
+      window.removeEventListener('cbe_accounts_updated' as any, handleSync);
+    };
+  }, [activeUser.id, activeUser.accountNumber, loadTransactions]);
+
   useEffect(() => {
     setCustomLogoUrl(LocalDb.getCustomBankLogo());
     loadTransactions();

@@ -859,8 +859,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             )}
           </div>
 
-          {/* Main White Sheet Container */}
-          <div className="bg-white rounded-t-[32px] sm:rounded-t-[36px] flex-1 px-4 sm:px-5 pt-0 pb-6 flex flex-col justify-between shadow-none relative">
+          {/* Main White Sheet Container with authentic rounded top curve */}
+          <div className={`bg-white rounded-t-[38px] ${hideUiElements ? 'rounded-b-none pb-12' : 'pb-6'} flex-1 px-4 sm:px-5 pt-0 flex flex-col justify-between shadow-none relative`}>
             
             {/* Overlapping Large Success Checkmark Badge (matching IMG_0135.png) */}
             <div className="relative flex justify-center flex-shrink-0">
@@ -1108,9 +1108,9 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         }}
         aria-hidden="true"
       >
-        <div className="w-full bg-white text-slate-800 flex flex-col font-sans select-none">
-          {/* Top Purple Header: Exact original top design matching live screen with clean top purple space */}
-          <div className="pt-16 pb-8 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0">
+        <div className="w-full bg-[#68137e] text-slate-800 flex flex-col font-sans select-none">
+          {/* Top Purple Header: Exact original top design matching live screen */}
+          <div className="pt-7 pb-6 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0">
             <div className="flex items-center gap-2.5">
               {/* Solid White Shield with Purple Checkmark */}
               <div className="w-8.5 h-8.5 flex-shrink-0 flex items-center justify-center">
@@ -1138,8 +1138,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             {/* Top right is clean: NO status bar, NO camera icon */}
           </div>
 
-          {/* Main White Sheet Container with rounded top ONLY and completely white bottom matching Image 1 */}
-          <div className="bg-white rounded-t-[36px] rounded-b-none mx-0 px-4 sm:px-5 pt-0 pb-12 flex flex-col shadow-none relative">
+          {/* Main White Sheet Container with rounded top corners against purple background matching IMG_0135.png */}
+          <div className="bg-white rounded-t-[38px] rounded-b-none mx-0 px-4 sm:px-5 pt-0 pb-12 flex flex-col shadow-none relative">
             
             {/* Overlapping Large Success Checkmark Badge (with full outer white ring matching Image 1) */}
             <div className="relative flex justify-center flex-shrink-0">

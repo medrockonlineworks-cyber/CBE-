@@ -80,6 +80,25 @@ export default function App() {
     });
   }, []);
 
+  // Listen for global balance updates so App-level currentUser is always fresh
+  useEffect(() => {
+    const handleBalanceSync = () => {
+      const users = LocalDb.getUsers();
+      const match = users.find(u => u.id === (currentUser?.id || 'user_1'));
+      if (match) {
+        setCurrentUser({ ...match });
+      }
+    };
+    window.addEventListener('cbe_balance_updated' as any, handleBalanceSync);
+    window.addEventListener('cbe_transaction_completed' as any, handleBalanceSync);
+    window.addEventListener('cbe_accounts_updated' as any, handleBalanceSync);
+    return () => {
+      window.removeEventListener('cbe_balance_updated' as any, handleBalanceSync);
+      window.removeEventListener('cbe_transaction_completed' as any, handleBalanceSync);
+      window.removeEventListener('cbe_accounts_updated' as any, handleBalanceSync);
+    };
+  }, [currentUser?.id]);
+
   // Track navigation state to manage Android / browser history correctly
   const navHistoryRef = useRef<{ view: string; tab: string }[]>([]);
 
@@ -302,18 +321,16 @@ export default function App() {
     setSmsActiveAccountId(cleanSender);
     navigateTo('receipt', activeTab);
     
-    // Refresh current user balance from database
-    if (currentUser) {
-      const users = LocalDb.getUsers();
-      const match = users.find(u => u.id === currentUser.id);
-      if (match) {
-        setCurrentUser(match);
-      }
+    // Refresh current user balance immediately from database
+    const users = LocalDb.getUsers();
+    const match = users.find(u => u.id === (currentUser?.id || 'user_1') || u.accountNumber === cleanSender);
+    if (match) {
+      setCurrentUser({ ...match });
     }
 
-    // Ensure simulated SMS is generated (idempotent duplicate prevention in SmsService)
+    // Ensure simulated SMS is generated with the accurate updated balance
     try {
-      SmsService.createSmsFromTransaction(tx, currentUser?.balance);
+      SmsService.createSmsFromTransaction(tx, match ? match.balance : currentUser?.balance);
     } catch (smsErr) {
       console.error('[SmsService] Non-blocking completion SMS error:', smsErr);
     }
@@ -616,6 +633,11 @@ export default function App() {
                 <Receipt 
                   transaction={selectedTransaction}
                   onBack={() => {
+                    const users = LocalDb.getUsers();
+                    const match = users.find(u => u.id === (currentUser?.id || 'user_1'));
+                    if (match) {
+                      setCurrentUser({ ...match });
+                    }
                     setActiveView('main');
                   }}
                 />

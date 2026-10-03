@@ -196,6 +196,20 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
     }
   };
 
+  useEffect(() => {
+    const handleSync = () => {
+      refreshAccounts();
+    };
+    window.addEventListener('cbe_balance_updated' as any, handleSync);
+    window.addEventListener('cbe_transaction_completed' as any, handleSync);
+    window.addEventListener('cbe_accounts_updated' as any, handleSync);
+    return () => {
+      window.removeEventListener('cbe_balance_updated' as any, handleSync);
+      window.removeEventListener('cbe_transaction_completed' as any, handleSync);
+      window.removeEventListener('cbe_accounts_updated' as any, handleSync);
+    };
+  }, []);
+
   const selectedFromAccountObj = userAccounts.find(a => a.id === selectedFromAccId) || userAccounts[0];
   const selectedToAccountObj = userAccounts.find(a => a.id === selectedToAccId) || userAccounts.find(a => a.id !== selectedFromAccId) || userAccounts[1];
 
@@ -763,10 +777,10 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
           <AccountCard
             bankName="Commercial Bank of Ethiopia"
             slogan="The bank you can always rely on!"
-            balance={currentUser.balance}
+            balance={selectedFromAccountObj ? selectedFromAccountObj.balance : currentUser.balance}
             currency={currentUser.currency || 'ETB'}
-            accountType="Saving Account"
-            accountNumber={currentUser.accountNumber}
+            accountType={selectedFromAccountObj?.accountType === 'checking' ? 'Current Account' : 'Saving Account'}
+            accountNumber={selectedFromAccountObj ? selectedFromAccountObj.accountNumber : currentUser.accountNumber}
             dateTimeString={currentDateTime}
             showBalanceDefault={false}
             customLogoUrl={customLogoUrl}

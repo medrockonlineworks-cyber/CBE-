@@ -136,17 +136,18 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, width, height);
 
-  // 2. Top Purple Header: #68137e with generous top space matching IMG_0135.png
-  const topPurplePadding = 64 * scale; // Clean purple area above shield
+  // 2. Top Purple Header: #68137e matching original authentic CBE top design
+  const topPurplePadding = 28 * scale; // Authentic top purple padding matching original CBE layout
   const shieldSize = 34 * scale;
-  const shieldX = 22 * scale;
+  const shieldX = 20 * scale;
   const shieldY = topPurplePadding;
-  const headerBottomPadding = 36 * scale;
-  const sheetTop = shieldY + shieldSize + headerBottomPadding; // ~134 * scale
-  const headerHeight = sheetTop;
+  const headerBottomPadding = 24 * scale;
+  const sheetTop = shieldY + shieldSize + headerBottomPadding; // ~86 * scale
+  const cornerRadius = 38 * scale; // Authentic large rounded-t curve matching IMG_0135.png
 
+  // Fill purple background extending down PAST sheetTop to fill the corners of the white curve
   ctx.fillStyle = '#68137e';
-  ctx.fillRect(0, 0, width, headerHeight);
+  ctx.fillRect(0, 0, width, sheetTop + cornerRadius + (20 * scale));
 
   // 3. Exact Solid White Shield with Purple Checkmark (matching exact SVG in IMG_0135.png)
   ctx.save();
@@ -182,9 +183,9 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   ctx.fillText('Success', shieldX + shieldSize + (10 * scale), shieldY + (32 * scale));
 
   // 5. Main White Sheet Container:
-  // Starts at sheetTop with rounded top corners (36px) and extends completely flat to canvas bottom!
+  // Starts at sheetTop with rounded top corners (38px) against purple background, extending flat to canvas bottom!
   ctx.fillStyle = '#ffffff';
-  roundRect(ctx, 0, sheetTop, width, height - sheetTop, [36 * scale, 36 * scale, 0, 0]);
+  roundRect(ctx, 0, sheetTop, width, height - sheetTop, [cornerRadius, cornerRadius, 0, 0]);
   ctx.fill();
 
   // 6. Overlapping Success Checkmark Badge (matching exact SVG in IMG_0135.png)
