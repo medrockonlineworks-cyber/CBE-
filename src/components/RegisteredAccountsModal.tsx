@@ -278,6 +278,23 @@ export const RegisteredAccountsModal: React.FC<RegisteredAccountsModalProps> = (
                           </>
                         )}
                       </div>
+
+                      {/* Live Account Balance */}
+                      {account.balance !== undefined && (
+                        <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide">
+                            Balance:
+                          </span>
+                          <span className="font-mono text-xs font-black text-emerald-900 bg-emerald-50/90 border border-emerald-200 px-2 py-0.5 rounded-md shadow-2xs">
+                            ETB {account.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                          {account.balance >= 10000000000 && (
+                            <span className="text-[9px] font-extrabold uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300 px-1.5 py-0.2 rounded-md">
+                              10 Billion ETB
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
 

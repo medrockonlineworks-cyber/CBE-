@@ -42,6 +42,7 @@ export interface RegisteredAccountInfo {
   phone?: string;
   isVerified: boolean;
   accountType?: string;
+  balance?: number;
 }
 
 export type TransactionType = 'send' | 'receive' | 'transfer' | 'bill' | 'airtime';

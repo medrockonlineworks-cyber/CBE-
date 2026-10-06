@@ -1,6 +1,6 @@
 import React, { forwardRef } from 'react';
 import { CbeGoldenEmblemSvg } from './CbeLogo';
-import { StampWeight, StampPosition, getOfficialCbeStampSvg, OFFICIAL_CBE_STAMP_LOGO, LocalDb } from '../lib/mockData';
+import { StampWeight, StampPosition, getOfficialCbeStampSvg, OFFICIAL_CBE_STAMP_LOGO, LocalDb, getAuthenticCbeQrSvgDataUri } from '../lib/mockData';
 
 export interface CbePdfReceiptData {
   refId: string;
@@ -64,6 +64,7 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
   // Use full, prominent stamp size (default 330px) to match the authentic web receipt layout
   const effectiveStampSize = stampSize || LocalDb.getPdfStampSize() || 330;
   const effectiveStampPos = stampPosition || LocalDb.getPdfStampPosition();
+  const effectiveQr = qrCodeDataUrl || LocalDb.getCustomQrCode() || getAuthenticCbeQrSvgDataUri(receiptData.refId || 'FT26248KLR82');
 
   return (
     <div
@@ -405,9 +406,10 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
 
           {/* Right: QR Code without frame */}
           <div style={{ width: '84px', height: '84px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {qrCodeDataUrl ? (
+            {effectiveQr ? (
               <img 
-                src={qrCodeDataUrl} 
+                id="cbe-pdf-official-qr-image"
+                src={effectiveQr} 
                 alt="Receipt Verification QR" 
                 crossOrigin="anonymous"
                 style={{ width: '80px', height: '80px', objectFit: 'contain', display: 'block' }} 

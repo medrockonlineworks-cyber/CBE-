@@ -818,6 +818,38 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
 
   const webReceiptUrl = `https://apps.cbe.com.et:100/?id=${receiptData.refId}`;
 
+  // Helper to convert SVG data URIs into high-resolution PNG data URLs for canvas & PDF export
+  const convertSvgDataUriToPng = (svgDataUri: string, size = 450): Promise<string> => {
+    return new Promise((resolve) => {
+      if (!svgDataUri || svgDataUri.startsWith('data:image/png')) {
+        resolve(svgDataUri);
+        return;
+      }
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        try {
+          const c = document.createElement('canvas');
+          c.width = size;
+          c.height = size;
+          const ctx = c.getContext('2d');
+          if (ctx) {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, size, size);
+            ctx.drawImage(img, 0, 0, size, size);
+            resolve(c.toDataURL('image/png', 1.0));
+            return;
+          }
+        } catch (err) {
+          console.warn('Canvas SVG to PNG conversion fallback:', err);
+        }
+        resolve(svgDataUri);
+      };
+      img.onerror = () => resolve(svgDataUri);
+      img.src = svgDataUri;
+    });
+  };
+
   // Synchronize identical authentic CBE QR code for Receipt, Web Receipt, and PDF Receipt
   useEffect(() => {
     let isMounted = true;
@@ -825,13 +857,25 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
     // 1. If a custom QR code was uploaded or set in AdminPanel, use it
     const customQr = LocalDb.getCustomQrCode();
     if (customQr) {
-      setQrCodeDataUrl(customQr);
+      if (customQr.startsWith('data:image/svg')) {
+        convertSvgDataUriToPng(customQr).then((png) => {
+          if (isMounted) setQrCodeDataUrl(png);
+        });
+      } else {
+        setQrCodeDataUrl(customQr);
+      }
       return;
     }
 
-    // 2. If passed directly from in-app receipt props, sync it
+    // 2. If passed directly from in-app receipt props, sync it (convert to PNG if SVG)
     if (initialQrCode) {
-      setQrCodeDataUrl(initialQrCode);
+      if (initialQrCode.startsWith('data:image/svg')) {
+        convertSvgDataUriToPng(initialQrCode).then((png) => {
+          if (isMounted) setQrCodeDataUrl(png);
+        });
+      } else {
+        setQrCodeDataUrl(initialQrCode);
+      }
       return;
     }
 
@@ -867,7 +911,11 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
     const handleQrUpdate = () => {
       const customQr = LocalDb.getCustomQrCode();
       if (customQr) {
-        setQrCodeDataUrl(customQr);
+        if (customQr.startsWith('data:image/svg')) {
+          convertSvgDataUriToPng(customQr).then((png) => setQrCodeDataUrl(png));
+        } else {
+          setQrCodeDataUrl(customQr);
+        }
       } else if (receiptData.refId) {
         getAuthenticCbeQrPngDataUrl(receiptData.refId, 450)
           .then((pngUrl) => setQrCodeDataUrl(pngUrl))
@@ -896,7 +944,33 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
       setDownloadError(null);
       showBarsToast('Generating high-resolution official CBE PDF...');
 
-      // Brief pause to allow any state batching to settle
+      // 1. Resolve exact QR code currently visible in the Web Receipt
+      let exactQr = qrCodeDataUrl;
+      const webReceiptQrImg = receiptCardRef.current?.querySelector('img[alt="Official CBE Receipt QR"]') as HTMLImageElement | null;
+      if (webReceiptQrImg && webReceiptQrImg.src) {
+        exactQr = webReceiptQrImg.src;
+      }
+
+      // Convert SVG QR data URI to PNG if needed for flawless rendering
+      if (exactQr && (exactQr.startsWith('data:image/svg') || exactQr.includes('<svg'))) {
+        try {
+          exactQr = await convertSvgDataUriToPng(exactQr, 450);
+          setQrCodeDataUrl(exactQr);
+        } catch {
+          const genPng = await getAuthenticCbeQrPngDataUrl(receiptData.refId || 'FT26248KLR82', 450);
+          if (genPng) {
+            exactQr = genPng;
+            setQrCodeDataUrl(exactQr);
+          }
+        }
+      }
+
+      if (!exactQr) {
+        exactQr = await getAuthenticCbeQrPngDataUrl(receiptData.refId || 'FT26248KLR82', 450);
+        if (exactQr) setQrCodeDataUrl(exactQr);
+      }
+
+      // Brief pause to allow state batching and image pre-rendering to settle
       await new Promise(r => setTimeout(r, 200));
 
       // Target the permanently mounted offscreen template element
@@ -908,6 +982,19 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
       const page1Element = (targetContainer.querySelector('#cbe-pdf-page-1') || targetContainer) as HTMLElement;
       const page2Element = targetContainer.querySelector('#cbe-pdf-page-2') as HTMLElement | null;
 
+      // Ensure QR image element on Page 1 has the exact source loaded
+      const qrImageInPage1 = page1Element.querySelector('#cbe-pdf-official-qr-image') as HTMLImageElement | null;
+      if (qrImageInPage1 && exactQr) {
+        qrImageInPage1.src = exactQr;
+        if (!qrImageInPage1.complete) {
+          await new Promise<void>((resolve) => {
+            qrImageInPage1.onload = () => resolve();
+            qrImageInPage1.onerror = () => resolve();
+            setTimeout(resolve, 300);
+          });
+        }
+      }
+
       // Capture Page 1
       const canvas1 = await html2canvas(page1Element, {
         scale: 2,
@@ -918,6 +1005,46 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
         imageTimeout: 15000,
         windowWidth: 640,
       });
+
+      // Direct pixel drawing guarantee:
+      // Even if html2canvas had any issue with offscreen image rendering,
+      // draw exactQr directly onto canvas1 at the exact coordinates of the QR slot!
+      let qrRelBounds: { relX: number; relY: number; relW: number; relH: number } | null = null;
+      if (qrImageInPage1 && exactQr) {
+        try {
+          const p1Rect = page1Element.getBoundingClientRect();
+          const qrRect = qrImageInPage1.getBoundingClientRect();
+          if (p1Rect.width > 0 && qrRect.width > 0) {
+            const scaleX = canvas1.width / p1Rect.width;
+            const scaleY = canvas1.height / p1Rect.height;
+            const relX = (qrRect.left - p1Rect.left) * scaleX;
+            const relY = (qrRect.top - p1Rect.top) * scaleY;
+            const relW = qrRect.width * scaleX;
+            const relH = qrRect.height * scaleY;
+
+            qrRelBounds = { relX, relY, relW, relH };
+
+            const qrImg = new Image();
+            qrImg.crossOrigin = 'anonymous';
+            await new Promise<void>((resolve) => {
+              qrImg.onload = () => resolve();
+              qrImg.onerror = () => resolve();
+              qrImg.src = exactQr;
+              if (qrImg.complete) resolve();
+            });
+
+            const ctx1 = canvas1.getContext('2d');
+            if (ctx1 && qrImg.naturalWidth > 0) {
+              ctx1.fillStyle = '#ffffff';
+              ctx1.fillRect(relX, relY, relW, relH);
+              ctx1.drawImage(qrImg, relX, relY, relW, relH);
+            }
+          }
+        } catch (drawErr) {
+          console.warn('Canvas direct QR overlay:', drawErr);
+        }
+      }
+
       const imgData1 = canvas1.toDataURL('image/png', 1.0);
 
       // Capture Page 2 (The Bank you can always rely on footer)
@@ -963,6 +1090,19 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
       }
       const startX1 = marginX + (printableWidth - renderWidth1) / 2;
       pdf.addImage(imgData1, 'PNG', startX1, marginY, renderWidth1, renderHeight1, undefined, 'FAST');
+
+      // Also directly draw the exact QR code as a native crisp vector/bitmap layer onto PDF
+      if (exactQr && qrRelBounds) {
+        try {
+          const qrPdfX = startX1 + (renderWidth1 * (qrRelBounds.relX / canvas1.width));
+          const qrPdfY = marginY + (renderHeight1 * (qrRelBounds.relY / canvas1.height));
+          const qrPdfW = renderWidth1 * (qrRelBounds.relW / canvas1.width);
+          const qrPdfH = renderHeight1 * (qrRelBounds.relH / canvas1.height);
+          pdf.addImage(exactQr, 'PNG', qrPdfX, qrPdfY, qrPdfW, qrPdfH, undefined, 'FAST');
+        } catch (pdfQrErr) {
+          console.warn('PDF native QR layer:', pdfQrErr);
+        }
+      }
 
       // --- RENDER PAGE 2 ---
       if (imgData2 && canvas2) {

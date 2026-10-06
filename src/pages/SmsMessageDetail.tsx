@@ -162,19 +162,9 @@ export default function SmsMessageDetail({ message, onBack, onDelete }: SmsMessa
             {message.transactionId && (
               <div className="flex justify-between items-center pt-1.5">
                 <span className="text-gray-500">Transaction ID</span>
-                <div className="flex items-center gap-1.5">
-                  <span className="font-mono font-bold text-purple-900 bg-purple-50 px-2 py-0.5 rounded">
-                    {message.transactionId}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleCopy(message.transactionId!)}
-                    className="p-1 text-gray-400 hover:text-purple-900 transition cursor-pointer"
-                    title="Copy Transaction ID"
-                  >
-                    {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                  </button>
-                </div>
+                <span className="font-mono font-bold text-purple-900 bg-purple-50 px-2 py-0.5 rounded">
+                  {message.transactionId}
+                </span>
               </div>
             )}
 
