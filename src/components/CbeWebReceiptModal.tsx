@@ -995,7 +995,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
         }
       }
 
-      // Capture Page 1
+      // Capture Page 1 cleanly with the single exact QR code from web receipt
       const canvas1 = await html2canvas(page1Element, {
         scale: 2,
         useCORS: true,
@@ -1005,45 +1005,6 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
         imageTimeout: 15000,
         windowWidth: 640,
       });
-
-      // Direct pixel drawing guarantee:
-      // Even if html2canvas had any issue with offscreen image rendering,
-      // draw exactQr directly onto canvas1 at the exact coordinates of the QR slot!
-      let qrRelBounds: { relX: number; relY: number; relW: number; relH: number } | null = null;
-      if (qrImageInPage1 && exactQr) {
-        try {
-          const p1Rect = page1Element.getBoundingClientRect();
-          const qrRect = qrImageInPage1.getBoundingClientRect();
-          if (p1Rect.width > 0 && qrRect.width > 0) {
-            const scaleX = canvas1.width / p1Rect.width;
-            const scaleY = canvas1.height / p1Rect.height;
-            const relX = (qrRect.left - p1Rect.left) * scaleX;
-            const relY = (qrRect.top - p1Rect.top) * scaleY;
-            const relW = qrRect.width * scaleX;
-            const relH = qrRect.height * scaleY;
-
-            qrRelBounds = { relX, relY, relW, relH };
-
-            const qrImg = new Image();
-            qrImg.crossOrigin = 'anonymous';
-            await new Promise<void>((resolve) => {
-              qrImg.onload = () => resolve();
-              qrImg.onerror = () => resolve();
-              qrImg.src = exactQr;
-              if (qrImg.complete) resolve();
-            });
-
-            const ctx1 = canvas1.getContext('2d');
-            if (ctx1 && qrImg.naturalWidth > 0) {
-              ctx1.fillStyle = '#ffffff';
-              ctx1.fillRect(relX, relY, relW, relH);
-              ctx1.drawImage(qrImg, relX, relY, relW, relH);
-            }
-          }
-        } catch (drawErr) {
-          console.warn('Canvas direct QR overlay:', drawErr);
-        }
-      }
 
       const imgData1 = canvas1.toDataURL('image/png', 1.0);
 
@@ -1090,19 +1051,6 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
       }
       const startX1 = marginX + (printableWidth - renderWidth1) / 2;
       pdf.addImage(imgData1, 'PNG', startX1, marginY, renderWidth1, renderHeight1, undefined, 'FAST');
-
-      // Also directly draw the exact QR code as a native crisp vector/bitmap layer onto PDF
-      if (exactQr && qrRelBounds) {
-        try {
-          const qrPdfX = startX1 + (renderWidth1 * (qrRelBounds.relX / canvas1.width));
-          const qrPdfY = marginY + (renderHeight1 * (qrRelBounds.relY / canvas1.height));
-          const qrPdfW = renderWidth1 * (qrRelBounds.relW / canvas1.width);
-          const qrPdfH = renderHeight1 * (qrRelBounds.relH / canvas1.height);
-          pdf.addImage(exactQr, 'PNG', qrPdfX, qrPdfY, qrPdfW, qrPdfH, undefined, 'FAST');
-        } catch (pdfQrErr) {
-          console.warn('PDF native QR layer:', pdfQrErr);
-        }
-      }
 
       // --- RENDER PAGE 2 ---
       if (imgData2 && canvas2) {
