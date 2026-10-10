@@ -206,68 +206,12 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   const [copiedToast, setCopiedToast] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [flashAnimation, setFlashAnimation] = useState(false);
-  const [statusTime, setStatusTime] = useState<string>(() => {
-    const now = new Date();
-    const hours = now.getHours() % 12 || 12;
-    const mins = now.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${mins}`;
-  });
-
   const [isIPhone, setIsIPhone] = useState<boolean>(() => PhoneSettingsService.isIPhoneMode());
 
   useEffect(() => {
     return PhoneSettingsService.subscribe(() => {
       setIsIPhone(PhoneSettingsService.isIPhoneMode());
     });
-  }, []);
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const now = new Date();
-      const hours = now.getHours() % 12 || 12;
-      const mins = now.getMinutes().toString().padStart(2, '0');
-      setStatusTime(`${hours}:${mins}`);
-    }, 10000);
-    return () => clearInterval(timer);
-  }, []);
-
-  // Real device phone power & battery condition detection (Battery Status API with smart fallback)
-  const [batteryLevel, setBatteryLevel] = useState<number>(92);
-  const [isPhoneCharging, setIsPhoneCharging] = useState<boolean>(false);
-
-  useEffect(() => {
-    let batteryManager: any = null;
-
-    const handleBatteryUpdate = (battery: any) => {
-      if (battery && typeof battery.level === 'number') {
-        const levelPct = Math.round(battery.level * 100);
-        setBatteryLevel(Math.max(1, Math.min(100, levelPct)));
-        setIsPhoneCharging(Boolean(battery.charging));
-      }
-    };
-
-    if (typeof navigator !== 'undefined' && 'getBattery' in navigator) {
-      (navigator as any).getBattery().then((battery: any) => {
-        batteryManager = battery;
-        handleBatteryUpdate(battery);
-
-        battery.addEventListener('levelchange', () => handleBatteryUpdate(battery));
-        battery.addEventListener('chargingchange', () => handleBatteryUpdate(battery));
-      }).catch(() => {
-        // Fallback gracefully
-      });
-    }
-
-    return () => {
-      if (batteryManager) {
-        try {
-          batteryManager.removeEventListener('levelchange', () => handleBatteryUpdate(batteryManager));
-          batteryManager.removeEventListener('chargingchange', () => handleBatteryUpdate(batteryManager));
-        } catch {
-          // Ignore cleanup error
-        }
-      }
-    };
   }, []);
 
   // Dynamic customized feedback assets (uploaded CBE logo & QR code)
@@ -304,29 +248,6 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     });
   };
 
-  // Double-tap/click to hide status bar (on iPhone, status bar is always hidden by default)
-  const [hideStatusBar, setHideStatusBar] = useState<boolean>(() => {
-    try {
-      if (PhoneSettingsService.isIPhoneMode()) return true;
-      return localStorage.getItem('cbe_hide_status_bar') === 'true' || localStorage.getItem('cbe_hide_phone_bars') === 'true';
-    } catch {
-      return PhoneSettingsService.isIPhoneMode();
-    }
-  });
-
-  const toggleStatusBar = () => {
-    setHideStatusBar(prev => {
-      const next = !prev;
-      try {
-        localStorage.setItem('cbe_hide_status_bar', String(next));
-      } catch {}
-      showBarsToast(next ? 'Status bar hidden' : 'Status bar restored');
-      return next;
-    });
-  };
-
-  const shouldShowStatusBar = !isIPhone && !hideStatusBar && !isCapturing && !hideUiElements;
-
   const [barsToast, setBarsToast] = useState<string | null>(null);
   const barsToastTimerRef = useRef<any>(null);
   const lastTapRef = useRef<{ time: number; x: number; y: number }>({ time: 0, x: 0, y: 0 });
@@ -343,11 +264,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   };
 
   const handleDoubleAction = () => {
-    if (isIPhone) {
-      onBack();
-    } else {
-      toggleStatusBar();
-    }
+    onBack();
   };
 
   const handleScreenTouchStart = (e: React.TouchEvent) => {
@@ -736,82 +653,13 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         data-capturing={isCapturing ? "true" : "false"}
         className={`w-full flex-1 flex flex-col justify-between bg-[#68137e] relative select-none ${isCapturing ? 'capturing-screenshot h-auto overflow-visible' : 'h-full overflow-hidden min-h-0'}`}
       >
-        {/* Phone Top Status Bar (Time, Cellular, Wi-Fi, Battery) - Authentic Android / iOS phone bar */}
-        {shouldShowStatusBar && (
-          <div 
-            id="receipt-status-bar"
-            className="w-full pt-2.5 pb-1 px-5 flex items-center justify-between text-white select-none z-20 flex-shrink-0 transition-opacity duration-200"
-          >
-            {/* Left: Time */}
-            <div className="text-left">
-              <span className="font-semibold text-[13px] sm:text-[14px] tracking-tight font-sans text-white/95 drop-shadow-xs">
-                {statusTime}
-              </span>
-            </div>
-
-            {/* Right: Cellular 4-Bars, Wi-Fi, and Battery Indicator */}
-            <div className="w-16 sm:w-20 flex items-center justify-end gap-1.5 text-white">
-              {/* Cellular 4-Bars */}
-              <div className="flex items-end gap-[1.5px] h-3" title="Cellular Full Signal">
-                <div className="w-[3px] h-1.5 bg-white rounded-[0.5px]" />
-                <div className="w-[3px] h-2 bg-white rounded-[0.5px]" />
-                <div className="w-[3px] h-2.5 bg-white rounded-[0.5px]" />
-                <div className="w-[3px] h-3 bg-white rounded-[0.5px]" />
-              </div>
-
-              {/* Wi-Fi Icon */}
-              <span title="Wi-Fi Connected" className="flex items-center">
-                <Wifi className="w-3.5 h-3.5 text-white stroke-[2.4]" />
-              </span>
-
-              {/* iOS Battery with Real Phone Battery Percentage & Charging State */}
-              <div 
-                className="flex items-center gap-[2px]" 
-                title={`Phone Battery: ${batteryLevel}% ${isPhoneCharging ? '(Charging ⚡)' : ''}`}
-              >
-                {/* Battery Body with Dynamic Real Phone Power Fill */}
-                <div className={`h-3 rounded-[3.5px] border-[1.5px] p-[1px] flex items-center relative transition-colors ${
-                  isPhoneCharging 
-                    ? 'border-emerald-400 bg-emerald-950/40' 
-                    : (batteryLevel <= 20 ? 'border-red-400 bg-red-950/30' : 'border-white bg-black/15')
-                } ${batteryLevel === 100 ? 'w-6' : 'w-5.5'}`}>
-                  <div 
-                    className={`h-full rounded-[1px] transition-all duration-500 ${
-                      isPhoneCharging 
-                        ? 'bg-emerald-400' 
-                        : (batteryLevel <= 20 ? 'bg-red-400' : 'bg-white')
-                    }`}
-                    style={{ width: `${Math.max(8, Math.min(100, batteryLevel))}%` }}
-                  />
-                  {isPhoneCharging && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <Zap className="w-2.5 h-2.5 text-white fill-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]" />
-                    </div>
-                  )}
-                </div>
-                {/* Battery Terminal Knob */}
-                <div className={`w-[1.5px] h-1.5 rounded-r-[1px] ${
-                  isPhoneCharging 
-                    ? 'bg-emerald-400' 
-                    : (batteryLevel <= 20 ? 'bg-red-400' : 'bg-white')
-                }`} />
-
-                {/* Battery Percentage Number */}
-                <span className="text-[10px] font-bold text-white leading-none ml-0.5 tracking-tight select-none">
-                  {batteryLevel}%
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* 2. RECEIPT CONTENT CONTAINER */}
+        {/* 2. RECEIPT CONTENT CONTAINER (Edge-to-Edge like real CBE Mobile Banking) */}
         <div 
           id="cbe-existing-receipt"
           className={`w-full flex-1 flex flex-col bg-[#68137e] relative select-none ${isCapturing ? 'h-auto overflow-visible' : 'h-full overflow-hidden min-h-0'}`}
         >
-          {/* Top Purple Navigation / App Header: Exact authentic CBE Bank top design (no back icon, shield on left, clean on right) */}
-          <div className={`${isIPhone ? 'pt-[max(env(safe-area-inset-top,0px),24px)]' : (shouldShowStatusBar ? 'pt-2.5 sm:pt-3' : 'pt-7 sm:pt-8')} pb-6 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0`}>
+          {/* Top Purple Navigation / App Header: Exact authentic CBE Bank top design running edge-to-edge with safe-area support */}
+          <div className="pt-[max(env(safe-area-inset-top,0px),16px)] sm:pt-[max(env(safe-area-inset-top,0px),20px)] pb-6 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0">
             <div className="flex items-center gap-2.5">
               {/* Solid White Shield with Purple Checkmark Icon matching original reference */}
               <div className="w-8.5 h-8.5 flex-shrink-0 flex items-center justify-center">

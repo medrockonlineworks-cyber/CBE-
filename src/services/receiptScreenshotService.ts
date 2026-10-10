@@ -308,14 +308,8 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
           (whiteSheet as HTMLElement).style.backgroundColor = '#ffffff';
         }
 
-        // Only restore status bar or action buttons if capturing live on-screen view
+        // Only restore action buttons if capturing live on-screen view
         if (clonedElement.id !== 'cbe-screenshot-exact-target') {
-          const statusBar = clonedDoc.getElementById('receipt-status-bar');
-          if (statusBar) {
-            statusBar.style.display = 'flex';
-            statusBar.style.visibility = 'visible';
-            statusBar.style.opacity = '1';
-          }
           const bottomBar = clonedDoc.getElementById('cbe-receipt-bottom-actions-container');
           if (bottomBar) {
             bottomBar.style.display = 'block';
