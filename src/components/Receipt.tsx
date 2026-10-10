@@ -36,7 +36,6 @@ import {
   RotateCcw,
   User,
   ExternalLink,
-  ChevronLeft,
   ChevronRight,
   Zap
 } from 'lucide-react';
@@ -594,6 +593,9 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       setFlashAnimation(true);
       setTimeout(() => setFlashAnimation(false), 250);
 
+      // Brief tick to ensure DOM state update flushes and animated badges reset to exact original size (scale 1.0)
+      await new Promise(r => setTimeout(r, 60));
+
       // 2. Capture exact receipt with original top design and completely white bottom
       let dataUrl: string | null = null;
       const element = screenshotExportRef.current || receiptRef.current;
@@ -731,7 +733,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       <div 
         ref={receiptRef}
         id="cbe-full-receipt-capture-target"
-        className="w-full flex-1 flex flex-col justify-between bg-[#68137e] relative select-none"
+        data-capturing={isCapturing ? "true" : "false"}
+        className={`w-full flex-1 flex flex-col justify-between bg-[#68137e] relative select-none ${isCapturing ? 'capturing-screenshot' : ''}`}
       >
         {/* Phone Top Status Bar (Time, Cellular, Wi-Fi, Battery) - Authentic Android / iOS phone bar */}
         {shouldShowStatusBar && (
@@ -807,19 +810,9 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           id="cbe-existing-receipt"
           className="w-full flex-1 flex flex-col bg-[#68137e] relative select-none"
         >
-          {/* Top Purple Navigation / App Header */}
+          {/* Top Purple Navigation / App Header (Exact match to real CBE Bank: no top back icon, shield on left, animated badge/icons) */}
           <div className={`${isIPhone ? 'pt-[max(env(safe-area-inset-top,0px),24px)]' : (shouldShowStatusBar ? 'pt-2 sm:pt-3' : 'pt-7 sm:pt-8')} pb-8 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0`}>
             <div className="flex items-center gap-2.5">
-              {/* Top Back Button */}
-              <button
-                type="button"
-                onClick={onBack}
-                className="p-1.5 -ml-1.5 text-white hover:text-purple-200 active:opacity-70 transition flex items-center cursor-pointer rounded-full"
-                title="Return to Home"
-              >
-                <ChevronLeft className="w-6 h-6 stroke-[2.5]" />
-              </button>
-
               {/* Solid White Shield with Purple Checkmark Icon perfectly fitted matching reference image */}
               <div className="w-8.5 h-8.5 flex-shrink-0 flex items-center justify-center">
                 <svg className="w-8.5 h-8.5 drop-shadow-xs" viewBox="0 0 24 24" fill="none">
@@ -844,14 +837,14 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
               </div>
             </div>
 
-            {/* Screenshot Button (Translucent circular badge with enlarged focus viewfinder) - hidden during screenshot capture */}
+            {/* Screenshot Button (Translucent circular badge with enlarged focus viewfinder) - smoothly animated like CBE bank, hidden during screenshot capture */}
             {!hideUiElements && !isCapturing && (
               <button 
                 type="button"
                 id="btn-top-screenshot"
                 data-screenshot-exclude="true"
                 onClick={handleScreenshot}
-                className="w-11 h-11 rounded-full bg-white/20 hover:bg-white/30 active:scale-95 flex items-center justify-center transition text-white cursor-pointer shadow-xs"
+                className="w-11 h-11 rounded-full bg-white/20 hover:bg-white/30 active:scale-95 flex items-center justify-center transition text-white cursor-pointer shadow-xs origin-center animate-cbe-pulse"
                 title="Take screenshot of receipt"
               >
                 <ScreenshotViewfinderIcon className="w-7 h-7 text-white" strokeWidth={1.8} />
@@ -862,29 +855,36 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           {/* Main White Sheet Container with authentic rounded top curve */}
           <div className={`bg-white rounded-t-[38px] ${hideUiElements ? 'rounded-b-none pb-12' : 'pb-6'} flex-1 px-4 sm:px-5 pt-0 flex flex-col justify-between shadow-none relative`}>
             
-            {/* Overlapping Large Success Checkmark Badge (matching IMG_0135.png) */}
+            {/* Overlapping Large Success Checkmark Badge (matching real CBE Bank: animated breathing pulse smoothly increasing and decreasing size, strictly original size when taking screenshot) */}
             <div className="relative flex justify-center flex-shrink-0">
-              <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 top-0 w-[90px] h-[90px] pointer-events-none select-none z-10">
-                <svg 
-                  viewBox="0 0 90 90" 
-                  className="w-full h-full block" 
-                  fill="none" 
-                  xmlns="http://www.w3.org/2000/svg"
+              <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 top-0 w-[90px] h-[90px] pointer-events-none select-none z-10 flex items-center justify-center">
+                <div 
+                  className={`w-full h-full flex items-center justify-center origin-center transition-transform duration-200 ${
+                    isCapturing ? 'transform-none !scale-100 [animation:none!important]' : 'animate-cbe-pulse'
+                  }`}
+                  style={isCapturing ? { transform: 'scale(1)', animation: 'none' } : undefined}
                 >
-                  {/* Purple Circle with crisp White Outer Ring */}
-                  <circle cx="45" cy="45" r="41.5" stroke="#ffffff" strokeWidth="6" fill="#68137e" />
-                  {/* Bold Crisp White Checkmark */}
-                  <path
-                    d="M 25.5 45.5 L 39.0 59.0 L 68.0 30.0"
-                    fill="none"
-                    stroke="#ffffff"
-                    strokeWidth="7.2"
-                    strokeLinecap="butt"
-                    strokeLinejoin="miter"
-                    strokeMiterlimit="4"
-                    shapeRendering="geometricPrecision"
-                  />
-                </svg>
+                  <svg 
+                    viewBox="0 0 90 90" 
+                    className="w-full h-full block" 
+                    fill="none" 
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    {/* Purple Circle with crisp White Outer Ring */}
+                    <circle cx="45" cy="45" r="41.5" stroke="#ffffff" strokeWidth="6" fill="#68137e" />
+                    {/* Bold Crisp White Checkmark ("right icon") */}
+                    <path
+                      d="M 25.5 45.5 L 39.0 59.0 L 68.0 30.0"
+                      fill="none"
+                      stroke="#ffffff"
+                      strokeWidth="7.2"
+                      strokeLinecap="butt"
+                      strokeLinejoin="miter"
+                      strokeMiterlimit="4"
+                      shapeRendering="geometricPrecision"
+                    />
+                  </svg>
+                </div>
               </div>
             </div>
 

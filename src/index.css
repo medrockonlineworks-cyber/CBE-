@@ -135,6 +135,30 @@ input, select, textarea {
   animation: tickerMarquee 8s linear infinite;
 }
 
+/* Authentic Commercial Bank of Ethiopia (CBE) Success Checkmark & Badge Breathing Animation */
+@keyframes cbePulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.085);
+  }
+}
+
+.animate-cbe-pulse {
+  animation: cbePulse 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+/* Force exact original size when taking screenshot or exporting */
+[data-capturing="true"] .animate-cbe-pulse,
+.capturing-screenshot .animate-cbe-pulse,
+#cbe-screenshot-exact-target .animate-cbe-pulse {
+  animation: none !important;
+  transform: scale(1) !important;
+}
+
 /* Printable layout styling to omit background controls and preserve dark headers */
 @media print {
   body {
