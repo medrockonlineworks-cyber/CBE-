@@ -682,7 +682,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       onDoubleClick={handleScreenDoubleClick}
       onTouchStart={handleScreenTouchStart}
       onTouchEnd={handleScreenTouchEnd}
-      className="h-full min-h-[100dvh] max-w-md mx-auto bg-[#68137e] text-slate-800 flex flex-col justify-between relative overflow-y-auto scrollbar-none select-none cursor-pointer"
+      className="h-[100dvh] max-h-[100dvh] max-w-md mx-auto bg-[#68137e] text-slate-800 flex flex-col relative overflow-hidden select-none cursor-pointer"
     >
       
       {/* Floating Home Back Button when in clean screenshot view mode (like Image 1) */}
@@ -734,7 +734,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         ref={receiptRef}
         id="cbe-full-receipt-capture-target"
         data-capturing={isCapturing ? "true" : "false"}
-        className={`w-full flex-1 flex flex-col justify-between bg-[#68137e] relative select-none ${isCapturing ? 'capturing-screenshot' : ''}`}
+        className={`w-full flex-1 flex flex-col justify-between bg-[#68137e] relative select-none ${isCapturing ? 'capturing-screenshot h-auto overflow-visible' : 'h-full overflow-hidden min-h-0'}`}
       >
         {/* Phone Top Status Bar (Time, Cellular, Wi-Fi, Battery) - Authentic Android / iOS phone bar */}
         {shouldShowStatusBar && (
@@ -808,12 +808,12 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         {/* 2. RECEIPT CONTENT CONTAINER */}
         <div 
           id="cbe-existing-receipt"
-          className="w-full flex-1 flex flex-col bg-[#68137e] relative select-none"
+          className={`w-full flex-1 flex flex-col bg-[#68137e] relative select-none ${isCapturing ? 'h-auto overflow-visible' : 'h-full overflow-hidden min-h-0'}`}
         >
-          {/* Top Purple Navigation / App Header (Exact match to real CBE Bank: no top back icon, shield on left, animated badge/icons) */}
-          <div className={`${isIPhone ? 'pt-[max(env(safe-area-inset-top,0px),24px)]' : (shouldShowStatusBar ? 'pt-2 sm:pt-3' : 'pt-7 sm:pt-8')} pb-8 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0`}>
+          {/* Top Purple Navigation / App Header: Exact authentic CBE Bank top design (no back icon, shield on left, clean on right) */}
+          <div className={`${isIPhone ? 'pt-[max(env(safe-area-inset-top,0px),24px)]' : (shouldShowStatusBar ? 'pt-2.5 sm:pt-3' : 'pt-7 sm:pt-8')} pb-6 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0`}>
             <div className="flex items-center gap-2.5">
-              {/* Solid White Shield with Purple Checkmark Icon perfectly fitted matching reference image */}
+              {/* Solid White Shield with Purple Checkmark Icon matching original reference */}
               <div className="w-8.5 h-8.5 flex-shrink-0 flex items-center justify-center">
                 <svg className="w-8.5 h-8.5 drop-shadow-xs" viewBox="0 0 24 24" fill="none">
                   <path 
@@ -836,28 +836,25 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 <p className="text-[12px] sm:text-[13px] text-purple-100 font-normal leading-tight mt-0.5">Success</p>
               </div>
             </div>
-
-            {/* Screenshot Button (Translucent circular badge with enlarged focus viewfinder) - smoothly animated like CBE bank, hidden during screenshot capture */}
-            {!hideUiElements && !isCapturing && (
-              <button 
-                type="button"
-                id="btn-top-screenshot"
-                data-screenshot-exclude="true"
-                onClick={handleScreenshot}
-                className="w-11 h-11 rounded-full bg-white/20 hover:bg-white/30 active:scale-95 flex items-center justify-center transition text-white cursor-pointer shadow-xs origin-center animate-cbe-pulse"
-                title="Take screenshot of receipt"
-              >
-                <ScreenshotViewfinderIcon className="w-7 h-7 text-white" strokeWidth={1.8} />
-              </button>
-            )}
+            {/* Top-Right Screenshot Icon Button (excluded from captured screenshot) */}
+            <button
+              type="button"
+              id="btn-top-screenshot"
+              data-screenshot-exclude="true"
+              onClick={handleScreenshot}
+              className="p-2 -mr-1 rounded-full text-white/90 hover:text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer flex items-center justify-center"
+              title="Take screenshot"
+              aria-label="Take screenshot"
+            >
+              <ScreenshotViewfinderIcon className="w-6 h-6 text-white" strokeWidth={1.9} />
+            </button>
           </div>
 
-          {/* Main White Sheet Container with authentic rounded top curve */}
-          <div className={`bg-white rounded-t-[38px] ${hideUiElements ? 'rounded-b-none pb-12' : 'pb-6'} flex-1 px-4 sm:px-5 pt-0 flex flex-col justify-between shadow-none relative`}>
-            
-            {/* Overlapping Large Success Checkmark Badge (matching real CBE Bank: animated breathing pulse smoothly increasing and decreasing size, strictly original size when taking screenshot) */}
+          {/* STATIC/UNSCROLLEABLE TOP CURVE CAP WITH OVERLAPPING ANIMATED CHECKMARK BADGE */}
+          <div className="bg-white rounded-t-[38px] rounded-b-none relative flex-shrink-0 z-20">
+            {/* Overlapping Large Success Checkmark Badge (matching real CBE Bank: animated breathing pulse, strictly original size when taking screenshot) */}
             <div className="relative flex justify-center flex-shrink-0">
-              <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 top-0 w-[90px] h-[90px] pointer-events-none select-none z-10 flex items-center justify-center">
+              <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 top-0 w-[90px] h-[90px] pointer-events-none select-none z-30 flex items-center justify-center">
                 <div 
                   className={`w-full h-full flex items-center justify-center origin-center transition-transform duration-200 ${
                     isCapturing ? 'transform-none !scale-100 [animation:none!important]' : 'animate-cbe-pulse'
@@ -888,12 +885,15 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
               </div>
             </div>
 
-            {/* Spacer for the overlapping badge */}
-            <div className="h-12 sm:h-13 flex-shrink-0" />
+            {/* Spacer for the overlapping badge matching exact original layout */}
+            <div className="h-13 flex-shrink-0" />
+          </div>
 
-            <div className="space-y-3 flex-1 flex flex-col justify-center">
+          {/* SCROLLABLE MIDDLE TEXT & CARD PART: Only this upper text area scrolls between the static header and static bottom buttons */}
+          <div className={`bg-white px-4 sm:px-5 ${hideUiElements ? 'pb-12' : 'pb-4'} ${isCapturing ? 'h-auto overflow-visible' : 'flex-1 overflow-y-auto overscroll-contain scrollbar-none min-h-0'}`}>
+            <div className="space-y-3 pb-2">
               {/* Headline */}
-              <h1 className="text-center text-[15px] sm:text-[16px] font-medium text-black tracking-tight">
+              <h1 className="text-center text-[15.5px] sm:text-[16px] font-medium text-black tracking-tight mb-1">
                 Transaction Completed Successfully!
               </h1>
 
@@ -982,15 +982,14 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
               </div>
             </div>
-
           </div>
         </div>
 
-        {/* 3. Bottom Actions Section (Receipt, Screenshot, Share, Close) - Included in screenshot matching Image 2 */}
+        {/* 3. STATIC/UNSCROLLEABLE BOTTOM ACTIONS: Receipt, Screenshot, Share, Close */}
         {!hideUiElements && (
           <div 
             id="cbe-receipt-bottom-actions-container"
-            className="bg-white px-4 sm:px-5 pb-5 space-y-3.5 flex-shrink-0 select-none"
+            className="bg-white px-4 sm:px-5 pb-[max(env(safe-area-inset-bottom,0px),18px)] pt-3 space-y-3.5 flex-shrink-0 z-20 select-none border-t border-gray-100/80 shadow-[0_-4px_12px_rgba(0,0,0,0.03)]"
           >
             {/* 3 Action Buttons matching exact app icons */}
             <div className="flex items-center justify-around px-3 text-black">
@@ -1044,12 +1043,12 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
               </button>
             </div>
 
-            {/* Full-width Close Pill Button */}
+            {/* Full-width Close Pill Button (thin vertically matching real CBE) */}
             <button 
               type="button"
               id="btn-action-close"
               onClick={onBack}
-              className="w-full bg-[#d7d7db] hover:bg-[#ceced3] active:bg-[#c4c4c9] text-[#333333] font-bold py-3.5 rounded-full text-[15px] transition active:scale-[0.99] cursor-pointer shadow-xs mb-1"
+              className="w-full bg-[#d7d7db] hover:bg-[#ceced3] active:bg-[#c4c4c9] text-[#333333] font-bold py-1.5 sm:py-2 rounded-full text-[13.5px] sm:text-[14px] transition active:scale-[0.99] cursor-pointer shadow-xs mb-0.5"
             >
               Close
             </button>

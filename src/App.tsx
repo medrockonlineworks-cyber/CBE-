@@ -151,9 +151,11 @@ export default function App() {
       return;
     }
 
-    // 2. If viewing a receipt, return to main CBE view
+    // 2. If viewing a receipt, return to main CBE view on Home page
     if (activeView === 'receipt') {
       setActiveView('main');
+      setActiveTab('home');
+      setSelectedTransaction(null);
       return;
     }
 
@@ -222,6 +224,8 @@ export default function App() {
         setActiveTab('profile');
       } else if (activeView === 'receipt') {
         setActiveView('main');
+        setActiveTab('home');
+        setSelectedTransaction(null);
       } else if (activeView === 'admin') {
         setActiveView('main');
         setActiveTab('profile');
@@ -639,6 +643,11 @@ export default function App() {
                       setCurrentUser({ ...match });
                     }
                     setActiveView('main');
+                    setActiveTab('home');
+                    setSelectedTransaction(null);
+                    try {
+                      window.history.pushState({ view: 'main', tab: 'home' }, '', '/');
+                    } catch {}
                   }}
                 />
               </div>
