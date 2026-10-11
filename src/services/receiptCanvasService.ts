@@ -136,13 +136,13 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, width, height);
 
-  // 2. Top Purple Header: #68137e matching original authentic CBE top design
-  const topPurplePadding = 28 * scale; // Authentic top purple padding matching original CBE layout
+  // 2. Top Purple Header: #68137e matching original authentic CBE top design with generous space above Thank you
+  const topPurplePadding = 44 * scale; // Increased vertical space above Thank you
   const shieldSize = 34 * scale;
   const shieldX = 20 * scale;
   const shieldY = topPurplePadding;
   const headerBottomPadding = 24 * scale;
-  const sheetTop = shieldY + shieldSize + headerBottomPadding; // ~86 * scale
+  const sheetTop = shieldY + shieldSize + headerBottomPadding;
   const cornerRadius = 38 * scale; // Authentic large rounded-t curve matching IMG_0135.png
 
   // Fill purple background extending down PAST sheetTop to fill the corners of the white curve

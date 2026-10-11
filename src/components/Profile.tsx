@@ -99,6 +99,7 @@ export default function Profile({
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
   const [editName, setEditName] = useState(currentUser.name);
   const [editAccount, setEditAccount] = useState(currentUser.accountNumber);
+  const [editBalance, setEditBalance] = useState(() => (currentUser.balance ?? 18450.50).toFixed(2));
   const [editPhone, setEditPhone] = useState(currentUser.phone);
   const [editEmail, setEditEmail] = useState(currentUser.email);
   const [editAccountType, setEditAccountType] = useState<UserProfile['accountType']>(currentUser.accountType || 'savings');
@@ -187,6 +188,7 @@ export default function Profile({
   const handleOpenEditProfile = () => {
     setEditName(currentUser.name);
     setEditAccount(currentUser.accountNumber);
+    setEditBalance((currentUser.balance ?? 18450.50).toFixed(2));
     setEditPhone(currentUser.phone);
     setEditEmail(currentUser.email);
     setEditAccountType(currentUser.accountType || 'savings');
@@ -208,17 +210,24 @@ export default function Profile({
       return;
     }
 
+    const parsedBal = parseFloat(editBalance.replace(/,/g, ''));
+    if (isNaN(parsedBal) || parsedBal < 0) {
+      setErrorMsg('Please enter a valid non-negative account balance.');
+      return;
+    }
+
     const updated = LocalDb.updateUserProfile(currentUser.id, {
       name: editName.trim(),
       accountNumber: cleanEditAcc,
       phone: editPhone.trim(),
       email: editEmail.trim(),
-      accountType: editAccountType
+      accountType: editAccountType,
+      balance: Math.round(parsedBal * 100) / 100
     });
 
     if (updated) {
       onUpdateUser(updated);
-      setSuccessMsg('Name and Account Number updated successfully!');
+      setSuccessMsg('Account details and balance updated successfully!');
       setShowEditProfileModal(false);
       setTimeout(() => setSuccessMsg(''), 4000);
     } else {
@@ -1060,7 +1069,7 @@ export default function Profile({
                 </div>
                 <div>
                   <h3 className="text-base font-extrabold text-gray-900">Edit Name &amp; Account</h3>
-                  <p className="text-[11px] text-gray-500">Update account holder &amp; CBE number</p>
+                  <p className="text-[11px] text-gray-500">Update account holder, balance &amp; CBE number</p>
                 </div>
               </div>
               <button
@@ -1127,6 +1136,33 @@ export default function Profile({
                   <option value="checking">Checking Current Account</option>
                   <option value="cbe_birr">CBE Birr Digital Wallet</option>
                 </select>
+              </div>
+
+              {/* Account Balance Editor */}
+              <div className="space-y-1">
+                <div className="flex justify-between items-center">
+                  <label className="text-xs font-bold text-gray-700">Account Balance (ETB)</label>
+                  <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                    Active Balance
+                  </span>
+                </div>
+                <div className="relative">
+                  <div className="absolute left-3.5 top-2.5 text-xs font-bold text-[#68137e] pointer-events-none">
+                    ETB
+                  </div>
+                  <input
+                    id="input-edit-balance"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={editBalance}
+                    onChange={(e) => setEditBalance(e.target.value)}
+                    placeholder="0.00"
+                    className="w-full bg-gray-50 border border-gray-200 focus:border-[#68137e] focus:bg-white rounded-xl py-2.5 pl-13 pr-3 text-xs font-mono font-bold text-gray-900 focus:outline-none transition tracking-wide"
+                    required
+                  />
+                </div>
+                <p className="text-[10px] text-gray-400">Updates live wallet &amp; CBE home account balance immediately</p>
               </div>
 
               {/* Phone & Email (Optional edits) */}

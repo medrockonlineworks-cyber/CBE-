@@ -2290,6 +2290,22 @@ export class LocalDb {
     users[index] = updatedUser;
     this.setUsers(users);
 
+    // Synchronize primary BankAccount in all accounts list
+    const accounts = this.getAllAccounts();
+    const primaryAccIndex = accounts.findIndex(a => a.userId === userId && a.isPrimary) !== -1 
+      ? accounts.findIndex(a => a.userId === userId && a.isPrimary)
+      : accounts.findIndex(a => a.accountNumber === oldUser.accountNumber || a.userId === userId);
+    
+    if (primaryAccIndex !== -1) {
+      if (updates.name) accounts[primaryAccIndex].accountName = `${updates.name} Savings Account`;
+      if (updates.accountNumber) accounts[primaryAccIndex].accountNumber = updates.accountNumber;
+      if (updates.balance !== undefined) {
+        accounts[primaryAccIndex].balance = updates.balance;
+        accounts[primaryAccIndex].availableBalance = updates.balance;
+      }
+      this.setAccounts(accounts);
+    }
+
     // If name or account number changed, update historical transactions to reflect the updated identity
     if (updates.name || updates.accountNumber) {
       const txs = this.getTransactions();
