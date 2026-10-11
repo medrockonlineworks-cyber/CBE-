@@ -73,7 +73,71 @@ export const ACCOUNT_BALANCES_UP_TO_50K: Record<string, number> = {
   "1000845273169": 47562,
   "1000637194258": 49302,
   "1000793462157": 21821.5,
-  "1000568214379": 45466
+  "1000568214379": 45466,
+  "1000359755683": 49654,
+  "1000124824597": 12758,
+  "1000140588345": 39872,
+  "1000786707257": 16894,
+  "1000297627618": 24076,
+  "1000942499597": 38189.5,
+  "1000670763687": 37081.5,
+  "1000565725072": 14755.5,
+  "1000642826446": 19049.5,
+  "1000684983045": 38480,
+  "1000566715987": 18371.5,
+  "1000683599481": 19664,
+  "1000388546892": 22072,
+  "1000107543384": 23740,
+  "1000400574412": 48576,
+  "1000278090837": 38082,
+  "1000161145204": 25182,
+  "1000722838628": 20666,
+  "1000306502882": 30058,
+  "1000130125611": 22074,
+  "1000930460731": 49654,
+  "1000509223623": 12758,
+  "1000157108790": 39872,
+  "1000907308092": 16894,
+  "1000145146447": 24076,
+  "1000552076078": 38189.5,
+  "1000247024586": 37081.5,
+  "1000410657630": 14755.5,
+  "1000477109898": 19049.5,
+  "1000112894262": 38480,
+  "1000195217202": 18371.5,
+  "1000926170975": 19664,
+  "1000850688398": 22072,
+  "1000508488136": 23740,
+  "1000479010111": 48576,
+  "1000605657700": 38082,
+  "1000247641376": 25182,
+  "1000280718129": 20666,
+  "1000572092857": 30058,
+  "1000270905457": 22074,
+  "1000906616928": 49654,
+  "1000578308343": 12758,
+  "1000701690020": 39872,
+  "1000688457638": 16894,
+  "1000117211365": 24076,
+  "1000963822438": 38189.5,
+  "1000523606928": 37081.5,
+  "1000802675409": 14755.5,
+  "1000391513939": 19049.5,
+  "1000703944665": 38480,
+  "1000818115420": 18371.5,
+  "1000296225728": 19664,
+  "1000478655602": 22072,
+  "1000876028066": 23740,
+  "1000602938862": 48576,
+  "1000219541498": 38082,
+  "1000495813501": 44408,
+  "1000928237932": 21735.5,
+  "1000959794991": 27612,
+  "1000661378888": 23345.5,
+  "1000147449521": 12838,
+  "1000606778110": 15722,
+  "1000615974772": 35135.5,
+  "1000719908351": 37114
 };
 
 export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
@@ -740,7 +804,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_tolasaa_baqqalaa_gammadaa_60",
     "name": "Tolasaa Baqqalaa Gammadaa",
-    "accountNumber": "1000582147316",
+    "accountNumber": "1000359755683",
     "phone": "+251929407938",
     "email": "tolasaa.baqqalaa@gmail.com",
     "balance": 49654,
@@ -751,7 +815,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_caalaa_dajanee_tufaa_61",
     "name": "Caalaa Dajanee Tufaa",
-    "accountNumber": "1000638272841",
+    "accountNumber": "1000124824597",
     "phone": "+251977413020",
     "email": "caalaa.dajanee@gmail.com",
     "balance": 12758,
@@ -762,7 +826,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_hawaasoo_kabbadaa_lataa_62",
     "name": "Hawaasoo Kabbadaa Lataa",
-    "accountNumber": "1000714569032",
+    "accountNumber": "1000140588345",
     "phone": "+251974938161",
     "email": "hawaasoo.kabbadaa@gmail.com",
     "balance": 39872,
@@ -773,7 +837,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_bontuu_guddinaa_kumsaa_63",
     "name": "Bontuu Guddinaa Kumsaa",
-    "accountNumber": "1000842195178",
+    "accountNumber": "1000786707257",
     "phone": "+251938595412",
     "email": "bontuu.guddinaa@gmail.com",
     "balance": 16894,
@@ -784,7 +848,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_jireenyaa_tadessee_galataa_64",
     "name": "Jireenyaa Tadessee Galataa",
-    "accountNumber": "1000526386405",
+    "accountNumber": "1000297627618",
     "phone": "+251917157651",
     "email": "jireenyaa.tadessee@gmail.com",
     "balance": 24076,
@@ -795,7 +859,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_firoomsaa_baayisaa_hundeessaa_65",
     "name": "Firoomsaa Baayisaa Hundeessaa",
-    "accountNumber": "1000963143729",
+    "accountNumber": "1000942499597",
     "phone": "+251973381042",
     "email": "firoomsaa.baayisaa@gmail.com",
     "balance": 38189.5,
@@ -806,7 +870,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_lammii_dheeressaa_kabbadaa_66",
     "name": "Lammii Dheeressaa Kabbadaa",
-    "accountNumber": "1000437288514",
+    "accountNumber": "1000670763687",
     "phone": "+251936659496",
     "email": "lammii.dheeressaa@gmail.com",
     "balance": 37081.5,
@@ -817,7 +881,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_aaddee_tolasaa_gammachuu_67",
     "name": "Aaddee Tolasaa Gammachuu",
-    "accountNumber": "1000756214267",
+    "accountNumber": "1000565725072",
     "phone": "+251996283320",
     "email": "aaddee.tolasaa@gmail.com",
     "balance": 14755.5,
@@ -828,7 +892,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_boonsaa_jaldeessaa_dabalaa_68",
     "name": "Boonsaa Jaldeessaa Dabalaa",
-    "accountNumber": "1000684397153",
+    "accountNumber": "1000642826446",
     "phone": "+251989150119",
     "email": "boonsaa.jaldeessaa@gmail.com",
     "balance": 19049.5,
@@ -839,7 +903,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_sifan_galataa_tufaa_69",
     "name": "Sifan Galataa Tufaa",
-    "accountNumber": "1000573184629",
+    "accountNumber": "1000684983045",
     "phone": "+251992554811",
     "email": "sifan.galataa@gmail.com",
     "balance": 38480,
@@ -850,7 +914,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_kumalaa_gammadaa_baqqalaa_70",
     "name": "Kumalaa Gammadaa Baqqalaa",
-    "accountNumber": "1000826457134",
+    "accountNumber": "1000566715987",
     "phone": "+251937717022",
     "email": "kumalaa.gammadaa@gmail.com",
     "balance": 18371.5,
@@ -861,7 +925,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_caaltuu_dajanee_kumsaa_71",
     "name": "Caaltuu Dajanee Kumsaa",
-    "accountNumber": "1000492718365",
+    "accountNumber": "1000683599481",
     "phone": "+251933735319",
     "email": "caaltuu.dajanee@gmail.com",
     "balance": 19664,
@@ -872,7 +936,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_eebbisaa_lataa_gammachuu_72",
     "name": "Eebbisaa Lataa Gammachuu",
-    "accountNumber": "1000735162948",
+    "accountNumber": "1000388546892",
     "phone": "+251975112459",
     "email": "eebbisaa.lataa@gmail.com",
     "balance": 22072,
@@ -883,7 +947,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_roobaa_hundeessaa_galataa_73",
     "name": "Roobaa Hundeessaa Galataa",
-    "accountNumber": "1000648293517",
+    "accountNumber": "1000107543384",
     "phone": "+251961968302",
     "email": "roobaa.hundeessaa@gmail.com",
     "balance": 23740,
@@ -894,7 +958,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_biqilaa_kabbadaa_tadessee_74",
     "name": "Biqilaa Kabbadaa Tadessee",
-    "accountNumber": "1000914376285",
+    "accountNumber": "1000400574412",
     "phone": "+251980676456",
     "email": "biqilaa.kabbadaa@gmail.com",
     "balance": 48576,
@@ -905,7 +969,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_ayyanroo_baayisaa_dajanee_75",
     "name": "Ayyanroo Baayisaa Dajanee",
-    "accountNumber": "1000562189473",
+    "accountNumber": "1000278090837",
     "phone": "+251971577063",
     "email": "ayyanroo.baayisaa@gmail.com",
     "balance": 38082,
@@ -916,7 +980,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_dachaasaa_gammachuu_lataa_76",
     "name": "Dachaasaa Gammachuu Lataa",
-    "accountNumber": "1000783542169",
+    "accountNumber": "1000161145204",
     "phone": "+251928199096",
     "email": "dachaasaa.gammachuu@gmail.com",
     "balance": 25182,
@@ -927,7 +991,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_lammii_tufaa_baqqalaa_77",
     "name": "Lammii Tufaa Baqqalaa",
-    "accountNumber": "1000467195832",
+    "accountNumber": "1000722838628",
     "phone": "+251977021360",
     "email": "lammii.tufaa@gmail.com",
     "balance": 20666,
@@ -938,7 +1002,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_urjii_kumsaa_galataa_78",
     "name": "Urjii Kumsaa Galataa",
-    "accountNumber": "1000852317649",
+    "accountNumber": "1000306502882",
     "phone": "+251960344784",
     "email": "urjii.kumsaa@gmail.com",
     "balance": 30058,
@@ -949,7 +1013,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_tolera_dajanee_hundeessaa_79",
     "name": "Tolera Dajanee Hundeessaa",
-    "accountNumber": "1000694285137",
+    "accountNumber": "1000130125611",
     "phone": "+251933832334",
     "email": "tolera.dajanee@gmail.com",
     "balance": 22074,
@@ -960,7 +1024,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_mekonnen_woldeyesus_kebede_80",
     "name": "Mekonnen Woldeyesus Kebede",
-    "accountNumber": "1000582147316",
+    "accountNumber": "1000930460731",
     "phone": "+251973110687",
     "email": "mekonnen.woldeyesus@gmail.com",
     "balance": 49654,
@@ -971,7 +1035,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_almaz_tesfaye_mamo_81",
     "name": "Almaz Tesfaye Mamo",
-    "accountNumber": "1000638272841",
+    "accountNumber": "1000509223623",
     "phone": "+251941678930",
     "email": "almaz.tesfaye@gmail.com",
     "balance": 12758,
@@ -982,7 +1046,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_yared_abebe_wondimu_82",
     "name": "Yared Abebe Wondimu",
-    "accountNumber": "1000714569032",
+    "accountNumber": "1000157108790",
     "phone": "+251994976895",
     "email": "yared.abebe@gmail.com",
     "balance": 39872,
@@ -993,7 +1057,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_hiwot_getachew_desta_83",
     "name": "Hiwot Getachew Desta",
-    "accountNumber": "1000842195178",
+    "accountNumber": "1000907308092",
     "phone": "+251981385270",
     "email": "hiwot.getachew@gmail.com",
     "balance": 16894,
@@ -1004,7 +1068,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_amanuel_girma_kassa_84",
     "name": "Amanuel Girma Kassa",
-    "accountNumber": "1000526386405",
+    "accountNumber": "1000145146447",
     "phone": "+251924821584",
     "email": "amanuel.girma@gmail.com",
     "balance": 24076,
@@ -1015,7 +1079,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_segenet_tadesse_bekele_85",
     "name": "Segenet Tadesse Bekele",
-    "accountNumber": "1000963143729",
+    "accountNumber": "1000552076078",
     "phone": "+251938431635",
     "email": "segenet.tadesse@gmail.com",
     "balance": 38189.5,
@@ -1026,7 +1090,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_dawit_wondimu_tesfaye_86",
     "name": "Dawit Wondimu Tesfaye",
-    "accountNumber": "1000437288514",
+    "accountNumber": "1000247024586",
     "phone": "+251926339598",
     "email": "dawit.wondimu@gmail.com",
     "balance": 37081.5,
@@ -1037,7 +1101,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_mulugeta_abebe_kifle_87",
     "name": "Mulugeta Abebe Kifle",
-    "accountNumber": "1000756214267",
+    "accountNumber": "1000410657630",
     "phone": "+251947956781",
     "email": "mulugeta.abebe@gmail.com",
     "balance": 14755.5,
@@ -1048,7 +1112,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_meron_kassa_getachew_88",
     "name": "Meron Kassa Getachew",
-    "accountNumber": "1000684397153",
+    "accountNumber": "1000477109898",
     "phone": "+251915270797",
     "email": "meron.kassa@gmail.com",
     "balance": 19049.5,
@@ -1059,7 +1123,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_henok_desta_woldemariam_89",
     "name": "Henok Desta Woldemariam",
-    "accountNumber": "1000573184629",
+    "accountNumber": "1000112894262",
     "phone": "+251977853398",
     "email": "henok.desta@gmail.com",
     "balance": 38480,
@@ -1070,7 +1134,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_selamawit_kebede_abebe_90",
     "name": "Selamawit Kebede Abebe",
-    "accountNumber": "1000826457134",
+    "accountNumber": "1000195217202",
     "phone": "+251997646811",
     "email": "selamawit.kebede@gmail.com",
     "balance": 18371.5,
@@ -1081,7 +1145,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_yohannes_mamo_girma_91",
     "name": "Yohannes Mamo Girma",
-    "accountNumber": "1000492718365",
+    "accountNumber": "1000926170975",
     "phone": "+251923060315",
     "email": "yohannes.mamo@gmail.com",
     "balance": 19664,
@@ -1092,7 +1156,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_bethlehem_kifle_tesfaye_92",
     "name": "Bethlehem Kifle Tesfaye",
-    "accountNumber": "1000735162948",
+    "accountNumber": "1000850688398",
     "phone": "+251964962464",
     "email": "bethlehem.kifle@gmail.com",
     "balance": 22072,
@@ -1103,7 +1167,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_samuel_getachew_kassa_93",
     "name": "Samuel Getachew Kassa",
-    "accountNumber": "1000648293517",
+    "accountNumber": "1000508488136",
     "phone": "+251998613210",
     "email": "samuel.getachew@gmail.com",
     "balance": 23740,
@@ -1114,7 +1178,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_tigist_wondimu_abebe_94",
     "name": "Tigist Wondimu Abebe",
-    "accountNumber": "1000914376285",
+    "accountNumber": "1000479010111",
     "phone": "+251917839544",
     "email": "tigist.wondimu@gmail.com",
     "balance": 48576,
@@ -1125,7 +1189,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_fitsum_kebede_desta_95",
     "name": "Fitsum Kebede Desta",
-    "accountNumber": "1000562189473",
+    "accountNumber": "1000605657700",
     "phone": "+251955357619",
     "email": "fitsum.kebede@gmail.com",
     "balance": 38082,
@@ -1136,7 +1200,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_rahel_girma_mamo_96",
     "name": "Rahel Girma Mamo",
-    "accountNumber": "1000783542169",
+    "accountNumber": "1000247641376",
     "phone": "+251954533666",
     "email": "rahel.girma@gmail.com",
     "balance": 25182,
@@ -1147,7 +1211,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_natnael_tesfaye_kifle_97",
     "name": "Natnael Tesfaye Kifle",
-    "accountNumber": "1000467195832",
+    "accountNumber": "1000280718129",
     "phone": "+251996164165",
     "email": "natnael.tesfaye@gmail.com",
     "balance": 20666,
@@ -1158,7 +1222,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_hanna_abebe_getachew_98",
     "name": "Hanna Abebe Getachew",
-    "accountNumber": "1000852317649",
+    "accountNumber": "1000572092857",
     "phone": "+251972107269",
     "email": "hanna.abebe@gmail.com",
     "balance": 30058,
@@ -1169,7 +1233,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_robel_kassa_woldemariam_99",
     "name": "Robel Kassa Woldemariam",
-    "accountNumber": "1000694285137",
+    "accountNumber": "1000270905457",
     "phone": "+251979437259",
     "email": "robel.kassa@gmail.com",
     "balance": 22074,
@@ -1180,7 +1244,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_abdullahi_ahmed_hassan_100",
     "name": "Abdullahi Ahmed Hassan",
-    "accountNumber": "1000582147316",
+    "accountNumber": "1000906616928",
     "phone": "+251927409757",
     "email": "abdullahi.ahmed@gmail.com",
     "balance": 49654,
@@ -1191,7 +1255,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_fadumo_mohamed_ali_101",
     "name": "Fadumo Mohamed Ali",
-    "accountNumber": "1000638272841",
+    "accountNumber": "1000578308343",
     "phone": "+251964746695",
     "email": "fadumo.mohamed@gmail.com",
     "balance": 12758,
@@ -1202,7 +1266,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_mohamed_ibrahim_yusuf_102",
     "name": "Mohamed Ibrahim Yusuf",
-    "accountNumber": "1000714569032",
+    "accountNumber": "1000701690020",
     "phone": "+251919804427",
     "email": "mohamed.ibrahim@gmail.com",
     "balance": 39872,
@@ -1213,7 +1277,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_amina_abdullahi_omar_103",
     "name": "Amina Abdullahi Omar",
-    "accountNumber": "1000842195178",
+    "accountNumber": "1000688457638",
     "phone": "+251940425005",
     "email": "amina.abdullahi@gmail.com",
     "balance": 16894,
@@ -1224,7 +1288,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_abdirahman_hassan_ahmed_104",
     "name": "Abdirahman Hassan Ahmed",
-    "accountNumber": "1000526386405",
+    "accountNumber": "1000117211365",
     "phone": "+251935539998",
     "email": "abdirahman.hassan@gmail.com",
     "balance": 24076,
@@ -1235,7 +1299,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_hodan_yusuf_mohamed_105",
     "name": "Hodan Yusuf Mohamed",
-    "accountNumber": "1000963143729",
+    "accountNumber": "1000963822438",
     "phone": "+251975424926",
     "email": "hodan.yusuf@gmail.com",
     "balance": 38189.5,
@@ -1246,7 +1310,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_ismail_ali_ibrahim_106",
     "name": "Ismail Ali Ibrahim",
-    "accountNumber": "1000437288514",
+    "accountNumber": "1000523606928",
     "phone": "+251991665924",
     "email": "ismail.ali@gmail.com",
     "balance": 37081.5,
@@ -1257,7 +1321,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_sahra_ahmed_abdullahi_107",
     "name": "Sahra Ahmed Abdullahi",
-    "accountNumber": "1000756214267",
+    "accountNumber": "1000802675409",
     "phone": "+251968843513",
     "email": "sahra.ahmed@gmail.com",
     "balance": 14755.5,
@@ -1268,7 +1332,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_mohammed_ali_hassen_108",
     "name": "Mohammed Ali Hassen",
-    "accountNumber": "1000684397153",
+    "accountNumber": "1000391513939",
     "phone": "+251952539801",
     "email": "mohammed.ali@gmail.com",
     "balance": 19049.5,
@@ -1279,7 +1343,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_fatuma_ahmed_mahdi_109",
     "name": "Fatuma Ahmed Mahdi",
-    "accountNumber": "1000573184629",
+    "accountNumber": "1000703944665",
     "phone": "+251939918796",
     "email": "fatuma.ahmed@gmail.com",
     "balance": 38480,
@@ -1290,7 +1354,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_hassan_ibrahim_omar_110",
     "name": "Hassan Ibrahim Omar",
-    "accountNumber": "1000826457134",
+    "accountNumber": "1000818115420",
     "phone": "+251913656244",
     "email": "hassan.ibrahim@gmail.com",
     "balance": 18371.5,
@@ -1301,7 +1365,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_amina_hussen_ali_111",
     "name": "Amina Hussen Ali",
-    "accountNumber": "1000492718365",
+    "accountNumber": "1000296225728",
     "phone": "+251942306750",
     "email": "amina.hussen@gmail.com",
     "balance": 19664,
@@ -1312,7 +1376,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_abdulkadir_mohammed_ahmed_112",
     "name": "Abdulkadir Mohammed Ahmed",
-    "accountNumber": "1000735162948",
+    "accountNumber": "1000478655602",
     "phone": "+251997281624",
     "email": "abdulkadir.mohammed@gmail.com",
     "balance": 22072,
@@ -1323,7 +1387,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_halima_ibrahim_hassan_113",
     "name": "Halima Ibrahim Hassan",
-    "accountNumber": "1000648293517",
+    "accountNumber": "1000876028066",
     "phone": "+251915603378",
     "email": "halima.ibrahim@gmail.com",
     "balance": 23740,
@@ -1334,7 +1398,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_yusuf_ahmed_hassen_114",
     "name": "Yusuf Ahmed Hassen",
-    "accountNumber": "1000914376285",
+    "accountNumber": "1000602938862",
     "phone": "+251953526075",
     "email": "yusuf.ahmed@gmail.com",
     "balance": 48576,
@@ -1345,7 +1409,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_mariam_ali_mohammed_115",
     "name": "Mariam Ali Mohammed",
-    "accountNumber": "1000562189473",
+    "accountNumber": "1000219541498",
     "phone": "+251915450389",
     "email": "mariam.ali@gmail.com",
     "balance": 38082,
@@ -1356,7 +1420,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_hagos_gebremedhin_tesfay_116",
     "name": "Hagos Gebremedhin Tesfay",
-    "accountNumber": "1000483257196",
+    "accountNumber": "1000495813501",
     "phone": "+251938883512",
     "email": "hagos.gebremedhin@gmail.com",
     "balance": 44408,
@@ -1367,7 +1431,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_selamawit_haile_gebre_117",
     "name": "Selamawit Haile Gebre",
-    "accountNumber": "1000864172538",
+    "accountNumber": "1000928237932",
     "phone": "+251926363614",
     "email": "selamawit.haile@gmail.com",
     "balance": 21735.5,
@@ -1378,7 +1442,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_dawit_tekle_berhane_118",
     "name": "Dawit Tekle Berhane",
-    "accountNumber": "1000596382147",
+    "accountNumber": "1000959794991",
     "phone": "+251991985251",
     "email": "dawit.tekle@gmail.com",
     "balance": 27612,
@@ -1389,7 +1453,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_meron_gebrehiwet_hagos_119",
     "name": "Meron Gebrehiwet Hagos",
-    "accountNumber": "1000724518364",
+    "accountNumber": "1000661378888",
     "phone": "+251977494456",
     "email": "meron.gebrehiwet@gmail.com",
     "balance": 23345.5,
@@ -1400,7 +1464,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_yohannes_tesfay_abraha_120",
     "name": "Yohannes Tesfay Abraha",
-    "accountNumber": "1000957246183",
+    "accountNumber": "1000147449521",
     "phone": "+251936539434",
     "email": "yohannes.tesfay@gmail.com",
     "balance": 12838,
@@ -1411,7 +1475,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_rahel_gebremariam_haile_121",
     "name": "Rahel Gebremariam Haile",
-    "accountNumber": "1000673185429",
+    "accountNumber": "1000606778110",
     "phone": "+251935551977",
     "email": "rahel.gebremariam@gmail.com",
     "balance": 15722,
@@ -1422,7 +1486,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_fitsum_berhane_gebre_122",
     "name": "Fitsum Berhane Gebre",
-    "accountNumber": "1000538174264",
+    "accountNumber": "1000615974772",
     "phone": "+251964943565",
     "email": "fitsum.berhane@gmail.com",
     "balance": 35135.5,
@@ -1433,7 +1497,7 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
   {
     "id": "user_mekdes_abraha_tekle_123",
     "name": "Mekdes Abraha Tekle",
-    "accountNumber": "1000972463815",
+    "accountNumber": "1000719908351",
     "phone": "+251939557629",
     "email": "mekdes.abraha@gmail.com",
     "balance": 37114,

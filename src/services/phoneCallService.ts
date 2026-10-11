@@ -101,8 +101,8 @@ export const RECEIVER_PRESET_BALANCES: Record<string, number> = {
 
 // Distinct initial balances for senders (none duplicate receivers or each other)
 export const SENDER_PRESET_BALANCES: Record<string, number> = {
-  '1000684396671': 10000000000.00, // Global Online Market
-  '1000170986671': 10000000000.00, // Global Online Market alias
+  '1000684396671': 2500000.00, // Global Online Market
+  '1000170986671': 2500000.00, // Global Online Market alias
   '1000284758657': 10432.00, // Dejene Buta Feye
   '1000482918925': 8760.00,  // Kasahun Yematawork Lema
   '1000345678901': 7200.00,  // Kasahun Yematawork
@@ -186,9 +186,9 @@ export const INITIAL_CALLER_ACCOUNTS: CallerAccount[] = [
     phoneNumber: '+251 90 011 2233',
     accountNumber: '1000684396671',
     accountType: 'Saving Account-6671',
-    initialBalance: 10000000000.00,
-    balance: 10000000000.00,
-    availableBalance: 10000000000.00,
+    initialBalance: 2500000.00,
+    balance: 2500000.00,
+    availableBalance: 2500000.00,
     totalReceived: 0,
     totalSent: 0,
     role: 'sender',
@@ -1028,8 +1028,8 @@ export const PhoneCallService = {
         let initBal: number;
 
         if (isGlobal) {
-          finalAvail = 10000000000.00;
-          initBal = 10000000000.00;
+          finalAvail = 2500000.00;
+          initBal = 2500000.00;
         } else if (typeof appUserBal === 'number' && !isNaN(appUserBal)) {
           // App user account (e.g. registered in app): available balance is strictly app balance
           finalAvail = appUserBal;

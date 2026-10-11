@@ -200,8 +200,8 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
       createdAt: new Date().toISOString(),
       accountNumber: newAccountNumber,
       accountType: pr.accountType || 'savings',
-      balance: 10000000000.00, // Welcome funds of 10 Billion ETB
-      availableBalance: 10000000000.00,
+      balance: 15000.00, // Welcome funds of 15,000.00 ETB
+      availableBalance: 15000.00,
       biometricEnabled: false
     };
 
@@ -212,7 +212,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
 
     // Logs & Notifications
     LocalDb.addAuditLog(newUser.id, newUser.email, 'USER_REGISTER', `Created new digital banking profile ${newUser.name}. Account A/C ${newUser.accountNumber} provisioned.`);
-    LocalDb.addNotification(newUser.id, 'Welcome to Tana Digital Bank!', 'We have credited your new wallet with ETB 10,000,000,000.00 as welcome funds!', 'success');
+    LocalDb.addNotification(newUser.id, 'Welcome to Tana Digital Bank!', 'We have credited your new wallet with ETB 15,000.00 as welcome funds!', 'success');
 
     setSuccessMsg(`Account created for ${newUser.name}! A/C: ${newUser.accountNumber}.`);
     setTimeout(() => {
@@ -246,10 +246,10 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
         role: 'admin',
         status: 'active',
         createdAt: '2026-01-01T08:00:00Z',
-        accountNumber: '1000999999999',
+        accountNumber: '1000419524747',
         accountType: 'wadiah',
-        balance: 10000000000.00,
-        availableBalance: 10000000000.00,
+        balance: 18450.50,
+        availableBalance: 18450.50,
         biometricEnabled: true
       };
       users.push(adminUser);

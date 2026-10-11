@@ -111,7 +111,7 @@ export default function Profile({
   const [newAccPhone, setNewAccPhone] = useState('+2519');
   const [newAccEmail, setNewAccEmail] = useState('');
   const [newAccType, setNewAccType] = useState<'savings' | 'checking' | 'wadiah' | 'cbe_birr'>('savings');
-  const [newAccInitialBalance, setNewAccInitialBalance] = useState('10000000000.00');
+  const [newAccInitialBalance, setNewAccInitialBalance] = useState('25000.00');
 
   // Forms
   const [showPinForm, setShowPinForm] = useState(false);
@@ -258,7 +258,7 @@ export default function Profile({
       ? newAccPhone.trim() 
       : '+251' + newAccPhone.trim().replace(/^0/, '');
 
-    const parsedBalance = parseFloat(newAccInitialBalance) || 10000000000.00;
+    const parsedBalance = parseFloat(newAccInitialBalance) || 25000.00;
 
     const newUser: UserProfile = {
       id: 'user_' + Math.random().toString(36).substring(2, 9),
@@ -1340,7 +1340,7 @@ export default function Profile({
                       type="number"
                       value={newAccInitialBalance}
                       onChange={(e) => setNewAccInitialBalance(e.target.value)}
-                      placeholder="10000000000.00"
+                      placeholder="25000.00"
                       className="w-full bg-gray-50 border border-gray-200 rounded-xl py-2 px-2.5 text-[11px] font-mono text-gray-800 focus:outline-none"
                     />
                   </div>

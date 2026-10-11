@@ -922,7 +922,7 @@ export class SmsService {
     // Get current sender account balance
     const accounts = this.getAccounts();
     const senderAccObj = accounts.find(a => a.accountNumber === senderAccount.replace(/\D/g, ''));
-    let currentBalance = senderAccObj?.balance ?? 10000000000.0;
+    let currentBalance = senderAccObj?.balance ?? 18450.50;
     currentBalance = Math.max(0, currentBalance - totalDebited);
 
     const txId = 'FT' + Math.floor(260000000000 + Math.random() * 90000000000).toString();

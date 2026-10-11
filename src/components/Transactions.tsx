@@ -1496,9 +1496,6 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
                               {selectedRegisteredRecipient.balance !== undefined && (
                                 <p className="text-[11px] font-mono font-extrabold text-emerald-900 mt-1">
                                   Balance: ETB {selectedRegisteredRecipient.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                  {selectedRegisteredRecipient.balance >= 10000000000 && (
-                                    <span className="ml-1.5 text-[9px] bg-amber-100 text-amber-900 px-1 py-0.2 rounded font-sans font-bold">10 Billion</span>
-                                  )}
                                 </p>
                               )}
                             </div>
@@ -1583,7 +1580,6 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
                                       {acc.balance !== undefined && (
                                         <p className="text-[10px] font-mono font-bold text-emerald-800">
                                           Balance: ETB {acc.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                          {acc.balance >= 10000000000 && <span className="ml-1 text-[9px] bg-amber-100 text-amber-900 px-1 rounded">10B</span>}
                                         </p>
                                       )}
                                     </div>
@@ -1617,9 +1613,6 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
                                 >
                                   <span className="w-2 h-2 rounded-full bg-emerald-600" />
                                   <span>{rec.accountName.split(' ')[0]} ({rec.accountNumber.slice(-4)})</span>
-                                  {rec.balance && rec.balance >= 10000000000 && (
-                                    <span className="text-[9px] font-black bg-amber-100 text-amber-900 px-1 rounded-sm">10B</span>
-                                  )}
                                 </button>
                               ))}
                             </div>
