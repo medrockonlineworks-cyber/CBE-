@@ -658,8 +658,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           id="cbe-existing-receipt"
           className={`w-full flex-1 flex flex-col bg-[#68137e] relative select-none ${isCapturing ? 'h-auto overflow-visible' : 'h-full overflow-hidden min-h-0'}`}
         >
-          {/* Top Purple Navigation / App Header: Exact authentic CBE Bank top design matching IMG_20261011_115144_548.png */}
-          <div className="pt-[max(env(safe-area-inset-top,0px),34px)] sm:pt-[max(env(safe-area-inset-top,0px),38px)] pb-12 sm:pb-13 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0">
+          {/* Top Purple Navigation / App Header: Exact authentic CBE Bank top design with increased vertical space above Thank You and to purple ending point */}
+          <div className="pt-[max(env(safe-area-inset-top,0px),48px)] sm:pt-[max(env(safe-area-inset-top,0px),54px)] pb-14 sm:pb-16 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0">
             <div className="flex items-center gap-2.5">
               {/* Solid White Shield with Purple Checkmark Icon matching original reference */}
               <div className="w-8.5 h-8.5 flex-shrink-0 flex items-center justify-center">
@@ -957,7 +957,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       >
         <div className="w-full bg-[#68137e] text-slate-800 flex flex-col font-sans select-none">
           {/* Top Purple Header: Exact original top design matching live screen & IMG_20261011_115144_548.png */}
-          <div className="pt-9 sm:pt-10 pb-12 sm:pb-13 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0">
+          <div className="pt-12 sm:pt-14 pb-14 sm:pb-16 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0">
             <div className="flex items-center gap-2.5">
               {/* Solid White Shield with Purple Checkmark */}
               <div className="w-8.5 h-8.5 flex-shrink-0 flex items-center justify-center">

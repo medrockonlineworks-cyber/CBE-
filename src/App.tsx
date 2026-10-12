@@ -70,7 +70,7 @@ export default function App() {
   const [returnTab, setReturnTab] = useState<TabType>('home');
   const [isRecentAppsOpen, setIsRecentAppsOpen] = useState<boolean>(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
-  const [initialTxTab, setInitialTxTab] = useState<'send' | 'transfer' | 'merchant' | 'receive' | 'airtime'>('send');
+  const [initialTxTab, setInitialTxTab] = useState<'send' | 'transfer' | 'merchant' | 'receive' | 'airtime'>('transfer');
   const [smsActiveAccountId, setSmsActiveAccountId] = useState<string | undefined>(undefined);
   const [isIPhone, setIsIPhone] = useState<boolean>(() => PhoneSettingsService.isIPhoneMode());
 
@@ -465,61 +465,57 @@ export default function App() {
   };
 
   return (
-    <div id="app-root-wrapper" className="h-[100dvh] max-h-[100dvh] w-full bg-slate-950 flex flex-col items-center justify-center p-0 md:p-6 font-sans overflow-hidden antialiased select-none">
+    <div id="app-root-wrapper" className="h-[100dvh] max-h-[100dvh] w-full bg-gray-50 flex flex-col p-0 m-0 font-sans overflow-hidden antialiased select-none relative">
       
-      {/* Background Ambient Gradients for Desktop */}
-      <div className="hidden md:block absolute -left-20 top-20 w-80 h-80 bg-purple-700/15 rounded-full blur-[100px] pointer-events-none" />
-      <div className="hidden md:block absolute -right-20 bottom-20 w-96 h-96 bg-amber-400/10 rounded-full blur-[120px] pointer-events-none" />
-
-      {/* Quick App Switcher Dock: Instant 1-Click Access to Ethiopian Banking & Telecom Apps */}
-      <nav aria-label="Apps Switcher" className="hidden md:flex items-center gap-1.5 mb-2.5 px-3 py-1.5 bg-slate-900/90 border border-slate-800 rounded-full shadow-lg z-40 backdrop-blur-md">
+      {/* Quick App Switcher Dock: Floating unobtrusively in top-right corner on wide screens */}
+      <nav aria-label="Apps Switcher" className="hidden md:flex fixed top-2 right-3 items-center gap-1.5 px-2.5 py-1 bg-slate-900/80 hover:bg-slate-900 border border-slate-700/60 rounded-full shadow-lg z-50 backdrop-blur-md transition-all">
         <button
           onClick={() => navigateTo('main', 'home')}
-          className={`px-3 py-1 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+          className={`px-2.5 py-0.5 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
             activeView === 'main' ? 'bg-[#70189F] text-white shadow-xs' : 'text-slate-400 hover:text-white'
           }`}
         >
-          <span className="w-2 h-2 rounded-full bg-amber-400" />
+          <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
           CBE Birr
         </button>
         <button
           onClick={() => navigateTo('telebirr')}
-          className={`px-3 py-1 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+          className={`px-2.5 py-0.5 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
             activeView === 'telebirr' ? 'bg-[#6cb81f] text-white shadow-xs' : 'text-slate-400 hover:text-white'
           }`}
         >
-          <span className="w-2 h-2 rounded-full bg-lime-200" />
+          <span className="w-1.5 h-1.5 rounded-full bg-lime-200" />
           Telebirr
         </button>
         <button
           onClick={() => navigateTo('telegram')}
-          className={`px-3 py-1 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+          className={`px-2.5 py-0.5 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
             activeView === 'telegram' ? 'bg-[#229ED9] text-white shadow-xs' : 'text-slate-400 hover:text-white'
           }`}
         >
-          <span className="w-2 h-2 rounded-full bg-sky-300" />
+          <span className="w-1.5 h-1.5 rounded-full bg-sky-300" />
           Telegram
         </button>
         <button
           onClick={() => navigateTo('dashen')}
-          className={`px-3 py-1 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+          className={`px-2.5 py-0.5 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
             activeView === 'dashen' ? 'bg-[#004b87] text-white shadow-xs' : 'text-slate-400 hover:text-white'
           }`}
         >
-          <span className="w-2 h-2 rounded-full bg-sky-300" />
+          <span className="w-1.5 h-1.5 rounded-full bg-sky-300" />
           Dashen Amole
         </button>
         <button
           onClick={() => navigateTo('sms')}
-          className={`px-3 py-1 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+          className={`px-2.5 py-0.5 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
             activeView === 'sms' ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
           }`}
         >
-          SMS & Alerts
+          SMS
         </button>
         <button
           onClick={() => navigateTo('phone')}
-          className={`px-3 py-1 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+          className={`px-2.5 py-0.5 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
             activeView === 'phone' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
           }`}
         >
@@ -527,32 +523,32 @@ export default function App() {
         </button>
         <button
           onClick={() => navigateTo('truecaller')}
-          className={`px-3 py-1 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+          className={`px-2.5 py-0.5 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
             activeView === 'truecaller' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
           }`}
         >
           Truecaller
         </button>
 
-        <div className="h-4 w-px bg-slate-700 mx-1" />
+        <div className="h-3 w-px bg-slate-700 mx-0.5" />
         <button
           onClick={() => {
             const newModel = isIPhone ? 'tecno' : 'iphone';
             PhoneSettingsService.applyPreset(newModel);
           }}
-          className={`px-3 py-1 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
+          className={`px-2.5 py-0.5 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-1 ${
             isIPhone ? 'bg-sky-600 text-white shadow-xs' : 'bg-emerald-700 text-white shadow-xs'
           }`}
           title="Toggle between iPhone (iOS) and Android modes"
         >
-          <span>{isIPhone ? '🍎 iPhone Mode' : '🤖 Android Mode'}</span>
+          <span>{isIPhone ? '🍎 iOS' : '🤖 Android'}</span>
         </button>
       </nav>
 
-      {/* Main Responsive Android/iPhone App Canvas */}
+      {/* Main Responsive Edge-to-Edge Canvas */}
       <div 
         id="app-main-canvas"
-        className="w-full max-w-full md:max-w-[430px] bg-gray-50 h-[100dvh] max-h-[100dvh] md:h-[880px] md:max-h-[920px] md:rounded-[44px] md:shadow-[0_25px_70px_rgba(0,0,0,0.65)] relative flex flex-col overflow-hidden border-0 md:border md:border-slate-800/90"
+        className="w-full h-full h-[100dvh] max-h-[100dvh] bg-gray-50 relative flex flex-col overflow-hidden border-none shadow-none rounded-none"
       >
         {/* Real-time Offline Warning Banner */}
         <OfflineBanner />

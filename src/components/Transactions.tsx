@@ -34,6 +34,7 @@ import {
   X,
   Search,
   ChevronRight,
+  ChevronLeft,
   User,
   SlidersHorizontal,
   RotateCw,
@@ -65,8 +66,8 @@ const ETHIOPIAN_BANKS = [
 ];
 
 export default function Transactions({ currentUser, onTransactionComplete, onSelectTransaction, onBack, initialTab }: TransactionsProps) {
-  // View mode: 'records' | 'transfer'
-  const [viewMode, setViewMode] = useState<'records' | 'transfer'>(initialTab ? 'transfer' : 'records');
+  // View mode: 'records' | 'transfer' (defaults to independent CBE Transfer)
+  const [viewMode, setViewMode] = useState<'records' | 'transfer'>('transfer');
   // Direct filter tabs requested by user: 'all' | 'credit' | 'debit'
   const [filterType, setFilterType] = useState<'all' | 'credit' | 'debit'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'success' | 'pending' | 'failed'>('all');
@@ -77,7 +78,7 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [selectedTxDetail, setSelectedTxDetail] = useState<Transaction | null>(null);
 
-  const [activeTab, setActiveTab] = useState<TxModuleTab>('send');
+  const [activeTab, setActiveTab] = useState<TxModuleTab>(initialTab || 'transfer');
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
@@ -142,9 +143,12 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
   useEffect(() => {
     if (initialTab) {
       setActiveTab(initialTab);
-      setErrorMsg('');
-      setSuccessMsg('');
+    } else {
+      setActiveTab('transfer');
     }
+    setViewMode('transfer');
+    setErrorMsg('');
+    setSuccessMsg('');
   }, [initialTab]);
 
   // Form Fields - Send Money
@@ -728,15 +732,27 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
         </svg>
       </div>
 
-      {/* 2. TOP HEADER */}
+      {/* 2. TOP HEADER (Independent CBE Transfer Header) */}
       <div className="relative z-10 flex flex-col w-full">
         <div className="px-5 pt-4 pb-2 flex items-center justify-between text-white">
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
+            {onBack && (
+              <button
+                id="btn-transfer-back-home"
+                type="button"
+                onClick={onBack}
+                className="p-1.5 -ml-1.5 rounded-full hover:bg-white/10 active:scale-95 transition text-white cursor-pointer flex items-center gap-0.5"
+                title="Back to Home"
+                aria-label="Back to Home"
+              >
+                <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
+              </button>
+            )}
             <div className="w-8 h-8 rounded-full bg-white/15 backdrop-blur-md flex items-center justify-center border border-white/20 shadow-sm">
               <ArrowLeftRight className="w-4 h-4 text-amber-300" />
             </div>
             <div>
-              <h1 className="text-base font-extrabold text-white tracking-wide">Transactions</h1>
+              <h1 className="text-base font-extrabold text-white tracking-wide">CBE Transfer</h1>
               <p className="text-[10px] text-purple-200">{currentDateTime}</p>
             </div>
           </div>
@@ -747,27 +763,9 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
               type="button"
               onClick={handleRefresh}
               className={`p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition active:scale-95 cursor-pointer ${isRefreshing ? 'animate-spin' : ''}`}
-              title="Refresh ledger"
+              title="Refresh balances"
             >
               <RefreshIcon size={18} />
-            </button>
-            <button
-              id="btn-toggle-viewmode"
-              type="button"
-              onClick={() => setViewMode(viewMode === 'records' ? 'transfer' : 'records')}
-              className="bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-3 py-1.5 rounded-full backdrop-blur-md border border-white/20 flex items-center gap-1.5 cursor-pointer transition active:scale-95 shadow-sm"
-            >
-              {viewMode === 'records' ? (
-                <>
-                  <Send className="w-3.5 h-3.5 text-amber-300" />
-                  <span>Send Money</span>
-                </>
-              ) : (
-                <>
-                  <ReceiptIcon className="w-3.5 h-3.5 text-emerald-300" />
-                  <span>View Records</span>
-                </>
-              )}
             </button>
           </div>
         </div>
@@ -1045,21 +1043,8 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
                 </div>
               </>
             ) : (
-              /* VIEW MODE: TRANSFER */
+              /* VIEW MODE: INDEPENDENT CBE TRANSFER */
               <div className="space-y-4">
-                {/* Switch back banner */}
-                <div className="flex items-center justify-between bg-white p-2.5 rounded-2xl border border-gray-100">
-                  <span className="text-xs font-extrabold text-gray-900">Transfer Financial Gateway</span>
-                  <button
-                    type="button"
-                    onClick={() => setViewMode('records')}
-                    className="text-xs font-bold text-[#68137e] hover:underline flex items-center gap-1 cursor-pointer"
-                  >
-                    <ArrowDownLeft className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>View Credit/Debit Records</span>
-                  </button>
-                </div>
-
                 {/* Horizontal segment selector tabs */}
                 <div className="flex bg-[#68137e] p-1.5 rounded-2xl border border-purple-300/20 gap-1 overflow-x-auto scrollbar-none shadow-md">
                   {[
@@ -1140,12 +1125,14 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
                       <AccountScanIcon className="w-5 h-5 text-[#16a34a]" />
                     </button>
                     <button
+                      id="btn-send-profile-icon"
                       type="button"
                       onClick={() => setShowRegisteredDirectoryModal(true)}
-                      className="p-1.5 rounded-lg hover:bg-emerald-50 text-[#16a34a] hover:text-[#15803d] active:scale-95 transition cursor-pointer"
-                      title="Search & Choose from Registered Accounts"
+                      className="p-1.5 rounded-lg hover:bg-emerald-50 text-[#16a34a] hover:text-[#15803d] active:scale-95 transition cursor-pointer flex items-center justify-center group"
+                      title="Click profile icon to choose from registered bank accounts"
+                      aria-label="View registered bank accounts"
                     >
-                      <AccountSearchDirectoryIcon className="w-5 h-5 text-[#16a34a]" />
+                      <User className="w-5 h-5 text-[#16a34a] group-hover:scale-110 transition-transform stroke-[2.2]" />
                     </button>
                   </div>
                 </div>
@@ -1623,11 +1610,16 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
                         <div className="pt-2 border-t border-gray-100">
                           <div className="flex justify-between items-center mb-1">
                             <label className="text-xs text-gray-500 font-bold">Or Enter Account Number Directly</label>
-                            <span className={`text-[10px] font-mono font-bold ${
-                              transferAccount.length === 13 ? 'text-emerald-700 font-extrabold' : 'text-gray-400'
-                            }`}>
-                              {transferAccount.length}/13 digits
-                            </span>
+                            <button
+                              id="btn-text-open-registered-accounts"
+                              type="button"
+                              onClick={() => setShowRegisteredDirectoryModal(true)}
+                              className="text-[11px] font-bold text-emerald-800 hover:text-emerald-950 flex items-center gap-1 cursor-pointer transition active:scale-95"
+                              title="Click to choose from registered bank accounts"
+                            >
+                              <User className="w-3.5 h-3.5 text-emerald-700" />
+                              <span>Registered Accounts</span>
+                            </button>
                           </div>
 
                           <div className="relative">
@@ -1651,7 +1643,7 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
                                     : 'border-[#22c55e]/80 focus:border-[#16a34a] ring-1 ring-[#22c55e]/15'
                               }`}
                             />
-                            {/* Dual action icons matching reference image IMG_20261001_102840_360.png */}
+                            {/* Dual action icons: Scan QR + Profile Icon to choose from Registered Bank Accounts */}
                             <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1 z-10">
                               <div className="h-6 w-[1.5px] bg-gray-200/90 mx-1 flex-shrink-0" />
                               <button
@@ -1659,16 +1651,19 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
                                 onClick={() => setShowScanner(true)}
                                 className="p-1.5 rounded-lg hover:bg-emerald-50 text-[#16a34a] hover:text-[#15803d] active:scale-95 transition cursor-pointer"
                                 title="Scan QR Code / Barcode"
+                                aria-label="Scan QR Code"
                               >
                                 <AccountScanIcon className="w-5 h-5 text-[#16a34a]" />
                               </button>
                               <button
+                                id="btn-transfer-profile-icon"
                                 type="button"
                                 onClick={() => setShowRegisteredDirectoryModal(true)}
-                                className="p-1.5 rounded-lg hover:bg-emerald-50 text-[#16a34a] hover:text-[#15803d] active:scale-95 transition cursor-pointer"
-                                title="Search & Choose from Registered Accounts"
+                                className="p-1.5 rounded-lg hover:bg-emerald-50 text-[#16a34a] hover:text-[#15803d] active:scale-95 transition cursor-pointer flex items-center justify-center group"
+                                title="Click profile icon to choose from registered bank accounts"
+                                aria-label="View registered bank accounts"
                               >
-                                <AccountSearchDirectoryIcon className="w-5 h-5 text-[#16a34a]" />
+                                <User className="w-5 h-5 text-[#16a34a] group-hover:scale-110 transition-transform stroke-[2.2]" />
                               </button>
                             </div>
                           </div>
