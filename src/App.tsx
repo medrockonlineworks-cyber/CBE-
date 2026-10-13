@@ -5,6 +5,7 @@ import Auth from './components/Auth';
 import Home from './pages/Home';
 import Dashboard from './components/Dashboard';
 import Transactions from './components/Transactions';
+import CbeTransfer from './components/CbeTransfer';
 import Payments from './components/Payments';
 import History from './components/History';
 import Profile from './components/Profile';
@@ -392,12 +393,10 @@ export default function App() {
         );
       case 'transfer':
         return (
-          <Transactions 
+          <CbeTransfer 
             currentUser={activeUser}
             onTransactionComplete={handleTransactionComplete}
-            onSelectTransaction={handleSelectTransaction}
             onBack={() => setActiveTab('home')}
-            initialTab={initialTxTab}
           />
         );
       case 'payments':
@@ -578,8 +577,8 @@ export default function App() {
 
           {activeView === 'main' && (
             <div className="flex-1 flex flex-col h-full w-full overflow-hidden relative">
-              {/* iPhone Sub-page Top Navigation Bar */}
-              {isIPhone && activeTab !== 'home' && activeTab !== 'profile' && (
+              {/* iPhone Sub-page Top Navigation Bar (Only for tabs without their own dedicated branded header) */}
+              {isIPhone && activeTab !== 'home' && activeTab !== 'profile' && activeTab !== 'transfer' && (
                 <div className="w-full bg-[#70189F] text-white px-4 pt-[max(env(safe-area-inset-top,0px),10px)] pb-2.5 flex items-center justify-between shrink-0 z-30 shadow-xs">
                   <button
                     type="button"
@@ -590,7 +589,7 @@ export default function App() {
                     <span>Home</span>
                   </button>
                   <span className="font-bold text-sm capitalize">
-                    {activeTab === 'transfer' ? 'Transfer & Send' : activeTab === 'payments' ? 'Bill Payments' : activeTab}
+                    {activeTab === 'payments' ? 'Bill Payments' : activeTab}
                   </span>
                   <div className="w-10" />
                 </div>
@@ -601,8 +600,8 @@ export default function App() {
                 {renderTabContent()}
               </div>
 
-              {/* Bottom navigation for secondary sub-tabs (transfer, payments, profile) */}
-              {activeTab !== 'home' && activeTab !== 'history' && (
+              {/* Bottom navigation for secondary sub-tabs (payments, profile) */}
+              {activeTab !== 'home' && activeTab !== 'history' && activeTab !== 'transfer' && (
                 <Navigation 
                   activeTab={activeTab}
                   onChangeTab={(tab) => {

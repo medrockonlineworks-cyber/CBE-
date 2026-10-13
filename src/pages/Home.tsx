@@ -384,7 +384,7 @@ export const Home: React.FC<HomeProps> = ({
   // Service grid handler
   const handleServiceSelect = (serviceId: string) => {
     if (serviceId === 'cbe-transfer' && onNavigateToTab) {
-      onNavigateToTab('transfer', 'send');
+      onNavigateToTab('transfer', 'transfer');
     } else if (serviceId === 'bills-utilities' && onNavigateToTab) {
       onNavigateToTab('payments');
     } else if (serviceId === 'airtime' && onNavigateToTab) {
@@ -835,7 +835,7 @@ export const Home: React.FC<HomeProps> = ({
                   setTimeout(() => {
                     setQrScanSuccess(false);
                     setActiveModal(null);
-                    onNavigateToTab?.('transfer', 'send');
+                    onNavigateToTab?.('transfer', 'transfer');
                   }, 1200);
                 }}
                 className="mt-3 bg-white/20 hover:bg-white/30 text-white text-xs font-bold py-1.5 px-4 rounded-xl backdrop-blur-sm border border-white/30 transition cursor-pointer"
