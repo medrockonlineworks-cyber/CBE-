@@ -219,10 +219,25 @@ export default function App() {
     } catch {}
 
     const handlePopState = (e: PopStateEvent) => {
-      // If user was on SMS, Truecaller, Phone, Dashen, Telebirr or Telegram view
+      // 1. Give active modals / sheets / sub-views first priority to handle device back
+      let handledBySubView = false;
+      const customBackEvent = new CustomEvent('cbe_phone_back', {
+        cancelable: true,
+        detail: {
+          setHandled: () => {
+            handledBySubView = true;
+          },
+        },
+      });
+      window.dispatchEvent(customBackEvent);
+      if (customBackEvent.defaultPrevented || handledBySubView) {
+        return;
+      }
+
+      // 2. Real device back across views
       if (activeView === 'sms' || activeView === 'truecaller' || activeView === 'phone' || activeView === 'dashen' || activeView === 'telebirr' || activeView === 'telegram') {
         setActiveView('main');
-        setActiveTab('profile');
+        setActiveTab(returnTab || 'home');
       } else if (activeView === 'receipt') {
         setActiveView('main');
         setActiveTab('home');
@@ -242,7 +257,9 @@ export default function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, [activeView, activeTab]);
 
-  // iOS Native Edge Swipe-to-Back Gesture
+  // Platform Native Swipe-to-Back Gesture:
+  // - iPhone: Left-edge swipe towards right
+  // - Android: Left-edge or Right-edge swipe (modern Android gesture system)
   useEffect(() => {
     let startX = 0;
     let startY = 0;
@@ -260,9 +277,15 @@ export default function App() {
         const endY = e.changedTouches[0].clientY;
         const diffX = endX - startX;
         const diffY = Math.abs(endY - startY);
+        const screenW = window.innerWidth || 360;
 
-        // Swiped from left edge (startX < 35) horizontally towards right (> 50px)
-        if (startX < 35 && diffX > 50 && diffY < 45) {
+        // 1. Left-edge swipe towards right (iPhone iOS & Android left back)
+        const isLeftEdge = startX <= 40 && diffX > 45 && diffY < 50;
+
+        // 2. Right-edge swipe towards left (Android gesture navigation right back)
+        const isRightEdge = !isIPhone && startX >= (screenW - 40) && (startX - endX) > 45 && diffY < 50;
+
+        if (isLeftEdge || isRightEdge) {
           handlePhoneBack();
         }
       }
@@ -274,7 +297,7 @@ export default function App() {
       window.removeEventListener('touchstart', onTouchStart);
       window.removeEventListener('touchend', onTouchEnd);
     };
-  }, [handlePhoneBack]);
+  }, [handlePhoneBack, isIPhone]);
 
   // Try auto restoring session on mount
   useEffect(() => {
@@ -577,23 +600,6 @@ export default function App() {
 
           {activeView === 'main' && (
             <div className="flex-1 flex flex-col h-full w-full overflow-hidden relative">
-              {/* iPhone Sub-page Top Navigation Bar (Only for tabs without their own dedicated branded header) */}
-              {isIPhone && activeTab !== 'home' && activeTab !== 'profile' && activeTab !== 'transfer' && (
-                <div className="w-full bg-[#70189F] text-white px-4 pt-[max(env(safe-area-inset-top,0px),10px)] pb-2.5 flex items-center justify-between shrink-0 z-30 shadow-xs">
-                  <button
-                    type="button"
-                    onClick={handlePhoneBack}
-                    className="text-white hover:text-purple-200 active:opacity-70 text-[16px] font-normal flex items-center gap-0.5 cursor-pointer"
-                  >
-                    <ChevronLeft className="w-5 h-5 -ml-1.5 stroke-[2.5]" />
-                    <span>Home</span>
-                  </button>
-                  <span className="font-bold text-sm capitalize">
-                    {activeTab === 'payments' ? 'Bill Payments' : activeTab}
-                  </span>
-                  <div className="w-10" />
-                </div>
-              )}
 
               {/* Main Tab Content: Home, Transfer, Payments, History, Profile */}
               <div className="flex-1 min-h-0 w-full overflow-y-auto overscroll-contain relative flex flex-col">

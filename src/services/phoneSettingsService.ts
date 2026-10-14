@@ -123,8 +123,8 @@ export class PhoneSettingsService {
   public static isIPhoneMode(): boolean {
     const current = this.getSettings();
     if (current.phoneModel === 'iphone') return true;
-    if (this.isIPhoneDevice()) return true;
-    return false;
+    if (['tecno', 'samsung', 'pixel', 'xiaomi'].includes(current.phoneModel)) return false;
+    return this.isIPhoneDevice();
   }
 
   public static getSettings(): PhoneSettings {

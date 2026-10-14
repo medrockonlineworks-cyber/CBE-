@@ -34,12 +34,57 @@ export const PhoneNavigationBar: React.FC<PhoneNavigationBarProps> = ({
   const borderCol = isDark ? 'border-neutral-900/80' : 'border-neutral-200';
   const iconColor = isDark ? 'text-neutral-400 hover:text-white' : 'text-neutral-500 hover:text-neutral-900';
 
-  // 1. Gesture Navigation Bar Style (Edge-to-edge uses device native navigation bar)
-  if (settings.navBarStyle === 'gesture' || settings.phoneModel === 'iphone') {
-    return null;
+  const isIPhone = settings.phoneModel === 'iphone' || PhoneSettingsService.isIPhoneMode();
+
+  // 1. iPhone Navigation System: Sleek Home Indicator Bar (Swipe/tap for home, left edge swipe for back)
+  if (isIPhone) {
+    return (
+      <div 
+        id="iphone-home-indicator-bar"
+        className={`w-full pt-1.5 pb-[max(env(safe-area-inset-bottom,0px),8px)] flex items-center justify-center select-none ${navBg} shrink-0 z-40 ${className}`}
+      >
+        <button
+          type="button"
+          aria-label="Home"
+          onClick={onHome}
+          className="p-1 cursor-pointer active:scale-95 transition"
+          title="iPhone Home Indicator"
+        >
+          <div 
+            className={`w-36 h-1 rounded-full ${
+              isDark ? 'bg-white/40 hover:bg-white/70' : 'bg-neutral-800/40 hover:bg-neutral-800/70'
+            }`} 
+          />
+        </button>
+      </div>
+    );
   }
 
-  // 2. 3-Button Navigation Bar (|||, ○, <) matching screenshot
+  // 2. Android Gesture Navigation Bar Style (Edge-to-edge pill)
+  if (settings.navBarStyle === 'gesture') {
+    return (
+      <div 
+        id="android-gesture-navbar"
+        className={`w-full pt-1.5 pb-2 flex items-center justify-center select-none ${navBg} shrink-0 z-40 ${className}`}
+      >
+        <button
+          type="button"
+          aria-label="Home"
+          onClick={onHome}
+          className="p-1 cursor-pointer active:scale-95 transition"
+          title="Android Gesture Pill"
+        >
+          <div 
+            className={`w-20 h-1 rounded-full ${
+              isDark ? 'bg-white/50 hover:bg-white/80' : 'bg-neutral-600/50 hover:bg-neutral-700'
+            }`} 
+          />
+        </button>
+      </div>
+    );
+  }
+
+  // 3. Android 3-Button Navigation Bar (|||, ○, <) matching Android system navigation
   return (
     <div 
       className={`w-full py-2 px-8 sm:px-14 md:px-16 flex items-center justify-between text-base font-light ${navBg} border-t ${borderCol} select-none ${className}`}
