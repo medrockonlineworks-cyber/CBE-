@@ -19,13 +19,8 @@ import {
 } from '../lib/mockData';
 import { CbeLogo } from './CbeLogo';
 import { CbeOfficialPdfReceipt } from './CbeOfficialPdfReceipt';
-import { PhoneSettingsService } from '../services/phoneSettingsService';
 import { 
   ArrowLeft, 
-  ChevronLeft,
-  ChevronRight,
-  MoreHorizontal,
-  Compass,
   Home, 
   Lock, 
   MoreVertical, 
@@ -47,9 +42,7 @@ import {
   Globe,
   CheckCircle2,
   Trash2,
-  Share,
   Share2,
-  BookOpen,
   ExternalLink,
   RefreshCw,
   Stamp,
@@ -198,114 +191,10 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [copiedUrl, setCopiedUrl] = useState(false);
 
-  // Browser bar customization state: Auto-defaults to 'safari' for iPhone/iOS, and 'opera' (Image 2) for Android
+  // Browser bar customization state
   const [browserType, setBrowserType] = useState<BrowserHeaderType>(() => {
-    const saved = localStorage.getItem('cbe_receipt_browser_type') as BrowserHeaderType;
-    if (saved && ['safari', 'opera', 'chrome', 'phoenix', 'samsung'].includes(saved)) {
-      return saved;
-    }
-    return PhoneSettingsService.isIPhoneMode() ? 'safari' : 'opera';
+    return (localStorage.getItem('cbe_receipt_browser_type') as BrowserHeaderType) || 'chrome';
   });
-
-  // Dynamically sync browser style when phone model changes if no manual preference is saved
-  useEffect(() => {
-    return PhoneSettingsService.subscribe(() => {
-      const saved = localStorage.getItem('cbe_receipt_browser_type');
-      if (!saved) {
-        setBrowserType(PhoneSettingsService.isIPhoneMode() ? 'safari' : 'opera');
-      }
-    });
-  }, []);
-
-  // Support real device navigation (hardware/system back button, browser popstate, and edge gestures)
-  useEffect(() => {
-    try {
-      window.history.pushState({ modal: 'cbe_web_receipt' }, '', window.location.pathname);
-    } catch {}
-
-    const handlePopState = () => {
-      onClose();
-    };
-
-    const handlePhoneBack = (e: any) => {
-      if (isMenuOpen) {
-        setIsMenuOpen(false);
-        e?.detail?.setHandled?.();
-        e?.preventDefault?.();
-        return;
-      }
-      if (isPdfMenuOpen) {
-        setIsPdfMenuOpen(false);
-        e?.detail?.setHandled?.();
-        e?.preventDefault?.();
-        return;
-      }
-      if (isEditingStampPosition) {
-        setIsEditingStampPosition(false);
-        e?.detail?.setHandled?.();
-        e?.preventDefault?.();
-        return;
-      }
-      if (viewMode === 'pdf') {
-        setViewMode('web');
-        e?.detail?.setHandled?.();
-        e?.preventDefault?.();
-        return;
-      }
-      onClose();
-      e?.detail?.setHandled?.();
-      e?.preventDefault?.();
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    window.addEventListener('cbe_phone_back', handlePhoneBack);
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-      window.removeEventListener('cbe_phone_back', handlePhoneBack);
-    };
-  }, [isMenuOpen, isPdfMenuOpen, isEditingStampPosition, viewMode, onClose]);
-
-  // Native Platform Edge Swipe to Go Back
-  // iPhone: Left edge swipe towards right (starts at screen left edge)
-  // Android: Left edge or right edge swipe to dismiss
-  useEffect(() => {
-    let startX = 0;
-    let startY = 0;
-
-    const onTouchStart = (e: TouchEvent) => {
-      if (e.touches.length === 1) {
-        startX = e.touches[0].clientX;
-        startY = e.touches[0].clientY;
-      }
-    };
-
-    const onTouchEnd = (e: TouchEvent) => {
-      if (e.changedTouches.length === 1) {
-        const endX = e.changedTouches[0].clientX;
-        const endY = e.changedTouches[0].clientY;
-        const diffX = endX - startX;
-        const diffY = Math.abs(endY - startY);
-        const screenW = window.innerWidth || 360;
-
-        const isIPhone = PhoneSettingsService.isIPhoneMode();
-
-        const isLeftEdge = startX <= 42 && diffX > 45 && diffY < 50;
-        const isRightEdge = !isIPhone && startX >= (screenW - 42) && (startX - endX) > 45 && diffY < 50;
-
-        if (isLeftEdge || isRightEdge) {
-          onClose();
-        }
-      }
-    };
-
-    window.addEventListener('touchstart', onTouchStart, { passive: true });
-    window.addEventListener('touchend', onTouchEnd, { passive: true });
-    return () => {
-      window.removeEventListener('touchstart', onTouchStart);
-      window.removeEventListener('touchend', onTouchEnd);
-    };
-  }, [onClose]);
-
   const [tabCount, setTabCount] = useState<string>(() => {
     return localStorage.getItem('cbe_receipt_tab_count') || '2';
   });
@@ -1232,23 +1121,6 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
     navigator.clipboard.writeText(webReceiptUrl);
     setCopiedUrl(true);
     setTimeout(() => setCopiedUrl(false), 2500);
-  };
-
-  const handleShareWebReceipt = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `CBE Customer Receipt - ${receiptData.refId}`,
-          text: `Official CBE Transaction Receipt: ETB ${receiptData.amount}`,
-          url: webReceiptUrl,
-        });
-        return;
-      } catch {
-        // cancelled by user
-      }
-    }
-    handleCopyLink();
-    showBarsToast('Receipt link copied to clipboard!');
   };
 
   const handleRefresh = () => {
@@ -2276,7 +2148,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                 type="button"
                 onClick={() => handleDownloadPdf()}
                 disabled={isDownloading}
-                className="flex items-center gap-1.5 text-xs font-bold text-white bg-[#781d77] hover:bg-[#68137e] active:bg-[#580f68] px-3 py-1.5 rounded-lg shadow-md transition cursor-pointer disabled:opacity-75 active:scale-95"
+                className="flex items-center gap-1.5 text-xs font-bold text-white bg-[#781d77] hover:bg-[#70189F] active:bg-[#580f68] px-3 py-1.5 rounded-lg shadow-md transition cursor-pointer disabled:opacity-75 active:scale-95"
                 title="Save PDF file to device storage"
               >
                 {isDownloading ? (
@@ -2617,7 +2489,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
               type="button"
               onClick={() => handleDownloadPdf()}
               disabled={isDownloading}
-              className="bg-[#781d77] hover:bg-[#68137e] text-white font-bold text-xs py-2 px-4 rounded-full shadow-2xl flex items-center gap-1.5 transition active:scale-95 cursor-pointer disabled:opacity-75"
+              className="bg-[#781d77] hover:bg-[#70189F] text-white font-bold text-xs py-2 px-4 rounded-full shadow-2xl flex items-center gap-1.5 transition active:scale-95 cursor-pointer disabled:opacity-75"
             >
               <Download className="w-3.5 h-3.5" />
               <span>{isDownloading ? 'Saving...' : 'Save PDF'}</span>
@@ -2994,7 +2866,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
             <button
               type="button"
               onClick={handleOpenPdfView}
-              className="bg-[#781d77] hover:bg-[#68137e] active:bg-[#580f68] text-white font-semibold text-[13px] sm:text-[13.5px] py-2 px-7 rounded-xl shadow-lg shadow-purple-950/25 flex items-center justify-center transition active:scale-95 cursor-pointer"
+              className="bg-[#781d77] hover:bg-[#70189F] active:bg-[#580f68] text-white font-semibold text-[13px] sm:text-[13.5px] py-2 px-7 rounded-xl shadow-lg shadow-purple-950/25 flex items-center justify-center transition active:scale-95 cursor-pointer"
             >
               <span>Download PDF</span>
             </button>

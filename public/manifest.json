@@ -51,8 +51,8 @@
     "browser"
   ],
   "orientation": "portrait-primary",
-  "theme_color": "#300642",
-  "background_color": "#300642",
+  "theme_color": "#70189F",
+  "background_color": "#70189F",
   "lang": "en",
   "dir": "ltr",
   "categories": [
@@ -66,21 +66,39 @@
       "short_name": "Send",
       "description": "Transfer funds instantly to any bank account",
       "url": "/?tab=transfer&sub=send",
-      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "Pay Bills & Airtime",
       "short_name": "Pay Bills",
       "description": "Pay utility bills, telecom, and merchant payments",
       "url": "/?tab=payments",
-      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     },
     {
       "name": "Transaction History",
       "short_name": "History",
       "description": "View recent transaction records and receipts",
       "url": "/?tab=history",
-      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ],
   "screenshots": [

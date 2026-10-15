@@ -320,7 +320,7 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
     <div className="w-full flex-1 flex flex-col bg-[#F7F7F7] min-h-0 overflow-hidden relative select-none">
       
       {/* 1. TOP PURPLE CBE HEADER */}
-      <div className="bg-[#68137e] text-white pt-[max(env(safe-area-inset-top,0px),16px)] pb-6 px-4 shadow-sm flex-shrink-0 relative z-20">
+      <div className="bg-[#70189F] text-white pt-[max(env(safe-area-inset-top,0px),16px)] pb-6 px-4 shadow-sm flex-shrink-0 relative z-20">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
@@ -357,7 +357,7 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
             <div className="bg-[#EFEBF2] rounded-2xl p-4 border border-purple-100/60 space-y-2">
               <span className="text-xs text-gray-500 font-medium">Transfer to</span>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-purple-200/80 text-[#68137e] flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-purple-200/80 text-[#70189F] flex items-center justify-center flex-shrink-0">
                   <Building2 className="w-6 h-6 stroke-[1.8]" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -421,7 +421,7 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
               {/* Phone Number / Account Input with bank icon on left and person icon on right */}
               <div className="relative">
                 <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-purple-900/60">
-                  <Building2 className="w-5 h-5 text-[#68137e]/70 stroke-[1.8]" />
+                  <Building2 className="w-5 h-5 text-[#70189F]/70 stroke-[1.8]" />
                 </div>
                 <input
                   id="input-recipient-phone-or-account"
@@ -432,7 +432,7 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
                   placeholder="Phone Number"
                   value={phoneOrAccount}
                   onChange={(e) => handleRecipientChange(e.target.value)}
-                  className="w-full bg-[#fbfbfb] border border-gray-200/90 rounded-2xl pl-11 pr-11 py-3.5 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:bg-white focus:border-[#68137e] transition"
+                  className="w-full bg-[#fbfbfb] border border-gray-200/90 rounded-2xl pl-11 pr-11 py-3.5 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:bg-white focus:border-[#70189F] transition"
                   required
                 />
                 
@@ -441,7 +441,7 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
                   type="button"
                   id="btn-open-registered-accounts"
                   onClick={() => setShowRegisteredModal(true)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#68137e]/80 hover:text-[#68137e] active:scale-90 transition cursor-pointer p-1"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#70189F]/80 hover:text-[#70189F] active:scale-90 transition cursor-pointer p-1"
                   title="Registered Bank Accounts"
                   aria-label="List of registered bank accounts"
                 >
@@ -451,7 +451,7 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
 
               {/* Amount Field with wallet icon and calculator/keypad icon */}
               <div className="relative">
-                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-[#68137e]/70">
+                <div className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-[#70189F]/70">
                   <Wallet className="w-5 h-5 stroke-[1.8]" />
                 </div>
                 <input
@@ -462,10 +462,10 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
                   placeholder="Amount*"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="w-full bg-[#fbfbfb] border border-gray-200/90 rounded-2xl pl-11 pr-11 py-3.5 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:bg-white focus:border-[#68137e] transition"
+                  className="w-full bg-[#fbfbfb] border border-gray-200/90 rounded-2xl pl-11 pr-11 py-3.5 text-sm font-medium text-gray-900 placeholder:text-gray-400 focus:outline-none focus:bg-white focus:border-[#70189F] transition"
                   required
                 />
-                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-[#68137e]/70">
+                <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-[#70189F]/70">
                   <Calculator className="w-5 h-5 stroke-[1.8]" />
                 </div>
               </div>
@@ -477,7 +477,7 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
                   onClick={() => setIsRemarkOpen(!isRemarkOpen)}
                   className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition cursor-pointer"
                 >
-                  <PlusCircle className="w-4 h-4 text-[#68137e] stroke-[2]" />
+                  <PlusCircle className="w-4 h-4 text-[#70189F] stroke-[2]" />
                   <span className="font-medium text-gray-700">Add remark</span>
                   <span className="text-[11px] text-gray-400 italic">*Default: MB transfer</span>
                 </button>
@@ -489,7 +489,7 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
                       placeholder="Enter remark..."
                       value={remark}
                       onChange={(e) => setRemark(e.target.value)}
-                      className="w-full bg-[#fbfbfb] border border-gray-200/90 rounded-xl px-3 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:border-[#68137e]"
+                      className="w-full bg-[#fbfbfb] border border-gray-200/90 rounded-xl px-3 py-2 text-xs font-medium text-gray-900 focus:outline-none focus:border-[#70189F]"
                     />
                   </div>
                 )}
@@ -501,7 +501,7 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
                   id="btn-submit-cbe-transfer"
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-[#68137e] hover:bg-[#570f69] active:scale-[0.99] disabled:opacity-50 text-white font-bold py-3.5 rounded-2xl text-base transition shadow-sm flex items-center justify-center cursor-pointer"
+                  className="w-full bg-[#70189F] hover:bg-[#58117D] active:scale-[0.99] disabled:opacity-50 text-white font-bold py-3.5 rounded-2xl text-base transition shadow-sm flex items-center justify-center cursor-pointer"
                 >
                   Continue
                 </button>
@@ -516,13 +516,13 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
                   onClick={() => setBottomTab('recent')}
                   className={`flex-1 pb-2.5 text-center text-xs font-bold transition cursor-pointer relative ${
                     bottomTab === 'recent'
-                      ? 'text-[#68137e]'
+                      ? 'text-[#70189F]'
                       : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
                   Recent Transfers
                   {bottomTab === 'recent' && (
-                    <div className="absolute bottom-0 inset-x-8 h-0.5 bg-[#68137e] rounded-full" />
+                    <div className="absolute bottom-0 inset-x-8 h-0.5 bg-[#70189F] rounded-full" />
                   )}
                 </button>
 
@@ -531,13 +531,13 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
                   onClick={() => setBottomTab('beneficiaries')}
                   className={`flex-1 pb-2.5 text-center text-xs font-bold transition cursor-pointer relative ${
                     bottomTab === 'beneficiaries'
-                      ? 'text-[#68137e]'
+                      ? 'text-[#70189F]'
                       : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
                   Beneficiaries
                   {bottomTab === 'beneficiaries' && (
-                    <div className="absolute bottom-0 inset-x-8 h-0.5 bg-[#68137e] rounded-full" />
+                    <div className="absolute bottom-0 inset-x-8 h-0.5 bg-[#70189F] rounded-full" />
                   )}
                 </button>
               </div>
@@ -554,7 +554,7 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
                       >
                         <div className="flex items-center gap-3">
                           {/* Circle Avatar with Initials */}
-                          <div className="w-10 h-10 rounded-full bg-purple-100/90 text-[#68137e] font-bold text-xs flex items-center justify-center flex-shrink-0">
+                          <div className="w-10 h-10 rounded-full bg-purple-100/90 text-[#70189F] font-bold text-xs flex items-center justify-center flex-shrink-0">
                             {item.initials}
                           </div>
                           <div>
@@ -636,7 +636,7 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
 
             {/* Title: "Enter your PIN to confirm" in CBE Purple */}
             <div className="text-center pt-2 pb-1">
-              <h3 className="text-base font-bold text-[#68137e] tracking-tight">
+              <h3 className="text-base font-bold text-[#70189F] tracking-tight">
                 Enter your PIN to confirm
               </h3>
             </div>
@@ -648,7 +648,7 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
                   key={i}
                   className={`w-3.5 h-3.5 rounded-full transition-all duration-150 ${
                     pin.length > i
-                      ? 'bg-[#68137e] border-2 border-[#68137e] scale-110 shadow-2xs'
+                      ? 'bg-[#70189F] border-2 border-[#70189F] scale-110 shadow-2xs'
                       : 'border-2 border-gray-300 bg-transparent'
                   }`}
                 />
@@ -735,15 +735,15 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
                 disabled={isSubmitting}
                 onClick={handleConfirmPin}
                 className={`h-12 bg-gray-100/80 hover:bg-gray-200/80 active:bg-gray-300/80 active:scale-95 rounded-2xl flex items-center justify-center transition cursor-pointer select-none ${
-                  pin.length === 6 ? 'text-[#68137e]' : 'text-gray-400'
+                  pin.length === 6 ? 'text-[#70189F]' : 'text-gray-400'
                 }`}
                 title="Confirm PIN & View Receipt"
                 aria-label="Confirm PIN"
               >
                 {isSubmitting ? (
-                  <Loader2 className="w-5 h-5 animate-spin text-[#68137e]" />
+                  <Loader2 className="w-5 h-5 animate-spin text-[#70189F]" />
                 ) : (
-                  <Check className={`w-6 h-6 stroke-[2.5] ${pin.length === 6 ? 'text-[#68137e]' : 'text-gray-400'}`} />
+                  <Check className={`w-6 h-6 stroke-[2.5] ${pin.length === 6 ? 'text-[#70189F]' : 'text-gray-400'}`} />
                 )}
               </button>
             </div>

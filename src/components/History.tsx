@@ -86,7 +86,7 @@ export default function History({ currentUser, onSelectTransaction }: HistoryPro
     <div id="history-screen" className="max-w-md mx-auto bg-gray-50 min-h-screen pb-28 font-sans">
       
       {/* Top Banner */}
-      <div className="bg-[#68137e] text-white px-5 pt-7 pb-8 rounded-b-[2rem] shadow-md">
+      <div className="bg-[#70189F] text-white px-5 pt-7 pb-8 rounded-b-[2rem] shadow-md">
         <h2 className="text-xl font-extrabold">Transaction History</h2>
         <p className="text-purple-200 text-xs mt-0.5">Commercial Bank of Ethiopia statement &amp; activity history</p>
       </div>
@@ -101,7 +101,7 @@ export default function History({ currentUser, onSelectTransaction }: HistoryPro
             onClick={() => setCreditDebitFilter('all')}
             className={`flex-1 py-2 rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 cursor-pointer ${
               creditDebitFilter === 'all'
-                ? 'bg-[#68137e] text-white shadow-md'
+                ? 'bg-[#70189F] text-white shadow-md'
                 : 'text-gray-600 hover:bg-gray-50'
             }`}
           >
@@ -237,7 +237,7 @@ export default function History({ currentUser, onSelectTransaction }: HistoryPro
                     <div>
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {isRecentTop && (
-                          <span className="text-[7.5px] font-black uppercase px-1.5 py-0.5 rounded bg-purple-100 text-[#68137e] border border-purple-200">
+                          <span className="text-[7.5px] font-black uppercase px-1.5 py-0.5 rounded bg-purple-100 text-[#70189F] border border-purple-200">
                             Recent
                           </span>
                         )}

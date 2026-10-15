@@ -136,7 +136,7 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, width, height);
 
-  // 2. Top Purple Header: #68137e matching original authentic CBE top design & IMG_20261011_115144_548.png
+  // 2. Top Purple Header: #70189F matching original authentic CBE top design & IMG_0609.jpeg
   const topPurplePadding = 36 * scale; // Exact vertical space above Thank you
   const shieldSize = 34 * scale;
   const shieldX = 20 * scale;
@@ -146,7 +146,7 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   const cornerRadius = 38 * scale; // Authentic large rounded-t curve matching IMG_0135.png
 
   // Fill purple background extending down PAST sheetTop to fill the corners of the white curve
-  ctx.fillStyle = '#68137e';
+  ctx.fillStyle = '#70189F';
   ctx.fillRect(0, 0, width, sheetTop + cornerRadius + (20 * scale));
 
   // 3. Exact Solid White Shield with Purple Checkmark (matching exact SVG in IMG_0135.png)
@@ -161,7 +161,7 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
 
   // Purple checkmark inside shield
   const shieldCheckmarkPath = new Path2D('M8.0 12.2L11.0 15.2L17.2 9.0');
-  ctx.strokeStyle = '#68137e';
+  ctx.strokeStyle = '#70189F';
   ctx.lineWidth = 1.9;
   ctx.lineCap = 'butt';
   ctx.lineJoin = 'miter';
@@ -197,7 +197,7 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   // Purple circle with thick white outer ring
   ctx.beginPath();
   ctx.arc(badgeCenterX, badgeCenterY, badgeRadius, 0, Math.PI * 2);
-  ctx.fillStyle = '#68137e';
+  ctx.fillStyle = '#70189F';
   ctx.fill();
   ctx.lineWidth = 6 * scale;
   ctx.strokeStyle = '#ffffff';

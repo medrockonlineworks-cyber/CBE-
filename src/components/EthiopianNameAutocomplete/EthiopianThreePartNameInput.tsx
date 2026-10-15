@@ -134,7 +134,7 @@ export default function EthiopianThreePartNameInput({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-gray-100">
         <div>
           <span className="text-xs font-black text-gray-900 flex items-center gap-1.5 uppercase tracking-wide">
-            <UserCheck className="w-4 h-4 text-[#68137e]" />
+            <UserCheck className="w-4 h-4 text-[#70189F]" />
             <span>Ethiopian 3-Part Naming</span>
             {required && <span className="text-rose-500 font-bold">*</span>}
           </span>
@@ -152,12 +152,12 @@ export default function EthiopianThreePartNameInput({
               onClick={() => setInputMethod('split')}
               className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                 inputMethod === 'split'
-                  ? 'bg-white text-[#68137e] shadow-sm font-black'
+                  ? 'bg-white text-[#70189F] shadow-sm font-black'
                   : 'text-gray-500 hover:text-gray-800'
               }`}
               title="Separate 3-Part Inputs for Self, Father, Grandfather"
             >
-              <Layers className="w-3 h-3 text-[#68137e]" />
+              <Layers className="w-3 h-3 text-[#70189F]" />
               <span>3-Fields</span>
             </button>
 
@@ -167,12 +167,12 @@ export default function EthiopianThreePartNameInput({
               onClick={() => setInputMethod('single')}
               className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                 inputMethod === 'single'
-                  ? 'bg-white text-[#68137e] shadow-sm font-black'
+                  ? 'bg-white text-[#70189F] shadow-sm font-black'
                   : 'text-gray-500 hover:text-gray-800'
               }`}
               title="Single Smart Field with Live Self/Father/Grandfather Token Detection"
             >
-              <AlignLeft className="w-3 h-3 text-[#68137e]" />
+              <AlignLeft className="w-3 h-3 text-[#70189F]" />
               <span>Smart Single</span>
             </button>
 
@@ -182,7 +182,7 @@ export default function EthiopianThreePartNameInput({
               onClick={() => setInputMethod('wizard')}
               className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                 inputMethod === 'wizard'
-                  ? 'bg-white text-[#68137e] shadow-sm font-black'
+                  ? 'bg-white text-[#70189F] shadow-sm font-black'
                   : 'text-gray-500 hover:text-gray-800'
               }`}
               title="Guided 3-Step Name Selector"
@@ -197,7 +197,7 @@ export default function EthiopianThreePartNameInput({
               onClick={() => setInputMethod('presets')}
               className={`px-2.5 py-1 rounded-lg text-[11px] font-extrabold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
                 inputMethod === 'presets'
-                  ? 'bg-white text-[#68137e] shadow-sm font-black'
+                  ? 'bg-white text-[#70189F] shadow-sm font-black'
                   : 'text-gray-500 hover:text-gray-800'
               }`}
               title="1-Tap Curated Ethiopian Full Names"
@@ -216,8 +216,8 @@ export default function EthiopianThreePartNameInput({
             {/* 1. Self (First Name) */}
             <div className="space-y-1">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-extrabold text-[#68137e] uppercase tracking-wider flex items-center gap-1">
-                  <User className="w-3 h-3 text-[#68137e]" />
+                <span className="text-[10px] font-extrabold text-[#70189F] uppercase tracking-wider flex items-center gap-1">
+                  <User className="w-3 h-3 text-[#70189F]" />
                   <span>1. Self (First Name)</span>
                 </span>
                 <span className="text-[9px] text-gray-400 font-medium">የግል ስም</span>
@@ -257,8 +257,8 @@ export default function EthiopianThreePartNameInput({
             {/* 2. Father's Name */}
             <div className="space-y-1">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-extrabold text-[#68137e] uppercase tracking-wider flex items-center gap-1">
-                  <Users className="w-3 h-3 text-[#68137e]" />
+                <span className="text-[10px] font-extrabold text-[#70189F] uppercase tracking-wider flex items-center gap-1">
+                  <Users className="w-3 h-3 text-[#70189F]" />
                   <span>2. Father's Name</span>
                 </span>
                 <span className="text-[9px] text-gray-400 font-medium">የአባት ስም</span>
@@ -280,8 +280,8 @@ export default function EthiopianThreePartNameInput({
             {/* 3. Grandfather's Name */}
             <div className="space-y-1">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-extrabold text-[#68137e] uppercase tracking-wider flex items-center gap-1">
-                  <UserCheck className="w-3 h-3 text-[#68137e]" />
+                <span className="text-[10px] font-extrabold text-[#70189F] uppercase tracking-wider flex items-center gap-1">
+                  <UserCheck className="w-3 h-3 text-[#70189F]" />
                   <span>3. Grandfather's Name</span>
                 </span>
                 <span className="text-[9px] text-gray-400 font-medium">የአያት ስም</span>
@@ -379,9 +379,9 @@ export default function EthiopianThreePartNameInput({
             
             {/* Slot 1: Self */}
             <div className={`px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition ${
-              firstName ? 'bg-purple-100 text-[#68137e] border border-purple-200' : 'bg-gray-100 text-gray-400 border border-gray-200'
+              firstName ? 'bg-purple-100 text-[#70189F] border border-purple-200' : 'bg-gray-100 text-gray-400 border border-gray-200'
             }`}>
-              <User className="w-3 h-3 text-[#68137e]" />
+              <User className="w-3 h-3 text-[#70189F]" />
               <span>1. Self:</span>
               <span className="font-extrabold text-gray-900">{firstName || 'Empty'}</span>
               {firstName && (
@@ -454,7 +454,7 @@ export default function EthiopianThreePartNameInput({
                   onClick={() => setWizardStep(s.step as any)}
                   className={`px-2.5 py-1 rounded-xl text-[11px] font-extrabold transition flex items-center gap-1 cursor-pointer ${
                     wizardStep === s.step
-                      ? 'bg-[#68137e] text-white shadow-sm'
+                      ? 'bg-[#70189F] text-white shadow-sm'
                       : s.done
                         ? 'bg-emerald-100 text-emerald-800'
                         : 'bg-white text-gray-500 border border-gray-200'
@@ -483,7 +483,7 @@ export default function EthiopianThreePartNameInput({
                       type="button"
                       onClick={() => setWizardGender(g)}
                       className={`px-2 py-0.5 rounded-md capitalize cursor-pointer ${
-                        wizardGender === g ? 'bg-[#68137e] text-white' : 'text-gray-500'
+                        wizardGender === g ? 'bg-[#70189F] text-white' : 'text-gray-500'
                       }`}
                     >
                       {g}
@@ -522,7 +522,7 @@ export default function EthiopianThreePartNameInput({
                         }}
                         className={`text-xs px-2.5 py-1 rounded-xl border transition cursor-pointer flex items-center gap-1 ${
                           firstName.toLowerCase() === item.name.toLowerCase()
-                            ? 'bg-[#68137e] text-white border-[#68137e] font-bold'
+                            ? 'bg-[#70189F] text-white border-[#70189F] font-bold'
                             : 'bg-white text-gray-800 border-gray-200 hover:border-purple-300'
                         }`}
                       >
@@ -538,7 +538,7 @@ export default function EthiopianThreePartNameInput({
                   type="button"
                   onClick={() => setWizardStep(2)}
                   disabled={!firstName}
-                  className="bg-[#68137e] disabled:opacity-50 text-white text-xs font-bold px-4 py-1.5 rounded-xl flex items-center gap-1.5 cursor-pointer shadow-sm"
+                  className="bg-[#70189F] disabled:opacity-50 text-white text-xs font-bold px-4 py-1.5 rounded-xl flex items-center gap-1.5 cursor-pointer shadow-sm"
                 >
                   <span>Next: Father's Name</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -562,7 +562,7 @@ export default function EthiopianThreePartNameInput({
                 <button
                   type="button"
                   onClick={() => setWizardStep(1)}
-                  className="text-[11px] text-[#68137e] hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                  className="text-[11px] text-[#70189F] hover:underline font-bold flex items-center gap-1 cursor-pointer"
                 >
                   <ArrowLeft className="w-3 h-3" />
                   <span>Back to Self</span>
@@ -596,7 +596,7 @@ export default function EthiopianThreePartNameInput({
                       }}
                       className={`text-xs px-2.5 py-1 rounded-xl border transition cursor-pointer ${
                         fathersName.toLowerCase() === pat.toLowerCase()
-                          ? 'bg-[#68137e] text-white border-[#68137e] font-bold'
+                          ? 'bg-[#70189F] text-white border-[#70189F] font-bold'
                           : 'bg-white text-gray-800 border-gray-200 hover:border-purple-300'
                       }`}
                     >
@@ -618,7 +618,7 @@ export default function EthiopianThreePartNameInput({
                   type="button"
                   onClick={() => setWizardStep(3)}
                   disabled={!fathersName}
-                  className="bg-[#68137e] disabled:opacity-50 text-white text-xs font-bold px-4 py-1.5 rounded-xl flex items-center gap-1.5 cursor-pointer shadow-sm"
+                  className="bg-[#70189F] disabled:opacity-50 text-white text-xs font-bold px-4 py-1.5 rounded-xl flex items-center gap-1.5 cursor-pointer shadow-sm"
                 >
                   <span>Next: Grandfather</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -642,7 +642,7 @@ export default function EthiopianThreePartNameInput({
                 <button
                   type="button"
                   onClick={() => setWizardStep(2)}
-                  className="text-[11px] text-[#68137e] hover:underline font-bold flex items-center gap-1 cursor-pointer"
+                  className="text-[11px] text-[#70189F] hover:underline font-bold flex items-center gap-1 cursor-pointer"
                 >
                   <ArrowLeft className="w-3 h-3" />
                   <span>Back to Father</span>
@@ -669,7 +669,7 @@ export default function EthiopianThreePartNameInput({
                       onClick={() => updateParts(firstName, fathersName, gpat)}
                       className={`text-xs px-2.5 py-1 rounded-xl border transition cursor-pointer ${
                         grandfathersName.toLowerCase() === gpat.toLowerCase()
-                          ? 'bg-[#68137e] text-white border-[#68137e] font-bold'
+                          ? 'bg-[#70189F] text-white border-[#70189F] font-bold'
                           : 'bg-white text-gray-800 border-gray-200 hover:border-purple-300'
                       }`}
                     >
@@ -722,7 +722,7 @@ export default function EthiopianThreePartNameInput({
               placeholder="Search presets (e.g. Leykun, Abebe, Selamawit...)"
               value={presetSearch}
               onChange={(e) => setPresetSearch(e.target.value)}
-              className="w-full bg-white border border-amber-200/80 rounded-xl pl-8 pr-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-[#68137e]"
+              className="w-full bg-white border border-amber-200/80 rounded-xl pl-8 pr-3 py-1.5 text-xs text-gray-800 focus:outline-none focus:border-[#70189F]"
             />
           </div>
 
@@ -753,7 +753,7 @@ export default function EthiopianThreePartNameInput({
                     }}
                     className={`p-2 rounded-xl text-left border transition flex items-center justify-between cursor-pointer ${
                       isSelected
-                        ? 'bg-[#68137e] text-white border-[#68137e] shadow-sm'
+                        ? 'bg-[#70189F] text-white border-[#70189F] shadow-sm'
                         : 'bg-white text-gray-800 border-amber-200/70 hover:border-purple-300 hover:bg-purple-50/40'
                     }`}
                   >
@@ -797,7 +797,7 @@ export default function EthiopianThreePartNameInput({
                   {fullNameString}
                 </p>
                 {showAmharicPreview && amharicTranslation && (
-                  <span className="text-xs font-bold text-[#68137e] font-mono bg-white px-2 py-0.5 rounded-lg border border-purple-100 shadow-2xs">
+                  <span className="text-xs font-bold text-[#70189F] font-mono bg-white px-2 py-0.5 rounded-lg border border-purple-100 shadow-2xs">
                     {amharicTranslation}
                   </span>
                 )}
@@ -848,7 +848,7 @@ export default function EthiopianThreePartNameInput({
             <button
               type="button"
               onClick={handleRandomize}
-              className="text-[#68137e] hover:text-[#520f63] font-bold flex items-center gap-1 transition cursor-pointer"
+              className="text-[#70189F] hover:text-[#520f63] font-bold flex items-center gap-1 transition cursor-pointer"
             >
               <Shuffle className="w-3 h-3 text-[#dfa04c]" />
               <span>Generate Sample Name</span>

@@ -5,10 +5,10 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   --font-display: "Space Grotesk", sans-serif;
 
-  --color-cbe-purple: #68137e;
-  --color-cbe-purple-dark: #530d66;
-  --color-cbe-purple-light: #7e1c97;
-  --color-cbe-purple-soft: #fbf2ff;
+  --color-cbe-purple: #70189F;
+  --color-cbe-purple-dark: #58117D;
+  --color-cbe-purple-light: #8320B4;
+  --color-cbe-purple-soft: #f7ecfd;
   --color-cbe-cream: #fae7cb;
   --color-cbe-cream-border: #f2dac0;
   --color-cbe-gold: #deb356;
@@ -16,18 +16,18 @@
   --color-cbe-card: #18191c;
   --color-cbe-bg: #f6f7fb;
 
-  --color-emerald-50: #f7ebfa;
-  --color-emerald-100: #f0ccf7;
-  --color-emerald-200: #e299f0;
-  --color-emerald-300: #cd60e2;
-  --color-emerald-400: #b032c7;
-  --color-emerald-500: #68137e; /* brand purple */
-  --color-emerald-600: #58106c;
-  --color-emerald-700: #490b5a;
-  --color-emerald-800: #3b074a;
-  --color-emerald-850: #2d0439;
-  --color-emerald-900: #21022b;
-  --color-emerald-950: #14011b;
+  --color-emerald-50: #fbf3fd;
+  --color-emerald-100: #f4dbfc;
+  --color-emerald-200: #e8bbf9;
+  --color-emerald-300: #d68ff3;
+  --color-emerald-400: #be5ce8;
+  --color-emerald-500: #70189F; /* brand purple */
+  --color-emerald-600: #601488;
+  --color-emerald-700: #500f72;
+  --color-emerald-800: #410b5c;
+  --color-emerald-850: #320846;
+  --color-emerald-900: #240533;
+  --color-emerald-950: #170221;
 
   --color-amber-50: #fdfaf4;
   --color-amber-100: #faf1df;

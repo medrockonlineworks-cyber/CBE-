@@ -23,9 +23,13 @@ import { PhoneSettingsService } from './services/phoneSettingsService';
 import Navigation, { TabType } from './components/Navigation';
 import OfflineBanner from './components/OfflineBanner';
 import PhoneRecentAppsModal, { AppViewId } from './components/PhoneRecentAppsModal';
+import SplashScreen from './components/SplashScreen';
 import { ChevronLeft } from 'lucide-react';
 
 export default function App() {
+  // Splash Screen initial state (exact #70189F launch screen)
+  const [showSplash, setShowSplash] = useState<boolean>(true);
+
   // Authentication & View Session States
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
     try {
@@ -583,6 +587,11 @@ export default function App() {
         id="app-main-canvas"
         className="w-full h-full h-[100dvh] max-h-[100dvh] bg-gray-50 relative flex flex-col overflow-hidden border-none shadow-none rounded-none"
       >
+        {/* Authentic CBE Initial Boot Splash Screen in exact #70189F */}
+        {showSplash && (
+          <SplashScreen onFinish={() => setShowSplash(false)} />
+        )}
+
         {/* Real-time Offline Warning Banner */}
         <OfflineBanner />
 

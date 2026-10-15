@@ -15,8 +15,8 @@ export const BASE_MANIFEST = {
   display: 'standalone',
   display_override: ['standalone', 'minimal-ui', 'fullscreen', 'browser'],
   orientation: 'portrait-primary',
-  theme_color: '#300642',
-  background_color: '#300642',
+  theme_color: '#70189F',
+  background_color: '#70189F',
   lang: 'en',
   dir: 'ltr',
   categories: ['finance', 'business', 'utilities'],
@@ -49,11 +49,7 @@ function createSplashScreenshotDataUrl(sourceUrl: string, width = 540, height = 
         }
 
         // Background Gradient (Deep Official CBE Purple)
-        const grad = ctx.createLinearGradient(0, 0, width, height);
-        grad.addColorStop(0, '#2a053b');
-        grad.addColorStop(0.5, '#1b0326');
-        grad.addColorStop(1, '#0c0112');
-        ctx.fillStyle = grad;
+        ctx.fillStyle = '#70189F';
         ctx.fillRect(0, 0, width, height);
 
         // Ambient Gold Glow
@@ -141,7 +137,7 @@ function createSizedIconDataUrl(sourceUrl: string, size: number, maskable = fals
 
         if (maskable) {
           // Maskable icons require a solid background filling the entire canvas
-          ctx.fillStyle = '#300642';
+          ctx.fillStyle = '#70189F';
           ctx.fillRect(0, 0, size, size);
 
           // Center image in the safe zone (80% diameter)
@@ -326,11 +322,11 @@ export async function updatePwaBranding(customLogoUrl?: string | null): Promise<
     // 5. Update theme-color and tile meta tags to official CBE purple
     let themeColorMeta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
     if (themeColorMeta) {
-      themeColorMeta.content = '#300642';
+      themeColorMeta.content = '#70189F';
     }
     let tileColorMeta = document.querySelector('meta[name="msapplication-TileColor"]') as HTMLMetaElement | null;
     if (tileColorMeta) {
-      tileColorMeta.content = '#300642';
+      tileColorMeta.content = '#70189F';
     }
     let tileImageMeta = document.querySelector('meta[name="msapplication-TileImage"]') as HTMLMetaElement | null;
     if (tileImageMeta) {
@@ -340,8 +336,8 @@ export async function updatePwaBranding(customLogoUrl?: string | null): Promise<
     // 6. Construct full dynamic manifest with active logo and splash screens
     const dynamicManifest = {
       ...BASE_MANIFEST,
-      background_color: '#300642',
-      theme_color: '#300642',
+      background_color: '#70189F',
+      theme_color: '#70189F',
       icons: [
         {
           src: `/pwa-192x192.png${versionParam}`,

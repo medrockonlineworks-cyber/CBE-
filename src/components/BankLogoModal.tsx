@@ -212,14 +212,14 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
         <div className="flex justify-between items-start pb-3 border-b border-gray-100">
           <div>
             <div className="flex items-center gap-1.5 text-[#deb356] font-bold text-xs">
-              <ShieldCheck className="w-4 h-4 text-[#68137e]" />
-              <span className="text-[#68137e]">Admin Branding Node</span>
+              <ShieldCheck className="w-4 h-4 text-[#70189F]" />
+              <span className="text-[#70189F]">Admin Branding Node</span>
             </div>
             <h3 className="text-lg font-extrabold text-gray-900 mt-0.5">
               {activeTab === 'logo' ? 'Manage Bank Logo Images' : 'Manage Web Receipt Stamps'}
             </h3>
             <p className="text-xs text-gray-500 mt-0.5">
-              Authorized access for <span className="font-semibold text-[#68137e] font-mono">{currentUser.email}</span>
+              Authorized access for <span className="font-semibold text-[#70189F] font-mono">{currentUser.email}</span>
             </p>
           </div>
           <button 
@@ -243,7 +243,7 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
                 : 'text-gray-500 hover:text-gray-900'
             }`}
           >
-            <ImageIcon className="w-4 h-4 text-[#68137e]" />
+            <ImageIcon className="w-4 h-4 text-[#70189F]" />
             <span>Bank Logo</span>
           </button>
           <button
@@ -268,7 +268,7 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs font-bold text-gray-700">
                 <span className="flex items-center gap-1.5">
-                  <Eye className="w-3.5 h-3.5 text-[#68137e]" />
+                  <Eye className="w-3.5 h-3.5 text-[#70189F]" />
                   Live Card Preview
                 </span>
                 <span className="text-[10px] text-gray-400 font-mono">Real-time sync</span>
@@ -312,16 +312,16 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
               <label className="block text-xs font-bold text-gray-800">
                 1. Upload Logo from Device (PNG, SVG, JPG, WebP)
               </label>
-              <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-[#68137e]/30 rounded-2xl bg-purple-50/40 hover:bg-purple-50 transition cursor-pointer group">
+              <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-[#70189F]/30 rounded-2xl bg-purple-50/40 hover:bg-purple-50 transition cursor-pointer group">
                 {isProcessingLogo ? (
                   <div className="flex flex-col items-center justify-center py-2">
-                    <Loader2 className="w-7 h-7 text-[#68137e] animate-spin mb-1" />
-                    <span className="text-xs font-bold text-[#68137e]">Optimizing &amp; Applying Image...</span>
+                    <Loader2 className="w-7 h-7 text-[#70189F] animate-spin mb-1" />
+                    <span className="text-xs font-bold text-[#70189F]">Optimizing &amp; Applying Image...</span>
                   </div>
                 ) : (
                   <>
-                    <Upload className="w-6 h-6 text-[#68137e] group-hover:scale-110 transition mb-1.5" />
-                    <span className="text-xs font-bold text-[#68137e]">Click or Tap to Browse Image</span>
+                    <Upload className="w-6 h-6 text-[#70189F] group-hover:scale-110 transition mb-1.5" />
+                    <span className="text-xs font-bold text-[#70189F]">Click or Tap to Browse Image</span>
                     <span className="text-[10px] text-gray-400 mt-0.5">Supports any resolution image (auto-optimized)</span>
                   </>
                 )}
@@ -350,13 +350,13 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
                     placeholder="https://example.com/logo.png" 
                     value={customLogoUrlInput}
                     onChange={(e) => setCustomLogoUrlInput(e.target.value)}
-                    className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-3 py-2 text-xs font-mono text-gray-800 focus:outline-none focus:border-[#68137e] focus:bg-white"
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-3 py-2 text-xs font-mono text-gray-800 focus:outline-none focus:border-[#70189F] focus:bg-white"
                   />
                 </div>
                 <button 
                   id="btn-apply-logo-url"
                   type="submit"
-                  className="bg-[#68137e] hover:bg-[#530d66] text-white px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer"
+                  className="bg-[#70189F] hover:bg-[#530d66] text-white px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer"
                 >
                   Apply
                 </button>

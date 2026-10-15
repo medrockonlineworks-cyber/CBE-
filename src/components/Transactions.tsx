@@ -812,7 +812,7 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
                     onClick={() => setFilterType('all')}
                     className={`flex-1 py-2 rounded-xl text-xs font-black transition flex items-center justify-center gap-1.5 cursor-pointer ${
                       filterType === 'all'
-                        ? 'bg-[#68137e] text-white shadow-md'
+                        ? 'bg-[#70189F] text-white shadow-md'
                         : 'text-gray-600 hover:bg-gray-50'
                     }`}
                   >
@@ -920,7 +920,7 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
                         onClick={() => setStatusFilter(st)}
                         className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-wide transition cursor-pointer flex-shrink-0 ${
                           statusFilter === st
-                            ? 'bg-[#68137e] text-white'
+                            ? 'bg-[#70189F] text-white'
                             : 'bg-gray-50 text-gray-500 hover:bg-gray-100'
                         }`}
                       >
@@ -971,8 +971,8 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-1.5 flex-wrap">
                                 {isRecentTop && (
-                                  <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-purple-100 text-[#68137e] border border-purple-200 flex items-center gap-1">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-[#68137e] animate-pulse" />
+                                  <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full bg-purple-100 text-[#70189F] border border-purple-200 flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-[#70189F] animate-pulse" />
                                     Recent
                                   </span>
                                 )}
@@ -1035,7 +1035,7 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
                     id="btn-initiate-transfer"
                     type="button"
                     onClick={() => setViewMode('transfer')}
-                    className="w-full bg-[#68137e] hover:bg-[#570f69] active:scale-[0.99] text-white p-3.5 rounded-2xl font-extrabold text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full bg-[#70189F] hover:bg-[#58117D] active:scale-[0.99] text-white p-3.5 rounded-2xl font-extrabold text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <Send className="w-4 h-4 text-amber-300" />
                     <span>Make New Transfer or Payment</span>
@@ -1046,7 +1046,7 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
               /* VIEW MODE: INDEPENDENT CBE TRANSFER */
               <div className="space-y-4">
                 {/* Horizontal segment selector tabs */}
-                <div className="flex bg-[#68137e] p-1.5 rounded-2xl border border-purple-300/20 gap-1 overflow-x-auto scrollbar-none shadow-md">
+                <div className="flex bg-[#70189F] p-1.5 rounded-2xl border border-purple-300/20 gap-1 overflow-x-auto scrollbar-none shadow-md">
                   {[
                     { id: 'send', label: 'Other Banks', icon: Send },
                     { id: 'transfer', label: 'CBE Transfer', icon: ArrowLeftRight },
@@ -1068,7 +1068,7 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
                         }}
                         className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${
                           isActive 
-                            ? 'bg-white text-[#68137e] shadow-md' 
+                            ? 'bg-white text-[#70189F] shadow-md' 
                             : 'text-purple-200 hover:text-white hover:bg-white/10'
                         }`}
                       >

@@ -169,7 +169,7 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
     <div id="cbe-dashboard-screen" className="max-w-md w-full h-full mx-auto bg-[#f6f7fb] relative font-sans flex flex-col overflow-hidden select-none">
       
       {/* 1. TOP CBE VIVID ROYAL PURPLE HEADER CONTAINER (STATIC / UNSCROLLABLE) */}
-      <header className="bg-[#68137e] text-white pt-5 pb-10 px-4 relative shadow-md flex-shrink-0 z-20 touch-none overscroll-none select-none">
+      <header className="bg-[#70189F] text-white pt-5 pb-10 px-4 relative shadow-md flex-shrink-0 z-20 touch-none overscroll-none select-none">
         
         {/* Top App Bar Row */}
         <div className="flex items-center justify-between gap-2">
@@ -314,10 +314,10 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
             onClick={() => setActiveModal('cashout')}
             className="flex flex-col items-center flex-1 group cursor-pointer"
           >
-            <div className="w-13 h-13 rounded-full bg-white border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex items-center justify-center text-[#68137e] transition group-hover:scale-105 group-active:scale-95">
+            <div className="w-13 h-13 rounded-full bg-white border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex items-center justify-center text-[#70189F] transition group-hover:scale-105 group-active:scale-95">
               <ArrowUpRight className="w-6 h-6 stroke-[2.5]" />
             </div>
-            <span className="text-[11px] font-extrabold text-[#68137e] mt-2 text-center leading-tight">
+            <span className="text-[11px] font-extrabold text-[#70189F] mt-2 text-center leading-tight">
               Cash Out
             </span>
           </button>
@@ -327,10 +327,10 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
             onClick={() => setActiveModal('ministatement')}
             className="flex flex-col items-center flex-1 group cursor-pointer"
           >
-            <div className="w-13 h-13 rounded-full bg-white border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex items-center justify-center text-[#68137e] transition group-hover:scale-105 group-active:scale-95">
-              <MiniStatementIcon size={24} color="#68137e" />
+            <div className="w-13 h-13 rounded-full bg-white border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex items-center justify-center text-[#70189F] transition group-hover:scale-105 group-active:scale-95">
+              <MiniStatementIcon size={24} color="#70189F" />
             </div>
-            <span className="text-[11px] font-extrabold text-[#68137e] mt-2 text-center leading-tight">
+            <span className="text-[11px] font-extrabold text-[#70189F] mt-2 text-center leading-tight">
               Mini Statement
             </span>
           </button>
@@ -340,10 +340,10 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
             onClick={() => setActiveModal('cards')}
             className="flex flex-col items-center flex-1 group cursor-pointer"
           >
-            <div className="w-13 h-13 rounded-full bg-white border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex items-center justify-center text-[#68137e] transition group-hover:scale-105 group-active:scale-95">
-              <CardsIcon size={24} color="#68137e" />
+            <div className="w-13 h-13 rounded-full bg-white border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex items-center justify-center text-[#70189F] transition group-hover:scale-105 group-active:scale-95">
+              <CardsIcon size={24} color="#70189F" />
             </div>
-            <span className="text-[11px] font-extrabold text-[#68137e] mt-2 text-center leading-tight">
+            <span className="text-[11px] font-extrabold text-[#70189F] mt-2 text-center leading-tight">
               Cards
             </span>
           </button>
@@ -353,10 +353,10 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
             onClick={() => setActiveModal('billshare')}
             className="flex flex-col items-center flex-1 group cursor-pointer"
           >
-            <div className="w-13 h-13 rounded-full bg-white border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex items-center justify-center text-[#68137e] transition group-hover:scale-105 group-active:scale-95">
-              <BillShareIcon size={24} color="#68137e" />
+            <div className="w-13 h-13 rounded-full bg-white border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex items-center justify-center text-[#70189F] transition group-hover:scale-105 group-active:scale-95">
+              <BillShareIcon size={24} color="#70189F" />
             </div>
-            <span className="text-[11px] font-extrabold text-[#68137e] mt-2 text-center leading-tight">
+            <span className="text-[11px] font-extrabold text-[#70189F] mt-2 text-center leading-tight">
               Bill Share
             </span>
           </button>
@@ -364,7 +364,7 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
           {/* Small Arrow Carousel Button */}
           <button 
             onClick={() => onNavigateToTab('transfer')}
-            className="w-7 h-7 mt-3 rounded-full bg-white border border-gray-200 shadow-xs flex items-center justify-center text-gray-400 hover:text-[#68137e] transition cursor-pointer"
+            className="w-7 h-7 mt-3 rounded-full bg-white border border-gray-200 shadow-xs flex items-center justify-center text-gray-400 hover:text-[#70189F] transition cursor-pointer"
             title="More actions"
           >
             <ChevronRight className="w-4 h-4 stroke-[2.5]" />
@@ -411,7 +411,7 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
             onClick={() => onNavigateToTab('transfer', 'airtime')}
             className="bg-white hover:bg-purple-50/30 p-4 rounded-2xl border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.03)] flex flex-col items-center justify-center text-center transition cursor-pointer active:scale-[0.98] py-5"
           >
-            <Phone className="w-7 h-7 text-[#68137e] fill-[#68137e]" />
+            <Phone className="w-7 h-7 text-[#70189F] fill-[#70189F]" />
             <h4 className="font-extrabold text-[14px] text-gray-900 mt-2">Airtime</h4>
           </button>
 
@@ -421,7 +421,7 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
             onClick={() => onNavigateToTab('transfer', 'send')}
             className="bg-white hover:bg-purple-50/30 p-4 rounded-2xl border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.03)] flex flex-col items-center justify-center text-center transition cursor-pointer active:scale-[0.98] py-5"
           >
-            <ArrowLeftRight className="w-7 h-7 text-[#68137e] stroke-[2.5]" />
+            <ArrowLeftRight className="w-7 h-7 text-[#70189F] stroke-[2.5]" />
             <h4 className="font-extrabold text-[14px] text-gray-900 mt-2">Other Transfers</h4>
           </button>
 
@@ -431,7 +431,7 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
             onClick={() => setActiveModal('cbebirr')}
             className="bg-white hover:bg-purple-50/30 p-4 rounded-2xl border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.03)] flex flex-col items-center justify-center text-center transition cursor-pointer active:scale-[0.98] py-5"
           >
-            <Wallet className="w-7 h-7 text-[#68137e] stroke-[2.5]" />
+            <Wallet className="w-7 h-7 text-[#70189F] stroke-[2.5]" />
             <h4 className="font-extrabold text-[14px] text-gray-900 mt-2">CBEBirr</h4>
           </button>
 
@@ -441,7 +441,7 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
             onClick={() => onNavigateToTab('payments')}
             className="bg-white hover:bg-purple-50/30 p-4 rounded-2xl border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.03)] flex flex-col items-center justify-center text-center transition cursor-pointer active:scale-[0.98] py-5"
           >
-            <ReceiptIcon className="w-7 h-7 text-[#68137e] stroke-[2.5]" />
+            <ReceiptIcon className="w-7 h-7 text-[#70189F] stroke-[2.5]" />
             <h4 className="font-extrabold text-[14px] text-gray-900 mt-2">Bills &amp; Utilities</h4>
           </button>
 
@@ -459,7 +459,7 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
           <div className="bg-white rounded-3xl max-w-xs w-full p-5 space-y-3 shadow-2xl">
             <div className="flex justify-between items-center pb-2 border-b border-gray-100">
               <h3 className="font-extrabold text-sm text-gray-900 flex items-center gap-2">
-                <Globe className="w-4 h-4 text-[#68137e]" />
+                <Globe className="w-4 h-4 text-[#70189F]" />
                 <span>Select Language</span>
               </h3>
               <button onClick={() => setShowLangModal(false)} className="text-gray-400 hover:text-gray-700">
@@ -481,7 +481,7 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
                     setShowLangModal(false);
                   }}
                   className={`w-full text-left px-3.5 py-2.5 rounded-xl font-bold text-xs flex justify-between items-center transition ${
-                    selectedLanguage === lang.code ? 'bg-[#68137e] text-white' : 'hover:bg-purple-50 text-gray-700'
+                    selectedLanguage === lang.code ? 'bg-[#70189F] text-white' : 'hover:bg-purple-50 text-gray-700'
                   }`}
                 >
                   <span>{lang.label}</span>
@@ -531,7 +531,7 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
                       <p className="text-xs font-bold text-gray-800">{tx.recipientName}</p>
                       <p className="text-[10px] text-gray-400 font-mono">{tx.id} • {new Date(tx.createdAt).toLocaleDateString()}</p>
                     </div>
-                    <span className="text-xs font-bold font-mono text-[#68137e]">
+                    <span className="text-xs font-bold font-mono text-[#70189F]">
                       ETB {tx.amount.toLocaleString()}
                     </span>
                   </button>
@@ -555,7 +555,7 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
           <div className="bg-white rounded-3xl max-w-sm w-full p-5 space-y-4 shadow-2xl">
             <div className="flex justify-between items-center pb-2 border-b border-gray-100">
               <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-[#68137e]" />
+                <FileText className="w-5 h-5 text-[#70189F]" />
                 <h3 className="font-extrabold text-sm text-gray-900">Mini Statement</h3>
               </div>
               <button onClick={() => setActiveModal(null)} className="text-gray-400 hover:text-gray-700">
@@ -566,11 +566,11 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
             <div className="bg-purple-50 p-3 rounded-2xl flex justify-between items-center text-xs">
               <div>
                 <p className="text-purple-700 font-medium">Account</p>
-                <p className="font-mono font-bold text-[#68137e]">{currentUser.accountNumber}</p>
+                <p className="font-mono font-bold text-[#70189F]">{currentUser.accountNumber}</p>
               </div>
               <div className="text-right">
                 <p className="text-purple-700 font-medium">Available Balance</p>
-                <p className="font-mono font-black text-[#68137e]">ETB {currentUser.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
+                <p className="font-mono font-black text-[#70189F]">ETB {currentUser.balance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
               </div>
             </div>
 
@@ -590,7 +590,7 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
                     <div>
                       <div className="flex items-center gap-1.5">
                         {index < 2 && (
-                          <span className="text-[8px] font-black uppercase px-1.5 py-0.2 rounded-full bg-purple-100 text-[#68137e] border border-purple-200">
+                          <span className="text-[8px] font-black uppercase px-1.5 py-0.2 rounded-full bg-purple-100 text-[#70189F] border border-purple-200">
                             Recent
                           </span>
                         )}
@@ -614,7 +614,7 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
                 setActiveModal(null);
                 onNavigateToTab('history');
               }}
-              className="w-full bg-[#68137e] text-white py-2.5 rounded-xl font-bold text-xs hover:bg-[#530d66] transition cursor-pointer"
+              className="w-full bg-[#70189F] text-white py-2.5 rounded-xl font-bold text-xs hover:bg-[#530d66] transition cursor-pointer"
             >
               View Full Statement History
             </button>
@@ -635,24 +635,24 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
 
             <div className="p-4 bg-purple-50/60 rounded-2xl flex flex-col items-center">
               <div className="bg-white p-3 rounded-2xl shadow-sm border border-purple-100">
-                <QrCode className="w-36 h-36 text-[#68137e]" />
+                <QrCode className="w-36 h-36 text-[#70189F]" />
               </div>
               <p className="font-extrabold text-sm text-gray-900 mt-3">{currentUser.name}</p>
-              <p className="text-xs font-mono font-bold text-[#68137e] mt-0.5">{currentUser.accountNumber}</p>
+              <p className="text-xs font-mono font-bold text-[#70189F] mt-0.5">{currentUser.accountNumber}</p>
               <span className="text-[10px] text-gray-500 mt-1 whitespace-nowrap">Commercial Bank of Ethiopia (CBE)</span>
             </div>
 
             <div className="flex gap-2">
               <button 
                 onClick={copyAccountNum}
-                className="flex-1 bg-purple-50 text-[#68137e] hover:bg-purple-100 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition"
+                className="flex-1 bg-purple-50 text-[#70189F] hover:bg-purple-100 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition"
               >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <CopyIcon size={16} color="#68137e" />}
+                {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <CopyIcon size={16} color="#70189F" />}
                 <span>{copied ? 'Copied' : 'Copy Account'}</span>
               </button>
               <button 
                 onClick={() => setActiveModal(null)}
-                className="flex-1 bg-[#68137e] text-white hover:bg-[#530d66] py-2.5 rounded-xl font-bold text-xs transition"
+                className="flex-1 bg-[#70189F] text-white hover:bg-[#530d66] py-2.5 rounded-xl font-bold text-xs transition"
               >
                 Done
               </button>
@@ -667,7 +667,7 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
           <div className="bg-white rounded-3xl max-w-sm w-full p-5 space-y-4 shadow-2xl">
             <div className="flex justify-between items-center pb-2 border-b border-gray-100">
               <h3 className="font-extrabold text-sm text-gray-900 flex items-center gap-2">
-                <ArrowUpRight className="w-5 h-5 text-[#68137e]" />
+                <ArrowUpRight className="w-5 h-5 text-[#70189F]" />
                 <span>Cash Out Options</span>
               </h3>
               <button onClick={() => setActiveModal(null)} className="text-gray-400 hover:text-gray-700">
@@ -683,7 +683,7 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
                 }}
                 className="w-full p-3.5 bg-gray-50 hover:bg-purple-50 rounded-2xl flex items-center gap-3 transition text-left border border-gray-100"
               >
-                <div className="w-10 h-10 rounded-xl bg-purple-100 text-[#68137e] flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-purple-100 text-[#70189F] flex items-center justify-center">
                   <Landmark className="w-5 h-5" />
                 </div>
                 <div>
@@ -699,7 +699,7 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
                 }}
                 className="w-full p-3.5 bg-gray-50 hover:bg-purple-50 rounded-2xl flex items-center gap-3 transition text-left border border-gray-100"
               >
-                <div className="w-10 h-10 rounded-xl bg-purple-100 text-[#68137e] flex items-center justify-center">
+                <div className="w-10 h-10 rounded-xl bg-purple-100 text-[#70189F] flex items-center justify-center">
                   <Building className="w-5 h-5" />
                 </div>
                 <div>
@@ -725,7 +725,7 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
           <div className="bg-white rounded-3xl max-w-sm w-full p-5 space-y-4 shadow-2xl">
             <div className="flex justify-between items-center pb-2 border-b border-gray-100">
               <h3 className="font-extrabold text-sm text-gray-900 flex items-center gap-2">
-                <CreditCard className="w-5 h-5 text-[#68137e]" />
+                <CreditCard className="w-5 h-5 text-[#70189F]" />
                 <span>My CBE Cards</span>
               </h3>
               <button onClick={() => setActiveModal(null)} className="text-gray-400 hover:text-gray-700">
@@ -753,7 +753,7 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
 
             <button 
               onClick={() => setActiveModal(null)}
-              className="w-full bg-[#68137e] text-white py-2.5 rounded-xl font-bold text-xs hover:bg-[#530d66]"
+              className="w-full bg-[#70189F] text-white py-2.5 rounded-xl font-bold text-xs hover:bg-[#530d66]"
             >
               Done
             </button>
@@ -786,7 +786,7 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
                 setActiveModal(null);
                 onNavigateToTab('transfer', 'send');
               }}
-              className="w-full bg-[#68137e] text-white py-2.5 rounded-xl font-bold text-xs hover:bg-[#530d66]"
+              className="w-full bg-[#70189F] text-white py-2.5 rounded-xl font-bold text-xs hover:bg-[#530d66]"
             >
               Continue to Transfer
             </button>
@@ -802,7 +802,7 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
             {/* Header */}
             <div className="flex justify-between items-center pb-3 border-b border-gray-100">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-[#68137e] flex items-center justify-center text-white shadow-xs">
+                <div className="w-8 h-8 rounded-xl bg-[#70189F] flex items-center justify-center text-white shadow-xs">
                   <div className="grid grid-cols-2 gap-1 p-0.5">
                     <div className="w-1.5 h-1.5 bg-white rounded-xs" />
                     <div className="w-1.5 h-1.5 bg-white rounded-xs" />
@@ -838,15 +838,15 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
                 className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-gray-50 hover:bg-purple-50/70 border border-gray-100 transition group cursor-pointer text-left"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-purple-100 text-[#68137e] flex items-center justify-center group-hover:scale-105 transition shadow-xs">
+                  <div className="w-10 h-10 rounded-xl bg-purple-100 text-[#70189F] flex items-center justify-center group-hover:scale-105 transition shadow-xs">
                     <Settings className="w-5 h-5" />
                   </div>
                   <div>
-                    <h4 className="text-xs font-bold text-gray-900 group-hover:text-[#68137e] transition">Settings &amp; Preferences</h4>
+                    <h4 className="text-xs font-bold text-gray-900 group-hover:text-[#70189F] transition">Settings &amp; Preferences</h4>
                     <p className="text-[11px] text-gray-500">Device security, language, theme &amp; branding</p>
                   </div>
                 </div>
-                <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-[#68137e] group-hover:translate-x-0.5 transition" />
+                <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-[#70189F] group-hover:translate-x-0.5 transition" />
               </button>
 
               {/* 2. Admin Council (Only for Administrators or Leykun) */}

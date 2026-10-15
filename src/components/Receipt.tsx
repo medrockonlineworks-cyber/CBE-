@@ -606,7 +606,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       onDoubleClick={handleScreenDoubleClick}
       onTouchStart={handleScreenTouchStart}
       onTouchEnd={handleScreenTouchEnd}
-      className="h-[100dvh] max-h-[100dvh] max-w-md mx-auto bg-[#68137e] text-slate-800 flex flex-col relative overflow-hidden select-none cursor-pointer"
+      className="h-[100dvh] max-h-[100dvh] max-w-md mx-auto bg-[#70189F] text-slate-800 flex flex-col relative overflow-hidden select-none cursor-pointer"
     >
       
       {/* Floating Home Back Button when in clean screenshot view mode (like Image 1) */}
@@ -658,15 +658,15 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         ref={receiptRef}
         id="cbe-full-receipt-capture-target"
         data-capturing={isCapturing ? "true" : "false"}
-        className={`w-full flex-1 flex flex-col justify-between bg-[#68137e] relative select-none ${isCapturing ? 'capturing-screenshot h-auto overflow-visible' : 'h-full overflow-hidden min-h-0'}`}
+        className={`w-full flex-1 flex flex-col justify-between bg-[#70189F] relative select-none ${isCapturing ? 'capturing-screenshot h-auto overflow-visible' : 'h-full overflow-hidden min-h-0'}`}
       >
         {/* 2. RECEIPT CONTENT CONTAINER (Edge-to-Edge like real CBE Mobile Banking) */}
         <div 
           id="cbe-existing-receipt"
-          className={`w-full flex-1 flex flex-col bg-[#68137e] relative select-none ${isCapturing ? 'h-auto overflow-visible' : 'h-full overflow-hidden min-h-0'}`}
+          className={`w-full flex-1 flex flex-col bg-[#70189F] relative select-none ${isCapturing ? 'h-auto overflow-visible' : 'h-full overflow-hidden min-h-0'}`}
         >
           {/* Top Purple Navigation / App Header: Exact authentic CBE Bank top design with increased vertical space above Thank You and to purple ending point */}
-          <div className="pt-[max(env(safe-area-inset-top,0px),48px)] sm:pt-[max(env(safe-area-inset-top,0px),54px)] pb-14 sm:pb-16 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0">
+          <div className="pt-[max(env(safe-area-inset-top,0px),48px)] sm:pt-[max(env(safe-area-inset-top,0px),54px)] pb-14 sm:pb-16 px-5 bg-[#70189F] flex items-center justify-between text-white flex-shrink-0">
             <div className="flex items-center gap-2.5">
               {/* Solid White Shield with Purple Checkmark Icon matching original reference */}
               <div className="w-8.5 h-8.5 flex-shrink-0 flex items-center justify-center">
@@ -677,7 +677,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                   />
                   <path 
                     d="M8.0 12.2L11.0 15.2L17.2 9.0" 
-                    stroke="#68137e" 
+                    stroke="#70189F" 
                     strokeWidth="1.9" 
                     strokeLinecap="butt" 
                     strokeLinejoin="miter" 
@@ -723,7 +723,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                     xmlns="http://www.w3.org/2000/svg"
                   >
                     {/* Purple Circle with crisp White Outer Ring */}
-                    <circle cx="45" cy="45" r="41.5" stroke="#ffffff" strokeWidth="6" fill="#68137e" />
+                    <circle cx="45" cy="45" r="41.5" stroke="#ffffff" strokeWidth="6" fill="#70189F" />
                     {/* Bold Crisp White Checkmark ("right icon") */}
                     <path
                       d="M 25.5 45.5 L 39.0 59.0 L 68.0 30.0"
@@ -935,7 +935,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       {/* 
         ========================================================================
         AUTHENTIC CBE RECEIPT SCREENSHOT EXPORT TARGET (EXACT MATCH TO IMAGE 1)
-        - Pure CBE purple top (#68137e) with white shield + "Thank you" / "Success" on left
+        - Pure CBE purple top (#70189F) with white shield + "Thank you" / "Success" on left
         - NO status bar, NO back arrow (<), NO viewfinder camera button
         - Main white sheet with rounded top ONLY (rounded-t-[36px], rounded-b-none)
         - Overlapping large purple checkmark badge with crisp white outer ring
@@ -962,9 +962,9 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         }}
         aria-hidden="true"
       >
-        <div className="w-full bg-[#68137e] text-slate-800 flex flex-col font-sans select-none">
+        <div className="w-full bg-[#70189F] text-slate-800 flex flex-col font-sans select-none">
           {/* Top Purple Header: Exact original top design matching live screen & IMG_20261011_115144_548.png */}
-          <div className="pt-12 sm:pt-14 pb-14 sm:pb-16 px-5 bg-[#68137e] flex items-center justify-between text-white flex-shrink-0">
+          <div className="pt-12 sm:pt-14 pb-14 sm:pb-16 px-5 bg-[#70189F] flex items-center justify-between text-white flex-shrink-0">
             <div className="flex items-center gap-2.5">
               {/* Solid White Shield with Purple Checkmark */}
               <div className="w-8.5 h-8.5 flex-shrink-0 flex items-center justify-center">
@@ -975,7 +975,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                   />
                   <path 
                     d="M8.0 12.2L11.0 15.2L17.2 9.0" 
-                    stroke="#68137e" 
+                    stroke="#70189F" 
                     strokeWidth="1.9" 
                     strokeLinecap="butt" 
                     strokeLinejoin="miter" 
@@ -1005,7 +1005,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                   xmlns="http://www.w3.org/2000/svg"
                 >
                   {/* Purple Circle with crisp White Outer Ring */}
-                  <circle cx="45" cy="45" r="41.5" stroke="#ffffff" strokeWidth="6" fill="#68137e" />
+                  <circle cx="45" cy="45" r="41.5" stroke="#ffffff" strokeWidth="6" fill="#70189F" />
                   {/* Bold Crisp White Checkmark */}
                   <path
                     d="M 25.5 45.5 L 39.0 59.0 L 68.0 30.0"

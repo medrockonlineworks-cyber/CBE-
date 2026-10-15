@@ -148,7 +148,7 @@ export const RegisteredAccountsModal: React.FC<RegisteredAccountsModalProps> = (
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
-        <div className="px-5 pt-4 pb-3 bg-gradient-to-r from-[#68137e] to-[#7f1899] text-white flex-shrink-0">
+        <div className="px-5 pt-4 pb-3 bg-gradient-to-r from-[#70189F] to-[#7f1899] text-white flex-shrink-0">
           <div className="w-12 h-1 bg-white/30 rounded-full mx-auto mb-3 sm:hidden" />
           
           <div className="flex items-center justify-between">
@@ -301,7 +301,7 @@ export const RegisteredAccountsModal: React.FC<RegisteredAccountsModalProps> = (
                   placeholder="e.g. Abebe Bikila"
                   value={regName}
                   onChange={(e) => setRegName(e.target.value)}
-                  className="w-full bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#68137e]"
+                  className="w-full bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#70189F]"
                   required
                 />
               </div>
@@ -317,7 +317,7 @@ export const RegisteredAccountsModal: React.FC<RegisteredAccountsModalProps> = (
                   placeholder="e.g. 1000123456789"
                   value={regAccount}
                   onChange={(e) => setRegAccount(e.target.value.replace(/\D/g, '').slice(0, 13))}
-                  className="w-full bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm font-mono font-bold text-gray-900 focus:outline-none focus:border-[#68137e]"
+                  className="w-full bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm font-mono font-bold text-gray-900 focus:outline-none focus:border-[#70189F]"
                   required
                 />
               </div>
@@ -329,7 +329,7 @@ export const RegisteredAccountsModal: React.FC<RegisteredAccountsModalProps> = (
                 <select
                   value={regBank}
                   onChange={(e) => setRegBank(e.target.value)}
-                  className="w-full bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#68137e]"
+                  className="w-full bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-gray-900 focus:outline-none focus:border-[#70189F]"
                 >
                   <option value="Commercial Bank of Ethiopia">Commercial Bank of Ethiopia (CBE)</option>
                   <option value="Dashen Bank">Dashen Bank</option>
@@ -349,7 +349,7 @@ export const RegisteredAccountsModal: React.FC<RegisteredAccountsModalProps> = (
                   placeholder="e.g. +251 91 123 4567"
                   value={regPhone}
                   onChange={(e) => setRegPhone(e.target.value)}
-                  className="w-full bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm font-medium text-gray-900 focus:outline-none focus:border-[#68137e]"
+                  className="w-full bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm font-medium text-gray-900 focus:outline-none focus:border-[#70189F]"
                 />
               </div>
 
@@ -363,7 +363,7 @@ export const RegisteredAccountsModal: React.FC<RegisteredAccountsModalProps> = (
                 </button>
                 <button
                   type="submit"
-                  className="flex-2 py-3 bg-[#68137e] hover:bg-[#570f69] active:scale-95 text-white font-extrabold rounded-xl text-xs transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md"
+                  className="flex-2 py-3 bg-[#70189F] hover:bg-[#58117D] active:scale-95 text-white font-extrabold rounded-xl text-xs transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md"
                 >
                   <UserPlus className="w-4 h-4" />
                   <span>Save &amp; Select Account</span>
@@ -392,7 +392,7 @@ export const RegisteredAccountsModal: React.FC<RegisteredAccountsModalProps> = (
                     onClick={() => handleAccountClick(account)}
                     className={`pt-2.5 first:pt-0 group p-3 rounded-2xl transition cursor-pointer flex items-center justify-between gap-3 border ${
                       isSelected
-                        ? 'bg-purple-50 border-[#68137e]/60 ring-2 ring-purple-600/20 shadow-xs'
+                        ? 'bg-purple-50 border-[#70189F]/60 ring-2 ring-purple-600/20 shadow-xs'
                         : 'bg-white hover:bg-purple-50/40 hover:border-purple-200 border-gray-100 shadow-2xs'
                     }`}
                   >
@@ -401,7 +401,7 @@ export const RegisteredAccountsModal: React.FC<RegisteredAccountsModalProps> = (
                       <div className="relative flex-shrink-0">
                         <div className={`w-11 h-11 rounded-2xl flex items-center justify-center font-extrabold text-sm tracking-tight ${
                           isCbe
-                            ? 'bg-purple-100 text-[#68137e] border border-purple-200/60'
+                            ? 'bg-purple-100 text-[#70189F] border border-purple-200/60'
                             : 'bg-emerald-100 text-emerald-800 border border-emerald-200/60'
                         }`}>
                           {isCbe ? initials : <Building className="w-5 h-5 text-emerald-700" />}
@@ -464,8 +464,8 @@ export const RegisteredAccountsModal: React.FC<RegisteredAccountsModalProps> = (
                         type="button"
                         className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1 ${
                           isSelected
-                            ? 'bg-[#68137e] text-white'
-                            : 'bg-purple-50 text-[#68137e] group-hover:bg-[#68137e] group-hover:text-white'
+                            ? 'bg-[#70189F] text-white'
+                            : 'bg-purple-50 text-[#70189F] group-hover:bg-[#70189F] group-hover:text-white'
                         }`}
                       >
                         <span>{isSelected ? 'Selected' : 'Choose'}</span>
@@ -487,7 +487,7 @@ export const RegisteredAccountsModal: React.FC<RegisteredAccountsModalProps> = (
                 <button
                   type="button"
                   onClick={() => setModalView('register')}
-                  className="mt-4 px-4 py-2 bg-[#68137e] text-white text-xs font-bold rounded-xl shadow-xs hover:bg-[#570f69] transition cursor-pointer"
+                  className="mt-4 px-4 py-2 bg-[#70189F] text-white text-xs font-bold rounded-xl shadow-xs hover:bg-[#58117D] transition cursor-pointer"
                 >
                   Register New Account
                 </button>
