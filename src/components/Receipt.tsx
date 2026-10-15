@@ -263,9 +263,55 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     }, 2200);
   };
 
-  const handleDoubleAction = () => {
-    onBack();
-  };
+  // Lock navigation to this receipt screen:
+  // Disables all iPhone / Android device back navigation gestures and history pops.
+  // There is NO way out of this screen except explicitly clicking the "Close" button!
+  useEffect(() => {
+    // Push a history state entry to trap device / browser back button
+    try {
+      window.history.pushState({ view: 'receipt', locked: true }, '', window.location.pathname);
+    } catch {}
+
+    const handlePopState = () => {
+      // If a sub-modal is open, dismiss it
+      if (showDetailedModal) {
+        setShowDetailedModal(false);
+      } else if (showScreenshotModal) {
+        setShowScreenshotModal(false);
+      }
+      // Re-push history entry to keep user firmly locked on this receipt page
+      try {
+        window.history.pushState({ view: 'receipt', locked: true }, '', window.location.pathname);
+      } catch {}
+    };
+
+    const handlePhoneBack = (e: any) => {
+      // Sub-modals can be dismissed
+      if (showDetailedModal) {
+        setShowDetailedModal(false);
+        e?.detail?.setHandled?.();
+        e?.preventDefault?.();
+        return;
+      }
+      if (showScreenshotModal) {
+        setShowScreenshotModal(false);
+        e?.detail?.setHandled?.();
+        e?.preventDefault?.();
+        return;
+      }
+      // On the receipt page itself, block all navigation!
+      // The user must explicitly tap the "Close" button.
+      e?.detail?.setHandled?.();
+      e?.preventDefault?.();
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('cbe_phone_back', handlePhoneBack);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('cbe_phone_back', handlePhoneBack);
+    };
+  }, [showDetailedModal, showScreenshotModal]);
 
   const handleScreenTouchStart = (e: React.TouchEvent) => {
     if (e.touches && e.touches[0]) {
@@ -283,22 +329,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     if (target.closest('button') || target.closest('a') || target.closest('input')) {
       return;
     }
-
-    // When in clean screenshot view mode (like Image 1), clicking anywhere navigates back to Home
     if (hideUiElements) {
-      onBack();
-      return;
-    }
-
-    const now = Date.now();
-    const timeDiff = now - lastTapRef.current.time;
-    const dist = Math.hypot(e.clientX - lastTapRef.current.x, e.clientY - lastTapRef.current.y);
-
-    if (timeDiff > 50 && timeDiff < 450 && dist < 50) {
-      handleDoubleAction();
-      lastTapRef.current = { time: 0, x: 0, y: 0 };
-    } else {
-      lastTapRef.current = { time: now, x: e.clientX, y: e.clientY };
+      toggleUiElements();
     }
   };
 
@@ -308,33 +340,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     if (target.closest('button') || target.closest('a') || target.closest('input')) {
       return;
     }
-    const touch = e.changedTouches[0];
-    if (!touch) return;
-
-    const deltaX = touch.clientX - touchStartXRef.current;
-    const deltaY = touch.clientY - touchStartYRef.current;
-
-    // Edge swipe back gesture (standard iOS back swipe)
-    if (touchStartXRef.current < 50 && deltaX > 60 && Math.abs(deltaY) < 60) {
-      onBack();
-      return;
-    }
-
-    // When in clean screenshot view mode (like Image 1), tapping anywhere navigates back to Home
     if (hideUiElements) {
-      onBack();
-      return;
-    }
-
-    const now = Date.now();
-    const timeDiff = now - lastTapRef.current.time;
-    const dist = Math.hypot(touch.clientX - lastTapRef.current.x, touch.clientY - lastTapRef.current.y);
-
-    if (timeDiff > 50 && timeDiff < 450 && dist < 65) {
-      handleDoubleAction();
-      lastTapRef.current = { time: 0, x: 0, y: 0 };
-    } else {
-      lastTapRef.current = { time: now, x: touch.clientX, y: touch.clientY };
+      toggleUiElements();
     }
   };
 
@@ -343,7 +350,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     if (target.closest('button') || target.closest('a') || target.closest('input')) {
       return;
     }
-    handleDoubleAction();
+    // No-op: double click will not exit the screen
   };
 
   useEffect(() => {
@@ -909,10 +916,10 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         <div data-html2canvas-ignore="true" data-screenshot-exclude="true" className="pt-4 pb-2 flex flex-col items-center justify-center shrink-0 bg-white">
           <button
             type="button"
-            onClick={onBack}
-            className="text-xs text-neutral-400 hover:text-neutral-700 transition flex items-center gap-1.5 py-1.5 px-4 rounded-full bg-neutral-100 hover:bg-neutral-200 cursor-pointer shadow-2xs active:scale-95"
+            onClick={toggleUiElements}
+            className="text-xs text-neutral-500 hover:text-neutral-800 transition flex items-center gap-1.5 py-1.5 px-4 rounded-full bg-neutral-100 hover:bg-neutral-200 cursor-pointer shadow-2xs active:scale-95 font-medium"
           >
-            <span>Tap anywhere to return to Home</span>
+            <span>Tap to show Close &amp; Action controls</span>
           </button>
         </div>
       )}

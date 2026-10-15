@@ -41,7 +41,7 @@ export const PHONE_PRESETS: Record<PhoneModelType, PhoneSettings> = {
     wifiBars: 4,
     soundMode: 'mute',
     showBluetooth: false,
-    navBarStyle: 'buttons',
+    navBarStyle: 'none',
   },
   samsung: {
     phoneModel: 'samsung',
@@ -57,7 +57,7 @@ export const PHONE_PRESETS: Record<PhoneModelType, PhoneSettings> = {
     wifiBars: 4,
     soundMode: 'normal',
     showBluetooth: true,
-    navBarStyle: 'gesture',
+    navBarStyle: 'none',
   },
   pixel: {
     phoneModel: 'pixel',
@@ -73,7 +73,7 @@ export const PHONE_PRESETS: Record<PhoneModelType, PhoneSettings> = {
     wifiBars: 4,
     soundMode: 'normal',
     showBluetooth: false,
-    navBarStyle: 'gesture',
+    navBarStyle: 'none',
   },
   iphone: {
     phoneModel: 'iphone',
@@ -89,7 +89,7 @@ export const PHONE_PRESETS: Record<PhoneModelType, PhoneSettings> = {
     wifiBars: 4,
     soundMode: 'normal',
     showBluetooth: false,
-    navBarStyle: 'gesture',
+    navBarStyle: 'none',
   },
   xiaomi: {
     phoneModel: 'xiaomi',
@@ -105,7 +105,7 @@ export const PHONE_PRESETS: Record<PhoneModelType, PhoneSettings> = {
     wifiBars: 4,
     soundMode: 'mute',
     showBluetooth: false,
-    navBarStyle: 'buttons',
+    navBarStyle: 'none',
   },
 };
 

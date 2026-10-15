@@ -152,11 +152,10 @@ export default function App() {
       return;
     }
 
-    // 2. If viewing a receipt, return to main CBE view on Home page
+    // 2. If viewing a receipt:
+    // Strictly prevent exiting! The receipt screen has no way out except explicitly clicking the "Close" button.
+    // iPhone and Android back navigation gestures/buttons are strictly disabled here.
     if (activeView === 'receipt') {
-      setActiveView('main');
-      setActiveTab('home');
-      setSelectedTransaction(null);
       return;
     }
 
@@ -198,6 +197,10 @@ export default function App() {
   }, [activeView, activeTab, returnTab, navigateTo]);
 
   const handlePhoneHome = useCallback(() => {
+    // On the receipt page, only the "Close" button can navigate away
+    if (activeView === 'receipt') {
+      return;
+    }
     window.dispatchEvent(new CustomEvent('cbe_phone_home'));
     if (activeView !== 'main') {
       navigateTo('main', 'home');
@@ -239,9 +242,11 @@ export default function App() {
         setActiveView('main');
         setActiveTab(returnTab || 'home');
       } else if (activeView === 'receipt') {
-        setActiveView('main');
-        setActiveTab('home');
-        setSelectedTransaction(null);
+        // Strictly prevent device back / popstate from exiting receipt page
+        try {
+          window.history.pushState({ view: 'receipt', locked: true }, '', window.location.pathname);
+        } catch {}
+        return;
       } else if (activeView === 'admin') {
         setActiveView('main');
         setActiveTab('profile');
@@ -285,6 +290,12 @@ export default function App() {
         // 2. Right-edge swipe towards left (Android gesture navigation right back)
         const isRightEdge = !isIPhone && startX >= (screenW - 40) && (startX - endX) > 45 && diffY < 50;
 
+        // On the receipt page, iPhone navigation system (swipe-to-back) is completely disabled:
+        // User requested: "Make sure in this page there is no way out either i click close button ok the iPhone navigation system will not work on this page"
+        if (activeView === 'receipt') {
+          return;
+        }
+
         if (isLeftEdge || isRightEdge) {
           handlePhoneBack();
         }
@@ -297,7 +308,7 @@ export default function App() {
       window.removeEventListener('touchstart', onTouchStart);
       window.removeEventListener('touchend', onTouchEnd);
     };
-  }, [handlePhoneBack, isIPhone]);
+  }, [handlePhoneBack, isIPhone, activeView]);
 
   // Try auto restoring session on mount
   useEffect(() => {
