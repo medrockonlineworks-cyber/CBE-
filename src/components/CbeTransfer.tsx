@@ -19,6 +19,7 @@ import {
 import { UserProfile, Transaction, BankAccount, RegisteredAccountInfo } from '../types';
 import { LocalDb } from '../lib/mockData';
 import { RegisteredAccountsModal } from './RegisteredAccountsModal';
+import { PhoneNavigationBar } from './PhoneNavigationBar';
 
 interface CbeTransferProps {
   currentUser: UserProfile;
@@ -751,6 +752,9 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
           </div>
         </div>
       )}
+
+      {/* Edge-to-Edge Navigation System: iOS Home Indicator (Image 1) or Android 3-Button (Image 2) */}
+      <PhoneNavigationBar onBack={onBack} onHome={onBack} theme="light" />
 
     </div>
   );

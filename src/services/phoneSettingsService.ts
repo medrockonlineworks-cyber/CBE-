@@ -41,7 +41,7 @@ export const PHONE_PRESETS: Record<PhoneModelType, PhoneSettings> = {
     wifiBars: 4,
     soundMode: 'mute',
     showBluetooth: false,
-    navBarStyle: 'none',
+    navBarStyle: 'buttons',
   },
   samsung: {
     phoneModel: 'samsung',
@@ -57,7 +57,7 @@ export const PHONE_PRESETS: Record<PhoneModelType, PhoneSettings> = {
     wifiBars: 4,
     soundMode: 'normal',
     showBluetooth: true,
-    navBarStyle: 'none',
+    navBarStyle: 'buttons',
   },
   pixel: {
     phoneModel: 'pixel',
@@ -73,7 +73,7 @@ export const PHONE_PRESETS: Record<PhoneModelType, PhoneSettings> = {
     wifiBars: 4,
     soundMode: 'normal',
     showBluetooth: false,
-    navBarStyle: 'none',
+    navBarStyle: 'buttons',
   },
   iphone: {
     phoneModel: 'iphone',
@@ -89,7 +89,7 @@ export const PHONE_PRESETS: Record<PhoneModelType, PhoneSettings> = {
     wifiBars: 4,
     soundMode: 'normal',
     showBluetooth: false,
-    navBarStyle: 'none',
+    navBarStyle: 'gesture',
   },
   xiaomi: {
     phoneModel: 'xiaomi',
@@ -105,7 +105,7 @@ export const PHONE_PRESETS: Record<PhoneModelType, PhoneSettings> = {
     wifiBars: 4,
     soundMode: 'mute',
     showBluetooth: false,
-    navBarStyle: 'none',
+    navBarStyle: 'buttons',
   },
 };
 
@@ -138,9 +138,15 @@ export class PhoneSettingsService {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
+        const resolvedModel = parsed.phoneModel || defaultPreset.phoneModel;
+        const resolvedNavBar = parsed.navBarStyle && parsed.navBarStyle !== 'none'
+          ? parsed.navBarStyle
+          : (resolvedModel === 'iphone' ? 'gesture' : 'buttons');
+
         this.cachedSettings = {
           ...defaultPreset,
           ...parsed,
+          navBarStyle: resolvedNavBar,
         };
         return { ...this.cachedSettings };
       }
