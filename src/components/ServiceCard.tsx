@@ -31,7 +31,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
         {/* Icon container */}
         <div 
           className={`w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-105 ${
-            iconBgColor || 'bg-transparent text-[#6b1284]'
+            iconBgColor || 'bg-transparent text-[#70189F]'
           }`}
         >
           {icon}
@@ -39,7 +39,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
 
         {/* Text Details */}
         <div className="min-w-0 flex-1 overflow-hidden">
-          <h3 className="text-xs sm:text-[13px] font-bold text-[#6b1284] leading-tight truncate">
+          <h3 className="text-xs sm:text-[13px] font-bold text-[#70189F] leading-tight truncate">
             {title}
           </h3>
           {subtitle && (
@@ -61,14 +61,14 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
       {/* Icon container */}
       <div 
         className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 transition-transform group-hover:scale-105 ${
-          iconBgColor || 'bg-transparent text-[#6b1284]'
+          iconBgColor || 'bg-transparent text-[#70189F]'
         }`}
       >
         {icon}
       </div>
 
       {/* Main Title */}
-      <h3 className="text-xs sm:text-[13px] font-bold text-[#6b1284] leading-tight">
+      <h3 className="text-xs sm:text-[13px] font-bold text-[#70189F] leading-tight">
         {title}
       </h3>
 

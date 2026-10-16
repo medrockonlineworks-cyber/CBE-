@@ -16,7 +16,7 @@ export const QRButton: React.FC<QRButtonProps> = ({
         type="button"
         aria-label="Scan QR Code"
         onClick={onClick}
-        className="bg-[#6b1284] hover:bg-[#5a0e70] active:scale-95 text-white px-5 py-2 rounded-full flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(107,18,132,0.4)] transition-all cursor-pointer border border-purple-300/20"
+        className="bg-[#70189F] hover:bg-[#5a1280] active:scale-95 text-white px-5 py-2 rounded-full flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(107,18,132,0.4)] transition-all cursor-pointer border border-purple-300/20"
       >
         {/* Left Viewfinder bracket with center dot */}
         <svg 

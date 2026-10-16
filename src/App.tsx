@@ -502,7 +502,7 @@ export default function App() {
   };
 
   return (
-    <div id="app-root-wrapper" className="h-[100dvh] max-h-[100dvh] w-full bg-gray-50 flex flex-col p-0 m-0 font-sans overflow-hidden antialiased select-none relative">
+    <div id="app-root-wrapper" className="h-full min-h-full w-full bg-white flex flex-col p-0 m-0 font-sans overflow-hidden antialiased select-none relative">
       
       {/* Quick App Switcher Dock: Floating unobtrusively in top-right corner on wide screens */}
       <nav aria-label="Apps Switcher" className="hidden md:flex fixed top-2 right-3 items-center gap-1.5 px-2.5 py-1 bg-slate-900/80 hover:bg-slate-900 border border-slate-700/60 rounded-full shadow-lg z-50 backdrop-blur-md transition-all">
@@ -585,7 +585,7 @@ export default function App() {
       {/* Main Responsive Edge-to-Edge Canvas */}
       <div 
         id="app-main-canvas"
-        className="w-full h-full h-[100dvh] max-h-[100dvh] bg-gray-50 relative flex flex-col overflow-hidden border-none shadow-none rounded-none"
+        className="w-full h-full min-h-full bg-white relative flex flex-col overflow-hidden border-none shadow-none rounded-none"
       >
         {/* Authentic CBE Initial Boot Splash Screen in exact #70189F */}
         {showSplash && (

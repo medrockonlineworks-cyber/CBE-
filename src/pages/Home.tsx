@@ -1314,7 +1314,7 @@ export const Home: React.FC<HomeProps> = ({
                   <div>
                     <p className="text-xs font-bold text-gray-900">{item.title}</p>
                     <p className="text-[10px] text-gray-500 mt-0.5">{item.recipient}</p>
-                    <span className="text-[9px] bg-purple-100 text-[#6b1284] font-extrabold px-1.5 py-0.5 rounded-md mt-1 inline-block">
+                    <span className="text-[9px] bg-purple-100 text-[#70189F] font-extrabold px-1.5 py-0.5 rounded-md mt-1 inline-block">
                       {item.freq}
                     </span>
                   </div>

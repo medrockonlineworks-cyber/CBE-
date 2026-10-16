@@ -52,7 +52,7 @@ const config: CapacitorConfig = {
     cleartext: false
   },
   android: {
-    backgroundColor: '#0f172a',
+    backgroundColor: '#ffffff',
     webContentsDebuggingEnabled: false
   },
   plugins: {
@@ -72,8 +72,8 @@ const config: CapacitorConfig = {
       overlaysWebView: true
     },
     NavigationBar: {
-      color: '#0f172a',
-      darkButtons: false
+      color: '#ffffff',
+      darkButtons: true
     },
     Keyboard: {
       resize: 'body',

@@ -116,7 +116,7 @@ export const ServiceGrid: React.FC<ServiceGridProps> = ({
           id="banking"
           title="Banking"
           layout="vertical"
-          icon={<Building2 className="w-6 h-6 text-[#6b1284] fill-[#6b1284]/15 stroke-[2.2]" />}
+          icon={<Building2 className="w-6 h-6 text-[#70189F] fill-[#70189F]/15 stroke-[2.2]" />}
           onClick={() => onServiceSelect?.('banking')}
         />
 
@@ -125,7 +125,7 @@ export const ServiceGrid: React.FC<ServiceGridProps> = ({
           id="government-services"
           title="Government Services"
           layout="vertical"
-          icon={<ShieldCheck className="w-6 h-6 text-[#6b1284] stroke-[2.2]" />}
+          icon={<ShieldCheck className="w-6 h-6 text-[#70189F] stroke-[2.2]" />}
           onClick={() => onServiceSelect?.('government-services')}
         />
 
@@ -134,7 +134,7 @@ export const ServiceGrid: React.FC<ServiceGridProps> = ({
           id="pay-merchant"
           title="Pay to Merchant"
           layout="vertical"
-          icon={<Store className="w-6 h-6 text-[#6b1284] fill-[#6b1284]/15 stroke-[2.2]" />}
+          icon={<Store className="w-6 h-6 text-[#70189F] fill-[#70189F]/15 stroke-[2.2]" />}
           onClick={() => onServiceSelect?.('pay-merchant')}
         />
 
@@ -143,7 +143,7 @@ export const ServiceGrid: React.FC<ServiceGridProps> = ({
           id="travel"
           title="Travel"
           layout="vertical"
-          icon={<Plane className="w-6 h-6 text-[#6b1284] stroke-[2.2]" />}
+          icon={<Plane className="w-6 h-6 text-[#70189F] stroke-[2.2]" />}
           onClick={() => onServiceSelect?.('travel')}
         />
 
@@ -152,7 +152,7 @@ export const ServiceGrid: React.FC<ServiceGridProps> = ({
           id="shopping"
           title="Shopping"
           layout="vertical"
-          icon={<ShoppingBag className="w-6 h-6 text-[#6b1284] fill-[#6b1284]/15 stroke-[2.2]" />}
+          icon={<ShoppingBag className="w-6 h-6 text-[#70189F] fill-[#70189F]/15 stroke-[2.2]" />}
           onClick={() => onServiceSelect?.('shopping')}
         />
 
@@ -161,7 +161,7 @@ export const ServiceGrid: React.FC<ServiceGridProps> = ({
           id="entertainment"
           title="Entertainment"
           layout="vertical"
-          icon={<Film className="w-6 h-6 text-[#6b1284] fill-[#6b1284]/15 stroke-[2.2]" />}
+          icon={<Film className="w-6 h-6 text-[#70189F] fill-[#70189F]/15 stroke-[2.2]" />}
           onClick={() => onServiceSelect?.('entertainment')}
         />
 
@@ -170,7 +170,7 @@ export const ServiceGrid: React.FC<ServiceGridProps> = ({
           id="tax-payment"
           title="Tax Payment"
           layout="vertical"
-          icon={<FileSpreadsheet className="w-6 h-6 text-[#6b1284] stroke-[2.2]" />}
+          icon={<FileSpreadsheet className="w-6 h-6 text-[#70189F] stroke-[2.2]" />}
           onClick={() => onServiceSelect?.('tax-payment')}
         />
 
