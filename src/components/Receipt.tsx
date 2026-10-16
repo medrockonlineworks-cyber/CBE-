@@ -267,10 +267,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   // Disables all iPhone / Android device back navigation gestures and history pops.
   // There is NO way out of this screen except explicitly clicking the "Close" button!
   useEffect(() => {
-    // Fill history entries with receipt states so Safari has no previous page to reveal
+    // Push a history state entry to trap device / browser back button
     try {
-      window.history.replaceState({ view: 'receipt', locked: true }, '', window.location.pathname);
-      window.history.pushState({ view: 'receipt', locked: true }, '', window.location.pathname);
       window.history.pushState({ view: 'receipt', locked: true }, '', window.location.pathname);
     } catch {}
 
@@ -307,56 +305,11 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       e?.preventDefault?.();
     };
 
-    // Strictly intercept and cancel any iPhone Safari horizontal swipe (swap left / right)
-    // or edge swipe before Safari's interactive navigation transition can start
-    let startTouchX = 0;
-    let startTouchY = 0;
-
-    const onCaptureTouchStart = (e: TouchEvent) => {
-      if (e.touches && e.touches[0]) {
-        startTouchX = e.touches[0].clientX;
-        startTouchY = e.touches[0].clientY;
-
-        // If touch starts within 80px of either edge, preventDefault blocks Safari's edge-drag gesture
-        if (startTouchX <= 80 || startTouchX >= (window.innerWidth - 80)) {
-          if (e.cancelable) {
-            e.preventDefault();
-          }
-        }
-      }
-    };
-
-    const onCaptureTouchMove = (e: TouchEvent) => {
-      if (e.touches && e.touches[0]) {
-        const curX = e.touches[0].clientX;
-        const curY = e.touches[0].clientY;
-        const diffX = Math.abs(curX - startTouchX);
-        const diffY = Math.abs(curY - startTouchY);
-
-        // User requested: "Still in recpit is can swap in left and right make sure you block iPhone navigation system in this page. It musr be no swap left and right ok only way out is click close button"
-        // Block ANY horizontal swipe/swap left and right!
-        if (diffX > diffY || startTouchX <= 80 || startTouchX >= (window.innerWidth - 80)) {
-          if (e.cancelable) {
-            e.preventDefault();
-          }
-        }
-      }
-    };
-
     window.addEventListener('popstate', handlePopState);
     window.addEventListener('cbe_phone_back', handlePhoneBack);
-    window.addEventListener('touchstart', onCaptureTouchStart, { capture: true, passive: false });
-    window.addEventListener('touchmove', onCaptureTouchMove, { capture: true, passive: false });
-    document.addEventListener('touchstart', onCaptureTouchStart, { capture: true, passive: false });
-    document.addEventListener('touchmove', onCaptureTouchMove, { capture: true, passive: false });
-
     return () => {
       window.removeEventListener('popstate', handlePopState);
       window.removeEventListener('cbe_phone_back', handlePhoneBack);
-      window.removeEventListener('touchstart', onCaptureTouchStart, { capture: true });
-      window.removeEventListener('touchmove', onCaptureTouchMove, { capture: true });
-      document.removeEventListener('touchstart', onCaptureTouchStart, { capture: true });
-      document.removeEventListener('touchmove', onCaptureTouchMove, { capture: true });
     };
   }, [showDetailedModal, showScreenshotModal]);
 
@@ -474,7 +427,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   const formattedBal = senderBalanceNum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   // Dynamic realistic CBE Transaction ID: 12 characters exactly (e.g. FT263211VK07)
-  const txId = formatTo12CharTxId(transaction.id);
+  const txId = formatTo12CharTxId(transaction.id || transaction.reference);
 
   const receiptUrl = `https://mbreceipt.cbe.com.et/v2-${txId}`;
   const feedbackUrl = 'https://forms.gle/kGNGQpG3mQCCk3iD6';
@@ -653,33 +606,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       onDoubleClick={handleScreenDoubleClick}
       onTouchStart={handleScreenTouchStart}
       onTouchEnd={handleScreenTouchEnd}
-      style={{
-        touchAction: 'pan-y',
-        overscrollBehavior: 'none',
-        overscrollBehaviorX: 'none',
-        WebkitOverscrollBehaviorX: 'none' as any,
-      }}
       className="h-[100dvh] max-h-[100dvh] max-w-md mx-auto bg-[#70189F] text-slate-800 flex flex-col relative overflow-hidden select-none cursor-pointer"
     >
-      {/* Invisible Edge Guard Rails: Absorb and cancel iOS Safari edge navigation gestures */}
-      <div 
-        aria-hidden="true"
-        data-html2canvas-ignore="true"
-        className="fixed left-0 top-0 bottom-0 w-8 z-[9999] pointer-events-auto touch-none select-none bg-transparent"
-        onTouchStart={(e) => { if (e.cancelable) e.preventDefault(); e.stopPropagation(); }}
-        onTouchMove={(e) => { if (e.cancelable) e.preventDefault(); e.stopPropagation(); }}
-        onTouchEnd={(e) => { if (e.cancelable) e.preventDefault(); e.stopPropagation(); }}
-        style={{ touchAction: 'none' }}
-      />
-      <div 
-        aria-hidden="true"
-        data-html2canvas-ignore="true"
-        className="fixed right-0 top-0 bottom-0 w-8 z-[9999] pointer-events-auto touch-none select-none bg-transparent"
-        onTouchStart={(e) => { if (e.cancelable) e.preventDefault(); e.stopPropagation(); }}
-        onTouchMove={(e) => { if (e.cancelable) e.preventDefault(); e.stopPropagation(); }}
-        onTouchEnd={(e) => { if (e.cancelable) e.preventDefault(); e.stopPropagation(); }}
-        style={{ touchAction: 'none' }}
-      />
       
       {/* Floating Home Back Button when in clean screenshot view mode (like Image 1) */}
       {hideUiElements && (
@@ -998,7 +926,11 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       {/* Official CBE Customer Receipt Web Page when User Clicks 'Receipt' */}
       {showDetailedModal && (
         <CbeWebReceiptModal 
-          transaction={transaction}
+          transaction={{
+            ...transaction,
+            id: txId,
+            reference: txId
+          }}
           initialQrCode={customQrCode || txQrSvgDataUri || qrDataUrl}
           onClose={() => setShowDetailedModal(false)} 
         />

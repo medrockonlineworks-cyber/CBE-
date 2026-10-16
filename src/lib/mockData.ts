@@ -1470,11 +1470,14 @@ export class LocalDb {
     } else {
       txs = loadData<Transaction[]>('tana_transactions', INITIAL_TRANSACTIONS);
     }
-    return txs
-      .map(t => ({
-        ...t,
-        id: formatTo12CharTxId(t.id)
-      }))
+    return txs.map(t => {
+        const standardId = formatTo12CharTxId(t.id || t.reference);
+        return {
+          ...t,
+          id: standardId,
+          reference: standardId
+        };
+      })
       .sort((a, b) => {
         const timeA = new Date(a.createdAt).getTime();
         const timeB = new Date(b.createdAt).getTime();
@@ -1803,7 +1806,7 @@ export class LocalDb {
       totalDebited: amount,
       description: remark?.trim() || `Internal transfer: ${fromAcc.accountName} ➔ ${toAcc.accountName}`,
       status: 'success',
-      reference: 'REF-' + generateId(),
+      reference: cbeTxId,
       createdAt: new Date().toISOString()
     };
 
@@ -2144,7 +2147,7 @@ export class LocalDb {
       totalDebited: totalCost,
       description: description || 'Mobile Banking Transfer',
       status: 'success',
-      reference: 'REF-' + generateId(),
+      reference: cbeTxId,
       createdAt: new Date().toISOString()
     };
 
