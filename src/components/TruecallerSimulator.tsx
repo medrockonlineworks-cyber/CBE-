@@ -84,6 +84,7 @@ import {
   BANK_PRESETS, 
   maskTruecallerAccount, 
   formatCurrentTimeString,
+  formatTimeFromIso,
   getDefaultBackgroundApp
 } from '../services/truecallerService';
 import { LocalDb } from '../lib/mockData';
@@ -869,11 +870,22 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
       allItems = allItems.filter(item => item.amount > 0);
     }
 
-    return allItems.map((item) => ({
-      ...item,
-      simSlot: selectedSimSlot || item.simSlot || 2,
-      isNow: false
-    }));
+    // Format timeString so only the most recent transaction shows 'Now' (if within recent window)
+    // and older messages strictly display their formatted time (e.g. 12:54 PM) never 'Now'
+    const totalCount = allItems.length;
+    return allItems.map((item, idx) => {
+      const isNewestItem = idx === totalCount - 1;
+      let displayTime = item.timeString;
+      if (!isNewestItem && (displayTime === 'Now' || displayTime?.toLowerCase?.().includes('now'))) {
+        displayTime = formatTimeFromIso(item.timestamp);
+      }
+      return {
+        ...item,
+        timeString: displayTime,
+        simSlot: selectedSimSlot || item.simSlot || 2,
+        isNow: isNewestItem && (item.timeString === 'Now' || item.timeString?.toLowerCase?.().includes('now'))
+      };
+    });
   }, [activeBankKey, alerts, activeAccount, inboxFilterMode, selectedSimSlot]);
 
   // Click on a thread in Google Messages Inbox

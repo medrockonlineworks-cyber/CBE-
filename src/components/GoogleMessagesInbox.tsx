@@ -257,43 +257,7 @@ export default function GoogleMessagesInbox({
         </button>
       </div>
 
-      {/* 📱 Android System Virtual Navigation Bar */}
-      <div className={`w-full py-2.5 px-10 flex items-center justify-between border-t ${
-        isDarkMode ? 'bg-[#121316] border-neutral-900 text-neutral-400' : 'bg-[#f8f9fa] border-neutral-200 text-neutral-600'
-      }`}>
-        {/* Recents (3 vertical lines) */}
-        <button 
-          onClick={onBackToApp} 
-          className="p-2 opacity-70 hover:opacity-100 transition-opacity" 
-          title="Back to Banking App"
-        >
-          <div className="flex items-center space-x-1">
-            <span className="w-0.5 h-3.5 bg-current rounded-full"></span>
-            <span className="w-0.5 h-3.5 bg-current rounded-full"></span>
-            <span className="w-0.5 h-3.5 bg-current rounded-full"></span>
-          </div>
-        </button>
 
-        {/* Home (Circle) */}
-        <button 
-          onClick={onBackToApp} 
-          className="p-2 opacity-70 hover:opacity-100 transition-opacity"
-          title="Home"
-        >
-          <div className="w-3.5 h-3.5 rounded-full border-2 border-current"></div>
-        </button>
-
-        {/* Back (Curved Arrow / Chevron) */}
-        <button 
-          onClick={onBackToApp} 
-          className="p-2 opacity-70 hover:opacity-100 transition-opacity"
-          title="Back to App"
-        >
-          <svg className="w-4 h-4 fill-none stroke-current stroke-2" viewBox="0 0 24 24">
-            <path d="M15 19l-7-7 7-7"/>
-          </svg>
-        </button>
-      </div>
 
       {/* 👤 Google Account Profile Modal (Clicked on Avatar "L") */}
       {showProfileModal && (

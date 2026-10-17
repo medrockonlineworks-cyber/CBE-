@@ -40,36 +40,7 @@ export const AppleMessagesInbox: React.FC<AppleMessagesInboxProps> = ({
 
   return (
     <div className="h-full min-h-[100dvh] flex flex-col font-sans select-none bg-black text-white relative">
-      {/* 1. iOS Top Status Bar (Matching IMG_0091.png with Green Call Pill & Signal/Battery) */}
-      <div className="pt-2 px-6 pb-1 flex items-center justify-between text-white text-xs select-none z-20">
-        {/* Left: Green call active pill with time */}
-        <div className="bg-[#34c759] text-white px-2.5 py-0.5 rounded-full font-bold text-[13px] tracking-tight shadow-xs flex items-center">
-          {phoneSettings.timeString || '10:56'}
-        </div>
 
-        {/* Right: LTE, 4 Signal Bars, Battery 53 */}
-        <div className="flex items-center gap-1.5 text-white">
-          {/* Signal Bars */}
-          <div className="flex items-end gap-[1.5px] h-3">
-            <div className="w-[3px] h-1.5 bg-white rounded-[0.5px]" />
-            <div className="w-[3px] h-2 bg-white rounded-[0.5px]" />
-            <div className="w-[3px] h-2.5 bg-white rounded-[0.5px]" />
-            <div className="w-[3px] h-3 bg-white rounded-[0.5px]" />
-          </div>
-
-          <span className="text-[11px] font-semibold tracking-tight ml-0.5">LTE</span>
-
-          {/* iOS Battery with Number 53 */}
-          <div className="flex items-center ml-0.5">
-            <div className="h-3 w-5 rounded-[3px] border border-white/80 p-[1px] flex items-center justify-center bg-black/40">
-              <span className="text-[9px] font-extrabold leading-none text-white">
-                {phoneSettings.batteryPercent ?? 53}
-              </span>
-            </div>
-            <div className="w-[1.5px] h-1 bg-white/80 rounded-r-[0.5px]" />
-          </div>
-        </div>
-      </div>
 
       {/* 2. Top Navigation Bar (Edit pill button on left, Filter icon button with unread count on right) */}
       <div className="px-4 pt-2 pb-1 flex items-center justify-between">

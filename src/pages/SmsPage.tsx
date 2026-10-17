@@ -107,7 +107,7 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
   const [customAccInput, setCustomAccInput] = useState('');
   const [customNameInput, setCustomNameInput] = useState('');
   const [showScrollBottom, setShowScrollBottom] = useState(false);
-  const [recentFirst, setRecentFirst] = useState(false);
+  const [recentFirst, setRecentFirst] = useState(true);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -838,41 +838,7 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
         </div>
       </footer>
 
-      {/* 5. Android Navigation Soft-Keys Bar (Back, Home, Recents) */}
-      <div className={`w-full ${
-        isDarkMode ? 'bg-[#121212] border-neutral-900' : 'bg-[#f4f5f7] border-neutral-200'
-      } py-2 px-8 flex items-center justify-around select-none border-t`}>
-        {/* Recents Icon -> Back to Messages Inbox */}
-        <button 
-          onClick={() => {
-            refreshThreads();
-            setPageView('inbox');
-          }}
-          className={`p-2 ${isDarkMode ? 'text-neutral-500 hover:text-neutral-300' : 'text-neutral-400 hover:text-neutral-600'} active:scale-90 transition-transform`}
-          title="Overview"
-        >
-          <div className={`w-3.5 h-3.5 border-2 ${isDarkMode ? 'border-neutral-500' : 'border-neutral-400'} rounded-sm`}></div>
-        </button>
-        {/* Home Icon -> Back to Banking App */}
-        <button 
-          onClick={onBack}
-          className={`p-2 ${isDarkMode ? 'text-neutral-500 hover:text-neutral-300' : 'text-neutral-400 hover:text-neutral-600'} active:scale-90 transition-transform`}
-          title="Home"
-        >
-          <div className={`w-3.5 h-3.5 border-2 ${isDarkMode ? 'border-neutral-500' : 'border-neutral-400'} rounded-full`}></div>
-        </button>
-        {/* Back Icon -> Back to Messages Inbox */}
-        <button 
-          onClick={() => {
-            refreshThreads();
-            setPageView('inbox');
-          }}
-          className={`p-2 ${isDarkMode ? 'text-neutral-500 hover:text-neutral-300' : 'text-neutral-400 hover:text-neutral-600'} active:scale-90 transition-transform`}
-          title="Back"
-        >
-          <div className={`w-0 h-0 border-y-[6px] border-y-transparent border-r-[10px] ${isDarkMode ? 'border-r-neutral-500' : 'border-r-neutral-400'}`}></div>
-        </button>
-      </div>
+
 
       {/* 6. Switch / Add Account Modal (from 3-Dot menu) */}
       {showAccountModal && (
