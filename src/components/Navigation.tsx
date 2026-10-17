@@ -5,7 +5,6 @@ import {
   BottomNavSettingsIcon 
 } from './CbeCustomIcons';
 import { UserProfile } from '../types';
-import { PhoneNavigationBar } from './PhoneNavigationBar';
 
 export type TabType = 'home' | 'transfer' | 'payments' | 'history' | 'profile';
 
@@ -31,7 +30,7 @@ export default function Navigation({
   const shouldRenderScanQr = showScanQr && isHomeActive;
 
   return (
-    <div className="w-full relative z-40 select-none shrink-0 bg-white border-t border-gray-100">
+    <div className="w-full relative z-40 select-none shrink-0">
       
       {/* 1. Floating Center "Scan QR" Pill Button (Snug above bottom bar matching Image 2) */}
       {shouldRenderScanQr && (
@@ -49,7 +48,7 @@ export default function Navigation({
             }}
             className="bg-[#70189F] hover:bg-[#5a1280] active:scale-95 text-white h-[28px] sm:h-[30px] px-3 rounded-full flex items-center justify-center gap-1.5 shadow-[0_3px_12px_rgba(112,24,159,0.35)] transition-all cursor-pointer border border-white/20 select-none group"
           >
-            {/* Left Corner Scanner Brackets */}
+            {/* Left Corner Scanner Brackets (Top & Bottom) */}
             <svg 
               className="w-2.5 h-4 text-white flex-shrink-0" 
               viewBox="0 0 14 26" 
@@ -69,7 +68,7 @@ export default function Navigation({
               Scan QR
             </span>
 
-            {/* Right Corner Scanner Brackets */}
+            {/* Right Corner Scanner Brackets (Top & Bottom) */}
             <svg 
               className="w-2.5 h-4 text-white flex-shrink-0" 
               viewBox="0 0 14 26" 
@@ -87,11 +86,11 @@ export default function Navigation({
         </div>
       )}
 
-      {/* 2. Primary Bottom Bar: Slim, Edge-to-Edge matching Image 2 */}
+      {/* 2. Primary Bottom Bar: Slim, Edge-to-Edge matching Image 2 & IMG_0679.png */}
       <nav 
         id="cbe-bottom-navbar" 
         aria-label="Main Navigation"
-        className="w-full pointer-events-auto bg-white px-6 pt-1 pb-1 flex justify-between items-center select-none"
+        className="w-full pointer-events-auto bg-white border-t border-gray-100 px-6 pt-1.5 pb-[max(env(safe-area-inset-bottom,0px),24px)] flex justify-between items-center shadow-[0_-2px_8px_rgba(0,0,0,0.03)] select-none"
       >
         {/* Item 1: Home */}
         <button
@@ -163,22 +162,6 @@ export default function Navigation({
           </span>
         </button>
       </nav>
-
-      {/* 3. System Navigation Bar Component:
-          - For iPhone users: edge-to-edge iOS Home Indicator Bar (like Image 1)
-          - For Android users: authentic 3-Button Navigation Bar [ |||  ○  ⊃ ] (like Image 2)
-      */}
-      <PhoneNavigationBar 
-        onHome={() => onChangeTab('home')}
-        onBack={() => {
-          if (activeTab !== 'home') {
-            onChangeTab('home');
-          } else {
-            window.dispatchEvent(new CustomEvent('cbe_phone_back'));
-          }
-        }}
-        theme="light"
-      />
 
     </div>
   );

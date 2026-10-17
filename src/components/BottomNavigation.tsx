@@ -4,8 +4,6 @@ import {
   BottomNavTransactionsIcon, 
   BottomNavSettingsIcon 
 } from './CbeCustomIcons';
-import { PhoneSettingsService } from '../services/phoneSettingsService';
-import { PhoneNavigationBar } from './PhoneNavigationBar';
 
 export type NavTabId = 'home' | 'transfer' | 'payments' | 'history' | 'profile' | 'transactions' | 'settings';
 
@@ -24,16 +22,6 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   showScanQr = true,
   className = '',
 }) => {
-  const [isIPhone, setIsIPhone] = useState<boolean>(() => PhoneSettingsService.isIPhoneMode());
-  const [navStyle, setNavStyle] = useState(() => PhoneSettingsService.getSettings().navBarStyle);
-
-  useEffect(() => {
-    return PhoneSettingsService.subscribe((settings) => {
-      setIsIPhone(PhoneSettingsService.isIPhoneMode());
-      setNavStyle(settings.navBarStyle);
-    });
-  }, []);
-
   const isHomeActive = activeTab === 'home';
   const isTransactionActive = activeTab === 'history' || activeTab === 'transactions' || activeTab === 'transaction' || activeTab === 'transfer';
   const isSettingActive = activeTab === 'profile' || activeTab === 'settings' || activeTab === 'setting';
@@ -42,7 +30,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   const shouldRenderScanQr = showScanQr && isHomeActive;
 
   return (
-    <div className={`w-full relative z-40 select-none shrink-0 bg-white border-t border-gray-100 ${className}`}>
+    <div className={`w-full relative z-40 select-none shrink-0 ${className}`}>
       
       {/* 1. Floating Center "Scan QR" Pill Button (Snug above bottom bar matching Image 2) */}
       {shouldRenderScanQr && (
@@ -98,11 +86,11 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
         </div>
       )}
 
-      {/* 2. White Bottom Navigation Bar: Slim, Edge-to-Edge matching Image 2 */}
+      {/* 2. White Bottom Navigation Bar: Slim, Edge-to-Edge matching Image 2 & IMG_0679.png */}
       <nav 
         id="cbe-bottom-navbar" 
         aria-label="Main Navigation"
-        className="w-full pointer-events-auto bg-white px-6 pt-1 pb-1 flex justify-between items-center select-none"
+        className="w-full pointer-events-auto bg-white border-t border-gray-100 px-6 pt-1.5 pb-[max(env(safe-area-inset-bottom,0px),24px)] flex justify-between items-center shadow-[0_-2px_8px_rgba(0,0,0,0.03)] select-none"
       >
         {/* Item 1: Home */}
         <button
@@ -175,24 +163,9 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
         </button>
       </nav>
 
-      {/* 3. System Navigation Bar Component:
-          - For iPhone users: edge-to-edge iOS Home Indicator Bar (like Image 1)
-          - For Android users: authentic 3-Button Navigation Bar [ |||  ○  ⊃ ] (like Image 2)
-      */}
-      <PhoneNavigationBar 
-        onHome={() => onChangeTab?.('home')}
-        onBack={() => {
-          if (activeTab !== 'home') {
-            onChangeTab?.('home');
-          } else {
-            window.dispatchEvent(new CustomEvent('cbe_phone_back'));
-          }
-        }}
-        theme="light"
-      />
-
     </div>
   );
 };
 
 export default BottomNavigation;
+
