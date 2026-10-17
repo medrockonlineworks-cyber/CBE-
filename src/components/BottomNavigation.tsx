@@ -86,11 +86,11 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
         </div>
       )}
 
-      {/* 2. White Bottom Navigation Bar: Slim, Edge-to-Edge matching Image 2 & IMG_0679.png */}
+      {/* 2. White Bottom Navigation Bar: Slim, Edge-to-Edge with minimal white space into phone edge */}
       <nav 
         id="cbe-bottom-navbar" 
         aria-label="Main Navigation"
-        className="w-full pointer-events-auto bg-white border-t border-gray-100 px-6 pt-1.5 pb-[max(env(safe-area-inset-bottom,0px),24px)] flex justify-between items-center shadow-[0_-2px_8px_rgba(0,0,0,0.03)] select-none"
+        className="w-full pointer-events-auto bg-white border-t border-gray-100 px-6 pt-1 pb-1 flex justify-between items-center shadow-[0_-2px_8px_rgba(0,0,0,0.03)] select-none"
       >
         {/* Item 1: Home */}
         <button
