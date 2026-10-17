@@ -86,11 +86,11 @@ export default function Navigation({
         </div>
       )}
 
-      {/* 2. Primary Bottom Bar: Slim, Edge-to-Edge with minimal white space into phone edge */}
+      {/* 2. Primary Bottom Bar: Ultra-Slim, Flush Edge-to-Edge with zero bottom gap */}
       <nav 
         id="cbe-bottom-navbar" 
         aria-label="Main Navigation"
-        className="w-full pointer-events-auto bg-white border-t border-gray-100 px-6 pt-1 pb-1 flex justify-between items-center shadow-[0_-2px_8px_rgba(0,0,0,0.03)] select-none"
+        className="w-full pointer-events-auto bg-white border-t border-gray-100 px-5 pt-0.5 pb-0 flex justify-between items-center shadow-[0_-1px_4px_rgba(0,0,0,0.02)] select-none"
       >
         {/* Item 1: Home */}
         <button
@@ -99,18 +99,18 @@ export default function Navigation({
           aria-label="Home"
           aria-current={isHomeActive ? 'page' : undefined}
           onClick={() => onChangeTab('home')}
-          className="flex flex-col items-center justify-center flex-1 py-0.5 text-[#70189F] hover:opacity-90 active:scale-95 transition cursor-pointer group"
+          className="flex flex-col items-center justify-center flex-1 pt-0.5 pb-0 text-[#70189F] hover:opacity-90 active:scale-95 transition cursor-pointer group"
         >
-          <div className={`w-[48px] sm:w-[52px] h-[24px] sm:h-[25px] rounded-full flex items-center justify-center transition-all ${
+          <div className={`w-[44px] sm:w-[48px] h-[21px] sm:h-[22px] rounded-full flex items-center justify-center transition-all ${
             isHomeActive ? 'bg-[#faeed6]' : 'bg-transparent'
           }`}>
             <BottomNavHomeIcon 
-              size={18} 
+              size={17} 
               color={isHomeActive ? '#70189F' : '#70189Faa'}
               className="transition-transform" 
             />
           </div>
-          <span className={`text-[10px] sm:text-[10.5px] mt-0.5 tracking-tight leading-none ${isHomeActive ? 'font-bold text-[#70189F]' : 'font-medium text-[#70189F]/75'}`}>
+          <span className={`text-[9.5px] sm:text-[10px] mt-[1px] mb-0 tracking-tight leading-none ${isHomeActive ? 'font-bold text-[#70189F]' : 'font-medium text-[#70189F]/75'}`}>
             Home
           </span>
         </button>
@@ -122,19 +122,19 @@ export default function Navigation({
           aria-label="Transactions"
           aria-current={isTransactionActive ? 'page' : undefined}
           onClick={() => onChangeTab('history')}
-          className="flex flex-col items-center justify-center flex-1 py-0.5 text-[#70189F] hover:opacity-90 active:scale-95 transition cursor-pointer group"
+          className="flex flex-col items-center justify-center flex-1 pt-0.5 pb-0 text-[#70189F] hover:opacity-90 active:scale-95 transition cursor-pointer group"
         >
-          <div className={`w-[48px] sm:w-[52px] h-[24px] sm:h-[25px] rounded-full flex items-center justify-center transition-all ${
+          <div className={`w-[44px] sm:w-[48px] h-[21px] sm:h-[22px] rounded-full flex items-center justify-center transition-all ${
             isTransactionActive ? 'bg-[#faeed6]' : 'bg-transparent'
           }`}>
             <BottomNavTransactionsIcon 
-              size={18} 
+              size={17} 
               color={isTransactionActive ? '#70189F' : '#70189Faa'}
               strokeWidth={isTransactionActive ? 2 : 1.7}
               className="transition-transform" 
             />
           </div>
-          <span className={`text-[10px] sm:text-[10.5px] mt-0.5 tracking-tight leading-none ${isTransactionActive ? 'font-bold text-[#70189F]' : 'font-medium text-[#70189F]/75'}`}>
+          <span className={`text-[9.5px] sm:text-[10px] mt-[1px] mb-0 tracking-tight leading-none ${isTransactionActive ? 'font-bold text-[#70189F]' : 'font-medium text-[#70189F]/75'}`}>
             Transactions
           </span>
         </button>
@@ -146,18 +146,18 @@ export default function Navigation({
           aria-label="Settings"
           aria-current={isSettingActive ? 'page' : undefined}
           onClick={() => onChangeTab('profile')}
-          className="flex flex-col items-center justify-center flex-1 py-0.5 text-[#70189F] hover:opacity-90 active:scale-95 transition cursor-pointer group"
+          className="flex flex-col items-center justify-center flex-1 pt-0.5 pb-0 text-[#70189F] hover:opacity-90 active:scale-95 transition cursor-pointer group"
         >
-          <div className={`w-[48px] sm:w-[52px] h-[24px] sm:h-[25px] rounded-full flex items-center justify-center transition-all ${
+          <div className={`w-[44px] sm:w-[48px] h-[21px] sm:h-[22px] rounded-full flex items-center justify-center transition-all ${
             isSettingActive ? 'bg-[#faeed6]' : 'bg-transparent'
           }`}>
             <BottomNavSettingsIcon 
-              size={18} 
+              size={17} 
               color={isSettingActive ? '#70189F' : '#70189Faa'}
               className="transition-transform" 
             />
           </div>
-          <span className={`text-[10px] sm:text-[10.5px] mt-0.5 tracking-tight leading-none ${isSettingActive ? 'font-bold text-[#70189F]' : 'font-medium text-[#70189F]/75'}`}>
+          <span className={`text-[9.5px] sm:text-[10px] mt-[1px] mb-0 tracking-tight leading-none ${isSettingActive ? 'font-bold text-[#70189F]' : 'font-medium text-[#70189F]/75'}`}>
             Settings
           </span>
         </button>
