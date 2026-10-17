@@ -389,14 +389,14 @@ export default function App() {
   // View Router Render Picker
   const renderTabContent = () => {
     const activeUser = currentUser || {
-      id: 'demo-user-1',
-      name: 'Abdurahman',
-      email: 'abdurahman@cbe.et',
-      phone: '+251911234567',
-      accountNumber: '1000284758657',
+      id: 'user_1',
+      name: 'Leykun Jemaneh Ylma',
+      email: 'leykunjemaneh3@gmail.com',
+      phone: '+251900112233',
+      accountNumber: '1000419524747',
       accountType: 'wadiah' as const,
-      balance: 25430.00,
-      availableBalance: 25430.00,
+      balance: 18450.50,
+      availableBalance: 18450.50,
       currency: 'ETB',
       role: 'user' as const,
       status: 'active' as const,

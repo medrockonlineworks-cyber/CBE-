@@ -123,17 +123,17 @@ export default function TransactionDetailModal({
   return (
     <div 
       id="transaction-detail-modal-overlay"
-      className="fixed top-0 left-0 right-0 bottom-[46px] sm:bottom-[48px] z-40 bg-black/45 backdrop-blur-[0.5px] flex items-end justify-center p-0 animate-in fade-in duration-200 select-none"
+      className="fixed top-0 left-0 right-0 bottom-[38px] z-40 bg-black/45 backdrop-blur-[0.5px] flex items-end justify-center p-0 animate-in fade-in duration-200 select-none"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div 
         id="transaction-detail-sheet"
-        className="w-full max-w-md bg-white rounded-t-[28px] sm:rounded-t-[32px] rounded-b-none shadow-[0_-10px_35px_rgba(0,0,0,0.2)] px-6 pt-2 pb-5 flex flex-col justify-between relative animate-in slide-in-from-bottom-4 duration-250 select-none border-t border-gray-100 max-h-[82vh] overflow-y-auto"
+        className="w-full max-w-md bg-white rounded-t-[28px] sm:rounded-t-[32px] rounded-b-none shadow-[0_-10px_35px_rgba(0,0,0,0.2)] px-6 pt-2 pb-4 flex flex-col justify-between relative animate-in slide-in-from-bottom-4 duration-250 select-none border-t border-gray-100 max-h-[82vh] overflow-y-auto"
       >
         {/* Top Drag Indicator matching Image 2 */}
-        <div className="w-10 h-1 bg-gray-300/80 rounded-full mx-auto mb-2 mt-0.5" />
+        <div className="w-9 h-1 bg-gray-300/90 rounded-full mx-auto mb-2 mt-0.5" />
 
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col justify-between py-1">

@@ -90,7 +90,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
       <nav 
         id="cbe-bottom-navbar" 
         aria-label="Main Navigation"
-        className="w-full pointer-events-auto bg-white border-t border-gray-100 px-5 pt-0.5 pb-0 flex justify-between items-center shadow-[0_-1px_4px_rgba(0,0,0,0.02)] select-none"
+        className="w-full pointer-events-auto bg-white border-t border-gray-100 px-5 pt-0.5 pb-0 flex justify-between items-center shadow-[0_-1px_4px_rgba(0,0,0,0.02)] select-none h-[38px] shrink-0"
       >
         {/* Item 1: Home */}
         <button
