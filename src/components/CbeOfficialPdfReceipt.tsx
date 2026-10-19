@@ -1,6 +1,7 @@
 import React, { forwardRef } from 'react';
 import { CbeGoldenEmblemSvg } from './CbeLogo';
 import { StampWeight, StampPosition, getOfficialCbeStampSvg, OFFICIAL_CBE_STAMP_LOGO, LocalDb, getAuthenticCbeQrSvgDataUri } from '../lib/mockData';
+import { CBE_DEFAULT_LOGO_BASE64 } from '../assets/cbeLogoBase64';
 
 export interface CbePdfReceiptData {
   refId: string;
@@ -113,7 +114,7 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
           {/* Left: CBE Official Bank Logo */}
           <div style={{ width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
             {(() => {
-              const effectiveLogo = customPdfLogo || LocalDb.getCustomBankLogo() || '/custom-bank-logo.png';
+              const effectiveLogo = customPdfLogo || LocalDb.getCustomBankLogo() || CBE_DEFAULT_LOGO_BASE64;
               return (
                 <img 
                   src={effectiveLogo} 
@@ -122,8 +123,8 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
                   crossOrigin="anonymous" 
                   onError={(e) => {
                     const target = e.currentTarget;
-                    if (target.src !== window.location.origin + '/custom-bank-logo.png') {
-                      target.src = '/custom-bank-logo.png';
+                    if (target.src !== CBE_DEFAULT_LOGO_BASE64) {
+                      target.src = CBE_DEFAULT_LOGO_BASE64;
                     }
                   }}
                 />
@@ -139,7 +140,7 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
             <div style={{ fontSize: '13.5px', fontWeight: 400, marginTop: '2.5px', color: '#ffffff', lineHeight: 1.2 }}>
               Customer Receipt
             </div>
-            <div style={{ fontSize: '10.5px', fontWeight: 700, marginTop: '2.5px', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#86efac' }}>
+            <div style={{ fontSize: '11px', fontWeight: 700, marginTop: '2.5px', letterSpacing: '0.2px', color: '#ffffff' }}>
               Status: COMPLETED
             </div>
           </div>
