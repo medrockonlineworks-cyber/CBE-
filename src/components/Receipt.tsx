@@ -790,13 +790,13 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                   </p>
                 )}
 
-                {/* Realistic QR Code Centered with authentic rounded grey frame */}
-                <div className="flex justify-center pt-3 sm:pt-3.5 pb-2">
+                {/* Realistic QR Code Centered with authentic rounded grey frame matching IMG_20261019_113049_969.png */}
+                <div className="flex justify-center !mt-1.5 pt-0 pb-1">
                   <div 
                     id="receipt-qr-container"
-                    className="bg-white p-2 sm:p-2.5 rounded-[22px] border-[2.8px] border-[#737373] shadow-xs inline-flex items-center justify-center select-none"
+                    className="bg-white p-2 rounded-[20px] border-[2.5px] border-[#737373] shadow-xs inline-flex items-center justify-center select-none"
                   >
-                    <div className="w-34 h-34 sm:w-38 sm:h-38 flex items-center justify-center">
+                    <div className="w-[148px] h-[148px] sm:w-[156px] sm:h-[156px] flex items-center justify-center">
                       {customQrCode ? (
                         <img 
                           src={customQrCode} 
@@ -840,7 +840,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 {/* Commercial Bank of Ethiopia Footer Inset matching reference screenshot */}
                 <div 
                   id="cbe-receipt-bottom-bar"
-                  className="flex items-center gap-3.5 pt-2 pb-1 px-1.5 min-w-0 w-full"
+                  className="flex items-center gap-3.5 !mt-1 pt-0.5 pb-0.5 px-1.5 min-w-0 w-full"
                 >
                   <div 
                     id="cbe-receipt-logo-container"
@@ -1075,12 +1075,12 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 </p>
               )}
 
-              {/* Realistic QR Code Centered with authentic rounded grey frame */}
-              <div className="flex justify-center pt-2.5 pb-1.5">
+              {/* Realistic QR Code Centered with authentic rounded grey frame matching IMG_20261019_113049_969.png */}
+              <div className="flex justify-center !mt-1.5 pt-0 pb-1">
                 <div 
-                  className="bg-white p-2.5 rounded-[22px] border-[2.8px] border-[#737373] shadow-xs inline-flex items-center justify-center select-none"
+                  className="bg-white p-2 rounded-[20px] border-[2.5px] border-[#737373] shadow-xs inline-flex items-center justify-center select-none"
                 >
-                  <div className="w-36 h-36 flex items-center justify-center">
+                  <div className="w-[148px] h-[148px] sm:w-[156px] sm:h-[156px] flex items-center justify-center">
                     {customQrCode ? (
                       <img 
                         src={customQrCode} 
@@ -1122,7 +1122,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
               {/* Commercial Bank of Ethiopia Footer Inset matching screenshot_1792332161141.png */}
               <div 
-                className="flex items-center gap-3.5 pt-1.5 pb-0.5 px-1 min-w-0 w-full"
+                className="flex items-center gap-3.5 !mt-1 pt-0.5 pb-0.5 px-1 min-w-0 w-full"
               >
                 <div 
                   className="w-11 h-11 flex-shrink-0 flex items-center justify-center"
