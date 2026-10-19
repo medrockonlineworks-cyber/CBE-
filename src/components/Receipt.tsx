@@ -995,13 +995,37 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         }}
         aria-hidden="true"
       >
-        <div className="w-full bg-[#70189F] text-slate-800 flex flex-col font-sans select-none shrink-0">
-          {/* Top Purple Header: Exact original top design matching live screen & screenshot */}
-          <div className="pt-12 sm:pt-14 pb-14 sm:pb-16 px-5 bg-[#70189F] flex items-center justify-between text-white flex-shrink-0">
-            <div className="flex items-center gap-2.5">
+        {/* Top Purple Header: Explicit inline styles for rock-solid Android rendering */}
+        <div 
+          style={{ 
+            width: '100%', 
+            backgroundColor: '#70189F', 
+            color: '#ffffff', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+            userSelect: 'none',
+            flexShrink: 0,
+          }}
+        >
+          <div 
+            style={{ 
+              paddingTop: '48px', 
+              paddingBottom: '54px', 
+              paddingLeft: '20px', 
+              paddingRight: '20px', 
+              backgroundColor: '#70189F', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between', 
+              color: '#ffffff',
+              flexShrink: 0,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               {/* Solid White Shield with Purple Checkmark */}
-              <div className="w-8.5 h-8.5 flex-shrink-0 flex items-center justify-center">
-                <svg className="w-8.5 h-8.5 drop-shadow-xs" viewBox="0 0 24 24" fill="none">
+              <div style={{ width: '34px', height: '34px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <svg style={{ width: '34px', height: '34px', display: 'block' }} viewBox="0 0 24 24" fill="none">
                   <path 
                     d="M12 2.2c0.3 0 0.6 0.1 0.9 0.2l6.5 2.6c0.5 0.2 0.8 0.7 0.8 1.2v5.6c0 4.8-3.0 9.2-7.5 10.7-.5 0.2-1.0 0.2-1.4 0-4.5-1.5-7.5-5.9-7.5-10.7V6.2c0-.5.3-1 .8-1.2l6.5-2.6c.3-.1.6-.2.9-.2z" 
                     fill="#ffffff" 
@@ -1018,23 +1042,52 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 </svg>
               </div>
               <div>
-                <h2 className="font-bold text-[16px] sm:text-[17px] leading-tight text-white tracking-tight">Thank you</h2>
-                <p className="text-[12px] sm:text-[13px] text-purple-100 font-normal leading-tight mt-0.5">Success</p>
+                <h2 style={{ margin: 0, fontWeight: 700, fontSize: '17px', lineHeight: 1.2, color: '#ffffff', letterSpacing: '-0.3px' }}>Thank you</h2>
+                <p style={{ margin: 0, fontSize: '12.5px', color: '#e9d5ff', fontWeight: 400, lineHeight: 1.2, marginTop: '2px' }}>Success</p>
               </div>
             </div>
-            {/* Top right is clean: NO status bar, NO camera icon */}
           </div>
         </div>
 
         {/* Main White Sheet Container with rounded top corners against purple background matching screenshot_1792332161141.png */}
-        <div className="w-full flex-1 bg-white rounded-t-[38px] rounded-b-none mx-0 px-4 sm:px-5 pt-0 pb-3 flex flex-col justify-between shadow-none relative select-none min-h-0">
-          
+        <div 
+          style={{ 
+            width: '100%', 
+            flex: 1, 
+            backgroundColor: '#ffffff', 
+            borderTopLeftRadius: '38px', 
+            borderTopRightRadius: '38px', 
+            paddingLeft: '16px', 
+            paddingRight: '16px', 
+            paddingTop: 0, 
+            paddingBottom: '12px', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            justifyContent: 'space-between', 
+            position: 'relative', 
+            userSelect: 'none', 
+            minHeight: 0,
+            boxSizing: 'border-box',
+          }}
+        >
           {/* Overlapping Large Success Checkmark Badge (with full outer white ring matching Image 1) */}
-          <div className="relative flex justify-center flex-shrink-0">
-            <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 top-0 w-[90px] h-[90px] pointer-events-none select-none z-10">
+          <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', flexShrink: 0 }}>
+            <div 
+              style={{ 
+                position: 'absolute', 
+                left: '50%', 
+                top: 0, 
+                transform: 'translate(-50%, -50%)', 
+                width: '90px', 
+                height: '90px', 
+                pointerEvents: 'none', 
+                userSelect: 'none', 
+                zIndex: 10,
+              }}
+            >
               <svg 
                 viewBox="0 0 90 90" 
-                className="w-full h-full block" 
+                style={{ width: '100%', height: '100%', display: 'block' }} 
                 fill="none" 
                 xmlns="http://www.w3.org/2000/svg"
               >
@@ -1056,61 +1109,84 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           </div>
 
           {/* Spacer for the overlapping badge */}
-          <div className="h-13 flex-shrink-0" />
+          <div style={{ height: '52px', flexShrink: 0 }} />
 
           {/* Main Content Area - Clean Gray Card matching screenshot_1792332161141.png */}
-          <div className="space-y-3 flex flex-col justify-start flex-1 pt-1 min-h-0">
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', flex: 1, paddingTop: '4px', minHeight: 0, gap: '10px' }}>
             {/* Main Transaction Summary Gray Card */}
-            <div className="bg-[#f2f3f5] rounded-[24px] sm:rounded-[26px] p-4 sm:p-5 space-y-3 border border-gray-200/50 shadow-xs">
-              <p className="text-[#8e8e93] font-normal text-[13.5px]">Transaction Summary</p>
+            <div 
+              style={{ 
+                backgroundColor: '#f2f3f5', 
+                borderRadius: '24px', 
+                padding: '16px 18px', 
+                border: '1px solid rgba(229, 231, 235, 0.8)', 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '10px',
+                boxSizing: 'border-box',
+              }}
+            >
+              <p style={{ margin: 0, color: '#8e8e93', fontWeight: 400, fontSize: '13.5px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                Transaction Summary
+              </p>
 
               {/* Paragraph Text with bold highlights matching CBE reference */}
               {isCredit ? (
-                <p className="text-[14px] sm:text-[14.5px] leading-[1.58] text-[#1a1a1a] font-normal select-text">
-                  ETB <span className="font-bold text-black">{amountFormatted}</span> has been credited to <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} from <span className="font-bold text-black">{senderName}</span> {senderSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason}
+                <p style={{ margin: 0, fontSize: '14px', lineHeight: 1.58, color: '#1a1a1a', fontWeight: 400, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                  ETB <span style={{ fontWeight: 700, color: '#000000' }}>{amountFormatted}</span> has been credited to <span style={{ fontWeight: 700, color: '#000000' }}>{recipientName}</span> {recipientSuffix} from <span style={{ fontWeight: 700, color: '#000000' }}>{senderName}</span> {senderSuffix} on <span style={{ fontWeight: 700, color: '#000000' }}>{formattedDate}</span> with transaction ID: <span style={{ fontWeight: 700, color: '#000000' }}>{txId}.</span> Reason: {reason}
                 </p>
               ) : (
-                <p className="text-[14px] sm:text-[14.5px] leading-[1.58] text-[#1a1a1a] font-normal select-text">
-                  ETB <span className="font-bold text-black">{amountFormatted}</span> has been debited from <span className="font-bold text-black">{senderName}</span> {senderSuffix} for <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason} Total Amount Debited: ETB{totalDebitedFormatted} with Service Charge of ETB{serviceChargeFormatted}, VAT (15%) of ETB{vatFormatted} and Disaster Recovery (5%) of ETB{disasterRecoveryFormatted}.
+                <p style={{ margin: 0, fontSize: '14px', lineHeight: 1.58, color: '#1a1a1a', fontWeight: 400, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                  ETB <span style={{ fontWeight: 700, color: '#000000' }}>{amountFormatted}</span> has been debited from <span style={{ fontWeight: 700, color: '#000000' }}>{senderName}</span> {senderSuffix} for <span style={{ fontWeight: 700, color: '#000000' }}>{recipientName}</span> {recipientSuffix} on <span style={{ fontWeight: 700, color: '#000000' }}>{formattedDate}</span> with transaction ID: <span style={{ fontWeight: 700, color: '#000000' }}>{txId}.</span> Reason: {reason} Total Amount Debited: ETB{totalDebitedFormatted} with Service Charge of ETB{serviceChargeFormatted}, VAT (15%) of ETB{vatFormatted} and Disaster Recovery (5%) of ETB{disasterRecoveryFormatted}.
                 </p>
               )}
 
               {/* Realistic QR Code Centered with authentic rounded grey frame matching IMG_20261019_113049_969.png */}
-              <div className="flex justify-center !mt-1.5 pt-0 pb-1">
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '4px', paddingTop: 0, paddingBottom: '4px' }}>
                 <div 
-                  className="bg-white p-2 rounded-[20px] border-[2.5px] border-[#737373] shadow-xs inline-flex items-center justify-center select-none"
+                  style={{ 
+                    backgroundColor: '#ffffff', 
+                    padding: '8px', 
+                    borderRadius: '20px', 
+                    border: '2.5px solid #737373', 
+                    display: 'inline-flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    userSelect: 'none',
+                    boxSizing: 'border-box',
+                  }}
                 >
-                  <div className="w-[148px] h-[148px] sm:w-[156px] sm:h-[156px] flex items-center justify-center">
+                  <div style={{ width: '150px', height: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                     {customQrCode ? (
                       <img 
                         src={customQrCode} 
                         alt={`Transaction ${txId} QR Code`} 
-                        className="w-full h-full object-contain block"
+                        style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
                       />
                     ) : qrDataUrl ? (
                       <img 
                         src={qrDataUrl} 
                         alt={`Transaction ${txId} QR Code`} 
-                        className="w-full h-full object-contain block"
+                        style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
                       />
                     ) : txQrSvgDataUri ? (
                       <img 
                         src={txQrSvgDataUri} 
                         alt={`Transaction ${txId} QR Code`} 
-                        className="w-full h-full object-contain block"
+                        style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }}
                       />
                     ) : (
                       <div 
-                        className="grid gap-[1px] w-full h-full bg-white p-0.5"
-                        style={{ gridTemplateColumns: `repeat(${qrMatrix.length}, minmax(0, 1fr))` }}
+                        style={{ display: 'grid', gridTemplateColumns: `repeat(${qrMatrix.length}, minmax(0, 1fr))`, gap: '1px', width: '100%', height: '100%', backgroundColor: '#ffffff', padding: '2px' }}
                       >
                         {qrMatrix.flatMap((row, rIdx) =>
                           row.map((filled, cIdx) => (
                             <div 
                               key={`export-qr-${rIdx}-${cIdx}`} 
-                              className={`rounded-[0.2px] ${
-                                filled ? 'bg-black' : 'bg-transparent'
-                              }`}
+                              style={{ 
+                                borderRadius: '0.2px', 
+                                backgroundColor: filled ? '#000000' : 'transparent',
+                              }}
                             />
                           ))
                         )}
@@ -1122,18 +1198,29 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
               {/* Commercial Bank of Ethiopia Footer Inset matching screenshot_1792332161141.png */}
               <div 
-                className="flex items-center gap-3.5 !mt-1 pt-0.5 pb-0.5 px-1 min-w-0 w-full"
+                style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '14px', 
+                  marginTop: '4px', 
+                  paddingTop: '2px', 
+                  paddingBottom: '2px', 
+                  paddingLeft: '4px', 
+                  paddingRight: '4px', 
+                  width: '100%', 
+                  boxSizing: 'border-box',
+                }}
               >
                 <div 
-                  className="w-11 h-11 flex-shrink-0 flex items-center justify-center"
+                  style={{ width: '44px', height: '44px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
                 >
                   <CbeLogo className="w-11 h-11 object-contain" src={customBankLogo} />
                 </div>
-                <div className="min-w-0 flex-1 text-left flex flex-col justify-center">
-                  <h4 className="font-bold text-[#1f2937] text-[13.5px] leading-tight tracking-tight">
+                <div style={{ flex: 1, minWidth: 0, textAlign: 'left', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <h4 style={{ margin: 0, fontWeight: 700, color: '#1f2937', fontSize: '13.5px', lineHeight: 1.2, letterSpacing: '-0.2px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
                     Commercial Bank of Ethiopia
                   </h4>
-                  <p className="text-[#6b7280] text-[11px] font-normal leading-tight mt-0.5 tracking-tight">
+                  <p style={{ margin: 0, color: '#6b7280', fontSize: '11px', fontWeight: 400, lineHeight: 1.2, marginTop: '2px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
                     The bank you can always rely on!
                   </p>
                 </div>
@@ -1142,7 +1229,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             </div>
 
             {/* Generous clean white space extending down to the bottom edge of the phone */}
-            <div className="flex-1 bg-white min-h-[30px]" />
+            <div style={{ flex: 1, backgroundColor: '#ffffff', minHeight: '30px' }} />
           </div>
 
         </div>
@@ -1150,7 +1237,17 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         {/* Authentic Bottom Phone Navigation Bar Edge matching screenshot_1792332161141.png */}
         <div 
           id="cbe-screenshot-phone-bottom-bar"
-          className="w-full h-11 bg-[#f4f4f5] border-t border-[#e4e4e7] shrink-0 flex items-center justify-center select-none"
+          style={{ 
+            width: '100%', 
+            height: '44px', 
+            backgroundColor: '#f4f4f5', 
+            borderTop: '1px solid #e4e4e7', 
+            flexShrink: 0, 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            userSelect: 'none',
+          }}
         />
       </div>
 

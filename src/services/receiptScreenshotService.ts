@@ -293,9 +293,21 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
         clonedElement.style.maxHeight = 'none';
         clonedElement.style.transform = 'none';
 
+        // Copy all style and link tags from main document to cloned document
+        try {
+          const mainStyles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'));
+          mainStyles.forEach((styleTag) => {
+            clonedDoc.head.appendChild(styleTag.cloneNode(true));
+          });
+        } catch {}
+
         if (clonedElement.id === 'cbe-screenshot-exact-target') {
-          clonedDoc.body.innerHTML = '';
-          clonedDoc.body.appendChild(clonedElement);
+          // Hide all other elements in body without removing style or link tags
+          Array.from(clonedDoc.body.children).forEach((child) => {
+            if (child !== clonedElement && !['style', 'link'].includes(child.tagName.toLowerCase())) {
+              (child as HTMLElement).style.display = 'none';
+            }
+          });
           clonedElement.style.position = 'static';
           clonedElement.style.top = '0';
           clonedElement.style.left = '0';
@@ -359,6 +371,25 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
         });
       },
     });
+
+    // Sanity check: Ensure top header has authentic CBE purple color (#70189F)
+    // If Android or mobile browser dropped CSS (rendering white unstyled text), reject so canvas fallback runs!
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      try {
+        const sample = ctx.getImageData(Math.round(canvas.width / 2), Math.round(25 * pixelRatio), 1, 1).data;
+        // CBE purple: r: 112, g: 24, b: 159
+        const isPurple = sample[0] > 60 && sample[0] < 160 && sample[1] < 60 && sample[2] > 110 && sample[3] > 200;
+        if (!isPurple) {
+          console.warn('[ScreenshotService] Detected unstyled capture (missing CBE purple header), rejecting for canvas fallback');
+          throw new Error('Unstyled capture detected: missing purple header');
+        }
+      } catch (checkErr) {
+        if (checkErr instanceof Error && checkErr.message.includes('Unstyled capture')) {
+          throw checkErr;
+        }
+      }
+    }
 
     const dataUrl = canvas.toDataURL('image/png');
     if (dataUrl && dataUrl.length > 1000) {
