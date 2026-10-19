@@ -215,9 +215,16 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   ctx.stroke(badgeCheckmark);
   ctx.restore();
 
-  // 7. Main Transaction Summary Gray Card: #f2f3f5 (positioned cleanly under badge matching screenshot_1792332161141.png)
+  // 7. Headline: "Transaction Completed Successfully!"
+  ctx.fillStyle = '#000000';
+  ctx.font = `500 ${15.5 * scale}px ${fontSans}`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText('Transaction Completed Successfully!', width / 2, sheetTop + (68 * scale));
+
+  // 8. Main Transaction Summary Gray Card: #f2f3f5 (positioned cleanly under headline)
   const cardMarginX = 16 * scale;
-  const cardTop = sheetTop + (58 * scale);
+  const cardTop = sheetTop + (82 * scale);
   const cardWidth = width - (cardMarginX * 2); // 388 * scale
   const cardPadX = 18 * scale;
   const cardPadY = 18 * scale;
