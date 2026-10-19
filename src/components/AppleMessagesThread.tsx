@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -48,6 +48,11 @@ export const AppleMessagesThread: React.FC<AppleMessagesThreadProps> = ({
   const [showProfileModal, setShowProfileModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const phoneSettings = PhoneSettingsService.getSettings();
+
+  // Sort messages newest first so recent transaction appears at top
+  const sortedMessages = useMemo(() => {
+    return [...messages].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  }, [messages]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -178,8 +183,8 @@ export const AppleMessagesThread: React.FC<AppleMessagesThreadProps> = ({
             );
           })
         ) : (
-          /* CBE Banking SMS Messages */
-          messages.map((msg, index) => {
+          /* CBE Banking SMS Messages (Recent transactions appear at top) */
+          sortedMessages.map((msg, index) => {
             const timeHeader = formatBubbleTime(msg.timestamp);
 
             return (

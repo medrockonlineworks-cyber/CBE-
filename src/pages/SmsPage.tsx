@@ -307,6 +307,15 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
     return messages.findIndex(m => !m.read);
   }, [messages]);
 
+  // Sort messages: newest first if recentFirst is true (so recent transaction appears at top)
+  const sortedMessages = useMemo(() => {
+    return [...messages].sort((a, b) => {
+      const timeA = new Date(a.timestamp).getTime() || 0;
+      const timeB = new Date(b.timestamp).getTime() || 0;
+      return recentFirst ? timeB - timeA : timeA - timeB;
+    });
+  }, [messages, recentFirst]);
+
   // Apple Messages for iPhone Mobile
   if (isIPhone) {
     if (pageView === 'inbox') {
@@ -422,7 +431,7 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
   }
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'bg-[#121212] text-[#e3e3e3]' : 'bg-[#f4f5f7] text-[#1f2328]'} flex flex-col font-sans select-text antialiased transition-colors duration-150`}>
+    <div className={`h-full min-h-[100dvh] h-[100dvh] w-full ${isDarkMode ? 'bg-[#121212] text-[#e3e3e3]' : 'bg-[#f4f5f7] text-[#1f2328]'} flex flex-col font-sans select-text antialiased transition-colors duration-150 overflow-hidden`}>
       
       {/* 2. Google Messages CBE Header Bar (Matching screenshot) */}
       <header className={`w-full ${isDarkMode ? 'bg-[#121212] border-neutral-900/80 text-white' : 'bg-white border-neutral-200 text-neutral-900 shadow-sm'} border-b px-2 py-2 flex items-center justify-between relative z-40`}>
@@ -717,7 +726,7 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
       <main 
         ref={scrollContainerRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto px-3.5 py-4 space-y-4 max-w-xl mx-auto w-full relative"
+        className="flex-1 overflow-y-auto px-3.5 py-3 space-y-2.5 max-w-xl mx-auto w-full relative"
       >
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-neutral-500 text-center space-y-2">
@@ -729,11 +738,10 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
           </div>
         ) : (
           <>
-            {/* Message bubbles sequence */}
-            {(recentFirst ? [...messages].reverse() : messages).map((msg, index) => {
-              const isRecentTwo = recentFirst && index < 2;
+            {/* Message bubbles sequence: recent transactions appear at top */}
+            {sortedMessages.map((msg, index) => {
               const isUnreadBoundary = unreadIndex !== -1 && index === unreadIndex;
-              const prevMsg = index > 0 ? messages[index - 1] : null;
+              const prevMsg = index > 0 ? sortedMessages[index - 1] : null;
               const showDateHeader = !prevMsg || (() => {
                 const d1 = new Date(prevMsg.timestamp).toDateString();
                 const d2 = new Date(msg.timestamp).toDateString();
@@ -743,16 +751,16 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
               return (
                 <React.Fragment key={msg.id}>
                   {showDateHeader && !isUnreadBoundary && (
-                    <div className="text-center my-3">
-                      <span className={`text-xs ${isDarkMode ? 'text-neutral-400' : 'text-neutral-500'} font-normal`}>
+                    <div className="text-center my-2">
+                      <span className={`text-[12px] ${isDarkMode ? 'text-neutral-400' : 'text-neutral-500'} font-normal`}>
                         {formatSmsThreadTime(msg.timestamp)}
                       </span>
                     </div>
                   )}
 
-                  {/* Unread Divider Bar (Matching Screenshot 1 & 3 with "Unread" line followed by timestamp) */}
+                  {/* Unread Divider Bar (Matching Screenshot with "Unread" line followed by timestamp) */}
                   {isUnreadBoundary && (
-                    <div className="my-3">
+                    <div className="my-2.5">
                       <div className="flex items-center px-2 select-none">
                         <div className={`h-[1px] ${isDarkMode ? 'bg-[#3c4043]' : 'bg-neutral-300'} flex-1`}></div>
                         <span className={`px-3 text-xs ${isDarkMode ? 'text-neutral-400' : 'text-neutral-500'} font-normal tracking-wide`}>
@@ -760,8 +768,8 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
                         </span>
                         <div className={`h-[1px] ${isDarkMode ? 'bg-[#3c4043]' : 'bg-neutral-300'} flex-1`}></div>
                       </div>
-                      <div className="text-center mt-2.5">
-                        <span className={`text-xs ${isDarkMode ? 'text-neutral-400' : 'text-neutral-500'} font-normal`}>
+                      <div className="text-center mt-1.5">
+                        <span className={`text-[12px] ${isDarkMode ? 'text-neutral-400' : 'text-neutral-500'} font-normal`}>
                           {formatSmsThreadTime(msg.timestamp)}
                         </span>
                       </div>
@@ -769,27 +777,19 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
                   )}
 
                   {/* Message Bubble Container (Exact Google Messages bubble style) */}
-                  <div className="flex flex-col items-start w-full mb-3">
-                    {isRecentTwo && (
-                      <div className="flex items-center space-x-1.5 mb-1.5 pl-1">
-                        <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-purple-600 text-white shadow-sm">
-                          <span className="w-1.5 h-1.5 rounded-full bg-purple-200 animate-pulse" />
-                          <span>Recent</span>
-                        </span>
-                      </div>
-                    )}
+                  <div className="flex flex-col items-start w-full mb-2.5">
                     <div 
                       className={`max-w-[92%] ${
                         isDarkMode 
                           ? 'bg-[#212226] text-[#e8eaed] border-neutral-800/40 shadow-sm' 
                           : 'bg-white text-[#1f2328] border-neutral-200/90 shadow-sm'
-                      } rounded-3xl rounded-tl-sm px-4 py-3.5 border relative group`}
+                      } rounded-2xl rounded-tl-sm px-4 py-3 border relative group`}
                     >
                       {/* Render text with hyperlinks */}
                       {renderMessageContent(msg)}
                     </div>
-                    {/* Timestamp & Carrier label below bubble as seen in Screenshot 1 ("12:54 PM • Ethio telecom") */}
-                    <span className={`text-[11.5px] ${isDarkMode ? 'text-neutral-400' : 'text-neutral-500'} mt-1 pl-1 select-none`}>
+                    {/* Timestamp & Carrier label below bubble ("12:54 PM • Ethio telecom") */}
+                    <span className={`text-[11px] ${isDarkMode ? 'text-neutral-400' : 'text-neutral-500'} mt-1 pl-1 select-none`}>
                       {formatBubbleTime(msg.timestamp)}
                     </span>
                   </div>
@@ -822,9 +822,9 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
       {/* 4. Bottom Banner: Exact text from screenshot */}
       <footer className={`w-full ${
         isDarkMode ? 'bg-[#161719] border-neutral-800/80 text-neutral-300' : 'bg-white border-neutral-200 text-neutral-600'
-      } border-t px-4 py-3.5 z-30`}>
+      } border-t px-4 py-2.5 z-30 shrink-0`}>
         <div className="max-w-xl mx-auto flex items-center justify-center text-center">
-          <p className={`text-[13px] ${isDarkMode ? 'text-neutral-300' : 'text-neutral-600'} font-normal`}>
+          <p className={`text-[12.5px] ${isDarkMode ? 'text-neutral-300' : 'text-neutral-600'} font-normal`}>
             Sender can't accept replies. Contact them directly.{' '}
             <a 
               href="https://www.combanketh.et" 

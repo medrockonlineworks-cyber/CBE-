@@ -123,33 +123,33 @@ export default function TransactionDetailModal({
   return (
     <div 
       id="transaction-detail-modal-overlay"
-      className="fixed top-0 left-0 right-0 bottom-[38px] z-40 bg-black/45 backdrop-blur-[0.5px] flex items-end justify-center p-0 animate-in fade-in duration-200 select-none"
+      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[0.5px] flex items-end justify-center p-0 animate-in fade-in duration-200 select-none"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div 
         id="transaction-detail-sheet"
-        className="w-full max-w-md bg-white rounded-t-[28px] sm:rounded-t-[32px] rounded-b-none shadow-[0_-10px_35px_rgba(0,0,0,0.2)] px-6 pt-2 pb-4 flex flex-col justify-between relative animate-in slide-in-from-bottom-4 duration-250 select-none border-t border-gray-100 max-h-[82vh] overflow-y-auto"
+        className="w-full max-w-md bg-white rounded-t-[32px] rounded-b-none shadow-[0_-12px_45px_rgba(0,0,0,0.25)] px-6 pt-3 pb-8 flex flex-col justify-between relative animate-in slide-in-from-bottom-5 duration-250 select-none border-t border-gray-100 min-h-[580px] max-h-[88vh] h-[80vh] sm:h-auto overflow-y-auto"
       >
         {/* Top Drag Indicator matching Image 2 */}
-        <div className="w-9 h-1 bg-gray-300/90 rounded-full mx-auto mb-2 mt-0.5" />
+        <div className="w-10 h-1.5 bg-gray-300 rounded-full mx-auto mb-3 mt-0.5 shrink-0" />
 
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col justify-between py-1">
           {/* Top Header Group */}
-          <div>
+          <div className="shrink-0">
             {/* Top Title Bar with Close Button */}
-            <div className="flex items-center justify-between relative mb-2">
+            <div className="flex items-center justify-between relative mb-2.5">
               <div className="w-6" /> {/* Balance spacer */}
-              <h2 className="text-[11.5px] sm:text-[12px] font-bold text-gray-400 tracking-wider uppercase text-center flex-1 font-sans">
+              <h2 className="text-[12px] sm:text-[12.5px] font-bold text-gray-400 tracking-wider uppercase text-center flex-1 font-sans">
                 TRANSACTION DETAIL
               </h2>
               <button
                 id="btn-close-tx-detail"
                 type="button"
                 onClick={onClose}
-                className="w-6 h-6 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-700 transition cursor-pointer"
+                className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition cursor-pointer"
                 aria-label="Close"
               >
                 <X className="w-4.5 h-4.5" />
@@ -157,50 +157,50 @@ export default function TransactionDetailModal({
             </div>
 
             {/* Status Pill Badge: Completed (Matching exact soft green in Image 2) */}
-            <div className="flex justify-center my-1.5">
-              <div className="bg-[#eaf8f1] text-[#00b050] px-3.5 py-0.5 rounded-full text-xs font-bold inline-flex items-center gap-1.5 shadow-2xs">
+            <div className="flex justify-center my-2">
+              <div className="bg-[#eaf8f1] text-[#00b050] px-4 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5 shadow-2xs">
                 <span className="w-3.5 h-3.5 rounded-full bg-[#00b050] text-white flex items-center justify-center text-[9px] font-black">
                   ✓
                 </span>
-                <span className="text-[11.5px] font-bold tracking-tight">Completed</span>
+                <span className="text-[12px] font-bold tracking-tight">Completed</span>
               </div>
             </div>
 
             {/* Transaction Amount matching Image 2 */}
-            <div className="text-center my-2 sm:my-3">
-              <h3 className="text-2xl sm:text-[28px] font-black text-[#0f172a] tracking-tight font-sans">
+            <div className="text-center my-4 sm:my-5">
+              <h3 className="text-3xl sm:text-[34px] font-black text-[#0f172a] tracking-tight font-sans leading-tight">
                 {isCredit ? '+' : '-'}{transaction.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
               </h3>
-              <p className="text-[12px] sm:text-[12.5px] text-gray-500 font-normal mt-1">
+              <p className="text-[13px] text-gray-500 font-normal mt-1.5">
                 {isCredit ? 'from' : 'to'} {isCredit ? (transaction.senderName || 'CBE Customer') : (transaction.recipientName || 'CBE Customer')}
               </p>
             </div>
           </div>
 
           {/* Key-Value Details List matching Image 2 */}
-          <div className="my-auto space-y-3.5 sm:space-y-4 px-0.5 text-sm">
+          <div className="my-auto space-y-4 sm:space-y-4.5 px-0.5 text-sm py-2">
             {/* 1. Date & Time */}
             <div className="flex items-center justify-between gap-3">
-              <span className="text-gray-400 font-medium whitespace-nowrap text-[12.5px] sm:text-[13px]">Date &amp; Time</span>
-              <span className="font-bold text-gray-900 text-right text-[12.5px] sm:text-[13px]">{formattedDate}</span>
+              <span className="text-gray-400 font-medium whitespace-nowrap text-[13px]">Date &amp; Time</span>
+              <span className="font-bold text-gray-900 text-right text-[13px]">{formattedDate}</span>
             </div>
 
             {/* 2. Type */}
             <div className="flex items-center justify-between gap-3">
-              <span className="text-gray-400 font-medium whitespace-nowrap text-[12.5px] sm:text-[13px]">Type</span>
-              <span className="font-bold text-gray-900 text-right text-[12.5px] sm:text-[13px]">{typeLabel}</span>
+              <span className="text-gray-400 font-medium whitespace-nowrap text-[13px]">Type</span>
+              <span className="font-bold text-gray-900 text-right text-[13px]">{typeLabel}</span>
             </div>
 
             {/* 3. Transaction ID */}
             <div className="flex items-center justify-between gap-3">
-              <span className="text-gray-400 font-medium whitespace-nowrap text-[12.5px] sm:text-[13px]">Transaction ID</span>
+              <span className="text-gray-400 font-medium whitespace-nowrap text-[13px]">Transaction ID</span>
               <div className="flex items-center gap-1.5">
-                <span className="font-bold font-mono text-gray-900 text-[12.5px] sm:text-[13px]">{txId}</span>
+                <span className="font-bold font-mono text-gray-900 text-[13px]">{txId}</span>
                 <button
                   id="btn-copy-txid"
                   type="button"
                   onClick={() => handleCopy(txId, 'txid')}
-                  className="p-0.5 text-gray-400 hover:text-[#70189F] transition cursor-pointer"
+                  className="p-1 text-gray-400 hover:text-[#70189F] hover:bg-purple-50 rounded transition cursor-pointer"
                   title="Copy Transaction ID"
                 >
                   {copiedField === 'txid' ? (
@@ -217,16 +217,16 @@ export default function TransactionDetailModal({
 
             {/* 4. Receipt ID */}
             <div className="flex items-center justify-between gap-3">
-              <span className="text-gray-400 font-medium whitespace-nowrap text-[12.5px] sm:text-[13px]">Receipt ID</span>
+              <span className="text-gray-400 font-medium whitespace-nowrap text-[13px]">Receipt ID</span>
               <div className="flex items-center gap-1.5">
-                <span className="font-bold font-mono text-gray-900 text-right break-all sm:break-normal max-w-[210px] sm:max-w-[250px] text-[12px] sm:text-[13px]">
+                <span className="font-bold font-mono text-gray-900 text-right break-all sm:break-normal max-w-[210px] sm:max-w-[250px] text-[12.5px] sm:text-[13px]">
                   {receiptId}
                 </span>
                 <button
                   id="btn-copy-receiptid"
                   type="button"
                   onClick={() => handleCopy(receiptId, 'receiptid')}
-                  className="p-0.5 text-gray-400 hover:text-[#70189F] transition cursor-pointer shrink-0"
+                  className="p-1 text-gray-400 hover:text-[#70189F] hover:bg-purple-50 rounded transition cursor-pointer shrink-0"
                   title="Copy Receipt ID"
                 >
                   {copiedField === 'receiptid' ? (
@@ -243,8 +243,8 @@ export default function TransactionDetailModal({
 
             {/* 5. Remark */}
             <div className="flex items-start justify-between gap-3">
-              <span className="text-gray-400 font-medium whitespace-nowrap mt-0.5 text-[12.5px] sm:text-[13px]">Remark</span>
-              <span className="font-bold text-gray-900 text-right max-w-[220px] sm:max-w-[240px] leading-snug text-[12.5px] sm:text-[13px]">
+              <span className="text-gray-400 font-medium whitespace-nowrap mt-0.5 text-[13px]">Remark</span>
+              <span className="font-bold text-gray-900 text-right max-w-[220px] sm:max-w-[240px] leading-snug text-[13px]">
                 {remark}
               </span>
             </div>
@@ -259,7 +259,7 @@ export default function TransactionDetailModal({
         </div>
 
         {/* Centered Purple VIEW RECEIPT Action Button (Matching Image 2) */}
-        <div className="mt-4 mb-0.5 flex justify-center">
+        <div className="mt-6 mb-2 flex justify-center shrink-0">
           <button
             id="btn-view-full-receipt"
             type="button"
@@ -272,7 +272,7 @@ export default function TransactionDetailModal({
               };
               onViewReceipt(normalizedTx);
             }}
-            className="w-auto min-w-[190px] max-w-[240px] bg-[#70189F] hover:bg-[#5e1286] active:scale-[0.98] text-white py-2.5 px-6 rounded-full font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_3px_14px_rgba(112,24,159,0.3)] transition-all cursor-pointer"
+            className="w-auto min-w-[210px] max-w-[260px] bg-[#70189F] hover:bg-[#5e1286] active:scale-[0.98] text-white py-3 px-8 rounded-full font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(112,24,159,0.35)] transition-all cursor-pointer"
           >
             <svg 
               className="w-4 h-4 text-white shrink-0" 

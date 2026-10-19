@@ -406,48 +406,39 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
   }, [accounts, activeBankKey]);
 
   // Determine which account has the current / newest message:
-  // USER RULE: "In the Truecaller sms the now badge and the the current message topfirst rule only applies in side the account list not the message ok"
+  // USER RULE: "And in true callers app sms now badge is only the recent transaction ok the old message must not have now badge"
   const currentMessageAccountId = useMemo(() => {
-    // 1. Check if an account explicitly has isNow: true
-    const explicitNowAcc = accounts.find(a => a.isNow && a.bankKey === activeBankKey);
-    if (explicitNowAcc) return explicitNowAcc.id;
-
-    // 2. Check newest alert for active bank
+    // Check newest alert for active bank strictly by timestamp
     const bankAlerts = alerts.filter(a => a.bankKey === activeBankKey);
     const candidateAlerts = bankAlerts.length > 0 ? bankAlerts : alerts;
     if (candidateAlerts.length > 0) {
       const sortedAlerts = [...candidateAlerts].sort((a, b) => {
-        const aIsNow = a.timeString === 'Now' || a.timeString?.toLowerCase().includes('now');
-        const bIsNow = b.timeString === 'Now' || b.timeString?.toLowerCase().includes('now');
-        if (aIsNow && !bIsNow) return -1;
-        if (!aIsNow && bIsNow) return 1;
         const tA = new Date(a.timestamp).getTime() || 0;
         const tB = new Date(b.timestamp).getTime() || 0;
         return tB - tA;
       });
       const topAlert = sortedAlerts[0];
-      const matched = accounts.find(acc => 
-        acc.id === topAlert.accountId ||
-        acc.accountNumber === topAlert.fullAccount ||
-        acc.accountNumber === topAlert.maskedAccount
-      );
-      if (matched) return matched.id;
-      if (topAlert.accountId) return topAlert.accountId;
+      // Only grant Now badge if the top alert is recent (created within active session / last 24 hours)
+      const topAlertTime = new Date(topAlert.timestamp).getTime() || 0;
+      const isRecent = (Date.now() - topAlertTime) < 24 * 60 * 60 * 1000;
+      if (isRecent) {
+        const matched = accounts.find(acc => 
+          acc.id === topAlert.accountId ||
+          acc.accountNumber === topAlert.fullAccount ||
+          acc.accountNumber === topAlert.maskedAccount
+        );
+        if (matched) return matched.id;
+        if (topAlert.accountId) return topAlert.accountId;
+      }
     }
 
-    // 3. Check most recent lastTransactionAt timestamp
-    const accountsWithTx = accounts.filter(a => a.bankKey === activeBankKey && a.lastTransactionAt);
-    if (accountsWithTx.length > 0) {
-      const sorted = [...accountsWithTx].sort((a, b) => {
-        const tA = new Date(a.lastTransactionAt!).getTime() || 0;
-        const tB = new Date(b.lastTransactionAt!).getTime() || 0;
-        return tB - tA;
-      });
-      return sorted[0].id;
-    }
+    // Check if an account explicitly has recent transaction with isNow
+    const explicitNowAcc = accounts.find(a => a.isNow && a.bankKey === activeBankKey);
+    if (explicitNowAcc) return explicitNowAcc.id;
 
-    return activeAccountId || accounts.find(a => a.bankKey === activeBankKey)?.id || accounts[0]?.id || null;
-  }, [alerts, accounts, activeBankKey, activeAccountId]);
+    // Do NOT fall back to arbitrary first account or old accounts!
+    return null;
+  }, [alerts, accounts, activeBankKey]);
 
   // Search filtered accounts list with current message top-first rule strictly inside the account list:
   const filteredAccounts = useMemo(() => {
