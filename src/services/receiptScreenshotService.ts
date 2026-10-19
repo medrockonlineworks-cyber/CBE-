@@ -302,17 +302,23 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
         } catch {}
 
         if (clonedElement.id === 'cbe-screenshot-exact-target') {
-          // Hide all other elements in body without removing style or link tags
-          Array.from(clonedDoc.body.children).forEach((child) => {
-            if (child !== clonedElement && !['style', 'link'].includes(child.tagName.toLowerCase())) {
-              (child as HTMLElement).style.display = 'none';
-            }
-          });
-          clonedElement.style.position = 'static';
+          // Move clonedElement out of #root into clonedDoc.body so it is NEVER hidden!
+          clonedDoc.body.appendChild(clonedElement);
+
+          // Safely hide the rest of the application now that clonedElement is a top-level child of body
+          const rootElement = clonedDoc.getElementById('root');
+          if (rootElement && rootElement !== clonedElement) {
+            rootElement.style.display = 'none';
+          }
+
+          clonedElement.style.position = 'relative';
           clonedElement.style.top = '0';
           clonedElement.style.left = '0';
-          clonedElement.style.zIndex = '1';
+          clonedElement.style.zIndex = '9999';
           clonedElement.style.opacity = '1';
+          clonedElement.style.visibility = 'visible';
+          clonedElement.style.display = 'flex';
+          clonedElement.style.flexDirection = 'column';
           clonedElement.style.width = `${fullWidth}px`;
           clonedElement.style.height = `${fullHeight}px`;
           clonedElement.style.minHeight = `${fullHeight}px`;
@@ -373,19 +379,28 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
     });
 
     // Sanity check: Ensure top header has authentic CBE purple color (#70189F)
-    // If Android or mobile browser dropped CSS (rendering white unstyled text), reject so canvas fallback runs!
+    // AND ensure the middle is NOT purple (which would mean a blank solid purple capture like IMG_0748.png)
     const ctx = canvas.getContext('2d');
     if (ctx) {
       try {
-        const sample = ctx.getImageData(Math.round(canvas.width / 2), Math.round(25 * pixelRatio), 1, 1).data;
+        const sampleTop = ctx.getImageData(Math.round(canvas.width / 2), Math.round(25 * pixelRatio), 1, 1).data;
         // CBE purple: r: 112, g: 24, b: 159
-        const isPurple = sample[0] > 60 && sample[0] < 160 && sample[1] < 60 && sample[2] > 110 && sample[3] > 200;
-        if (!isPurple) {
+        const isTopPurple = sampleTop[0] > 60 && sampleTop[0] < 160 && sampleTop[1] < 60 && sampleTop[2] > 110 && sampleTop[3] > 200;
+        if (!isTopPurple) {
           console.warn('[ScreenshotService] Detected unstyled capture (missing CBE purple header), rejecting for canvas fallback');
           throw new Error('Unstyled capture detected: missing purple header');
         }
+
+        // Sanity check 2: Middle of receipt must be white or light gray, NOT solid purple!
+        const midY = Math.round(canvas.height / 2);
+        const sampleMid = ctx.getImageData(Math.round(canvas.width / 2), midY, 1, 1).data;
+        const isMidPurple = sampleMid[0] > 60 && sampleMid[0] < 160 && sampleMid[1] < 60 && sampleMid[2] > 110;
+        if (isMidPurple) {
+          console.warn('[ScreenshotService] Detected blank solid purple capture, rejecting for canvas fallback');
+          throw new Error('Blank solid purple capture detected');
+        }
       } catch (checkErr) {
-        if (checkErr instanceof Error && checkErr.message.includes('Unstyled capture')) {
+        if (checkErr instanceof Error && (checkErr.message.includes('Unstyled capture') || checkErr.message.includes('Blank solid purple'))) {
           throw checkErr;
         }
       }
