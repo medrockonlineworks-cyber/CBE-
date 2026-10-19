@@ -215,16 +215,9 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   ctx.stroke(badgeCheckmark);
   ctx.restore();
 
-  // 7. Headline: "Transaction Completed Successfully!"
-  ctx.fillStyle = '#000000';
-  ctx.font = `500 ${15.5 * scale}px ${fontSans}`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'alphabetic';
-  ctx.fillText('Transaction Completed Successfully!', width / 2, sheetTop + (68 * scale));
-
-  // 8. Main Transaction Summary Gray Card: #f2f3f5 (positioned cleanly under headline)
+  // 7. Main Transaction Summary Gray Card: #f2f3f5 (positioned cleanly under badge matching screenshot_1792332161141.png)
   const cardMarginX = 16 * scale;
-  const cardTop = sheetTop + (82 * scale);
+  const cardTop = sheetTop + (58 * scale);
   const cardWidth = width - (cardMarginX * 2); // 388 * scale
   const cardPadX = 18 * scale;
   const cardPadY = 18 * scale;
@@ -325,18 +318,18 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   const paragraphHeight = lines.length * lineHeight;
 
   // 10. Position inside Card:
-  // Summary title -> paragraph -> snug QR box -> CBE logo footer matching IMG_20261019_113049_969.png
+  // Summary title -> paragraph -> QR box -> CBE logo footer
   const summaryTitleY = cardTop + cardPadY + (13.5 * scale);
   const paragraphStartY = summaryTitleY + (16 * scale);
-  const qrBoxTop = paragraphStartY + paragraphHeight + (6 * scale);
-  const qrBoxSize = 160 * scale;
+  const qrBoxTop = paragraphStartY + paragraphHeight + (16 * scale);
+  const qrBoxSize = 152 * scale;
   const qrBoxX = (width - qrBoxSize) / 2;
-  const qrImgSize = 144 * scale;
+  const qrImgSize = 132 * scale;
   const qrImgOffset = (qrBoxSize - qrImgSize) / 2;
 
-  const footerY = qrBoxTop + qrBoxSize + (8 * scale);
+  const footerY = qrBoxTop + qrBoxSize + (16 * scale);
   const footerLogoSize = 44 * scale;
-  const cardBottomPadding = 16 * scale;
+  const cardBottomPadding = 18 * scale;
   const cardHeight = (footerY + footerLogoSize + cardBottomPadding) - cardTop;
 
   // Draw Card Background: #f2f3f5 with radius 26px
@@ -364,12 +357,12 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   }
 
   // Draw QR Code Container Box:
-  // White background, rounded corners (20px), border: 2.5px solid #737373
+  // White background, rounded corners (22px), border: 2.8px solid #737373
   ctx.save();
   ctx.fillStyle = '#ffffff';
-  roundRect(ctx, qrBoxX, qrBoxTop, qrBoxSize, qrBoxSize, 20 * scale);
+  roundRect(ctx, qrBoxX, qrBoxTop, qrBoxSize, qrBoxSize, 22 * scale);
   ctx.fill();
-  ctx.lineWidth = 2.5 * scale;
+  ctx.lineWidth = 2.8 * scale;
   ctx.strokeStyle = '#737373';
   ctx.stroke();
 
