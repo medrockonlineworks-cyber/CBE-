@@ -89,7 +89,7 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
           minHeight: '880px',
           backgroundColor: '#ffffff',
           color: '#000000',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+          fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
           padding: '28px 32px 36px 32px',
           boxSizing: 'border-box',
           position: 'relative',
@@ -97,12 +97,12 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
           borderRadius: isPreview ? '2px' : '0px',
         }}
       >
-        {/* 1. Header Banner: Deep CBE Purple with golden emblem and centered white text */}
+        {/* 1. Header Banner: Deep CBE Purple (#781d77) with logo and centered text matching Image 1 */}
         <div 
           style={{ 
-            backgroundColor: '#77126a',
-            borderRadius: '6px 6px 0 0',
-            padding: '12px 18px',
+            backgroundColor: '#781d77',
+            borderRadius: '8px 8px 0 0',
+            padding: '13px 18px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -110,7 +110,7 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
             position: 'relative'
           }}
         >
-          {/* Left: CBE Official Bank Logo (Uploaded PNG or HTTPS) */}
+          {/* Left: CBE Official Bank Logo */}
           <div style={{ width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
             {(() => {
               const effectiveLogo = customPdfLogo || LocalDb.getCustomBankLogo() || '/custom-bank-logo.png';
@@ -121,7 +121,6 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
                   style={{ width: '48px', height: '48px', objectFit: 'contain' }} 
                   crossOrigin="anonymous" 
                   onError={(e) => {
-                    // Fallback to /custom-bank-logo.png or SVG if remote URL fails
                     const target = e.currentTarget;
                     if (target.src !== window.location.origin + '/custom-bank-logo.png') {
                       target.src = '/custom-bank-logo.png';
@@ -132,38 +131,39 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
             })()}
           </div>
 
-          {/* Center: Official CBE Title, Subtitle, and Status */}
+          {/* Center: Official CBE Title, Subtitle, and Status matching Image 1 */}
           <div style={{ flex: 1, textAlign: 'center', paddingRight: '48px' }}>
-            <h1 style={{ margin: 0, fontSize: '18px', fontWeight: 800, letterSpacing: '-0.2px', color: '#ffffff' }}>
+            <h1 style={{ margin: 0, fontSize: '18px', fontWeight: 700, letterSpacing: '-0.2px', color: '#ffffff', lineHeight: 1.2 }}>
               Commercial Bank of Ethiopia
             </h1>
-            <div style={{ fontSize: '13px', fontWeight: 400, marginTop: '2px', color: '#ffffff' }}>
+            <div style={{ fontSize: '13.5px', fontWeight: 400, marginTop: '2.5px', color: '#ffffff', lineHeight: 1.2 }}>
               Customer Receipt
             </div>
-            <div style={{ fontSize: '11px', fontWeight: 700, marginTop: '2px', letterSpacing: '0.2px', color: '#ffffff' }}>
+            <div style={{ fontSize: '10.5px', fontWeight: 700, marginTop: '2.5px', letterSpacing: '0.15em', textTransform: 'uppercase', color: '#86efac' }}>
               Status: COMPLETED
             </div>
           </div>
         </div>
 
-        {/* 2. Two-Column Information Section: Company Address & Customer Information */}
+        {/* 2. Two-Column Information Section: Company Address & Customer Information matching Image 1 */}
         <div 
           style={{ 
             display: 'grid', 
             gridTemplateColumns: '1fr 1fr', 
             gap: '24px', 
             marginTop: '16px',
-            fontSize: '10px',
+            fontSize: '11px',
+            lineHeight: 1.4,
             color: '#000000'
           }}
         >
           {/* Left Column: Company Address & Other Information */}
           <div>
-            <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#000000', lineHeight: 1.25, marginBottom: '5px', paddingBottom: '3px', borderBottom: '1px solid #4a5568' }}>
+            <div style={{ fontSize: '12px', fontWeight: 700, color: '#000000', lineHeight: 1.25, marginBottom: '5px', paddingBottom: '3px', borderBottom: '1px solid #e5e7eb' }}>
               <div>Company Address &amp; Other</div>
               <div>Information</div>
             </div>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
               <tbody>
                 {[
                   { label: 'Country:', val: 'Ethiopia' },
@@ -174,16 +174,16 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
                   { label: 'Email:', val: 'info@cbe.com.et' },
                   { label: 'Tel:', val: '+251-551-50-04' },
                   { label: 'Fax:', val: '+251-551-45-22' },
-                  { label: 'Tfn:', val: '0000006966' },
+                  { label: 'Tin:', val: '0000006966' },
                   { label: 'VAT Receipt No:', val: receiptData.refId },
                   { label: 'VAT Registration No:', val: '011140' },
                   { label: 'VAT Registration Date:', val: '01/01/2003' },
                 ].map((row, idx) => (
-                  <tr key={idx} style={{ height: '16px' }}>
-                    <td style={{ color: '#000000', fontWeight: 500, padding: '1px 0', verticalAlign: 'top', whiteSpace: 'nowrap' }}>
+                  <tr key={idx} style={{ height: '17px' }}>
+                    <td style={{ color: '#374151', fontWeight: 400, padding: '1px 0', verticalAlign: 'top', whiteSpace: 'nowrap' }}>
                       {row.label}
                     </td>
-                    <td style={{ textAlign: 'right', fontWeight: 500, color: '#000000', padding: '1px 0', verticalAlign: 'top' }}>
+                    <td style={{ textAlign: 'right', fontWeight: 400, color: '#000000', padding: '1px 0', verticalAlign: 'top' }}>
                       {row.val}
                     </td>
                   </tr>
@@ -194,10 +194,10 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
 
           {/* Right Column: Customer Information */}
           <div>
-            <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#000000', lineHeight: 1.25, marginBottom: '5px', paddingBottom: '3px', borderBottom: '1px solid #4a5568' }}>
+            <div style={{ fontSize: '12px', fontWeight: 700, color: '#000000', lineHeight: 1.25, marginBottom: '5px', paddingBottom: '3px', borderBottom: '1px solid #e5e7eb' }}>
               <div>Customer Information</div>
             </div>
-            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
               <tbody>
                 {[
                   { label: 'Customer Name:', val: receiptData.customerName || receiptData.payerName },
@@ -210,11 +210,11 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
                   { label: 'TIN (TAX ID):', val: '-' },
                   { label: 'Branch:', val: '-' },
                 ].map((row, idx) => (
-                  <tr key={idx} style={{ height: '16px' }}>
-                    <td style={{ color: '#000000', fontWeight: 500, padding: '1px 0', verticalAlign: 'top', whiteSpace: 'nowrap' }}>
+                  <tr key={idx} style={{ height: '17px' }}>
+                    <td style={{ color: '#374151', fontWeight: 400, padding: '1px 0', verticalAlign: 'top', whiteSpace: 'nowrap' }}>
                       {row.label}
                     </td>
-                    <td style={{ textAlign: 'right', fontWeight: 500, color: '#000000', padding: '1px 0', verticalAlign: 'top' }}>
+                    <td style={{ textAlign: 'right', fontWeight: 400, color: '#000000', padding: '1px 0', verticalAlign: 'top' }}>
                       {row.val}
                     </td>
                   </tr>
@@ -224,12 +224,12 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
           </div>
         </div>
 
-        {/* 3. Main Box: Payment / Transaction Information Table with Overlaid Stamp */}
+        {/* 3. Main Box: Payment / Transaction Information Table with Overlaid Stamp matching Image 1 */}
         <div 
           ref={tableRef}
           style={{ 
             marginTop: '16px', 
-            border: '1.5px solid #852d76', 
+            border: '1px solid #d1d5db', 
             borderRadius: '6px',
             position: 'relative',
             overflow: 'hidden',
@@ -240,61 +240,70 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
           <div 
             style={{ 
               textAlign: 'center', 
-              fontWeight: 800, 
-              fontSize: '11.5px', 
+              fontWeight: 700, 
+              fontSize: '13px', 
               color: '#000000',
-              padding: '6px 0', 
-              borderBottom: '1px solid #4a5568',
+              padding: '7px 0', 
+              borderBottom: '1px solid #d1d5db',
               backgroundColor: '#ffffff'
             }}
           >
-            Payment / Transaction Information
+            Payment / Transaction Informations
           </div>
 
-          {/* Data Rows: Dark charcoal/slate horizontal row dividers matching IMG_20260920_113448_873.png */}
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10.5px' }}>
+          {/* Data Rows: Crisp clean row dividers matching Image 1 */}
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11.5px' }}>
             <tbody>
-              {[
-                { label: 'Payer:', val: receiptData.payerName, bold: false },
-                { label: 'Account:', val: receiptData.payerAccount, bold: false },
-                { label: 'Receiver:', val: receiptData.receiverName, bold: false },
-                { label: 'Account:', val: receiptData.receiverAccount, bold: false },
-                { label: 'Payment Type:', val: receiptData.paymentType || 'A2A', bold: false },
-                { label: 'Payment Date & Time:', val: receiptData.paymentDate, bold: false },
-                { label: 'Reference No. (VAT Invoice No):', val: receiptData.refId, bold: false },
-                { label: 'Reason / Type of service:', val: receiptData.reason || '-', bold: false },
-                { label: 'Transferred Amount:', val: `${receiptData.amount.toFixed(2)} ETB`, bold: false, boldVal: true },
-                { label: 'Service Charge:', val: `${receiptData.serviceCharge.toFixed(2)} ETB`, bold: false },
-                { label: 'VAT (15% of service charge):', val: `${receiptData.vat.toFixed(2)} ETB`, bold: false },
-                { label: 'Disaster Risk Response Fund (5% of service charge):', val: `${receiptData.disasterRecovery.toFixed(2)} ETB`, bold: false },
-                { label: 'Total amount debited from customer\'s account:', val: `${receiptData.totalDebited.toFixed(2)} ETB`, bold: true, boldVal: true },
-              ].map((row, idx, arr) => (
-                <tr 
-                  key={idx} 
-                  style={{ 
-                    borderBottom: idx < arr.length - 1 ? '1px solid #4a5568' : 'none',
-                    height: '24px'
-                  }}
-                >
-                  <td style={{ 
-                    padding: '4px 14px', 
-                    color: '#000000', 
-                    fontWeight: row.bold ? 800 : 500,
-                    whiteSpace: 'nowrap'
-                  }}>
-                    {row.label}
-                  </td>
-                  <td style={{ 
-                    padding: '4px 14px', 
-                    textAlign: 'right', 
-                    color: '#000000', 
-                    fontWeight: (row.bold || row.boldVal) ? 800 : 500,
-                    whiteSpace: 'nowrap'
-                  }}>
-                    {row.val}
-                  </td>
-                </tr>
-              ))}
+              {(() => {
+                const formatEtb = (val: number) => 
+                  (val || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ETB';
+
+                return [
+                  { label: 'Payer:', val: receiptData.payerName, bold: false, boldVal: false },
+                  { label: 'Account:', val: receiptData.payerAccount, bold: false, boldVal: false },
+                  { label: 'Receiver:', val: receiptData.receiverName, bold: false, boldVal: false },
+                  { label: 'Account:', val: receiptData.receiverAccount, bold: false, boldVal: false },
+                  { label: 'Payment Type:', val: receiptData.paymentType || 'A2A', bold: false, boldVal: false },
+                  { label: 'Payment Date & Time:', val: receiptData.paymentDate, bold: false, boldVal: false },
+                  { label: 'Reference No. (VAT Invoice No):', val: receiptData.refId, bold: false, boldVal: false },
+                  { label: 'Reason / Type of service:', val: receiptData.reason || '-', bold: false, boldVal: false },
+                  { label: 'Transferred Amount:', val: formatEtb(receiptData.amount), bold: false, boldVal: false },
+                  { label: 'Service Charge:', val: formatEtb(receiptData.serviceCharge), bold: false, boldVal: false },
+                  { label: 'VAT (15% of service charge):', val: formatEtb(receiptData.vat), bold: false, boldVal: false },
+                  { label: 'Disaster Risk Response Fund (5% of service charge):', val: formatEtb(receiptData.disasterRecovery), bold: false, boldVal: false },
+                  // Bold number is ONLY the last one like Image 1
+                  { label: "Total amount debited from customer's account:", val: formatEtb(receiptData.totalDebited), bold: true, boldVal: true },
+                ].map((row, idx, arr) => (
+                  <tr 
+                    key={idx} 
+                    style={{ 
+                      borderBottom: idx < arr.length - 1 ? '1px solid #e5e7eb' : 'none',
+                      height: '24px',
+                      backgroundColor: row.bold ? '#ffffff' : 'transparent'
+                    }}
+                  >
+                    <td style={{ 
+                      padding: '5px 14px', 
+                      color: row.bold ? '#000000' : '#374151', 
+                      fontWeight: row.bold ? 700 : 400,
+                      fontSize: row.bold ? '12px' : '11.5px',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {row.label}
+                    </td>
+                    <td style={{ 
+                      padding: '5px 14px', 
+                      textAlign: 'right', 
+                      color: '#000000', 
+                      fontWeight: row.boldVal ? 700 : 400,
+                      fontSize: row.boldVal ? '12.5px' : '11.5px',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      {row.val}
+                    </td>
+                  </tr>
+                ));
+              })()}
             </tbody>
           </table>
 
@@ -390,16 +399,17 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
           <div 
             style={{ 
               flex: 1, 
-              backgroundColor: '#f2f3f7', 
+              backgroundColor: '#f8f9fa', 
+              border: '1px solid #d1d5db',
               borderRadius: '8px', 
               padding: '12px 18px', 
               textAlign: 'center'
             }}
           >
-            <div style={{ fontSize: '11.5px', fontWeight: 800, color: '#000000' }}>
+            <div style={{ fontSize: '12px', fontWeight: 700, color: '#000000' }}>
               Amount in Word:
             </div>
-            <div style={{ fontSize: '10.5px', color: '#000000', marginTop: '3px', fontWeight: 400 }}>
+            <div style={{ fontSize: '11.5px', color: '#1f2937', marginTop: '3px', fontWeight: 400, lineHeight: 1.4 }}>
               {receiptData.words}
             </div>
           </div>
@@ -450,7 +460,7 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
           minHeight: '880px',
           backgroundColor: '#ffffff',
           color: '#000000',
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+          fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
           padding: '28px 32px 36px 32px',
           boxSizing: 'border-box',
           position: 'relative',
@@ -463,12 +473,12 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
           paddingTop: '130px',
         }}
       >
-        {/* Footer: Official Slogan & Copyright centered in upper third of Page 2 */}
+        {/* Footer: Official Slogan & Copyright centered in upper third of Page 2 matching Image 1 */}
         <div style={{ textAlign: 'center' }}>
-          <div style={{ color: '#77126a', fontWeight: 800, fontSize: '13px' }}>
+          <div style={{ color: '#781d77', fontWeight: 700, fontSize: '13px' }}>
             The Bank you can always rely on.
           </div>
-          <div style={{ color: '#555555', fontSize: '10px', marginTop: '4px' }}>
+          <div style={{ color: '#6b7280', fontSize: '10.5px', marginTop: '4px', fontWeight: 400 }}>
             © 2026 Commercial Bank of Ethiopia. All rights reserved.
           </div>
         </div>
