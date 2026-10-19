@@ -251,7 +251,7 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
       scale: pixelRatio,
       useCORS: true,
       allowTaint: true,
-      backgroundColor: '#ffffff',
+      backgroundColor: element.id === 'cbe-screenshot-exact-target' ? '#70189F' : '#ffffff',
       logging: false,
       imageTimeout: 15000,
       scrollX: 0,
@@ -320,10 +320,10 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
           clonedElement.style.margin = '0';
           clonedElement.style.padding = '0';
           clonedElement.style.boxSizing = 'border-box';
-          clonedElement.style.backgroundColor = '#ffffff';
+          clonedElement.style.backgroundColor = '#70189F';
           clonedDoc.body.style.width = `${fullWidth}px`;
           clonedDoc.body.style.height = `${fullHeight}px`;
-          clonedDoc.body.style.backgroundColor = '#ffffff';
+          clonedDoc.body.style.backgroundColor = '#70189F';
           clonedDoc.body.style.margin = '0';
           clonedDoc.body.style.padding = '0';
           clonedDoc.body.style.overflow = 'hidden';

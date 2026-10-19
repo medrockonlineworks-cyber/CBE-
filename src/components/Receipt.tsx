@@ -987,7 +987,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           zIndex: -100,
           pointerEvents: 'none',
           opacity: 1,
-          backgroundColor: '#ffffff',
+          backgroundColor: '#70189F',
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
