@@ -215,6 +215,28 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     });
   }, []);
 
+  // Phone screen dimensions for authentic edge-to-edge screenshot matching screenshot_1792332161141.png
+  const [screenshotDimensions, setScreenshotDimensions] = useState<{ width: number; height: number }>(() => {
+    if (typeof window !== 'undefined') {
+      const isMobile = window.innerWidth <= 500;
+      const w = isMobile ? window.innerWidth : 412;
+      const h = isMobile && window.innerHeight >= 650 ? window.innerHeight : Math.round(w * 2.22);
+      return { width: w, height: h };
+    }
+    return { width: 412, height: 915 };
+  });
+
+  useEffect(() => {
+    const updateDimensions = () => {
+      const isMobile = window.innerWidth <= 500;
+      const w = isMobile ? window.innerWidth : 412;
+      const h = isMobile && window.innerHeight >= 650 ? window.innerHeight : Math.round(w * 2.22);
+      setScreenshotDimensions({ width: w, height: h });
+    };
+    window.addEventListener('resize', updateDimensions);
+    return () => window.removeEventListener('resize', updateDimensions);
+  }, []);
+
   // Dynamic customized feedback assets (uploaded CBE logo & QR code)
   const [customBankLogo, setCustomBankLogo] = useState<string | null>(() => LocalDb.getCustomBankLogo());
   const [customQrCode, setCustomQrCode] = useState<string | null>(() => LocalDb.getCustomQrCode());
@@ -958,17 +980,23 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           position: 'fixed',
           top: 0,
           left: 0,
-          width: '420px',
+          width: `${screenshotDimensions.width}px`,
+          height: `${screenshotDimensions.height}px`,
+          minHeight: `${screenshotDimensions.height}px`,
+          maxHeight: `${screenshotDimensions.height}px`,
           zIndex: -100,
           pointerEvents: 'none',
           opacity: 1,
           backgroundColor: '#ffffff',
           overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          boxSizing: 'border-box',
         }}
         aria-hidden="true"
       >
-        <div className="w-full bg-[#70189F] text-slate-800 flex flex-col font-sans select-none">
-          {/* Top Purple Header: Exact original top design matching live screen & IMG_20261011_115144_548.png */}
+        <div className="w-full bg-[#70189F] text-slate-800 flex flex-col font-sans select-none shrink-0">
+          {/* Top Purple Header: Exact original top design matching live screen & screenshot */}
           <div className="pt-12 sm:pt-14 pb-14 sm:pb-16 px-5 bg-[#70189F] flex items-center justify-between text-white flex-shrink-0">
             <div className="flex items-center gap-2.5">
               {/* Solid White Shield with Purple Checkmark */}
@@ -996,131 +1024,134 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             </div>
             {/* Top right is clean: NO status bar, NO camera icon */}
           </div>
+        </div>
 
-          {/* Main White Sheet Container with rounded top corners against purple background matching IMG_0135.png */}
-          <div className="bg-white rounded-t-[38px] rounded-b-none mx-0 px-4 sm:px-5 pt-0 pb-12 flex flex-col shadow-none relative">
-            
-            {/* Overlapping Large Success Checkmark Badge (with full outer white ring matching Image 1) */}
-            <div className="relative flex justify-center flex-shrink-0">
-              <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 top-0 w-[90px] h-[90px] pointer-events-none select-none z-10">
-                <svg 
-                  viewBox="0 0 90 90" 
-                  className="w-full h-full block" 
-                  fill="none" 
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  {/* Purple Circle with crisp White Outer Ring */}
-                  <circle cx="45" cy="45" r="41.5" stroke="#ffffff" strokeWidth="6" fill="#70189F" />
-                  {/* Bold Crisp White Checkmark */}
-                  <path
-                    d="M 25.5 45.5 L 39.0 59.0 L 68.0 30.0"
-                    fill="none"
-                    stroke="#ffffff"
-                    strokeWidth="7.2"
-                    strokeLinecap="butt"
-                    strokeLinejoin="miter"
-                    strokeMiterlimit="4"
-                    shapeRendering="geometricPrecision"
-                  />
-                </svg>
-              </div>
+        {/* Main White Sheet Container with rounded top corners against purple background matching screenshot_1792332161141.png */}
+        <div className="w-full flex-1 bg-white rounded-t-[38px] rounded-b-none mx-0 px-4 sm:px-5 pt-0 pb-3 flex flex-col justify-between shadow-none relative select-none min-h-0">
+          
+          {/* Overlapping Large Success Checkmark Badge (with full outer white ring matching Image 1) */}
+          <div className="relative flex justify-center flex-shrink-0">
+            <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 top-0 w-[90px] h-[90px] pointer-events-none select-none z-10">
+              <svg 
+                viewBox="0 0 90 90" 
+                className="w-full h-full block" 
+                fill="none" 
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                {/* Purple Circle with crisp White Outer Ring */}
+                <circle cx="45" cy="45" r="41.5" stroke="#ffffff" strokeWidth="6" fill="#70189F" />
+                {/* Bold Crisp White Checkmark */}
+                <path
+                  d="M 25.5 45.5 L 39.0 59.0 L 68.0 30.0"
+                  fill="none"
+                  stroke="#ffffff"
+                  strokeWidth="7.2"
+                  strokeLinecap="butt"
+                  strokeLinejoin="miter"
+                  strokeMiterlimit="4"
+                  shapeRendering="geometricPrecision"
+                />
+              </svg>
             </div>
-
-            {/* Spacer for the overlapping badge */}
-            <div className="h-13 flex-shrink-0" />
-
-            <div className="space-y-3 flex flex-col justify-center">
-              {/* Headline */}
-              <h1 className="text-center text-[15.5px] sm:text-[16px] font-medium text-black tracking-tight mb-1">
-                Transaction Completed Successfully!
-              </h1>
-
-              {/* Main Transaction Summary Gray Card */}
-              <div className="bg-[#f2f3f5] rounded-[26px] p-4 sm:p-5 space-y-3 border border-gray-200/50 shadow-xs">
-                <p className="text-[#8e8e93] font-normal text-[13.5px]">Transaction Summary</p>
-
-                {/* Paragraph Text with bold highlights matching CBE reference */}
-                {isCredit ? (
-                  <p className="text-[14px] sm:text-[14.5px] leading-[1.58] text-[#1a1a1a] font-normal select-text">
-                    ETB <span className="font-bold text-black">{amountFormatted}</span> has been credited to <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} from <span className="font-bold text-black">{senderName}</span> {senderSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason}
-                  </p>
-                ) : (
-                  <p className="text-[14px] sm:text-[14.5px] leading-[1.58] text-[#1a1a1a] font-normal select-text">
-                    ETB <span className="font-bold text-black">{amountFormatted}</span> has been debited from <span className="font-bold text-black">{senderName}</span> {senderSuffix} for <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason} Total Amount Debited: ETB{totalDebitedFormatted} with Service Charge of ETB{serviceChargeFormatted}, VAT (15%) of ETB{vatFormatted} and Disaster Recovery (5%) of ETB{disasterRecoveryFormatted}.
-                  </p>
-                )}
-
-                {/* Realistic QR Code Centered with authentic rounded grey frame */}
-                <div className="flex justify-center pt-3 pb-2">
-                  <div 
-                    className="bg-white p-2.5 rounded-[22px] border-[2.8px] border-[#737373] shadow-xs inline-flex items-center justify-center select-none"
-                  >
-                    <div className="w-36 h-36 flex items-center justify-center">
-                      {customQrCode ? (
-                        <img 
-                          src={customQrCode} 
-                          alt={`Transaction ${txId} QR Code`} 
-                          className="w-full h-full object-contain block"
-                        />
-                      ) : qrDataUrl ? (
-                        <img 
-                          src={qrDataUrl} 
-                          alt={`Transaction ${txId} QR Code`} 
-                          className="w-full h-full object-contain block"
-                        />
-                      ) : txQrSvgDataUri ? (
-                        <img 
-                          src={txQrSvgDataUri} 
-                          alt={`Transaction ${txId} QR Code`} 
-                          className="w-full h-full object-contain block"
-                        />
-                      ) : (
-                        <div 
-                          className="grid gap-[1px] w-full h-full bg-white p-0.5"
-                          style={{ gridTemplateColumns: `repeat(${qrMatrix.length}, minmax(0, 1fr))` }}
-                        >
-                          {qrMatrix.flatMap((row, rIdx) =>
-                            row.map((filled, cIdx) => (
-                              <div 
-                                key={`export-qr-${rIdx}-${cIdx}`} 
-                                className={`rounded-[0.2px] ${
-                                  filled ? 'bg-black' : 'bg-transparent'
-                                }`}
-                              />
-                            ))
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Commercial Bank of Ethiopia Footer Inset matching Image 1 */}
-                <div 
-                  className="flex items-center gap-3.5 pt-2 pb-1 px-1 min-w-0 w-full"
-                >
-                  <div 
-                    className="w-11 h-11 flex-shrink-0 flex items-center justify-center"
-                  >
-                    <CbeLogo className="w-11 h-11 object-contain" src={customBankLogo} />
-                  </div>
-                  <div className="min-w-0 flex-1 text-left flex flex-col justify-center">
-                    <h4 className="font-bold text-[#1f2937] text-[13.5px] leading-tight tracking-tight">
-                      Commercial Bank of Ethiopia
-                    </h4>
-                    <p className="text-[#6b7280] text-[11px] font-normal leading-tight mt-0.5 tracking-tight">
-                      The bank you can always rely on!
-                    </p>
-                  </div>
-                </div>
-
-              </div>
-            </div>
-
           </div>
 
-          {/* Completely white bottom matching Image 1 (ZERO purple strip) */}
+          {/* Spacer for the overlapping badge */}
+          <div className="h-13 flex-shrink-0" />
+
+          {/* Main Content Area - Clean Gray Card matching screenshot_1792332161141.png */}
+          <div className="space-y-3 flex flex-col justify-start flex-1 pt-1 min-h-0">
+            {/* Main Transaction Summary Gray Card */}
+            <div className="bg-[#f2f3f5] rounded-[24px] sm:rounded-[26px] p-4 sm:p-5 space-y-3 border border-gray-200/50 shadow-xs">
+              <p className="text-[#8e8e93] font-normal text-[13.5px]">Transaction Summary</p>
+
+              {/* Paragraph Text with bold highlights matching CBE reference */}
+              {isCredit ? (
+                <p className="text-[14px] sm:text-[14.5px] leading-[1.58] text-[#1a1a1a] font-normal select-text">
+                  ETB <span className="font-bold text-black">{amountFormatted}</span> has been credited to <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} from <span className="font-bold text-black">{senderName}</span> {senderSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason}
+                </p>
+              ) : (
+                <p className="text-[14px] sm:text-[14.5px] leading-[1.58] text-[#1a1a1a] font-normal select-text">
+                  ETB <span className="font-bold text-black">{amountFormatted}</span> has been debited from <span className="font-bold text-black">{senderName}</span> {senderSuffix} for <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason} Total Amount Debited: ETB{totalDebitedFormatted} with Service Charge of ETB{serviceChargeFormatted}, VAT (15%) of ETB{vatFormatted} and Disaster Recovery (5%) of ETB{disasterRecoveryFormatted}.
+                </p>
+              )}
+
+              {/* Realistic QR Code Centered with authentic rounded grey frame */}
+              <div className="flex justify-center pt-2.5 pb-1.5">
+                <div 
+                  className="bg-white p-2.5 rounded-[22px] border-[2.8px] border-[#737373] shadow-xs inline-flex items-center justify-center select-none"
+                >
+                  <div className="w-36 h-36 flex items-center justify-center">
+                    {customQrCode ? (
+                      <img 
+                        src={customQrCode} 
+                        alt={`Transaction ${txId} QR Code`} 
+                        className="w-full h-full object-contain block"
+                      />
+                    ) : qrDataUrl ? (
+                      <img 
+                        src={qrDataUrl} 
+                        alt={`Transaction ${txId} QR Code`} 
+                        className="w-full h-full object-contain block"
+                      />
+                    ) : txQrSvgDataUri ? (
+                      <img 
+                        src={txQrSvgDataUri} 
+                        alt={`Transaction ${txId} QR Code`} 
+                        className="w-full h-full object-contain block"
+                      />
+                    ) : (
+                      <div 
+                        className="grid gap-[1px] w-full h-full bg-white p-0.5"
+                        style={{ gridTemplateColumns: `repeat(${qrMatrix.length}, minmax(0, 1fr))` }}
+                      >
+                        {qrMatrix.flatMap((row, rIdx) =>
+                          row.map((filled, cIdx) => (
+                            <div 
+                              key={`export-qr-${rIdx}-${cIdx}`} 
+                              className={`rounded-[0.2px] ${
+                                filled ? 'bg-black' : 'bg-transparent'
+                              }`}
+                            />
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Commercial Bank of Ethiopia Footer Inset matching screenshot_1792332161141.png */}
+              <div 
+                className="flex items-center gap-3.5 pt-1.5 pb-0.5 px-1 min-w-0 w-full"
+              >
+                <div 
+                  className="w-11 h-11 flex-shrink-0 flex items-center justify-center"
+                >
+                  <CbeLogo className="w-11 h-11 object-contain" src={customBankLogo} />
+                </div>
+                <div className="min-w-0 flex-1 text-left flex flex-col justify-center">
+                  <h4 className="font-bold text-[#1f2937] text-[13.5px] leading-tight tracking-tight">
+                    Commercial Bank of Ethiopia
+                  </h4>
+                  <p className="text-[#6b7280] text-[11px] font-normal leading-tight mt-0.5 tracking-tight">
+                    The bank you can always rely on!
+                  </p>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Generous clean white space extending down to the bottom edge of the phone */}
+            <div className="flex-1 bg-white min-h-[30px]" />
+          </div>
+
         </div>
+
+        {/* Authentic Bottom Phone Navigation Bar Edge matching screenshot_1792332161141.png */}
+        <div 
+          id="cbe-screenshot-phone-bottom-bar"
+          className="w-full h-11 bg-[#f4f4f5] border-t border-[#e4e4e7] shrink-0 flex items-center justify-center select-none"
+        />
       </div>
 
       {/* Android & iOS Screenshot Preview Sheet Modal */}

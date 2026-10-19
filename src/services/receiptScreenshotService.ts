@@ -226,8 +226,13 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
 
   // 5. Measure full content bounds
   const rect = element.getBoundingClientRect();
-  const fullWidth = Math.max(element.scrollWidth, element.offsetWidth, Math.ceil(rect.width), 360);
-  const fullHeight = Math.max(element.scrollHeight, element.offsetHeight, Math.ceil(rect.height), 700);
+  const isExactTarget = element.id === 'cbe-screenshot-exact-target';
+  const fullWidth = isExactTarget 
+    ? (parseInt(element.style.width, 10) || element.offsetWidth || 412)
+    : Math.max(element.scrollWidth, element.offsetWidth, Math.ceil(rect.width), 360);
+  const fullHeight = isExactTarget
+    ? (parseInt(element.style.height, 10) || element.offsetHeight || 915)
+    : Math.max(element.scrollHeight, element.offsetHeight, Math.ceil(rect.height), 700);
 
   // Safe pixel ratio for mobile devices (2.0x is razor-sharp without exceeding Android canvas memory limits)
   const rawDpr = typeof window !== 'undefined' ? window.devicePixelRatio || 2 : 2;
@@ -251,6 +256,10 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
       imageTimeout: 15000,
       scrollX: 0,
       scrollY: 0,
+      width: fullWidth,
+      height: fullHeight,
+      windowWidth: fullWidth,
+      windowHeight: fullHeight,
       ignoreElements: isExcluded,
       onclone: (clonedDoc: Document, clonedElement: HTMLElement) => {
         // Reset scroll position on clone
@@ -292,12 +301,27 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
           clonedElement.style.left = '0';
           clonedElement.style.zIndex = '1';
           clonedElement.style.opacity = '1';
-          clonedElement.style.width = '420px';
-          clonedElement.style.margin = '0 auto';
+          clonedElement.style.width = `${fullWidth}px`;
+          clonedElement.style.height = `${fullHeight}px`;
+          clonedElement.style.minHeight = `${fullHeight}px`;
+          clonedElement.style.maxHeight = `${fullHeight}px`;
+          clonedElement.style.margin = '0';
+          clonedElement.style.padding = '0';
+          clonedElement.style.boxSizing = 'border-box';
           clonedElement.style.backgroundColor = '#ffffff';
+          clonedDoc.body.style.width = `${fullWidth}px`;
+          clonedDoc.body.style.height = `${fullHeight}px`;
           clonedDoc.body.style.backgroundColor = '#ffffff';
           clonedDoc.body.style.margin = '0';
           clonedDoc.body.style.padding = '0';
+          clonedDoc.body.style.overflow = 'hidden';
+          if (clonedDoc.documentElement) {
+            clonedDoc.documentElement.style.width = `${fullWidth}px`;
+            clonedDoc.documentElement.style.height = `${fullHeight}px`;
+            clonedDoc.documentElement.style.margin = '0';
+            clonedDoc.documentElement.style.padding = '0';
+            clonedDoc.documentElement.style.overflow = 'hidden';
+          }
         }
 
         // Ensure white sheet container does not clip or shrink and has clean white bottom
