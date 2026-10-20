@@ -587,8 +587,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         try {
           const result = await saveAndShareReceiptImage(dataUrl, txId, false);
           if (result.saved) {
-            setCopiedToast('Full receipt screenshot captured!');
-            setTimeout(() => setCopiedToast(null), 3000);
+            setCopiedToast('Screenshot saved to your device / gallery!');
+            setTimeout(() => setCopiedToast(null), 3500);
           }
         } catch (saveErr) {
           console.warn('[Screenshot] Background save notice:', saveErr);
@@ -732,7 +732,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           </div>
 
           {/* STATIC/UNSCROLLEABLE TOP CURVE CAP WITH OVERLAPPING ANIMATED CHECKMARK BADGE */}
-          <div className="bg-white rounded-t-[38px] rounded-b-none relative flex-shrink-0 z-20">
+          <div className="bg-white rounded-t-[38px] rounded-b-none relative flex-shrink-0 z-20 -mt-0.5 border-none outline-none">
             {/* Overlapping Large Success Checkmark Badge (matching real CBE Bank: animated breathing pulse, strictly original size when taking screenshot) */}
             <div className="relative flex justify-center flex-shrink-0">
               <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 top-0 w-[90px] h-[90px] pointer-events-none select-none z-30 flex items-center justify-center">
@@ -779,7 +779,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
               </h1>
 
               {/* Main Transaction Summary Gray Card */}
-              <div className="bg-[#f2f3f5] rounded-[24px] p-4 sm:p-5 space-y-3 border border-gray-200/50 shadow-xs">
+              <div className="bg-[#f2f3f5] rounded-[24px] p-4 sm:p-5 space-y-3 border-none shadow-xs">
                 <p className="text-[#8e8e93] font-normal text-[13.5px] sm:text-[14px]">Transaction Summary</p>
 
                 {/* Paragraph Text with bold highlights matching CBE reference */}
@@ -1069,6 +1069,9 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             backgroundColor: '#ffffff', 
             borderTopLeftRadius: '38px', 
             borderTopRightRadius: '38px', 
+            marginTop: '-2px',
+            border: 'none',
+            outline: 'none',
             paddingLeft: '16px', 
             paddingRight: '16px', 
             paddingTop: '0px', 
@@ -1147,7 +1150,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 backgroundColor: '#f2f3f5', 
                 borderRadius: '24px', 
                 padding: '16px 18px', 
-                border: '1px solid rgba(229, 231, 235, 0.8)', 
+                border: 'none', 
                 display: 'flex', 
                 flexDirection: 'column', 
                 gap: '10px',

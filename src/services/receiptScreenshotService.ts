@@ -528,15 +528,16 @@ export async function saveAndShareReceiptImage(
         }
       }
 
-      // 2. Direct browser file download (Saves directly to Android Downloads/Gallery and iOS Files/Photos)
+      // 2. Direct browser file download (Saves directly to Android Downloads/Gallery and device storage)
       try {
         const blobUrl = URL.createObjectURL(blob);
         const downloadLink = document.createElement('a');
         downloadLink.href = blobUrl;
         downloadLink.download = filename;
-        downloadLink.target = '_blank';
-        downloadLink.rel = 'noopener noreferrer';
-        downloadLink.style.display = 'none';
+        downloadLink.style.position = 'fixed';
+        downloadLink.style.left = '-9999px';
+        downloadLink.style.top = '-9999px';
+        downloadLink.style.opacity = '0';
         document.body.appendChild(downloadLink);
         downloadLink.click();
         setTimeout(() => {
