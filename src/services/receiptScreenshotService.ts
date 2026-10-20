@@ -226,8 +226,13 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
 
   // 5. Measure full content bounds
   const rect = element.getBoundingClientRect();
-  const fullWidth = Math.max(element.scrollWidth, element.offsetWidth, Math.ceil(rect.width), 360);
-  const fullHeight = Math.max(element.scrollHeight, element.offsetHeight, Math.ceil(rect.height), 700);
+  const isExactTarget = element.id === 'cbe-screenshot-exact-target';
+  const fullWidth = isExactTarget 
+    ? (parseInt(element.style.width, 10) || element.offsetWidth || 412)
+    : Math.max(element.scrollWidth, element.offsetWidth, Math.ceil(rect.width), 360);
+  const fullHeight = isExactTarget
+    ? (parseInt(element.style.height, 10) || element.offsetHeight || 915)
+    : Math.max(element.scrollHeight, element.offsetHeight, Math.ceil(rect.height), 700);
 
   // Safe pixel ratio for mobile devices (2.0x is razor-sharp without exceeding Android canvas memory limits)
   const rawDpr = typeof window !== 'undefined' ? window.devicePixelRatio || 2 : 2;
@@ -246,11 +251,15 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
       scale: pixelRatio,
       useCORS: true,
       allowTaint: true,
-      backgroundColor: '#ffffff',
+      backgroundColor: element.id === 'cbe-screenshot-exact-target' ? '#70189F' : '#ffffff',
       logging: false,
       imageTimeout: 15000,
       scrollX: 0,
       scrollY: 0,
+      width: fullWidth,
+      height: fullHeight,
+      windowWidth: fullWidth,
+      windowHeight: fullHeight,
       ignoreElements: isExcluded,
       onclone: (clonedDoc: Document, clonedElement: HTMLElement) => {
         // Reset scroll position on clone
@@ -284,20 +293,53 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
         clonedElement.style.maxHeight = 'none';
         clonedElement.style.transform = 'none';
 
+        // Copy all style and link tags from main document to cloned document
+        try {
+          const mainStyles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'));
+          mainStyles.forEach((styleTag) => {
+            clonedDoc.head.appendChild(styleTag.cloneNode(true));
+          });
+        } catch {}
+
         if (clonedElement.id === 'cbe-screenshot-exact-target') {
-          clonedDoc.body.innerHTML = '';
+          // Move clonedElement out of #root into clonedDoc.body so it is NEVER hidden!
           clonedDoc.body.appendChild(clonedElement);
-          clonedElement.style.position = 'static';
+
+          // Safely hide the rest of the application now that clonedElement is a top-level child of body
+          const rootElement = clonedDoc.getElementById('root');
+          if (rootElement && rootElement !== clonedElement) {
+            rootElement.style.display = 'none';
+          }
+
+          clonedElement.style.position = 'relative';
           clonedElement.style.top = '0';
           clonedElement.style.left = '0';
-          clonedElement.style.zIndex = '1';
+          clonedElement.style.zIndex = '9999';
           clonedElement.style.opacity = '1';
-          clonedElement.style.width = '420px';
-          clonedElement.style.margin = '0 auto';
-          clonedElement.style.backgroundColor = '#ffffff';
-          clonedDoc.body.style.backgroundColor = '#ffffff';
+          clonedElement.style.visibility = 'visible';
+          clonedElement.style.display = 'flex';
+          clonedElement.style.flexDirection = 'column';
+          clonedElement.style.width = `${fullWidth}px`;
+          clonedElement.style.height = `${fullHeight}px`;
+          clonedElement.style.minHeight = `${fullHeight}px`;
+          clonedElement.style.maxHeight = `${fullHeight}px`;
+          clonedElement.style.margin = '0';
+          clonedElement.style.padding = '0';
+          clonedElement.style.boxSizing = 'border-box';
+          clonedElement.style.backgroundColor = '#70189F';
+          clonedDoc.body.style.width = `${fullWidth}px`;
+          clonedDoc.body.style.height = `${fullHeight}px`;
+          clonedDoc.body.style.backgroundColor = '#70189F';
           clonedDoc.body.style.margin = '0';
           clonedDoc.body.style.padding = '0';
+          clonedDoc.body.style.overflow = 'hidden';
+          if (clonedDoc.documentElement) {
+            clonedDoc.documentElement.style.width = `${fullWidth}px`;
+            clonedDoc.documentElement.style.height = `${fullHeight}px`;
+            clonedDoc.documentElement.style.margin = '0';
+            clonedDoc.documentElement.style.padding = '0';
+            clonedDoc.documentElement.style.overflow = 'hidden';
+          }
         }
 
         // Ensure white sheet container does not clip or shrink and has clean white bottom
@@ -335,6 +377,34 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
         });
       },
     });
+
+    // Sanity check: Ensure top header has authentic CBE purple color (#70189F)
+    // AND ensure the middle is NOT purple (which would mean a blank solid purple capture like IMG_0748.png)
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      try {
+        const sampleTop = ctx.getImageData(Math.round(canvas.width / 2), Math.round(25 * pixelRatio), 1, 1).data;
+        // CBE purple: r: 112, g: 24, b: 159
+        const isTopPurple = sampleTop[0] > 60 && sampleTop[0] < 160 && sampleTop[1] < 60 && sampleTop[2] > 110 && sampleTop[3] > 200;
+        if (!isTopPurple) {
+          console.warn('[ScreenshotService] Detected unstyled capture (missing CBE purple header), rejecting for canvas fallback');
+          throw new Error('Unstyled capture detected: missing purple header');
+        }
+
+        // Sanity check 2: Middle of receipt must be white or light gray, NOT solid purple!
+        const midY = Math.round(canvas.height / 2);
+        const sampleMid = ctx.getImageData(Math.round(canvas.width / 2), midY, 1, 1).data;
+        const isMidPurple = sampleMid[0] > 60 && sampleMid[0] < 160 && sampleMid[1] < 60 && sampleMid[2] > 110;
+        if (isMidPurple) {
+          console.warn('[ScreenshotService] Detected blank solid purple capture, rejecting for canvas fallback');
+          throw new Error('Blank solid purple capture detected');
+        }
+      } catch (checkErr) {
+        if (checkErr instanceof Error && (checkErr.message.includes('Unstyled capture') || checkErr.message.includes('Blank solid purple'))) {
+          throw checkErr;
+        }
+      }
+    }
 
     const dataUrl = canvas.toDataURL('image/png');
     if (dataUrl && dataUrl.length > 1000) {

@@ -110,12 +110,12 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
 
   // Razor-sharp 2x retina resolution
   const scale = 2;
-  const baseWidth = 420;
-  const width = baseWidth * scale; // 840px
+  const baseWidth = 412;
+  const width = baseWidth * scale; // 824px
   
-  // Canvas estimated height (will be exact)
-  const baseHeight = 860;
-  const height = baseHeight * scale; // 1720px
+  // Authentic smartphone screen height matching edge-to-edge screenshot_1792332161141.png
+  const baseHeight = 915;
+  const height = baseHeight * scale; // 1830px
 
   const canvas = document.createElement('canvas');
   canvas.width = width;
@@ -215,16 +215,9 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   ctx.stroke(badgeCheckmark);
   ctx.restore();
 
-  // 7. Headline: "Transaction Completed Successfully!"
-  const headlineY = sheetTop + (68 * scale);
-  ctx.fillStyle = '#000000';
-  ctx.font = `500 ${15.5 * scale}px ${fontSans}`;
-  ctx.textAlign = 'center';
-  ctx.fillText('Transaction Completed Successfully!', width / 2, headlineY);
-
-  // 8. Main Transaction Summary Gray Card: #f2f3f5
+  // 7. Main Transaction Summary Gray Card: #f2f3f5 (positioned cleanly under badge matching screenshot_1792332161141_7b18d68a.png)
   const cardMarginX = 16 * scale;
-  const cardTop = sheetTop + (88 * scale);
+  const cardTop = sheetTop + (56 * scale);
   const cardWidth = width - (cardMarginX * 2); // 388 * scale
   const cardPadX = 18 * scale;
   const cardPadY = 18 * scale;
@@ -325,18 +318,18 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   const paragraphHeight = lines.length * lineHeight;
 
   // 10. Position inside Card:
-  // Summary title -> paragraph -> QR box -> CBE logo footer
+  // Summary title -> paragraph -> snug QR box -> CBE logo footer matching IMG_20261019_113049_969.png
   const summaryTitleY = cardTop + cardPadY + (13.5 * scale);
   const paragraphStartY = summaryTitleY + (16 * scale);
-  const qrBoxTop = paragraphStartY + paragraphHeight + (16 * scale);
-  const qrBoxSize = 152 * scale;
+  const qrBoxTop = paragraphStartY + paragraphHeight + (6 * scale);
+  const qrBoxSize = 160 * scale;
   const qrBoxX = (width - qrBoxSize) / 2;
-  const qrImgSize = 132 * scale;
+  const qrImgSize = 144 * scale;
   const qrImgOffset = (qrBoxSize - qrImgSize) / 2;
 
-  const footerY = qrBoxTop + qrBoxSize + (16 * scale);
-  const footerLogoSize = 44 * scale;
-  const cardBottomPadding = 18 * scale;
+  const footerY = qrBoxTop + qrBoxSize + (8 * scale);
+  const footerLogoSize = 40 * scale;
+  const cardBottomPadding = 16 * scale;
   const cardHeight = (footerY + footerLogoSize + cardBottomPadding) - cardTop;
 
   // Draw Card Background: #f2f3f5 with radius 26px
@@ -364,12 +357,12 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   }
 
   // Draw QR Code Container Box:
-  // White background, rounded corners (22px), border: 2.8px solid #737373
+  // White background, rounded corners (20px), border: 2.5px solid #737373
   ctx.save();
   ctx.fillStyle = '#ffffff';
-  roundRect(ctx, qrBoxX, qrBoxTop, qrBoxSize, qrBoxSize, 22 * scale);
+  roundRect(ctx, qrBoxX, qrBoxTop, qrBoxSize, qrBoxSize, 20 * scale);
   ctx.fill();
-  ctx.lineWidth = 2.8 * scale;
+  ctx.lineWidth = 2.5 * scale;
   ctx.strokeStyle = '#737373';
   ctx.stroke();
 
@@ -396,24 +389,17 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   ctx.font = `normal ${11 * scale}px ${fontSans}`;
   ctx.fillText('The bank you can always rely on!', footerTextX, footerY + (33 * scale));
 
-  // 11. Final Canvas Bottom:
-  // The area below cardTop + cardHeight is already pure white (#ffffff).
-  // Total image height with generous clean bottom space matching Image 1:
-  const desiredTotalHeight = cardTop + cardHeight + (48 * scale);
-
-  // If actual canvas height differs slightly, create clean cropped final canvas
-  if (Math.abs(canvas.height - desiredTotalHeight) > 10) {
-    const finalCanvas = document.createElement('canvas');
-    finalCanvas.width = width;
-    finalCanvas.height = desiredTotalHeight;
-    const finalCtx = finalCanvas.getContext('2d');
-    if (finalCtx) {
-      finalCtx.fillStyle = '#ffffff';
-      finalCtx.fillRect(0, 0, width, desiredTotalHeight);
-      finalCtx.drawImage(canvas, 0, 0);
-      return finalCanvas.toDataURL('image/png', 1.0);
-    }
-  }
+  // 11. Authentic bottom phone navigation bar edge matching screenshot_1792332161141.png
+  const bottomBarHeight = 44 * scale;
+  const bottomBarY = height - bottomBarHeight;
+  ctx.fillStyle = '#f4f4f5';
+  ctx.fillRect(0, bottomBarY, width, bottomBarHeight);
+  ctx.strokeStyle = '#e4e4e7';
+  ctx.lineWidth = 1 * scale;
+  ctx.beginPath();
+  ctx.moveTo(0, bottomBarY);
+  ctx.lineTo(width, bottomBarY);
+  ctx.stroke();
 
   return canvas.toDataURL('image/png', 1.0);
 }

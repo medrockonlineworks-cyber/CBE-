@@ -4,16 +4,18 @@ import { CBE_DEFAULT_LOGO_BASE64 } from '../assets/cbeLogoBase64';
 
 interface CbeLogoProps {
   className?: string;
+  style?: React.CSSProperties;
   src?: string | null;
   alt?: string;
 }
 
-export const CbeGoldenEmblemSvg: React.FC<{ className?: string }> = ({ className = "w-10 h-10" }) => (
+export const CbeGoldenEmblemSvg: React.FC<{ className?: string; style?: React.CSSProperties }> = ({ className = "w-10 h-10", style }) => (
   <svg 
     viewBox="0 0 120 120" 
     fill="none" 
     xmlns="http://www.w3.org/2000/svg"
     className={`${className} shrink-0`}
+    style={style}
   >
     <defs>
       <linearGradient id="cbeGoldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -75,6 +77,7 @@ export const CbeGoldenEmblemSvg: React.FC<{ className?: string }> = ({ className
 
 export const CbeLogo: React.FC<CbeLogoProps> = ({ 
   className = "w-10 h-10", 
+  style,
   src,
   alt = "Commercial Bank of Ethiopia" 
 }) => {
@@ -124,7 +127,7 @@ export const CbeLogo: React.FC<CbeLogoProps> = ({
     : rawSrc;
 
   if (imgError || !finalSrc) {
-    return <CbeGoldenEmblemSvg className={className} />;
+    return <CbeGoldenEmblemSvg className={className} style={style} />;
   }
 
   return (
@@ -133,6 +136,15 @@ export const CbeLogo: React.FC<CbeLogoProps> = ({
       alt={alt} 
       data-cbe-logo="true"
       className={`${className} object-contain`} 
+      style={{
+        maxWidth: '100%',
+        maxHeight: '100%',
+        width: '100%',
+        height: '100%',
+        objectFit: 'contain',
+        display: 'block',
+        ...style
+      }}
       crossOrigin={finalSrc.startsWith('data:') ? undefined : 'anonymous'}
       referrerPolicy="no-referrer"
       onError={() => {
