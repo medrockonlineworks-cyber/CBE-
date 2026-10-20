@@ -112,11 +112,11 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
 
   // Razor-sharp 2x retina resolution
   const scale = 2;
-  const baseWidth = options.targetWidth || 412;
+  const baseWidth = options.targetWidth || 360;
   const width = baseWidth * scale;
   
-  // Authentic smartphone screen height matching edge-to-edge Image 2
-  const baseHeight = options.targetHeight || 915;
+  // Authentic smartphone screen height matching edge-to-edge Image 2 (720x1600 at 2x)
+  const baseHeight = options.targetHeight || 800;
   const height = baseHeight * scale;
 
   const canvas = document.createElement('canvas');

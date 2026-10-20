@@ -215,26 +215,31 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     });
   }, []);
 
-  // Phone screen dimensions for authentic edge-to-edge screenshot matching screenshot_1792332161141.png
-  const [screenshotDimensions, setScreenshotDimensions] = useState<{ width: number; height: number }>(() => {
-    if (typeof window !== 'undefined') {
-      const isMobile = window.innerWidth <= 500;
-      const w = isMobile ? window.innerWidth : 412;
-      const h = isMobile && window.innerHeight >= 650 ? window.innerHeight : Math.round(w * 2.22);
-      return { width: w, height: h };
-    }
-    return { width: 412, height: 915 };
-  });
+  // Phone screen dimensions for authentic edge-to-edge screenshot matching Image 2 (720x1600)
+  const getDeviceDimensions = () => {
+    if (typeof window === 'undefined') return { width: 360, height: 800 };
+    const isMobile = window.innerWidth <= 500;
+    // On physical mobile phone, CSS width is typically 360px (720px at 2.0 DPR)
+    const w = isMobile ? (window.screen?.width || window.innerWidth || 360) : 360;
+    // Full physical screen height in CSS pixels (e.g. 800 on 720x1600 phones, ratio 20:9)
+    const screenH = typeof window.screen !== 'undefined' && window.screen.height ? window.screen.height : 0;
+    const computedRatioH = Math.round(w * (20 / 9)); // 360 * 20 / 9 = 800
+    const h = isMobile ? Math.max(screenH, computedRatioH, 800) : 800;
+    return { width: w, height: h };
+  };
+
+  const [screenshotDimensions, setScreenshotDimensions] = useState<{ width: number; height: number }>(getDeviceDimensions);
 
   useEffect(() => {
     const updateDimensions = () => {
-      const isMobile = window.innerWidth <= 500;
-      const w = isMobile ? window.innerWidth : 412;
-      const h = isMobile && window.innerHeight >= 650 ? window.innerHeight : Math.round(w * 2.22);
-      setScreenshotDimensions({ width: w, height: h });
+      setScreenshotDimensions(getDeviceDimensions());
     };
     window.addEventListener('resize', updateDimensions);
-    return () => window.removeEventListener('resize', updateDimensions);
+    window.addEventListener('orientationchange', updateDimensions);
+    return () => {
+      window.removeEventListener('resize', updateDimensions);
+      window.removeEventListener('orientationchange', updateDimensions);
+    };
   }, []);
 
   // Dynamic customized feedback assets (uploaded CBE logo & QR code)
