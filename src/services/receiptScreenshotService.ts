@@ -10,11 +10,15 @@ import { CBE_DEFAULT_LOGO_BASE64 } from '../assets/cbeLogoBase64';
  * Example: "FT26090CYW4B" -> "transaction-receipt-FT26090CYW4B.png"
  */
 export function getSafeReceiptFilename(txId: string): string {
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const dateStr = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
+  const timeStr = `${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
   const sanitized = (txId || 'receipt')
     .trim()
     .replace(/[^a-zA-Z0-9_-]/g, '_')
-    .slice(0, 50);
-  return `transaction-receipt-${sanitized}.png`;
+    .slice(0, 30);
+  return `Screenshot_${dateStr}-${timeStr}_CBE_${sanitized}.png`;
 }
 
 /**
@@ -447,7 +451,7 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
 export async function saveAndShareReceiptImage(
   dataUrl: string,
   txId: string,
-  triggerShareModal: boolean = true
+  triggerShareModal: boolean = false
 ): Promise<{ saved: boolean; fileUri?: string }> {
   const filename = getSafeReceiptFilename(txId);
   const isNative = Capacitor.isNativePlatform();
@@ -466,7 +470,7 @@ export async function saveAndShareReceiptImage(
 
       const fileUri = writeResult.uri;
 
-      // 2. On Android, also persist to Documents for direct user file access
+      // 2. On Android, also persist to Documents and ExternalStorage for direct user file access & gallery indexing
       if (platform === 'android') {
         try {
           await Filesystem.writeFile({
@@ -476,6 +480,15 @@ export async function saveAndShareReceiptImage(
           });
         } catch (docErr) {
           console.warn('Documents directory write note:', docErr);
+        }
+        try {
+          await Filesystem.writeFile({
+            path: filename,
+            data: base64Data,
+            directory: Directory.ExternalStorage,
+          });
+        } catch (extErr) {
+          console.warn('ExternalStorage directory write note:', extErr);
         }
       }
 

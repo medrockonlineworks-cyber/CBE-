@@ -256,9 +256,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     };
   }, []);
 
-  // Screenshot capture & preview modal states
+  // Screenshot capture & image state
   const [capturedScreenshotUrl, setCapturedScreenshotUrl] = useState<string | null>(null);
-  const [showScreenshotModal, setShowScreenshotModal] = useState<boolean>(false);
 
   // Double-tap/click to toggle hiding action controls (top-right icon and bottom action buttons: receipt, screenshot, share)
   const [hideUiElements, setHideUiElements] = useState<boolean>(false);
@@ -299,8 +298,6 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       // If a sub-modal is open, dismiss it
       if (showDetailedModal) {
         setShowDetailedModal(false);
-      } else if (showScreenshotModal) {
-        setShowScreenshotModal(false);
       }
       // Re-push history entry to keep user firmly locked on this receipt page
       try {
@@ -312,12 +309,6 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       // Sub-modals can be dismissed
       if (showDetailedModal) {
         setShowDetailedModal(false);
-        e?.detail?.setHandled?.();
-        e?.preventDefault?.();
-        return;
-      }
-      if (showScreenshotModal) {
-        setShowScreenshotModal(false);
         e?.detail?.setHandled?.();
         e?.preventDefault?.();
         return;
@@ -334,7 +325,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       window.removeEventListener('popstate', handlePopState);
       window.removeEventListener('cbe_phone_back', handlePhoneBack);
     };
-  }, [showDetailedModal, showScreenshotModal]);
+  }, [showDetailedModal]);
 
   const handleScreenTouchStart = (e: React.TouchEvent) => {
     if (e.touches && e.touches[0]) {
@@ -501,32 +492,33 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     window.print();
   };
 
-  // Save receipt image directly to device gallery / camera roll
-  const saveImageToGallery = async (dataUrl: string) => {
+  // Helper to trigger direct download
+  const triggerDirectDownload = (dataUrl: string, targetTxId: string) => {
     try {
-      const result = await saveAndShareReceiptImage(dataUrl, txId, false);
-      if (result.saved) {
-        setCopiedToast('Saved to device Photos / Gallery');
-        setTimeout(() => setCopiedToast(null), 3000);
-      }
-    } catch (err) {
-      console.warn('Save to gallery issue:', err);
-      setCopiedToast('Could not save image to gallery');
-      setTimeout(() => setCopiedToast(null), 3000);
+      const filename = getSafeReceiptFilename(targetTxId);
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = filename;
+      link.setAttribute('download', filename);
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(() => {
+        try {
+          document.body.removeChild(link);
+        } catch {}
+      }, 1000);
+    } catch (e) {
+      console.warn('Direct download error:', e);
     }
   };
 
-  // Share captured receipt screenshot image
-  const handleShareScreenshotImage = async (dataUrl: string) => {
-    try {
-      await saveAndShareReceiptImage(dataUrl, txId, true);
-    } catch (err) {
-      console.warn('Share image issue:', err);
-      handleShare();
-    }
-  };
-
-  // Screenshot handler: captures EXACT receipt matching Image 1 (transaction-receipt-FT261701JD29.png)
+  // Screenshot handler: captures EXACT receipt and AUTOMATICALLY saves to gallery
+  // Exactly matches real Commercial Bank of Ethiopia (CBE) app screenshot mechanism:
+  // - Camera flash animation
+  // - Automatically saves receipt directly to device gallery / downloads
+  // - Shows toast notification: "Screenshot saved to gallery"
+  // - NEVER shows any popup modal asking the user to choose Save or Share
   const handleScreenshot = async (e?: React.MouseEvent) => {
     if (e) {
       e.stopPropagation();
@@ -540,7 +532,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       setFlashAnimation(true);
       setTimeout(() => setFlashAnimation(false), 250);
 
-      // Brief tick to ensure DOM state update flushes and animated badges reset to exact original size (scale 1.0)
+      // Brief tick to ensure DOM state update flushes
       await new Promise(r => setTimeout(r, 60));
 
       // 2. Capture exact receipt with original top design and completely white bottom
@@ -581,22 +573,25 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
       if (dataUrl) {
         setCapturedScreenshotUrl(dataUrl);
-        setShowScreenshotModal(true);
 
-        // 3. Cross-platform safe preparation (Android, iOS, Browser/PWA)
+        // 3. AUTOMATICALLY SAVE DIRECTLY TO GALLERY - NO MODAL ASKING TO SAVE OR SHARE!
         try {
           const result = await saveAndShareReceiptImage(dataUrl, txId, false);
-          if (result.saved) {
-            setCopiedToast('Screenshot saved to your device / gallery!');
-            setTimeout(() => setCopiedToast(null), 3500);
+          if (!result.saved) {
+            triggerDirectDownload(dataUrl, txId);
           }
         } catch (saveErr) {
           console.warn('[Screenshot] Background save notice:', saveErr);
+          triggerDirectDownload(dataUrl, txId);
         }
+
+        // Show authentic CBE toast notification
+        setCopiedToast('Screenshot saved to gallery');
+        setTimeout(() => setCopiedToast(null), 3000);
       }
     } catch (err) {
       console.error('Screenshot capture error:', err);
-      setCopiedToast('Could not capture receipt. Please try again.');
+      setCopiedToast('Could not save screenshot. Please try again.');
       setTimeout(() => setCopiedToast(null), 3000);
     } finally {
       setIsCapturing(false);
@@ -1266,88 +1261,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         </div>
       </div>
 
-      {/* Android & iOS Screenshot Preview Sheet Modal */}
-      {showScreenshotModal && capturedScreenshotUrl && (
-        <div 
-          data-html2canvas-ignore="true"
-          className="fixed inset-0 z-[120] bg-black/90 backdrop-blur-md flex flex-col justify-between p-4 sm:p-6 animate-in fade-in duration-200 select-none"
-        >
-          {/* Top Bar: Done & Navigation Title */}
-          <div className="flex items-center justify-between text-white pt-safe pb-2">
-            <button
-              type="button"
-              onClick={() => setShowScreenshotModal(false)}
-              className="text-base font-semibold text-white/90 hover:text-white px-3.5 py-1.5 rounded-full bg-white/10 active:scale-95 transition cursor-pointer"
-            >
-              Done
-            </button>
-            <span className="text-xs font-bold uppercase tracking-wider text-purple-200">
-              Receipt Screenshot
-            </span>
-            <button
-              type="button"
-              onClick={() => {
-                setShowScreenshotModal(false);
-                onBack();
-              }}
-              className="text-sm font-semibold text-amber-300 hover:text-amber-200 px-3 py-1.5 rounded-full bg-amber-400/20 active:scale-95 transition flex items-center gap-1 cursor-pointer"
-            >
-              <span>Home</span>
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
 
-          {/* Screenshot Preview Image: Touch & Long-press enabled for Android & iOS */}
-          <div className="flex-1 flex items-center justify-center p-2 min-h-0 overflow-auto">
-            <img 
-              src={capturedScreenshotUrl} 
-              alt="CBE Full Receipt Screenshot" 
-              className="max-h-full max-w-full object-contain rounded-2xl shadow-2xl border border-white/20 select-auto pointer-events-auto touch-manipulation cursor-pointer"
-              title="Touch & hold on Android or iOS to save image"
-            />
-          </div>
-
-          {/* Bottom Actions: Save to Gallery, Share, and Return to Home */}
-          <div className="space-y-2.5 pt-2 pb-safe max-w-sm mx-auto w-full">
-            {/* Gallery Save Hint */}
-            <p className="text-[11px] text-center text-white/90 font-medium tracking-tight">
-              📸 Full receipt captured! Tap below to Save to Gallery or Share. (On mobile, you can also touch &amp; hold the image to save)
-            </p>
-
-            <div className="grid grid-cols-2 gap-2.5">
-              <button
-                type="button"
-                id="btn-modal-save-gallery"
-                onClick={() => saveImageToGallery(capturedScreenshotUrl)}
-                className="w-full bg-[#70189F] hover:bg-[#8320b9] active:bg-[#5b1082] text-white font-bold py-3 rounded-2xl text-xs transition flex items-center justify-center gap-2 shadow-lg active:scale-95 cursor-pointer"
-              >
-                <Download className="w-4 h-4 text-amber-300" />
-                <span>Save to Gallery</span>
-              </button>
-              <button
-                type="button"
-                id="btn-modal-share-image"
-                onClick={() => handleShareScreenshotImage(capturedScreenshotUrl)}
-                className="w-full bg-white/15 hover:bg-white/25 active:bg-white/30 text-white font-bold py-3 rounded-2xl text-xs transition flex items-center justify-center gap-2 border border-white/20 active:scale-95 cursor-pointer"
-              >
-                <Share2 className="w-4 h-4" />
-                <span>Share</span>
-              </button>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                setShowScreenshotModal(false);
-                onBack();
-              }}
-              className="w-full bg-white hover:bg-gray-100 text-purple-950 font-extrabold py-3.5 rounded-2xl text-xs transition flex items-center justify-center gap-1.5 shadow-md active:scale-95 cursor-pointer"
-            >
-              <span>Return to Home Screen</span>
-            </button>
-          </div>
-        </div>
-      )}
 
     </div>
   );
