@@ -573,7 +573,9 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           disasterRecoveryFormatted,
           isCredit,
           qrDataUrl: qrUrl,
-          customBankLogo
+          customBankLogo,
+          targetWidth: screenshotDimensions.width,
+          targetHeight: screenshotDimensions.height,
         });
       }
 
@@ -769,7 +771,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           </div>
 
           {/* SCROLLABLE MIDDLE TEXT & CARD PART: Only this upper text area scrolls between the static header and static bottom buttons */}
-          <div className={`bg-white px-4 sm:px-5 ${hideUiElements ? 'pb-12' : 'pb-4'} flex-1 overflow-y-auto overscroll-contain scrollbar-none min-h-0`}>
+          <div className={`bg-white -mt-px px-4 sm:px-5 ${hideUiElements ? 'pb-12' : 'pb-4'} flex-1 overflow-y-auto overscroll-contain scrollbar-none min-h-0`}>
             <div className="space-y-3 pb-2">
               {/* Headline */}
               <h1 className="text-center text-[15.5px] sm:text-[16px] font-medium text-black tracking-tight mb-1">
@@ -1052,84 +1054,25 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
         {/* 
           ========================================================================
-          AUTHENTIC CURVE OF WHITE AND PURPLE COLOR
-          - Smooth symmetrical 38px curved transition matching exact CBE mobile banking
-          - Vector SVG path ensures 100% precision rendering in html2canvas & on all devices
-          - Large overlapping success checkmark badge centered precisely on the curve boundary
+          MAIN WHITE SHEET CONTAINER (MATCHING IMAGE 2 EXACTLY)
+          - Symmetrical 38px rounded top corners directly on white container against purple header
+          - ZERO intermediate SVG div => ZERO tiny horizontal line or seam!
+          - Overlapping large success checkmark badge centered on top curve boundary
+          - "Transaction Completed Successfully!" headline centered directly below badge
+          - Full edge-to-edge phone screen layout extending flat all the way to bottom edge
           ========================================================================
         */}
         <div 
           style={{ 
             width: '100%', 
-            height: '40px', 
-            backgroundColor: '#70189F', 
-            position: 'relative', 
-            flexShrink: 0,
-            overflow: 'visible',
-          }}
-        >
-          {/* Vector Curve Cap: Purple top background with white 38px rounded corner arcs */}
-          <svg 
-            viewBox="0 0 400 40" 
-            preserveAspectRatio="none" 
-            style={{ width: '100%', height: '40px', display: 'block' }}
-          >
-            {/* Top purple background corners */}
-            <rect x="0" y="0" width="400" height="40" fill="#70189F" />
-            {/* White curved sheet top */}
-            <path 
-              d="M 0,40 L 0,38 A 38 38 0 0 1 38,0 L 362,0 A 38 38 0 0 1 400,38 L 400,40 Z" 
-              fill="#ffffff" 
-            />
-          </svg>
-
-          {/* Overlapping Large Success Checkmark Badge centered precisely on the curve boundary (y = 0) */}
-          <div 
-            style={{ 
-              position: 'absolute', 
-              left: '50%', 
-              top: 0, 
-              transform: 'translate(-50%, -50%)', 
-              width: '90px', 
-              height: '90px', 
-              pointerEvents: 'none', 
-              userSelect: 'none', 
-              zIndex: 10,
-            }}
-          >
-            <svg 
-              viewBox="0 0 90 90" 
-              style={{ width: '100%', height: '100%', display: 'block' }} 
-              fill="none" 
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              {/* Purple Circle with crisp White Outer Ring */}
-              <circle cx="45" cy="45" r="41.5" stroke="#ffffff" strokeWidth="6" fill="#70189F" />
-              {/* Bold Crisp White Checkmark */}
-              <path
-                d="M 25.5 45.5 L 39.0 59.0 L 68.0 30.0"
-                fill="none"
-                stroke="#ffffff"
-                strokeWidth="7.2"
-                strokeLinecap="butt"
-                strokeLinejoin="miter"
-                strokeMiterlimit="4"
-                shapeRendering="geometricPrecision"
-              />
-            </svg>
-          </div>
-        </div>
-
-        {/* Main White Sheet Container */}
-        <div 
-          style={{ 
-            width: '100%', 
             flex: 1, 
             backgroundColor: '#ffffff', 
+            borderTopLeftRadius: '38px', 
+            borderTopRightRadius: '38px', 
             paddingLeft: '16px', 
             paddingRight: '16px', 
             paddingTop: '0px', 
-            paddingBottom: '12px', 
+            paddingBottom: '24px', 
             display: 'flex', 
             flexDirection: 'column', 
             justifyContent: 'space-between', 
@@ -1139,10 +1082,64 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             boxSizing: 'border-box',
           }}
         >
-          {/* Main Content Area - Matching screenshot_1792332161141_7b18d68a.png directly under overlapping checkmark badge */}
-          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', flex: 1, paddingTop: '0px', minHeight: 0, gap: '8px' }}>
-            {/* Spacer for bottom half of overlapping circular checkmark badge */}
-            <div style={{ height: '40px', flexShrink: 0 }} />
+          {/* Overlapping Large Success Checkmark Badge (matching Image 2) */}
+          <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', flexShrink: 0 }}>
+            <div 
+              style={{ 
+                position: 'absolute', 
+                left: '50%', 
+                top: 0, 
+                transform: 'translate(-50%, -50%)', 
+                width: '90px', 
+                height: '90px', 
+                pointerEvents: 'none', 
+                userSelect: 'none', 
+                zIndex: 10,
+              }}
+            >
+              <svg 
+                viewBox="0 0 90 90" 
+                style={{ width: '100%', height: '100%', display: 'block' }} 
+                fill="none" 
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                {/* Purple Circle with crisp White Outer Ring */}
+                <circle cx="45" cy="45" r="41.5" stroke="#ffffff" strokeWidth="6" fill="#70189F" />
+                {/* Bold Crisp White Checkmark */}
+                <path
+                  d="M 25.5 45.5 L 39.0 59.0 L 68.0 30.0"
+                  fill="none"
+                  stroke="#ffffff"
+                  strokeWidth="7.2"
+                  strokeLinecap="butt"
+                  strokeLinejoin="miter"
+                  strokeMiterlimit="4"
+                  shapeRendering="geometricPrecision"
+                />
+              </svg>
+            </div>
+          </div>
+
+          {/* Spacer for bottom half of overlapping badge */}
+          <div style={{ height: '48px', flexShrink: 0 }} />
+
+          {/* Main Content Area - Matching Image 2 */}
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', flex: 1, paddingTop: '0px', minHeight: 0, gap: '10px' }}>
+            {/* Headline exactly matching Image 2 */}
+            <h1 
+              style={{ 
+                margin: '0 0 2px 0', 
+                textAlign: 'center', 
+                fontSize: '15.5px', 
+                fontWeight: 500, 
+                color: '#000000', 
+                letterSpacing: '-0.2px', 
+                fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                flexShrink: 0,
+              }}
+            >
+              Transaction Completed Successfully!
+            </h1>
 
             {/* Main Transaction Summary Gray Card */}
             <div 
@@ -1172,7 +1169,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 </p>
               )}
 
-              {/* Realistic QR Code Centered with authentic rounded grey frame matching IMG_20261019_113049_969.png */}
+              {/* Realistic QR Code Centered with authentic rounded grey frame */}
               <div style={{ display: 'flex', justifyContent: 'center', marginTop: '4px', paddingTop: 0, paddingBottom: '4px' }}>
                 <div 
                   style={{ 
@@ -1183,7 +1180,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                     display: 'inline-flex', 
                     alignItems: 'center', 
                     justifyContent: 'center', 
-                    userSelect: 'none',
+                    userSelect: 'none', 
                     boxSizing: 'border-box',
                   }}
                 >
@@ -1227,7 +1224,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 </div>
               </div>
 
-              {/* Commercial Bank of Ethiopia Footer Inset matching screenshot_1792332161141.png */}
+              {/* Commercial Bank of Ethiopia Footer Inset in TRUE SIZE matching Image 2 */}
               <div 
                 style={{ 
                   display: 'flex', 
@@ -1239,7 +1236,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                   paddingLeft: '4px', 
                   paddingRight: '4px', 
                   width: '100%', 
-                  boxSizing: 'border-box',
+                  boxSizing: 'border-box', 
                 }}
               >
                 <div 
@@ -1259,27 +1256,11 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
             </div>
 
-            {/* Generous clean white space extending down to the bottom edge of the phone */}
-            <div style={{ flex: 1, backgroundColor: '#ffffff', minHeight: '30px' }} />
+            {/* Generous clean white space extending flat all the way to the bottom edge of device */}
+            <div style={{ flex: 1, backgroundColor: '#ffffff', minHeight: '40px' }} />
           </div>
 
         </div>
-
-        {/* Authentic Bottom Phone Navigation Bar Edge matching screenshot_1792332161141.png */}
-        <div 
-          id="cbe-screenshot-phone-bottom-bar"
-          style={{ 
-            width: '100%', 
-            height: '44px', 
-            backgroundColor: '#f4f4f5', 
-            borderTop: '1px solid #e4e4e7', 
-            flexShrink: 0, 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center', 
-            userSelect: 'none',
-          }}
-        />
       </div>
 
       {/* Android & iOS Screenshot Preview Sheet Modal */}

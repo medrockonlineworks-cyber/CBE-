@@ -18,6 +18,8 @@ export interface ReceiptDrawOptions {
   isCredit: boolean;
   qrDataUrl: string;
   customBankLogo?: string | null;
+  targetWidth?: number;
+  targetHeight?: number;
 }
 
 interface TextToken {
@@ -110,12 +112,12 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
 
   // Razor-sharp 2x retina resolution
   const scale = 2;
-  const baseWidth = 412;
-  const width = baseWidth * scale; // 824px
+  const baseWidth = options.targetWidth || 412;
+  const width = baseWidth * scale;
   
-  // Authentic smartphone screen height matching edge-to-edge screenshot_1792332161141.png
-  const baseHeight = 915;
-  const height = baseHeight * scale; // 1830px
+  // Authentic smartphone screen height matching edge-to-edge Image 2
+  const baseHeight = options.targetHeight || 915;
+  const height = baseHeight * scale;
 
   const canvas = document.createElement('canvas');
   canvas.width = width;
@@ -132,24 +134,24 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
     loadImage(logoSrc)
   ]);
 
-  // 1. Entire Canvas Background: Pure White (#ffffff)
+  // 1. Entire Canvas Background: Pure White (#ffffff) extending edge-to-edge
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, width, height);
 
-  // 2. Top Purple Header: #70189F matching original authentic CBE top design & IMG_0609.jpeg
+  // 2. Top Purple Header: #70189F matching original authentic CBE top design & Image 2
   const topPurplePadding = 36 * scale; // Exact vertical space above Thank you
   const shieldSize = 34 * scale;
   const shieldX = 20 * scale;
   const shieldY = topPurplePadding;
-  const headerBottomPadding = 22 * scale; // Ending point space matching IMG_20261011_115144_548.png
+  const headerBottomPadding = 22 * scale;
   const sheetTop = shieldY + shieldSize + headerBottomPadding;
-  const cornerRadius = 38 * scale; // Authentic large rounded-t curve matching IMG_0135.png
+  const cornerRadius = 38 * scale; // Authentic large rounded-t curve matching Image 2
 
-  // Fill purple background extending down PAST sheetTop to fill the corners of the white curve
+  // Fill purple background extending down only to sheetTop + cornerRadius to fill behind curved corners
   ctx.fillStyle = '#70189F';
-  ctx.fillRect(0, 0, width, sheetTop + cornerRadius + (20 * scale));
+  ctx.fillRect(0, 0, width, sheetTop + cornerRadius);
 
-  // 3. Exact Solid White Shield with Purple Checkmark (matching exact SVG in IMG_0135.png)
+  // 3. Exact Solid White Shield with Purple Checkmark (matching exact SVG in Image 2)
   ctx.save();
   ctx.translate(shieldX, shieldY);
   ctx.scale(shieldSize / 24, shieldSize / 24);
@@ -185,10 +187,10 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   // 5. Main White Sheet Container:
   // Starts at sheetTop with rounded top corners (38px) against purple background, extending flat to canvas bottom!
   ctx.fillStyle = '#ffffff';
-  roundRect(ctx, 0, sheetTop, width, height - sheetTop, [cornerRadius, cornerRadius, 0, 0]);
+  roundRect(ctx, 0, sheetTop, width, height - sheetTop + (20 * scale), [cornerRadius, cornerRadius, 0, 0]);
   ctx.fill();
 
-  // 6. Overlapping Success Checkmark Badge (matching exact SVG in IMG_0135.png)
+  // 6. Overlapping Success Checkmark Badge (matching exact SVG in Image 2)
   const badgeCenterX = width / 2;
   const badgeCenterY = sheetTop;
   const badgeRadius = 41.5 * scale;
@@ -215,10 +217,18 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   ctx.stroke(badgeCheckmark);
   ctx.restore();
 
-  // 7. Main Transaction Summary Gray Card: #f2f3f5 (positioned cleanly under badge matching screenshot_1792332161141_7b18d68a.png)
+  // 7. Headline: "Transaction Completed Successfully!" (matching Image 2)
+  const headlineY = sheetTop + (58 * scale);
+  ctx.fillStyle = '#000000';
+  ctx.font = `500 ${15.5 * scale}px ${fontSans}`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText('Transaction Completed Successfully!', width / 2, headlineY);
+
+  // 8. Main Transaction Summary Gray Card: #f2f3f5 (positioned cleanly under headline matching Image 2)
   const cardMarginX = 16 * scale;
-  const cardTop = sheetTop + (56 * scale);
-  const cardWidth = width - (cardMarginX * 2); // 388 * scale
+  const cardTop = headlineY + (16 * scale);
+  const cardWidth = width - (cardMarginX * 2);
   const cardPadX = 18 * scale;
   const cardPadY = 18 * scale;
   const textStartX = cardMarginX + cardPadX;
@@ -389,17 +399,6 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   ctx.font = `normal ${11 * scale}px ${fontSans}`;
   ctx.fillText('The bank you can always rely on!', footerTextX, footerY + (33 * scale));
 
-  // 11. Authentic bottom phone navigation bar edge matching screenshot_1792332161141.png
-  const bottomBarHeight = 44 * scale;
-  const bottomBarY = height - bottomBarHeight;
-  ctx.fillStyle = '#f4f4f5';
-  ctx.fillRect(0, bottomBarY, width, bottomBarHeight);
-  ctx.strokeStyle = '#e4e4e7';
-  ctx.lineWidth = 1 * scale;
-  ctx.beginPath();
-  ctx.moveTo(0, bottomBarY);
-  ctx.lineTo(width, bottomBarY);
-  ctx.stroke();
-
+  // Pure clean white sheet extends all the way to bottom edge (zero bottom bar, zero horizontal lines)
   return canvas.toDataURL('image/png', 1.0);
 }
