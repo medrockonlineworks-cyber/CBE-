@@ -38,6 +38,17 @@ export function dataUrlToBlob(dataUrl: string): Blob {
 }
 
 /**
+ * Accurately detects iOS devices (iPhone, iPad, iPod, or iPadOS Safari on MacIntel).
+ */
+export function checkIsIOS(): boolean {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  const isIos = /iPhone|iPad|iPod/i.test(ua);
+  const isMacTouch = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+  return isIos || isMacTouch;
+}
+
+/**
  * Converts an SVG Data URL (e.g. data:image/svg+xml...) to a rasterized PNG Data URL
  * to avoid tainted canvas or blank image issues on Android Chrome / WebKit.
  */
@@ -456,6 +467,7 @@ export async function saveAndShareReceiptImage(
   const filename = getSafeReceiptFilename(txId);
   const isNative = Capacitor.isNativePlatform();
   const platform = Capacitor.getPlatform();
+  const isIos = platform === 'ios' || checkIsIOS();
 
   if (isNative) {
     try {
@@ -470,7 +482,7 @@ export async function saveAndShareReceiptImage(
 
       const fileUri = writeResult.uri;
 
-      // 2. On Android, also persist to Documents and ExternalStorage for direct user file access & gallery indexing
+      // 2. On Android, persist to Documents and ExternalStorage for direct user file access & gallery indexing
       if (platform === 'android') {
         try {
           await Filesystem.writeFile({
@@ -492,14 +504,27 @@ export async function saveAndShareReceiptImage(
         }
       }
 
-      // 3. Open native share sheet (on iOS provides "Save Image" to Photos, AirDrop; on Android provides Photos, Drive, Telegram, WhatsApp)
-      if (triggerShareModal) {
+      // 2b. On native iOS, also persist to Documents
+      if (platform === 'ios') {
+        try {
+          await Filesystem.writeFile({
+            path: filename,
+            data: base64Data,
+            directory: Directory.Documents,
+          });
+        } catch (iosDocErr) {
+          console.warn('iOS Documents directory write note:', iosDocErr);
+        }
+      }
+
+      // 3. For native iOS or explicit share request: open native share sheet so user can tap "Save Image" to Photos
+      if (triggerShareModal || platform === 'ios') {
         try {
           await Share.share({
             title: `CBE Receipt ${txId}`,
             text: `Commercial Bank of Ethiopia Transaction Receipt #${txId}`,
             files: [fileUri],
-            dialogTitle: 'Share or Save Receipt',
+            dialogTitle: 'Save Image to Photos',
           });
         } catch (shareErr: any) {
           if (
@@ -524,29 +549,13 @@ export async function saveAndShareReceiptImage(
       const blob = dataUrlToBlob(dataUrl);
       const file = new File([blob], filename, { type: 'image/png' });
 
-      // 1. Web Share API with file support (works on Android Chrome and iOS Safari when user gesture is present)
-      if (triggerShareModal && typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({
-            files: [file],
-            title: `CBE Receipt - ${txId}`,
-            text: `Commercial Bank of Ethiopia Transaction Receipt #${txId}`,
-          });
-          return { saved: true };
-        } catch (shareErr: any) {
-          if (shareErr?.name === 'AbortError') {
-            return { saved: true };
-          }
-          console.log('Web share note (falling back to download):', shareErr);
-        }
-      }
-
-      // 2. Direct browser file download (Saves directly to Android Downloads/Gallery and device storage)
+      // 1. Direct browser file download (Saves directly to Android Downloads/Gallery and iOS Files/Downloads)
       try {
         const blobUrl = URL.createObjectURL(blob);
         const downloadLink = document.createElement('a');
         downloadLink.href = blobUrl;
         downloadLink.download = filename;
+        downloadLink.setAttribute('download', filename);
         downloadLink.style.position = 'fixed';
         downloadLink.style.left = '-9999px';
         downloadLink.style.top = '-9999px';
@@ -563,11 +572,30 @@ export async function saveAndShareReceiptImage(
         console.warn('Download link fallback notice:', downloadErr);
       }
 
-      // 3. Clipboard copy fallback
+      // 2. Clipboard copy: allows pasting image directly into Photos, Messages, Notes on iOS & desktop
       if (typeof navigator !== 'undefined' && navigator.clipboard && window.ClipboardItem) {
         try {
           await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
         } catch {}
+      }
+
+      // 3. iOS Safari / Apple Photos integration:
+      // On iOS devices, web security requires invoking the native share sheet with the image file
+      // so the user can tap "Save Image" to put the receipt directly into the Apple Photos (Camera Roll) gallery.
+      if ((isIos || triggerShareModal) && typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: `CBE Receipt - ${txId}`,
+            text: `Commercial Bank of Ethiopia Transaction Receipt #${txId}`,
+          });
+          return { saved: true };
+        } catch (shareErr: any) {
+          if (shareErr?.name === 'AbortError') {
+            return { saved: true };
+          }
+          console.log('iOS share note (falling back to download):', shareErr);
+        }
       }
 
       return { saved: true };

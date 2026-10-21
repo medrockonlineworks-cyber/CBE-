@@ -590,8 +590,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           triggerDirectDownload(dataUrl, txId);
         }
 
-        // Show authentic CBE toast notification
-        setCopiedToast('Screenshot saved to gallery');
+        // Show authentic CBE toast notification (tailored for iPhone Photos & Android Gallery)
+        setCopiedToast(isIPhone ? 'Screenshot saved to Photos / Gallery' : 'Screenshot saved to gallery');
         setTimeout(() => setCopiedToast(null), 3000);
       }
     } catch (err) {
