@@ -415,28 +415,6 @@ export const TruecallerService = {
               mod = true;
             }
           });
-
-          // Always synchronize live balances from tana_users so Truecaller is 100% in sync
-          try {
-            const rawUsers = typeof window !== 'undefined' ? localStorage.getItem('tana_users') : null;
-            if (rawUsers) {
-              const uList = JSON.parse(rawUsers);
-              if (Array.isArray(uList)) {
-                uList.forEach((u: any) => {
-                  const clean = (u.accountNumber || '').replace(/\D/g, '');
-                  if (!clean) return;
-                  const target = parsed.find(a => (a.accountNumber || '').replace(/\D/g, '') === clean);
-                  if (target && u.balance !== undefined && !isNaN(u.balance)) {
-                    if (target.balance !== u.balance) {
-                      target.balance = u.balance;
-                      mod = true;
-                    }
-                  }
-                });
-              }
-            }
-          } catch {}
-
           if (mod) this.saveAccounts(parsed);
           return parsed;
         }
@@ -446,30 +424,6 @@ export const TruecallerService = {
     }
     this.saveAccounts(DEFAULT_ACCOUNTS);
     return DEFAULT_ACCOUNTS;
-  },
-
-  syncBalance(accountNumber: string, newBalance: number): void {
-    const clean = (accountNumber || '').replace(/\D/g, '');
-    if (!clean) return;
-    const accounts = this.getAccounts();
-    const targetIdx = accounts.findIndex(a => (a.accountNumber || '').replace(/\D/g, '') === clean);
-    if (targetIdx !== -1) {
-      accounts[targetIdx].balance = newBalance;
-      this.saveAccounts(accounts);
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('tc_alerts_updated', { detail: { account: accounts[targetIdx] } }));
-      }
-    }
-  },
-
-  setActiveAccountNumber(accountNumber: string): void {
-    const clean = (accountNumber || '').replace(/\D/g, '');
-    if (!clean) return;
-    const accounts = this.getAccounts();
-    const match = accounts.find(a => (a.accountNumber || '').replace(/\D/g, '') === clean);
-    if (match) {
-      this.setActiveAccountId(match.id);
-    }
   },
 
   saveAccounts(accounts: TruecallerBankAccount[]): void {
@@ -648,7 +602,7 @@ export const TruecallerService = {
     return newAlert;
   },
 
-  syncTransactionToTruecaller(tx: Transaction, userBalance?: number, recipientBalance?: number): TruecallerAlert {
+  syncTransactionToTruecaller(tx: Transaction, userBalance?: number): TruecallerAlert {
     const bankKey = getBankKeyFromName(tx.recipientBank || 'cbe');
     const preset = BANK_PRESETS.find(p => p.key === bankKey) || BANK_PRESETS[0];
 
@@ -704,11 +658,9 @@ export const TruecallerService = {
     // Rule: "When user receive the available balance is the previous balance plus the the current received balance."
     let recipientAcc = updatedAccounts.find(a => a.accountNumber === recipientAccNum);
     const recipientPrevBal = recipientAcc ? (recipientAcc.balance ?? 244600.00) : (tx.type === 'receive' && userBalance !== undefined ? Math.max(0, userBalance - tx.amount) : 244600.00);
-    const recipientNewBal = recipientBalance !== undefined
-      ? recipientBalance
-      : (tx.type === 'receive' && userBalance !== undefined)
-        ? userBalance
-        : recipientPrevBal + tx.amount;
+    const recipientNewBal = (tx.type === 'receive' && userBalance !== undefined)
+      ? userBalance
+      : recipientPrevBal + tx.amount;
 
     if (recipientAcc) {
       recipientAcc = {

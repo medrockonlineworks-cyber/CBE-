@@ -477,45 +477,12 @@ export class SmsService {
           modified = true;
         }
       });
-      // Always synchronize live balances from tana_users so SMS simulator is 100% in sync
-      try {
-        const rawUsers = typeof window !== 'undefined' ? localStorage.getItem('tana_users') : null;
-        if (rawUsers) {
-          const uList = JSON.parse(rawUsers);
-          if (Array.isArray(uList)) {
-            uList.forEach((u: any) => {
-              const clean = (u.accountNumber || '').replace(/\D/g, '');
-              if (!clean) return;
-              const target = list.find(a => (a.accountNumber || '').replace(/\D/g, '') === clean);
-              if (target && u.balance !== undefined && !isNaN(u.balance)) {
-                if (target.balance !== u.balance) {
-                  target.balance = u.balance;
-                  modified = true;
-                }
-              }
-            });
-          }
-        }
-      } catch {}
-
       if (modified) {
         this.saveAccounts(list);
       }
       return list;
     } catch {
       return INITIAL_DEMO_ACCOUNTS;
-    }
-  }
-
-  static syncBalance(accountNumber: string, newBalance: number): void {
-    const clean = (accountNumber || '').replace(/\D/g, '');
-    if (!clean) return;
-    const accounts = this.getAccounts();
-    const targetIdx = accounts.findIndex(a => (a.accountNumber || '').replace(/\D/g, '') === clean);
-    if (targetIdx !== -1) {
-      accounts[targetIdx].balance = newBalance;
-      accounts[targetIdx].lastUpdated = new Date().toISOString();
-      this.saveAccounts(accounts);
     }
   }
 
