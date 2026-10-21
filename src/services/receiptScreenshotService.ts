@@ -517,14 +517,14 @@ export async function saveAndShareReceiptImage(
         }
       }
 
-      // 3. For native iOS or explicit share request: open native share sheet so user can tap "Save Image" to Photos
-      if (triggerShareModal || platform === 'ios') {
+      // 3. For native explicit share request ONLY: open native share sheet
+      if (triggerShareModal) {
         try {
           await Share.share({
             title: `CBE Receipt ${txId}`,
             text: `Commercial Bank of Ethiopia Transaction Receipt #${txId}`,
             files: [fileUri],
-            dialogTitle: 'Save Image to Photos',
+            dialogTitle: 'Share Receipt',
           });
         } catch (shareErr: any) {
           if (
@@ -549,17 +549,14 @@ export async function saveAndShareReceiptImage(
       const blob = dataUrlToBlob(dataUrl);
       const file = new File([blob], filename, { type: 'image/png' });
 
-      // 1. Direct browser file download (Saves directly to Android Downloads/Gallery and iOS Files/Downloads)
+      // 1. Direct browser file download: saves silently & automatically to device on iOS & Android
       try {
         const blobUrl = URL.createObjectURL(blob);
         const downloadLink = document.createElement('a');
         downloadLink.href = blobUrl;
         downloadLink.download = filename;
         downloadLink.setAttribute('download', filename);
-        downloadLink.style.position = 'fixed';
-        downloadLink.style.left = '-9999px';
-        downloadLink.style.top = '-9999px';
-        downloadLink.style.opacity = '0';
+        downloadLink.style.display = 'none';
         document.body.appendChild(downloadLink);
         downloadLink.click();
         setTimeout(() => {
@@ -572,17 +569,15 @@ export async function saveAndShareReceiptImage(
         console.warn('Download link fallback notice:', downloadErr);
       }
 
-      // 2. Clipboard copy: allows pasting image directly into Photos, Messages, Notes on iOS & desktop
+      // 2. Clipboard copy: silently saves full image to clipboard on iOS and desktop
       if (typeof navigator !== 'undefined' && navigator.clipboard && window.ClipboardItem) {
         try {
           await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
         } catch {}
       }
 
-      // 3. iOS Safari / Apple Photos integration:
-      // On iOS devices, web security requires invoking the native share sheet with the image file
-      // so the user can tap "Save Image" to put the receipt directly into the Apple Photos (Camera Roll) gallery.
-      if ((isIos || triggerShareModal) && typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
+      // 3. Web Share API ONLY when explicitly requested by tapping the Share button
+      if (triggerShareModal && typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
         try {
           await navigator.share({
             files: [file],
@@ -594,7 +589,7 @@ export async function saveAndShareReceiptImage(
           if (shareErr?.name === 'AbortError') {
             return { saved: true };
           }
-          console.log('iOS share note (falling back to download):', shareErr);
+          console.log('Share dialog note:', shareErr);
         }
       }
 
