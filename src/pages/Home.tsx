@@ -29,10 +29,14 @@ import {
   ExternalLink,
   MessageSquare,
   Smartphone,
-  PhoneCall
+  PhoneCall,
+  Users
 } from 'lucide-react';
-import { UserProfile, Transaction } from '../types';
+import { UserProfile, Transaction, RegisteredAccountInfo } from '../types';
 import { LocalDb } from '../lib/mockData';
+import { RegisteredAccountsModal } from '../components/RegisteredAccountsModal';
+import { SmsService } from '../services/smsService';
+import { TruecallerService } from '../services/truecallerService';
 
 interface HomeProps {
   currentUser?: UserProfile | null;

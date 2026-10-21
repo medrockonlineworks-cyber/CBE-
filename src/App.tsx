@@ -94,13 +94,20 @@ export default function App() {
         setCurrentUser({ ...match });
       }
     };
+    const handleAccountSwitched = (e: any) => {
+      if (e?.detail?.user) {
+        setCurrentUser({ ...e.detail.user });
+      }
+    };
     window.addEventListener('cbe_balance_updated' as any, handleBalanceSync);
     window.addEventListener('cbe_transaction_completed' as any, handleBalanceSync);
     window.addEventListener('cbe_accounts_updated' as any, handleBalanceSync);
+    window.addEventListener('cbe_account_switched' as any, handleAccountSwitched);
     return () => {
       window.removeEventListener('cbe_balance_updated' as any, handleBalanceSync);
       window.removeEventListener('cbe_transaction_completed' as any, handleBalanceSync);
       window.removeEventListener('cbe_accounts_updated' as any, handleBalanceSync);
+      window.removeEventListener('cbe_account_switched' as any, handleAccountSwitched);
     };
   }, [currentUser?.id]);
 

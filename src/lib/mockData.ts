@@ -2093,34 +2093,59 @@ export class LocalDb {
 
     // If recipient is a registered account in our system, credit them in real-time
     const cleanRecipAcc = (recipientAccount || '').replace(/\D/g, '');
-    const matchedRecipAcc = allAccs.find(a => a.accountNumber === cleanRecipAcc);
-    if (matchedRecipAcc && type !== 'receive') {
-      matchedRecipAcc.balance = Number((matchedRecipAcc.balance + amount).toFixed(2));
-      matchedRecipAcc.availableBalance = matchedRecipAcc.balance;
-      const recAccIdx = allAccs.findIndex(a => a.id === matchedRecipAcc.id);
-      if (recAccIdx !== -1) allAccs[recAccIdx] = matchedRecipAcc;
-      this.setAccounts(allAccs);
+    let matchedRecipAcc = allAccs.find(a => a.accountNumber.replace(/\D/g, '') === cleanRecipAcc);
+    let matchedRecipUser = users.find(u => (u.accountNumber && u.accountNumber.replace(/\D/g, '') === cleanRecipAcc) || (matchedRecipAcc && u.id === matchedRecipAcc.userId));
+    let recipientFinalBal: number | undefined = undefined;
 
-      // Sync recipient user profile
-      const recUserIdx = users.findIndex(u => u.id === matchedRecipAcc.userId);
-      if (recUserIdx !== -1) {
-        const recUser = users[recUserIdx];
-        if (matchedRecipAcc.isPrimary || matchedRecipAcc.accountNumber === recUser.accountNumber || !allAccs.some(a => a.userId === recUser.id && a.isPrimary)) {
-          recUser.balance = matchedRecipAcc.balance;
-          recUser.availableBalance = matchedRecipAcc.balance;
-        } else {
-          recUser.balance = Number((recUser.balance + amount).toFixed(2));
-          recUser.availableBalance = recUser.balance;
+    if (type !== 'receive' && cleanRecipAcc) {
+      // 1. Credit matching account in allAccs if present
+      if (matchedRecipAcc) {
+        matchedRecipAcc.balance = Number((matchedRecipAcc.balance + amount).toFixed(2));
+        matchedRecipAcc.availableBalance = matchedRecipAcc.balance;
+        const recAccIdx = allAccs.findIndex(a => a.id === matchedRecipAcc!.id);
+        if (recAccIdx !== -1) allAccs[recAccIdx] = matchedRecipAcc;
+        this.setAccounts(allAccs);
+        recipientFinalBal = matchedRecipAcc.balance;
+      }
+
+      // 2. Credit matching user profile in users
+      if (matchedRecipUser) {
+        matchedRecipUser.balance = Number((matchedRecipUser.balance + amount).toFixed(2));
+        matchedRecipUser.availableBalance = matchedRecipUser.balance;
+        const recUserIdx = users.findIndex(u => u.id === matchedRecipUser!.id);
+        if (recUserIdx !== -1) {
+          users[recUserIdx] = matchedRecipUser;
+          this.setUsers(users);
         }
-        users[recUserIdx] = recUser;
-        this.setUsers(users);
-        firebaseService.syncUserProfile(recUser).catch(() => {});
+        recipientFinalBal = matchedRecipUser.balance;
+        firebaseService.syncUserProfile(matchedRecipUser).catch(() => {});
         this.addNotification(
-          recUser.id,
+          matchedRecipUser.id,
           'Account Credited',
-          `Received ETB ${amount.toLocaleString()} from ${user.name}. (A/C: ${matchedRecipAcc.accountNumber})`,
+          `Received ETB ${amount.toLocaleString()} from ${user.name}. (A/C: ${cleanRecipAcc})`,
           'success'
         );
+      }
+
+      // 3. If in custom directory accounts, credit there too
+      try {
+        const customList = loadData<RegisteredAccountInfo[]>('tana_custom_directory_accounts', []);
+        const cIdx = customList.findIndex(c => c.accountNumber && c.accountNumber.replace(/\D/g, '') === cleanRecipAcc);
+        if (cIdx !== -1) {
+          customList[cIdx].balance = Number(((customList[cIdx].balance ?? 25000) + amount).toFixed(2));
+          saveData('tana_custom_directory_accounts', customList);
+          if (recipientFinalBal === undefined) {
+            recipientFinalBal = customList[cIdx].balance;
+          }
+        }
+      } catch {}
+
+      // 4. Directly update and sync recipient balance in SmsService and TruecallerService
+      if (recipientFinalBal !== undefined) {
+        try {
+          SmsService.syncBalance(cleanRecipAcc, recipientFinalBal);
+          TruecallerService.syncBalance(cleanRecipAcc, recipientFinalBal);
+        } catch {}
       }
     }
 
@@ -2135,7 +2160,7 @@ export class LocalDb {
       senderId: type !== 'receive' ? userId : undefined,
       senderName: type !== 'receive' ? user.name : recipientName,
       senderAccount: type !== 'receive' ? (fromAcc?.accountNumber || user.accountNumber) : recipientAccount,
-      recipientId: type === 'receive' ? userId : (matchedRecipAcc?.userId),
+      recipientId: type === 'receive' ? userId : (matchedRecipUser?.id || matchedRecipAcc?.userId),
       recipientName,
       recipientAccount,
       recipientBank,
@@ -2153,6 +2178,15 @@ export class LocalDb {
 
     txs.unshift(newTx);
     this.setTransactions(txs);
+
+    const senderFinalBal = fromAcc ? fromAcc.balance : user.balance;
+    const senderCleanAcc = (fromAcc?.accountNumber || user.accountNumber).replace(/\D/g, '');
+
+    // Synchronize sender live balance in SmsService & TruecallerService
+    try {
+      SmsService.syncBalance(senderCleanAcc, senderFinalBal);
+      TruecallerService.syncBalance(senderCleanAcc, senderFinalBal);
+    } catch {}
 
     // Broadcast instant balance update event to all UI cards and listeners
     if (typeof window !== 'undefined') {
@@ -2188,16 +2222,14 @@ export class LocalDb {
 
     // Automatically generate simulated SMS for successful banking transaction
     try {
-      const finalBal = fromAcc ? fromAcc.balance : user.balance;
-      SmsService.createSmsFromTransaction(newTx, finalBal, fromAcc?.id, matchedRecipAcc?.balance);
+      SmsService.createSmsFromTransaction(newTx, senderFinalBal, fromAcc?.id, recipientFinalBal ?? matchedRecipAcc?.balance);
     } catch (smsErr) {
       console.error('[SmsService] Failed to auto-generate transaction SMS:', smsErr);
     }
 
     // Automatically create/update account and alert in Truecaller SMS simulator
     try {
-      const finalBal = fromAcc ? fromAcc.balance : user.balance;
-      TruecallerService.syncTransactionToTruecaller(newTx, finalBal);
+      TruecallerService.syncTransactionToTruecaller(newTx, senderFinalBal, recipientFinalBal ?? matchedRecipAcc?.balance);
     } catch (tcErr) {
       console.error('[TruecallerService] Failed to auto-generate Truecaller alert:', tcErr);
     }
