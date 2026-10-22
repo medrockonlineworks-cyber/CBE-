@@ -215,6 +215,17 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
     reloadMessages(accNum);
     setShowMenu(false);
     setShowAccountModal(false);
+
+    try {
+      const cleanNum = accNum.replace(/\D/g, '');
+      const users = LocalDb.getUsers();
+      const match = users.find(u => (u.accountNumber || '').replace(/\D/g, '') === cleanNum);
+      if (match) {
+        localStorage.setItem('tana_active_user_id', match.id);
+        window.dispatchEvent(new CustomEvent('cbe_account_switched', { detail: { user: match } }));
+        window.dispatchEvent(new CustomEvent('cbe_balance_updated', { detail: { user: match, balance: match.balance } }));
+      }
+    } catch {}
   };
 
   // Add custom account

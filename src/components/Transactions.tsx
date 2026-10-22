@@ -121,8 +121,24 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
 
   const loadTransactions = () => {
     const list = LocalDb.getTransactions();
+    const cleanUserAcc = (currentUser.accountNumber || '').replace(/\D/g, '');
+    const userAccs = LocalDb.getUserAccounts(currentUser.id).map(a => a.accountNumber.replace(/\D/g, ''));
+    userAccs.push(cleanUserAcc);
+
+    const filtered = list.filter(tx => {
+      const sAcc = (tx.senderAccount || '').replace(/\D/g, '');
+      const rAcc = (tx.recipientAccount || '').replace(/\D/g, '');
+      const isSender = userAccs.includes(sAcc) || tx.senderId === currentUser.id;
+      const isRecipient = userAccs.includes(rAcc) || tx.recipientId === currentUser.id;
+
+      const isPrimaryUser = currentUser.id === 'user_1' || currentUser.id === 'user_admin' || userAccs.includes('1000419524747') || userAccs.includes('1000284758657');
+      const isLegacyPrimaryTx = isPrimaryUser && (sAcc === '1000284758657' || rAcc === '1000284758657' || tx.senderId === 'user_1' || tx.recipientId === 'user_1');
+
+      return isSender || isRecipient || isLegacyPrimaryTx;
+    });
+
     setTransactionsList(
-      list.sort((a, b) => {
+      filtered.sort((a, b) => {
         const timeA = new Date(a.createdAt).getTime();
         const timeB = new Date(b.createdAt).getTime();
         if (isNaN(timeA) || isNaN(timeB)) {

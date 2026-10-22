@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { UserProfile } from '../types';
 import { LocalDb, DEFAULT_CBE_LOGO } from '../lib/mockData';
 import { SmsService } from '../services/smsService';
+import { TruecallerService } from '../services/truecallerService';
 import { CbeLogo } from './CbeLogo';
 import { 
   User, 
@@ -104,8 +105,19 @@ export default function Profile({
   const [editEmail, setEditEmail] = useState(currentUser.email);
   const [editAccountType, setEditAccountType] = useState<UserProfile['accountType']>(currentUser.accountType || 'savings');
 
+  useEffect(() => {
+    setEditName(currentUser.name);
+    setEditAccount(currentUser.accountNumber);
+    setEditBalance((currentUser.balance ?? 18450.50).toFixed(2));
+    setEditPhone(currentUser.phone);
+    setEditEmail(currentUser.email);
+    setEditAccountType(currentUser.accountType || 'savings');
+    setBiometrics(currentUser.biometricEnabled || false);
+  }, [currentUser]);
+
   // Account Switcher / Multi-Account Registration Modal
   const [showAccountsModal, setShowAccountsModal] = useState(false);
+  const [accountsSearchTerm, setAccountsSearchTerm] = useState('');
   const [showNewAccountForm, setShowNewAccountForm] = useState(false);
   const [newAccName, setNewAccName] = useState('');
   const [newAccNumber, setNewAccNumber] = useState(() => '1000' + Math.floor(100000000 + Math.random() * 900000000).toString());
@@ -113,6 +125,11 @@ export default function Profile({
   const [newAccEmail, setNewAccEmail] = useState('');
   const [newAccType, setNewAccType] = useState<'savings' | 'checking' | 'wadiah' | 'cbe_birr'>('savings');
   const [newAccInitialBalance, setNewAccInitialBalance] = useState('25000.00');
+
+  // Fast memoized registered users list for instant switching
+  const allRegisteredUsers = useMemo(() => {
+    return LocalDb.getUsers();
+  }, [showAccountsModal]);
 
   // Forms
   const [showPinForm, setShowPinForm] = useState(false);
@@ -236,16 +253,34 @@ export default function Profile({
   };
 
   const handleSwitchAccount = (targetUser: UserProfile) => {
-    if (targetUser.id === currentUser.id) {
-      setShowAccountsModal(false);
-      return;
-    }
-    LocalDb.addAuditLog(targetUser.id, targetUser.email, 'USER_SWITCH_ACCOUNT', `Switched active session from ${currentUser.name} to ${targetUser.name} (A/C: ${targetUser.accountNumber}).`);
-    localStorage.setItem('tana_active_user_id', targetUser.id);
-    onUpdateUser(targetUser);
+    // 1. Immediately close modal and switch active session
     setShowAccountsModal(false);
-    setSuccessMsg(`Switched to account: ${targetUser.name} (A/C: ${targetUser.accountNumber})`);
-    setTimeout(() => setSuccessMsg(''), 4000);
+    if (targetUser.id === currentUser.id) return;
+
+    localStorage.setItem('tana_active_user_id', targetUser.id);
+    setEditName(targetUser.name);
+    setEditAccount(targetUser.accountNumber);
+    setEditBalance((targetUser.balance ?? 18450.50).toFixed(2));
+    setEditPhone(targetUser.phone);
+    setEditEmail(targetUser.email);
+    setEditAccountType(targetUser.accountType || 'savings');
+    onUpdateUser(targetUser);
+
+    setSuccessMsg(`Switched to: ${targetUser.name}`);
+    setTimeout(() => setSuccessMsg(''), 2500);
+
+    // 2. Non-blocking asynchronous sync so UI switches instantaneously without stutter
+    setTimeout(() => {
+      try {
+        SmsService.ensureAccount(targetUser.accountNumber, targetUser.name, targetUser.balance);
+        SmsService.setActiveAccountNumber(targetUser.accountNumber);
+        TruecallerService.syncBalance(targetUser.accountNumber, targetUser.balance);
+        TruecallerService.setActiveAccountNumber(targetUser.accountNumber);
+        window.dispatchEvent(new CustomEvent('cbe_account_switched', { detail: { user: targetUser } }));
+        window.dispatchEvent(new CustomEvent('cbe_balance_updated', { detail: { user: targetUser, balance: targetUser.balance } }));
+        LocalDb.addAuditLog(targetUser.id, targetUser.email, 'USER_SWITCH_ACCOUNT', `Switched active session from ${currentUser.name} to ${targetUser.name} (A/C: ${targetUser.accountNumber}).`);
+      } catch {}
+    }, 0);
   };
 
   const handleRegisterNewAccount = (e: React.FormEvent) => {
@@ -297,6 +332,15 @@ export default function Profile({
     setShowAccountsModal(false);
     setSuccessMsg(`New account for "${newUser.name}" (A/C: ${newUser.accountNumber}) created and activated!`);
     setTimeout(() => setSuccessMsg(''), 5000);
+
+    try {
+      SmsService.ensureAccount(newUser.accountNumber, newUser.name, newUser.balance);
+      SmsService.setActiveAccountNumber(newUser.accountNumber);
+      TruecallerService.syncBalance(newUser.accountNumber, newUser.balance);
+      TruecallerService.setActiveAccountNumber(newUser.accountNumber);
+      window.dispatchEvent(new CustomEvent('cbe_account_switched', { detail: { user: newUser } }));
+      window.dispatchEvent(new CustomEvent('cbe_balance_updated', { detail: { user: newUser, balance: newUser.balance } }));
+    } catch {}
   };
 
   const handleToggleBiometrics = () => {
@@ -519,7 +563,7 @@ export default function Profile({
             }}
             className="w-full bg-white hover:bg-gray-50 text-[#70189F] text-xs font-bold py-2.5 px-3 rounded-2xl border border-purple-150 transition flex items-center justify-between cursor-pointer"
           >
-            <span>View All Registered Accounts ({LocalDb.getUsers().length})</span>
+            <span>View All Registered Accounts ({allRegisteredUsers.length})</span>
             <ChevronRight className="w-4 h-4 text-purple-400" />
           </button>
         </div>
@@ -1241,20 +1285,48 @@ export default function Profile({
 
             {/* View 1: List Accounts */}
             {!showNewAccountForm && (
-              <div className="mt-4 space-y-3">
+              <div className="mt-3 space-y-2.5">
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={accountsSearchTerm}
+                    onChange={(e) => setAccountsSearchTerm(e.target.value)}
+                    placeholder="Search account name or number..."
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#70189f] focus:bg-white transition"
+                  />
+                  {accountsSearchTerm && (
+                    <button
+                      type="button"
+                      onClick={() => setAccountsSearchTerm('')}
+                      className="absolute right-2.5 top-2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+
                 <div className="space-y-2 max-h-[42vh] overflow-y-auto pr-1">
-                  {LocalDb.getUsers().map((u) => {
-                    const isCurrent = u.id === currentUser.id;
-                    return (
-                      <div
-                        key={u.id}
-                        onClick={() => handleSwitchAccount(u)}
-                        className={`p-3.5 rounded-2xl border transition cursor-pointer flex items-center justify-between ${
-                          isCurrent
-                            ? 'bg-purple-50/80 border-[#70189F] shadow-sm'
-                            : 'bg-gray-50 hover:bg-purple-50/40 border-gray-200'
-                        }`}
-                      >
+                  {allRegisteredUsers
+                    .filter((u) => {
+                      if (!accountsSearchTerm.trim()) return true;
+                      const q = accountsSearchTerm.toLowerCase();
+                      const digits = q.replace(/\D/g, '');
+                      const matchName = u.name.toLowerCase().includes(q);
+                      const matchAcc = digits.length > 0 && u.accountNumber.includes(digits);
+                      return matchName || matchAcc;
+                    })
+                    .map((u) => {
+                      const isCurrent = u.id === currentUser.id || (Boolean(u.accountNumber) && Boolean(currentUser.accountNumber) && u.accountNumber.replace(/\D/g, '') === currentUser.accountNumber.replace(/\D/g, ''));
+                      return (
+                        <div
+                          key={u.id}
+                          onClick={() => handleSwitchAccount(u)}
+                          className={`p-3.5 rounded-2xl border transition cursor-pointer flex items-center justify-between ${
+                            isCurrent
+                              ? 'bg-purple-50/80 border-[#70189F] shadow-sm'
+                              : 'bg-gray-50 hover:bg-purple-50/40 border-gray-200'
+                          }`}
+                        >
                         <div className="flex items-center gap-3 min-w-0">
                           <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0 ${
                             isCurrent ? 'bg-[#70189F] text-amber-300' : 'bg-gray-200 text-gray-700'

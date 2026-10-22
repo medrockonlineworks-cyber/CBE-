@@ -29,10 +29,14 @@ import {
   ExternalLink,
   MessageSquare,
   Smartphone,
-  PhoneCall
+  PhoneCall,
+  Users
 } from 'lucide-react';
-import { UserProfile, Transaction } from '../types';
+import { UserProfile, Transaction, RegisteredAccountInfo } from '../types';
 import { LocalDb } from '../lib/mockData';
+import { RegisteredAccountsModal } from '../components/RegisteredAccountsModal';
+import { SmsService } from '../services/smsService';
+import { TruecallerService } from '../services/truecallerService';
 
 interface HomeProps {
   currentUser?: UserProfile | null;
@@ -64,26 +68,37 @@ export const Home: React.FC<HomeProps> = ({
   onOpenTelegramSimulator,
 }) => {
   // Active user state to reflect balance and account changes in real time
-  const [activeUser, setActiveUser] = useState<UserProfile>(() => propUser || {
-    id: 'demo-user-1',
-    name: 'Leykun Jemaneh',
-    email: 'leykunjemaneh3@gmail.com',
-    phone: '+251911234567',
-    accountNumber: '1000284758657',
-    accountType: 'wadiah',
-    balance: 25430.00,
-    availableBalance: 25430.00,
-    currency: 'ETB',
-    role: 'user',
-    status: 'active',
-    createdAt: new Date().toISOString(),
+  const [activeUser, setActiveUser] = useState<UserProfile>(() => {
+    if (propUser) return propUser;
+    try {
+      const savedUserId = typeof window !== 'undefined' ? localStorage.getItem('tana_active_user_id') : null;
+      if (savedUserId) {
+        const users = LocalDb.getUsers();
+        const match = users.find(u => u.id === savedUserId);
+        if (match) return match;
+      }
+    } catch {}
+    return {
+      id: 'user_1',
+      name: 'Leykun Jemaneh Ylma',
+      email: 'leykunjemaneh3@gmail.com',
+      phone: '+251900112233',
+      accountNumber: '1000419524747',
+      accountType: 'wadiah',
+      balance: 18450.50,
+      availableBalance: 18450.50,
+      currency: 'ETB',
+      role: 'user',
+      status: 'active',
+      createdAt: new Date().toISOString(),
+    };
   });
 
   useEffect(() => {
     if (propUser) {
       setActiveUser(propUser);
     }
-  }, [propUser]);
+  }, [propUser?.id, propUser?.balance, propUser?.accountNumber, propUser?.name]);
 
   const [activeNavTab, setActiveNavTab] = useState<NavTabId>(initialNavTab);
   const [selectedLanguage, setSelectedLanguage] = useState('English');
@@ -120,6 +135,7 @@ export const Home: React.FC<HomeProps> = ({
   const [qrScanSuccess, setQrScanSuccess] = useState(false);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
+  const [showRegisteredAccountsModal, setShowRegisteredAccountsModal] = useState(false);
 
   useEffect(() => {
     setActiveNavTab(initialNavTab);
@@ -146,15 +162,64 @@ export const Home: React.FC<HomeProps> = ({
     setRecentTransactions(txs.slice(0, 6));
   }, []);
 
+  const handleSwitchRegisteredAccount = (account: RegisteredAccountInfo) => {
+    setShowRegisteredAccountsModal(false);
+    const users = LocalDb.getUsers();
+    const cleanNum = account.accountNumber.replace(/\D/g, '');
+    let target = users.find(u => (u.accountNumber && u.accountNumber.replace(/\D/g, '') === cleanNum));
+    if (!target) {
+      target = {
+        id: account.userId || 'user_' + Math.random().toString(36).substring(2, 9),
+        name: account.accountName,
+        accountNumber: account.accountNumber,
+        phone: account.phone || '+251911000000',
+        email: `${account.accountName.toLowerCase().replace(/\s+/g, '')}@cbe.et`,
+        balance: account.balance ?? 25000,
+        availableBalance: account.balance ?? 25000,
+        currency: 'ETB',
+        role: 'user',
+        status: 'active',
+        createdAt: new Date().toISOString()
+      };
+      users.push(target);
+      LocalDb.setUsers(users);
+    }
+    localStorage.setItem('tana_active_user_id', target.id);
+    setActiveUser({ ...target });
+    onUpdateCurrentUser?.(target);
+    loadTransactions();
+    try {
+      SmsService.ensureAccount(target.accountNumber, target.name, target.balance);
+      SmsService.setActiveAccountNumber(target.accountNumber);
+      TruecallerService.syncBalance(target.accountNumber, target.balance);
+      TruecallerService.setActiveAccountNumber(target.accountNumber);
+      window.dispatchEvent(new CustomEvent('cbe_account_switched', { detail: { user: target } }));
+      window.dispatchEvent(new CustomEvent('cbe_balance_updated', { detail: { user: target, balance: target.balance } }));
+    } catch {}
+  };
+
   // Sync balance and transactions anytime any transaction is made
   useEffect(() => {
     const handleSync = (e: any) => {
+      const activeId = (typeof window !== 'undefined' ? localStorage.getItem('tana_active_user_id') : null) || e?.detail?.user?.id || 'user_1';
       const users = LocalDb.getUsers();
-      const freshUser = users.find(u => u.id === (activeUser.id || 'user_1') || u.accountNumber === activeUser.accountNumber);
+      const freshUser = users.find(u => u.id === activeId) || (e?.detail?.user ? e.detail.user : null);
       if (freshUser) {
         setActiveUser({ ...freshUser });
-      } else if (e?.detail?.user) {
-        setActiveUser(e.detail.user);
+      }
+      loadTransactions();
+    };
+
+    const handleAccountSwitched = (e: any) => {
+      if (e?.detail?.user) {
+        setActiveUser({ ...e.detail.user });
+      } else {
+        const activeId = typeof window !== 'undefined' ? localStorage.getItem('tana_active_user_id') : null;
+        if (activeId) {
+          const users = LocalDb.getUsers();
+          const match = users.find(u => u.id === activeId);
+          if (match) setActiveUser({ ...match });
+        }
       }
       loadTransactions();
     };
@@ -162,12 +227,14 @@ export const Home: React.FC<HomeProps> = ({
     window.addEventListener('cbe_balance_updated' as any, handleSync);
     window.addEventListener('cbe_transaction_completed' as any, handleSync);
     window.addEventListener('cbe_accounts_updated' as any, handleSync);
+    window.addEventListener('cbe_account_switched' as any, handleAccountSwitched);
     return () => {
       window.removeEventListener('cbe_balance_updated' as any, handleSync);
       window.removeEventListener('cbe_transaction_completed' as any, handleSync);
       window.removeEventListener('cbe_accounts_updated' as any, handleSync);
+      window.removeEventListener('cbe_account_switched' as any, handleAccountSwitched);
     };
-  }, [activeUser.id, activeUser.accountNumber, loadTransactions]);
+  }, [loadTransactions]);
 
   useEffect(() => {
     setCustomLogoUrl(LocalDb.getCustomBankLogo());
@@ -428,12 +495,32 @@ export const Home: React.FC<HomeProps> = ({
     return 'ACCOUNT TO ACCOUNT';
   };
 
-  // Filtered transactions for the History view
+  // Filtered transactions for the History view: ONLY from the selected or active bank account
   const filteredHistoryTransactions = allTransactions.filter((tx) => {
-    const isCredit = tx.type === 'receive' || tx.senderName === 'Deposit';
+    // 1. Must belong to the selected or active bank account
+    const cleanUserAcc = (activeUser.accountNumber || '').replace(/\D/g, '');
+    const cleanSenderAcc = (tx.senderAccount || '').replace(/\D/g, '');
+    const cleanRecipAcc = (tx.recipientAccount || '').replace(/\D/g, '');
+
+    const isSender = (cleanSenderAcc && cleanSenderAcc === cleanUserAcc) || (tx.senderId && tx.senderId === activeUser.id);
+    const isRecipient = (cleanRecipAcc && cleanRecipAcc === cleanUserAcc) || (tx.recipientId && tx.recipientId === activeUser.id);
+
+    // Support legacy seed transactions for primary user (user_1 / user_admin)
+    const isPrimaryUser = activeUser.id === 'user_1' || activeUser.id === 'user_admin' || cleanUserAcc === '1000419524747' || cleanUserAcc === '1000284758657';
+    const isLegacyPrimaryTx = isPrimaryUser && (cleanSenderAcc === '1000284758657' || cleanRecipAcc === '1000284758657' || tx.senderId === 'user_1' || tx.recipientId === 'user_1');
+
+    if (!isSender && !isRecipient && !isLegacyPrimaryTx) {
+      return false;
+    }
+
+    // 2. Direction calculation for this active account:
+    // If active account received the transfer: CREDIT!
+    // If active account sent the transfer: DEBIT!
+    const isCredit = (isRecipient && !isSender) ? true : (tx.type === 'receive' || tx.senderName === 'Deposit');
     if (historyFilter === 'debited' && isCredit) return false;
     if (historyFilter === 'credited' && !isCredit) return false;
 
+    // 3. Search query filter
     if (historySearchText.trim()) {
       const query = historySearchText.toLowerCase();
       const matchName = (tx.recipientName || '').toLowerCase().includes(query) || (tx.senderName || '').toLowerCase().includes(query);
@@ -576,7 +663,11 @@ export const Home: React.FC<HomeProps> = ({
             </div>
 
             {/* 3. STATIC GOLD / YELLOW INDICATOR (Line on Home, Circular Dot on Transactions) */}
-            <div className="w-full flex justify-center items-center pt-1.5 pb-2 relative z-20">
+            <div 
+              className="w-full flex justify-center items-center pt-1.5 pb-2 relative z-20 cursor-pointer active:scale-95 transition-transform"
+              onClick={() => setShowRegisteredAccountsModal(true)}
+              title="Click to switch registered account"
+            >
               <div 
                 id="static-gold-indicator-line"
                 className={`bg-gradient-to-r from-[#d4af37] via-[#f59e0b] to-[#deb356] rounded-full shadow-[0_1px_2px_rgba(212,175,55,0.3)] transition-all duration-300 ${
@@ -584,7 +675,7 @@ export const Home: React.FC<HomeProps> = ({
                     ? 'w-2.5 h-2.5 rounded-full'
                     : 'w-7 h-2 rounded-full'
                 }`} 
-                title="CBE Section Indicator"
+                title="CBE Section Indicator - Click to switch registered account"
               />
             </div>
           </div>
@@ -717,7 +808,14 @@ export const Home: React.FC<HomeProps> = ({
                 </div>
               ) : (
                 filteredHistoryTransactions.map((tx) => {
-                  const isCredit = tx.type === 'receive' || tx.senderName === 'Deposit';
+                  const cleanUserAcc = (activeUser.accountNumber || '').replace(/\D/g, '');
+                  const cleanRecipAcc = (tx.recipientAccount || '').replace(/\D/g, '');
+                  const cleanSenderAcc = (tx.senderAccount || '').replace(/\D/g, '');
+
+                  const isSender = (cleanSenderAcc && cleanSenderAcc === cleanUserAcc) || (tx.senderId && tx.senderId === activeUser.id);
+                  const isRecipient = (cleanRecipAcc && cleanRecipAcc === cleanUserAcc) || (tx.recipientId && tx.recipientId === activeUser.id);
+                  const isCredit = (isRecipient && !isSender) ? true : (tx.type === 'receive' || tx.senderName === 'Deposit');
+
                   const displayName = isCredit 
                     ? (tx.senderName || 'Deposit') 
                     : (tx.recipientName || 'CBE Transfer');
@@ -1101,6 +1199,25 @@ export const Home: React.FC<HomeProps> = ({
                   <p className="text-[10px] text-amber-700">Manage Branding</p>
                 </button>
               )}
+
+              <button
+                onClick={() => {
+                  setActiveModal(null);
+                  setShowRegisteredAccountsModal(true);
+                }}
+                className="p-3 bg-purple-50 hover:bg-purple-100/80 rounded-2xl text-left transition cursor-pointer border border-purple-200 col-span-2 flex items-center justify-between"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-[#70189F] text-amber-300 rounded-xl">
+                    <Users className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-purple-950">Switch Active Account</p>
+                    <p className="text-[10px] text-purple-700">Switch to any registered account &amp; view its transactions</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-4 h-4 text-purple-900" />
+              </button>
             </div>
           </div>
         </div>
@@ -1659,6 +1776,15 @@ export const Home: React.FC<HomeProps> = ({
           currentUserAccount={activeUser.accountNumber}
         />
       )}
+
+      {/* REGISTERED ACCOUNTS DIRECTORY & ACCOUNT SWITCHER MODAL */}
+      <RegisteredAccountsModal
+        isOpen={showRegisteredAccountsModal}
+        onClose={() => setShowRegisteredAccountsModal(false)}
+        onSelect={handleSwitchRegisteredAccount}
+        currentSelectedAccount={activeUser.accountNumber}
+        title="Switch Registered Account"
+      />
 
     </div>
   );

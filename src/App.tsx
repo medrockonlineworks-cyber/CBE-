@@ -85,24 +85,40 @@ export default function App() {
     });
   }, []);
 
-  // Listen for global balance updates so App-level currentUser is always fresh
+  // Listen for global balance updates & account switches so App-level currentUser is always fresh
   useEffect(() => {
-    const handleBalanceSync = () => {
+    const handleBalanceSync = (e?: any) => {
+      const savedActiveId = (typeof window !== 'undefined' ? localStorage.getItem('tana_active_user_id') : null) || e?.detail?.user?.id || currentUser?.id || 'user_1';
       const users = LocalDb.getUsers();
-      const match = users.find(u => u.id === (currentUser?.id || 'user_1'));
+      const match = users.find(u => u.id === savedActiveId) || users.find(u => u.id === 'user_1') || users[0];
       if (match) {
         setCurrentUser({ ...match });
+      }
+    };
+    const handleAccountSwitched = (e: any) => {
+      if (e?.detail?.user) {
+        localStorage.setItem('tana_active_user_id', e.detail.user.id);
+        setCurrentUser({ ...e.detail.user });
+      } else {
+        const savedActiveId = typeof window !== 'undefined' ? localStorage.getItem('tana_active_user_id') : null;
+        if (savedActiveId) {
+          const users = LocalDb.getUsers();
+          const match = users.find(u => u.id === savedActiveId);
+          if (match) setCurrentUser({ ...match });
+        }
       }
     };
     window.addEventListener('cbe_balance_updated' as any, handleBalanceSync);
     window.addEventListener('cbe_transaction_completed' as any, handleBalanceSync);
     window.addEventListener('cbe_accounts_updated' as any, handleBalanceSync);
+    window.addEventListener('cbe_account_switched' as any, handleAccountSwitched);
     return () => {
       window.removeEventListener('cbe_balance_updated' as any, handleBalanceSync);
       window.removeEventListener('cbe_transaction_completed' as any, handleBalanceSync);
       window.removeEventListener('cbe_accounts_updated' as any, handleBalanceSync);
+      window.removeEventListener('cbe_account_switched' as any, handleAccountSwitched);
     };
-  }, [currentUser?.id]);
+  }, []);
 
   // Track navigation state to manage Android / browser history correctly
   const navHistoryRef = useRef<{ view: string; tab: string }[]>([]);
@@ -350,6 +366,7 @@ export default function App() {
 
   const handleUpdateUserProfile = (updatedUser: UserProfile) => {
     setCurrentUser(updatedUser);
+    localStorage.setItem('tana_active_user_id', updatedUser.id);
   };
 
   const handleSelectTransaction = (tx: Transaction) => {
@@ -366,7 +383,8 @@ export default function App() {
     
     // Refresh current user balance immediately from database
     const users = LocalDb.getUsers();
-    const match = users.find(u => u.id === (currentUser?.id || 'user_1') || u.accountNumber === cleanSender);
+    const activeId = localStorage.getItem('tana_active_user_id') || currentUser?.id || 'user_1';
+    const match = users.find(u => u.id === activeId || u.accountNumber === cleanSender);
     if (match) {
       setCurrentUser({ ...match });
     }
@@ -658,8 +676,9 @@ export default function App() {
                 <Receipt 
                   transaction={selectedTransaction}
                   onBack={() => {
+                    const savedActiveId = localStorage.getItem('tana_active_user_id') || currentUser?.id || 'user_1';
                     const users = LocalDb.getUsers();
-                    const match = users.find(u => u.id === (currentUser?.id || 'user_1'));
+                    const match = users.find(u => u.id === savedActiveId);
                     if (match) {
                       setCurrentUser({ ...match });
                     }
