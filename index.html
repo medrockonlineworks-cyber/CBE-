@@ -30,8 +30,22 @@
     <link id="app-apple-touch-icon" rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link id="app-mask-icon" rel="mask-icon" href="/icons/icon-maskable.svg" color="#deb356" />
 
-    <!-- Early PWA Install Prompt Capture -->
+    <!-- Early PWA Install Prompt Capture & HMR Error Suppression -->
     <script>
+      // Suppress Vite HMR WebSocket errors in sandboxed iframe environment
+      window.addEventListener('error', function(e) {
+        if (e.message && (e.message.includes("reading 'send'") || e.message.includes('WebSocket') || e.message.includes('vite'))) {
+          e.stopImmediatePropagation();
+          e.preventDefault();
+        }
+      });
+      window.addEventListener('unhandledrejection', function(e) {
+        if (e.reason && (String(e.reason).includes("reading 'send'") || String(e.reason).includes('WebSocket') || String(e.reason).includes('vite'))) {
+          e.stopImmediatePropagation();
+          e.preventDefault();
+        }
+      });
+
       window.__deferredPrompt = null;
       window.addEventListener('beforeinstallprompt', function(e) {
         e.preventDefault();

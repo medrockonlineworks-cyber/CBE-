@@ -5,17 +5,21 @@ import './index.css';
 import { initPwaDynamicManifest } from './utils/pwaBranding';
 import { registerSW } from 'virtual:pwa-register';
 
-// Register PWA Service Worker for offline capability & installability
-if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-  registerSW({
-    immediate: true,
-    onNeedRefresh() {
-      console.log('[PWA] New version ready, updating in background');
-    },
-    onOfflineReady() {
-      console.log('[PWA] App is cached and ready for offline use');
-    },
-  });
+// Register PWA Service Worker in production for offline capability & installability
+if (import.meta.env.PROD && typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+  try {
+    registerSW({
+      immediate: true,
+      onNeedRefresh() {
+        console.log('[PWA] New version ready, updating in background');
+      },
+      onOfflineReady() {
+        console.log('[PWA] App is cached and ready for offline use');
+      },
+    });
+  } catch (swErr) {
+    console.warn('[PWA] SW registration note:', swErr);
+  }
 }
 
 // Safe PWA manifest dynamic loader
