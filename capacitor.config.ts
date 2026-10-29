@@ -67,13 +67,13 @@ const config: CapacitorConfig = {
       splashImmersive: true
     },
     StatusBar: {
-      style: 'LIGHT',
+      style: 'DARK',
       backgroundColor: '#70189F',
-      overlaysWebView: true
+      overlaysWebView: false
     },
     NavigationBar: {
-      color: '#ffffff',
-      darkButtons: true
+      color: '#70189F',
+      darkButtons: false
     },
     Keyboard: {
       resize: 'body',

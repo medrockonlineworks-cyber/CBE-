@@ -250,6 +250,57 @@ export const MiniStatementIcon: React.FC<IconProps> = ({
 );
 
 /**
+ * 6b. Cash Out Icon (Matching Image 2 in CBE App)
+ * Circular outline with gap at top-right, diagonal arrow pointing up-right,
+ * and a dollar sign '$' inside.
+ */
+export const CashOutIcon: React.FC<IconProps> = ({
+  size = 24,
+  className = '',
+  strokeWidth = 2,
+  color = '#70189F',
+  ...props
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    className={className}
+    {...props}
+  >
+    {/* Circular ring with opening at upper-right */}
+    <path
+      d="M 15.5 6.2 A 7.8 7.8 0 1 0 19.2 12.8"
+      stroke={color || '#70189F'}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+    />
+    {/* Diagonal arrow pointing up-right out of opening */}
+    <path
+      d="M 13.8 10.2 L 20 4 M 20 4 H 15.8 M 20 4 V 8.2"
+      stroke={color || '#70189F'}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    {/* Dollar symbol inside center */}
+    <text
+      x="10.8"
+      y="14.8"
+      fontSize="8.8"
+      fontWeight="700"
+      fontFamily="system-ui, -apple-system, sans-serif"
+      fill={color || '#70189F'}
+      textAnchor="middle"
+      stroke="none"
+    >
+      $
+    </text>
+  </svg>
+);
+
+/**
  * 7. Cards Icon (CBE Card Icon with magnetic stripe and two dashes)
  * Exact match to CBE reference icon:
  * - Rounded rectangle card outline

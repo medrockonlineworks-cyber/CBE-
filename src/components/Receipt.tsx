@@ -41,7 +41,6 @@ import {
 } from 'lucide-react';
 import { maskAccountNumber } from '../services/smsService';
 import { PhoneSettingsService } from '../services/phoneSettingsService';
-import { PhoneNavigationBar } from './PhoneNavigationBar';
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';

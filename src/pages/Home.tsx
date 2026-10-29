@@ -462,8 +462,8 @@ export const Home: React.FC<HomeProps> = ({
   };
 
   // Quick action handler
-  const handleQuickAction = (actionId: 'ministatement' | 'cards' | 'billshare' | 'schedules') => {
-    setActiveModal(actionId);
+  const handleQuickAction = (actionId: 'ministatement' | 'cashout' | 'billshare' | 'cards' | 'schedules') => {
+    setActiveModal(actionId as any);
   };
 
   // Format date helper for CBE transaction history

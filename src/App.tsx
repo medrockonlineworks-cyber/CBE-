@@ -85,6 +85,20 @@ export default function App() {
     });
   }, []);
 
+  // Sync real device phone status bar and navigation bar color with active app (#70189F for CBE)
+  useEffect(() => {
+    let themeColor = '#70189F'; // Official CBE App Color
+    if (activeView === 'telebirr') themeColor = '#6cb81f';
+    else if (activeView === 'dashen') themeColor = '#004b87';
+    else if (activeView === 'telegram') themeColor = '#229ED9';
+    else if (activeView === 'sms') themeColor = '#121212';
+    else if (activeView === 'truecaller') themeColor = '#0284c7';
+    else if (activeView === 'phone') themeColor = '#059669';
+
+    const metaTags = document.querySelectorAll('meta[name="theme-color"], meta[name="msapplication-navbutton-color"]');
+    metaTags.forEach(meta => meta.setAttribute('content', themeColor));
+  }, [activeView]);
+
   // Listen for global balance updates & account switches so App-level currentUser is always fresh
   useEffect(() => {
     const handleBalanceSync = (e?: any) => {

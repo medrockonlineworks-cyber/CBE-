@@ -1,14 +1,14 @@
 import React from 'react';
 import { 
   MiniStatementIcon, 
-  CardsIcon, 
+  CashOutIcon,
   BillShareIcon, 
-  SchedulesClockIcon, 
+  CardsIcon, 
   RightChevronIcon 
 } from './CbeCustomIcons';
 
 interface QuickActionsProps {
-  onActionClick?: (actionId: 'ministatement' | 'cards' | 'billshare' | 'schedules') => void;
+  onActionClick?: (actionId: 'ministatement' | 'cashout' | 'billshare' | 'cards' | 'schedules') => void;
   className?: string;
 }
 
@@ -34,22 +34,22 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
           </span>
         </button>
 
-        {/* 2. CARDS */}
+        {/* 2. CASH OUT (Matching Image 2) */}
         <button
-          id="quick-action-cards"
+          id="quick-action-cashout"
           type="button"
-          onClick={() => onActionClick?.('cards')}
+          onClick={() => onActionClick?.('cashout')}
           className="flex flex-col items-center justify-start group cursor-pointer active:scale-95 transition-transform w-full focus:outline-none"
         >
           <div className="w-[50px] h-[50px] sm:w-[54px] sm:h-[54px] rounded-full bg-white flex items-center justify-center shadow-[0_2px_8px_rgba(0,0,0,0.06)] border border-gray-100/90 group-hover:scale-105 group-active:scale-95 transition-all flex-shrink-0">
-            <CardsIcon size={24} className="text-[#70189F]" strokeWidth={2.2} />
+            <CashOutIcon size={24} className="text-[#70189F]" strokeWidth={2.1} />
           </div>
           <span className="text-[11px] sm:text-[11.5px] font-bold text-[#70189F] mt-2 text-center leading-tight min-h-[28px] flex items-center justify-center">
-            Cards
+            Cash Out
           </span>
         </button>
 
-        {/* 3. BILL SHARE */}
+        {/* 3. BILL SHARE (Matching Image 2) */}
         <button
           id="quick-action-billshare"
           type="button"
@@ -64,18 +64,18 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
           </span>
         </button>
 
-        {/* 4. SCHEDULES */}
+        {/* 4. CARDS (Matching Image 2) */}
         <button
-          id="quick-action-schedules"
+          id="quick-action-cards"
           type="button"
-          onClick={() => onActionClick?.('schedules')}
+          onClick={() => onActionClick?.('cards')}
           className="flex flex-col items-center justify-start group cursor-pointer active:scale-95 transition-transform w-full focus:outline-none"
         >
           <div className="w-[50px] h-[50px] sm:w-[54px] sm:h-[54px] rounded-full bg-white flex items-center justify-center shadow-[0_2px_8px_rgba(0,0,0,0.06)] border border-gray-100/90 group-hover:scale-105 group-active:scale-95 transition-all flex-shrink-0">
-            <SchedulesClockIcon size={24} className="text-[#70189F]" strokeWidth={2.2} />
+            <CardsIcon size={24} className="text-[#70189F]" strokeWidth={2.2} />
           </div>
           <span className="text-[11px] sm:text-[11.5px] font-bold text-[#70189F] mt-2 text-center leading-tight min-h-[28px] flex items-center justify-center">
-            Schedules
+            Cards
           </span>
         </button>
 

@@ -9,7 +9,7 @@ export interface PhoneNavigationBarProps {
   onBack?: () => void;
   onHome?: () => void;
   onRecents?: () => void;
-  theme?: 'dark' | 'light';
+  theme?: 'cbe' | 'dark' | 'light';
   className?: string;
   forceStyle?: NavigationBarStyle;
 }
@@ -18,7 +18,7 @@ export const PhoneNavigationBar: React.FC<PhoneNavigationBarProps> = ({
   onBack,
   onHome,
   onRecents,
-  theme = 'light',
+  theme = 'cbe',
   className = '',
   forceStyle,
 }) => {
@@ -33,7 +33,8 @@ export const PhoneNavigationBar: React.FC<PhoneNavigationBarProps> = ({
   }, []);
 
   const navStyle = forceStyle || settings.navBarStyle || (isIPhone ? 'gesture' : 'buttons');
-  const isDark = theme === 'dark';
+  const isCbe = theme === 'cbe';
+  const isDark = theme === 'dark' || isCbe;
 
   const handleRecentsClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -82,23 +83,27 @@ export const PhoneNavigationBar: React.FC<PhoneNavigationBarProps> = ({
     );
   }
 
-  // 2. Android 3-Button Navigation Bar (matching Image 2)
-  // [ |||  ○  ⊃ ] Edge-to-edge soft keys with exact icons, spacing & touch feedback
+  // 2. Android 3-Button Navigation Bar (matching Screenshot_20261028-111001_7018c5b4.png)
+  // [ ≡  ○  ⊃ ] Edge-to-edge soft keys with CBE purple app background & purple/white icons
   if (navStyle === 'buttons') {
-    const iconColorClass = isDark 
-      ? 'text-neutral-400 hover:text-white' 
-      : 'text-neutral-500 hover:text-neutral-800';
+    const barBackgroundClass = isCbe 
+      ? 'bg-[#180026] border-[#70189F]/30 shadow-[0_-2px_8px_rgba(112,24,159,0.15)]' 
+      : isDark 
+        ? 'bg-neutral-950 border-neutral-900/60' 
+        : 'bg-white border-gray-100 shadow-[0_-1px_4px_rgba(0,0,0,0.02)]';
+
+    const iconColorClass = isCbe
+      ? 'text-[#b86ddf] hover:text-white active:text-white'
+      : isDark 
+        ? 'text-neutral-400 hover:text-white active:text-white' 
+        : 'text-neutral-500 hover:text-neutral-800 active:text-neutral-900';
 
     return (
       <div 
         id="cbe-android-navbar"
-        className={`w-full shrink-0 flex items-center justify-between px-10 sm:px-14 py-1.5 select-none pointer-events-auto border-t transition-colors ${
-          isDark 
-            ? 'bg-neutral-950 border-neutral-900/60' 
-            : 'bg-white border-gray-100 shadow-[0_-1px_4px_rgba(0,0,0,0.02)]'
-        } ${className}`}
+        className={`w-full shrink-0 flex items-center justify-between px-10 sm:px-14 py-2 select-none pointer-events-auto border-t transition-colors ${barBackgroundClass} ${className}`}
       >
-        {/* Button 1: Recents Overview (||| Three vertical pill lines matching Image 2) */}
+        {/* Button 1: Recents Overview (≡ Three horizontal lines matching Screenshot_20261028-111001_7018c5b4.png) */}
         <button
           id="btn-android-nav-recents"
           type="button"
@@ -111,13 +116,13 @@ export const PhoneNavigationBar: React.FC<PhoneNavigationBarProps> = ({
             viewBox="0 0 16 16" 
             fill="currentColor"
           >
-            <rect x="2" y="2.5" width="2.2" height="11" rx="1.1" />
-            <rect x="6.9" y="2.5" width="2.2" height="11" rx="1.1" />
-            <rect x="11.8" y="2.5" width="2.2" height="11" rx="1.1" />
+            <rect x="2" y="3.2" width="12" height="1.8" rx="0.9" />
+            <rect x="2" y="7.1" width="12" height="1.8" rx="0.9" />
+            <rect x="2" y="11" width="12" height="1.8" rx="0.9" />
           </svg>
         </button>
 
-        {/* Button 2: Home (○ Crisp circle ring matching Image 2) */}
+        {/* Button 2: Home (○ Crisp circle ring matching Screenshot_20261028-111001_7018c5b4.png) */}
         <button
           id="btn-android-nav-home"
           type="button"
@@ -132,11 +137,11 @@ export const PhoneNavigationBar: React.FC<PhoneNavigationBarProps> = ({
             stroke="currentColor" 
             strokeWidth="1.8"
           >
-            <circle cx="8" cy="8" r="5.5" />
+            <circle cx="8" cy="8" r="5.2" />
           </svg>
         </button>
 
-        {/* Button 3: Back (⊃ Curved return arrow hook matching Image 2) */}
+        {/* Button 3: Back (⊃ Curved return arrow hook matching Screenshot_20261028-111001_7018c5b4.png) */}
         <button
           id="btn-android-nav-back"
           type="button"

@@ -100,10 +100,10 @@ export const AccountCard: React.FC<AccountCardProps> = ({
             </div>
 
             <div className="min-w-0 flex-1">
-              <h3 className="text-[#deb356] font-extrabold text-xs sm:text-[13px] tracking-wide leading-none whitespace-nowrap overflow-hidden text-ellipsis">
+              <h3 className="text-[#F5BD47] font-extrabold text-[12.5px] sm:text-[13.5px] tracking-wide leading-none whitespace-nowrap overflow-hidden text-ellipsis drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
                 {bankName}
               </h3>
-              <p className="text-[#deb356]/80 text-[9px] sm:text-[10px] font-medium tracking-tight mt-1 whitespace-nowrap overflow-hidden text-ellipsis">
+              <p className="text-[#EDE49E] text-[9.5px] sm:text-[10px] font-medium tracking-tight mt-1 whitespace-nowrap overflow-hidden text-ellipsis">
                 {slogan}
               </p>
             </div>
