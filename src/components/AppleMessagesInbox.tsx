@@ -33,9 +33,11 @@ export const AppleMessagesInbox: React.FC<AppleMessagesInboxProps> = ({
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const phoneSettings = PhoneSettingsService.getSettings();
 
-  const filteredThreads = threads.filter(t => 
-    t.sender.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    t.snippet.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredThreads = (threads || []).filter(t => 
+    t && (
+      (t.sender || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (t.snippet || '').toLowerCase().includes(searchQuery.toLowerCase())
+    )
   );
 
   return (

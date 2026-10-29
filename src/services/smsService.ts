@@ -522,13 +522,57 @@ export class SmsService {
   /**
    * Saves accounts list to local storage.
    */
-  private static saveAccounts(accounts: SmsAccount[]): void {
+  private static saveAccounts(accounts: SmsAccount[], notify: boolean = true): void {
     try {
       if (typeof window === 'undefined') return;
       localStorage.setItem(STORAGE_ACCOUNTS_KEY, JSON.stringify(accounts));
-      window.dispatchEvent(new CustomEvent('sms-accounts-updated'));
+      if (notify) {
+        window.dispatchEvent(new CustomEvent('sms-accounts-updated'));
+      }
     } catch (err) {
       console.error('[SmsService] Failed to save accounts:', err);
+    }
+  }
+
+  /**
+   * Batch ensures multiple accounts exist in the registry in a single operation without event floods.
+   */
+  static ensureAccountsBatch(entries: Array<{ accountNumber: string; accountName?: string; balance?: number }>): void {
+    try {
+      const accounts = this.getAccounts();
+      let modified = false;
+
+      for (const e of entries) {
+        const cleanNum = String(e.accountNumber || '').replace(/\D/g, '');
+        if (!cleanNum) continue;
+
+        const existing = accounts.find(a => String(a.accountNumber || '').replace(/\D/g, '') === cleanNum);
+        if (existing) {
+          if (e.accountName && existing.accountName !== e.accountName) {
+            existing.accountName = e.accountName;
+            modified = true;
+          }
+          if (e.balance !== undefined && existing.balance !== e.balance) {
+            existing.balance = e.balance;
+            modified = true;
+          }
+        } else {
+          accounts.push({
+            accountNumber: cleanNum,
+            accountName: e.accountName || 'CBE Account Holder',
+            bankName: 'Commercial Bank of Ethiopia',
+            balance: e.balance ?? 1000.0,
+            lastUpdated: new Date().toISOString(),
+          });
+          modified = true;
+        }
+      }
+
+      if (modified) {
+        this.saveAccounts(accounts, true);
+      }
+    } catch (err) {
+      console.error('[SmsService] Error in ensureAccountsBatch:', err);
     }
   }
 
@@ -537,19 +581,24 @@ export class SmsService {
    * Creates it automatically if not found.
    */
   static ensureAccount(accountNumber: string, accountName?: string, balance?: number): SmsAccount {
-    const cleanNum = (accountNumber || '').replace(/\D/g, '');
+    const cleanNum = String(accountNumber || '').replace(/\D/g, '');
     const accounts = this.getAccounts();
-    const existing = accounts.find(a => a.accountNumber === cleanNum);
+    const existing = accounts.find(a => String(a.accountNumber || '').replace(/\D/g, '') === cleanNum);
 
     if (existing) {
+      let changed = false;
       if (accountName && existing.accountName !== accountName) {
         existing.accountName = accountName;
+        changed = true;
       }
-      if (balance !== undefined) {
+      if (balance !== undefined && existing.balance !== balance) {
         existing.balance = balance;
+        changed = true;
       }
-      existing.lastUpdated = new Date().toISOString();
-      this.saveAccounts(accounts);
+      if (changed) {
+        existing.lastUpdated = new Date().toISOString();
+        this.saveAccounts(accounts, true);
+      }
       return existing;
     }
 
@@ -562,7 +611,7 @@ export class SmsService {
     };
 
     accounts.push(newAcc);
-    this.saveAccounts(accounts);
+    this.saveAccounts(accounts, true);
     return newAcc;
   }
 
@@ -590,6 +639,8 @@ export class SmsService {
   static setActiveAccountNumber(accountNumber: string): void {
     try {
       if (typeof window === 'undefined') return;
+      const current = localStorage.getItem(STORAGE_ACTIVE_ACC_KEY);
+      if (current === accountNumber) return; // Prevent unnecessary change cycles
       localStorage.setItem(STORAGE_ACTIVE_ACC_KEY, accountNumber);
       window.dispatchEvent(new CustomEvent('sms-active-account-changed', { detail: accountNumber }));
     } catch (err) {
@@ -677,11 +728,19 @@ export class SmsService {
       }
 
       // Sort oldest to newest for a natural SMS conversation feed
-      list.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+      list.sort((a, b) => {
+        const timeA = new Date(a?.timestamp || 0).getTime();
+        const timeB = new Date(b?.timestamp || 0).getTime();
+        return (isNaN(timeA) ? 0 : timeA) - (isNaN(timeB) ? 0 : timeB);
+      });
 
       if (accountNumber) {
-        const cleanTarget = accountNumber.replace(/\D/g, '');
-        return list.filter(m => m.accountNumber.replace(/\D/g, '') === cleanTarget || m.forAllUsers === true || m.accountNumber === 'ALL');
+        const cleanTarget = String(accountNumber || '').replace(/\D/g, '');
+        return list.filter(m => {
+          if (!m) return false;
+          const mAcc = String(m.accountNumber || '').replace(/\D/g, '');
+          return (cleanTarget && mAcc === cleanTarget) || m.forAllUsers === true || m.accountNumber === 'ALL';
+        });
       }
       return list;
     } catch (err) {
@@ -1031,225 +1090,244 @@ export class SmsService {
    * 3. Grouped by days: Recent, Yesterday, Last week, Last month, Older.
    */
   static getGroupedAccounts(): AccountGroupSection[] {
-    const accounts = this.getAccounts();
-    const allMessages = this.getSmsMessages();
-
-    // Map each account to its latest message timestamp
-    const accountMetas: AccountTimeMeta[] = accounts.map(acc => {
-      const cleanAcc = acc.accountNumber.replace(/\D/g, '');
-      const accMessages = allMessages.filter(
-        m => m.accountNumber.replace(/\D/g, '') === cleanAcc
-      );
-      const sortedMessages = [...accMessages].sort(
-        (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-      );
-      const latestTimestamp = sortedMessages[0]?.timestamp || acc.lastUpdated || null;
-      const unreadCount = accMessages.filter(m => !m.read).length;
-
-      return {
-        account: acc,
-        latestTimestamp,
-        timeLabel: '',
-        isNow: false,
-        groupKey: 'older',
-        groupTitle: 'Older',
-        unreadCount,
-      };
-    });
-
-    // Identify the sender and receiver of the most recent transaction (strictly max 2 accounts)
-    const nowAccountCleanSet = new Set<string>();
-
-    // 1. Check local transactions
     try {
-      if (typeof window !== 'undefined') {
-        const storedTxRaw = localStorage.getItem('cbe_transactions');
-        if (storedTxRaw) {
-          const txList = JSON.parse(storedTxRaw);
-          if (Array.isArray(txList) && txList.length > 0) {
-            const sortedTx = [...txList].sort(
-              (a: any, b: any) => new Date(b.createdAt || b.date || b.timestamp || 0).getTime() - new Date(a.createdAt || a.date || a.timestamp || 0).getTime()
-            );
-            const latestTx = sortedTx[0];
-            if (latestTx) {
-              if (latestTx.senderAccount) {
-                nowAccountCleanSet.add(String(latestTx.senderAccount).replace(/\D/g, ''));
+      const accounts = this.getAccounts() || [];
+      const allMessages = this.getSmsMessages() || [];
+
+      // Map each account to its latest message timestamp
+      const accountMetas: AccountTimeMeta[] = accounts
+        .filter(acc => acc && typeof acc === 'object')
+        .map(acc => {
+          const cleanAcc = String(acc.accountNumber || '').replace(/\D/g, '');
+          const accMessages = allMessages.filter(
+            m => m && String(m.accountNumber || '').replace(/\D/g, '') === cleanAcc
+          );
+          const sortedMessages = [...accMessages].sort((a, b) => {
+            const timeA = new Date(a?.timestamp || 0).getTime();
+            const timeB = new Date(b?.timestamp || 0).getTime();
+            return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
+          });
+          const latestTimestamp = sortedMessages[0]?.timestamp || acc.lastUpdated || null;
+          const unreadCount = accMessages.filter(m => m && !m.read).length;
+
+          return {
+            account: acc,
+            latestTimestamp,
+            timeLabel: '',
+            isNow: false,
+            groupKey: 'older',
+            groupTitle: 'Older',
+            unreadCount,
+          };
+        });
+
+      // Identify the sender and receiver of the most recent transaction (strictly max 2 accounts)
+      const nowAccountCleanSet = new Set<string>();
+
+      // 1. Check local transactions
+      try {
+        if (typeof window !== 'undefined') {
+          const storedTxRaw = localStorage.getItem('cbe_transactions');
+          if (storedTxRaw) {
+            const txList = JSON.parse(storedTxRaw);
+            if (Array.isArray(txList) && txList.length > 0) {
+              const sortedTx = [...txList].sort((a: any, b: any) => {
+                const timeA = new Date(a?.createdAt || a?.date || a?.timestamp || 0).getTime();
+                const timeB = new Date(b?.createdAt || b?.date || b?.timestamp || 0).getTime();
+                return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
+              });
+              const latestTx = sortedTx[0];
+              if (latestTx) {
+                if (latestTx.senderAccount) {
+                  nowAccountCleanSet.add(String(latestTx.senderAccount).replace(/\D/g, ''));
+                }
+                if (latestTx.recipientAccount) {
+                  nowAccountCleanSet.add(String(latestTx.recipientAccount).replace(/\D/g, ''));
+                }
               }
-              if (latestTx.recipientAccount) {
-                nowAccountCleanSet.add(String(latestTx.recipientAccount).replace(/\D/g, ''));
+            }
+          }
+        }
+      } catch {
+        // Non-blocking fallback
+      }
+
+      // 2. Check SMS messages for the latest transaction sender and receiver
+      const sortedAllMessages = [...allMessages]
+        .filter(m => m && !m.forAllUsers && m.accountNumber !== 'ALL')
+        .sort((a, b) => {
+          const timeA = new Date(a?.timestamp || 0).getTime();
+          const timeB = new Date(b?.timestamp || 0).getTime();
+          return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
+        });
+
+      if (nowAccountCleanSet.size < 2 && sortedAllMessages.length > 0) {
+        const topMsg = sortedAllMessages[0];
+        const topTxId = topMsg.transactionId;
+
+        if (topMsg.accountNumber) {
+          nowAccountCleanSet.add(String(topMsg.accountNumber).replace(/\D/g, ''));
+        }
+
+        if (topTxId) {
+          const matchingTxMsgs = sortedAllMessages.filter(m => m.transactionId === topTxId);
+          for (const m of matchingTxMsgs) {
+            if (m.accountNumber) {
+              nowAccountCleanSet.add(String(m.accountNumber).replace(/\D/g, ''));
+            }
+            if (nowAccountCleanSet.size >= 2) break;
+          }
+        }
+
+        if (nowAccountCleanSet.size < 2) {
+          const otherParty = topMsg.role === 'sender' ? topMsg.recipient : topMsg.sender;
+          if (otherParty && typeof otherParty === 'string') {
+            const cleanOther = String(otherParty).replace(/\D/g, '');
+            if (cleanOther) {
+              const matchedAcc = accounts.find(a => {
+                const cleanA = String(a?.accountNumber || '').replace(/\D/g, '');
+                return cleanA && (cleanA === cleanOther || (cleanOther.length >= 4 && cleanA.endsWith(cleanOther.slice(-4))));
+              });
+              if (matchedAcc && matchedAcc.accountNumber) {
+                nowAccountCleanSet.add(String(matchedAcc.accountNumber).replace(/\D/g, ''));
               }
             }
           }
         }
       }
-    } catch {
-      // Non-blocking fallback
-    }
 
-    // 2. Check SMS messages for the latest transaction sender and receiver
-    const sortedAllMessages = [...allMessages]
-      .filter(m => !m.forAllUsers && m.accountNumber !== 'ALL')
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
-    if (nowAccountCleanSet.size < 2 && sortedAllMessages.length > 0) {
-      const topMsg = sortedAllMessages[0];
-      const topTxId = topMsg.transactionId;
-
-      if (topMsg.accountNumber) {
-        nowAccountCleanSet.add(topMsg.accountNumber.replace(/\D/g, ''));
-      }
-
-      if (topTxId) {
-        const matchingTxMsgs = sortedAllMessages.filter(m => m.transactionId === topTxId);
-        for (const m of matchingTxMsgs) {
-          if (m.accountNumber) {
-            nowAccountCleanSet.add(m.accountNumber.replace(/\D/g, ''));
+      // If still need counterpart, pick the next highest activity account
+      if (nowAccountCleanSet.size < 2 && accountMetas.length > 0) {
+        for (const meta of accountMetas) {
+          const cleanAcc = String(meta.account?.accountNumber || '').replace(/\D/g, '');
+          if (cleanAcc) {
+            nowAccountCleanSet.add(cleanAcc);
           }
           if (nowAccountCleanSet.size >= 2) break;
         }
       }
 
-      if (nowAccountCleanSet.size < 2) {
-        const otherParty = topMsg.role === 'sender' ? topMsg.recipient : topMsg.sender;
-        if (otherParty) {
-          const cleanOther = otherParty.replace(/\D/g, '');
-          const matchedAcc = accounts.find(a => {
-            const cleanA = a.accountNumber.replace(/\D/g, '');
-            return cleanA === cleanOther || (cleanOther.length >= 4 && cleanA.endsWith(cleanOther.slice(-4)));
-          });
-          if (matchedAcc) {
-            nowAccountCleanSet.add(matchedAcc.accountNumber.replace(/\D/g, ''));
-          }
-        }
-      }
-    }
+      // Fulfills: "the now badge is only should have two accounts ok. the receiver and sender."
+      const finalNowAccounts = new Set(Array.from(nowAccountCleanSet).slice(0, 2));
 
-    // If still need counterpart, pick the next highest activity account
-    if (nowAccountCleanSet.size < 2 && accountMetas.length > 0) {
-      for (const meta of accountMetas) {
-        const cleanAcc = meta.account.accountNumber.replace(/\D/g, '');
-        nowAccountCleanSet.add(cleanAcc);
-        if (nowAccountCleanSet.size >= 2) break;
-      }
-    }
+      // Sort all accounts:
+      // 1. The two "Now" accounts (sender and receiver of latest transaction) are FIRST
+      // 2. The other accounts are sorted by their timestamp descending
+      accountMetas.sort((a, b) => {
+        const aClean = String(a.account?.accountNumber || '').replace(/\D/g, '');
+        const bClean = String(b.account?.accountNumber || '').replace(/\D/g, '');
+        const aIsNow = aClean ? finalNowAccounts.has(aClean) : false;
+        const bIsNow = bClean ? finalNowAccounts.has(bClean) : false;
 
-    // Fulfills: "the now badge is only should have two accounts ok. the receiver and sender."
-    const finalNowAccounts = new Set(Array.from(nowAccountCleanSet).slice(0, 2));
+        if (aIsNow && !bIsNow) return -1;
+        if (!aIsNow && bIsNow) return 1;
 
-    // Sort all accounts:
-    // 1. The two "Now" accounts (sender and receiver of latest transaction) are FIRST
-    // 2. The other accounts are sorted by their timestamp descending
-    accountMetas.sort((a, b) => {
-      const aClean = a.account.accountNumber.replace(/\D/g, '');
-      const bClean = b.account.accountNumber.replace(/\D/g, '');
-      const aIsNow = finalNowAccounts.has(aClean);
-      const bIsNow = finalNowAccounts.has(bClean);
+        const timeA = a.latestTimestamp ? new Date(a.latestTimestamp).getTime() : 0;
+        const timeB = b.latestTimestamp ? new Date(b.latestTimestamp).getTime() : 0;
+        return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
+      });
 
-      if (aIsNow && !bIsNow) return -1;
-      if (!aIsNow && bIsNow) return 1;
+      const now = new Date();
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+      let nonNowRecentIndex = 0;
 
-      const timeA = a.latestTimestamp ? new Date(a.latestTimestamp).getTime() : 0;
-      const timeB = b.latestTimestamp ? new Date(b.latestTimestamp).getTime() : 0;
-      return timeB - timeA;
-    });
+      accountMetas.forEach((item) => {
+        const cleanAcc = String(item.account?.accountNumber || '').replace(/\D/g, '');
+        const isSenderOrReceiver = cleanAcc ? finalNowAccounts.has(cleanAcc) : false;
 
-    const now = new Date();
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-    let nonNowRecentIndex = 0;
-
-    accountMetas.forEach((item) => {
-      const cleanAcc = item.account.accountNumber.replace(/\D/g, '');
-      const isSenderOrReceiver = finalNowAccounts.has(cleanAcc);
-
-      if (!item.latestTimestamp) {
-        item.timeLabel = 'No activity';
-        item.isNow = false;
-        item.groupKey = 'older';
-        item.groupTitle = 'Older';
-        return;
-      }
-
-      const date = new Date(item.latestTimestamp);
-      if (isNaN(date.getTime())) {
-        item.timeLabel = 'No activity';
-        item.isNow = false;
-        item.groupKey = 'older';
-        item.groupTitle = 'Older';
-        return;
-      }
-
-      const startOfTarget = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
-      const diffDays = Math.round((startOfToday - startOfTarget) / (1000 * 60 * 60 * 24));
-
-      if (diffDays <= 0) {
-        item.groupKey = 'recent';
-        item.groupTitle = 'Recent';
-
-        // Only the receiver and sender have the "Now" badge!
-        if (isSenderOrReceiver) {
-          item.isNow = true;
-          item.timeLabel = 'Now';
-        } else {
-          // All other accounts in the recent list display their timestamp
+        if (!item.latestTimestamp) {
+          item.timeLabel = 'No activity';
           item.isNow = false;
-          nonNowRecentIndex++;
-          // Stagger if timestamps are identical so each shows a realistic, distinct time
-          const staggeredDate = new Date(date.getTime() - (nonNowRecentIndex * 15 * 60 * 1000));
-          const displayDate = staggeredDate.getDate() === date.getDate() ? staggeredDate : date;
-          item.timeLabel = displayDate.toLocaleTimeString('en-US', {
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true,
+          item.groupKey = 'older';
+          item.groupTitle = 'Older';
+          return;
+        }
+
+        const date = new Date(item.latestTimestamp);
+        if (isNaN(date.getTime())) {
+          item.timeLabel = 'No activity';
+          item.isNow = false;
+          item.groupKey = 'older';
+          item.groupTitle = 'Older';
+          return;
+        }
+
+        const startOfTarget = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+        const diffDays = Math.round((startOfToday - startOfTarget) / (1000 * 60 * 60 * 24));
+
+        if (diffDays <= 0) {
+          item.groupKey = 'recent';
+          item.groupTitle = 'Recent';
+
+          // Only the receiver and sender have the "Now" badge!
+          if (isSenderOrReceiver) {
+            item.isNow = true;
+            item.timeLabel = 'Now';
+          } else {
+            // All other accounts in the recent list display their timestamp
+            item.isNow = false;
+            nonNowRecentIndex++;
+            // Stagger if timestamps are identical so each shows a realistic, distinct time
+            const staggeredDate = new Date(date.getTime() - (nonNowRecentIndex * 15 * 60 * 1000));
+            const displayDate = (!isNaN(staggeredDate.getTime()) && staggeredDate.getDate() === date.getDate()) ? staggeredDate : date;
+            item.timeLabel = displayDate.toLocaleTimeString('en-US', {
+              hour: 'numeric',
+              minute: '2-digit',
+              hour12: true,
+            });
+          }
+        } else if (diffDays === 1) {
+          item.groupKey = 'yesterday';
+          item.groupTitle = 'Yesterday';
+          item.isNow = false;
+          item.timeLabel = 'Yesterday';
+        } else if (diffDays > 1 && diffDays <= 7) {
+          const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
+          item.groupKey = 'last_week';
+          item.groupTitle = 'Last week';
+          item.isNow = false;
+          item.timeLabel = weekday;
+        } else if (diffDays > 7 && diffDays <= 31) {
+          const monthDay = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          item.groupKey = 'last_month';
+          item.groupTitle = 'Last month';
+          item.isNow = false;
+          item.timeLabel = monthDay;
+        } else {
+          const monthDay = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          item.groupKey = 'older';
+          item.groupTitle = 'Older';
+          item.isNow = false;
+          item.timeLabel = monthDay;
+        }
+      });
+
+      // Group into structured sections in order
+      const groupOrder: Array<{ key: AccountTimeMeta['groupKey']; title: string }> = [
+        { key: 'recent', title: 'Recent' },
+        { key: 'yesterday', title: 'Yesterday' },
+        { key: 'last_week', title: 'Last week' },
+        { key: 'last_month', title: 'Last month' },
+        { key: 'older', title: 'Older' },
+      ];
+
+      const sections: AccountGroupSection[] = [];
+      for (const grp of groupOrder) {
+        const matching = accountMetas.filter(m => m.groupKey === grp.key);
+        if (matching.length > 0) {
+          sections.push({
+            key: grp.key,
+            title: grp.title,
+            accounts: matching,
           });
         }
-      } else if (diffDays === 1) {
-        item.groupKey = 'yesterday';
-        item.groupTitle = 'Yesterday';
-        item.isNow = false;
-        item.timeLabel = 'Yesterday';
-      } else if (diffDays > 1 && diffDays <= 7) {
-        const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
-        item.groupKey = 'last_week';
-        item.groupTitle = 'Last week';
-        item.isNow = false;
-        item.timeLabel = weekday;
-      } else if (diffDays > 7 && diffDays <= 31) {
-        const monthDay = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        item.groupKey = 'last_month';
-        item.groupTitle = 'Last month';
-        item.isNow = false;
-        item.timeLabel = monthDay;
-      } else {
-        const monthDay = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        item.groupKey = 'older';
-        item.groupTitle = 'Older';
-        item.isNow = false;
-        item.timeLabel = monthDay;
       }
-    });
 
-    // Group into structured sections in order
-    const groupOrder: Array<{ key: AccountTimeMeta['groupKey']; title: string }> = [
-      { key: 'recent', title: 'Recent' },
-      { key: 'yesterday', title: 'Yesterday' },
-      { key: 'last_week', title: 'Last week' },
-      { key: 'last_month', title: 'Last month' },
-      { key: 'older', title: 'Older' },
-    ];
-
-    const sections: AccountGroupSection[] = [];
-    for (const grp of groupOrder) {
-      const matching = accountMetas.filter(m => m.groupKey === grp.key);
-      if (matching.length > 0) {
-        sections.push({
-          key: grp.key,
-          title: grp.title,
-          accounts: matching,
-        });
-      }
+      return sections;
+    } catch (err) {
+      console.error('[SmsService] getGroupedAccounts safe fallback:', err);
+      return [];
     }
-
-    return sections;
   }
 }
 

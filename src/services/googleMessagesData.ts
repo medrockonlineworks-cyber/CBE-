@@ -225,7 +225,23 @@ export class GoogleMessagesService {
     try {
       const data = localStorage.getItem(STORAGE_KEY);
       if (data) {
-        return JSON.parse(data);
+        const parsed = JSON.parse(data);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          // Ensure all threads have required string fields
+          return parsed.map((t, idx) => ({
+            id: t?.id || `thread-${idx}`,
+            sender: t?.sender || 'Unknown',
+            avatarColor: t?.avatarColor || '#545458',
+            snippet: t?.snippet || '',
+            timestamp: t?.timestamp || new Date().toISOString(),
+            timeLabel: t?.timeLabel || '9:30 AM',
+            unreadCount: typeof t?.unreadCount === 'number' ? t.unreadCount : 0,
+            isCbe: Boolean(t?.isCbe || t?.id === 'CBE' || t?.sender === 'CBE'),
+            tag: t?.tag,
+            phoneNumber: t?.phoneNumber,
+            messages: Array.isArray(t?.messages) ? t.messages : [],
+          }));
+        }
       }
     } catch {
       // ignore
@@ -246,58 +262,71 @@ export class GoogleMessagesService {
    * with real banking transactions from SmsService.
    */
   static getThreads(): MessageThread[] {
-    const activeAccNum = SmsService.getActiveAccountNumber();
-    const cbeMessages = SmsService.getSmsMessages(activeAccNum);
-    const sortedCbe = [...cbeMessages].sort(
-      (a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-    );
-    const latestCbeMsg = sortedCbe[0];
-    const unreadCbeCount = cbeMessages.filter(m => !m.read).length;
+    try {
+      const activeAccNum = SmsService.getActiveAccountNumber();
+      const cbeMessages = SmsService.getSmsMessages(activeAccNum) || [];
+      const sortedCbe = [...cbeMessages].sort((a, b) => {
+        const timeA = new Date(a?.timestamp || 0).getTime();
+        const timeB = new Date(b?.timestamp || 0).getTime();
+        return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
+      });
+      const latestCbeMsg = sortedCbe[0];
+      const unreadCbeCount = cbeMessages.filter(m => m && !m.read).length;
 
-    const threads = this.getStoredThreads();
+      const threads = this.getStoredThreads();
 
-    return threads.map(thread => {
-      if (thread.isCbe) {
-        let snippet = thread.snippet;
-        let timeLabel = thread.timeLabel;
+      return threads.map(thread => {
+        if (!thread) return DEFAULT_THREADS[0];
 
-        if (latestCbeMsg) {
-          snippet = latestCbeMsg.message.replace(/\n+/g, ' ');
-          if (snippet.length > 55) {
-            snippet = snippet.slice(0, 52) + '...';
-          }
+        if (thread.isCbe || thread.id === 'CBE' || thread.sender === 'CBE') {
+          let snippet = thread.snippet || 'Dear Customer...';
+          let timeLabel = thread.timeLabel || 'Now';
 
-          const msgDate = new Date(latestCbeMsg.timestamp);
-          const now = new Date();
-          const diffMs = Math.max(0, now.getTime() - msgDate.getTime());
-          const diffMins = Math.floor(diffMs / (1000 * 60));
+          if (latestCbeMsg && typeof latestCbeMsg.message === 'string') {
+            snippet = latestCbeMsg.message.replace(/\n+/g, ' ');
+            if (snippet.length > 55) {
+              snippet = snippet.slice(0, 52) + '...';
+            }
 
-          if (diffMins < 1) {
-            timeLabel = 'Now';
-          } else if (diffMins < 60) {
-            timeLabel = `${diffMins} min`;
-          } else {
-            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-            if (diffDays === 0) {
-              timeLabel = msgDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-            } else if (diffDays === 1) {
-              timeLabel = 'Yesterday';
+            const msgDate = new Date(latestCbeMsg.timestamp);
+            if (!isNaN(msgDate.getTime())) {
+              const now = new Date();
+              const diffMs = Math.max(0, now.getTime() - msgDate.getTime());
+              const diffMins = Math.floor(diffMs / (1000 * 60));
+
+              if (diffMins < 1) {
+                timeLabel = 'Now';
+              } else if (diffMins < 60) {
+                timeLabel = `${diffMins} min`;
+              } else {
+                const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                if (diffDays === 0) {
+                  timeLabel = msgDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+                } else if (diffDays === 1) {
+                  timeLabel = 'Yesterday';
+                } else {
+                  timeLabel = msgDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                }
+              }
             } else {
-              timeLabel = msgDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+              timeLabel = 'Now';
             }
           }
+
+          return {
+            ...thread,
+            snippet,
+            timeLabel,
+            unreadCount: unreadCbeCount,
+          };
         }
 
-        return {
-          ...thread,
-          snippet,
-          timeLabel,
-          unreadCount: unreadCbeCount,
-        };
-      }
-
-      return thread;
-    });
+        return thread;
+      });
+    } catch (err) {
+      console.error('[GoogleMessagesService] Error in getThreads:', err);
+      return DEFAULT_THREADS;
+    }
   }
 
   /**

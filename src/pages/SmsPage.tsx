@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { 
   ArrowLeft, 
   MoreVertical, 
@@ -112,27 +112,38 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
+  const activeAccountNumRef = useRef(activeAccountNum);
+  useEffect(() => {
+    activeAccountNumRef.current = activeAccountNum;
+  }, [activeAccountNum]);
+
   // Sync with available banking accounts in LocalDb
-  const refreshAccounts = () => {
+  const refreshAccounts = useCallback(() => {
     try {
       const registered = LocalDb.getAllRegisteredAccounts();
-      registered.forEach(r => {
-        if (r.accountNumber) {
-          SmsService.ensureAccount(r.accountNumber, r.accountName);
-        }
-      });
+      if (Array.isArray(registered)) {
+        const batch = registered
+          .filter(r => r && r.accountNumber)
+          .map(r => ({
+            accountNumber: r.accountNumber,
+            accountName: r.accountName,
+            balance: r.balance
+          }));
+        SmsService.ensureAccountsBatch(batch);
+      }
     } catch {
       // Non-blocking fallback
     }
     const updatedAccs = SmsService.getAccounts();
-    setAccounts(updatedAccs);
-  };
+    setAccounts(updatedAccs || []);
+  }, []);
 
   // Reload current account's messages
-  const reloadMessages = (accountNum: string) => {
+  const reloadMessages = useCallback((accountNum: string) => {
+    if (!accountNum) return;
     const msgs = SmsService.getSmsMessages(accountNum);
-    setMessages(msgs);
-  };
+    setMessages(msgs || []);
+  }, []);
 
   // Listen to SMS updates, account changes, and transactions
   useEffect(() => {
@@ -141,11 +152,12 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
       SmsService.setActiveAccountNumber(initialAccountId);
       reloadMessages(initialAccountId);
     }
-  }, [initialAccountId]);
+  }, [initialAccountId, activeAccountNum, reloadMessages]);
 
   // Selection and chat handlers for Google Messages
   const handleSelectThread = (thread: MessageThread) => {
-    if (thread.isCbe) {
+    if (!thread) return;
+    if (thread.isCbe || thread.id === 'CBE' || thread.sender === 'CBE') {
       setPageView('cbe');
     } else {
       setSelectedGenericThread(thread);
@@ -160,19 +172,20 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
     setPageView('generic_thread');
   };
 
+  // Mount-only event listener registration
   useEffect(() => {
     refreshAccounts();
-    reloadMessages(activeAccountNum);
+    reloadMessages(activeAccountNumRef.current);
     refreshThreads();
 
     const handleSmsUpdated = () => {
-      reloadMessages(activeAccountNum);
-      setAccounts(SmsService.getAccounts());
+      reloadMessages(activeAccountNumRef.current);
+      setAccounts(SmsService.getAccounts() || []);
       refreshThreads();
     };
 
     const handleActiveAccChanged = (e: CustomEvent<string>) => {
-      if (e.detail) {
+      if (e.detail && e.detail !== activeAccountNumRef.current) {
         setActiveAccountNum(e.detail);
         reloadMessages(e.detail);
         refreshThreads();
@@ -190,12 +203,12 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
       window.removeEventListener('sms-accounts-updated', handleSmsUpdated);
       window.removeEventListener('sms-active-account-changed', handleActiveAccChanged as EventListener);
     };
-  }, [activeAccountNum]);
+  }, [refreshAccounts, reloadMessages]);
 
   // Current active account details
   const activeAccount = useMemo(() => {
-    return accounts.find(a => a.accountNumber === activeAccountNum) || {
-      accountNumber: activeAccountNum,
+    return (accounts || []).find(a => a && a.accountNumber === activeAccountNum) || {
+      accountNumber: activeAccountNum || '1000419524747',
       accountName: 'Leykun Jemaneh Ylma',
       bankName: 'Commercial Bank of Ethiopia',
       balance: 1859.47,
@@ -342,7 +355,7 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
     }
 
     if (pageView === 'cbe') {
-      const currentAcc: SmsAccount = accounts.find(a => a.accountNumber === activeAccountNum) || accounts[0] || {
+      const currentAcc: SmsAccount = (accounts || []).find(a => a && a.accountNumber === activeAccountNum) || (accounts && accounts[0]) || {
         accountNumber: '1000419524747',
         accountName: 'Leykun Jemaneh Ylma',
         bankName: 'Commercial Bank of Ethiopia',
@@ -935,7 +948,7 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
                                     <span className="w-2 h-2 rounded-full bg-[#f43f5e]" title={`${meta.unreadCount} unread`} />
                                   )}
                                   <span className="text-[10px] text-neutral-400">
-                                    {SmsService.getSmsMessages(meta.account.accountNumber).length} messages
+                                    {meta?.account?.accountNumber ? (SmsService.getSmsMessages(meta.account.accountNumber) || []).length : 0} messages
                                   </span>
                                 </div>
                               </div>

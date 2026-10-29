@@ -24,7 +24,76 @@ import Navigation, { TabType } from './components/Navigation';
 import OfflineBanner from './components/OfflineBanner';
 import PhoneRecentAppsModal, { AppViewId } from './components/PhoneRecentAppsModal';
 import SplashScreen from './components/SplashScreen';
-import { ChevronLeft } from 'lucide-react';
+import { ChevronLeft, ArrowLeft, RefreshCw, AlertCircle } from 'lucide-react';
+
+interface ViewErrorBoundaryProps {
+  children: React.ReactNode;
+  viewName: string;
+  onBack: () => void;
+}
+
+interface ViewErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class ViewErrorBoundary extends React.Component<ViewErrorBoundaryProps, ViewErrorBoundaryState> {
+  public state: ViewErrorBoundaryState = {
+    hasError: false,
+    error: null,
+  };
+
+  static getDerivedStateFromError(error: Error): ViewErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error(`[ViewErrorBoundary:${this.props.viewName}]`, error, errorInfo);
+  }
+
+  handleReset = () => {
+    try {
+      localStorage.removeItem('google_messages_custom_threads');
+      localStorage.removeItem('bank_sms_messages_v6');
+      localStorage.removeItem('bank_sms_accounts_v6');
+      localStorage.removeItem('bank_sms_active_account');
+    } catch {}
+    this.setState({ hasError: false, error: null });
+  };
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="h-full w-full bg-[#121212] text-white flex flex-col items-center justify-center p-6 text-center select-none font-sans">
+          <div className="w-14 h-14 rounded-full bg-rose-500/20 text-rose-400 flex items-center justify-center mb-4">
+            <AlertCircle className="w-8 h-8" />
+          </div>
+          <h2 className="text-lg font-bold mb-2">Unable to load {this.props.viewName}</h2>
+          <p className="text-xs text-neutral-400 max-w-sm mb-6 leading-relaxed">
+            A temporary display error was encountered while reading messages. You can reset message storage or return to CBE Mobile Banking.
+          </p>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={this.handleReset}
+              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-semibold flex items-center gap-2 cursor-pointer transition active:scale-95"
+            >
+              <RefreshCw className="w-4 h-4" />
+              <span>Reset &amp; Restore</span>
+            </button>
+            <button
+              onClick={this.props.onBack}
+              className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 rounded-xl text-xs font-semibold flex items-center gap-2 cursor-pointer transition active:scale-95"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back to CBE</span>
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 export default function App() {
   // Splash Screen initial state (exact #70189F launch screen)
@@ -725,20 +794,34 @@ export default function App() {
           )}
 
           {activeView === 'sms' && (
-            <SmsPage 
-              accountId={smsActiveAccountId}
+            <ViewErrorBoundary
+              viewName="SMS Messages Simulator"
               onBack={() => {
                 navigateTo('main', returnTab);
               }}
-            />
+            >
+              <SmsPage 
+                accountId={smsActiveAccountId}
+                onBack={() => {
+                  navigateTo('main', returnTab);
+                }}
+              />
+            </ViewErrorBoundary>
           )}
 
           {activeView === 'truecaller' && (
-            <TruecallerSimulator 
+            <ViewErrorBoundary
+              viewName="Truecaller Simulator"
               onBack={() => {
                 navigateTo('main', returnTab);
               }}
-            />
+            >
+              <TruecallerSimulator 
+                onBack={() => {
+                  navigateTo('main', returnTab);
+                }}
+              />
+            </ViewErrorBoundary>
           )}
 
           {activeView === 'phone' && (

@@ -54,12 +54,13 @@ export default function GoogleMessagesInbox({
   const [geminiPrompt, setGeminiPrompt] = useState('');
   const [geminiSuggestion, setGeminiSuggestion] = useState('');
 
-  const filteredThreads = threads.filter(t => {
+  const filteredThreads = (threads || []).filter(t => {
+    if (!t) return false;
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
     return (
-      t.sender.toLowerCase().includes(q) ||
-      t.snippet.toLowerCase().includes(q)
+      (t.sender || '').toLowerCase().includes(q) ||
+      (t.snippet || '').toLowerCase().includes(q)
     );
   });
 
