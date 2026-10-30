@@ -15,6 +15,55 @@ interface AuthProps {
   onLoginSuccess: (user: UserProfile) => void;
 }
 
+/**
+ * Authentic CBE Fingerprint Biometric Icon
+ * Exact vector replication of the concentric biometric ridges from Commercial Bank of Ethiopia
+ */
+export function CbeFingerprintIcon({ 
+  size = 28, 
+  strokeColor = '#ffffff', 
+  strokeWidth = 1.9,
+  className = ''
+}: { 
+  size?: number; 
+  strokeColor?: string; 
+  strokeWidth?: number;
+  className?: string;
+}) {
+  return (
+    <svg 
+      width={size} 
+      height={size} 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke={strokeColor} 
+      strokeWidth={strokeWidth} 
+      strokeLinecap="round" 
+      strokeLinejoin="round"
+      className={className}
+    >
+      {/* Innermost vertical core loop */}
+      <path d="M12 11.2a1.8 1.8 0 0 0-1.8 1.8v2.4" />
+      <path d="M12 11.2a1.8 1.8 0 0 1 1.8 1.8v1.6" />
+      
+      {/* Second concentric arch */}
+      <path d="M8.7 15.8v-2.8a3.3 3.3 0 0 1 6.6 0v3.2" />
+      
+      {/* Third concentric arch */}
+      <path d="M6.8 17.2v-4.2a5.2 5.2 0 0 1 10.4 0v2.6" />
+      
+      {/* Fourth concentric arch */}
+      <path d="M5 16.5v-3.5a7 7 0 0 1 14 0v2" />
+      
+      {/* Outermost upper crest arch */}
+      <path d="M3.5 15v-2a8.5 8.5 0 0 1 17 0v1" />
+      
+      {/* Bottom whorl curve */}
+      <path d="M13.6 18c-.4.9-1 1.6-1.8 2" />
+    </svg>
+  );
+}
+
 export default function Auth({ onLoginSuccess }: AuthProps) {
   const [pin, setPin] = useState<string>('');
   // Show error by default or on submit (matching reference photo which has 'This field is required' shown)
@@ -27,6 +76,17 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
   const [showAccountSwitcher, setShowAccountSwitcher] = useState<boolean>(false);
   const [showNotificationToast, setShowNotificationToast] = useState<boolean>(false);
   const [isBiometricScanning, setIsBiometricScanning] = useState<boolean>(false);
+
+  // Detect iOS / iPhone device (physical device, Safari, or iPhone preset)
+  // Ensures top bar icons (Bell, English, Grid) are never covered by iPhone notch/status bar
+  const [isIOSDevice, setIsIOSDevice] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    const ua = window.navigator.userAgent || '';
+    const isApple = /iPhone|iPad|iPod/.test(ua) || (window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1);
+    const savedSettings = localStorage.getItem('tana_phone_settings_v1');
+    const isIPhonePreset = savedSettings ? savedSettings.includes('"iphone"') : false;
+    return isApple || isIPhonePreset;
+  });
 
   // Active account selection
   const [usersList, setUsersList] = useState<UserProfile[]>(() => LocalDb.getUsers());
@@ -51,16 +111,33 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
     };
   });
 
-  // Keep user list fresh
+  // Keep user list fresh, sync phone model settings, and set white device status bar
   useEffect(() => {
     const handleUpdate = () => {
       setUsersList(LocalDb.getUsers());
     };
+    const handleSettingsChange = () => {
+      const ua = window.navigator.userAgent || '';
+      const isApple = /iPhone|iPad|iPod/.test(ua) || (window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1);
+      const savedSettings = localStorage.getItem('tana_phone_settings_v1');
+      const isIPhonePreset = savedSettings ? savedSettings.includes('"iphone"') : false;
+      setIsIOSDevice(isApple || isIPhonePreset);
+    };
+
     window.addEventListener('storage', handleUpdate);
     window.addEventListener('cbe_account_switched', handleUpdate);
+    window.addEventListener('tana_phone_settings_changed', handleSettingsChange);
+
+    // Ensure phone device status bar is pure white (#ffffff) on opening login screen
+    const metas = document.querySelectorAll('meta[name="theme-color"]');
+    metas.forEach(m => m.setAttribute('content', '#ffffff'));
+
     return () => {
       window.removeEventListener('storage', handleUpdate);
       window.removeEventListener('cbe_account_switched', handleUpdate);
+      window.removeEventListener('tana_phone_settings_changed', handleSettingsChange);
+      // Restore CBE royal purple status bar theme color
+      metas.forEach(m => m.setAttribute('content', '#70189F'));
     };
   }, []);
 
@@ -275,7 +352,15 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
 
       {/* TOP BAR: Exact matching Image 1 & 2 */}
       {/* Left: Outline Bell | Center: English ⌵ | Right: 4-square Solid Grid Button */}
-      <div className="pt-4 px-6 max-w-md mx-auto w-full flex items-center justify-between relative z-20 shrink-0">
+      {/* Safe-area padding ensures top icons are never hidden beneath iPhone notch, status bar clock, or Dynamic Island */}
+      <div 
+        style={{
+          paddingTop: isIOSDevice 
+            ? 'max(calc(env(safe-area-inset-top, 0px) + 14px), 54px)' 
+            : 'max(calc(env(safe-area-inset-top, 0px) + 14px), 24px)'
+        }}
+        className="px-6 max-w-md mx-auto w-full flex items-center justify-between relative z-30 shrink-0"
+      >
         
         {/* Left: Bell Outline Icon in light circular pill button */}
         <button
@@ -473,18 +558,8 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
                 isBiometricScanning ? 'animate-pulse ring-4 ring-purple-300' : ''
               }`}
             >
-              {/* White Fingerprint Icon */}
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 3" />
-                <path d="M14 13.12c0 2.38 0 6.38-1 8.88" />
-                <path d="M2 16h.01" />
-                <path d="M21.8 16c.2-2 .131-5.354 0-6" />
-                <path d="M9 6.8a6 6 0 0 1 9 5.2v2" />
-                <path d="M5.88 9A7 7 0 0 1 18 12a14.7 14.7 0 0 1-.5 5" />
-                <path d="M2 10s.5-5 5-7 8 0 10 2" />
-                <path d="M7 15c0 2.5 1 4 2 5.5" />
-                <path d="M10.1 2.5A9.9 9.9 0 0 1 20 12c0 .87-.04 1.74-.1 2.6" />
-              </svg>
+              {/* White Authentic CBE Biometric Fingerprint Icon matching reference photo */}
+              <CbeFingerprintIcon size={32} strokeColor="#ffffff" strokeWidth={1.9} />
             </button>
 
             {/* "USE BIOMETRICS" text */}
@@ -588,12 +663,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
               onClick={handleBiometricsLogin}
               className="flex items-center gap-1.5 text-xs font-bold text-[#70189F] hover:underline cursor-pointer"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 3" />
-                <path d="M14 13.12c0 2.38 0 6.38-1 8.88" />
-                <path d="M9 6.8a6 6 0 0 1 9 5.2v2" />
-                <path d="M5.88 9A7 7 0 0 1 18 12a14.7 14.7 0 0 1-.5 5" />
-              </svg>
+              <CbeFingerprintIcon size={18} strokeColor="#70189F" strokeWidth={2.0} />
               <span>Use Biometrics</span>
             </button>
 
