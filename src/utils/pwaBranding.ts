@@ -15,8 +15,8 @@ export const BASE_MANIFEST = {
   display: 'standalone',
   display_override: ['standalone', 'minimal-ui', 'fullscreen', 'browser'],
   orientation: 'portrait-primary',
-  theme_color: '#70189F',
-  background_color: '#70189F',
+  theme_color: '#ffffff',
+  background_color: '#ffffff',
   lang: 'en',
   dir: 'ltr',
   categories: ['finance', 'business', 'utilities'],
@@ -319,14 +319,16 @@ export async function updatePwaBranding(customLogoUrl?: string | null): Promise<
       maskIconLink.href = `/pwa-maskable-512x512.png${versionParam}`;
     }
 
-    // 5. Update theme-color and tile meta tags to official CBE purple
-    let themeColorMeta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
-    if (themeColorMeta) {
-      themeColorMeta.content = '#70189F';
-    }
+    // 5. Update theme-color and tile meta tags: respect current active view (#ffffff on opening auth page)
+    const isMainSession = typeof window !== 'undefined' && Boolean(localStorage.getItem('tana_active_user_id'));
+    const activeColor = isMainSession ? '#70189F' : '#ffffff';
+
+    const allThemeMetas = document.querySelectorAll('meta[name="theme-color"], meta[name="msapplication-navbutton-color"]');
+    allThemeMetas.forEach(meta => meta.setAttribute('content', activeColor));
+
     let tileColorMeta = document.querySelector('meta[name="msapplication-TileColor"]') as HTMLMetaElement | null;
     if (tileColorMeta) {
-      tileColorMeta.content = '#70189F';
+      tileColorMeta.content = activeColor;
     }
     let tileImageMeta = document.querySelector('meta[name="msapplication-TileImage"]') as HTMLMetaElement | null;
     if (tileImageMeta) {
@@ -336,8 +338,8 @@ export async function updatePwaBranding(customLogoUrl?: string | null): Promise<
     // 6. Construct full dynamic manifest with active logo and splash screens
     const dynamicManifest = {
       ...BASE_MANIFEST,
-      background_color: '#70189F',
-      theme_color: '#70189F',
+      background_color: activeColor,
+      theme_color: activeColor,
       icons: [
         {
           src: `/pwa-192x192.png${versionParam}`,

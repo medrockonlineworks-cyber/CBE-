@@ -155,6 +155,13 @@ export default function App() {
 
     const metaTags = document.querySelectorAll('meta[name="theme-color"], meta[name="msapplication-navbutton-color"]');
     metaTags.forEach(meta => meta.setAttribute('content', themeColor));
+    if (activeView === 'auth') {
+      document.documentElement.style.backgroundColor = '#ffffff';
+      document.body.style.backgroundColor = '#ffffff';
+    } else if (activeView === 'main') {
+      document.documentElement.style.backgroundColor = '#70189F';
+      document.body.style.backgroundColor = '#70189F';
+    }
   }, [activeView]);
 
   // Listen for global balance updates & account switches so App-level currentUser is always fresh

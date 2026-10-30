@@ -128,15 +128,36 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
     window.addEventListener('cbe_account_switched', handleUpdate);
     window.addEventListener('tana_phone_settings_changed', handleSettingsChange);
 
-    // Ensure phone device status bar is pure white (#ffffff) on opening login screen
-    const metas = document.querySelectorAll('meta[name="theme-color"]');
-    metas.forEach(m => m.setAttribute('content', '#ffffff'));
+    // Ensure device status bar and navigation bar are pure white (#ffffff) on this opening page
+    const applyWhiteBars = () => {
+      const metas = document.querySelectorAll('meta[name="theme-color"], meta[name="msapplication-navbutton-color"]');
+      metas.forEach(m => m.setAttribute('content', '#ffffff'));
+      document.documentElement.style.backgroundColor = '#ffffff';
+      document.body.style.backgroundColor = '#ffffff';
+
+      let colorSchemeMeta = document.querySelector('meta[name="color-scheme"]') as HTMLMetaElement | null;
+      if (!colorSchemeMeta) {
+        colorSchemeMeta = document.createElement('meta');
+        colorSchemeMeta.name = 'color-scheme';
+        document.head.appendChild(colorSchemeMeta);
+      }
+      colorSchemeMeta.content = 'light';
+    };
+
+    applyWhiteBars();
+    const t1 = setTimeout(applyWhiteBars, 50);
+    const t2 = setTimeout(applyWhiteBars, 300);
+    const t3 = setTimeout(applyWhiteBars, 800);
 
     return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
       window.removeEventListener('storage', handleUpdate);
       window.removeEventListener('cbe_account_switched', handleUpdate);
       window.removeEventListener('tana_phone_settings_changed', handleSettingsChange);
       // Restore CBE royal purple status bar theme color
+      const metas = document.querySelectorAll('meta[name="theme-color"], meta[name="msapplication-navbutton-color"]');
       metas.forEach(m => m.setAttribute('content', '#70189F'));
     };
   }, []);
@@ -441,21 +462,21 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
             <CbeLogo className="w-18 h-18 sm:w-20 sm:h-20 object-contain drop-shadow-xs" />
           </div>
 
-          {/* Amharic Header in Golden Bronze */}
-          <h2 className="text-[#c09349] font-bold text-[19px] sm:text-[21px] tracking-normal leading-tight">
+          {/* Amharic Header in Golden Bronze (Authentic Ethiopic typography) */}
+          <h2 className="text-[#c09349] font-semibold text-[20px] sm:text-[21px] tracking-normal leading-tight font-['Noto_Serif_Ethiopic','Noto_Sans_Ethiopic',serif]">
             የኢትዮጵያ ንግድ ባንክ
           </h2>
 
           {/* English Header in Spaced Charcoal */}
-          <h1 className="text-[#374151] font-bold text-[11px] sm:text-[12px] tracking-[0.22em] uppercase mt-1">
+          <h1 className="text-[#374151] font-semibold text-[10.5px] sm:text-[11px] tracking-[0.24em] uppercase mt-1 font-sans">
             COMMERCIAL BANK OF ETHIOPIA
           </h1>
 
           {/* Hairline Divider */}
-          <div className="w-36 h-[1px] bg-neutral-200 mt-3.5 mb-3.5" />
+          <div className="w-32 h-[1px] bg-neutral-200/90 mt-3.5 mb-3.5" />
 
           {/* Welcome back Subtitle */}
-          <p className="text-[#8e8e93] font-normal text-[16px]">
+          <p className="text-[#8e8e93] font-normal text-[15.5px] font-sans">
             Welcome back
           </p>
         </div>
@@ -465,16 +486,16 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
           <div
             id="cbe-pin-input-box"
             onClick={() => setShowKeypad(true)}
-            className={`w-full rounded-2xl bg-white border py-3.5 px-4 flex items-center gap-3 transition-all cursor-pointer shadow-xs ${
+            className={`w-full rounded-[18px] bg-white border py-3.5 px-4 flex items-center gap-3 transition-all cursor-pointer shadow-xs ${
               showError 
-                ? 'border-[#ef4444] bg-[#fffcfc]' 
+                ? 'border-[#e05347] border-[1.5px] bg-[#fffcfc]' 
                 : showKeypad 
                   ? 'border-[#c58c2b] ring-2 ring-[#c58c2b]/20' 
                   : 'border-neutral-300 hover:border-neutral-400'
             }`}
           >
             {/* Golden Padlock Icon with Arched Shackle (Exact replica of Image 1 & 2) */}
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="shrink-0">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" className="shrink-0">
               <path 
                 d="M7 10V7a5 5 0 0 1 10 0v3" 
                 stroke="#d49a37" 
@@ -494,12 +515,12 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
             </svg>
 
             {/* PIN characters or placeholder with Red Cursor |PIN */}
-            <div className="flex-1 flex items-center text-neutral-800 text-base font-medium min-h-[24px]">
+            <div className="flex-1 flex items-center text-neutral-800 text-[15px] font-normal min-h-[24px]">
               {pin.length === 0 ? (
                 <div className="flex items-center text-[#9ca3af] tracking-normal font-normal">
                   {/* Red/coral cursor right between lock and PIN (Exact replica of Image 2) */}
-                  <span className="w-[1.8px] h-5 bg-[#e05347] animate-pulse mr-1" />
-                  <span>PIN</span>
+                  <span className="w-[1.5px] h-5 bg-[#e05347] animate-pulse mr-1.5" />
+                  <span className="tracking-wide">PIN</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
@@ -509,7 +530,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
                       className="w-2.5 h-2.5 rounded-full bg-neutral-800 inline-block" 
                     />
                   ))}
-                  <span className="w-[1.8px] h-5 bg-[#e05347] animate-pulse ml-0.5" />
+                  <span className="w-[1.5px] h-5 bg-[#e05347] animate-pulse ml-0.5" />
                 </div>
               )}
             </div>
@@ -566,7 +587,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
             <button
               type="button"
               onClick={handleBiometricsLogin}
-              className="text-[#1f2937] text-[11px] font-bold tracking-[0.16em] uppercase mt-2.5 cursor-pointer hover:text-[#70189F] transition"
+              className="text-[#1f2937] text-[11px] font-bold tracking-[0.16em] uppercase mt-3 cursor-pointer hover:text-[#70189F] transition font-sans"
             >
               {isBiometricScanning ? 'Scanning Fingerprint...' : 'USE BIOMETRICS'}
             </button>
@@ -574,22 +595,25 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
 
           {/* Bottom Actions: Login Button + Footer */}
           <div className="w-full mt-auto">
-            {/* Wide Golden/Bronze "Login ->" Button (Exact replica of Image 1) */}
+            {/* Wide Golden/Bronze "Login ->" Button (Exact replica of Image 1 & 2) */}
             <button
               id="btn-cbe-login"
               type="button"
               onClick={handleLoginAttempt}
-              className="w-full py-4 rounded-2xl bg-[#c58c2b] hover:bg-[#b87f22] active:bg-[#a9731b] text-white font-bold text-base shadow-sm transition flex items-center justify-center gap-2.5 cursor-pointer active:scale-[0.99]"
+              className="w-full py-3.5 rounded-[18px] bg-[#c58c2b] hover:bg-[#b87f22] active:bg-[#a9731b] text-white font-semibold text-[16px] shadow-sm transition flex items-center justify-center gap-2.5 cursor-pointer active:scale-[0.99] font-sans"
             >
-              <span className="text-base font-semibold">Login</span>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <span className="text-[16px] font-semibold">Login</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="5" y1="12" x2="19" y2="12" />
                 <polyline points="12 5 19 12 12 19" />
               </svg>
             </button>
 
-            {/* FOOTER: © Commercial Bank of Ethiopia (Exact replica of Image 1) */}
-            <div className="pt-8 pb-3 text-center text-[#9ca3af] text-xs font-normal">
+            {/* FOOTER: © Commercial Bank of Ethiopia (Exact replica of Image 1 & 2) */}
+            <div 
+              style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 8px), 16px)' }}
+              className="pt-8 text-center text-[#9ca3af] text-[11.5px] font-normal font-sans"
+            >
               &copy; Commercial Bank of Ethiopia
             </div>
           </div>
@@ -598,7 +622,10 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
 
       {/* VIEW B: ON-SCREEN NUMERIC KEYPAD (Exact replica of Image 2) */}
       {showKeypad && (
-        <div className="w-full max-w-md mx-auto bg-[#f8f9fa] rounded-t-[32px] shadow-[0_-4px_24px_rgba(0,0,0,0.04)] border-t border-neutral-100/80 px-6 pt-3 pb-8 shrink-0 animate-in slide-in-from-bottom-8 duration-200">
+        <div 
+          style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 12px), 24px)' }}
+          className="w-full max-w-md mx-auto bg-[#f8f9fa] rounded-t-[32px] shadow-[0_-4px_24px_rgba(0,0,0,0.04)] border-t border-neutral-100/80 px-6 pt-3 shrink-0 animate-in slide-in-from-bottom-8 duration-200"
+        >
           
           {/* Subtle grab handle bar at top center (Exact replica of Image 2) */}
           <div 
