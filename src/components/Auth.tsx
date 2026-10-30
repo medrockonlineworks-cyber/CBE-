@@ -1,745 +1,553 @@
-import React, { useState, useEffect } from 'react';
-import { LocalDb, DEFAULT_CBE_LOGO } from '../lib/mockData';
+import React, { useState, useEffect, useRef } from 'react';
+import { LocalDb } from '../lib/mockData';
 import { UserProfile } from '../types';
 import { CbeLogo } from './CbeLogo';
+import { AppsGridIcon } from './CbeCustomIcons';
 import { 
-  Phone, 
+  Bell, 
+  ChevronDown, 
   Lock, 
-  User, 
-  Mail, 
+  Fingerprint, 
   ArrowRight, 
-  Smartphone, 
-  CheckCircle2, 
-  AlertCircle,
-  KeyRound,
-  Fingerprint,
-  CreditCard,
-  Shuffle,
-  Users
+  Delete, 
+  Check, 
+  X, 
+  UserCheck, 
+  Users, 
+  Plus, 
+  ShieldCheck, 
+  Sparkles 
 } from 'lucide-react';
 
 interface AuthProps {
   onLoginSuccess: (user: UserProfile) => void;
 }
 
-type AuthSubScreen = 'login' | 'register' | 'otp' | 'pin-setup' | 'forgot';
-
 export default function Auth({ onLoginSuccess }: AuthProps) {
-  const [screen, setScreen] = useState<AuthSubScreen>('login');
-  
-  // Registration States
-  const [regName, setRegName] = useState('');
-  const [regAccountNumber, setRegAccountNumber] = useState(() => '1000' + Math.floor(100000000 + Math.random() * 900000000).toString());
-  const [regPhone, setRegPhone] = useState('');
-  const [regEmail, setRegEmail] = useState('');
-  const [regPass, setRegPass] = useState('');
-  const [regAccountType, setRegAccountType] = useState<UserProfile['accountType']>('savings');
+  const [pin, setPin] = useState<string>('');
+  const [showError, setShowError] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string>('This field is required');
+  const [showKeypad, setShowKeypad] = useState<boolean>(false);
+  const [selectedLanguage, setSelectedLanguage] = useState<'English' | 'አማርኛ'>('English');
+  const [showLangMenu, setShowLangMenu] = useState<boolean>(false);
+  const [showAccountSwitcher, setShowAccountSwitcher] = useState<boolean>(false);
+  const [showNotificationToast, setShowNotificationToast] = useState<boolean>(false);
+  const [isBiometricScanning, setIsBiometricScanning] = useState<boolean>(false);
 
-  // Login States
-  const [loginPhone, setLoginPhone] = useState('');
-  const [loginPass, setLoginPass] = useState('');
-
-  // PIN & OTP States
-  const [otpCode, setOtpCode] = useState('');
-  const [simulatedSentOtp, setSimulatedSentOtp] = useState('');
-  const [enteredPin, setEnteredPin] = useState('');
-
-  // Status message
-  const [errorMsg, setErrorMsg] = useState('');
-  const [successMsg, setSuccessMsg] = useState('');
-  const [simulatedSmsToast, setSimulatedSmsToast] = useState<string | null>(null);
-  const [customBankLogo, setCustomBankLogo] = useState<string | null>(() => LocalDb.getCustomBankLogo());
-
-  const generateRandomCbeAccount = () => {
-    return '1000' + Math.floor(100000000 + Math.random() * 900000000).toString();
-  };
-
-  useEffect(() => {
-    const handleUpdate = () => setCustomBankLogo(LocalDb.getCustomBankLogo());
-    window.addEventListener('cbe_logo_updated', handleUpdate);
-    return () => window.removeEventListener('cbe_logo_updated', handleUpdate);
-  }, []);
-
-  // Auto load demo toast for visual delight
-  const triggerSimulatedSms = (code: string) => {
-    setSimulatedSentOtp(code);
-    setSimulatedSmsToast(`[SMS GATEWAY] TanaBank OTP code is: ${code}. Valid for 5 mins.`);
-    setTimeout(() => {
-      setSimulatedSmsToast(null);
-    }, 15000); // show for 15s so user sees it
-  };
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMsg('');
-    setSuccessMsg('');
-
-    const users = LocalDb.getUsers();
-    const query = loginPhone.trim().toLowerCase();
-    
-    // find user by phone, email, or account number
-    const match = users.find(u => 
-      u.phone === loginPhone.trim() || 
-      u.phone === '+251' + loginPhone.trim().replace(/^0/, '') || 
-      u.email.toLowerCase() === query ||
-      u.accountNumber === loginPhone.trim() ||
-      u.name.toLowerCase() === query
-    );
-
-    if (!match) {
-      setErrorMsg('No account found with this phone number, email, or account number.');
-      return;
+  // Active account selection
+  const [usersList, setUsersList] = useState<UserProfile[]>(() => LocalDb.getUsers());
+  const [selectedUser, setSelectedUser] = useState<UserProfile>(() => {
+    const list = LocalDb.getUsers();
+    const savedId = typeof window !== 'undefined' ? localStorage.getItem('tana_active_user_id') : null;
+    if (savedId) {
+      const match = list.find(u => u.id === savedId);
+      if (match) return match;
     }
-
-    if (match.status === 'suspended') {
-      setErrorMsg('This account has been suspended by administration security policy.');
-      return;
-    }
-
-    // Success - trigger simulated OTP
-    const generatedCode = Math.floor(1000 + Math.random() * 9000).toString();
-    setSuccessMsg('Authentication credentials matched! OTP required.');
-    triggerSimulatedSms(generatedCode);
-    setScreen('otp');
-    
-    // Store user session temporarily
-    localStorage.setItem('tana_pending_user_id', match.id);
-  };
-
-  const handleRegister = (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMsg('');
-    setSuccessMsg('');
-
-    if (!regName.trim() || !regPhone.trim() || !regPass.trim()) {
-      setErrorMsg('Please fill in all required fields.');
-      return;
-    }
-
-    const formattedPhone = regPhone.trim().startsWith('+251') 
-      ? regPhone.trim() 
-      : '+251' + regPhone.trim().replace(/^0/, '');
-    
-    const accountNumToUse = regAccountNumber.trim() || generateRandomCbeAccount();
-
-    // Create intermediate pending profile
-    const pendingProfile = {
-      name: regName.trim(),
-      accountNumber: accountNumToUse,
-      accountType: regAccountType || 'savings',
-      phone: formattedPhone,
-      email: regEmail.trim() || `${regName.trim().toLowerCase().replace(/\s+/g, '')}@tana.demo`,
-      password: regPass
-    };
-
-    localStorage.setItem('tana_pending_registration', JSON.stringify(pendingProfile));
-    
-    // Send simulated OTP for registration
-    const generatedCode = Math.floor(1000 + Math.random() * 9000).toString();
-    triggerSimulatedSms(generatedCode);
-    setSuccessMsg('Registration code dispatched via SMS!');
-    setScreen('otp');
-  };
-
-  const handleVerifyOtp = (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMsg('');
-
-    if (otpCode !== simulatedSentOtp && otpCode !== '1234') { // '1234' is master debug code
-      setErrorMsg('Invalid verification code. Please check your SMS and try again.');
-      return;
-    }
-
-    // OTP Correct! Check if registration or login
-    const pendingRegStr = localStorage.getItem('tana_pending_registration');
-    const pendingUserId = localStorage.getItem('tana_pending_user_id');
-
-    if (pendingRegStr) {
-      // Registration complete, move to PIN Setup
-      setScreen('pin-setup');
-    } else if (pendingUserId) {
-      // Login complete, load user directly
-      const users = LocalDb.getUsers();
-      const user = users.find(u => u.id === pendingUserId);
-      if (user) {
-        LocalDb.addAuditLog(user.id, user.email, 'USER_LOGIN', `User ${user.name} logged in successfully via simulated OTP authentication.`);
-        onLoginSuccess(user);
-      } else {
-        setErrorMsg('Error reloading session profile.');
-      }
-    }
-  };
-
-  const handlePinSetupSubmit = (pin: string) => {
-    setErrorMsg('');
-    if (pin.length !== 4) {
-      setErrorMsg('PIN must be exactly 4 digits.');
-      return;
-    }
-
-    const pendingRegStr = localStorage.getItem('tana_pending_registration');
-    if (!pendingRegStr) {
-      setErrorMsg('Registration session expired.');
-      setScreen('register');
-      return;
-    }
-
-    const pr = JSON.parse(pendingRegStr);
-    const users = LocalDb.getUsers();
-    
-    // Use user-specified account number or generate 13-digit CBE account
-    const newAccountNumber = pr.accountNumber || ('1000' + Math.floor(100000000 + Math.random() * 900000000).toString());
-
-    const newUser: UserProfile = {
-      id: 'user_' + Math.random().toString(36).substring(2, 9),
-      name: pr.name,
-      phone: pr.phone,
-      email: pr.email,
+    return list[0] || {
+      id: 'user_1',
+      name: 'Leykun Jemaneh Ylma',
+      accountNumber: '1000419524747',
+      phone: '+251900112233',
+      email: 'leykunjemaneh3@gmail.com',
       role: 'user',
       status: 'active',
-      createdAt: new Date().toISOString(),
-      accountNumber: newAccountNumber,
-      accountType: pr.accountType || 'savings',
-      balance: 15000.00, // Welcome funds of 15,000.00 ETB
-      availableBalance: 15000.00,
-      biometricEnabled: false
+      balance: 18450.50,
+      availableBalance: 18450.50,
+      createdAt: new Date().toISOString()
+    };
+  });
+
+  // Keep user list fresh
+  useEffect(() => {
+    const handleUpdate = () => {
+      setUsersList(LocalDb.getUsers());
+    };
+    window.addEventListener('storage', handleUpdate);
+    window.addEventListener('cbe_account_switched', handleUpdate);
+    return () => {
+      window.removeEventListener('storage', handleUpdate);
+      window.removeEventListener('cbe_account_switched', handleUpdate);
+    };
+  }, []);
+
+  // Handle typing from physical keyboard when auth screen is mounted
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (showAccountSwitcher) return;
+      if (e.key >= '0' && e.key <= '9') {
+        e.preventDefault();
+        setShowError(false);
+        setPin(prev => (prev.length < 6 ? prev + e.key : prev));
+      } else if (e.key === 'Backspace') {
+        e.preventDefault();
+        setShowError(false);
+        setPin(prev => prev.slice(0, -1));
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        handleLoginAttempt();
+      }
     };
 
-    // Save user to DB
-    users.push(newUser);
-    LocalDb.setUsers(users);
-    localStorage.removeItem('tana_pending_registration');
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [pin, selectedUser, showAccountSwitcher]);
 
-    // Logs & Notifications
-    LocalDb.addAuditLog(newUser.id, newUser.email, 'USER_REGISTER', `Created new digital banking profile ${newUser.name}. Account A/C ${newUser.accountNumber} provisioned.`);
-    LocalDb.addNotification(newUser.id, 'Welcome to Tana Digital Bank!', 'We have credited your new wallet with ETB 15,000.00 as welcome funds!', 'success');
+  const handleKeypadPress = (digit: string) => {
+    setShowError(false);
+    if (pin.length < 6) {
+      setPin(prev => prev + digit);
+    }
+  };
 
-    setSuccessMsg(`Account created for ${newUser.name}! A/C: ${newUser.accountNumber}.`);
+  const handleBackspace = () => {
+    setShowError(false);
+    setPin(prev => prev.slice(0, -1));
+  };
+
+  const handleLoginAttempt = () => {
+    if (!pin || pin.trim().length === 0) {
+      setShowError(true);
+      setErrorMessage('This field is required');
+      return;
+    }
+
+    // Accepts standard Ethiopian CBE PIN (e.g. 4 or 6 digits)
+    if (pin.length < 4) {
+      setShowError(true);
+      setErrorMessage('PIN must be at least 4 digits');
+      return;
+    }
+
+    // Complete login
+    LocalDb.addAuditLog(selectedUser.id, selectedUser.email, 'USER_LOGIN', `User ${selectedUser.name} logged in via PIN authentication.`);
+    localStorage.setItem('tana_active_user_id', selectedUser.id);
+    onLoginSuccess(selectedUser);
+  };
+
+  const handleBiometricsLogin = () => {
+    setIsBiometricScanning(true);
+    setShowError(false);
+
+    // Simulate authentic biometric fingerprint scan response
     setTimeout(() => {
-      onLoginSuccess(newUser);
-    }, 1200);
+      setIsBiometricScanning(false);
+      LocalDb.addAuditLog(selectedUser.id, selectedUser.email, 'BIOMETRIC_LOGIN', `User ${selectedUser.name} logged in via CBE Biometrics (Fingerprint).`);
+      localStorage.setItem('tana_active_user_id', selectedUser.id);
+      onLoginSuccess(selectedUser);
+    }, 700);
   };
 
-  const handleQuickLoginUser = (user: UserProfile) => {
-    LocalDb.addAuditLog(user.id, user.email, 'QUICK_LOGIN', `User ${user.name} logged in.`);
-    onLoginSuccess(user);
-  };
-
-  const loadAbebeDemoUser = () => {
-    const users = LocalDb.getUsers();
-    const abebe = users.find(u => u.id === 'user_1');
-    if (abebe) {
-      LocalDb.addAuditLog(abebe.id, abebe.email, 'DEMO_LOGIN', 'Quick login as demo user Abebe Kebede.');
-      onLoginSuccess(abebe);
-    }
-  };
-
-  const loadAdminDemoUser = () => {
-    const users = LocalDb.getUsers();
-    let adminUser = users.find(u => u.email.toLowerCase() === 'leykunjemaneh3@gmail.com') || users.find(u => u.role === 'admin');
-    if (!adminUser) {
-      adminUser = {
-        id: 'user_admin',
-        name: 'Leykun Jemaneh (Admin)',
-        phone: '+251900112233',
-        email: 'leykunjemaneh3@gmail.com',
-        role: 'admin',
-        status: 'active',
-        createdAt: '2026-01-01T08:00:00Z',
-        accountNumber: '1000419524747',
-        accountType: 'wadiah',
-        balance: 18450.50,
-        availableBalance: 18450.50,
-        biometricEnabled: true
-      };
-      users.push(adminUser);
-      LocalDb.setUsers(users);
-    }
-    LocalDb.addAuditLog(adminUser.id, adminUser.email, 'DEMO_LOGIN_ADMIN', 'Administrator Leykun Jemaneh authenticated with full root privileges.');
-    onLoginSuccess(adminUser);
+  const handleSelectAccount = (user: UserProfile) => {
+    setSelectedUser(user);
+    localStorage.setItem('tana_active_user_id', user.id);
+    setShowAccountSwitcher(false);
+    setShowError(false);
+    setPin('');
   };
 
   return (
-    <div className="max-w-md mx-auto bg-gradient-to-br from-[#530d66] via-[#70189F] to-[#3a084c] min-h-screen text-white flex flex-col justify-between p-6 pb-12 relative overflow-hidden">
-      {/* Background radial overlay */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(222,179,86,0.18),transparent_60%)]" />
-
-      {/* Top simulated SMS banner */}
-      {simulatedSmsToast && (
-        <div id="sms-toast" className="fixed top-4 left-4 right-4 max-w-sm mx-auto bg-[#deb356] text-[#530d66] px-4 py-3 rounded-2xl shadow-2xl border border-amber-300 font-sans z-50 animate-bounce flex items-start gap-3">
-          <Smartphone className="w-5 h-5 flex-shrink-0 text-[#530d66] mt-0.5" />
-          <div className="flex-1">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#530d66]/80 font-mono">SMS Verification Code Received</p>
-            <p className="text-sm font-extrabold mt-0.5">{simulatedSmsToast}</p>
+    <div className="min-h-screen h-full w-full bg-white text-neutral-900 flex flex-col justify-between relative overflow-hidden select-none font-sans">
+      
+      {/* Notification Toast Modal */}
+      {showNotificationToast && (
+        <div 
+          onClick={() => setShowNotificationToast(false)}
+          className="fixed inset-0 z-50 bg-black/30 backdrop-blur-xs flex items-start justify-center pt-16 px-4 animate-in fade-in duration-200"
+        >
+          <div 
+            onClick={e => e.stopPropagation()}
+            className="w-full max-w-sm bg-white rounded-2xl p-4 shadow-2xl border border-neutral-100 flex items-start gap-3"
+          >
+            <div className="w-10 h-10 rounded-full bg-purple-100 text-[#70189F] flex items-center justify-center shrink-0">
+              <Bell className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="text-sm font-bold text-neutral-900">Notifications</h4>
+              <p className="text-xs text-neutral-600 mt-0.5">Welcome to Commercial Bank of Ethiopia. No urgent security notices.</p>
+            </div>
+            <button 
+              onClick={() => setShowNotificationToast(false)}
+              className="text-neutral-400 hover:text-neutral-600 p-1"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
         </div>
       )}
 
-      {/* Header Branding */}
-      <div className="text-center pt-6 relative">
-        <div className="flex flex-col justify-center items-center gap-2 mb-2">
-          <CbeLogo 
-            src={customBankLogo} 
-            className="w-16 h-16 object-contain drop-shadow-md"
-          />
-          <div className="text-center max-w-full px-2">
-            <h1 className="text-lg sm:text-xl font-extrabold tracking-tight leading-none text-[#deb356] whitespace-nowrap overflow-hidden text-ellipsis">
-              Commercial Bank of Ethiopia
-            </h1>
-            <span className="text-[11px] tracking-wider font-semibold text-purple-200 mt-1 block whitespace-nowrap overflow-hidden text-ellipsis">
-              The bank you can always rely on!
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Forms & Screens container */}
-      <div className="flex-1 flex flex-col justify-center my-8 relative z-10">
-        
-        {/* Error/Success messages */}
-        {errorMsg && (
-          <div className="mb-4 bg-red-500/15 border border-red-500/30 text-red-200 text-xs py-2.5 px-3.5 rounded-2xl flex items-center gap-2.5">
-            <AlertCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
-            <span>{errorMsg}</span>
-          </div>
-        )}
-        {successMsg && (
-          <div className="mb-4 bg-emerald-500/15 border border-emerald-500/30 text-emerald-200 text-xs py-2.5 px-3.5 rounded-2xl flex items-center gap-2.5">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-            <span>{successMsg}</span>
-          </div>
-        )}
-
-        {/* 1. LOGIN SCREEN */}
-        {screen === 'login' && (
-          <form id="form-login" onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-1">
-              <label className="text-xs text-emerald-300 font-semibold">Phone, Email or CBE Account Number</label>
-              <div className="relative">
-                <Smartphone className="absolute left-4 top-3.5 w-5 h-5 text-emerald-400/70" />
-                <input 
-                  id="input-login-phone"
-                  type="text" 
-                  placeholder="09... or 1000... or email@demo"
-                  value={loginPhone}
-                  onChange={(e) => setLoginPhone(e.target.value)}
-                  className="w-full bg-white/5 border border-emerald-500/20 rounded-2xl py-3.5 pl-12 pr-4 text-sm text-white placeholder-emerald-300/40 focus:outline-none focus:border-amber-400/50 focus:bg-white/10 transition"
-                  required
-                />
+      {/* Account Switcher Drawer */}
+      {showAccountSwitcher && (
+        <div 
+          onClick={() => setShowAccountSwitcher(false)}
+          className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex flex-col justify-end items-center animate-in fade-in duration-200"
+        >
+          <div 
+            onClick={e => e.stopPropagation()}
+            className="w-full max-w-md bg-white rounded-t-3xl p-6 shadow-2xl border-t border-neutral-200 max-h-[85vh] flex flex-col"
+          >
+            <div className="w-10 h-1 bg-neutral-300 rounded-full mx-auto mb-4" />
+            
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-100">
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-[#70189F]" />
+                <h3 className="font-bold text-base text-neutral-900">Switch CBE Account</h3>
               </div>
+              <button 
+                onClick={() => setShowAccountSwitcher(false)}
+                className="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center text-neutral-500 hover:text-neutral-900 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
-            <div className="space-y-1">
-              <div className="flex justify-between items-center">
-                <label className="text-xs text-emerald-300 font-semibold">Password</label>
-                <button 
-                  id="btn-forgot-link"
-                  type="button" 
-                  onClick={() => setScreen('forgot')}
-                  className="text-xs text-amber-400 hover:underline font-semibold"
-                >
-                  Forgot Password?
-                </button>
-              </div>
-              <div className="relative">
-                <Lock className="absolute left-4 top-3.5 w-5 h-5 text-emerald-400/70" />
-                <input 
-                  id="input-login-pass"
-                  type="password" 
-                  placeholder="••••••••"
-                  value={loginPass}
-                  onChange={(e) => setLoginPass(e.target.value)}
-                  className="w-full bg-white/5 border border-emerald-500/20 rounded-2xl py-3.5 pl-12 pr-4 text-sm text-white placeholder-emerald-300/40 focus:outline-none focus:border-amber-400/50 focus:bg-white/10 transition"
-                  required
-                />
-              </div>
+            <div className="overflow-y-auto py-3 space-y-2 flex-1">
+              {usersList.map((u) => {
+                const isCurrent = u.id === selectedUser.id;
+                return (
+                  <button
+                    key={u.id}
+                    onClick={() => handleSelectAccount(u)}
+                    className={`w-full p-3.5 rounded-2xl flex items-center justify-between transition cursor-pointer text-left border ${
+                      isCurrent 
+                        ? 'bg-purple-50 border-[#70189F]/40 shadow-xs' 
+                        : 'bg-neutral-50 hover:bg-neutral-100 border-neutral-100'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shrink-0 ${
+                        isCurrent ? 'bg-[#70189F] text-amber-300' : 'bg-neutral-200 text-neutral-700'
+                      }`}>
+                        {u.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <p className="font-bold text-sm text-neutral-900 truncate">{u.name}</p>
+                          {u.role === 'admin' && (
+                            <span className="text-[10px] bg-amber-400 text-purple-950 font-bold px-1.5 py-0.2 rounded shrink-0">Admin</span>
+                          )}
+                        </div>
+                        <p className="text-xs text-neutral-500 font-mono mt-0.5">A/C: {u.accountNumber}</p>
+                      </div>
+                    </div>
+                    {isCurrent && (
+                      <span className="w-6 h-6 rounded-full bg-[#70189F] text-white flex items-center justify-center shrink-0">
+                        <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
-
-            <button 
-              id="btn-submit-login"
-              type="submit" 
-              className="w-full bg-gradient-to-r from-amber-400 to-amber-300 text-emerald-950 font-extrabold py-3.5 rounded-2xl shadow-lg shadow-amber-400/10 hover:brightness-105 active:scale-[0.99] transition flex items-center justify-center gap-2 cursor-pointer mt-2"
-            >
-              <span>Secure Login</span>
-              <ArrowRight className="w-5 h-5" />
-            </button>
-
-            <div className="pt-4 text-center">
-              <p className="text-emerald-200/60 text-xs">
-                Don't have an account?{' '}
-                <button 
-                  id="btn-switch-register"
-                  type="button" 
-                  onClick={() => setScreen('register')}
-                  className="text-amber-400 font-extrabold hover:underline"
-                >
-                  Register New Account
-                </button>
-              </p>
-            </div>
-          </form>
-        )}
-
-        {/* 2. REGISTRATION SCREEN */}
-        {screen === 'register' && (
-          <form id="form-register" onSubmit={handleRegister} className="space-y-3.5">
-            <div className="space-y-1">
-              <label className="text-xs text-emerald-300 font-semibold">Account Holder Name (Full Name)</label>
-              <div className="relative">
-                <User className="absolute left-4 top-3.5 w-5 h-5 text-emerald-400/70" />
-                <input 
-                  id="input-reg-name"
-                  type="text" 
-                  placeholder="e.g. Almaz Ayana, Abebe Kebede..."
-                  value={regName}
-                  onChange={(e) => setRegName(e.target.value)}
-                  className="w-full bg-white/5 border border-emerald-500/20 rounded-2xl py-3.5 pl-12 pr-4 text-sm text-white placeholder-emerald-300/40 focus:outline-none focus:border-amber-400/50 focus:bg-white/10 transition"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <div className="flex justify-between items-center">
-                <label className="text-xs text-emerald-300 font-semibold">CBE Account Number</label>
-                <button
-                  type="button"
-                  onClick={() => setRegAccountNumber(generateRandomCbeAccount())}
-                  className="text-[11px] text-amber-300 hover:text-amber-200 font-bold flex items-center gap-1 cursor-pointer"
-                >
-                  <Shuffle className="w-3 h-3" />
-                  <span>Generate New Number</span>
-                </button>
-              </div>
-              <div className="relative">
-                <CreditCard className="absolute left-4 top-3.5 w-5 h-5 text-emerald-400/70" />
-                <input 
-                  id="input-reg-account"
-                  type="text" 
-                  placeholder="1000123456789"
-                  value={regAccountNumber}
-                  onChange={(e) => setRegAccountNumber(e.target.value.replace(/\s+/g, ''))}
-                  className="w-full bg-white/5 border border-emerald-500/20 rounded-2xl py-3.5 pl-12 pr-4 text-sm font-mono font-bold text-amber-300 placeholder-emerald-300/40 focus:outline-none focus:border-amber-400/50 focus:bg-white/10 transition"
-                  required
-                />
-              </div>
-              <p className="text-[10px] text-emerald-200/50">Custom or 13-digit standard CBE Account number.</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <label className="text-xs text-emerald-300 font-semibold">Ethiopian Phone</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-[13px] text-xs font-bold text-emerald-400/70 font-mono">+251</span>
-                  <input 
-                    id="input-reg-phone"
-                    type="tel" 
-                    placeholder="911223344"
-                    value={regPhone}
-                    onChange={(e) => setRegPhone(e.target.value)}
-                    className="w-full bg-white/5 border border-emerald-500/20 rounded-2xl py-3 pl-13 pr-3 text-xs text-white placeholder-emerald-300/40 focus:outline-none focus:border-amber-400/50 focus:bg-white/10 transition font-mono"
-                    required
-                  />
-                </div>
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-emerald-300 font-semibold">Account Type</label>
-                <select
-                  id="select-reg-type"
-                  value={regAccountType}
-                  onChange={(e) => setRegAccountType(e.target.value as any)}
-                  className="w-full bg-slate-900 border border-emerald-500/20 rounded-2xl py-3 px-3 text-xs text-white focus:outline-none focus:border-amber-400/50 transition font-medium"
-                >
-                  <option value="savings">CBE Savings</option>
-                  <option value="checking">Current/Checking</option>
-                  <option value="wadiah">Wadiah Interest-Free</option>
-                  <option value="cbe_birr">CBE Birr Wallet</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs text-emerald-300 font-semibold">Email Address (Optional)</label>
-              <div className="relative">
-                <Mail className="absolute left-4 top-3.5 w-5 h-5 text-emerald-400/70" />
-                <input 
-                  id="input-reg-email"
-                  type="email" 
-                  placeholder="name@example.com"
-                  value={regEmail}
-                  onChange={(e) => setRegEmail(e.target.value)}
-                  className="w-full bg-white/5 border border-emerald-500/20 rounded-2xl py-3.5 pl-12 pr-4 text-sm text-white placeholder-emerald-300/40 focus:outline-none focus:border-amber-400/50 focus:bg-white/10 transition"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs text-emerald-300 font-semibold">Set Security Password</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-3.5 w-5 h-5 text-emerald-400/70" />
-                <input 
-                  id="input-reg-pass"
-                  type="password" 
-                  placeholder="Minimum 6 characters"
-                  value={regPass}
-                  onChange={(e) => setRegPass(e.target.value)}
-                  className="w-full bg-white/5 border border-emerald-500/20 rounded-2xl py-3.5 pl-12 pr-4 text-sm text-white placeholder-emerald-300/40 focus:outline-none focus:border-amber-400/50 focus:bg-white/10 transition"
-                  required
-                />
-              </div>
-            </div>
-
-            <button 
-              id="btn-submit-register"
-              type="submit" 
-              className="w-full bg-gradient-to-r from-amber-400 to-amber-300 text-emerald-950 font-extrabold py-3.5 rounded-2xl shadow-lg shadow-amber-400/10 hover:brightness-105 active:scale-[0.99] transition flex items-center justify-center gap-2 cursor-pointer mt-2"
-            >
-              <span>Get Verification OTP</span>
-              <ArrowRight className="w-5 h-5" />
-            </button>
-
-            <div className="pt-2 text-center">
-              <p className="text-emerald-200/60 text-xs">
-                Already have an account?{' '}
-                <button 
-                  id="btn-switch-login"
-                  type="button" 
-                  onClick={() => setScreen('login')}
-                  className="text-amber-400 font-extrabold hover:underline"
-                >
-                  Login Now
-                </button>
-              </p>
-            </div>
-          </form>
-        )}
-
-        {/* 3. OTP VERIFICATION */}
-        {screen === 'otp' && (
-          <form id="form-otp" onSubmit={handleVerifyOtp} className="space-y-6 text-center">
-            <div className="space-y-2">
-              <h2 className="text-xl font-bold">SMS Code Verification</h2>
-              <p className="text-xs text-emerald-200/70 leading-relaxed max-w-xs mx-auto">
-                We have simulated disptaching a 4-digit code to your handset. Please type the OTP received below.
-              </p>
-            </div>
-
-            <div className="flex justify-center gap-3">
-              <input 
-                id="input-otp-field"
-                type="text"
-                maxLength={4}
-                value={otpCode}
-                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-                placeholder="••••"
-                className="w-36 text-center text-3xl font-extrabold tracking-widest bg-white/10 border border-emerald-500/30 rounded-2xl py-3 text-white placeholder-emerald-300/20 focus:outline-none focus:border-amber-400"
-                required
-                autoFocus
-              />
-            </div>
-
-            <button 
-              id="btn-verify-otp"
-              type="submit" 
-              className="w-full bg-gradient-to-r from-amber-400 to-amber-300 text-emerald-950 font-extrabold py-3.5 rounded-2xl transition shadow-lg active:scale-[0.99]"
-            >
-              Verify OTP Code
-            </button>
 
             <button
-              id="btn-resend-otp"
-              type="button"
               onClick={() => {
-                const generatedCode = Math.floor(1000 + Math.random() * 9000).toString();
-                triggerSimulatedSms(generatedCode);
-                setSuccessMsg('New security OTP code generated!');
+                // Instantly generate and switch to a new test account
+                const newAccNum = '1000' + Math.floor(100000000 + Math.random() * 900000000).toString();
+                const newUser: UserProfile = {
+                  id: 'user_' + Math.random().toString(36).substring(2, 8),
+                  name: 'New CBE Customer',
+                  accountNumber: newAccNum,
+                  accountType: 'savings',
+                  phone: '+251912345678',
+                  email: 'customer@cbe.et',
+                  role: 'user',
+                  status: 'active',
+                  balance: 25000.00,
+                  availableBalance: 25000.00,
+                  createdAt: new Date().toISOString()
+                };
+                const updated = [...usersList, newUser];
+                LocalDb.setUsers(updated);
+                setUsersList(updated);
+                handleSelectAccount(newUser);
               }}
-              className="text-xs text-amber-400 hover:underline font-semibold block mx-auto"
+              className="mt-3 w-full py-3 rounded-2xl bg-neutral-100 hover:bg-neutral-200 text-neutral-800 font-semibold text-xs flex items-center justify-center gap-2 cursor-pointer transition"
             >
-              Resend Code via SMS
+              <Plus className="w-4 h-4" />
+              <span>Create New Test Account</span>
             </button>
-          </form>
-        )}
+          </div>
+        </div>
+      )}
 
-        {/* 4. PIN SETUP SCREEN */}
-        {screen === 'pin-setup' && (
-          <div className="space-y-6 text-center">
-            <div className="space-y-2">
-              <KeyRound className="w-12 h-12 text-amber-400 mx-auto animate-bounce" />
-              <h2 className="text-xl font-bold">Set 4-Digit Security PIN</h2>
-              <p className="text-xs text-emerald-200/70 max-w-xs mx-auto">
-                This secure security PIN is required to authorize all future transfers, payments, and receipt generation.
-              </p>
-            </div>
+      {/* TOP BAR: Bell Icon (Left) — Language Pill (Center) — Apps Grid Icon (Right) */}
+      <div className="pt-4 px-6 max-w-md mx-auto w-full flex items-center justify-between relative z-20">
+        
+        {/* Left: Notification Bell in light circular pill button */}
+        <button
+          id="btn-auth-notification"
+          aria-label="Notifications"
+          onClick={() => setShowNotificationToast(true)}
+          className="w-11 h-11 rounded-full bg-[#f4f5f7] hover:bg-[#eaecef] active:scale-95 flex items-center justify-center text-neutral-700 transition cursor-pointer shadow-xs"
+        >
+          <Bell className="w-5 h-5 text-neutral-600 stroke-[1.8]" />
+        </button>
 
-            <div className="flex justify-center">
-              <div className="flex gap-2">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div 
-                    key={i} 
-                    className={`w-10 h-10 rounded-full border-2 transition ${
-                      enteredPin.length > i 
-                        ? 'bg-amber-400 border-amber-400 scale-110 shadow-lg shadow-amber-400/20' 
-                        : 'border-emerald-500/30 bg-white/5'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
+        {/* Center: Language selector pill: English ⌵ */}
+        <div className="relative">
+          <button
+            id="btn-auth-language"
+            aria-label="Select Language"
+            onClick={() => setShowLangMenu(prev => !prev)}
+            className="px-4 py-2 rounded-full bg-[#f4f5f7] hover:bg-[#eaecef] active:scale-95 text-neutral-800 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer shadow-xs"
+          >
+            <span>{selectedLanguage}</span>
+            <ChevronDown className="w-3.5 h-3.5 text-neutral-600" />
+          </button>
 
-            {/* Custom Interactive Numerical Keypad */}
-            <div className="max-w-[280px] mx-auto grid grid-cols-3 gap-3 pt-4">
-              {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((num) => (
-                <button
-                  key={num}
-                  type="button"
-                  onClick={() => {
-                    if (enteredPin.length < 4) setEnteredPin(prev => prev + num);
-                  }}
-                  className="bg-white/5 hover:bg-white/15 py-3 rounded-2xl text-xl font-black font-mono transition border border-white/5 flex items-center justify-center cursor-pointer"
-                >
-                  {num}
-                </button>
-              ))}
+          {showLangMenu && (
+            <div className="absolute top-full mt-1.5 left-1/2 -translate-x-1/2 bg-white border border-neutral-200 shadow-xl rounded-2xl p-1.5 w-32 z-30 animate-in fade-in">
               <button
-                type="button"
-                onClick={() => setEnteredPin('')}
-                className="text-xs font-bold text-red-400 bg-white/5 hover:bg-white/10 rounded-2xl py-3 flex items-center justify-center cursor-pointer"
+                onClick={() => { setSelectedLanguage('English'); setShowLangMenu(false); }}
+                className={`w-full px-3 py-2 text-xs font-semibold rounded-xl text-left flex items-center justify-between cursor-pointer ${
+                  selectedLanguage === 'English' ? 'bg-purple-50 text-[#70189F]' : 'hover:bg-neutral-100 text-neutral-700'
+                }`}
               >
-                Clear
+                <span>English</span>
+                {selectedLanguage === 'English' && <Check className="w-3.5 h-3.5" />}
               </button>
               <button
+                onClick={() => { setSelectedLanguage('አማርኛ'); setShowLangMenu(false); }}
+                className={`w-full px-3 py-2 text-xs font-semibold rounded-xl text-left flex items-center justify-between cursor-pointer ${
+                  selectedLanguage === 'አማርኛ' ? 'bg-purple-50 text-[#70189F]' : 'hover:bg-neutral-100 text-neutral-700'
+                }`}
+              >
+                <span>አማርኛ</span>
+                {selectedLanguage === 'አማርኛ' && <Check className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Right: 4-square Apps Grid button in light circular pill */}
+        <button
+          id="btn-auth-apps-menu"
+          aria-label="Select Account or Services"
+          onClick={() => setShowAccountSwitcher(true)}
+          className="w-11 h-11 rounded-full bg-[#f4f5f7] hover:bg-[#eaecef] active:scale-95 flex items-center justify-center text-neutral-700 transition cursor-pointer shadow-xs"
+          title="Switch Account"
+        >
+          <AppsGridIcon size={20} className="text-neutral-700" strokeWidth={2.2} />
+        </button>
+      </div>
+
+      {/* MAIN CONTENT AREA */}
+      <div className="flex-1 flex flex-col justify-center px-6 max-w-md mx-auto w-full my-auto py-4">
+        
+        {/* Brand Emblem & Headers (Exact replica of Image 1) */}
+        <div className="flex flex-col items-center text-center">
+          
+          {/* Golden Spiral Emblem */}
+          <div className="w-20 h-20 flex items-center justify-center mb-3">
+            <CbeLogo className="w-20 h-20 object-contain drop-shadow-sm" />
+          </div>
+
+          {/* Amharic Header in Golden Bronze */}
+          <h2 className="text-[#c58c2b] font-bold text-lg sm:text-xl tracking-normal">
+            የኢትዮጵያ ንግድ ባንክ
+          </h2>
+
+          {/* English Header in Spaced Charcoal */}
+          <h1 className="text-neutral-800 font-bold text-[11px] sm:text-[12px] tracking-[0.2em] uppercase mt-1">
+            COMMERCIAL BANK OF ETHIOPIA
+          </h1>
+
+          {/* Hairline Divider */}
+          <div className="w-40 h-[1px] bg-neutral-200 mt-4 mb-4" />
+
+          {/* Welcome back Subtitle */}
+          <p className="text-neutral-400 font-normal text-base">
+            Welcome back
+          </p>
+        </div>
+
+        {/* PIN INPUT FIELD (Exact styling from Image 1 & 2) */}
+        <div className="mt-6 mb-2">
+          <div
+            id="cbe-pin-input-box"
+            onClick={() => setShowKeypad(true)}
+            className={`w-full rounded-2xl bg-white border py-4 px-4 flex items-center gap-3 transition-all cursor-pointer shadow-xs ${
+              showError 
+                ? 'border-[#e0564c] bg-[#fffaf9]' 
+                : showKeypad 
+                  ? 'border-[#c58c2b] ring-2 ring-[#c58c2b]/20' 
+                  : 'border-neutral-300 hover:border-neutral-400'
+            }`}
+          >
+            {/* Golden Padlock Icon */}
+            <Lock className="w-5 h-5 text-[#c58c2b] shrink-0" fill="#c58c2b" />
+
+            {/* PIN characters or placeholder */}
+            <div className="flex-1 flex items-center text-neutral-800 text-base font-medium min-h-[24px]">
+              {pin.length === 0 ? (
+                <div className="flex items-center text-neutral-400 tracking-normal font-normal">
+                  <span className="w-0.5 h-5 bg-neutral-400 animate-pulse mr-1" />
+                  <span>PIN</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  {Array.from({ length: pin.length }).map((_, i) => (
+                    <span 
+                      key={i} 
+                      className="w-2.5 h-2.5 rounded-full bg-neutral-800 inline-block" 
+                    />
+                  ))}
+                  {showKeypad && <span className="w-0.5 h-5 bg-neutral-400 animate-pulse ml-0.5" />}
+                </div>
+              )}
+            </div>
+
+            {/* Clear PIN button when digits exist */}
+            {pin.length > 0 && (
+              <button
                 type="button"
-                onClick={() => {
-                  if (enteredPin.length < 4) setEnteredPin(prev => prev + '0');
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPin('');
+                  setShowError(false);
                 }}
-                className="bg-white/5 hover:bg-white/15 py-3 rounded-2xl text-xl font-black font-mono transition border border-white/5 flex items-center justify-center cursor-pointer"
+                className="text-neutral-400 hover:text-neutral-600 p-1 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Error Message: "This field is required" (Exact replica from Image 1) */}
+          {showError && (
+            <p className="text-[#e0564c] text-xs font-medium mt-1.5 pl-2 animate-in fade-in">
+              {errorMessage}
+            </p>
+          )}
+        </div>
+
+        {/* BIOMETRICS & LOGIN BUTTON AREA (When Keypad is hidden or compact) */}
+        {!showKeypad && (
+          <div className="mt-8 flex flex-col items-center">
+            
+            {/* Circular Purple Biometrics Button */}
+            <button
+              id="btn-use-biometrics"
+              type="button"
+              aria-label="Use Biometrics"
+              onClick={handleBiometricsLogin}
+              disabled={isBiometricScanning}
+              className={`w-14 h-14 rounded-full bg-[#70189F] hover:bg-[#5e1385] active:scale-95 text-white flex items-center justify-center shadow-md transition-all cursor-pointer relative ${
+                isBiometricScanning ? 'animate-pulse ring-4 ring-purple-300' : ''
+              }`}
+            >
+              <Fingerprint className="w-7 h-7 text-white" />
+            </button>
+
+            {/* "USE BIOMETRICS" text */}
+            <button
+              type="button"
+              onClick={handleBiometricsLogin}
+              className="text-neutral-800 text-[11px] font-bold tracking-wider uppercase mt-2.5 cursor-pointer hover:text-[#70189F] transition"
+            >
+              {isBiometricScanning ? 'Scanning Fingerprint...' : 'USE BIOMETRICS'}
+            </button>
+
+            {/* Wide Golden/Bronze "Login ->" Button */}
+            <div className="w-full mt-10">
+              <button
+                id="btn-cbe-login"
+                type="button"
+                onClick={handleLoginAttempt}
+                className="w-full py-4 rounded-2xl bg-[#c58c2b] hover:bg-[#b87f22] active:bg-[#a9731b] text-white font-bold text-base shadow-sm transition flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99]"
+              >
+                <span>Login</span>
+                <ArrowRight className="w-5 h-5 stroke-[2.2]" />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* NUMERIC KEYPAD (Exact replica of Image 2) */}
+        {showKeypad && (
+          <div className="mt-4 pt-2 border-t border-neutral-100 flex flex-col animate-in slide-in-from-bottom-6 duration-200">
+            
+            {/* Grab handle to collapse keypad */}
+            <button 
+              type="button"
+              onClick={() => setShowKeypad(false)}
+              className="w-12 h-1 bg-neutral-300 hover:bg-neutral-400 rounded-full mx-auto mb-3 cursor-pointer"
+              title="Close Keypad"
+            />
+
+            {/* 3x4 Numeric Keypad Grid */}
+            <div className="grid grid-cols-3 gap-2.5 max-w-sm mx-auto w-full">
+              {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
+                <button
+                  key={digit}
+                  type="button"
+                  onClick={() => handleKeypadPress(digit)}
+                  className="h-14 rounded-xl bg-[#f4f5f7] hover:bg-[#eaecef] active:bg-[#dfe2e6] text-neutral-800 text-2xl font-normal flex items-center justify-center transition shadow-xs cursor-pointer select-none"
+                >
+                  {digit}
+                </button>
+              ))}
+
+              {/* Backspace Key */}
+              <button
+                type="button"
+                aria-label="Backspace"
+                onClick={handleBackspace}
+                className="h-14 rounded-xl bg-[#f4f5f7] hover:bg-[#eaecef] active:bg-[#dfe2e6] text-red-500 flex items-center justify-center transition shadow-xs cursor-pointer select-none"
+              >
+                <Delete className="w-6 h-6 stroke-[1.8]" />
+              </button>
+
+              {/* 0 Key */}
+              <button
+                type="button"
+                onClick={() => handleKeypadPress('0')}
+                className="h-14 rounded-xl bg-[#f4f5f7] hover:bg-[#eaecef] active:bg-[#dfe2e6] text-neutral-800 text-2xl font-normal flex items-center justify-center transition shadow-xs cursor-pointer select-none"
               >
                 0
               </button>
+
+              {/* Submit Checkmark Key */}
               <button
                 type="button"
-                onClick={() => {
-                  if (enteredPin.length === 4) {
-                    handlePinSetupSubmit(enteredPin);
-                  } else {
-                    setErrorMsg('Please enter a 4-digit PIN first.');
-                  }
-                }}
-                className="bg-amber-400 text-emerald-950 font-bold rounded-2xl text-xs hover:brightness-105 transition flex items-center justify-center cursor-pointer"
+                aria-label="Submit PIN"
+                onClick={handleLoginAttempt}
+                className="h-14 rounded-xl bg-[#f4f5f7] hover:bg-purple-100 active:bg-purple-200 text-[#70189F] flex items-center justify-center transition shadow-xs cursor-pointer select-none"
               >
-                Submit
+                <Check className="w-6 h-6 stroke-[2.2]" />
+              </button>
+            </div>
+
+            {/* Bottom Actions when keypad is visible: Use Biometrics or Login Button */}
+            <div className="flex items-center justify-between gap-3 mt-4 pt-2">
+              <button
+                type="button"
+                onClick={handleBiometricsLogin}
+                className="flex items-center gap-1.5 text-xs font-bold text-[#70189F] hover:underline cursor-pointer py-1"
+              >
+                <Fingerprint className="w-4 h-4" />
+                <span>Use Biometrics</span>
+              </button>
+              
+              <button
+                type="button"
+                onClick={handleLoginAttempt}
+                className="px-5 py-2.5 rounded-xl bg-[#c58c2b] hover:bg-[#b87f22] text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+              >
+                <span>Login</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
         )}
 
-        {/* 5. FORGOT SCREEN */}
-        {screen === 'forgot' && (
-          <form id="form-forgot" onSubmit={(e) => {
-            e.preventDefault();
-            const code = Math.floor(1000 + Math.random() * 9000).toString();
-            triggerSimulatedSms(code);
-            setSuccessMsg('Recovery code sent via SMS!');
-            setScreen('otp');
-          }} className="space-y-4">
-            <div className="space-y-2 text-center pb-4">
-              <h2 className="text-xl font-bold">Password Recovery</h2>
-              <p className="text-xs text-emerald-200/70 max-w-xs mx-auto">
-                Enter your registered Ethiopian phone number or email address to request a simulated authentication OTP recovery code.
-              </p>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs text-emerald-300 font-semibold">Phone or Email</label>
-              <div className="relative">
-                <Smartphone className="absolute left-4 top-3.5 w-5 h-5 text-emerald-400/70" />
-                <input 
-                  id="input-forgot-phone"
-                  type="text" 
-                  placeholder="09... or email@example.com"
-                  className="w-full bg-white/5 border border-emerald-500/20 rounded-2xl py-3.5 pl-12 pr-4 text-sm text-white placeholder-emerald-300/40 focus:outline-none focus:border-amber-400/50 transition"
-                  required
-                />
-              </div>
-            </div>
-
-            <button 
-              id="btn-submit-forgot"
-              type="submit" 
-              className="w-full bg-gradient-to-r from-amber-400 to-amber-300 text-emerald-950 font-extrabold py-3.5 rounded-2xl transition shadow-lg"
-            >
-              Generate Recovery SMS Code
-            </button>
-
-            <button 
-              id="btn-back-to-login"
-              type="button" 
-              onClick={() => setScreen('login')}
-              className="text-xs text-emerald-200 hover:text-white font-bold block mx-auto pt-2"
-            >
-              Back to Login
-            </button>
-          </form>
-        )}
       </div>
 
-      {/* Quick Launch Registered Accounts */}
-      {screen === 'login' && (
-        <div className="border-t border-white/10 pt-6 relative z-10 text-center space-y-5">
-          <div>
-            <div className="flex items-center justify-between mb-3 px-1">
-              <p className="text-[10px] uppercase tracking-widest font-bold text-amber-400/80 flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5 text-amber-400" />
-                <span>Available Accounts (One-Tap Login)</span>
-              </p>
-              <button
-                type="button"
-                onClick={() => setScreen('register')}
-                className="text-[10px] text-amber-300 hover:underline font-bold"
-              >
-                + New Account
-              </button>
-            </div>
-            
-            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-              {LocalDb.getUsers().map((u) => (
-                <button
-                  key={u.id}
-                  id={`btn-login-user-${u.id}`}
-                  onClick={() => handleQuickLoginUser(u)}
-                  className="w-full bg-white/5 hover:bg-white/10 text-emerald-100 border border-white/10 p-2.5 rounded-2xl text-xs font-semibold transition flex items-center justify-between cursor-pointer touch-manipulation group"
-                >
-                  <div className="flex items-center gap-2.5 text-left min-w-0">
-                    <div className="w-8 h-8 rounded-full bg-[#70189F] border border-amber-400/40 flex items-center justify-center font-bold text-amber-300 text-xs flex-shrink-0">
-                      {u.name.split(' ').map(n => n[0]).join('')}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-bold text-white text-xs truncate">{u.name}</span>
-                        {u.role === 'admin' && (
-                          <span className="text-[9px] bg-amber-400 text-purple-950 px-1.5 py-0.2 rounded font-extrabold flex-shrink-0">
-                            Admin
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-[10px] font-mono text-emerald-300/70 truncate">A/C: {u.accountNumber}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1.5 pl-2 flex-shrink-0">
-                    <span className="text-[10px] text-amber-300 group-hover:underline font-bold">Login &rarr;</span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Bottom Legal Notice */}
-      <div className="text-center text-[10px] text-emerald-300/40 mt-6 relative z-10 font-mono">
-        &copy; 2026 TANA Digital Bank. Licensed Sandbox Demo.
+      {/* FOOTER: © Commercial Bank of Ethiopia (Exact from Image 1) */}
+      <div className="pb-6 pt-2 text-center text-neutral-400 text-xs font-normal relative z-10">
+        &copy; Commercial Bank of Ethiopia
       </div>
+
     </div>
   );
 }

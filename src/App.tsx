@@ -23,7 +23,6 @@ import { PhoneSettingsService } from './services/phoneSettingsService';
 import Navigation, { TabType } from './components/Navigation';
 import OfflineBanner from './components/OfflineBanner';
 import PhoneRecentAppsModal, { AppViewId } from './components/PhoneRecentAppsModal';
-import SplashScreen from './components/SplashScreen';
 import { ChevronLeft, ArrowLeft, RefreshCw, AlertCircle } from 'lucide-react';
 
 interface ViewErrorBoundaryProps {
@@ -96,9 +95,6 @@ class ViewErrorBoundary extends React.Component<ViewErrorBoundaryProps, ViewErro
 }
 
 export default function App() {
-  // Splash Screen initial state (exact #70189F launch screen)
-  const [showSplash, setShowSplash] = useState<boolean>(true);
-
   // Authentication & View Session States
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
     try {
@@ -127,18 +123,10 @@ export default function App() {
       if (path === '/telebirr' || appParam === 'telebirr' || hash === '#telebirr' || hash === '#/telebirr') return 'telebirr';
       if (path === '/telegram' || appParam === 'telegram' || hash === '#telegram' || hash === '#/telegram') return 'telegram';
       if (path === '/admin' || appParam === 'admin' || hash === '#admin') return 'admin';
-
-      // Restore last active app from localStorage
-      try {
-        const savedView = localStorage.getItem('tana_active_view');
-        if (savedView && ['main', 'dashen', 'telebirr', 'sms', 'truecaller', 'phone', 'admin', 'telegram'].includes(savedView)) {
-          return savedView as any;
-        }
-      } catch {
-        // Ignore storage errors
-      }
+      if (path === '/main' || appParam === 'main' || hash === '#main') return 'main';
     }
-    return 'main';
+    // Default: Open directly to the authentic white CBE login page
+    return 'auth';
   });
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [returnTab, setReturnTab] = useState<TabType>('home');
@@ -154,10 +142,11 @@ export default function App() {
     });
   }, []);
 
-  // Sync real device phone status bar and navigation bar color with active app (#70189F for CBE)
+  // Sync real device phone status bar and navigation bar color with active app (#ffffff for opening CBE login page, #70189F for CBE main app)
   useEffect(() => {
     let themeColor = '#70189F'; // Official CBE App Color
-    if (activeView === 'telebirr') themeColor = '#6cb81f';
+    if (activeView === 'auth') themeColor = '#ffffff'; // White opening login page
+    else if (activeView === 'telebirr') themeColor = '#6cb81f';
     else if (activeView === 'dashen') themeColor = '#004b87';
     else if (activeView === 'telegram') themeColor = '#229ED9';
     else if (activeView === 'sms') themeColor = '#121212';
@@ -413,7 +402,7 @@ export default function App() {
     };
   }, [handlePhoneBack, isIPhone, activeView]);
 
-  // Try auto restoring session on mount
+  // Try auto restoring session profile on mount
   useEffect(() => {
     const savedUserId = localStorage.getItem('tana_active_user_id');
     if (savedUserId) {
@@ -422,10 +411,8 @@ export default function App() {
       if (match) {
         if (match.status === 'suspended') {
           localStorage.removeItem('tana_active_user_id');
-          alert('Your account is currently suspended.');
         } else {
           setCurrentUser(match);
-          setActiveView('main');
         }
       }
     }
@@ -688,11 +675,6 @@ export default function App() {
         id="app-main-canvas"
         className="w-full h-full min-h-[100dvh] h-[100dvh] bg-white relative flex flex-col overflow-hidden border-none shadow-none rounded-none"
       >
-        {/* Authentic CBE Initial Boot Splash Screen in exact #70189F */}
-        {showSplash && (
-          <SplashScreen onFinish={() => setShowSplash(false)} />
-        )}
-
         {/* Real-time Offline Warning Banner */}
         <OfflineBanner />
 
