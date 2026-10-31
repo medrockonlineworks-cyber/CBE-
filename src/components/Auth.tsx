@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { LocalDb } from '../lib/mockData';
 import { UserProfile } from '../types';
+import { SystemBarsService } from '../services/systemBarsService';
 import { CbeLogo } from './CbeLogo';
 import { 
   Bell, 
@@ -130,20 +131,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
 
     // Ensure device status bar uses CBE app purple (#70189F) and navigation bar is pure white (#ffffff)
     const applyBarColors = () => {
-      const themeMetas = document.querySelectorAll('meta[name="theme-color"], meta[name="msapplication-navbutton-color"]');
-      themeMetas.forEach(m => m.setAttribute('content', '#70189F'));
-      const navMetas = document.querySelectorAll('meta[name="navigation-bar-color"]');
-      navMetas.forEach(m => m.setAttribute('content', '#ffffff'));
-      document.documentElement.style.backgroundColor = '#ffffff';
-      document.body.style.backgroundColor = '#ffffff';
-
-      let colorSchemeMeta = document.querySelector('meta[name="color-scheme"]') as HTMLMetaElement | null;
-      if (!colorSchemeMeta) {
-        colorSchemeMeta = document.createElement('meta');
-        colorSchemeMeta.name = 'color-scheme';
-        document.head.appendChild(colorSchemeMeta);
-      }
-      colorSchemeMeta.content = 'light';
+      SystemBarsService.applyDualSystemBars();
     };
 
     applyBarColors();
@@ -158,12 +146,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
       window.removeEventListener('storage', handleUpdate);
       window.removeEventListener('cbe_account_switched', handleUpdate);
       window.removeEventListener('tana_phone_settings_changed', handleSettingsChange);
-      const themeMetas = document.querySelectorAll('meta[name="theme-color"], meta[name="msapplication-navbutton-color"]');
-      themeMetas.forEach(m => m.setAttribute('content', '#70189F'));
-      const navMetas = document.querySelectorAll('meta[name="navigation-bar-color"]');
-      navMetas.forEach(m => m.setAttribute('content', '#ffffff'));
-      document.documentElement.style.backgroundColor = '#ffffff';
-      document.body.style.backgroundColor = '#ffffff';
+      SystemBarsService.applyDualSystemBars();
     };
   }, []);
 

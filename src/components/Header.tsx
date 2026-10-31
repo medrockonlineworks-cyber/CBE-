@@ -61,10 +61,10 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Greeting Text */}
         <div className="flex flex-col justify-center">
-          <p className="text-[12px] text-white/80 font-normal leading-tight">
+          <p className="text-[13px] sm:text-[14px] text-white/85 font-normal leading-tight">
             Hello,
           </p>
-          <h2 className="text-[17px] font-bold text-white tracking-tight leading-none mt-0.5">
+          <h2 className="text-[19px] sm:text-[21px] font-bold text-white tracking-tight leading-none mt-0.5">
             {userName}
           </h2>
         </div>

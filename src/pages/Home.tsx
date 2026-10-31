@@ -844,10 +844,10 @@ export const Home: React.FC<HomeProps> = ({
 
                         {/* Title and Date */}
                         <div className="flex flex-col min-w-0">
-                          <span className="font-bold text-[#2d0938] text-[11px] sm:text-[11.5px] leading-snug truncate group-hover:text-[#70189f] transition-colors">
+                          <span className="font-bold text-[#2d0938] text-[13px] sm:text-[14px] leading-snug truncate group-hover:text-[#70189f] transition-colors">
                             {displayName}
                           </span>
-                          <span className="text-[9px] sm:text-[9.5px] text-gray-400 font-normal leading-tight mt-0.5">
+                          <span className="text-[10.5px] sm:text-[11px] text-gray-400 font-normal leading-tight mt-0.5">
                             {formattedDate}
                           </span>
                         </div>
@@ -855,13 +855,13 @@ export const Home: React.FC<HomeProps> = ({
 
                       {/* Right: Amount + Category Pill Badge */}
                       <div className="flex flex-col items-end flex-shrink-0">
-                        <span className={`text-[11px] sm:text-[11.5px] font-bold tracking-tight text-right ${
+                        <span className={`text-[13px] sm:text-[14px] font-bold tracking-tight text-right ${
                           isCredit ? 'text-[#16a34a]' : 'text-gray-900'
                         }`}>
                           {isCredit ? '+' : '-'}{tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
                         </span>
 
-                        <span className="bg-[#f5eef8] text-[#70189f] px-1.5 py-0.5 rounded-full text-[7.5px] sm:text-[8px] font-bold uppercase tracking-wider mt-0.5 text-right inline-block whitespace-nowrap">
+                        <span className="bg-[#f5eef8] text-[#70189f] px-2 py-0.5 rounded-full text-[9px] sm:text-[9.5px] font-bold uppercase tracking-wider mt-0.5 text-right inline-block whitespace-nowrap">
                           {categoryTag}
                         </span>
                       </div>

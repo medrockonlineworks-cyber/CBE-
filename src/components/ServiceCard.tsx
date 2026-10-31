@@ -39,11 +39,11 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
 
         {/* Text Details */}
         <div className="min-w-0 flex-1 overflow-hidden">
-          <h3 className="text-xs sm:text-[13px] font-bold text-[#70189F] leading-tight truncate">
+          <h3 className="text-[13.5px] sm:text-[14.5px] font-bold text-[#70189F] leading-tight truncate">
             {title}
           </h3>
           {subtitle && (
-            <p className="text-[10px] sm:text-[10.5px] font-medium text-gray-400 mt-0.5 leading-tight truncate">
+            <p className="text-[11.5px] sm:text-[12px] font-medium text-gray-500 mt-0.5 leading-tight truncate">
               {subtitle}
             </p>
           )}
@@ -56,7 +56,7 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
     <button
       id={`service-card-${id}`}
       onClick={onClick}
-      className={`w-full min-h-[105px] bg-white rounded-2xl p-3.5 flex flex-col items-center justify-center text-center shadow-[0_2px_12px_rgba(0,0,0,0.04)] border border-gray-100/70 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all cursor-pointer group select-none ${className}`}
+      className={`w-full min-h-[108px] bg-white rounded-2xl p-3.5 flex flex-col items-center justify-center text-center shadow-[0_2px_12px_rgba(0,0,0,0.04)] border border-gray-100/70 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] transition-all cursor-pointer group select-none ${className}`}
     >
       {/* Icon container */}
       <div 
@@ -68,13 +68,13 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
       </div>
 
       {/* Main Title */}
-      <h3 className="text-xs sm:text-[13px] font-bold text-[#70189F] leading-tight">
+      <h3 className="text-[13.5px] sm:text-[14.5px] font-bold text-[#70189F] leading-tight">
         {title}
       </h3>
 
       {/* Optional Subtitle */}
       {subtitle && (
-        <p className="text-[10px] sm:text-[11px] font-medium text-gray-400 mt-0.5 leading-none">
+        <p className="text-[11.5px] sm:text-[12px] font-medium text-gray-500 mt-0.5 leading-none">
           {subtitle}
         </p>
       )}

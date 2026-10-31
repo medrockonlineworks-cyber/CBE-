@@ -64,7 +64,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
             </svg>
 
             {/* Centered Text */}
-            <span className="text-[11.5px] font-bold tracking-tight text-white whitespace-nowrap leading-none">
+            <span className="text-[12.5px] font-bold tracking-tight text-white whitespace-nowrap leading-none">
               Scan QR
             </span>
 
@@ -90,7 +90,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
       <nav 
         id="cbe-bottom-navbar" 
         aria-label="Main Navigation"
-        className="w-full pointer-events-auto bg-white border-t border-gray-100 px-5 pt-0.5 pb-[max(env(safe-area-inset-bottom,0px),4px)] flex justify-between items-center shadow-[0_-1px_4px_rgba(0,0,0,0.02)] select-none min-h-[44px] shrink-0"
+        className="w-full pointer-events-auto bg-white border-t border-gray-100 px-5 pt-0.5 pb-[max(env(safe-area-inset-bottom,0px),4px)] flex justify-between items-center shadow-[0_-1px_4px_rgba(0,0,0,0.02)] select-none min-h-[46px] shrink-0"
       >
         {/* Item 1: Home */}
         <button
@@ -110,7 +110,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
               className="transition-transform" 
             />
           </div>
-          <span className={`text-[9.5px] sm:text-[10px] mt-[1px] mb-0 tracking-tight leading-none ${isHomeActive ? 'font-bold text-[#70189F]' : 'font-medium text-[#70189F]/75'}`}>
+          <span className={`text-[11px] sm:text-[11.5px] mt-[1.5px] mb-0 tracking-tight leading-none ${isHomeActive ? 'font-bold text-[#70189F]' : 'font-medium text-[#70189F]/75'}`}>
             Home
           </span>
         </button>
@@ -134,7 +134,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
               className="transition-transform" 
             />
           </div>
-          <span className={`text-[9.5px] sm:text-[10px] mt-[1px] mb-0 tracking-tight leading-none ${isTransactionActive ? 'font-bold text-[#70189F]' : 'font-medium text-[#70189F]/75'}`}>
+          <span className={`text-[11px] sm:text-[11.5px] mt-[1.5px] mb-0 tracking-tight leading-none ${isTransactionActive ? 'font-bold text-[#70189F]' : 'font-medium text-[#70189F]/75'}`}>
             Transactions
           </span>
         </button>
@@ -157,7 +157,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
               className="transition-transform" 
             />
           </div>
-          <span className={`text-[9.5px] sm:text-[10px] mt-[1px] mb-0 tracking-tight leading-none ${isSettingActive ? 'font-bold text-[#70189F]' : 'font-medium text-[#70189F]/75'}`}>
+          <span className={`text-[11px] sm:text-[11.5px] mt-[1.5px] mb-0 tracking-tight leading-none ${isSettingActive ? 'font-bold text-[#70189F]' : 'font-medium text-[#70189F]/75'}`}>
             Settings
           </span>
         </button>
