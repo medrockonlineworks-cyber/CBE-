@@ -141,8 +141,8 @@ export function formatCbeDebitMessage(params: {
   const formattedDr = params.disasterRecovery.toFixed(2);
   const formattedTotal = params.totalDebited.toFixed(2);
   const formattedBal = params.balance !== undefined
-    ? params.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    : '1,755.47';
+    ? Number(params.balance).toFixed(2)
+    : '1755.47';
   const fbUrl = params.feedbackUrl || DEFAULT_FEEDBACK_URL;
 
   return `Dear ${cleanSenderName} A debit transaction of ETB ${formattedAmt} has occurred on your account ${maskedSenderAcc}. Service charge of ETB ${formattedSc} and VAT(15%) of ETB${formattedVat} and Disaster Recovery(5%) of ${formattedDr} with total of ETB${formattedTotal} .Your current balance is ETB${formattedBal}. Thanks for Banking with CBE.\n${params.receiptUrl} for feedback:\n${fbUrl}`;
@@ -151,7 +151,7 @@ export function formatCbeDebitMessage(params: {
 /**
  * Formats the exact official CBE credit alert text matching authentic CBE SMS notifications.
  * Matching Screenshot 1:
- * "Dear Leykun Jemaneh Ylma You have received ETB 50.00 from account 1*********8925 (Kasahun Yematawork Lema) to your account 1*********4747. Your current balance is ETB1,805.47. Thanks for Banking with CBE.
+ * "Dear Leykun Jemaneh Ylma You have received ETB 50.00 from account 1*********8925 (Kasahun Yematawork Lema) to your account 1*********4747. Your current balance is ETB1805.47. Thanks for Banking with CBE.
  * https://mreciept.cbe.com.et/v2-hfHCxGwmcij7q3ExbiWb for feedback:
  * https://forms.gle/kGNGQpG3mQCCk3iD6"
  */
@@ -167,15 +167,12 @@ export function formatCbeCreditMessage(params: {
 }): string {
   const cleanReceiverName = params.receiverName.replace(/\s*\(Admin\)/i, '').replace(/\s*\(\d{4}\)/, '').trim() || 'Leykun Jemaneh Ylma';
   const cleanSenderName = params.senderName.replace(/\s*\(Admin\)/i, '').replace(/\s*\(\d{4}\)/, '').trim() || 'Kasahun Yematawork Lema';
-  const formattedAmt = params.amount.toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  const formattedAmt = Number(params.amount).toFixed(2);
   const maskedSenderAcc = maskAccountNumber(params.senderAccountNumber);
   const maskedReceiverAcc = maskAccountNumber(params.receiverAccountNumber);
   const formattedBal = params.balance !== undefined
-    ? params.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-    : '1,805.47';
+    ? Number(params.balance).toFixed(2)
+    : '1805.47';
   const fbUrl = params.feedbackUrl || DEFAULT_FEEDBACK_URL;
 
   return `Dear ${cleanReceiverName} You have received ETB ${formattedAmt} from account ${maskedSenderAcc} (${cleanSenderName}) to your account ${maskedReceiverAcc}. Your current balance is ETB${formattedBal}. Thanks for Banking with CBE.\n${params.receiptUrl} for feedback:\n${fbUrl}`;

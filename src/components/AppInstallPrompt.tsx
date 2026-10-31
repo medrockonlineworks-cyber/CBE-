@@ -146,13 +146,13 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
         </div>
 
         <div className="flex items-center gap-3 p-3 bg-black/40 rounded-xl border border-white/10">
-          <div className="w-10 h-10 rounded-xl bg-purple-950/80 p-1.5 flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-white p-1 flex items-center justify-center flex-shrink-0 shadow-sm border border-neutral-200">
             <CbeLogo className="w-full h-full object-contain" />
           </div>
           <div>
-            <p className="text-xs font-bold text-white">CBE Mobile Banking</p>
+            <p className="text-xs font-bold text-white">CBE Mobil</p>
             <p className="text-[10.5px] text-amber-300/90">
-              {customLogo ? 'Installs with your uploaded app icon' : 'Installs with official CBE Gold Emblem'}
+              {customLogo ? 'Installs with your white background app icon' : 'Installs with official CBE Gold Emblem on white'}
             </p>
           </div>
         </div>
@@ -188,7 +188,7 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
             <li className="flex items-start gap-2.5">
               <span className="w-5 h-5 rounded-full bg-amber-400 text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">2</span>
               <div>
-                <span>Select <strong>&quot;Install app&quot;</strong> or <strong>&quot;Install CBE Mobile Banking&quot;</strong>.</span>
+                <span>Select <strong>&quot;Install app&quot;</strong> or <strong>&quot;Install CBE Mobil&quot;</strong>.</span>
                 <p className="text-[10px] text-slate-400 mt-0.5">
                   Avoid selecting &quot;Create shortcut&quot; to ensure a genuine WebAPK application is installed in your app drawer.
                 </p>
@@ -196,7 +196,7 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
             </li>
             <li className="flex items-start gap-2.5">
               <span className="w-5 h-5 rounded-full bg-amber-400 text-slate-950 font-black text-[11px] flex items-center justify-center shrink-0 mt-0.5">3</span>
-              <span>Tap <strong>&quot;Install&quot;</strong>. Android will mint and install CBE Mobile Banking in your app drawer.</span>
+              <span>Tap <strong>&quot;Install&quot;</strong>. Android will mint and install CBE Mobil in your app drawer.</span>
             </li>
           </ol>
         )}
@@ -238,7 +238,7 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
             </div>
             <div>
               <h3 className="text-sm font-extrabold text-gray-900 tracking-tight">Application &amp; Device Installation</h3>
-              <p className="text-[11px] text-gray-500">Install CBE Mobile Banking to your home screen</p>
+              <p className="text-[11px] text-gray-500">Install CBE Mobil to your home screen</p>
             </div>
           </div>
 
@@ -256,7 +256,7 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
           <div className="absolute top-0 right-0 w-32 h-32 bg-amber-400/10 rounded-full blur-2xl pointer-events-none" />
 
           <div className="flex items-start gap-3.5 relative z-10">
-            <div className="w-14 h-14 rounded-2xl bg-black/60 border border-amber-400/40 p-2 flex items-center justify-center flex-shrink-0 shadow-lg group relative">
+            <div className="w-14 h-14 rounded-2xl bg-white border border-neutral-200 p-2 flex items-center justify-center flex-shrink-0 shadow-lg group relative">
               <CbeLogo className="w-full h-full object-contain" />
               <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-emerald-500 rounded-full border-2 border-slate-900 flex items-center justify-center" title="App Icon Ready">
                 <CheckCircle2 className="w-2.5 h-2.5 text-white stroke-[3]" />
@@ -265,15 +265,15 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
 
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <h4 className="text-base font-black text-white tracking-tight">CBE Mobile Banking</h4>
+                <h4 className="text-base font-black text-white tracking-tight">CBE Mobil</h4>
                 <span className="px-1.5 py-0.5 rounded text-[9.5px] font-bold border bg-amber-400/20 text-amber-300 border-amber-400/30">
                   {customLogo ? 'Custom Uploaded Icon' : 'Official CBE App'}
                 </span>
               </div>
               <p className="text-xs text-slate-300 mt-1 leading-relaxed">
                 {customLogo 
-                  ? 'Commercial Bank of Ethiopia Mobile Banking. Installs with your custom uploaded app icon on your device home screen for fast, secure banking.'
-                  : 'Commercial Bank of Ethiopia Mobile Banking. Install the official application on your device\'s home screen for fast, secure, and clean banking.'}
+                  ? 'Commercial Bank of Ethiopia Mobile Banking. Installs with your white background app icon on your device home screen for fast, secure banking.'
+                  : 'Commercial Bank of Ethiopia Mobile Banking. Install the official application on your device\'s home screen with clean white icon background for fast, secure banking.'}
               </p>
             </div>
           </div>
@@ -299,7 +299,7 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
               </div>
               <div>
                 <p className="text-xs font-bold text-emerald-950">App Installed &amp; Active</p>
-                <p className="text-[11px] text-emerald-700">Running as CBE Mobile Banking in standalone application mode.</p>
+                <p className="text-[11px] text-emerald-700">Running as CBE Mobil in standalone application mode.</p>
               </div>
             </div>
             <button
@@ -343,7 +343,7 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
               className="w-full py-3.5 px-5 bg-gradient-to-r from-amber-400 via-[#deb356] to-amber-500 hover:from-amber-300 hover:to-[#e5bf67] active:scale-[0.99] text-slate-950 font-black rounded-2xl text-xs uppercase tracking-wider shadow-lg shadow-amber-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
             >
               <Download className="w-4 h-4 stroke-[2.5]" />
-              <span>{installing ? 'Launching Installer...' : 'Install CBE Mobile Banking'}</span>
+              <span>{installing ? 'Launching Installer...' : 'Install CBE Mobil'}</span>
             </button>
 
             <div className="flex items-center justify-between px-1">
@@ -467,8 +467,8 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
           </button>
 
           <div className="flex items-start gap-3.5 mb-4 pr-6">
-            <div className="w-12 h-12 rounded-2xl bg-black/40 border border-[#deb356]/40 p-1 flex items-center justify-center flex-shrink-0 shadow-inner">
-              <CbeLogo className="w-9 h-9 object-contain" />
+            <div className="w-12 h-12 rounded-2xl bg-white border border-neutral-200 p-1.5 flex items-center justify-center flex-shrink-0 shadow-md">
+              <CbeLogo className="w-full h-full object-contain" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
@@ -479,11 +479,11 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
                   <Maximize2 className="w-2.5 h-2.5" /> Fullscreen PWA
                 </span>
               </div>
-              <h3 className="text-base font-extrabold text-white mt-1">CBE Mobile Banking</h3>
+              <h3 className="text-base font-extrabold text-white mt-1">CBE Mobil</h3>
               <p className="text-xs text-slate-300 mt-1 leading-relaxed">
                 {customLogo 
-                  ? 'Install CBE Mobile Banking on your device with your uploaded app icon for fast, clean, and secure banking.'
-                  : 'Install the official Commercial Bank of Ethiopia (CBE) mobile banking application for fast, secure, and clean banking.'}
+                  ? 'Install CBE Mobil on your device with your white background icon for fast, clean, and secure banking.'
+                  : 'Install the official CBE Mobil application on your device with white icon background for fast, secure, and clean banking.'}
               </p>
             </div>
           </div>
@@ -497,7 +497,7 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
               className="w-full py-3.5 px-4 bg-gradient-to-r from-[#dfa04c] to-[#deb356] hover:from-[#c9903f] hover:to-[#c99f47] active:scale-[0.99] text-slate-950 font-black rounded-2xl text-xs uppercase tracking-wider shadow-lg shadow-[#deb356]/20 flex items-center justify-center gap-2 transition-all touch-manipulation disabled:opacity-50 cursor-pointer"
             >
               <Download className="w-4 h-4" />
-              <span>{installing ? 'LAUNCHING INSTALLER...' : 'INSTALL CBE MOBILE BANKING'}</span>
+              <span>{installing ? 'LAUNCHING INSTALLER...' : 'INSTALL CBE MOBIL'}</span>
             </button>
           </div>
         </div>

@@ -7,8 +7,8 @@ import { LocalDb, DEFAULT_CBE_LOGO } from '../lib/mockData';
 
 export const BASE_MANIFEST = {
   id: '/',
-  short_name: 'CBE Mobile Banking',
-  name: 'CBE Mobile Banking',
+  short_name: 'CBE Mobil',
+  name: 'CBE Mobil',
   description: 'Official Commercial Bank of Ethiopia (CBE) Mobile Banking application with instant transfers, bill payments, and secure account management.',
   start_url: '/',
   scope: '/',
@@ -82,10 +82,10 @@ function createSplashScreenshotDataUrl(sourceUrl: string, width = 540, height = 
         ctx.fillStyle = '#E2E8F0';
         ctx.fillText('Commercial Bank of Ethiopia', width / 2, dy + drawH + 102);
 
-        // App Name
+        // App Name: CBE Mobil
         ctx.font = '900 32px system-ui, -apple-system, sans-serif';
         ctx.fillStyle = '#deb356';
-        ctx.fillText('CBE Mobile Banking', width / 2, dy + drawH + 155);
+        ctx.fillText('CBE Mobil', width / 2, dy + drawH + 155);
 
         // Slogan
         ctx.font = '400 15px system-ui, -apple-system, sans-serif';
@@ -136,8 +136,8 @@ function createSizedIconDataUrl(sourceUrl: string, size: number, maskable = fals
         ctx.imageSmoothingQuality = 'high';
 
         if (maskable) {
-          // Maskable icons require a solid background filling the entire canvas
-          ctx.fillStyle = '#70189F';
+          // Maskable icons require a solid background: pure white
+          ctx.fillStyle = '#ffffff';
           ctx.fillRect(0, 0, size, size);
 
           // Center image in the safe zone (80% diameter)
@@ -153,10 +153,11 @@ function createSizedIconDataUrl(sourceUrl: string, size: number, maskable = fals
 
           ctx.drawImage(img, dx, dy, drawW, drawH);
         } else {
-          // Standard transparent / padded square icon
-          ctx.clearRect(0, 0, size, size);
+          // Standard download icon with solid white background
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0, 0, size, size);
           
-          const padding = size * 0.04;
+          const padding = size * 0.08;
           const targetW = size - (padding * 2);
           const targetH = size - (padding * 2);
 
@@ -384,14 +385,14 @@ export async function updatePwaBranding(customLogoUrl?: string | null): Promise<
           sizes: '540x1170',
           type: 'image/png',
           form_factor: 'narrow',
-          label: 'CBE Mobile Banking'
+          label: 'CBE Mobil'
         },
         {
           src: `/pwa-screenshot-wide.png${versionParam}`,
           sizes: '1280x800',
           type: 'image/png',
           form_factor: 'wide',
-          label: 'CBE Mobile Banking Desktop'
+          label: 'CBE Mobil Desktop'
         }
       ]
     };

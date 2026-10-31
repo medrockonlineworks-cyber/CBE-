@@ -257,7 +257,7 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
             <tbody>
               {(() => {
                 const formatEtb = (val: number) => 
-                  (val || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ETB';
+                  (Number(val) || 0).toFixed(2) + ' ETB';
 
                 return [
                   { label: 'Payer:', val: receiptData.payerName, bold: false, boldVal: false },

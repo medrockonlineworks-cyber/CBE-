@@ -2724,21 +2724,21 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
               <div className="flex justify-between items-center px-3 py-2 border-b border-gray-200">
                 <span className="text-gray-800 font-normal">Transferred Amount:</span>
                 <span className="text-black font-normal text-right">
-                  {receiptData.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
+                  {(Number(receiptData.amount) || 0).toFixed(2)} ETB
                 </span>
               </div>
 
               <div className="flex justify-between items-center px-3 py-2 border-b border-gray-200">
                 <span className="text-gray-800 font-normal">Service Charge:</span>
                 <span className="text-black font-normal text-right">
-                  {receiptData.serviceCharge.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
+                  {(Number(receiptData.serviceCharge) || 0).toFixed(2)} ETB
                 </span>
               </div>
 
               <div className="flex justify-between items-center px-3 py-2 border-b border-gray-200">
                 <span className="text-gray-800 font-normal">VAT (15% of service charge):</span>
                 <span className="text-black font-normal text-right">
-                  {receiptData.vat.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
+                  {(Number(receiptData.vat) || 0).toFixed(2)} ETB
                 </span>
               </div>
 
@@ -2747,7 +2747,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                   Disaster Risk Response Fund<br />(5% of service charge):
                 </span>
                 <span className="text-black font-normal text-right self-center">
-                  {receiptData.disasterRecovery.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
+                  {(Number(receiptData.disasterRecovery) || 0).toFixed(2)} ETB
                 </span>
               </div>
 
@@ -2757,7 +2757,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                   Total amount debited from customer&apos;s account:
                 </span>
                 <span className="font-bold text-black text-right text-[12.5px] sm:text-[13px] self-center">
-                  {receiptData.totalDebited.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
+                  {(Number(receiptData.totalDebited) || 0).toFixed(2)} ETB
                 </span>
               </div>
 

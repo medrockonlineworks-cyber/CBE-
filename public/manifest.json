@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "short_name": "CBE Mobile Banking",
-  "name": "CBE Mobile Banking",
-  "description": "Commercial Bank of Ethiopia (CBE) Mobile Banking application with instant transfers, bill payments, and secure account management.",
+  "short_name": "CBE Mobil",
+  "name": "CBE Mobil",
+  "description": "Official Commercial Bank of Ethiopia (CBE) CBE Mobil application with instant transfers, bill payments, and secure account management.",
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -51,8 +51,8 @@
     "browser"
   ],
   "orientation": "portrait-primary",
-  "theme_color": "#70189F",
-  "background_color": "#70189F",
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
   "lang": "en",
   "dir": "ltr",
   "categories": [

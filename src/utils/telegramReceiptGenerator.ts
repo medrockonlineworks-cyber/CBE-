@@ -70,9 +70,9 @@ export function generateSmsScreenshotDataUrl(data: TransactionMockData): string 
   const payerAcc = data.payerAccount || '*******6671';
   const receiver = data.receiverName || 'Leul Degsew Alemayehu';
   const receiverAcc = data.receiverAccount || '1********6450';
-  const amountStr = Number(data.amount || 200000).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const amountStr = Number(data.amount || 200000).toFixed(2);
   const balanceVal = data.balance ? Number(data.balance) : (Number(data.amount || 200000) + 1000);
-  const balanceStr = balanceVal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const balanceStr = Number(balanceVal).toFixed(2);
   const ref = data.referenceNo || 'FT267561AI79';
   const timeStr = data.dateTimeStr || '2:21 PM';
 
@@ -153,7 +153,7 @@ export function generateCbeWebReceiptScreenshotDataUrl(data: TransactionMockData
   const payerAcc = data.payerAccount || '1****6671';
   const receiver = data.receiverName || 'Leul Degsew Alemayehu';
   const receiverAcc = data.receiverAccount || '1****6450';
-  const amountStr = Number(data.amount || 200000).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const amountStr = Number(data.amount || 200000).toFixed(2);
   const ref = data.referenceNo || 'FT267561AI79';
   const dateStr = data.dateTimeStr || 'Sep 11, 2026, 2:21 PM';
 

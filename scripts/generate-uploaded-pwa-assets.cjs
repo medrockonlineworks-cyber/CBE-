@@ -30,55 +30,38 @@ function generateUploadedPwaAssets() {
     return resvg.render().asPng();
   };
 
-  // 1. Standard App Icon SVG (Deep CBE Purple background + clean centered uploaded image)
+  // 1. Standard App Icon SVG (Pure white background + clean centered uploaded image)
   const appIconSvg = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#3b0a50"/>
-      <stop offset="50%" stop-color="#2a053b"/>
-      <stop offset="100%" stop-color="#180122"/>
-    </linearGradient>
-    <radialGradient id="goldGlow" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#deb356" stop-opacity="0.25"/>
-      <stop offset="100%" stop-color="#deb356" stop-opacity="0"/>
-    </radialGradient>
     <filter id="subtleDrop" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000000" flood-opacity="0.4"/>
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000000" flood-opacity="0.15"/>
     </filter>
   </defs>
 
-  <!-- Background Base with Squircle Corners -->
-  <rect width="512" height="512" rx="112" fill="url(#bgGrad)"/>
-  
-  <!-- Ambient Gold Glow -->
-  <circle cx="256" cy="256" r="210" fill="url(#goldGlow)"/>
+  <!-- Background Base with Squircle Corners: Pure White -->
+  <rect width="512" height="512" rx="112" fill="#ffffff"/>
 
-  <!-- Centered Uploaded Logo -->
+  <!-- Centered Logo on White Background -->
   <g filter="url(#subtleDrop)">
     <image href="${dataUri}" x="64" y="64" width="384" height="384" preserveAspectRatio="xMidYMid meet"/>
   </g>
 </svg>
 `;
 
-  // 2. Maskable Icon SVG (Solid full-bleed CBE purple background with 80% safe-zone centering)
+  // 2. Maskable Icon SVG (Pure white background with 80% safe-zone centering)
   const maskableIconSvg = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
   <defs>
-    <linearGradient id="maskBg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#3b0a50"/>
-      <stop offset="50%" stop-color="#2a053b"/>
-      <stop offset="100%" stop-color="#180122"/>
-    </linearGradient>
     <filter id="maskDrop" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#000000" flood-opacity="0.35"/>
+      <feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#000000" flood-opacity="0.12"/>
     </filter>
   </defs>
 
-  <!-- Full-bleed background filling entire canvas (Required by Android WebAPK Maskable spec) -->
-  <rect width="512" height="512" fill="url(#maskBg)"/>
+  <!-- Full-bleed pure white background filling entire canvas -->
+  <rect width="512" height="512" fill="#ffffff"/>
 
-  <!-- Uploaded Logo centered strictly inside the 80% diameter safe zone (x=77, y=77, w=358, h=358) -->
+  <!-- Logo centered strictly inside the 80% diameter safe zone -->
   <g filter="url(#maskDrop)">
     <image href="${dataUri}" x="86" y="86" width="340" height="340" preserveAspectRatio="xMidYMid meet"/>
   </g>
@@ -113,7 +96,7 @@ function generateUploadedPwaAssets() {
   <text x="270" y="656" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="600" font-size="17" fill="#E2E8F0">Commercial Bank of Ethiopia</text>
 
   <!-- App Name -->
-  <text x="270" y="715" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="30" fill="#deb356">CBE Mobile Banking</text>
+  <text x="270" y="715" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="30" fill="#deb356">CBE Mobil</text>
 
   <!-- Slogan -->
   <text x="270" y="750" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="400" font-size="14" fill="#CBD5E1">The Bank You Can Always Rely On</text>
@@ -143,7 +126,7 @@ function generateUploadedPwaAssets() {
 
   <text x="640" y="490" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="bold" font-size="28" fill="#deb356">የኢትዮጵያ ንግድ ባንክ</text>
   <text x="640" y="528" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="600" font-size="20" fill="#E2E8F0">Commercial Bank of Ethiopia</text>
-  <text x="640" y="585" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="34" fill="#deb356">CBE Mobile Banking</text>
+  <text x="640" y="585" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="34" fill="#deb356">CBE Mobil</text>
   <text x="640" y="622" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="400" font-size="16" fill="#CBD5E1">The Bank You Can Always Rely On</text>
 </svg>
 `;

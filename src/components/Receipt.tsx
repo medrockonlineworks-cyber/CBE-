@@ -184,14 +184,11 @@ export function getDenseQrMatrix(txId: string, payload: string): boolean[][] {
   return matrix;
 }
 
-// Helper for authentic CBE currency formatting: e.g. 100.00, 1,000.00, 136,748.00
+// Helper for authentic CBE currency formatting: e.g. 100.00, 1200.00, 458999.00 (without comma separation)
 export const formatCbeCurrency = (val: number | string | undefined): string => {
   const num = typeof val === 'number' ? val : parseFloat(String(val || '0'));
   if (isNaN(num)) return '0.00';
-  return num.toLocaleString('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  return num.toFixed(2);
 };
 
 interface ReceiptProps {
@@ -438,11 +435,11 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   const rawRecipientClean = rawRecipientAccount.replace(/\D/g, '') || '1000284758657';
   const maskedRecipientAcc = maskAccountNumber(rawRecipientClean);
 
-  const formattedAmt = (transaction.amount ?? 0).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 2 });
+  const formattedAmt = Number(transaction.amount ?? 0).toFixed(2);
   const senderBalanceNum = transaction.senderAccount
     ? (LocalDb.getAllAccounts().find(a => a.accountNumber === transaction.senderAccount)?.balance ?? 9999499976.0)
     : 9999499976.0;
-  const formattedBal = senderBalanceNum.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const formattedBal = Number(senderBalanceNum).toFixed(2);
 
   // Dynamic realistic CBE Transaction ID: 12 characters exactly (e.g. FT263211VK07)
   const txId = formatTo12CharTxId(transaction.id || transaction.reference);
