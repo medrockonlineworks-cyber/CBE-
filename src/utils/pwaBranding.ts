@@ -320,11 +320,10 @@ export async function updatePwaBranding(customLogoUrl?: string | null): Promise<
       maskIconLink.href = `/pwa-maskable-512x512.png${versionParam}`;
     }
 
-    // 5. Update theme-color and tile meta tags: respect current active view (#ffffff on opening auth page)
-    const isMainSession = typeof window !== 'undefined' && Boolean(localStorage.getItem('tana_active_user_id'));
-    const activeColor = isMainSession ? '#70189F' : '#ffffff';
+    // 5. Update theme-color and tile meta tags: always pure white (#ffffff) so the device navigation bar remains pure white not purple
+    const activeColor = '#ffffff';
 
-    const allThemeMetas = document.querySelectorAll('meta[name="theme-color"], meta[name="msapplication-navbutton-color"]');
+    const allThemeMetas = document.querySelectorAll('meta[name="theme-color"], meta[name="msapplication-navbutton-color"], meta[name="navigation-bar-color"]');
     allThemeMetas.forEach(meta => meta.setAttribute('content', activeColor));
 
     let tileColorMeta = document.querySelector('meta[name="msapplication-TileColor"]') as HTMLMetaElement | null;

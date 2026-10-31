@@ -83,20 +83,11 @@ export const PhoneNavigationBar: React.FC<PhoneNavigationBarProps> = ({
     );
   }
 
-  // 2. Android 3-Button Navigation Bar (matching Screenshot_20261028-111001_7018c5b4.png)
-  // [ ≡  ○  ⊃ ] Edge-to-edge soft keys with CBE purple app background & purple/white icons
+  // 2. Android 3-Button Navigation Bar
+  // [ ≡  ○  ⊃ ] Edge-to-edge soft keys: ALWAYS pure white background with dark icons (never purple)
   if (navStyle === 'buttons') {
-    const barBackgroundClass = isCbe 
-      ? 'bg-[#180026] border-[#70189F]/30 shadow-[0_-2px_8px_rgba(112,24,159,0.15)]' 
-      : isDark 
-        ? 'bg-neutral-950 border-neutral-900/60' 
-        : 'bg-white border-gray-100 shadow-[0_-1px_4px_rgba(0,0,0,0.02)]';
-
-    const iconColorClass = isCbe
-      ? 'text-[#b86ddf] hover:text-white active:text-white'
-      : isDark 
-        ? 'text-neutral-400 hover:text-white active:text-white' 
-        : 'text-neutral-500 hover:text-neutral-800 active:text-neutral-900';
+    const barBackgroundClass = 'bg-white border-gray-200/90 shadow-[0_-1px_4px_rgba(0,0,0,0.02)]';
+    const iconColorClass = 'text-neutral-700 hover:text-black active:text-black';
 
     return (
       <div 

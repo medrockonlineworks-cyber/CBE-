@@ -142,26 +142,22 @@ export default function App() {
     });
   }, []);
 
-  // Sync real device phone status bar and navigation bar color with active app (#ffffff for opening CBE login page, #70189F for CBE main app)
+  // Ensure real device phone navigation bar and status bar are always pure white (#ffffff) not purple
   useEffect(() => {
-    let themeColor = '#70189F'; // Official CBE App Color
-    if (activeView === 'auth') themeColor = '#ffffff'; // White opening login page
-    else if (activeView === 'telebirr') themeColor = '#6cb81f';
-    else if (activeView === 'dashen') themeColor = '#004b87';
-    else if (activeView === 'telegram') themeColor = '#229ED9';
-    else if (activeView === 'sms') themeColor = '#121212';
-    else if (activeView === 'truecaller') themeColor = '#0284c7';
-    else if (activeView === 'phone') themeColor = '#059669';
+    const metaTags = document.querySelectorAll('meta[name="theme-color"], meta[name="msapplication-navbutton-color"], meta[name="navigation-bar-color"]');
+    metaTags.forEach(meta => meta.setAttribute('content', '#ffffff'));
+    
+    // Always keep document root and body background white so the device navigation bar remains pure white
+    document.documentElement.style.backgroundColor = '#ffffff';
+    document.body.style.backgroundColor = '#ffffff';
 
-    const metaTags = document.querySelectorAll('meta[name="theme-color"], meta[name="msapplication-navbutton-color"]');
-    metaTags.forEach(meta => meta.setAttribute('content', themeColor));
-    if (activeView === 'auth') {
-      document.documentElement.style.backgroundColor = '#ffffff';
-      document.body.style.backgroundColor = '#ffffff';
-    } else if (activeView === 'main') {
-      document.documentElement.style.backgroundColor = '#70189F';
-      document.body.style.backgroundColor = '#70189F';
+    let colorSchemeMeta = document.querySelector('meta[name="color-scheme"]') as HTMLMetaElement | null;
+    if (!colorSchemeMeta) {
+      colorSchemeMeta = document.createElement('meta');
+      colorSchemeMeta.name = 'color-scheme';
+      document.head.appendChild(colorSchemeMeta);
     }
+    colorSchemeMeta.content = 'light';
   }, [activeView]);
 
   // Listen for global balance updates & account switches so App-level currentUser is always fresh

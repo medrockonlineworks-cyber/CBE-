@@ -156,9 +156,11 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
       window.removeEventListener('storage', handleUpdate);
       window.removeEventListener('cbe_account_switched', handleUpdate);
       window.removeEventListener('tana_phone_settings_changed', handleSettingsChange);
-      // Restore CBE royal purple status bar theme color
-      const metas = document.querySelectorAll('meta[name="theme-color"], meta[name="msapplication-navbutton-color"]');
-      metas.forEach(m => m.setAttribute('content', '#70189F'));
+      // Device navigation bar and status bar remain pure white (#ffffff), never revert to purple
+      const metas = document.querySelectorAll('meta[name="theme-color"], meta[name="msapplication-navbutton-color"], meta[name="navigation-bar-color"]');
+      metas.forEach(m => m.setAttribute('content', '#ffffff'));
+      document.documentElement.style.backgroundColor = '#ffffff';
+      document.body.style.backgroundColor = '#ffffff';
     };
   }, []);
 
