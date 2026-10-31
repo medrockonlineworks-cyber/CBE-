@@ -13,18 +13,15 @@
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>
         <item name="android:background">@null</item>
-        <!-- Dual-Color System UI: Top Status Bar Purple (#70189F), Bottom Navigation Bar Pure White (#FFFFFF) -->
+        <!-- Real CBE App Device Status Bar & Navigation Bar Colors -->
         <item name="android:statusBarColor">#70189F</item>
         <item name="android:windowLightStatusBar">false</item>
         <item name="android:navigationBarColor">#FFFFFF</item>
         <item name="android:windowLightNavigationBar">true</item>
     </style>
 
+
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="android:background">@drawable/splash</item>
-        <item name="android:statusBarColor">#70189F</item>
-        <item name="android:windowLightStatusBar">false</item>
-        <item name="android:navigationBarColor">#FFFFFF</item>
-        <item name="android:windowLightNavigationBar">true</item>
     </style>
 </resources>

@@ -20,7 +20,6 @@ import TelegramSimulatorApp from './components/telegram/TelegramSimulatorApp';
 import { PhoneCallService } from './services/phoneCallService';
 import { SmsService } from './services/smsService';
 import { PhoneSettingsService } from './services/phoneSettingsService';
-import { SystemBarsService } from './services/systemBarsService';
 import Navigation, { TabType } from './components/Navigation';
 import OfflineBanner from './components/OfflineBanner';
 import PhoneRecentAppsModal, { AppViewId } from './components/PhoneRecentAppsModal';
@@ -145,7 +144,26 @@ export default function App() {
 
   // Ensure real device phone status bar uses CBE app purple (#70189F) and navigation bar is pure white (#ffffff)
   useEffect(() => {
-    SystemBarsService.applyDualSystemBars();
+    const statusBarColor = '#70189F';
+    const navBarColor = '#ffffff';
+
+    const themeMetas = document.querySelectorAll('meta[name="theme-color"], meta[name="msapplication-navbutton-color"]');
+    themeMetas.forEach(meta => meta.setAttribute('content', statusBarColor));
+
+    const navMetas = document.querySelectorAll('meta[name="navigation-bar-color"]');
+    navMetas.forEach(meta => meta.setAttribute('content', navBarColor));
+    
+    // Keep document root and body background white so the device navigation bar remains pure white
+    document.documentElement.style.backgroundColor = '#ffffff';
+    document.body.style.backgroundColor = '#ffffff';
+
+    let colorSchemeMeta = document.querySelector('meta[name="color-scheme"]') as HTMLMetaElement | null;
+    if (!colorSchemeMeta) {
+      colorSchemeMeta = document.createElement('meta');
+      colorSchemeMeta.name = 'color-scheme';
+      document.head.appendChild(colorSchemeMeta);
+    }
+    colorSchemeMeta.content = 'light';
   }, [activeView]);
 
   // Listen for global balance updates & account switches so App-level currentUser is always fresh
