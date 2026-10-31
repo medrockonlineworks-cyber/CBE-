@@ -142,12 +142,18 @@ export default function App() {
     });
   }, []);
 
-  // Ensure real device phone navigation bar and status bar are always pure white (#ffffff) not purple
+  // Ensure real device phone status bar uses CBE app purple (#70189F) and navigation bar is pure white (#ffffff)
   useEffect(() => {
-    const metaTags = document.querySelectorAll('meta[name="theme-color"], meta[name="msapplication-navbutton-color"], meta[name="navigation-bar-color"]');
-    metaTags.forEach(meta => meta.setAttribute('content', '#ffffff'));
+    const statusBarColor = '#70189F';
+    const navBarColor = '#ffffff';
+
+    const themeMetas = document.querySelectorAll('meta[name="theme-color"], meta[name="msapplication-navbutton-color"]');
+    themeMetas.forEach(meta => meta.setAttribute('content', statusBarColor));
+
+    const navMetas = document.querySelectorAll('meta[name="navigation-bar-color"]');
+    navMetas.forEach(meta => meta.setAttribute('content', navBarColor));
     
-    // Always keep document root and body background white so the device navigation bar remains pure white
+    // Keep document root and body background white so the device navigation bar remains pure white
     document.documentElement.style.backgroundColor = '#ffffff';
     document.body.style.backgroundColor = '#ffffff';
 

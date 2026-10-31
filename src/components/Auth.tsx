@@ -128,10 +128,12 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
     window.addEventListener('cbe_account_switched', handleUpdate);
     window.addEventListener('tana_phone_settings_changed', handleSettingsChange);
 
-    // Ensure device status bar and navigation bar are pure white (#ffffff) on this opening page
-    const applyWhiteBars = () => {
-      const metas = document.querySelectorAll('meta[name="theme-color"], meta[name="msapplication-navbutton-color"]');
-      metas.forEach(m => m.setAttribute('content', '#ffffff'));
+    // Ensure device status bar uses CBE app purple (#70189F) and navigation bar is pure white (#ffffff)
+    const applyBarColors = () => {
+      const themeMetas = document.querySelectorAll('meta[name="theme-color"], meta[name="msapplication-navbutton-color"]');
+      themeMetas.forEach(m => m.setAttribute('content', '#70189F'));
+      const navMetas = document.querySelectorAll('meta[name="navigation-bar-color"]');
+      navMetas.forEach(m => m.setAttribute('content', '#ffffff'));
       document.documentElement.style.backgroundColor = '#ffffff';
       document.body.style.backgroundColor = '#ffffff';
 
@@ -144,10 +146,10 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
       colorSchemeMeta.content = 'light';
     };
 
-    applyWhiteBars();
-    const t1 = setTimeout(applyWhiteBars, 50);
-    const t2 = setTimeout(applyWhiteBars, 300);
-    const t3 = setTimeout(applyWhiteBars, 800);
+    applyBarColors();
+    const t1 = setTimeout(applyBarColors, 50);
+    const t2 = setTimeout(applyBarColors, 300);
+    const t3 = setTimeout(applyBarColors, 800);
 
     return () => {
       clearTimeout(t1);
@@ -156,9 +158,10 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
       window.removeEventListener('storage', handleUpdate);
       window.removeEventListener('cbe_account_switched', handleUpdate);
       window.removeEventListener('tana_phone_settings_changed', handleSettingsChange);
-      // Device navigation bar and status bar remain pure white (#ffffff), never revert to purple
-      const metas = document.querySelectorAll('meta[name="theme-color"], meta[name="msapplication-navbutton-color"], meta[name="navigation-bar-color"]');
-      metas.forEach(m => m.setAttribute('content', '#ffffff'));
+      const themeMetas = document.querySelectorAll('meta[name="theme-color"], meta[name="msapplication-navbutton-color"]');
+      themeMetas.forEach(m => m.setAttribute('content', '#70189F'));
+      const navMetas = document.querySelectorAll('meta[name="navigation-bar-color"]');
+      navMetas.forEach(m => m.setAttribute('content', '#ffffff'));
       document.documentElement.style.backgroundColor = '#ffffff';
       document.body.style.backgroundColor = '#ffffff';
     };

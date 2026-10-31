@@ -44,7 +44,7 @@ export interface CapacitorConfig {
 
 const config: CapacitorConfig = {
   appId: 'et.cbe.tanadigitalbank',
-  appName: 'Tana Digital Bank',
+  appName: 'CBE Mobil',
   webDir: 'dist',
   bundledWebRuntime: false,
   server: {
@@ -72,8 +72,8 @@ const config: CapacitorConfig = {
       overlaysWebView: false
     },
     NavigationBar: {
-      color: '#70189F',
-      darkButtons: false
+      color: '#FFFFFF',
+      darkButtons: true
     },
     Keyboard: {
       resize: 'body',

@@ -16,8 +16,8 @@
         <!-- Real CBE App Device Status Bar & Navigation Bar Colors -->
         <item name="android:statusBarColor">#70189F</item>
         <item name="android:windowLightStatusBar">false</item>
-        <item name="android:navigationBarColor">#70189F</item>
-        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:navigationBarColor">#FFFFFF</item>
+        <item name="android:windowLightNavigationBar">true</item>
     </style>
 
 
