@@ -65,7 +65,10 @@ export const AccountCard: React.FC<AccountCardProps> = ({
   }, [accountType, accountNumber, showBalance]);
 
   const formattedBalanceAmount = React.useMemo(() => {
-    return (Number(balance) || 0).toFixed(2);
+    return new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(Number(balance) || 0);
   }, [balance]);
 
   return (
