@@ -3,7 +3,15 @@ import { createRoot } from 'react-dom/client';
 import App from './App';
 import './index.css';
 import { initPwaDynamicManifest } from './utils/pwaBranding';
+import { SystemBarsService } from './services/systemBarsService';
 import { registerSW } from 'virtual:pwa-register';
+
+// Initialize dual-color system UI (Top Purple #70189F, Bottom White #FFFFFF)
+try {
+  SystemBarsService.initAutoSync();
+} catch (e) {
+  console.warn('[SystemBars] AutoSync note:', e);
+}
 
 // Register PWA Service Worker in production for offline capability & installability
 if (import.meta.env.PROD && typeof window !== 'undefined' && 'serviceWorker' in navigator) {
