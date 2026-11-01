@@ -143,9 +143,15 @@ export default function App() {
     });
   }, []);
 
-  // Ensure real device phone status bar uses CBE app purple (#70189F) and navigation bar is pure white (#ffffff)
+  // Ensure status bar & navigation bar match the active view:
+  // - Login/Auth: White status bar and White navigation bar
+  // - Main Banking: Purple status bar (#70189F) and White navigation bar
   useEffect(() => {
-    SystemBarsService.applyDualSystemBars();
+    if (activeView === 'auth') {
+      SystemBarsService.applyAllWhiteBars();
+    } else {
+      SystemBarsService.applyDualSystemBars();
+    }
   }, [activeView]);
 
   // Listen for global balance updates & account switches so App-level currentUser is always fresh
@@ -581,7 +587,10 @@ export default function App() {
   };
 
   return (
-    <div id="app-root-wrapper" className="h-full min-h-[100dvh] h-[100dvh] w-full bg-[#70189F] flex flex-col p-0 m-0 font-sans overflow-hidden antialiased select-none relative">
+    <div 
+      id="app-root-wrapper" 
+      className={`h-full min-h-[100dvh] h-[100dvh] w-full ${activeView === 'auth' ? 'bg-white' : 'bg-[#70189F]'} flex flex-col p-0 m-0 font-sans overflow-hidden antialiased select-none relative transition-colors duration-200`}
+    >
       
       {/* Quick App Switcher Dock: Floating unobtrusively in top-right corner on wide screens */}
       <nav aria-label="Apps Switcher" className="hidden md:flex fixed top-2 right-3 items-center gap-1.5 px-2.5 py-1 bg-slate-900/80 hover:bg-slate-900 border border-slate-700/60 rounded-full shadow-lg z-50 backdrop-blur-md transition-all">
@@ -664,7 +673,7 @@ export default function App() {
       {/* Main Responsive Edge-to-Edge Canvas */}
       <div 
         id="app-main-canvas"
-        className="w-full h-full min-h-[100dvh] h-[100dvh] bg-[#70189F] relative flex flex-col overflow-hidden border-none shadow-none rounded-none"
+        className={`w-full h-full min-h-[100dvh] h-[100dvh] ${activeView === 'auth' ? 'bg-white' : 'bg-[#70189F]'} relative flex flex-col overflow-hidden border-none shadow-none rounded-none transition-colors duration-200`}
       >
         {/* Real-time Offline Warning Banner */}
         <OfflineBanner />

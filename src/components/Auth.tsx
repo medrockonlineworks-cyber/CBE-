@@ -129,9 +129,9 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
     window.addEventListener('cbe_account_switched', handleUpdate);
     window.addEventListener('tana_phone_settings_changed', handleSettingsChange);
 
-    // Ensure device status bar uses CBE app purple (#70189F) and navigation bar is pure white (#ffffff)
+    // For Login page: status bar and navigation bar must both be pure white (#ffffff)
     const applyBarColors = () => {
-      SystemBarsService.applyDualSystemBars();
+      SystemBarsService.applyAllWhiteBars();
     };
 
     applyBarColors();
