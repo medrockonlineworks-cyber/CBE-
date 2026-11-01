@@ -100,10 +100,10 @@ export const AccountCard: React.FC<AccountCardProps> = ({
             </div>
 
             <div className="min-w-0 flex-1">
-              <h3 className="text-[#F5BD47] font-extrabold text-[14.5px] sm:text-[16px] tracking-wide leading-none whitespace-nowrap overflow-hidden text-ellipsis drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+              <h3 className="text-[#F5BD47] font-extrabold text-[12.5px] sm:text-[13.5px] tracking-wide leading-none whitespace-nowrap overflow-hidden text-ellipsis drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
                 {bankName}
               </h3>
-              <p className="text-[#EDE49E] text-[11px] sm:text-[12px] font-medium tracking-tight mt-1 whitespace-nowrap overflow-hidden text-ellipsis">
+              <p className="text-[#EDE49E] text-[9.5px] sm:text-[10px] font-medium tracking-tight mt-1 whitespace-nowrap overflow-hidden text-ellipsis">
                 {slogan}
               </p>
             </div>
@@ -114,10 +114,10 @@ export const AccountCard: React.FC<AccountCardProps> = ({
         <div className="my-4 sm:my-5 relative flex items-center justify-center z-10">
           {/* Centered Balance text */}
           <div className="flex items-baseline justify-center gap-2 text-center">
-            <span className="text-[24px] sm:text-[28px] font-extrabold tracking-widest font-mono text-white">
+            <span className="text-xl sm:text-2xl font-extrabold tracking-widest font-mono text-white">
               {showBalance ? formattedBalanceAmount : '******'}
             </span>
-            <span className="text-base sm:text-lg font-bold text-gray-300 font-mono">
+            <span className="text-sm font-bold text-gray-300 font-mono">
               {currency}
             </span>
           </div>
@@ -140,8 +140,8 @@ export const AccountCard: React.FC<AccountCardProps> = ({
         </div>
 
         {/* BOTTOM SECTION: Account Type/Number & Copy Icon (Centered together) */}
-        <div className="flex items-center justify-center text-[13.5px] sm:text-[15px] text-[#EDE49E] relative z-10 font-mono">
-          <span className="font-semibold tracking-wide text-[#EDE49E] select-text">
+        <div className="flex items-center justify-center text-xs sm:text-[13px] text-[#EDE49E] relative z-10 font-mono">
+          <span className="font-medium tracking-wide text-[#EDE49E] select-text">
             {formattedAccountDisplay}
           </span>
           <button
@@ -155,13 +155,13 @@ export const AccountCard: React.FC<AccountCardProps> = ({
             {copied ? (
               <Check className="w-3.5 h-3.5 text-emerald-400 stroke-[2.5]" />
             ) : (
-              <CopyIcon size={16} className="text-gray-300 hover:text-white" strokeWidth={1.6} />
+              <CopyIcon size={15} className="text-gray-300 hover:text-white" strokeWidth={1.6} />
             )}
           </button>
         </div>
 
         {/* Date & Time display */}
-        <div className="mt-3 text-center text-[11px] sm:text-[12px] text-gray-300/90 font-mono tracking-wide">
+        <div className="mt-3 text-center text-[10px] text-gray-400/90 font-mono tracking-wide">
           {dateTimeString}
         </div>
       </div>
