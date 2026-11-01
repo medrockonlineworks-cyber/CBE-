@@ -730,12 +730,11 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
       <div 
         className="hero-background absolute top-0 left-0 right-0 h-[280px] sm:h-[300px] pointer-events-none z-0 overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, #70189F 0%, #8420AE 55%, #8E29B9 100%)',
+          background: '#70189F',
         }}
       >
-        {/* Soft Ambient Glow Elements */}
-        <div className="absolute -top-16 -left-16 w-64 h-64 rounded-full bg-white/10 blur-3xl pointer-events-none" />
-        <div className="absolute top-20 -right-20 w-80 h-80 rounded-full bg-[#8E29B9]/30 blur-3xl pointer-events-none" />
+        {/* Subtle bottom shadow gradient to define depth above the card */}
+        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-b from-transparent to-black/10 pointer-events-none" />
 
         {/* SVG Smooth Curved Transition Wave */}
         <svg
