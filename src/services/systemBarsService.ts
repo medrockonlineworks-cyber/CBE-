@@ -19,12 +19,12 @@ export class SystemBarsService {
     const navMetas = document.querySelectorAll('meta[name="navigation-bar-color"]');
     navMetas.forEach(meta => meta.setAttribute('content', navBarColor));
 
-    // Document root backgrounds
+    // Document root backgrounds: CBE purple #70189F so iOS notch/status bar is purple
     if (document.documentElement) {
-      document.documentElement.style.backgroundColor = navBarColor;
+      document.documentElement.style.backgroundColor = statusBarColor;
     }
     if (document.body) {
-      document.body.style.backgroundColor = navBarColor;
+      document.body.style.backgroundColor = statusBarColor;
     }
   }
 
