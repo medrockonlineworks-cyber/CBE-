@@ -190,16 +190,16 @@ export default defineConfig(() => {
         ],
         manifest: {
           id: '/',
-          name: 'CBE Mobile Banking',
-          short_name: 'CBE Mobile Banking',
+          name: 'CBE Mobile',
+          short_name: 'CBE Mobile',
           description: 'Official Commercial Bank of Ethiopia (CBE) Mobile Banking application with instant transfers, bill payments, and secure account management.',
           start_url: '/',
           scope: '/',
           display: 'standalone',
           display_override: ['standalone', 'minimal-ui', 'fullscreen', 'browser'],
           orientation: 'portrait-primary',
-          theme_color: '#300642',
-          background_color: '#300642',
+          theme_color: '#70189F',
+          background_color: '#ffffff',
           lang: 'en',
           dir: 'ltr',
           categories: ['finance', 'business', 'utilities'],
@@ -336,6 +336,26 @@ export default defineConfig(() => {
         'lucide-react',
       ],
       exclude: ['firebase', '@firebase/app', '@firebase/firestore', '@firebase/auth', '@firebase/component'],
+    },
+    build: {
+      chunkSizeWarningLimit: 1500,
+      rollupOptions: {
+        output: {
+          manualChunks(id: string) {
+            if (id.includes('node_modules')) {
+              if (id.includes('jspdf') || id.includes('html2canvas') || id.includes('html-to-image')) {
+                return 'vendor-canvas';
+              }
+              if (id.includes('firebase')) {
+                return 'vendor-firebase';
+              }
+              if (id.includes('lucide-react')) {
+                return 'vendor-icons';
+              }
+            }
+          },
+        },
+      },
     },
     server: {
       // HMR is disabled in AI Studio via DISABLE_HMR env var.

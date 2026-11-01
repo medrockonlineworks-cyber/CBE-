@@ -6,35 +6,43 @@ import { initPwaDynamicManifest } from './utils/pwaBranding';
 import { SystemBarsService } from './services/systemBarsService';
 import { registerSW } from 'virtual:pwa-register';
 
-// Initialize dual-color system UI (Top Purple #70189F, Bottom White #FFFFFF)
-try {
-  SystemBarsService.initAutoSync();
-} catch (e) {
-  console.warn('[SystemBars] AutoSync note:', e);
-}
+// Non-blocking initialization after initial paint
+if (typeof window !== 'undefined') {
+  const initBackgroundTasks = () => {
+    try {
+      SystemBarsService.initAutoSync();
+    } catch (e) {
+      console.warn('[SystemBars] AutoSync note:', e);
+    }
 
-// Register PWA Service Worker in production for offline capability & installability
-if (import.meta.env.PROD && typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-  try {
-    registerSW({
-      immediate: true,
-      onNeedRefresh() {
-        console.log('[PWA] New version ready, updating in background');
-      },
-      onOfflineReady() {
-        console.log('[PWA] App is cached and ready for offline use');
-      },
-    });
-  } catch (swErr) {
-    console.warn('[PWA] SW registration note:', swErr);
+    try {
+      initPwaDynamicManifest();
+    } catch (e) {
+      console.warn('[PWA] Manifest init skipped:', e);
+    }
+
+    if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+      try {
+        registerSW({
+          immediate: true,
+          onNeedRefresh() {
+            console.log('[PWA] New version ready');
+          },
+          onOfflineReady() {
+            console.log('[PWA] Ready for offline use');
+          },
+        });
+      } catch (swErr) {
+        console.warn('[PWA] SW registration note:', swErr);
+      }
+    }
+  };
+
+  if (document.readyState === 'complete') {
+    setTimeout(initBackgroundTasks, 30);
+  } else {
+    window.addEventListener('load', () => setTimeout(initBackgroundTasks, 30));
   }
-}
-
-// Safe PWA manifest dynamic loader
-try {
-  initPwaDynamicManifest();
-} catch (e) {
-  console.warn('[PWA] Manifest init skipped:', e);
 }
 
 // React Error Boundary to prevent blank screen crashes
