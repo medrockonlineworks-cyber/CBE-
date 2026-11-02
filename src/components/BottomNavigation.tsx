@@ -4,6 +4,7 @@ import {
   BottomNavTransactionsIcon, 
   BottomNavSettingsIcon 
 } from './CbeCustomIcons';
+import { PhoneSettingsService } from '../services/phoneSettingsService';
 
 export type NavTabId = 'home' | 'transfer' | 'payments' | 'history' | 'profile' | 'transactions' | 'settings';
 
@@ -22,6 +23,14 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   showScanQr = true,
   className = '',
 }) => {
+  const [isIPhone, setIsIPhone] = useState<boolean>(() => PhoneSettingsService.isIPhoneMode());
+
+  useEffect(() => {
+    return PhoneSettingsService.subscribe(() => {
+      setIsIPhone(PhoneSettingsService.isIPhoneMode());
+    });
+  }, []);
+
   const isHomeActive = activeTab === 'home';
   const isTransactionActive = activeTab === 'history' || activeTab === 'transactions' || activeTab === 'transaction' || activeTab === 'transfer';
   const isSettingActive = activeTab === 'profile' || activeTab === 'settings' || activeTab === 'setting';
@@ -90,7 +99,9 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
       <nav 
         id="cbe-bottom-navbar" 
         aria-label="Main Navigation"
-        className="w-full pointer-events-auto bg-white border-t border-gray-100 px-5 pt-0.5 pb-[max(env(safe-area-inset-bottom,0px),4px)] flex justify-between items-center shadow-[0_-1px_4px_rgba(0,0,0,0.02)] select-none min-h-[46px] shrink-0"
+        className={`w-full pointer-events-auto bg-white border-t border-gray-100 px-5 pt-0.5 ${
+          isIPhone ? 'pb-[max(env(safe-area-inset-bottom,0px),12px)] min-h-[50px]' : 'pb-[max(env(safe-area-inset-bottom,0px),4px)] min-h-[46px]'
+        } flex justify-between items-center shadow-[0_-1px_4px_rgba(0,0,0,0.02)] select-none shrink-0`}
       >
         {/* Item 1: Home */}
         <button

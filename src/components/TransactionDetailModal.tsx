@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Transaction } from '../types';
 import { formatTo12CharTxId } from '../lib/mockData';
 import { X, Check } from 'lucide-react';
+import { PhoneSettingsService } from '../services/phoneSettingsService';
 
 interface TransactionDetailModalProps {
   transaction: Transaction;
@@ -12,11 +13,11 @@ interface TransactionDetailModalProps {
 }
 
 /**
- * Formats date into authentic CBE detail format matching Image 2: e.g. "14-Oct-26 10:35 PM"
+ * Formats date into authentic CBE detail format matching Image 1 & 2: e.g. "19-Oct-26 3:26 PM" or "18-Oct-26 1:44 PM"
  */
 export function formatCbeDetailDate(dateInput: any): string {
   const d = new Date(dateInput);
-  if (isNaN(d.getTime())) return '14-Oct-26 10:35 PM';
+  if (isNaN(d.getTime())) return '18-Oct-26 1:44 PM';
 
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const day = d.getDate().toString().padStart(2, '0');
@@ -34,7 +35,7 @@ export function formatCbeDetailDate(dateInput: any): string {
 }
 
 /**
- * Deterministically formats / generates authentic CBE Receipt ID (e.g. "v2-hfHCxHBAM4l2EDhVl6xw")
+ * Deterministically formats / generates authentic CBE Receipt ID (e.g. "v2-hfHCxHMLTz6TX6TEmZJh")
  */
 export function generateCbeReceiptId(txId: string, createdAt: string): string {
   const seed = `${txId}_${createdAt}_CBE_V2`;
@@ -61,6 +62,13 @@ export default function TransactionDetailModal({
   currentUserAccount
 }: TransactionDetailModalProps) {
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [isIPhone, setIsIPhone] = useState<boolean>(() => PhoneSettingsService.isIPhoneMode());
+
+  useEffect(() => {
+    return PhoneSettingsService.subscribe(() => {
+      setIsIPhone(PhoneSettingsService.isIPhoneMode());
+    });
+  }, []);
 
   // Check if credit or debit
   const txType = (transaction.type as string);
@@ -76,7 +84,7 @@ export default function TransactionDetailModal({
   const receiptId = generateCbeReceiptId(txId, transaction.createdAt);
   const formattedDate = formatCbeDetailDate(transaction.createdAt);
 
-  // Determine realistic type string matching Image 2
+  // Determine realistic type string matching Image 1 & 2
   const recipientNameLower = (transaction.recipientName || '').toLowerCase();
   const descLower = (transaction.description || '').toLowerCase();
   const isWallet = 
@@ -97,14 +105,14 @@ export default function TransactionDetailModal({
     typeLabel = 'Account to Account';
   }
 
-  // Remark string matching Image 2
+  // Remark string matching Image 1 & 2
   let remark = transaction.description;
   if (!remark || remark.toLowerCase() === 'deposit') {
     if (isWallet) {
       const cleanPhone = (transaction.recipientAccount || '0926193920').replace(/\D/g, '').slice(-10) || '0926193920';
       remark = `TeleB${cleanPhone}`;
     } else {
-      remark = 'MB transfer';
+      remark = isIPhone ? 'transfer' : 'tr';
     }
   }
 
@@ -121,7 +129,7 @@ export default function TransactionDetailModal({
   return (
     <div 
       id="transaction-detail-modal-overlay"
-      className="fixed inset-0 z-40 bg-black/45 backdrop-blur-[0.5px] flex flex-col justify-end items-center p-0 animate-in fade-in duration-200 select-none"
+      className="fixed inset-0 z-40 bg-transparent flex flex-col justify-end items-center p-0 animate-in fade-in duration-200 select-none pointer-events-auto"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -129,72 +137,76 @@ export default function TransactionDetailModal({
       <div 
         id="transaction-detail-sheet"
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md bg-white rounded-t-[32px] rounded-b-none shadow-[0_-12px_45px_rgba(0,0,0,0.22)] px-6 pt-3 pb-3 mb-[calc(48px+max(env(safe-area-inset-bottom,0px),4px))] flex flex-col justify-between relative animate-in slide-in-from-bottom-5 duration-250 select-none border-t border-gray-100 max-h-[75vh] overflow-y-auto"
+        className={`w-full max-w-md bg-white rounded-b-none ${
+          isIPhone 
+            ? 'rounded-t-[32px] px-6 pt-2.5 pb-3 mb-[calc(46px+max(env(safe-area-inset-bottom,0px),12px))] shadow-[0_-12px_45px_rgba(0,0,0,0.22)] max-h-[78vh]' 
+            : 'rounded-t-[28px] px-5 pt-2 pb-2.5 mb-[46px] shadow-[0_-8px_35px_rgba(0,0,0,0.18)] max-h-[76vh]'
+        } flex flex-col justify-between relative animate-in slide-in-from-bottom-5 duration-250 select-none border-t border-gray-100/90 overflow-y-auto`}
       >
-        {/* Top Drag Indicator matching Image 2 */}
-        <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-2.5 mt-0.5 shrink-0" />
+        {/* Top Drag Indicator matching Image 1 (Android) & Image 2 (iOS) */}
+        <div className={`${isIPhone ? 'w-10 h-1 mb-2 mt-0.5' : 'w-9 h-1 mb-1.5 mt-0.5'} bg-gray-300 rounded-full mx-auto shrink-0`} />
 
         {/* Main Content Area */}
-        <div className="flex-1 flex flex-col justify-between py-1">
+        <div className="flex-1 flex flex-col justify-between py-0.5">
           {/* Top Header Group */}
           <div className="shrink-0">
             {/* Top Title Bar with Close Button */}
-            <div className="flex items-center justify-between relative mb-2.5">
-              <div className="w-6" /> {/* Balance spacer */}
-              <h2 className="text-[12px] sm:text-[12.5px] font-bold text-gray-400 tracking-wider uppercase text-center flex-1 font-sans">
+            <div className={`flex items-center justify-between relative ${isIPhone ? 'mb-2' : 'mb-1.5'}`}>
+              <div className={isIPhone ? 'w-7' : 'w-6'} /> {/* Balance spacer */}
+              <h2 className={`${isIPhone ? 'text-[12px] sm:text-[12.5px]' : 'text-[11.5px] sm:text-[12px]'} font-bold text-gray-400 tracking-wider uppercase text-center flex-1 font-sans`}>
                 TRANSACTION DETAIL
               </h2>
               <button
                 id="btn-close-tx-detail"
                 type="button"
                 onClick={onClose}
-                className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition cursor-pointer"
+                className={`${isIPhone ? 'w-7 h-7' : 'w-6 h-6'} rounded-full flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition cursor-pointer`}
                 aria-label="Close"
               >
-                <X className="w-4.5 h-4.5" />
+                <X className={isIPhone ? 'w-4.5 h-4.5' : 'w-4 h-4'} />
               </button>
             </div>
 
-            {/* Status Pill Badge: Completed (Matching exact soft green in Image 2) */}
-            <div className="flex justify-center my-2">
-              <div className="bg-[#eaf8f1] text-[#00b050] px-4 py-1 rounded-full text-xs font-bold inline-flex items-center gap-1.5 shadow-2xs">
+            {/* Status Pill Badge: Completed (Matching exact soft green in reference photos) */}
+            <div className={`flex justify-center ${isIPhone ? 'my-2' : 'my-1.5'}`}>
+              <div className={`bg-[#eaf8f1] text-[#00b050] ${isIPhone ? 'px-4 py-1 text-xs' : 'px-3.5 py-0.5 text-[11.5px]'} rounded-full font-bold inline-flex items-center gap-1.5 shadow-2xs`}>
                 <span className="w-3.5 h-3.5 rounded-full bg-[#00b050] text-white flex items-center justify-center text-[9px] font-black">
                   ✓
                 </span>
-                <span className="text-[12px] font-bold tracking-tight">Completed</span>
+                <span className={`${isIPhone ? 'text-[12px]' : 'text-[11.5px]'} font-bold tracking-tight`}>Completed</span>
               </div>
             </div>
 
-            {/* Transaction Amount matching Image 2 */}
-            <div className="text-center my-4 sm:my-5">
-              <h3 className="text-3xl sm:text-[34px] font-black text-[#0f172a] tracking-tight font-sans leading-tight">
+            {/* Transaction Amount matching Image 1 & 2 */}
+            <div className={`text-center ${isIPhone ? 'my-3.5 sm:my-4' : 'my-2.5 sm:my-3'}`}>
+              <h3 className={`${isIPhone ? 'text-3xl sm:text-[34px]' : 'text-[28px] sm:text-[30px]'} font-black text-[#0f172a] tracking-tight font-sans leading-tight`}>
                 {isCredit ? '+' : '-'}{transaction.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
               </h3>
-              <p className="text-[13px] text-gray-500 font-normal mt-1.5">
-                {isCredit ? 'from' : 'to'} {isCredit ? (transaction.senderName || 'CBE Customer') : (transaction.recipientName || 'CBE Customer')}
+              <p className={`${isIPhone ? 'text-[13px] mt-1.5' : 'text-[12px] sm:text-[12.5px] mt-1'} text-gray-500 font-normal`}>
+                {isCredit ? 'from' : 'to'} {isCredit ? (transaction.senderName || 'Mosisa Teshome Tesfa') : (transaction.recipientName || 'Mosisa Teshome Tesfa')}
               </p>
             </div>
           </div>
 
-          {/* Key-Value Details List matching Image 2 */}
-          <div className="my-auto space-y-4 sm:space-y-4.5 px-0.5 text-sm py-2">
+          {/* Key-Value Details List matching Image 1 (Android space-y-3) & Image 2 (iOS space-y-4) */}
+          <div className={`my-auto ${isIPhone ? 'space-y-4 py-2 px-0.5' : 'space-y-3 py-1 px-0.5'} text-sm`}>
             {/* 1. Date & Time */}
             <div className="flex items-center justify-between gap-3">
-              <span className="text-gray-400 font-medium whitespace-nowrap text-[13px]">Date &amp; Time</span>
-              <span className="font-bold text-gray-900 text-right text-[13px]">{formattedDate}</span>
+              <span className={`text-gray-400 font-medium whitespace-nowrap ${isIPhone ? 'text-[13px]' : 'text-[12.5px]'}`}>Date &amp; Time</span>
+              <span className={`font-bold text-gray-900 text-right ${isIPhone ? 'text-[13px]' : 'text-[12.5px]'}`}>{formattedDate}</span>
             </div>
 
             {/* 2. Type */}
             <div className="flex items-center justify-between gap-3">
-              <span className="text-gray-400 font-medium whitespace-nowrap text-[13px]">Type</span>
-              <span className="font-bold text-gray-900 text-right text-[13px]">{typeLabel}</span>
+              <span className={`text-gray-400 font-medium whitespace-nowrap ${isIPhone ? 'text-[13px]' : 'text-[12.5px]'}`}>Type</span>
+              <span className={`font-bold text-gray-900 text-right ${isIPhone ? 'text-[13px]' : 'text-[12.5px]'}`}>{typeLabel}</span>
             </div>
 
             {/* 3. Transaction ID */}
             <div className="flex items-center justify-between gap-3">
-              <span className="text-gray-400 font-medium whitespace-nowrap text-[13px]">Transaction ID</span>
+              <span className={`text-gray-400 font-medium whitespace-nowrap ${isIPhone ? 'text-[13px]' : 'text-[12.5px]'}`}>Transaction ID</span>
               <div className="flex items-center gap-1.5">
-                <span className="font-bold font-mono text-gray-900 text-[13px]">{txId}</span>
+                <span className={`font-bold font-mono text-gray-900 ${isIPhone ? 'text-[13px]' : 'text-[12.5px]'}`}>{txId}</span>
                 <button
                   id="btn-copy-txid"
                   type="button"
@@ -214,20 +226,30 @@ export default function TransactionDetailModal({
               </div>
             </div>
 
-            {/* 4. Receipt ID (Formatted with v2- on line 1 matching Image 2) */}
-            <div className="flex items-start justify-between gap-3">
-              <span className="text-gray-400 font-medium whitespace-nowrap text-[13px] pt-0.5">Receipt ID</span>
+            {/* 4. Receipt ID:
+                - Android Image 1: Single clean line "v2-hfHCxHMLTz6TX6TEmZJh"
+                - iOS Image 2: Multi-line wrapped "v2-" / "hfHCxHMrxBOfkOHZPWo" / "p"
+            */}
+            <div className={`flex ${isIPhone ? 'items-start' : 'items-center'} justify-between gap-3`}>
+              <span className={`text-gray-400 font-medium whitespace-nowrap ${isIPhone ? 'text-[13px] pt-0.5' : 'text-[12.5px]'}`}>Receipt ID</span>
               <div className="flex items-center gap-1.5 text-right">
-                <span className="font-bold font-mono text-gray-900 text-[12px] sm:text-[12.5px] tracking-tight leading-tight text-right break-words max-w-[210px]">
-                  {receiptId.startsWith('v2-') ? (
-                    <>
-                      <span className="block text-right">{receiptId.slice(0, 3)}</span>
-                      <span className="block text-right">{receiptId.slice(3)}</span>
-                    </>
-                  ) : (
-                    receiptId
-                  )}
-                </span>
+                {isIPhone ? (
+                  <span className="font-bold font-mono text-gray-900 text-[12px] sm:text-[12.5px] tracking-tight leading-tight text-right break-words max-w-[200px]">
+                    {receiptId.startsWith('v2-') ? (
+                      <>
+                        <span className="block text-right">{receiptId.slice(0, 3)}</span>
+                        <span className="block text-right">{receiptId.slice(3, -1)}</span>
+                        <span className="block text-right">{receiptId.slice(-1)}</span>
+                      </>
+                    ) : (
+                      receiptId
+                    )}
+                  </span>
+                ) : (
+                  <span className="font-bold font-mono text-gray-900 text-[12px] whitespace-nowrap tracking-tight">
+                    {receiptId}
+                  </span>
+                )}
                 <button
                   id="btn-copy-receiptid"
                   type="button"
@@ -249,8 +271,8 @@ export default function TransactionDetailModal({
 
             {/* 5. Remark */}
             <div className="flex items-start justify-between gap-3">
-              <span className="text-gray-400 font-medium whitespace-nowrap mt-0.5 text-[13px]">Remark</span>
-              <span className="font-bold text-gray-900 text-right max-w-[220px] sm:max-w-[240px] leading-snug text-[13px]">
+              <span className={`text-gray-400 font-medium whitespace-nowrap mt-0.5 ${isIPhone ? 'text-[13px]' : 'text-[12.5px]'}`}>Remark</span>
+              <span className={`font-bold text-gray-900 text-right leading-snug ${isIPhone ? 'max-w-[220px] sm:max-w-[240px] text-[13px]' : 'max-w-[200px] text-[12.5px]'}`}>
                 {remark}
               </span>
             </div>
@@ -264,8 +286,8 @@ export default function TransactionDetailModal({
           )}
         </div>
 
-        {/* Centered Purple VIEW RECEIPT Action Button (Matching Image 2) */}
-        <div className="mt-4 mb-1 flex justify-center shrink-0">
+        {/* Centered Purple VIEW RECEIPT Action Button (Matching Image 1 & Image 2) */}
+        <div className={`${isIPhone ? 'mt-4 mb-1.5' : 'mt-3 mb-1'} flex justify-center shrink-0`}>
           <button
             id="btn-view-full-receipt"
             type="button"
@@ -278,10 +300,14 @@ export default function TransactionDetailModal({
               };
               onViewReceipt(normalizedTx);
             }}
-            className="w-auto min-w-[200px] max-w-[240px] bg-[#70189F] hover:bg-[#5e1286] active:scale-[0.98] text-white py-2.5 px-7 rounded-full font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_4px_14px_rgba(112,24,159,0.35)] transition-all cursor-pointer"
+            className={`w-auto ${
+              isIPhone 
+                ? 'min-w-[200px] max-w-[240px] py-2.5 px-7 text-xs shadow-[0_4px_14px_rgba(112,24,159,0.35)]' 
+                : 'min-w-[190px] max-w-[230px] py-2 px-6 text-[11.5px] shadow-[0_4px_14px_rgba(112,24,159,0.3)]'
+            } bg-[#70189F] hover:bg-[#5e1286] active:scale-[0.98] text-white rounded-full font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer`}
           >
             <svg 
-              className="w-4 h-4 text-white shrink-0" 
+              className={`${isIPhone ? 'w-4 h-4' : 'w-3.5 h-3.5'} text-white shrink-0`} 
               viewBox="0 0 24 24" 
               fill="none" 
               stroke="currentColor" 
@@ -294,7 +320,7 @@ export default function TransactionDetailModal({
               <path d="M16 12h-8" />
               <path d="M13 16h-5" />
             </svg>
-            <span className="font-bold tracking-wider text-[12px] whitespace-nowrap">VIEW RECEIPT</span>
+            <span className={`font-bold tracking-wider ${isIPhone ? 'text-[12px]' : 'text-[11.5px]'} whitespace-nowrap`}>VIEW RECEIPT</span>
           </button>
         </div>
       </div>

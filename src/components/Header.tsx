@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
 import { AppsGridIcon, RefreshIcon, CbeLoadingStatusIcon } from './CbeCustomIcons';
+import { PhoneSettingsService } from '../services/phoneSettingsService';
 
 interface HeaderProps {
   userName?: string;
@@ -26,7 +27,14 @@ export const Header: React.FC<HeaderProps> = ({
   showProfileIcon = true,
 }) => {
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
+  const [isIPhone, setIsIPhone] = useState<boolean>(() => PhoneSettingsService.isIPhoneMode());
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    return PhoneSettingsService.subscribe(() => {
+      setIsIPhone(PhoneSettingsService.isIPhoneMode());
+    });
+  }, []);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -45,7 +53,7 @@ export const Header: React.FC<HeaderProps> = ({
   ];
 
   return (
-    <header className="relative z-30 pt-[max(env(safe-area-inset-top,0px),12px)] px-4 pb-2 max-w-md mx-auto w-full flex items-center justify-between text-white select-none">
+    <header className={`relative z-30 ${isIPhone ? 'pt-[max(env(safe-area-inset-top,0px),44px)]' : 'pt-[max(env(safe-area-inset-top,0px),26px)]'} px-4 pb-2 max-w-md mx-auto w-full flex items-center justify-between text-white select-none`}>
       {/* Left Section: 2x2 Rounded Squares Apps Grid Menu Button & User Greeting */}
       <div className="flex items-center gap-2.5">
         {/* Apps Grid Menu Button */}
