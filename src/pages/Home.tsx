@@ -600,11 +600,7 @@ export const Home: React.FC<HomeProps> = ({
       >
         {/* HERO BACKGROUND WITH SMOOTH CURVED WAVE TRANSITION */}
         <div 
-          className={`hero-background absolute top-0 left-0 right-0 pointer-events-none z-0 overflow-hidden transition-all duration-200 ${
-            activeNavTab === 'history' 
-              ? 'h-[140px] sm:h-[150px]' 
-              : 'h-[280px] sm:h-[300px]'
-          }`}
+          className="hero-background absolute inset-0 pointer-events-none z-0 overflow-hidden"
           style={{
             background: '#70189F',
           }}
@@ -615,13 +611,13 @@ export const Home: React.FC<HomeProps> = ({
           {/* SVG Smooth Curved Transition Wave (Purple to #F7F7F7 Page Background) for Home View */}
           {activeNavTab !== 'history' && (
             <svg
-              className="hero-curve absolute bottom-0 left-0 w-full h-[140px] sm:h-[160px] text-[#F7F7F7]"
-              viewBox="0 0 1440 320"
+              className="hero-curve absolute bottom-0 left-0 w-full h-[120px] text-[#F7F7F7]"
+              viewBox="0 0 1440 240"
               preserveAspectRatio="none"
               fill="currentColor"
             >
               {/* Preserves the organic curve on the left while leveling into a clean straight horizontal line on the right */}
-              <path d="M 0,192 C 140,150 260,155 380,180 C 500,205 600,230 740,220 C 880,210 980,160 1100,160 L 1440,160 L 1440,320 L 0,320 Z" />
+              <path d="M 0,140 C 140,100 260,110 380,130 C 500,150 600,165 740,155 C 880,145 980,110 1100,110 L 1440,110 L 1440,240 L 0,240 Z" />
             </svg>
           )}
         </div>

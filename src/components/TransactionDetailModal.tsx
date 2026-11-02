@@ -139,19 +139,16 @@ export default function TransactionDetailModal({
         onClick={(e) => e.stopPropagation()}
         className={`w-full max-w-md bg-white rounded-b-none ${
           isIPhone 
-            ? 'rounded-t-[32px] px-6 pt-2.5 pb-3 mb-[calc(46px+max(env(safe-area-inset-bottom,0px),12px))] shadow-[0_-12px_45px_rgba(0,0,0,0.22)] max-h-[78vh]' 
-            : 'rounded-t-[28px] px-5 pt-2 pb-2.5 mb-[46px] shadow-[0_-8px_35px_rgba(0,0,0,0.18)] max-h-[76vh]'
-        } flex flex-col justify-between relative animate-in slide-in-from-bottom-5 duration-250 select-none border-t border-gray-100/90 overflow-y-auto`}
+            ? 'rounded-t-[32px] px-6 pt-4 pb-3.5 mb-[calc(46px+max(env(safe-area-inset-bottom,0px),12px))] shadow-[0_-12px_45px_rgba(0,0,0,0.22)] h-[74vh] min-h-[520px] max-h-[76vh]' 
+            : 'rounded-t-[28px] px-5 pt-3.5 pb-3 mb-[46px] shadow-[0_-8px_35px_rgba(0,0,0,0.18)] h-[71vh] min-h-[490px] max-h-[74vh]'
+        } flex flex-col justify-between relative animate-in slide-in-from-bottom-5 duration-250 select-none overflow-y-auto`}
       >
-        {/* Top Drag Indicator matching Image 1 (Android) & Image 2 (iOS) */}
-        <div className={`${isIPhone ? 'w-10 h-1 mb-2 mt-0.5' : 'w-9 h-1 mb-1.5 mt-0.5'} bg-gray-300 rounded-full mx-auto shrink-0`} />
-
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col justify-between py-0.5">
           {/* Top Header Group */}
           <div className="shrink-0">
             {/* Top Title Bar with Close Button */}
-            <div className={`flex items-center justify-between relative ${isIPhone ? 'mb-2' : 'mb-1.5'}`}>
+            <div className={`flex items-center justify-between relative ${isIPhone ? 'mb-2.5' : 'mb-2'}`}>
               <div className={isIPhone ? 'w-7' : 'w-6'} /> {/* Balance spacer */}
               <h2 className={`${isIPhone ? 'text-[12px] sm:text-[12.5px]' : 'text-[11.5px] sm:text-[12px]'} font-bold text-gray-400 tracking-wider uppercase text-center flex-1 font-sans`}>
                 TRANSACTION DETAIL
