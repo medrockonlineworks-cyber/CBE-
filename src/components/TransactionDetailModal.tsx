@@ -224,46 +224,65 @@ export default function TransactionDetailModal({
             </div>
 
             {/* 4. Receipt ID:
-                - Android Image 1: Single clean line "v2-hfHCxHMLTz6TX6TEmZJh"
-                - iOS Image 2: Multi-line wrapped "v2-" / "hfHCxHMrxBOfkOHZPWo" / "p"
+                - Android Image 1: Single clean line "v2-hfHCxHMLTz6TX6TEmZJh" [copy]
+                - iOS Image 2: 3-line wrapped "v2-" / "hfHCxHMrxBOfkOHZPWo" [copy] / "p"
             */}
             <div className={`flex ${isIPhone ? 'items-start' : 'items-center'} justify-between gap-3`}>
               <span className={`text-gray-400 font-medium whitespace-nowrap ${isIPhone ? 'text-[13px] pt-0.5' : 'text-[12.5px]'}`}>Receipt ID</span>
-              <div className="flex items-center gap-1.5 text-right">
-                {isIPhone ? (
-                  <span className="font-bold font-mono text-gray-900 text-[12px] sm:text-[12.5px] tracking-tight leading-tight text-right break-words max-w-[200px]">
-                    {receiptId.startsWith('v2-') ? (
-                      <>
-                        <span className="block text-right">{receiptId.slice(0, 3)}</span>
-                        <span className="block text-right">{receiptId.slice(3, -1)}</span>
-                        <span className="block text-right">{receiptId.slice(-1)}</span>
-                      </>
-                    ) : (
-                      receiptId
-                    )}
+              
+              {isIPhone ? (
+                <div className="flex flex-col items-end text-right">
+                  <span className="font-bold font-mono text-gray-900 text-[12px] sm:text-[12.5px] tracking-tight leading-tight block text-right">
+                    {receiptId.slice(0, 3)}
                   </span>
-                ) : (
+                  <div className="flex items-center gap-1.5 justify-end">
+                    <span className="font-bold font-mono text-gray-900 text-[12px] sm:text-[12.5px] tracking-tight leading-tight">
+                      {receiptId.slice(3, -1)}
+                    </span>
+                    <button
+                      id="btn-copy-receiptid"
+                      type="button"
+                      onClick={() => handleCopy(receiptId, 'receiptid')}
+                      className="p-0.5 text-gray-400 hover:text-[#70189F] hover:bg-purple-50 rounded transition cursor-pointer shrink-0"
+                      title="Copy Receipt ID"
+                    >
+                      {copiedField === 'receiptid' ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />
+                      ) : (
+                        <svg className="w-3.5 h-3.5 text-purple-400/80 hover:text-[#70189F]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+                  <span className="font-bold font-mono text-gray-900 text-[12px] sm:text-[12.5px] tracking-tight leading-tight block text-right">
+                    {receiptId.slice(-1)}
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 text-right">
                   <span className="font-bold font-mono text-gray-900 text-[12px] whitespace-nowrap tracking-tight">
                     {receiptId}
                   </span>
-                )}
-                <button
-                  id="btn-copy-receiptid"
-                  type="button"
-                  onClick={() => handleCopy(receiptId, 'receiptid')}
-                  className="p-1 text-gray-400 hover:text-[#70189F] hover:bg-purple-50 rounded transition cursor-pointer shrink-0 mt-0.5"
-                  title="Copy Receipt ID"
-                >
-                  {copiedField === 'receiptid' ? (
-                    <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />
-                  ) : (
-                    <svg className="w-3.5 h-3.5 text-purple-400/80 hover:text-[#70189F]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                    </svg>
-                  )}
-                </button>
-              </div>
+                  <button
+                    id="btn-copy-receiptid"
+                    type="button"
+                    onClick={() => handleCopy(receiptId, 'receiptid')}
+                    className="p-1 text-gray-400 hover:text-[#70189F] hover:bg-purple-50 rounded transition cursor-pointer shrink-0"
+                    title="Copy Receipt ID"
+                  >
+                    {copiedField === 'receiptid' ? (
+                      <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />
+                    ) : (
+                      <svg className="w-3.5 h-3.5 text-purple-400/80 hover:text-[#70189F]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* 5. Remark */}
