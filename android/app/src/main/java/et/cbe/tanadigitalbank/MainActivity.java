@@ -7,85 +7,85 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowInsetsController;
 import android.view.WindowManager;
+import androidx.core.view.WindowCompat;
 import com.getcapacitor.BridgeActivity;
 
+/**
+ * MainActivity
+ * Enforces true edge-to-edge rendering so the app seamlessly extends
+ * behind the status bar and navigation bar with no extra artificial layers.
+ */
 public class MainActivity extends BridgeActivity {
 
-    public static final int CBE_PURPLE = Color.parseColor("#70189F");
-    public static final int PURE_WHITE = Color.parseColor("#FFFFFF");
-
-    private void applySystemBarsDualColor() {
+    private void applyEdgeToEdge() {
         try {
             Window window = getWindow();
             if (window == null) return;
 
-            // 1. Android 5.0+ (Lollipop): Enable system bar background drawing
+            // 1. Tell Android window manager not to fit system windows, extending webview to edges
+            WindowCompat.setDecorFitsSystemWindows(window, false);
+
+            // 2. Set status bar and navigation bar to transparent so no extra layer is added
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-                window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
-                window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
-                
-                // Top status bar: CBE Purple (#70189F)
-                window.setStatusBarColor(CBE_PURPLE);
-                // Bottom navigation bar: Pure White (#FFFFFF)
-                window.setNavigationBarColor(PURE_WHITE);
+                window.setStatusBarColor(Color.TRANSPARENT);
+                window.setNavigationBarColor(Color.TRANSPARENT);
             }
 
-            // 2. Android 10+ (Q): Explicitly disable automatic dark contrast scrim on white navigation bars
+            // 3. Disable automatic high-contrast scrims on Android 10+ (Q)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 window.setNavigationBarContrastEnforced(false);
                 window.setStatusBarContrastEnforced(false);
             }
 
-            // 3. Android 11+ (R): Modern WindowInsetsController
+            // 4. Configure icons: White status bar icons on top of purple header,
+            // and dark buttons on bottom white navigation bar
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 WindowInsetsController controller = window.getInsetsController();
                 if (controller != null) {
-                    // Dark soft-key buttons (≡, ○, ↩) on white navigation bar
-                    controller.setSystemBarsAppearance(
-                        WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
-                        WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
-                    );
-                    // Light (white) text and icons on purple status bar
+                    // White icons on purple status bar
                     controller.setSystemBarsAppearance(
                         0,
                         WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
                     );
+                    // Dark navigation buttons (≡, ○, ↩) over white bottom bar
+                    controller.setSystemBarsAppearance(
+                        WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
+                        WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
+                    );
                 }
             } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                // Android 8.0 - 10: Legacy system UI visibility flags
                 View decorView = window.getDecorView();
                 if (decorView != null) {
-                    int flags = decorView.getSystemUiVisibility();
-                    // Dark navigation buttons on white background
-                    flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
-                    // White status bar icons on purple background
-                    flags &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;
+                    int flags = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                              | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                              | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                              | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
                     decorView.setSystemUiVisibility(flags);
                 }
             }
         } catch (Exception e) {
-            // Guard against device-specific vendor quirks
+            // Guard against vendor quirks
         }
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        applySystemBarsDualColor();
+        applyEdgeToEdge();
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        applySystemBarsDualColor();
+        applyEdgeToEdge();
     }
 
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
         if (hasFocus) {
-            applySystemBarsDualColor();
+            applyEdgeToEdge();
         }
     }
 }

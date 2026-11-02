@@ -43,7 +43,7 @@ export class SystemBarsService {
     // Capacitor Native Bridge Support (Android & iOS)
     if (Capacitor.isNativePlatform()) {
       try {
-        StatusBar.setBackgroundColor({ color: barColor }).catch(() => {});
+        StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
         StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
       } catch (err) {
         console.warn('[SystemBars] Capacitor white status bar note:', err);
@@ -85,7 +85,7 @@ export class SystemBarsService {
     // Capacitor Native Bridge Support (Android & iOS)
     if (Capacitor.isNativePlatform()) {
       try {
-        StatusBar.setBackgroundColor({ color: statusBarColor }).catch(() => {});
+        StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
         StatusBar.setStyle({ style: Style.Light }).catch(() => {});
       } catch (err) {
         console.warn('[SystemBars] Capacitor dual status bar note:', err);
