@@ -76,72 +76,72 @@ export const AccountCard: React.FC<AccountCardProps> = ({
       {/* Compact Dark CBE Account Card */}
       <div 
         id="cbe-account-card"
-        className="account-card w-full bg-[#18191c] rounded-3xl p-5 shadow-2xl text-white relative overflow-hidden border border-white/10"
+        className="account-card w-full bg-[#141416] rounded-[26px] p-5 sm:p-5.5 shadow-2xl text-white relative overflow-hidden border border-white/10"
       >
         {/* Subtle Halftone Dotted Texture */}
         <DottedWorldMap />
         <div className="absolute -right-10 -bottom-10 w-36 h-36 bg-[#deb356]/10 rounded-full blur-2xl pointer-events-none" />
 
         {/* TOP SECTION: Bank Emblem & Bank Titles */}
-        <div className="relative z-10 flex items-center justify-between gap-2 min-w-0">
-          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+        <div className="relative z-10 flex items-center justify-between gap-2 min-w-0 mb-4 sm:mb-4.5">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
             {/* Bank Golden Coin Emblem or Custom Logo */}
-            <div className="w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0 flex items-center justify-center">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 flex-shrink-0 flex items-center justify-center">
               {customLogoUrl ? (
                 <img 
                   src={customLogoUrl} 
                   alt="Bank Logo" 
-                  className="w-8 h-8 object-contain rounded-full"
+                  className="w-9 h-9 object-contain rounded-full"
                   referrerPolicy="no-referrer"
                 />
               ) : (
-                <CbeGoldenEmblemSvg className="w-8 h-8 sm:w-9 sm:h-9" />
+                <CbeGoldenEmblemSvg className="w-9 h-9 sm:w-10 sm:h-10" />
               )}
             </div>
 
             <div className="min-w-0 flex-1">
-              <h3 className="text-[#F5BD47] font-extrabold text-[12.5px] sm:text-[13.5px] tracking-wide leading-none whitespace-nowrap overflow-hidden text-ellipsis drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
+              <h3 className="text-[#FED053] font-bold text-[16px] sm:text-[17px] tracking-normal leading-tight whitespace-nowrap overflow-hidden text-ellipsis drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">
                 {bankName}
               </h3>
-              <p className="text-[#EDE49E] text-[9.5px] sm:text-[10px] font-medium tracking-tight mt-1 whitespace-nowrap overflow-hidden text-ellipsis">
+              <p className="text-[#FED053] text-[12px] sm:text-[12.5px] font-medium tracking-normal mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
                 {slogan}
               </p>
             </div>
           </div>
         </div>
 
-        {/* MIDDLE SECTION: Horizontally Centered Balance & Right Eye Toggle */}
-        <div className="my-4 sm:my-5 relative flex items-center justify-center z-10">
-          {/* Centered Balance text */}
-          <div className="flex items-baseline justify-center gap-2 text-center">
-            <span className="text-xl sm:text-2xl font-extrabold tracking-widest font-mono text-white">
+        {/* MIDDLE SECTION: Horizontally Centered Balance, Currency & Beside Eye Toggle */}
+        <div className="my-3.5 sm:my-4 flex items-center justify-center z-10">
+          <div className="flex items-center justify-center">
+            {/* Balance Amount */}
+            <span className="text-[36px] sm:text-[40px] font-black text-white tracking-tight font-sans leading-none">
               {showBalance ? formattedBalanceAmount : '******'}
             </span>
-            <span className="text-sm font-bold text-gray-300 font-mono">
+            {/* Currency ETB */}
+            <span className="ml-2.5 sm:ml-3 text-[16px] sm:text-[17px] font-bold text-white font-sans">
               {currency}
             </span>
+            {/* Eye Visibility Toggle Button positioned directly beside ETB */}
+            <button
+              id="btn-toggle-balance"
+              type="button"
+              aria-label={showBalance ? "Hide Account Balance" : "Show Account Balance"}
+              onClick={handleToggle}
+              className="ml-3 sm:ml-4 p-1 rounded-full text-white/75 hover:text-white transition-colors cursor-pointer active:scale-95 flex items-center justify-center"
+              title={showBalance ? "Hide Balance & Account" : "Show Balance & Account"}
+            >
+              {showBalance ? (
+                <EyeOpenIcon size={21} className="text-white/80 hover:text-white" strokeWidth={1.8} />
+              ) : (
+                <EyeOffIcon size={21} className="text-white/80 hover:text-white" strokeWidth={1.8} />
+              )}
+            </button>
           </div>
-
-          {/* Eye Visibility Toggle Button positioned at right */}
-          <button
-            id="btn-toggle-balance"
-            type="button"
-            aria-label={showBalance ? "Hide Account Balance" : "Show Account Balance"}
-            onClick={handleToggle}
-            className="absolute right-0 p-1.5 rounded-full text-gray-400 hover:text-white transition-colors cursor-pointer active:scale-95"
-            title={showBalance ? "Hide Balance & Account" : "Show Balance & Account"}
-          >
-            {showBalance ? (
-              <EyeOpenIcon size={20} className="text-gray-300" strokeWidth={2} />
-            ) : (
-              <EyeOffIcon size={20} className="text-gray-400" strokeWidth={2} />
-            )}
-          </button>
         </div>
 
         {/* BOTTOM SECTION: Account Type/Number & Copy Icon (Centered together) */}
-        <div className="flex items-center justify-center text-xs sm:text-[13px] text-[#EDE49E] relative z-10 font-mono">
-          <span className="font-medium tracking-wide text-[#EDE49E] select-text">
+        <div className="flex items-center justify-center text-[14.5px] sm:text-[15.5px] text-[#FED053] relative z-10 font-sans my-1.5">
+          <span className="font-bold tracking-normal text-[#FED053] select-text">
             {formattedAccountDisplay}
           </span>
           <button
@@ -149,19 +149,19 @@ export const AccountCard: React.FC<AccountCardProps> = ({
             type="button"
             aria-label="Copy Account Number"
             onClick={handleCopy}
-            className="ml-2 hover:text-white text-gray-300 p-0.5 transition cursor-pointer flex items-center active:scale-95"
+            className="ml-2 hover:text-white text-white/80 p-0.5 transition cursor-pointer flex items-center active:scale-95"
             title="Copy Account Number"
           >
             {copied ? (
-              <Check className="w-3.5 h-3.5 text-emerald-400 stroke-[2.5]" />
+              <Check className="w-4 h-4 text-emerald-400 stroke-[2.5]" />
             ) : (
-              <CopyIcon size={15} className="text-gray-300 hover:text-white" strokeWidth={1.6} />
+              <CopyIcon size={16} className="text-white/80 hover:text-white" strokeWidth={1.8} />
             )}
           </button>
         </div>
 
         {/* Date & Time display */}
-        <div className="mt-3 text-center text-[10px] text-gray-400/90 font-mono tracking-wide">
+        <div className="mt-2.5 text-center text-[11.5px] sm:text-[12px] text-white/60 font-sans tracking-normal">
           {dateTimeString}
         </div>
       </div>
