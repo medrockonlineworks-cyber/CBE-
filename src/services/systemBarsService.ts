@@ -93,6 +93,43 @@ export class SystemBarsService {
     }
   }
 
+  static applyModalOpenBars(): void {
+    if (typeof document === 'undefined') return;
+    const darkenedPurple = '#380c50';
+    const navBarColor = '#ffffff';
+
+    const themeMetas = document.querySelectorAll(
+      'meta[name="theme-color"], meta[name="msapplication-navbutton-color"]'
+    );
+    themeMetas.forEach(meta => meta.setAttribute('content', darkenedPurple));
+
+    const navMetas = document.querySelectorAll('meta[name="navigation-bar-color"]');
+    navMetas.forEach(meta => meta.setAttribute('content', navBarColor));
+
+    const appleStatusBar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+    if (appleStatusBar) {
+      appleStatusBar.setAttribute('content', 'black-translucent');
+    }
+
+    if (document.documentElement) {
+      document.documentElement.style.backgroundColor = darkenedPurple;
+    }
+    if (document.body) {
+      document.body.style.backgroundColor = darkenedPurple;
+    }
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
+        StatusBar.setStyle({ style: Style.Light }).catch(() => {});
+      } catch (err) {}
+    }
+  }
+
+  static restoreFromModal(): void {
+    this.syncCurrent();
+  }
+
   static syncCurrent(): void {
     if (this.currentMode === 'white') {
       this.applyAllWhiteBars();

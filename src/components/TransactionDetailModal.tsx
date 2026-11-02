@@ -3,6 +3,7 @@ import { Transaction } from '../types';
 import { formatTo12CharTxId } from '../lib/mockData';
 import { X, Check } from 'lucide-react';
 import { PhoneSettingsService } from '../services/phoneSettingsService';
+import { SystemBarsService } from '../services/systemBarsService';
 
 interface TransactionDetailModalProps {
   transaction: Transaction;
@@ -70,6 +71,14 @@ export default function TransactionDetailModal({
     });
   }, []);
 
+  // Sync native status bar and background dimming to match dimmed CBE purple #380c50
+  useEffect(() => {
+    SystemBarsService.applyModalOpenBars();
+    return () => {
+      SystemBarsService.restoreFromModal();
+    };
+  }, []);
+
   // Check if credit or debit
   const txType = (transaction.type as string);
   const isCredit = 
@@ -129,7 +138,7 @@ export default function TransactionDetailModal({
   return (
     <div 
       id="transaction-detail-modal-overlay"
-      className="fixed inset-0 z-40 bg-transparent flex flex-col justify-end items-center p-0 animate-in fade-in duration-200 select-none pointer-events-auto"
+      className="fixed inset-0 z-40 bg-black/50 backdrop-blur-[0.5px] flex flex-col justify-end items-center p-0 animate-in fade-in duration-200 select-none pointer-events-auto"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -139,8 +148,8 @@ export default function TransactionDetailModal({
         onClick={(e) => e.stopPropagation()}
         className={`w-full max-w-md bg-white rounded-b-none ${
           isIPhone 
-            ? 'rounded-t-[32px] px-6 pt-4 pb-3.5 mb-[calc(46px+max(env(safe-area-inset-bottom,0px),12px))] shadow-[0_-12px_45px_rgba(0,0,0,0.22)] h-[74vh] min-h-[520px] max-h-[76vh]' 
-            : 'rounded-t-[28px] px-5 pt-3.5 pb-3 mb-[46px] shadow-[0_-8px_35px_rgba(0,0,0,0.18)] h-[71vh] min-h-[490px] max-h-[74vh]'
+            ? 'rounded-t-[36px] px-6 pt-5 pb-4 mb-[calc(48px+max(env(safe-area-inset-bottom,0px),10px))] shadow-[0_-12px_45px_rgba(0,0,0,0.22)] h-[74vh] min-h-[530px] max-h-[76vh]' 
+            : 'rounded-t-[30px] px-5 pt-4 pb-3.5 mb-[46px] shadow-[0_-8px_35px_rgba(0,0,0,0.18)] h-[71vh] min-h-[490px] max-h-[74vh]'
         } flex flex-col justify-between relative animate-in slide-in-from-bottom-5 duration-250 select-none overflow-y-auto`}
       >
         {/* Main Content Area */}
@@ -148,8 +157,8 @@ export default function TransactionDetailModal({
           {/* Top Header Group */}
           <div className="shrink-0">
             {/* Top Title Bar with Close Button */}
-            <div className={`flex items-center justify-between relative ${isIPhone ? 'mb-2.5' : 'mb-2'}`}>
-              <div className={isIPhone ? 'w-7' : 'w-6'} /> {/* Balance spacer */}
+            <div className={`flex items-center justify-between relative ${isIPhone ? 'mb-3 sm:mb-3.5' : 'mb-2 sm:mb-2.5'}`}>
+              <div className={isIPhone ? 'w-6' : 'w-5'} /> {/* Balance spacer */}
               <h2 className={`${isIPhone ? 'text-[12px] sm:text-[12.5px]' : 'text-[11.5px] sm:text-[12px]'} font-bold text-gray-400 tracking-wider uppercase text-center flex-1 font-sans`}>
                 TRANSACTION DETAIL
               </h2>
@@ -157,15 +166,15 @@ export default function TransactionDetailModal({
                 id="btn-close-tx-detail"
                 type="button"
                 onClick={onClose}
-                className={`${isIPhone ? 'w-7 h-7' : 'w-6 h-6'} rounded-full flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition cursor-pointer`}
+                className={`${isIPhone ? 'w-7 h-7' : 'w-6 h-6'} rounded-full flex items-center justify-center text-gray-400 hover:text-gray-700 transition cursor-pointer`}
                 aria-label="Close"
               >
-                <X className={isIPhone ? 'w-4.5 h-4.5' : 'w-4 h-4'} />
+                <X className={isIPhone ? 'w-4 h-4' : 'w-3.5 h-3.5'} />
               </button>
             </div>
 
             {/* Status Pill Badge: Completed (Matching exact soft green in reference photos) */}
-            <div className={`flex justify-center ${isIPhone ? 'my-2' : 'my-1.5'}`}>
+            <div className={`flex justify-center ${isIPhone ? 'my-2.5 sm:my-3' : 'my-2'}`}>
               <div className={`bg-[#eaf8f1] text-[#00b050] ${isIPhone ? 'px-4 py-1 text-xs' : 'px-3.5 py-0.5 text-[11.5px]'} rounded-full font-bold inline-flex items-center gap-1.5 shadow-2xs`}>
                 <span className="w-3.5 h-3.5 rounded-full bg-[#00b050] text-white flex items-center justify-center text-[9px] font-black">
                   ✓
@@ -175,11 +184,11 @@ export default function TransactionDetailModal({
             </div>
 
             {/* Transaction Amount matching Image 1 & 2 */}
-            <div className={`text-center ${isIPhone ? 'my-3.5 sm:my-4' : 'my-2.5 sm:my-3'}`}>
-              <h3 className={`${isIPhone ? 'text-3xl sm:text-[34px]' : 'text-[28px] sm:text-[30px]'} font-black text-[#0f172a] tracking-tight font-sans leading-tight`}>
+            <div className={`text-center ${isIPhone ? 'mt-4 mb-5 sm:mt-5 sm:mb-6' : 'mt-3 mb-4 sm:mt-3.5 sm:mb-4.5'}`}>
+              <h3 className={`${isIPhone ? 'text-3xl sm:text-[34px]' : 'text-[28px] sm:text-[30px]'} font-black text-[#111827] tracking-tight font-sans leading-tight`}>
                 {isCredit ? '+' : '-'}{transaction.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
               </h3>
-              <p className={`${isIPhone ? 'text-[13px] mt-1.5' : 'text-[12px] sm:text-[12.5px] mt-1'} text-gray-500 font-normal`}>
+              <p className={`${isIPhone ? 'text-[13px] mt-1' : 'text-[12px] sm:text-[12.5px] mt-0.5'} text-gray-500 font-normal`}>
                 {isCredit ? 'from' : 'to'} {isCredit ? (transaction.senderName || 'Mosisa Teshome Tesfa') : (transaction.recipientName || 'Mosisa Teshome Tesfa')}
               </p>
             </div>
@@ -303,7 +312,7 @@ export default function TransactionDetailModal({
         </div>
 
         {/* Centered Purple VIEW RECEIPT Action Button (Matching Image 1 & Image 2) */}
-        <div className={`${isIPhone ? 'mt-4 mb-1.5' : 'mt-3 mb-1'} flex justify-center shrink-0`}>
+        <div className={`${isIPhone ? 'mt-5 mb-2 sm:mt-6 sm:mb-2.5' : 'mt-3.5 mb-1.5 sm:mt-4 sm:mb-2'} flex justify-center shrink-0`}>
           <button
             id="btn-view-full-receipt"
             type="button"
@@ -318,7 +327,7 @@ export default function TransactionDetailModal({
             }}
             className={`w-auto ${
               isIPhone 
-                ? 'min-w-[200px] max-w-[240px] py-2.5 px-7 text-xs shadow-[0_4px_14px_rgba(112,24,159,0.35)]' 
+                ? 'min-w-[210px] max-w-[250px] py-2.5 px-8 text-xs shadow-[0_4px_14px_rgba(112,24,159,0.35)]' 
                 : 'min-w-[190px] max-w-[230px] py-2 px-6 text-[11.5px] shadow-[0_4px_14px_rgba(112,24,159,0.3)]'
             } bg-[#70189F] hover:bg-[#5e1286] active:scale-[0.98] text-white rounded-full font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer`}
           >
