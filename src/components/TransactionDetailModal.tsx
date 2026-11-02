@@ -86,17 +86,15 @@ export default function TransactionDetailModal({
     descLower.includes('tele') || 
     descLower.includes('wallet');
 
-  let typeLabel = 'CBE Transfer';
+  let typeLabel = 'Account to Account';
   if (isWallet) {
     typeLabel = 'Wallet Transfer';
   } else if (txType === 'bill') {
     typeLabel = 'Utility Bill Payment';
   } else if (txType === 'airtime') {
     typeLabel = 'Airtime Topup';
-  } else if (txType === 'transfer' || txType === 'send') {
-    typeLabel = isCredit ? 'Mobile Money TXN' : 'CBE Transfer';
-  } else if (txType === 'receive') {
-    typeLabel = 'Mobile Money TXN';
+  } else {
+    typeLabel = 'Account to Account';
   }
 
   // Remark string matching Image 2
@@ -123,17 +121,18 @@ export default function TransactionDetailModal({
   return (
     <div 
       id="transaction-detail-modal-overlay"
-      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[0.5px] flex items-end justify-center p-0 animate-in fade-in duration-200 select-none"
+      className="fixed inset-0 z-40 bg-black/45 backdrop-blur-[0.5px] flex flex-col justify-end items-center p-0 animate-in fade-in duration-200 select-none"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
       <div 
         id="transaction-detail-sheet"
-        className="w-full max-w-md bg-white rounded-t-[32px] rounded-b-none shadow-[0_-12px_45px_rgba(0,0,0,0.25)] px-6 pt-3 pb-8 flex flex-col justify-between relative animate-in slide-in-from-bottom-5 duration-250 select-none border-t border-gray-100 min-h-[580px] max-h-[88vh] h-[80vh] sm:h-auto overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-md bg-white rounded-t-[32px] rounded-b-none shadow-[0_-12px_45px_rgba(0,0,0,0.22)] px-6 pt-3 pb-3 mb-[calc(48px+max(env(safe-area-inset-bottom,0px),4px))] flex flex-col justify-between relative animate-in slide-in-from-bottom-5 duration-250 select-none border-t border-gray-100 max-h-[75vh] overflow-y-auto"
       >
         {/* Top Drag Indicator matching Image 2 */}
-        <div className="w-10 h-1.5 bg-gray-300 rounded-full mx-auto mb-3 mt-0.5 shrink-0" />
+        <div className="w-10 h-1 bg-gray-300 rounded-full mx-auto mb-2.5 mt-0.5 shrink-0" />
 
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col justify-between py-1">
@@ -215,18 +214,25 @@ export default function TransactionDetailModal({
               </div>
             </div>
 
-            {/* 4. Receipt ID */}
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-gray-400 font-medium whitespace-nowrap text-[13px]">Receipt ID</span>
-              <div className="flex items-center gap-1.5">
-                <span className="font-bold font-mono text-gray-900 text-right break-all sm:break-normal max-w-[210px] sm:max-w-[250px] text-[12.5px] sm:text-[13px]">
-                  {receiptId}
+            {/* 4. Receipt ID (Formatted with v2- on line 1 matching Image 2) */}
+            <div className="flex items-start justify-between gap-3">
+              <span className="text-gray-400 font-medium whitespace-nowrap text-[13px] pt-0.5">Receipt ID</span>
+              <div className="flex items-center gap-1.5 text-right">
+                <span className="font-bold font-mono text-gray-900 text-[12px] sm:text-[12.5px] tracking-tight leading-tight text-right break-words max-w-[210px]">
+                  {receiptId.startsWith('v2-') ? (
+                    <>
+                      <span className="block text-right">{receiptId.slice(0, 3)}</span>
+                      <span className="block text-right">{receiptId.slice(3)}</span>
+                    </>
+                  ) : (
+                    receiptId
+                  )}
                 </span>
                 <button
                   id="btn-copy-receiptid"
                   type="button"
                   onClick={() => handleCopy(receiptId, 'receiptid')}
-                  className="p-1 text-gray-400 hover:text-[#70189F] hover:bg-purple-50 rounded transition cursor-pointer shrink-0"
+                  className="p-1 text-gray-400 hover:text-[#70189F] hover:bg-purple-50 rounded transition cursor-pointer shrink-0 mt-0.5"
                   title="Copy Receipt ID"
                 >
                   {copiedField === 'receiptid' ? (
@@ -252,14 +258,14 @@ export default function TransactionDetailModal({
 
           {/* Copied Notification Toast */}
           {copiedField && (
-            <div className="my-1.5 py-1 px-3 bg-gray-900 text-white text-[11px] font-semibold rounded-lg text-center animate-in fade-in duration-150">
+            <div className="my-1 py-1 px-3 bg-gray-900 text-white text-[11px] font-semibold rounded-lg text-center animate-in fade-in duration-150">
               {copiedField === 'txid' ? 'Transaction ID' : 'Receipt ID'} copied to clipboard
             </div>
           )}
         </div>
 
         {/* Centered Purple VIEW RECEIPT Action Button (Matching Image 2) */}
-        <div className="mt-6 mb-2 flex justify-center shrink-0">
+        <div className="mt-4 mb-1 flex justify-center shrink-0">
           <button
             id="btn-view-full-receipt"
             type="button"
@@ -272,7 +278,7 @@ export default function TransactionDetailModal({
               };
               onViewReceipt(normalizedTx);
             }}
-            className="w-auto min-w-[210px] max-w-[260px] bg-[#70189F] hover:bg-[#5e1286] active:scale-[0.98] text-white py-3 px-8 rounded-full font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_4px_16px_rgba(112,24,159,0.35)] transition-all cursor-pointer"
+            className="w-auto min-w-[200px] max-w-[240px] bg-[#70189F] hover:bg-[#5e1286] active:scale-[0.98] text-white py-2.5 px-7 rounded-full font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_4px_14px_rgba(112,24,159,0.35)] transition-all cursor-pointer"
           >
             <svg 
               className="w-4 h-4 text-white shrink-0" 

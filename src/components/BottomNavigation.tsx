@@ -30,7 +30,7 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
   const shouldRenderScanQr = showScanQr && isHomeActive;
 
   return (
-    <div className={`w-full relative z-40 select-none shrink-0 ${className}`}>
+    <div className={`w-full relative z-50 select-none shrink-0 ${className}`}>
       
       {/* 1. Floating Center "Scan QR" Pill Button (Snug above bottom bar matching Image 2) */}
       {shouldRenderScanQr && (
