@@ -636,12 +636,8 @@ export const Home: React.FC<HomeProps> = ({
             showProfileIcon={activeNavTab !== 'history'}
           />
 
-          {/* 2. WHITE CONTAINER WITH SYMMETRICAL TOP CURVES ON BOTH SIDES IN TRANSACTION VIEW */}
-          <div className={`w-full transition-all duration-200 ${
-            activeNavTab === 'history'
-              ? 'bg-[#F7F7F7] rounded-t-[28px] sm:rounded-t-[32px] pt-3 sm:pt-3.5 shadow-[-0_-2px_10px_rgba(0,0,0,0.03)] mt-2'
-              : 'mt-2 sm:mt-3'
-          }`}>
+          {/* 2. ACCOUNT CARD SECTION (Sitting cleanly on the CBE Purple Background) */}
+          <div className="w-full mt-2 sm:mt-3 transition-all duration-200">
             {/* BLACK ACCOUNT CARD (Floating & Overlapping Curve) */}
             <div className="w-full">
               <AccountCard

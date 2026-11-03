@@ -148,16 +148,16 @@ export default function TransactionDetailModal({
         onClick={(e) => e.stopPropagation()}
         className={`w-full max-w-md bg-white rounded-b-none ${
           isIPhone 
-            ? 'rounded-t-[36px] px-6 pt-5 pb-4 mb-[calc(48px+max(env(safe-area-inset-bottom,0px),10px))] shadow-[0_-12px_45px_rgba(0,0,0,0.22)] h-[74vh] min-h-[530px] max-h-[76vh]' 
-            : 'rounded-t-[30px] px-5 pt-4 pb-3.5 mb-[46px] shadow-[0_-8px_35px_rgba(0,0,0,0.18)] h-[71vh] min-h-[490px] max-h-[74vh]'
-        } flex flex-col justify-between relative animate-in slide-in-from-bottom-5 duration-250 select-none overflow-y-auto`}
+            ? 'rounded-t-[34px] px-6 pt-4 pb-[calc(52px+max(env(safe-area-inset-bottom,0px),12px))] shadow-[0_-12px_45px_rgba(0,0,0,0.22)] h-[68vh] min-h-[470px] max-h-[70vh]' 
+            : 'rounded-t-[28px] px-5 pt-3.5 pb-[calc(48px+max(env(safe-area-inset-bottom,0px),4px))] shadow-[0_-8px_35px_rgba(0,0,0,0.18)] h-[67vh] min-h-[460px] max-h-[69vh]'
+        } mb-0 flex flex-col justify-between relative animate-in slide-in-from-bottom-5 duration-250 select-none overflow-y-auto`}
       >
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col justify-between py-0.5">
           {/* Top Header Group */}
           <div className="shrink-0">
             {/* Top Title Bar with Close Button */}
-            <div className={`flex items-center justify-between relative ${isIPhone ? 'mb-3 sm:mb-3.5' : 'mb-2 sm:mb-2.5'}`}>
+            <div className={`flex items-center justify-between relative ${isIPhone ? 'mb-2 sm:mb-2.5' : 'mb-1.5 sm:mb-2'}`}>
               <div className={isIPhone ? 'w-6' : 'w-5'} /> {/* Balance spacer */}
               <h2 className={`${isIPhone ? 'text-[12px] sm:text-[12.5px]' : 'text-[11.5px] sm:text-[12px]'} font-bold text-gray-400 tracking-wider uppercase text-center flex-1 font-sans`}>
                 TRANSACTION DETAIL
@@ -174,7 +174,7 @@ export default function TransactionDetailModal({
             </div>
 
             {/* Status Pill Badge: Completed (Matching exact soft green in reference photos) */}
-            <div className={`flex justify-center ${isIPhone ? 'my-2.5 sm:my-3' : 'my-2'}`}>
+            <div className={`flex justify-center ${isIPhone ? 'my-1.5 sm:my-2' : 'my-1.5'}`}>
               <div className={`bg-[#eaf8f1] text-[#00b050] ${isIPhone ? 'px-4 py-1 text-xs' : 'px-3.5 py-0.5 text-[11.5px]'} rounded-full font-bold inline-flex items-center gap-1.5 shadow-2xs`}>
                 <span className="w-3.5 h-3.5 rounded-full bg-[#00b050] text-white flex items-center justify-center text-[9px] font-black">
                   ✓
@@ -184,18 +184,18 @@ export default function TransactionDetailModal({
             </div>
 
             {/* Transaction Amount matching Image 1 & 2 */}
-            <div className={`text-center ${isIPhone ? 'mt-4 mb-5 sm:mt-5 sm:mb-6' : 'mt-3 mb-4 sm:mt-3.5 sm:mb-4.5'}`}>
-              <h3 className={`${isIPhone ? 'text-3xl sm:text-[34px]' : 'text-[28px] sm:text-[30px]'} font-black text-[#111827] tracking-tight font-sans leading-tight`}>
+            <div className={`text-center ${isIPhone ? 'mt-3 mb-3.5 sm:mt-3.5 sm:mb-4' : 'mt-2.5 mb-3 sm:mt-3 sm:mb-3.5'}`}>
+              <h3 className={`${isIPhone ? 'text-3xl sm:text-[32px]' : 'text-[28px] sm:text-[30px]'} font-black text-[#111827] tracking-tight font-sans leading-tight`}>
                 {isCredit ? '+' : '-'}{transaction.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
               </h3>
-              <p className={`${isIPhone ? 'text-[13px] mt-1' : 'text-[12px] sm:text-[12.5px] mt-0.5'} text-gray-500 font-normal`}>
+              <p className={`${isIPhone ? 'text-[12.5px] sm:text-[13px] mt-0.5' : 'text-[12px] sm:text-[12.5px] mt-0.5'} text-gray-500 font-normal`}>
                 {isCredit ? 'from' : 'to'} {isCredit ? (transaction.senderName || 'Mosisa Teshome Tesfa') : (transaction.recipientName || 'Mosisa Teshome Tesfa')}
               </p>
             </div>
           </div>
 
-          {/* Key-Value Details List matching Image 1 (Android space-y-3) & Image 2 (iOS space-y-4) */}
-          <div className={`my-auto ${isIPhone ? 'space-y-4 py-2 px-0.5' : 'space-y-3 py-1 px-0.5'} text-sm`}>
+          {/* Key-Value Details List matching Image 1 (Android space-y-3) & Image 2 (iOS space-y-3.5) */}
+          <div className={`my-auto ${isIPhone ? 'space-y-3.5 py-1 px-0.5' : 'space-y-3 py-1 px-0.5'} text-sm`}>
             {/* 1. Date & Time */}
             <div className="flex items-center justify-between gap-3">
               <span className={`text-gray-400 font-medium whitespace-nowrap ${isIPhone ? 'text-[13px]' : 'text-[12.5px]'}`}>Date &amp; Time</span>
@@ -312,7 +312,7 @@ export default function TransactionDetailModal({
         </div>
 
         {/* Centered Purple VIEW RECEIPT Action Button (Matching Image 1 & Image 2) */}
-        <div className={`${isIPhone ? 'mt-5 mb-2 sm:mt-6 sm:mb-2.5' : 'mt-3.5 mb-1.5 sm:mt-4 sm:mb-2'} flex justify-center shrink-0`}>
+        <div className={`${isIPhone ? 'mt-3 mb-1 sm:mt-3.5 sm:mb-1' : 'mt-2.5 mb-1 sm:mt-3 sm:mb-1'} flex justify-center shrink-0`}>
           <button
             id="btn-view-full-receipt"
             type="button"
