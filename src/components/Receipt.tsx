@@ -268,25 +268,38 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
   // Floating "PAID" stamp badge in CBE purple (#70189F), shown for 2 seconds on screen click & mount
   const [showPaidBadge, setShowPaidBadge] = useState<boolean>(true);
+  const [isFadingPaidBadge, setIsFadingPaidBadge] = useState<boolean>(false);
+  const [stampKey, setStampKey] = useState<number>(1);
   const paidBadgeTimerRef = useRef<any>(null);
+  const paidFadeTimerRef = useRef<any>(null);
 
   const triggerPaidBadge = () => {
-    if (paidBadgeTimerRef.current) {
-      clearTimeout(paidBadgeTimerRef.current);
-    }
+    if (paidBadgeTimerRef.current) clearTimeout(paidBadgeTimerRef.current);
+    if (paidFadeTimerRef.current) clearTimeout(paidFadeTimerRef.current);
+
+    // Replay stamp animation with impact
+    setStampKey(prev => prev + 1);
+    setIsFadingPaidBadge(false);
     setShowPaidBadge(true);
+
+    // Begin fade out after 1.6s
+    paidFadeTimerRef.current = setTimeout(() => {
+      setIsFadingPaidBadge(true);
+    }, 1600);
+
+    // Complete fade out and hide at 2.05s
     paidBadgeTimerRef.current = setTimeout(() => {
       setShowPaidBadge(false);
-    }, 2000);
+      setIsFadingPaidBadge(false);
+    }, 2050);
   };
 
   useEffect(() => {
     // Show for 2 seconds when receipt screen opens
     triggerPaidBadge();
     return () => {
-      if (paidBadgeTimerRef.current) {
-        clearTimeout(paidBadgeTimerRef.current);
-      }
+      if (paidBadgeTimerRef.current) clearTimeout(paidBadgeTimerRef.current);
+      if (paidFadeTimerRef.current) clearTimeout(paidFadeTimerRef.current);
     };
   }, []);
 
@@ -825,19 +838,22 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                     </p>
                   )}
 
-                  {/* Floating "PAID" Stamp Badge with CBE brand purple color (#70189F), visible for 2 seconds */}
-                  <div 
-                    data-screenshot-exclude="true"
-                    className={`absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 z-30 transition-all duration-300 ease-out select-none pointer-events-none ${
-                      showPaidBadge && !isCapturing ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-                    }`}
-                  >
-                    <div className="bg-[#70189F] text-white px-7 py-2.5 sm:px-8 sm:py-3 rounded-xl sm:rounded-2xl shadow-xl shadow-purple-950/30 flex items-center justify-center border border-purple-400/20">
-                      <span className="font-black text-xl sm:text-2xl tracking-widest text-white drop-shadow-xs">
-                        PAID
-                      </span>
+                  {/* Floating "PAID" Rubber Stamp Badge matching exact video animation: -12deg tilt, stamp impact bounce & fade */}
+                  {showPaidBadge && !isCapturing && (
+                    <div 
+                      key={stampKey}
+                      data-screenshot-exclude="true"
+                      className={`absolute left-[52%] top-[55%] z-30 select-none pointer-events-none transition-opacity duration-400 ease-out animate-paid-stamp ${
+                        isFadingPaidBadge ? 'opacity-0' : 'opacity-100'
+                      }`}
+                    >
+                      <div className="bg-[#70189F] text-white px-6 py-2 sm:px-7 sm:py-2.5 rounded-2xl shadow-xl shadow-purple-950/40 flex items-center justify-center border border-purple-400/25">
+                        <span className="font-black text-[22px] sm:text-[25px] tracking-wider text-white drop-shadow-sm select-none">
+                          PAID
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* Realistic QR Code Centered with authentic rounded grey frame matching IMG_20261019_113049_969.png */}
