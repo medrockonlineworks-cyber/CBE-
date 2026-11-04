@@ -608,7 +608,7 @@ export const Home: React.FC<HomeProps> = ({
           {/* Subtle bottom shadow gradient to define depth above the card */}
           <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-b from-transparent to-black/10 pointer-events-none" />
 
-          {/* SVG Smooth Curved Transition Wave (Purple to #F7F7F7 Page Background) for Home View */}
+          {/* SVG Smooth Curved Transition Wave (Purple to #F7F7F7 Page Background) for Home View Only */}
           {activeNavTab !== 'history' && (
             <svg
               className="hero-curve absolute bottom-0 left-0 w-full h-[120px] text-[#F7F7F7]"
@@ -636,9 +636,13 @@ export const Home: React.FC<HomeProps> = ({
             showProfileIcon={activeNavTab !== 'history'}
           />
 
-          {/* 2. ACCOUNT CARD SECTION (Sitting cleanly on the CBE Purple Background) */}
-          <div className="w-full mt-2 sm:mt-3 transition-all duration-200">
-            {/* BLACK ACCOUNT CARD (Floating & Overlapping Curve) */}
+          {/* 2. ACCOUNT CARD SECTION (Distinct Previous Curves: Floating on Home, Rounded Sheet on Transactions) */}
+          <div className={`w-full mt-2 sm:mt-3 transition-all duration-200 ${
+            activeNavTab === 'history' 
+              ? 'rounded-t-[26px] sm:rounded-t-[28px] bg-[#E2E4E8] pt-2 sm:pt-2.5 px-1 sm:px-2 shadow-xs' 
+              : ''
+          }`}>
+            {/* BLACK ACCOUNT CARD */}
             <div className="w-full">
               <AccountCard
                 bankName="Commercial Bank of Ethiopia"
