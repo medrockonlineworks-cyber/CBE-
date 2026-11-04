@@ -266,6 +266,30 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   // Double-tap/click to toggle hiding action controls (top-right icon and bottom action buttons: receipt, screenshot, share)
   const [hideUiElements, setHideUiElements] = useState<boolean>(false);
 
+  // Floating "PAID" stamp badge in CBE purple (#70189F), shown for 2 seconds on screen click & mount
+  const [showPaidBadge, setShowPaidBadge] = useState<boolean>(true);
+  const paidBadgeTimerRef = useRef<any>(null);
+
+  const triggerPaidBadge = () => {
+    if (paidBadgeTimerRef.current) {
+      clearTimeout(paidBadgeTimerRef.current);
+    }
+    setShowPaidBadge(true);
+    paidBadgeTimerRef.current = setTimeout(() => {
+      setShowPaidBadge(false);
+    }, 2000);
+  };
+
+  useEffect(() => {
+    // Show for 2 seconds when receipt screen opens
+    triggerPaidBadge();
+    return () => {
+      if (paidBadgeTimerRef.current) {
+        clearTimeout(paidBadgeTimerRef.current);
+      }
+    };
+  }, []);
+
   const toggleUiElements = () => {
     setHideUiElements(prev => {
       const next = !prev;
@@ -339,6 +363,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   };
 
   const handleScreenClick = (e: React.MouseEvent) => {
+    triggerPaidBadge();
     if (isTouchRef.current) {
       isTouchRef.current = false;
       return;
@@ -358,6 +383,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     if (target.closest('button') || target.closest('a') || target.closest('input')) {
       return;
     }
+    triggerPaidBadge();
     if (hideUiElements) {
       toggleUiElements();
     }
@@ -787,16 +813,32 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
               <div className="bg-[#f2f3f5] rounded-[24px] p-4 sm:p-5 space-y-3 border-none shadow-xs">
                 <p className="text-[#8e8e93] font-normal text-[13.5px] sm:text-[14px]">Transaction Summary</p>
 
-                {/* Paragraph Text with bold highlights matching CBE reference */}
-                {isCredit ? (
-                  <p className="text-[14px] sm:text-[14.5px] leading-[1.58] text-[#1a1a1a] font-normal select-text">
-                    ETB <span className="font-bold text-black">{amountFormatted}</span> has been credited to <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} from <span className="font-bold text-black">{senderName}</span> {senderSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason}
-                  </p>
-                ) : (
-                  <p className="text-[14px] sm:text-[14.5px] leading-[1.58] text-[#1a1a1a] font-normal select-text">
-                    ETB <span className="font-bold text-black">{amountFormatted}</span> has been debited from <span className="font-bold text-black">{senderName}</span> {senderSuffix} for <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason} Total Amount Debited: ETB{totalDebitedFormatted} with Service Charge of ETB{serviceChargeFormatted}, VAT (15%) of ETB{vatFormatted} and Disaster Recovery (5%) of ETB{disasterRecoveryFormatted}.
-                  </p>
-                )}
+                {/* Paragraph Text with bold highlights and floating PAID badge */}
+                <div className="relative">
+                  {isCredit ? (
+                    <p className="text-[14px] sm:text-[14.5px] leading-[1.58] text-[#1a1a1a] font-normal select-text">
+                      ETB <span className="font-bold text-black">{amountFormatted}</span> has been credited to <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} from <span className="font-bold text-black">{senderName}</span> {senderSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason}
+                    </p>
+                  ) : (
+                    <p className="text-[14px] sm:text-[14.5px] leading-[1.58] text-[#1a1a1a] font-normal select-text">
+                      ETB <span className="font-bold text-black">{amountFormatted}</span> has been debited from <span className="font-bold text-black">{senderName}</span> {senderSuffix} for <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason} Total Amount Debited: ETB{totalDebitedFormatted} with Service Charge of ETB{serviceChargeFormatted}, VAT (15%) of ETB{vatFormatted} and Disaster Recovery (5%) of ETB{disasterRecoveryFormatted}.
+                    </p>
+                  )}
+
+                  {/* Floating "PAID" Stamp Badge with CBE brand purple color (#70189F), visible for 2 seconds */}
+                  <div 
+                    data-screenshot-exclude="true"
+                    className={`absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 z-30 transition-all duration-300 ease-out select-none pointer-events-none ${
+                      showPaidBadge && !isCapturing ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+                    }`}
+                  >
+                    <div className="bg-[#70189F] text-white px-7 py-2.5 sm:px-8 sm:py-3 rounded-xl sm:rounded-2xl shadow-xl shadow-purple-950/30 flex items-center justify-center border border-purple-400/20">
+                      <span className="font-black text-xl sm:text-2xl tracking-widest text-white drop-shadow-xs">
+                        PAID
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
                 {/* Realistic QR Code Centered with authentic rounded grey frame matching IMG_20261019_113049_969.png */}
                 <div className="flex justify-center !mt-1.5 pt-0 pb-1">

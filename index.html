@@ -36,17 +36,17 @@
     <script>
       // Suppress Vite HMR WebSocket errors in sandboxed iframe environment
       window.addEventListener('error', function(e) {
-        if (e.message && (e.message.includes("reading 'send'") || e.message.includes('WebSocket') || e.message.includes('vite'))) {
+        if (e.message && (e.message.includes("reading 'send'") || e.message.includes('WebSocket') || e.message.includes('vite') || e.message.includes('HMR'))) {
           e.stopImmediatePropagation();
           e.preventDefault();
         }
-      });
+      }, true);
       window.addEventListener('unhandledrejection', function(e) {
-        if (e.reason && (String(e.reason).includes("reading 'send'") || String(e.reason).includes('WebSocket') || String(e.reason).includes('vite'))) {
+        if (e.reason && (String(e.reason).includes("reading 'send'") || String(e.reason).includes('WebSocket') || String(e.reason).includes('vite') || String(e.reason).includes('HMR'))) {
           e.stopImmediatePropagation();
           e.preventDefault();
         }
-      });
+      }, true);
 
       window.__deferredPrompt = null;
       window.addEventListener('beforeinstallprompt', function(e) {

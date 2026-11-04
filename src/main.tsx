@@ -4,7 +4,6 @@ import App from './App';
 import './index.css';
 import { initPwaDynamicManifest } from './utils/pwaBranding';
 import { SystemBarsService } from './services/systemBarsService';
-import { registerSW } from 'virtual:pwa-register';
 
 // Non-blocking initialization after initial paint
 if (typeof window !== 'undefined') {
@@ -22,19 +21,21 @@ if (typeof window !== 'undefined') {
     }
 
     if (import.meta.env.PROD && 'serviceWorker' in navigator) {
-      try {
-        registerSW({
-          immediate: true,
-          onNeedRefresh() {
-            console.log('[PWA] New version ready');
-          },
-          onOfflineReady() {
-            console.log('[PWA] Ready for offline use');
-          },
+      import('virtual:pwa-register')
+        .then(({ registerSW }) => {
+          registerSW({
+            immediate: true,
+            onNeedRefresh() {
+              console.log('[PWA] New version ready');
+            },
+            onOfflineReady() {
+              console.log('[PWA] Ready for offline use');
+            },
+          });
+        })
+        .catch((swErr) => {
+          console.warn('[PWA] SW registration note:', swErr);
         });
-      } catch (swErr) {
-        console.warn('[PWA] SW registration note:', swErr);
-      }
     }
   };
 

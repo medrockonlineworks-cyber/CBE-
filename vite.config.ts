@@ -175,6 +175,7 @@ export default defineConfig(() => {
       tailwindcss(),
       pwaBrandingSyncPlugin(),
       VitePWA({
+        injectRegister: null,
         registerType: 'autoUpdate',
         includeAssets: [
           'favicon.svg',
