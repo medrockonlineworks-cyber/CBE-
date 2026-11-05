@@ -139,11 +139,11 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   ctx.fillRect(0, 0, width, height);
 
   // 2. Top Purple Header: #70189F matching original authentic CBE top design & Image 2
-  const topPurplePadding = 36 * scale; // Exact vertical space above Thank you
+  const topPurplePadding = 52 * scale; // Exact vertical space above Thank you
   const shieldSize = 34 * scale;
   const shieldX = 20 * scale;
   const shieldY = topPurplePadding;
-  const headerBottomPadding = 22 * scale;
+  const headerBottomPadding = 48 * scale;
   const sheetTop = shieldY + shieldSize + headerBottomPadding;
   const cornerRadius = 38 * scale; // Authentic large rounded-t curve matching Image 2
 
@@ -175,13 +175,13 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   const fontSans = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
   
   ctx.fillStyle = '#ffffff';
-  ctx.font = `bold ${16.5 * scale}px ${fontSans}`;
+  ctx.font = `bold ${17 * scale}px ${fontSans}`;
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
   ctx.fillText('Thank you', shieldX + shieldSize + (10 * scale), shieldY + (17 * scale));
 
   ctx.fillStyle = 'rgba(255, 255, 255, 0.88)';
-  ctx.font = `normal ${12 * scale}px ${fontSans}`;
+  ctx.font = `normal ${12.5 * scale}px ${fontSans}`;
   ctx.fillText('Success', shieldX + shieldSize + (10 * scale), shieldY + (32 * scale));
 
   // 5. Main White Sheet Container:
@@ -218,9 +218,9 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   ctx.restore();
 
   // 7. Headline: "Transaction Completed Successfully!" (matching Image 2)
-  const headlineY = sheetTop + (58 * scale);
+  const headlineY = sheetTop + (54 * scale);
   ctx.fillStyle = '#111827';
-  ctx.font = `500 ${17 * scale}px ${fontSans}`;
+  ctx.font = `500 ${16 * scale}px ${fontSans}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
   ctx.fillText('Transaction Completed Successfully!', width / 2, headlineY);
@@ -266,13 +266,13 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
     );
   }
 
-  // Pre-calculate wrapped paragraph text lines
-  const regularFont = `400 ${16.5 * scale}px ${fontSans}`;
-  const boldFont = `bold ${16.5 * scale}px ${fontSans}`;
-  const lineHeight = 29 * scale;
+  // Pre-calculate wrapped paragraph text lines (exact 10 lines matching reference)
+  const regularFont = `400 ${14.5 * scale}px ${fontSans}`;
+  const boldFont = `bold ${14.5 * scale}px ${fontSans}`;
+  const lineHeight = 24 * scale;
 
   if ('letterSpacing' in ctx) {
-    (ctx as any).letterSpacing = `${0.45 * scale}px`;
+    (ctx as any).letterSpacing = `${0.15 * scale}px`;
   }
 
   interface WordToken {
@@ -332,18 +332,18 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   const paragraphHeight = lines.length * lineHeight;
 
   // 10. Position inside Card:
-  // Summary title -> paragraph -> snug QR box -> CBE logo footer matching IMG_20261019_113049_969.png
-  const summaryTitleY = cardTop + cardPadY + (13.5 * scale);
-  const paragraphStartY = summaryTitleY + (16 * scale);
-  const qrBoxTop = paragraphStartY + paragraphHeight + (10 * scale);
+  // Summary title -> paragraph -> snug QR box -> CBE logo footer matching image two
+  const summaryTitleY = cardTop + cardPadY + (12 * scale);
+  const paragraphStartY = summaryTitleY + (14 * scale);
+  const qrBoxTop = paragraphStartY + paragraphHeight + (18 * scale);
   const qrBoxSize = 130 * scale;
   const qrBoxX = (width - qrBoxSize) / 2;
   const qrImgSize = 114 * scale;
   const qrImgOffset = (qrBoxSize - qrImgSize) / 2;
 
-  const footerY = qrBoxTop + qrBoxSize + (10 * scale);
-  const footerLogoSize = 44 * scale;
-  const cardBottomPadding = 16 * scale;
+  const footerY = qrBoxTop + qrBoxSize + (14 * scale);
+  const footerLogoSize = 42 * scale;
+  const cardBottomPadding = 18 * scale;
   const cardHeight = (footerY + footerLogoSize + cardBottomPadding) - cardTop;
 
   // Draw Card Background: #f2f3f5 with radius 26px
@@ -363,7 +363,7 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
     let lineX = textStartX;
     for (const item of line.tokens) {
       ctx.font = item.bold ? boldFont : regularFont;
-      ctx.fillStyle = item.bold ? '#000000' : '#1a1a1a';
+      ctx.fillStyle = item.bold ? '#000000' : '#1f2937';
       ctx.fillText(item.word, lineX, lineY);
       lineX += item.width;
     }
@@ -371,10 +371,10 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   }
 
   // Draw QR Code Container Box:
-  // White background, rounded corners (20px), border: 2px solid #737373
+  // White background, rounded corners (18px), border: 2px solid #737373
   ctx.save();
   ctx.fillStyle = '#ffffff';
-  roundRect(ctx, qrBoxX, qrBoxTop, qrBoxSize, qrBoxSize, 20 * scale);
+  roundRect(ctx, qrBoxX, qrBoxTop, qrBoxSize, qrBoxSize, 18 * scale);
   ctx.fill();
   ctx.lineWidth = 2 * scale;
   ctx.strokeStyle = '#737373';
@@ -386,25 +386,11 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   }
   ctx.restore();
 
-  // Draw Commercial Bank of Ethiopia Footer: Logo and Text counted as one centered unit
-  const footerTitleFont = `bold ${16.5 * scale}px ${fontSans}`;
-  const footerSloganFont = `normal ${14 * scale}px ${fontSans}`;
-  
-  if ('letterSpacing' in ctx) {
-    (ctx as any).letterSpacing = `${0.2 * scale}px`;
-  }
-  ctx.font = footerTitleFont;
-  const titleTextWidth = ctx.measureText('Commercial Bank of Ethiopia').width;
-  
-  if ('letterSpacing' in ctx) {
-    (ctx as any).letterSpacing = `${0.5 * scale}px`;
-  }
-  ctx.font = footerSloganFont;
-  const sloganTextWidth = ctx.measureText('The bank you can always rely on!').width;
-  const maxFooterTextWidth = Math.max(titleTextWidth, sloganTextWidth);
-  const footerGap = 11 * scale;
-  const totalFooterUnitWidth = footerLogoSize + footerGap + maxFooterTextWidth;
-  const footerX = cardMarginX + Math.max(0, (cardWidth - totalFooterUnitWidth) / 2);
+  // Draw Commercial Bank of Ethiopia Footer: Logo on left, aligned with text margin, matching reference image two
+  const footerTitleFont = `bold ${15 * scale}px ${fontSans}`;
+  const footerSloganFont = `normal ${12.5 * scale}px ${fontSans}`;
+  const footerGap = 12 * scale;
+  const footerX = textStartX; // Aligned with the text margin!
 
   // Gold CBE emblem
   if (logoImg.complete && logoImg.naturalWidth > 0) {
@@ -412,23 +398,17 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   }
 
   const footerTextX = footerX + footerLogoSize + footerGap;
-  ctx.fillStyle = '#2c2c2e';
+  ctx.fillStyle = '#1f2937';
   ctx.font = footerTitleFont;
   ctx.textAlign = 'left';
   if ('letterSpacing' in ctx) {
-    (ctx as any).letterSpacing = `${0.2 * scale}px`;
-  }
-  ctx.fillText('Commercial Bank of Ethiopia', footerTextX, footerY + (19 * scale));
-
-  ctx.fillStyle = '#68686a';
-  ctx.font = footerSloganFont;
-  if ('letterSpacing' in ctx) {
-    (ctx as any).letterSpacing = `${0.5 * scale}px`;
-  }
-  ctx.fillText('The bank you can always rely on!', footerTextX, footerY + (38 * scale));
-  if ('letterSpacing' in ctx) {
     (ctx as any).letterSpacing = '0px';
   }
+  ctx.fillText('Commercial Bank of Ethiopia', footerTextX, footerY + (18 * scale));
+
+  ctx.fillStyle = '#6b7280';
+  ctx.font = footerSloganFont;
+  ctx.fillText('The bank you can always rely on!', footerTextX, footerY + (34 * scale));
 
   // Pure clean white sheet extends all the way to bottom edge (zero bottom bar, zero horizontal lines)
   return canvas.toDataURL('image/png', 1.0);

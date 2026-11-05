@@ -735,8 +735,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           id="cbe-existing-receipt"
           className="w-full flex-1 flex flex-col bg-[#70189F] relative select-none h-full overflow-hidden min-h-0"
         >
-          {/* Top Purple Navigation / App Header: Exact authentic CBE Bank top design with increased vertical space above Thank You and to purple ending point */}
-          <div className="pt-[max(env(safe-area-inset-top,0px),48px)] sm:pt-[max(env(safe-area-inset-top,0px),54px)] pb-14 sm:pb-16 px-5 bg-[#70189F] flex items-center justify-between text-white flex-shrink-0">
+          {/* Top Purple Navigation / App Header: Exact authentic CBE Bank top design with proper vertical height and curve position matching reference */}
+          <div className="pt-[max(calc(env(safe-area-inset-top,0px)+16px),52px)] sm:pt-[max(calc(env(safe-area-inset-top,0px)+20px),58px)] pb-14 sm:pb-16 px-5 bg-[#70189F] flex items-center justify-between text-white flex-shrink-0">
             <div className="flex items-center gap-2.5">
               {/* Solid White Shield with Purple Checkmark Icon matching original reference */}
               <div className="w-8.5 h-8.5 flex-shrink-0 flex items-center justify-center">
@@ -758,13 +758,13 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
               </div>
               <div>
                 <h2 
-                  className="font-bold text-[18.5px] sm:text-[19.5px] leading-snug text-white tracking-normal"
+                  className="font-bold text-[18px] sm:text-[19px] leading-snug text-white tracking-normal"
                   style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif' }}
                 >
                   Thank you
                 </h2>
                 <p 
-                  className="text-[13.5px] sm:text-[14px] text-purple-100 font-normal leading-snug mt-0.5 tracking-normal"
+                  className="text-[13px] sm:text-[13.5px] text-purple-100/90 font-normal leading-snug mt-0.5 tracking-normal"
                   style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}
                 >
                   Success
@@ -821,31 +821,30 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             </div>
 
             {/* Spacer for the overlapping badge matching exact original layout */}
-            <div className="h-13 flex-shrink-0" />
+            <div className="h-12 flex-shrink-0" />
           </div>
 
           {/* SCROLLABLE MIDDLE TEXT & CARD PART: Only this upper text area scrolls between the static header and static bottom buttons */}
           <div className={`bg-white -mt-px px-4 sm:px-5 ${hideUiElements ? 'pb-12' : 'pb-4'} flex-1 overflow-y-auto overscroll-contain scrollbar-none min-h-0`}>
-            <div className="space-y-3 pb-2">
+            <div className="space-y-4 pb-2">
               {/* Headline */}
               <h1 
-                className="text-center text-[17px] sm:text-[17.5px] font-medium text-[#111827] tracking-normal mb-1.5"
+                className="text-center text-[16px] sm:text-[16.5px] font-medium text-[#111827] tracking-normal mt-1 mb-4.5"
                 style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif' }}
               >
                 Transaction Completed Successfully!
               </h1>
 
               {/* Main Transaction Summary Gray Card */}
-              <div className="bg-[#f2f3f5] rounded-[24px] p-4 sm:p-5 space-y-3 border-none shadow-xs">
-                <p className="text-[#8e8e93] font-normal text-[14px] sm:text-[14.5px]">Transaction Summary</p>
+              <div className="bg-[#f2f3f5] rounded-[26px] p-4.5 sm:p-5 space-y-3.5 border-none shadow-xs">
+                <p className="text-[#8e8e93] font-normal text-[13.5px] sm:text-[14px] mb-2.5">Transaction Summary</p>
 
                 {/* Paragraph Text with bold highlights and floating PAID badge */}
                 <div className="relative">
                   {isCredit ? (
                     <p 
-                      className="text-[16.5px] sm:text-[17px] leading-[1.78] sm:leading-[1.82] text-[#1f2937] font-normal select-text tracking-[0.03em]"
+                      className="text-[14.5px] sm:text-[15px] leading-[1.65] text-[#1f2937] font-normal select-text tracking-[0.012em]"
                       style={{ 
-                        letterSpacing: '0.45px',
                         fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' 
                       }}
                     >
@@ -853,9 +852,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                     </p>
                   ) : (
                     <p 
-                      className="text-[16.5px] sm:text-[17px] leading-[1.78] sm:leading-[1.82] text-[#1f2937] font-normal select-text tracking-[0.03em]"
+                      className="text-[14.5px] sm:text-[15px] leading-[1.65] text-[#1f2937] font-normal select-text tracking-[0.012em]"
                       style={{ 
-                        letterSpacing: '0.45px',
                         fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' 
                       }}
                     >
@@ -881,13 +879,13 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                   )}
                 </div>
 
-                {/* Realistic QR Code Centered with authentic rounded grey frame matching image one */}
-                <div className="flex justify-center !mt-[10px] mb-0">
+                {/* Realistic QR Code Centered with authentic rounded grey frame matching reference */}
+                <div className="flex justify-center mt-5 mb-1">
                   <div 
                     id="receipt-qr-container"
-                    className="bg-white p-2 rounded-[20px] border-[2px] border-[#737373] shadow-xs inline-flex items-center justify-center select-none"
+                    className="bg-white p-2 rounded-[18px] border-[2px] border-[#737373] shadow-xs inline-flex items-center justify-center select-none"
                   >
-                    <div className="w-[114px] h-[114px] sm:w-[120px] sm:h-[120px] flex items-center justify-center">
+                    <div className="w-[114px] h-[114px] sm:w-[118px] sm:h-[118px] flex items-center justify-center">
                       {customQrCode ? (
                         <img 
                           src={customQrCode} 
@@ -928,33 +926,31 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                   </div>
                 </div>
 
-                {/* Commercial Bank of Ethiopia Footer Inset: Logo and Text counted as one centered unit */}
-                <div className="flex justify-center w-full !mt-[10px] pt-0.5 pb-1">
+                {/* Commercial Bank of Ethiopia Footer Inset: Logo on left, aligned with text margin, matching reference image two */}
+                <div className="flex items-center w-full mt-3.5 pt-1 pb-1 px-1">
                   <div 
                     id="cbe-receipt-bottom-bar"
-                    className="inline-flex items-center gap-[11px] sm:gap-3 mx-auto select-none"
+                    className="flex items-center gap-3 w-full select-none"
                   >
                     <div 
                       id="cbe-receipt-logo-container"
-                      className="w-[42px] h-[42px] sm:w-[46px] sm:h-[46px] flex-shrink-0 flex items-center justify-center"
+                      className="w-[42px] h-[42px] sm:w-[44px] sm:h-[44px] flex-shrink-0 flex items-center justify-center"
                     >
                       <CbeLogo className="w-full h-full object-contain" src={customBankLogo} />
                     </div>
                     <div className="text-left flex flex-col justify-center">
                       <h4 
-                        className="font-bold text-[#2c2c2e] text-[16.5px] sm:text-[17px] leading-[1.2] whitespace-nowrap"
+                        className="font-bold text-[#1f2937] text-[15px] sm:text-[15.5px] leading-tight whitespace-nowrap"
                         style={{ 
-                          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif',
-                          letterSpacing: '0.2px' 
+                          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif'
                         }}
                       >
                         Commercial Bank of Ethiopia
                       </h4>
                       <p 
-                        className="text-[#68686a] text-[14px] sm:text-[14.5px] font-normal leading-[1.2] mt-[3.5px] whitespace-nowrap"
+                        className="text-[#6b7280] text-[12.5px] sm:text-[13px] font-normal leading-tight mt-0.5 whitespace-nowrap"
                         style={{ 
-                          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif',
-                          letterSpacing: '0.5px' 
+                          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif'
                         }}
                       >
                         The bank you can always rely on!
@@ -1229,13 +1225,13 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           <div style={{ height: '48px', flexShrink: 0 }} />
 
           {/* Main Content Area - Matching Image 2 */}
-          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', flex: 1, paddingTop: '0px', minHeight: 0, gap: '10px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', flex: 1, paddingTop: '0px', minHeight: 0, gap: '14px' }}>
             {/* Headline exactly matching reference screenshot */}
             <h1 
               style={{ 
-                margin: '0 0 4px 0', 
+                margin: '4px 0 8px 0', 
                 textAlign: 'center', 
-                fontSize: '17px', 
+                fontSize: '16px', 
                 fontWeight: 500, 
                 color: '#111827', 
                 letterSpacing: '0px', 
@@ -1250,37 +1246,37 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             <div 
               style={{ 
                 backgroundColor: '#f2f3f5', 
-                borderRadius: '24px', 
-                padding: '16px 18px', 
+                borderRadius: '26px', 
+                padding: '18px', 
                 border: 'none', 
                 display: 'flex', 
                 flexDirection: 'column', 
-                gap: '10px',
+                gap: '12px',
                 boxSizing: 'border-box',
               }}
             >
-              <p style={{ margin: 0, color: '#8e8e93', fontWeight: 400, fontSize: '14px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
+              <p style={{ margin: '0 0 2px 0', color: '#8e8e93', fontWeight: 400, fontSize: '13.5px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
                 Transaction Summary
               </p>
 
               {/* Paragraph Text with bold highlights matching CBE reference */}
               {isCredit ? (
-                <p style={{ margin: 0, fontSize: '16.5px', lineHeight: 1.78, color: '#1f2937', fontWeight: 400, letterSpacing: '0.45px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
+                <p style={{ margin: 0, fontSize: '14.5px', lineHeight: 1.65, color: '#1f2937', fontWeight: 400, letterSpacing: '0.15px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
                   ETB <span style={{ fontWeight: 700, color: '#000000' }}>{amountFormatted}</span> has been credited to <span style={{ fontWeight: 700, color: '#000000' }}>{recipientName}</span> {recipientSuffix} from <span style={{ fontWeight: 700, color: '#000000' }}>{senderName}</span> {senderSuffix} on <span style={{ fontWeight: 700, color: '#000000' }}>{formattedDate}</span> with transaction ID: <span style={{ fontWeight: 700, color: '#000000' }}>{txId}.</span> Reason: {reason}
                 </p>
               ) : (
-                <p style={{ margin: 0, fontSize: '16.5px', lineHeight: 1.78, color: '#1f2937', fontWeight: 400, letterSpacing: '0.45px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
+                <p style={{ margin: 0, fontSize: '14.5px', lineHeight: 1.65, color: '#1f2937', fontWeight: 400, letterSpacing: '0.15px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
                   ETB <span style={{ fontWeight: 700, color: '#000000' }}>{amountFormatted}</span> has been debited from <span style={{ fontWeight: 700, color: '#000000' }}>{senderName}</span> {senderSuffix} for <span style={{ fontWeight: 700, color: '#000000' }}>{recipientName}</span> {recipientSuffix} on <span style={{ fontWeight: 700, color: '#000000' }}>{formattedDate}</span> with transaction ID: <span style={{ fontWeight: 700, color: '#000000' }}>{txId}.</span> Reason: {reason} Total Amount Debited: ETB{totalDebitedFormatted} with Service Charge of ETB{serviceChargeFormatted}, VAT (15%) of ETB{vatFormatted} and Disaster Recovery (5%) of ETB{disasterRecoveryFormatted}.
                 </p>
               )}
 
-              {/* Realistic QR Code Centered with authentic rounded grey frame matching image one */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0px', marginBottom: '0px' }}>
+              {/* Realistic QR Code Centered with authentic rounded grey frame matching reference */}
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '8px', marginBottom: '4px' }}>
                 <div 
                   style={{ 
                     backgroundColor: '#ffffff', 
                     padding: '8px', 
-                    borderRadius: '20px', 
+                    borderRadius: '18px', 
                     border: '2px solid #737373', 
                     display: 'inline-flex', 
                     alignItems: 'center', 
@@ -1329,37 +1325,37 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 </div>
               </div>
 
-              {/* Commercial Bank of Ethiopia Footer Inset: Logo and Text counted as one centered unit */}
+              {/* Commercial Bank of Ethiopia Footer Inset: Logo on left, aligned with text margin, matching reference image two */}
               <div 
                 style={{ 
                   display: 'flex', 
-                  justifyContent: 'center', 
                   alignItems: 'center', 
                   width: '100%', 
-                  marginTop: '0px', 
+                  marginTop: '4px', 
                   paddingTop: '2px', 
-                  paddingBottom: '4px', 
+                  paddingBottom: '2px', 
+                  paddingLeft: '4px',
                   boxSizing: 'border-box', 
                 }}
               >
                 <div 
                   style={{ 
-                    display: 'inline-flex', 
+                    display: 'flex', 
                     alignItems: 'center', 
-                    gap: '11px', 
-                    margin: '0 auto', 
+                    gap: '12px', 
+                    width: '100%',
                   }}
                 >
                   <div 
-                    style={{ width: '44px', height: '44px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
+                    style={{ width: '42px', height: '42px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
                   >
-                    <CbeLogo className="w-11 h-11 object-contain" style={{ width: '44px', height: '44px', maxWidth: '44px', maxHeight: '44px' }} src={customBankLogo} />
+                    <CbeLogo className="w-10.5 h-10.5 object-contain" style={{ width: '42px', height: '42px', maxWidth: '42px', maxHeight: '42px' }} src={customBankLogo} />
                   </div>
                   <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                    <h4 style={{ margin: 0, fontWeight: 700, color: '#2c2c2e', fontSize: '16.5px', lineHeight: 1.2, letterSpacing: '0.2px', whiteSpace: 'nowrap', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif' }}>
+                    <h4 style={{ margin: 0, fontWeight: 700, color: '#1f2937', fontSize: '15px', lineHeight: 1.2, letterSpacing: '0px', whiteSpace: 'nowrap', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif' }}>
                       Commercial Bank of Ethiopia
                     </h4>
-                    <p style={{ margin: 0, color: '#68686a', fontSize: '14px', fontWeight: 400, lineHeight: 1.2, marginTop: '3.5px', letterSpacing: '0.5px', whiteSpace: 'nowrap', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
+                    <p style={{ margin: '2px 0 0 0', color: '#6b7280', fontSize: '12.5px', fontWeight: 400, lineHeight: 1.2, letterSpacing: '0px', whiteSpace: 'nowrap', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
                       The bank you can always rely on!
                     </p>
                   </div>
