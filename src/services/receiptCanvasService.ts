@@ -382,21 +382,31 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   }
   ctx.restore();
 
-  // Draw Commercial Bank of Ethiopia Footer
-  const footerX = textStartX;
+  // Draw Commercial Bank of Ethiopia Footer: Logo and Text counted as one centered unit
+  const footerTitleFont = `bold ${15 * scale}px ${fontSans}`;
+  const footerSloganFont = `normal ${12.5 * scale}px ${fontSans}`;
+  ctx.font = footerTitleFont;
+  const titleTextWidth = ctx.measureText('Commercial Bank of Ethiopia').width;
+  ctx.font = footerSloganFont;
+  const sloganTextWidth = ctx.measureText('The bank you can always rely on!').width;
+  const maxFooterTextWidth = Math.max(titleTextWidth, sloganTextWidth);
+  const footerGap = 12 * scale;
+  const totalFooterUnitWidth = footerLogoSize + footerGap + maxFooterTextWidth;
+  const footerX = cardMarginX + Math.max(0, (cardWidth - totalFooterUnitWidth) / 2);
+
   // Gold CBE emblem
   if (logoImg.complete && logoImg.naturalWidth > 0) {
     ctx.drawImage(logoImg, footerX, footerY, footerLogoSize, footerLogoSize);
   }
 
-  const footerTextX = footerX + footerLogoSize + (14 * scale);
+  const footerTextX = footerX + footerLogoSize + footerGap;
   ctx.fillStyle = '#1f2937';
-  ctx.font = `bold ${15 * scale}px ${fontSans}`;
+  ctx.font = footerTitleFont;
   ctx.textAlign = 'left';
   ctx.fillText('Commercial Bank of Ethiopia', footerTextX, footerY + (18 * scale));
 
   ctx.fillStyle = '#6b7280';
-  ctx.font = `normal ${12.5 * scale}px ${fontSans}`;
+  ctx.font = footerSloganFont;
   ctx.fillText('The bank you can always rely on!', footerTextX, footerY + (36 * scale));
 
   // Pure clean white sheet extends all the way to bottom edge (zero bottom bar, zero horizontal lines)

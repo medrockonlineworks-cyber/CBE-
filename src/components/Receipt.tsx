@@ -903,24 +903,26 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                   </div>
                 </div>
 
-                {/* Commercial Bank of Ethiopia Footer Inset matching reference screenshot */}
-                <div 
-                  id="cbe-receipt-bottom-bar"
-                  className="flex items-center gap-3 sm:gap-3.5 !mt-[10px] pt-0.5 pb-1 px-0 min-w-0 w-full"
-                >
+                {/* Commercial Bank of Ethiopia Footer Inset: Logo and Text counted as one centered unit */}
+                <div className="flex justify-center w-full !mt-[10px] pt-0.5 pb-1">
                   <div 
-                    id="cbe-receipt-logo-container"
-                    className="w-11 h-11 sm:w-12 sm:h-12 flex-shrink-0 flex items-center justify-center"
+                    id="cbe-receipt-bottom-bar"
+                    className="inline-flex items-center gap-3 sm:gap-3.5 mx-auto select-none"
                   >
-                    <CbeLogo className="w-11 h-11 sm:w-12 sm:h-12 object-contain" src={customBankLogo} />
-                  </div>
-                  <div className="min-w-0 flex-1 text-left flex flex-col justify-center">
-                    <h4 className="font-bold text-[#1f2937] text-[15px] sm:text-[15.5px] leading-snug tracking-tight">
-                      Commercial Bank of Ethiopia
-                    </h4>
-                    <p className="text-[#6b7280] text-[12.5px] sm:text-[13px] font-normal leading-snug mt-0.5 tracking-tight">
-                      The bank you can always rely on!
-                    </p>
+                    <div 
+                      id="cbe-receipt-logo-container"
+                      className="w-11 h-11 sm:w-12 sm:h-12 flex-shrink-0 flex items-center justify-center"
+                    >
+                      <CbeLogo className="w-11 h-11 sm:w-12 sm:h-12 object-contain" src={customBankLogo} />
+                    </div>
+                    <div className="text-left flex flex-col justify-center">
+                      <h4 className="font-bold text-[#1f2937] text-[15px] sm:text-[15.5px] leading-snug tracking-tight whitespace-nowrap">
+                        Commercial Bank of Ethiopia
+                      </h4>
+                      <p className="text-[#6b7280] text-[12.5px] sm:text-[13px] font-normal leading-snug mt-0.5 tracking-tight whitespace-nowrap">
+                        The bank you can always rely on!
+                      </p>
+                    </div>
                   </div>
                 </div>
 
@@ -1290,33 +1292,40 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 </div>
               </div>
 
-              {/* Commercial Bank of Ethiopia Footer Inset matching reference screenshot */}
+              {/* Commercial Bank of Ethiopia Footer Inset: Logo and Text counted as one centered unit */}
               <div 
                 style={{ 
                   display: 'flex', 
+                  justifyContent: 'center', 
                   alignItems: 'center', 
-                  gap: '14px', 
+                  width: '100%', 
                   marginTop: '0px', 
                   paddingTop: '2px', 
                   paddingBottom: '4px', 
-                  paddingLeft: '0px', 
-                  paddingRight: '0px', 
-                  width: '100%', 
                   boxSizing: 'border-box', 
                 }}
               >
                 <div 
-                  style={{ width: '44px', height: '44px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
+                  style={{ 
+                    display: 'inline-flex', 
+                    alignItems: 'center', 
+                    gap: '12px', 
+                    margin: '0 auto', 
+                  }}
                 >
-                  <CbeLogo className="w-11 h-11 object-contain" style={{ width: '44px', height: '44px', maxWidth: '44px', maxHeight: '44px' }} src={customBankLogo} />
-                </div>
-                <div style={{ flex: 1, minWidth: 0, textAlign: 'left', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <h4 style={{ margin: 0, fontWeight: 700, color: '#1f2937', fontSize: '15px', lineHeight: 1.25, letterSpacing: '-0.2px', fontFamily: '"Inter", system-ui, -apple-system, sans-serif' }}>
-                    Commercial Bank of Ethiopia
-                  </h4>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '12.5px', fontWeight: 400, lineHeight: 1.25, marginTop: '2px', fontFamily: '"Inter", system-ui, -apple-system, sans-serif' }}>
-                    The bank you can always rely on!
-                  </p>
+                  <div 
+                    style={{ width: '44px', height: '44px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
+                  >
+                    <CbeLogo className="w-11 h-11 object-contain" style={{ width: '44px', height: '44px', maxWidth: '44px', maxHeight: '44px' }} src={customBankLogo} />
+                  </div>
+                  <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <h4 style={{ margin: 0, fontWeight: 700, color: '#1f2937', fontSize: '15px', lineHeight: 1.25, letterSpacing: '-0.2px', whiteSpace: 'nowrap', fontFamily: '"Inter", system-ui, -apple-system, sans-serif' }}>
+                      Commercial Bank of Ethiopia
+                    </h4>
+                    <p style={{ margin: 0, color: '#6b7280', fontSize: '12.5px', fontWeight: 400, lineHeight: 1.25, marginTop: '2px', whiteSpace: 'nowrap', fontFamily: '"Inter", system-ui, -apple-system, sans-serif' }}>
+                      The bank you can always rely on!
+                    </p>
+                  </div>
                 </div>
               </div>
 
