@@ -219,8 +219,8 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
 
   // 7. Headline: "Transaction Completed Successfully!" (matching Image 2)
   const headlineY = sheetTop + (58 * scale);
-  ctx.fillStyle = '#000000';
-  ctx.font = `500 ${15.5 * scale}px ${fontSans}`;
+  ctx.fillStyle = '#111827';
+  ctx.font = `500 ${17 * scale}px ${fontSans}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
   ctx.fillText('Transaction Completed Successfully!', width / 2, headlineY);
@@ -267,12 +267,12 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   }
 
   // Pre-calculate wrapped paragraph text lines
-  const regularFont = `400 ${14.5 * scale}px ${fontSans}`;
-  const boldFont = `bold ${14.5 * scale}px ${fontSans}`;
-  const lineHeight = 25.5 * scale;
+  const regularFont = `400 ${15.5 * scale}px ${fontSans}`;
+  const boldFont = `bold ${15.5 * scale}px ${fontSans}`;
+  const lineHeight = 27 * scale;
 
   if ('letterSpacing' in ctx) {
-    (ctx as any).letterSpacing = `${0.25 * scale}px`;
+    (ctx as any).letterSpacing = `${0.22 * scale}px`;
   }
 
   interface WordToken {

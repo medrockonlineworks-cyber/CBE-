@@ -757,8 +757,18 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 </svg>
               </div>
               <div>
-                <h2 className="font-bold text-[16px] sm:text-[17px] leading-tight text-white tracking-tight">Thank you</h2>
-                <p className="text-[12px] sm:text-[13px] text-purple-100 font-normal leading-tight mt-0.5">Success</p>
+                <h2 
+                  className="font-bold text-[18.5px] sm:text-[19.5px] leading-snug text-white tracking-normal"
+                  style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif' }}
+                >
+                  Thank you
+                </h2>
+                <p 
+                  className="text-[13.5px] sm:text-[14px] text-purple-100 font-normal leading-snug mt-0.5 tracking-normal"
+                  style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}
+                >
+                  Success
+                </p>
               </div>
             </div>
             {/* Top-Right Screenshot Icon Button (excluded from captured screenshot) */}
@@ -818,27 +828,36 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           <div className={`bg-white -mt-px px-4 sm:px-5 ${hideUiElements ? 'pb-12' : 'pb-4'} flex-1 overflow-y-auto overscroll-contain scrollbar-none min-h-0`}>
             <div className="space-y-3 pb-2">
               {/* Headline */}
-              <h1 className="text-center text-[15.5px] sm:text-[16px] font-medium text-black tracking-tight mb-1">
+              <h1 
+                className="text-center text-[17px] sm:text-[17.5px] font-medium text-[#111827] tracking-normal mb-1.5"
+                style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif' }}
+              >
                 Transaction Completed Successfully!
               </h1>
 
               {/* Main Transaction Summary Gray Card */}
               <div className="bg-[#f2f3f5] rounded-[24px] p-4 sm:p-5 space-y-3 border-none shadow-xs">
-                <p className="text-[#8e8e93] font-normal text-[13.5px] sm:text-[14px]">Transaction Summary</p>
+                <p className="text-[#8e8e93] font-normal text-[14px] sm:text-[14.5px]">Transaction Summary</p>
 
                 {/* Paragraph Text with bold highlights and floating PAID badge */}
                 <div className="relative">
                   {isCredit ? (
                     <p 
-                      className="text-[14.5px] sm:text-[15px] leading-[1.76] sm:leading-[1.8] text-[#1f2937] font-normal select-text tracking-[0.018em]"
-                      style={{ letterSpacing: '0.25px' }}
+                      className="text-[15.5px] sm:text-[16px] leading-[1.74] sm:leading-[1.78] text-[#1f2937] font-normal select-text tracking-[0.016em]"
+                      style={{ 
+                        letterSpacing: '0.22px',
+                        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' 
+                      }}
                     >
                       ETB <span className="font-bold text-black">{amountFormatted}</span> has been credited to <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} from <span className="font-bold text-black">{senderName}</span> {senderSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason}
                     </p>
                   ) : (
                     <p 
-                      className="text-[14.5px] sm:text-[15px] leading-[1.76] sm:leading-[1.8] text-[#1f2937] font-normal select-text tracking-[0.018em]"
-                      style={{ letterSpacing: '0.25px' }}
+                      className="text-[15.5px] sm:text-[16px] leading-[1.74] sm:leading-[1.78] text-[#1f2937] font-normal select-text tracking-[0.016em]"
+                      style={{ 
+                        letterSpacing: '0.22px',
+                        fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' 
+                      }}
                     >
                       ETB <span className="font-bold text-black">{amountFormatted}</span> has been debited from <span className="font-bold text-black">{senderName}</span> {senderSuffix} for <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason} Total Amount Debited: ETB{totalDebitedFormatted} with Service Charge of ETB{serviceChargeFormatted}, VAT (15%) of ETB{vatFormatted} and Disaster Recovery (5%) of ETB{disasterRecoveryFormatted}.
                     </p>
@@ -1211,16 +1230,16 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
           {/* Main Content Area - Matching Image 2 */}
           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', flex: 1, paddingTop: '0px', minHeight: 0, gap: '10px' }}>
-            {/* Headline exactly matching Image 2 */}
+            {/* Headline exactly matching reference screenshot */}
             <h1 
               style={{ 
-                margin: '0 0 2px 0', 
+                margin: '0 0 4px 0', 
                 textAlign: 'center', 
-                fontSize: '15.5px', 
+                fontSize: '17px', 
                 fontWeight: 500, 
-                color: '#000000', 
-                letterSpacing: '-0.2px', 
-                fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                color: '#111827', 
+                letterSpacing: '0px', 
+                fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif',
                 flexShrink: 0,
               }}
             >
@@ -1240,17 +1259,17 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 boxSizing: 'border-box',
               }}
             >
-              <p style={{ margin: 0, color: '#8e8e93', fontWeight: 400, fontSize: '13.5px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+              <p style={{ margin: 0, color: '#8e8e93', fontWeight: 400, fontSize: '14px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
                 Transaction Summary
               </p>
 
               {/* Paragraph Text with bold highlights matching CBE reference */}
               {isCredit ? (
-                <p style={{ margin: 0, fontSize: '14.5px', lineHeight: 1.76, color: '#1f2937', fontWeight: 400, letterSpacing: '0.25px', fontFamily: '"Inter", system-ui, -apple-system, sans-serif' }}>
+                <p style={{ margin: 0, fontSize: '15.5px', lineHeight: 1.74, color: '#1f2937', fontWeight: 400, letterSpacing: '0.22px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
                   ETB <span style={{ fontWeight: 700, color: '#000000' }}>{amountFormatted}</span> has been credited to <span style={{ fontWeight: 700, color: '#000000' }}>{recipientName}</span> {recipientSuffix} from <span style={{ fontWeight: 700, color: '#000000' }}>{senderName}</span> {senderSuffix} on <span style={{ fontWeight: 700, color: '#000000' }}>{formattedDate}</span> with transaction ID: <span style={{ fontWeight: 700, color: '#000000' }}>{txId}.</span> Reason: {reason}
                 </p>
               ) : (
-                <p style={{ margin: 0, fontSize: '14.5px', lineHeight: 1.76, color: '#1f2937', fontWeight: 400, letterSpacing: '0.25px', fontFamily: '"Inter", system-ui, -apple-system, sans-serif' }}>
+                <p style={{ margin: 0, fontSize: '15.5px', lineHeight: 1.74, color: '#1f2937', fontWeight: 400, letterSpacing: '0.22px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
                   ETB <span style={{ fontWeight: 700, color: '#000000' }}>{amountFormatted}</span> has been debited from <span style={{ fontWeight: 700, color: '#000000' }}>{senderName}</span> {senderSuffix} for <span style={{ fontWeight: 700, color: '#000000' }}>{recipientName}</span> {recipientSuffix} on <span style={{ fontWeight: 700, color: '#000000' }}>{formattedDate}</span> with transaction ID: <span style={{ fontWeight: 700, color: '#000000' }}>{txId}.</span> Reason: {reason} Total Amount Debited: ETB{totalDebitedFormatted} with Service Charge of ETB{serviceChargeFormatted}, VAT (15%) of ETB{vatFormatted} and Disaster Recovery (5%) of ETB{disasterRecoveryFormatted}.
                 </p>
               )}
