@@ -267,9 +267,13 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   }
 
   // Pre-calculate wrapped paragraph text lines
-  const regularFont = `400 ${14 * scale}px ${fontSans}`;
-  const boldFont = `bold ${14 * scale}px ${fontSans}`;
-  const lineHeight = 22 * scale;
+  const regularFont = `400 ${14.5 * scale}px ${fontSans}`;
+  const boldFont = `bold ${14.5 * scale}px ${fontSans}`;
+  const lineHeight = 25.5 * scale;
+
+  if ('letterSpacing' in ctx) {
+    (ctx as any).letterSpacing = `${0.25 * scale}px`;
+  }
 
   interface WordToken {
     word: string;

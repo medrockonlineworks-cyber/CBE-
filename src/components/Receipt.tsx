@@ -829,11 +829,17 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 {/* Paragraph Text with bold highlights and floating PAID badge */}
                 <div className="relative">
                   {isCredit ? (
-                    <p className="text-[14.5px] sm:text-[15px] leading-[1.62] text-[#1f2937] font-normal select-text tracking-normal">
+                    <p 
+                      className="text-[14.5px] sm:text-[15px] leading-[1.76] sm:leading-[1.8] text-[#1f2937] font-normal select-text tracking-[0.018em]"
+                      style={{ letterSpacing: '0.25px' }}
+                    >
                       ETB <span className="font-bold text-black">{amountFormatted}</span> has been credited to <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} from <span className="font-bold text-black">{senderName}</span> {senderSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason}
                     </p>
                   ) : (
-                    <p className="text-[14.5px] sm:text-[15px] leading-[1.62] text-[#1f2937] font-normal select-text tracking-normal">
+                    <p 
+                      className="text-[14.5px] sm:text-[15px] leading-[1.76] sm:leading-[1.8] text-[#1f2937] font-normal select-text tracking-[0.018em]"
+                      style={{ letterSpacing: '0.25px' }}
+                    >
                       ETB <span className="font-bold text-black">{amountFormatted}</span> has been debited from <span className="font-bold text-black">{senderName}</span> {senderSuffix} for <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason} Total Amount Debited: ETB{totalDebitedFormatted} with Service Charge of ETB{serviceChargeFormatted}, VAT (15%) of ETB{vatFormatted} and Disaster Recovery (5%) of ETB{disasterRecoveryFormatted}.
                     </p>
                   )}
@@ -1240,11 +1246,11 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
               {/* Paragraph Text with bold highlights matching CBE reference */}
               {isCredit ? (
-                <p style={{ margin: 0, fontSize: '14.5px', lineHeight: 1.62, color: '#1f2937', fontWeight: 400, fontFamily: '"Inter", system-ui, -apple-system, sans-serif' }}>
+                <p style={{ margin: 0, fontSize: '14.5px', lineHeight: 1.76, color: '#1f2937', fontWeight: 400, letterSpacing: '0.25px', fontFamily: '"Inter", system-ui, -apple-system, sans-serif' }}>
                   ETB <span style={{ fontWeight: 700, color: '#000000' }}>{amountFormatted}</span> has been credited to <span style={{ fontWeight: 700, color: '#000000' }}>{recipientName}</span> {recipientSuffix} from <span style={{ fontWeight: 700, color: '#000000' }}>{senderName}</span> {senderSuffix} on <span style={{ fontWeight: 700, color: '#000000' }}>{formattedDate}</span> with transaction ID: <span style={{ fontWeight: 700, color: '#000000' }}>{txId}.</span> Reason: {reason}
                 </p>
               ) : (
-                <p style={{ margin: 0, fontSize: '14.5px', lineHeight: 1.62, color: '#1f2937', fontWeight: 400, fontFamily: '"Inter", system-ui, -apple-system, sans-serif' }}>
+                <p style={{ margin: 0, fontSize: '14.5px', lineHeight: 1.76, color: '#1f2937', fontWeight: 400, letterSpacing: '0.25px', fontFamily: '"Inter", system-ui, -apple-system, sans-serif' }}>
                   ETB <span style={{ fontWeight: 700, color: '#000000' }}>{amountFormatted}</span> has been debited from <span style={{ fontWeight: 700, color: '#000000' }}>{senderName}</span> {senderSuffix} for <span style={{ fontWeight: 700, color: '#000000' }}>{recipientName}</span> {recipientSuffix} on <span style={{ fontWeight: 700, color: '#000000' }}>{formattedDate}</span> with transaction ID: <span style={{ fontWeight: 700, color: '#000000' }}>{txId}.</span> Reason: {reason} Total Amount Debited: ETB{totalDebitedFormatted} with Service Charge of ETB{serviceChargeFormatted}, VAT (15%) of ETB{vatFormatted} and Disaster Recovery (5%) of ETB{disasterRecoveryFormatted}.
                 </p>
               )}
