@@ -829,11 +829,11 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 {/* Paragraph Text with bold highlights and floating PAID badge */}
                 <div className="relative">
                   {isCredit ? (
-                    <p className="text-[14px] sm:text-[14.5px] leading-[1.58] text-[#1a1a1a] font-normal select-text">
+                    <p className="text-[14.5px] sm:text-[15px] leading-[1.62] text-[#1f2937] font-normal select-text tracking-normal">
                       ETB <span className="font-bold text-black">{amountFormatted}</span> has been credited to <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} from <span className="font-bold text-black">{senderName}</span> {senderSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason}
                     </p>
                   ) : (
-                    <p className="text-[14px] sm:text-[14.5px] leading-[1.58] text-[#1a1a1a] font-normal select-text">
+                    <p className="text-[14.5px] sm:text-[15px] leading-[1.62] text-[#1f2937] font-normal select-text tracking-normal">
                       ETB <span className="font-bold text-black">{amountFormatted}</span> has been debited from <span className="font-bold text-black">{senderName}</span> {senderSuffix} for <span className="font-bold text-black">{recipientName}</span> {recipientSuffix} on <span className="font-bold text-black">{formattedDate}</span> with transaction ID: <span className="font-bold text-black">{txId}.</span> Reason: {reason} Total Amount Debited: ETB{totalDebitedFormatted} with Service Charge of ETB{serviceChargeFormatted}, VAT (15%) of ETB{vatFormatted} and Disaster Recovery (5%) of ETB{disasterRecoveryFormatted}.
                     </p>
                   )}
@@ -856,13 +856,13 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                   )}
                 </div>
 
-                {/* Realistic QR Code Centered with authentic rounded grey frame matching IMG_20261019_113049_969.png */}
-                <div className="flex justify-center !mt-1.5 pt-0 pb-1">
+                {/* Realistic QR Code Centered with authentic rounded grey frame matching image one */}
+                <div className="flex justify-center !mt-[10px] mb-0">
                   <div 
                     id="receipt-qr-container"
-                    className="bg-white p-2 rounded-[20px] border-[2.5px] border-[#737373] shadow-xs inline-flex items-center justify-center select-none"
+                    className="bg-white p-2 rounded-[20px] border-[2px] border-[#737373] shadow-xs inline-flex items-center justify-center select-none"
                   >
-                    <div className="w-[148px] h-[148px] sm:w-[156px] sm:h-[156px] flex items-center justify-center">
+                    <div className="w-[114px] h-[114px] sm:w-[120px] sm:h-[120px] flex items-center justify-center">
                       {customQrCode ? (
                         <img 
                           src={customQrCode} 
@@ -892,7 +892,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                               <div 
                                 key={`${rIdx}-${cIdx}`} 
                                 className={`rounded-[0.2px] ${
-                                  filled ? 'bg-black' : 'bg-transparent'
+                                   filled ? 'bg-black' : 'bg-transparent'
                                 }`}
                               />
                             ))
@@ -906,7 +906,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 {/* Commercial Bank of Ethiopia Footer Inset matching reference screenshot */}
                 <div 
                   id="cbe-receipt-bottom-bar"
-                  className="flex items-center gap-3.5 !mt-1 pt-0.5 pb-0.5 px-1.5 min-w-0 w-full"
+                  className="flex items-center gap-3 sm:gap-3.5 !mt-[10px] pt-0.5 pb-1 px-0 min-w-0 w-full"
                 >
                   <div 
                     id="cbe-receipt-logo-container"
@@ -915,10 +915,10 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                     <CbeLogo className="w-11 h-11 sm:w-12 sm:h-12 object-contain" src={customBankLogo} />
                   </div>
                   <div className="min-w-0 flex-1 text-left flex flex-col justify-center">
-                    <h4 className="font-bold text-[#1f2937] text-[13.5px] sm:text-[14px] leading-tight tracking-tight">
+                    <h4 className="font-bold text-[#1f2937] text-[15px] sm:text-[15.5px] leading-snug tracking-tight">
                       Commercial Bank of Ethiopia
                     </h4>
-                    <p className="text-[#6b7280] text-[11px] sm:text-[11.5px] font-normal leading-tight mt-0.5 tracking-tight">
+                    <p className="text-[#6b7280] text-[12.5px] sm:text-[13px] font-normal leading-snug mt-0.5 tracking-tight">
                       The bank you can always rely on!
                     </p>
                   </div>
@@ -1226,23 +1226,23 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
               {/* Paragraph Text with bold highlights matching CBE reference */}
               {isCredit ? (
-                <p style={{ margin: 0, fontSize: '14px', lineHeight: 1.58, color: '#1a1a1a', fontWeight: 400, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                <p style={{ margin: 0, fontSize: '14.5px', lineHeight: 1.62, color: '#1f2937', fontWeight: 400, fontFamily: '"Inter", system-ui, -apple-system, sans-serif' }}>
                   ETB <span style={{ fontWeight: 700, color: '#000000' }}>{amountFormatted}</span> has been credited to <span style={{ fontWeight: 700, color: '#000000' }}>{recipientName}</span> {recipientSuffix} from <span style={{ fontWeight: 700, color: '#000000' }}>{senderName}</span> {senderSuffix} on <span style={{ fontWeight: 700, color: '#000000' }}>{formattedDate}</span> with transaction ID: <span style={{ fontWeight: 700, color: '#000000' }}>{txId}.</span> Reason: {reason}
                 </p>
               ) : (
-                <p style={{ margin: 0, fontSize: '14px', lineHeight: 1.58, color: '#1a1a1a', fontWeight: 400, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                <p style={{ margin: 0, fontSize: '14.5px', lineHeight: 1.62, color: '#1f2937', fontWeight: 400, fontFamily: '"Inter", system-ui, -apple-system, sans-serif' }}>
                   ETB <span style={{ fontWeight: 700, color: '#000000' }}>{amountFormatted}</span> has been debited from <span style={{ fontWeight: 700, color: '#000000' }}>{senderName}</span> {senderSuffix} for <span style={{ fontWeight: 700, color: '#000000' }}>{recipientName}</span> {recipientSuffix} on <span style={{ fontWeight: 700, color: '#000000' }}>{formattedDate}</span> with transaction ID: <span style={{ fontWeight: 700, color: '#000000' }}>{txId}.</span> Reason: {reason} Total Amount Debited: ETB{totalDebitedFormatted} with Service Charge of ETB{serviceChargeFormatted}, VAT (15%) of ETB{vatFormatted} and Disaster Recovery (5%) of ETB{disasterRecoveryFormatted}.
                 </p>
               )}
 
-              {/* Realistic QR Code Centered with authentic rounded grey frame */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '4px', paddingTop: 0, paddingBottom: '4px' }}>
+              {/* Realistic QR Code Centered with authentic rounded grey frame matching image one */}
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '0px', marginBottom: '0px' }}>
                 <div 
                   style={{ 
                     backgroundColor: '#ffffff', 
                     padding: '8px', 
                     borderRadius: '20px', 
-                    border: '2.5px solid #737373', 
+                    border: '2px solid #737373', 
                     display: 'inline-flex', 
                     alignItems: 'center', 
                     justifyContent: 'center', 
@@ -1250,7 +1250,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                     boxSizing: 'border-box',
                   }}
                 >
-                  <div style={{ width: '150px', height: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                  <div style={{ width: '114px', height: '114px', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                     {customQrCode ? (
                       <img 
                         src={customQrCode} 
@@ -1290,31 +1290,31 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 </div>
               </div>
 
-              {/* Commercial Bank of Ethiopia Footer Inset in TRUE SIZE matching Image 2 */}
+              {/* Commercial Bank of Ethiopia Footer Inset matching reference screenshot */}
               <div 
                 style={{ 
                   display: 'flex', 
                   alignItems: 'center', 
                   gap: '14px', 
-                  marginTop: '4px', 
+                  marginTop: '0px', 
                   paddingTop: '2px', 
-                  paddingBottom: '2px', 
-                  paddingLeft: '4px', 
-                  paddingRight: '4px', 
+                  paddingBottom: '4px', 
+                  paddingLeft: '0px', 
+                  paddingRight: '0px', 
                   width: '100%', 
                   boxSizing: 'border-box', 
                 }}
               >
                 <div 
-                  style={{ width: '40px', height: '40px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
+                  style={{ width: '44px', height: '44px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
                 >
-                  <CbeLogo className="w-10 h-10 object-contain" style={{ width: '40px', height: '40px', maxWidth: '40px', maxHeight: '40px' }} src={customBankLogo} />
+                  <CbeLogo className="w-11 h-11 object-contain" style={{ width: '44px', height: '44px', maxWidth: '44px', maxHeight: '44px' }} src={customBankLogo} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0, textAlign: 'left', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <h4 style={{ margin: 0, fontWeight: 700, color: '#1f2937', fontSize: '13.5px', lineHeight: 1.2, letterSpacing: '-0.2px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                  <h4 style={{ margin: 0, fontWeight: 700, color: '#1f2937', fontSize: '15px', lineHeight: 1.25, letterSpacing: '-0.2px', fontFamily: '"Inter", system-ui, -apple-system, sans-serif' }}>
                     Commercial Bank of Ethiopia
                   </h4>
-                  <p style={{ margin: 0, color: '#6b7280', fontSize: '11px', fontWeight: 400, lineHeight: 1.2, marginTop: '2px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                  <p style={{ margin: 0, color: '#6b7280', fontSize: '12.5px', fontWeight: 400, lineHeight: 1.25, marginTop: '2px', fontFamily: '"Inter", system-ui, -apple-system, sans-serif' }}>
                     The bank you can always rely on!
                   </p>
                 </div>

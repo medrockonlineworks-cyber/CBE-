@@ -331,14 +331,14 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   // Summary title -> paragraph -> snug QR box -> CBE logo footer matching IMG_20261019_113049_969.png
   const summaryTitleY = cardTop + cardPadY + (13.5 * scale);
   const paragraphStartY = summaryTitleY + (16 * scale);
-  const qrBoxTop = paragraphStartY + paragraphHeight + (6 * scale);
-  const qrBoxSize = 160 * scale;
+  const qrBoxTop = paragraphStartY + paragraphHeight + (10 * scale);
+  const qrBoxSize = 130 * scale;
   const qrBoxX = (width - qrBoxSize) / 2;
-  const qrImgSize = 144 * scale;
+  const qrImgSize = 114 * scale;
   const qrImgOffset = (qrBoxSize - qrImgSize) / 2;
 
-  const footerY = qrBoxTop + qrBoxSize + (8 * scale);
-  const footerLogoSize = 40 * scale;
+  const footerY = qrBoxTop + qrBoxSize + (10 * scale);
+  const footerLogoSize = 44 * scale;
   const cardBottomPadding = 16 * scale;
   const cardHeight = (footerY + footerLogoSize + cardBottomPadding) - cardTop;
 
@@ -367,12 +367,12 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   }
 
   // Draw QR Code Container Box:
-  // White background, rounded corners (20px), border: 2.5px solid #737373
+  // White background, rounded corners (20px), border: 2px solid #737373
   ctx.save();
   ctx.fillStyle = '#ffffff';
   roundRect(ctx, qrBoxX, qrBoxTop, qrBoxSize, qrBoxSize, 20 * scale);
   ctx.fill();
-  ctx.lineWidth = 2.5 * scale;
+  ctx.lineWidth = 2 * scale;
   ctx.strokeStyle = '#737373';
   ctx.stroke();
 
@@ -383,7 +383,7 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   ctx.restore();
 
   // Draw Commercial Bank of Ethiopia Footer
-  const footerX = textStartX + (2 * scale);
+  const footerX = textStartX;
   // Gold CBE emblem
   if (logoImg.complete && logoImg.naturalWidth > 0) {
     ctx.drawImage(logoImg, footerX, footerY, footerLogoSize, footerLogoSize);
@@ -391,13 +391,13 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
 
   const footerTextX = footerX + footerLogoSize + (14 * scale);
   ctx.fillStyle = '#1f2937';
-  ctx.font = `bold ${13.5 * scale}px ${fontSans}`;
+  ctx.font = `bold ${15 * scale}px ${fontSans}`;
   ctx.textAlign = 'left';
-  ctx.fillText('Commercial Bank of Ethiopia', footerTextX, footerY + (17 * scale));
+  ctx.fillText('Commercial Bank of Ethiopia', footerTextX, footerY + (18 * scale));
 
   ctx.fillStyle = '#6b7280';
-  ctx.font = `normal ${11 * scale}px ${fontSans}`;
-  ctx.fillText('The bank you can always rely on!', footerTextX, footerY + (33 * scale));
+  ctx.font = `normal ${12.5 * scale}px ${fontSans}`;
+  ctx.fillText('The bank you can always rely on!', footerTextX, footerY + (36 * scale));
 
   // Pure clean white sheet extends all the way to bottom edge (zero bottom bar, zero horizontal lines)
   return canvas.toDataURL('image/png', 1.0);
