@@ -843,9 +843,9 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 <div className="relative">
                   {isCredit ? (
                     <p 
-                      className="text-[15.5px] sm:text-[16px] leading-[1.74] sm:leading-[1.78] text-[#1f2937] font-normal select-text tracking-[0.016em]"
+                      className="text-[16.5px] sm:text-[17px] leading-[1.78] sm:leading-[1.82] text-[#1f2937] font-normal select-text tracking-[0.03em]"
                       style={{ 
-                        letterSpacing: '0.22px',
+                        letterSpacing: '0.45px',
                         fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' 
                       }}
                     >
@@ -853,9 +853,9 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                     </p>
                   ) : (
                     <p 
-                      className="text-[15.5px] sm:text-[16px] leading-[1.74] sm:leading-[1.78] text-[#1f2937] font-normal select-text tracking-[0.016em]"
+                      className="text-[16.5px] sm:text-[17px] leading-[1.78] sm:leading-[1.82] text-[#1f2937] font-normal select-text tracking-[0.03em]"
                       style={{ 
-                        letterSpacing: '0.22px',
+                        letterSpacing: '0.45px',
                         fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' 
                       }}
                     >
@@ -1265,11 +1265,11 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
               {/* Paragraph Text with bold highlights matching CBE reference */}
               {isCredit ? (
-                <p style={{ margin: 0, fontSize: '15.5px', lineHeight: 1.74, color: '#1f2937', fontWeight: 400, letterSpacing: '0.22px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
+                <p style={{ margin: 0, fontSize: '16.5px', lineHeight: 1.78, color: '#1f2937', fontWeight: 400, letterSpacing: '0.45px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
                   ETB <span style={{ fontWeight: 700, color: '#000000' }}>{amountFormatted}</span> has been credited to <span style={{ fontWeight: 700, color: '#000000' }}>{recipientName}</span> {recipientSuffix} from <span style={{ fontWeight: 700, color: '#000000' }}>{senderName}</span> {senderSuffix} on <span style={{ fontWeight: 700, color: '#000000' }}>{formattedDate}</span> with transaction ID: <span style={{ fontWeight: 700, color: '#000000' }}>{txId}.</span> Reason: {reason}
                 </p>
               ) : (
-                <p style={{ margin: 0, fontSize: '15.5px', lineHeight: 1.74, color: '#1f2937', fontWeight: 400, letterSpacing: '0.22px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
+                <p style={{ margin: 0, fontSize: '16.5px', lineHeight: 1.78, color: '#1f2937', fontWeight: 400, letterSpacing: '0.45px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
                   ETB <span style={{ fontWeight: 700, color: '#000000' }}>{amountFormatted}</span> has been debited from <span style={{ fontWeight: 700, color: '#000000' }}>{senderName}</span> {senderSuffix} for <span style={{ fontWeight: 700, color: '#000000' }}>{recipientName}</span> {recipientSuffix} on <span style={{ fontWeight: 700, color: '#000000' }}>{formattedDate}</span> with transaction ID: <span style={{ fontWeight: 700, color: '#000000' }}>{txId}.</span> Reason: {reason} Total Amount Debited: ETB{totalDebitedFormatted} with Service Charge of ETB{serviceChargeFormatted}, VAT (15%) of ETB{vatFormatted} and Disaster Recovery (5%) of ETB{disasterRecoveryFormatted}.
                 </p>
               )}
