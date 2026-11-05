@@ -907,19 +907,31 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 <div className="flex justify-center w-full !mt-[10px] pt-0.5 pb-1">
                   <div 
                     id="cbe-receipt-bottom-bar"
-                    className="inline-flex items-center gap-3 sm:gap-3.5 mx-auto select-none"
+                    className="inline-flex items-center gap-[11px] sm:gap-3 mx-auto select-none"
                   >
                     <div 
                       id="cbe-receipt-logo-container"
-                      className="w-11 h-11 sm:w-12 sm:h-12 flex-shrink-0 flex items-center justify-center"
+                      className="w-[42px] h-[42px] sm:w-[46px] sm:h-[46px] flex-shrink-0 flex items-center justify-center"
                     >
-                      <CbeLogo className="w-11 h-11 sm:w-12 sm:h-12 object-contain" src={customBankLogo} />
+                      <CbeLogo className="w-full h-full object-contain" src={customBankLogo} />
                     </div>
                     <div className="text-left flex flex-col justify-center">
-                      <h4 className="font-bold text-[#1f2937] text-[15px] sm:text-[15.5px] leading-snug tracking-tight whitespace-nowrap">
+                      <h4 
+                        className="font-bold text-[#2c2c2e] text-[16.5px] sm:text-[17px] leading-[1.2] whitespace-nowrap"
+                        style={{ 
+                          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif',
+                          letterSpacing: '0.2px' 
+                        }}
+                      >
                         Commercial Bank of Ethiopia
                       </h4>
-                      <p className="text-[#6b7280] text-[12.5px] sm:text-[13px] font-normal leading-snug mt-0.5 tracking-tight whitespace-nowrap">
+                      <p 
+                        className="text-[#68686a] text-[14px] sm:text-[14.5px] font-normal leading-[1.2] mt-[3.5px] whitespace-nowrap"
+                        style={{ 
+                          fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif',
+                          letterSpacing: '0.5px' 
+                        }}
+                      >
                         The bank you can always rely on!
                       </p>
                     </div>
@@ -1309,7 +1321,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                   style={{ 
                     display: 'inline-flex', 
                     alignItems: 'center', 
-                    gap: '12px', 
+                    gap: '11px', 
                     margin: '0 auto', 
                   }}
                 >
@@ -1319,10 +1331,10 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                     <CbeLogo className="w-11 h-11 object-contain" style={{ width: '44px', height: '44px', maxWidth: '44px', maxHeight: '44px' }} src={customBankLogo} />
                   </div>
                   <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                    <h4 style={{ margin: 0, fontWeight: 700, color: '#1f2937', fontSize: '15px', lineHeight: 1.25, letterSpacing: '-0.2px', whiteSpace: 'nowrap', fontFamily: '"Inter", system-ui, -apple-system, sans-serif' }}>
+                    <h4 style={{ margin: 0, fontWeight: 700, color: '#2c2c2e', fontSize: '16.5px', lineHeight: 1.2, letterSpacing: '0.2px', whiteSpace: 'nowrap', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif' }}>
                       Commercial Bank of Ethiopia
                     </h4>
-                    <p style={{ margin: 0, color: '#6b7280', fontSize: '12.5px', fontWeight: 400, lineHeight: 1.25, marginTop: '2px', whiteSpace: 'nowrap', fontFamily: '"Inter", system-ui, -apple-system, sans-serif' }}>
+                    <p style={{ margin: 0, color: '#68686a', fontSize: '14px', fontWeight: 400, lineHeight: 1.2, marginTop: '3.5px', letterSpacing: '0.5px', whiteSpace: 'nowrap', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
                       The bank you can always rely on!
                     </p>
                   </div>

@@ -383,14 +383,22 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   ctx.restore();
 
   // Draw Commercial Bank of Ethiopia Footer: Logo and Text counted as one centered unit
-  const footerTitleFont = `bold ${15 * scale}px ${fontSans}`;
-  const footerSloganFont = `normal ${12.5 * scale}px ${fontSans}`;
+  const footerTitleFont = `bold ${16.5 * scale}px ${fontSans}`;
+  const footerSloganFont = `normal ${14 * scale}px ${fontSans}`;
+  
+  if ('letterSpacing' in ctx) {
+    (ctx as any).letterSpacing = `${0.2 * scale}px`;
+  }
   ctx.font = footerTitleFont;
   const titleTextWidth = ctx.measureText('Commercial Bank of Ethiopia').width;
+  
+  if ('letterSpacing' in ctx) {
+    (ctx as any).letterSpacing = `${0.5 * scale}px`;
+  }
   ctx.font = footerSloganFont;
   const sloganTextWidth = ctx.measureText('The bank you can always rely on!').width;
   const maxFooterTextWidth = Math.max(titleTextWidth, sloganTextWidth);
-  const footerGap = 12 * scale;
+  const footerGap = 11 * scale;
   const totalFooterUnitWidth = footerLogoSize + footerGap + maxFooterTextWidth;
   const footerX = cardMarginX + Math.max(0, (cardWidth - totalFooterUnitWidth) / 2);
 
@@ -400,14 +408,23 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   }
 
   const footerTextX = footerX + footerLogoSize + footerGap;
-  ctx.fillStyle = '#1f2937';
+  ctx.fillStyle = '#2c2c2e';
   ctx.font = footerTitleFont;
   ctx.textAlign = 'left';
-  ctx.fillText('Commercial Bank of Ethiopia', footerTextX, footerY + (18 * scale));
+  if ('letterSpacing' in ctx) {
+    (ctx as any).letterSpacing = `${0.2 * scale}px`;
+  }
+  ctx.fillText('Commercial Bank of Ethiopia', footerTextX, footerY + (19 * scale));
 
-  ctx.fillStyle = '#6b7280';
+  ctx.fillStyle = '#68686a';
   ctx.font = footerSloganFont;
-  ctx.fillText('The bank you can always rely on!', footerTextX, footerY + (36 * scale));
+  if ('letterSpacing' in ctx) {
+    (ctx as any).letterSpacing = `${0.5 * scale}px`;
+  }
+  ctx.fillText('The bank you can always rely on!', footerTextX, footerY + (38 * scale));
+  if ('letterSpacing' in ctx) {
+    (ctx as any).letterSpacing = '0px';
+  }
 
   // Pure clean white sheet extends all the way to bottom edge (zero bottom bar, zero horizontal lines)
   return canvas.toDataURL('image/png', 1.0);
