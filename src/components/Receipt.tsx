@@ -880,7 +880,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 </div>
 
                 {/* Realistic QR Code Centered with authentic rounded grey frame matching reference */}
-                <div className="flex justify-center mt-5 mb-1">
+                <div className="flex justify-center !mt-[5px] mb-0">
                   <div 
                     id="receipt-qr-container"
                     className="bg-white p-2 rounded-[18px] border-[2px] border-[#737373] shadow-xs inline-flex items-center justify-center select-none"
@@ -927,7 +927,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 </div>
 
                 {/* Commercial Bank of Ethiopia Footer Inset: Logo on left, aligned with text margin, matching reference image two */}
-                <div className="flex items-center w-full mt-3.5 pt-1 pb-1 px-1">
+                <div className="flex items-center w-full !mt-[5px] pt-0 pb-1 px-1">
                   <div 
                     id="cbe-receipt-bottom-bar"
                     className="flex items-center gap-3 w-full select-none"
@@ -1271,7 +1271,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
               )}
 
               {/* Realistic QR Code Centered with authentic rounded grey frame matching reference */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '8px', marginBottom: '4px' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '5px', marginBottom: '0px' }}>
                 <div 
                   style={{ 
                     backgroundColor: '#ffffff', 
@@ -1331,8 +1331,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                   display: 'flex', 
                   alignItems: 'center', 
                   width: '100%', 
-                  marginTop: '4px', 
-                  paddingTop: '2px', 
+                  marginTop: '5px', 
+                  paddingTop: '0px', 
                   paddingBottom: '2px', 
                   paddingLeft: '4px',
                   boxSizing: 'border-box', 
