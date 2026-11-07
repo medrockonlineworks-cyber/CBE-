@@ -53,7 +53,14 @@ export const PhoneStatusBar: React.FC<PhoneStatusBarProps> = ({
   const textColor = isDark ? 'text-white' : 'text-neutral-900';
   const subTextColor = isCbe ? 'text-white/80' : isDark ? 'text-neutral-300' : 'text-neutral-700';
   const iconColor = isDark ? 'text-white' : 'text-neutral-800';
-  const containerBgClass = isCbe ? 'bg-[#70189F] text-white' : '';
+  const hasCustomBg = className.includes('bg-');
+  const defaultBg = hasCustomBg 
+    ? '' 
+    : isCbe 
+    ? 'bg-[#70189F]' 
+    : isDark 
+    ? 'bg-black' 
+    : 'bg-white';
 
   // 1. iPhone iOS 18 Dynamic Island Style
   if (settings.phoneModel === 'iphone') {
@@ -61,7 +68,7 @@ export const PhoneStatusBar: React.FC<PhoneStatusBarProps> = ({
       <div 
         onClick={onClick}
         title="Click to customize Phone Status Bar"
-        className={`w-full px-5 pt-3 pb-2 flex items-center justify-between text-xs select-none relative group cursor-pointer transition-colors ${className}`}
+        className={`w-full px-5 pt-3 pb-2 flex items-center justify-between text-xs select-none relative group cursor-pointer transition-colors ${defaultBg} ${className}`}
       >
         {/* Left: iOS Bold Time */}
         <div className="flex items-center space-x-1 pl-1 z-10">
@@ -120,7 +127,7 @@ export const PhoneStatusBar: React.FC<PhoneStatusBarProps> = ({
       <div 
         onClick={onClick}
         title="Click to customize Phone Status Bar"
-        className={`w-full px-4 pt-2 pb-1.5 flex items-center justify-between text-xs select-none relative group cursor-pointer transition-colors ${className}`}
+        className={`w-full px-4 pt-2 pb-1.5 flex items-center justify-between text-xs select-none relative group cursor-pointer transition-colors ${defaultBg} ${className}`}
       >
         {/* Left: Pixel Clock */}
         <div className="flex items-center space-x-1.5">
@@ -167,7 +174,7 @@ export const PhoneStatusBar: React.FC<PhoneStatusBarProps> = ({
       <div 
         onClick={onClick}
         title="Click to customize Phone Status Bar"
-        className={`w-full px-4 pt-1.5 pb-1 flex items-center justify-between text-xs select-none relative group cursor-pointer transition-colors ${className}`}
+        className={`w-full px-4 pt-1.5 pb-1 flex items-center justify-between text-xs select-none relative group cursor-pointer transition-colors ${defaultBg} ${className}`}
       >
         {/* Left: Time & Notifications */}
         <div className="flex items-center space-x-2">
@@ -220,7 +227,7 @@ export const PhoneStatusBar: React.FC<PhoneStatusBarProps> = ({
     <div 
       onClick={onClick}
       title="Click to customize Phone Status Bar (Tecno / Infinix / Samsung / iPhone)"
-      className={`w-full px-3.5 sm:px-4 pt-1.5 pb-1 flex items-center justify-between text-xs select-none relative group cursor-pointer transition-colors ${className}`}
+      className={`w-full px-3.5 sm:px-4 pt-1.5 pb-1 flex items-center justify-between text-xs select-none relative group cursor-pointer transition-colors ${defaultBg} ${className}`}
     >
       {/* Left: Time and Notifications matching Screenshot_20261028-111001_7018c5b4.png */}
       <div className="flex items-center space-x-1.5">

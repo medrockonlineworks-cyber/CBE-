@@ -736,7 +736,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         >
           {/* Top Purple Navigation / App Header: background extends behind rounded-t-[38px] curve */}
           <div className="bg-[#70189F] pb-10 -mb-10 flex-shrink-0 relative z-10">
-            <div className="pt-[max(calc(env(safe-area-inset-top,0px)+16px),52px)] sm:pt-[max(calc(env(safe-area-inset-top,0px)+20px),58px)] pb-14 sm:pb-16 px-5 flex items-center justify-between text-white flex-shrink-0">
+            <div className="pt-3 sm:pt-4 pb-14 sm:pb-16 px-5 flex items-center justify-between text-white flex-shrink-0">
               <div className="flex items-center gap-2.5">
                 {/* Solid White Shield with Purple Checkmark Icon matching original reference */}
                 <div className="w-8.5 h-8.5 flex-shrink-0 flex items-center justify-center">

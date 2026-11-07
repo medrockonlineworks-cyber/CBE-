@@ -63,20 +63,26 @@ export const PhoneNavigationBar: React.FC<PhoneNavigationBarProps> = ({
     }
   };
 
-  // 1. iPhone Edge-to-Edge Navigation System (matching Image 1)
+  const hasCustomBg = className.includes('bg-');
+
+  // 1. iPhone Edge-to-Edge Navigation System (matching iOS Home Indicator)
   // Continuous background extending to bottom edge with centered iOS Home Indicator Bar
   if (isIPhone || navStyle === 'gesture') {
+    const bgContainer = hasCustomBg 
+      ? '' 
+      : isDark 
+      ? 'bg-transparent text-white' 
+      : 'bg-transparent text-black';
+
     return (
       <div 
         id="cbe-ios-home-indicator-container"
-        className={`w-full shrink-0 flex flex-col items-center justify-center pointer-events-none select-none pt-1 pb-[max(env(safe-area-inset-bottom,0px),6px)] ${
-          isDark ? 'bg-transparent text-white' : 'bg-transparent text-black'
-        } ${className}`}
+        className={`w-full shrink-0 flex flex-col items-center justify-center pointer-events-none select-none pt-1.5 pb-[max(env(safe-area-inset-bottom,0px),8px)] ${bgContainer} ${className}`}
       >
         <div 
           id="cbe-ios-home-indicator"
           className={`w-32 sm:w-36 h-1 sm:h-[4.5px] rounded-full transition-colors ${
-            isDark ? 'bg-white/90 shadow-[0_1px_4px_rgba(0,0,0,0.5)]' : 'bg-black/90 shadow-[0_1px_3px_rgba(0,0,0,0.2)]'
+            isDark ? 'bg-white/90 shadow-[0_1px_4px_rgba(0,0,0,0.6)]' : 'bg-black/90 shadow-[0_1px_3px_rgba(0,0,0,0.2)]'
           }`} 
         />
       </div>
@@ -84,15 +90,21 @@ export const PhoneNavigationBar: React.FC<PhoneNavigationBarProps> = ({
   }
 
   // 2. Android 3-Button Navigation Bar
-  // [ ≡  ○  ⊃ ] Edge-to-edge soft keys: ALWAYS pure white background with dark icons (never purple)
+  // [ ≡  ○  ⊃ ] Edge-to-edge soft keys: Theme aligned (dark background for dark subapps, white for light)
   if (navStyle === 'buttons') {
-    const barBackgroundClass = 'bg-white border-gray-200/90 shadow-[0_-1px_4px_rgba(0,0,0,0.02)]';
-    const iconColorClass = 'text-neutral-700 hover:text-black active:text-black';
+    const barBackgroundClass = isDark 
+      ? 'bg-[#121214] border-neutral-800/80 shadow-[0_-1px_4px_rgba(0,0,0,0.5)]'
+      : 'bg-white border-gray-200/90 shadow-[0_-1px_4px_rgba(0,0,0,0.02)]';
+    const iconColorClass = isDark
+      ? 'text-neutral-300 hover:text-white active:text-white'
+      : 'text-neutral-700 hover:text-black active:text-black';
+
+    const finalBgClass = hasCustomBg ? '' : barBackgroundClass;
 
     return (
       <div 
         id="cbe-android-navbar"
-        className={`w-full shrink-0 flex items-center justify-between px-10 sm:px-14 py-2 select-none pointer-events-auto border-t transition-colors ${barBackgroundClass} ${className}`}
+        className={`w-full shrink-0 flex items-center justify-between px-10 sm:px-14 py-2 select-none pointer-events-auto border-t transition-colors ${finalBgClass} ${className}`}
       >
         {/* Button 1: Recents Overview (≡ Three horizontal lines matching Screenshot_20261028-111001_7018c5b4.png) */}
         <button

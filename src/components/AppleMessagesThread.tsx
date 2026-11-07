@@ -115,7 +115,7 @@ export const AppleMessagesThread: React.FC<AppleMessagesThreadProps> = ({
   };
 
   return (
-    <div className="h-full min-h-[100dvh] flex flex-col font-sans select-none bg-black text-white relative">
+    <div className="h-full flex-1 flex flex-col font-sans select-none bg-black text-white relative overflow-hidden">
 
 
       {/* 2. Top Navigation Bar (Back pill on left, Large Avatar & Contact Pill in center) */}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { UserProfile, Transaction } from './types';
 import { LocalDb } from './lib/mockData';
 import Auth from './components/Auth';
@@ -24,6 +24,9 @@ import { SystemBarsService } from './services/systemBarsService';
 import Navigation, { TabType } from './components/Navigation';
 import OfflineBanner from './components/OfflineBanner';
 import PhoneRecentAppsModal, { AppViewId } from './components/PhoneRecentAppsModal';
+import PhoneStatusBar from './components/PhoneStatusBar';
+import PhoneNavigationBar from './components/PhoneNavigationBar';
+import PhoneSettingsModal from './components/PhoneSettingsModal';
 import { ChevronLeft, ArrowLeft, RefreshCw, AlertCircle } from 'lucide-react';
 
 interface ViewErrorBoundaryProps {
@@ -141,6 +144,7 @@ export default function App() {
   const [initialTxTab, setInitialTxTab] = useState<'send' | 'transfer' | 'merchant' | 'receive' | 'airtime'>('transfer');
   const [smsActiveAccountId, setSmsActiveAccountId] = useState<string | undefined>(undefined);
   const [isIPhone, setIsIPhone] = useState<boolean>(() => PhoneSettingsService.isIPhoneMode());
+  const [showPhoneSettingsModal, setShowPhoneSettingsModal] = useState<boolean>(false);
 
   useEffect(() => {
     return PhoneSettingsService.subscribe(() => {
@@ -148,14 +152,104 @@ export default function App() {
     });
   }, []);
 
-  // Ensure status bar & navigation bar match the active view:
-  // - Login/Auth: White status bar and White navigation bar
-  // - Main Banking: Purple status bar (#70189F) and White navigation bar
+  // Ensure system status bar & navigation bar match the active view dynamically:
   useEffect(() => {
-    if (activeView === 'auth') {
-      SystemBarsService.applyAllWhiteBars();
-    } else {
-      SystemBarsService.applyDualSystemBars();
+    SystemBarsService.syncForView(activeView);
+  }, [activeView]);
+
+  // Support mobile navigation bar buttons (Home & Recents) across all subapps
+  useEffect(() => {
+    const handlePhoneHome = () => {
+      navigateTo('main', 'home');
+    };
+    const handlePhoneRecents = () => {
+      setIsRecentAppsOpen(true);
+    };
+    window.addEventListener('cbe_phone_home', handlePhoneHome);
+    window.addEventListener('cbe_phone_recents', handlePhoneRecents);
+    return () => {
+      window.removeEventListener('cbe_phone_home', handlePhoneHome);
+      window.removeEventListener('cbe_phone_recents', handlePhoneRecents);
+    };
+  }, []);
+
+  // Theme Alignment configuration for Fixed Status Bar and Navigation Bar per subapp
+  const viewThemeConfig = useMemo(() => {
+    switch (activeView) {
+      case 'truecaller':
+        return {
+          rootBg: 'bg-[#121316]',
+          statusBarBg: 'bg-[#121316] text-white',
+          statusTheme: 'dark' as const,
+          navBarBg: 'bg-[#121316] border-neutral-800/80 text-white',
+          navTheme: 'dark' as const,
+        };
+      case 'sms':
+        return {
+          rootBg: 'bg-[#121212]',
+          statusBarBg: 'bg-[#121212] text-white',
+          statusTheme: 'dark' as const,
+          navBarBg: 'bg-[#121212] border-neutral-800/80 text-white',
+          navTheme: 'dark' as const,
+        };
+      case 'phone':
+        return {
+          rootBg: 'bg-black',
+          statusBarBg: 'bg-black text-white',
+          statusTheme: 'dark' as const,
+          navBarBg: 'bg-black border-neutral-900 text-white',
+          navTheme: 'dark' as const,
+        };
+      case 'dashen':
+        return {
+          rootBg: 'bg-[#040b18]',
+          statusBarBg: 'bg-[#040b18] text-white',
+          statusTheme: 'dark' as const,
+          navBarBg: 'bg-[#040b18] border-neutral-900 text-white',
+          navTheme: 'dark' as const,
+        };
+      case 'telebirr':
+        return {
+          rootBg: 'bg-white',
+          statusBarBg: 'bg-[#005fa8] text-white',
+          statusTheme: 'dark' as const,
+          navBarBg: 'bg-white border-neutral-200 text-neutral-800',
+          navTheme: 'light' as const,
+        };
+      case 'telegram':
+      case 'admin':
+        return {
+          rootBg: 'bg-slate-900',
+          statusBarBg: 'bg-slate-900 text-white',
+          statusTheme: 'dark' as const,
+          navBarBg: 'bg-slate-900 border-slate-800 text-white',
+          navTheme: 'dark' as const,
+        };
+      case 'receipt':
+        return {
+          rootBg: 'bg-white',
+          statusBarBg: 'bg-[#70189F] text-white',
+          statusTheme: 'cbe' as const,
+          navBarBg: 'bg-white border-neutral-200 text-neutral-800',
+          navTheme: 'light' as const,
+        };
+      case 'auth':
+        return {
+          rootBg: 'bg-white',
+          statusBarBg: 'bg-white text-neutral-900',
+          statusTheme: 'light' as const,
+          navBarBg: 'bg-white border-neutral-200 text-neutral-800',
+          navTheme: 'light' as const,
+        };
+      case 'main':
+      default:
+        return {
+          rootBg: 'bg-[#70189F]',
+          statusBarBg: 'bg-[#70189F] text-white',
+          statusTheme: 'cbe' as const,
+          navBarBg: 'bg-white border-neutral-200 text-neutral-800',
+          navTheme: 'light' as const,
+        };
     }
   }, [activeView]);
 
@@ -594,7 +688,7 @@ export default function App() {
   return (
     <div 
       id="app-root-wrapper" 
-      className={`h-full min-h-[100dvh] h-[100dvh] w-full ${activeView === 'auth' ? 'bg-white' : 'bg-[#70189F]'} flex flex-col p-0 m-0 font-sans overflow-hidden antialiased select-none relative transition-colors duration-200`}
+      className={`h-full min-h-[100dvh] h-[100dvh] w-full ${viewThemeConfig.rootBg} flex flex-col p-0 m-0 font-sans overflow-hidden antialiased select-none relative transition-colors duration-200`}
     >
       
       {/* Quick App Switcher Dock: Floating unobtrusively in top-right corner on wide screens */}
@@ -678,31 +772,26 @@ export default function App() {
       {/* Main Responsive Edge-to-Edge Canvas */}
       <div 
         id="app-main-canvas"
-        className={`w-full h-full min-h-[100dvh] h-[100dvh] ${
-          activeView === 'auth' || activeView === 'receipt' || activeView === 'telebirr'
-            ? 'bg-white' 
-            : activeView === 'sms' || activeView === 'phone'
-            ? 'bg-black'
-            : activeView === 'admin' || activeView === 'telegram'
-            ? 'bg-slate-900'
-            : activeView === 'truecaller'
-            ? 'bg-slate-950'
-            : activeView === 'dashen'
-            ? 'bg-[#040b18]'
-            : 'bg-[#70189F]'
-        } relative flex flex-col overflow-hidden border-none shadow-none rounded-none transition-colors duration-200`}
+        className={`w-full h-full min-h-[100dvh] h-[100dvh] ${viewThemeConfig.rootBg} relative flex flex-col overflow-hidden border-none shadow-none rounded-none transition-colors duration-200`}
       >
         {/* Real-time Offline Warning Banner */}
         <OfflineBanner />
 
+        {/* Fixed Mobile Status Bar: Theme-aligned across Truecaller, SMS, Phone, Dashen, Telebirr, Telegram, Receipt, Admin, and CBE */}
+        <PhoneStatusBar 
+          theme={viewThemeConfig.statusTheme}
+          className={`${viewThemeConfig.statusBarBg} shrink-0 z-40 transition-colors duration-200`}
+          onClick={() => setShowPhoneSettingsModal(true)}
+        />
+
         {/* Dynamic View Panel Router */}
-        <main className={`flex-1 flex flex-col min-h-0 scrollbar-none ${
+        <main className={`flex-1 flex flex-col min-h-0 scrollbar-none overflow-hidden ${
           activeView === 'admin'
             ? 'h-full overflow-y-auto overflow-x-hidden bg-slate-900 w-full max-w-full min-w-0'
             : activeView === 'sms' 
             ? 'h-full overflow-hidden bg-[#121212]' 
             : activeView === 'truecaller'
-              ? 'h-full overflow-hidden bg-slate-950'
+              ? 'h-full overflow-hidden bg-[#121316]' 
               : activeView === 'phone'
                 ? 'h-full overflow-hidden bg-black'
                 : activeView === 'dashen'
@@ -885,6 +974,23 @@ export default function App() {
           )}
 
         </main>
+
+        {/* Fixed Mobile Navigation Bar: Theme-aligned per subapp (Home Indicator for iOS, 3-Buttons for Android) */}
+        <PhoneNavigationBar 
+          theme={viewThemeConfig.navTheme}
+          className={`${viewThemeConfig.navBarBg} shrink-0 z-40 transition-colors duration-200`}
+          onBack={() => {
+            if (activeView !== 'main') {
+              navigateTo('main', returnTab);
+            }
+          }}
+          onHome={() => {
+            navigateTo('main', 'home');
+          }}
+          onRecents={() => {
+            setIsRecentAppsOpen(true);
+          }}
+        />
       </div>
 
       {/* Android / iPhone Recent Multitasking Apps Modal */}
@@ -896,6 +1002,12 @@ export default function App() {
           setIsRecentAppsOpen(false);
           navigateTo(appId as any, 'home');
         }}
+      />
+
+      {/* Phone & Status Bar Settings Modal: Quick customize phone models, clock, battery, wifi, etc. */}
+      <PhoneSettingsModal 
+        isOpen={showPhoneSettingsModal}
+        onClose={() => setShowPhoneSettingsModal(false)}
       />
     </div>
   );

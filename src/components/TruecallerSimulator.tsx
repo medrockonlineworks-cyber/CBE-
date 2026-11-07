@@ -569,6 +569,23 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
     };
   }, []);
 
+  // Handle mobile navigation bar Back button
+  useEffect(() => {
+    const handlePhoneBack = () => {
+      if (showPickerModal) {
+        setShowPickerModal(false);
+      } else if (isPopdownVisible) {
+        setIsPopdownVisible(false);
+      } else if (view === 'bank_thread') {
+        setView('inbox');
+      } else {
+        onBack();
+      }
+    };
+    window.addEventListener('cbe_phone_back', handlePhoneBack);
+    return () => window.removeEventListener('cbe_phone_back', handlePhoneBack);
+  }, [view, showPickerModal, isPopdownVisible, onBack]);
+
   // Toast notification banner
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -2296,7 +2313,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
     // -------------------------------------------------------------
     if (isIPhone) {
       return (
-        <div className="min-h-screen bg-black text-white flex flex-col font-sans select-none relative pb-safe">
+        <div className="h-full w-full flex-1 bg-black text-white flex flex-col font-sans select-none relative overflow-hidden">
           {/* iOS Top Navigation Bar for Truecaller */}
           <header className="sticky top-0 z-30 px-4 pt-[max(env(safe-area-inset-top,0px),10px)] pb-2 backdrop-blur-xl bg-black/90 border-b border-[#38383A]">
             <div className="flex items-center justify-between h-11">
@@ -2469,7 +2486,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
     // TRUECALLER FOR ANDROID (Clean edge-to-edge layout without fake bars)
     // -------------------------------------------------------------
     return (
-      <div className="min-h-screen bg-[#121316] text-white flex flex-col font-sans select-none relative pb-safe">
+      <div className="h-full w-full flex-1 bg-[#121316] text-white flex flex-col font-sans select-none relative overflow-hidden">
         {/* Google Messages Top App Bar with safe-area spacing */}
         <header className="px-4 pt-[max(env(safe-area-inset-top,0px),10px)] pb-2 flex items-center justify-between sticky top-0 z-30 bg-[#121316]">
           {!isSearching ? (
@@ -2644,7 +2661,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
   // =========================================================================
   if (view === 'bank_thread') {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col font-sans select-none relative overflow-x-hidden pb-safe">
+      <div className="h-full w-full flex-1 bg-black text-white flex flex-col font-sans select-none relative overflow-y-auto">
         
         {/* Toast popup */}
         {toastMessage && (

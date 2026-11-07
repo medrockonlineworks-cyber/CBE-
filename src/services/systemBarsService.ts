@@ -126,6 +126,95 @@ export class SystemBarsService {
     }
   }
 
+  static syncForView(view: string): void {
+    if (typeof document === 'undefined') return;
+
+    let statusBarColor = '#70189F';
+    let navBarColor = '#ffffff';
+    let isDarkStyle = false; // false = dark text/icons on light bar; true = light text/icons on dark/colored bar
+
+    switch (view) {
+      case 'auth':
+      case 'receipt':
+        statusBarColor = '#ffffff';
+        navBarColor = '#ffffff';
+        isDarkStyle = false;
+        break;
+      case 'truecaller':
+        statusBarColor = '#121316';
+        navBarColor = '#121316';
+        isDarkStyle = true;
+        break;
+      case 'sms':
+        statusBarColor = '#121212';
+        navBarColor = '#121212';
+        isDarkStyle = true;
+        break;
+      case 'phone':
+        statusBarColor = '#000000';
+        navBarColor = '#000000';
+        isDarkStyle = true;
+        break;
+      case 'dashen':
+        statusBarColor = '#040b18';
+        navBarColor = '#040b18';
+        isDarkStyle = true;
+        break;
+      case 'telebirr':
+        statusBarColor = '#005fa8';
+        navBarColor = '#ffffff';
+        isDarkStyle = true;
+        break;
+      case 'telegram':
+      case 'admin':
+        statusBarColor = '#0f172a';
+        navBarColor = '#0f172a';
+        isDarkStyle = true;
+        break;
+      case 'main':
+      default:
+        statusBarColor = '#70189F';
+        navBarColor = '#ffffff';
+        isDarkStyle = true;
+        break;
+    }
+
+    // Top status bar meta tags
+    const themeMetas = document.querySelectorAll(
+      'meta[name="theme-color"], meta[name="msapplication-navbutton-color"]'
+    );
+    themeMetas.forEach(meta => meta.setAttribute('content', statusBarColor));
+
+    // Bottom navigation bar meta tags
+    const navMetas = document.querySelectorAll('meta[name="navigation-bar-color"]');
+    navMetas.forEach(meta => meta.setAttribute('content', navBarColor));
+
+    // iOS Safari apple-mobile-web-app-status-bar-style:
+    // black-translucent shows white status bar icons/text over colored or dark background
+    // default shows dark icons over light background
+    const appleStatusBar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+    if (appleStatusBar) {
+      appleStatusBar.setAttribute('content', isDarkStyle ? 'black-translucent' : 'default');
+    }
+
+    // Document root backgrounds
+    if (document.documentElement) {
+      document.documentElement.style.backgroundColor = statusBarColor;
+    }
+    if (document.body) {
+      document.body.style.backgroundColor = statusBarColor;
+    }
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
+        StatusBar.setStyle({ style: isDarkStyle ? Style.Light : Style.Dark }).catch(() => {});
+      } catch (err) {
+        console.warn('[SystemBars] Capacitor status bar error:', err);
+      }
+    }
+  }
+
   static restoreFromModal(): void {
     this.syncCurrent();
   }

@@ -210,6 +210,26 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
     };
   }, [refreshAccounts, reloadMessages]);
 
+  // Support mobile navigation bar Back button
+  useEffect(() => {
+    const handlePhoneBack = () => {
+      if (showReceiptModal) {
+        setShowReceiptModal(null);
+      } else if (showHolidayCardModal) {
+        setShowHolidayCardModal(false);
+      } else if (showAccountModal) {
+        setShowAccountModal(false);
+      } else if (pageView !== 'inbox') {
+        refreshThreads();
+        setPageView('inbox');
+      } else {
+        onBack();
+      }
+    };
+    window.addEventListener('cbe_phone_back', handlePhoneBack);
+    return () => window.removeEventListener('cbe_phone_back', handlePhoneBack);
+  }, [pageView, showReceiptModal, showHolidayCardModal, showAccountModal, onBack]);
+
   // Current active account details
   const activeAccount = useMemo(() => {
     return (accounts || []).find(a => a && a.accountNumber === activeAccountNum) || {
