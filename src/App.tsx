@@ -69,9 +69,14 @@ class ViewErrorBoundary extends React.Component<ViewErrorBoundaryProps, ViewErro
             <AlertCircle className="w-8 h-8" />
           </div>
           <h2 className="text-lg font-bold mb-2">Unable to load {this.props.viewName}</h2>
-          <p className="text-xs text-neutral-400 max-w-sm mb-6 leading-relaxed">
+          <p className="text-xs text-neutral-400 max-w-sm mb-4 leading-relaxed">
             A temporary display error was encountered while reading messages. You can reset message storage or return to CBE Mobile Banking.
           </p>
+          {this.state.error && (
+            <p className="text-[11px] text-rose-400/80 font-mono max-w-sm mb-6 p-2 bg-rose-950/30 rounded border border-rose-900/40 break-words">
+              {this.state.error.message}
+            </p>
+          )}
           <div className="flex items-center gap-3">
             <button
               onClick={this.handleReset}
@@ -673,7 +678,19 @@ export default function App() {
       {/* Main Responsive Edge-to-Edge Canvas */}
       <div 
         id="app-main-canvas"
-        className={`w-full h-full min-h-[100dvh] h-[100dvh] ${activeView === 'auth' || activeView === 'receipt' ? 'bg-white' : 'bg-[#70189F]'} relative flex flex-col overflow-hidden border-none shadow-none rounded-none transition-colors duration-200`}
+        className={`w-full h-full min-h-[100dvh] h-[100dvh] ${
+          activeView === 'auth' || activeView === 'receipt' || activeView === 'telebirr'
+            ? 'bg-white' 
+            : activeView === 'sms' || activeView === 'phone'
+            ? 'bg-black'
+            : activeView === 'admin' || activeView === 'telegram'
+            ? 'bg-slate-900'
+            : activeView === 'truecaller'
+            ? 'bg-slate-950'
+            : activeView === 'dashen'
+            ? 'bg-[#040b18]'
+            : 'bg-[#70189F]'
+        } relative flex flex-col overflow-hidden border-none shadow-none rounded-none transition-colors duration-200`}
       >
         {/* Real-time Offline Warning Banner */}
         <OfflineBanner />

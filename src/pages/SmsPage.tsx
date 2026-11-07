@@ -178,10 +178,14 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
     reloadMessages(activeAccountNumRef.current);
     refreshThreads();
 
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
     const handleSmsUpdated = () => {
-      reloadMessages(activeAccountNumRef.current);
-      setAccounts(SmsService.getAccounts() || []);
-      refreshThreads();
+      if (debounceTimer) clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        reloadMessages(activeAccountNumRef.current);
+        setAccounts(SmsService.getAccounts() || []);
+        refreshThreads();
+      }, 50);
     };
 
     const handleActiveAccChanged = (e: CustomEvent<string>) => {
@@ -198,6 +202,7 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
     window.addEventListener('sms-active-account-changed', handleActiveAccChanged as EventListener);
 
     return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
       window.removeEventListener('sms-updated', handleSmsUpdated);
       window.removeEventListener('sms-created', handleSmsUpdated);
       window.removeEventListener('sms-accounts-updated', handleSmsUpdated);
@@ -288,7 +293,8 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
 
   // Format message text with active links matching screenshot
   const renderMessageContent = (msg: SmsMessage) => {
-    const text = msg.message;
+    const text = msg?.message || '';
+    if (!text) return null;
     // URL regex to make links clickable
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const parts = text.split(urlRegex);
@@ -328,14 +334,15 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
 
   // Partition messages around unread line
   const unreadIndex = useMemo(() => {
-    return messages.findIndex(m => !m.read);
+    return (messages || []).findIndex(m => m && !m.read);
   }, [messages]);
 
   // Sort messages: newest first if recentFirst is true (so recent transaction appears at top)
   const sortedMessages = useMemo(() => {
-    return [...messages].sort((a, b) => {
-      const timeA = new Date(a.timestamp).getTime() || 0;
-      const timeB = new Date(b.timestamp).getTime() || 0;
+    const valid = (messages || []).filter(Boolean);
+    return valid.sort((a, b) => {
+      const timeA = a?.timestamp ? new Date(a.timestamp).getTime() || 0 : 0;
+      const timeB = b?.timestamp ? new Date(b.timestamp).getTime() || 0 : 0;
       return recentFirst ? timeB - timeA : timeA - timeB;
     });
   }, [messages, recentFirst]);

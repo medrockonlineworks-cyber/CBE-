@@ -51,7 +51,12 @@ export const AppleMessagesThread: React.FC<AppleMessagesThreadProps> = ({
 
   // Sort messages newest first so recent transaction appears at top
   const sortedMessages = useMemo(() => {
-    return [...messages].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    const valid = (messages || []).filter(Boolean);
+    return valid.sort((a, b) => {
+      const timeA = a?.timestamp ? new Date(a.timestamp).getTime() || 0 : 0;
+      const timeB = b?.timestamp ? new Date(b.timestamp).getTime() || 0 : 0;
+      return timeB - timeA;
+    });
   }, [messages]);
 
   useEffect(() => {
@@ -74,6 +79,7 @@ export const AppleMessagesThread: React.FC<AppleMessagesThreadProps> = ({
 
   // Helper to highlight phone numbers, shortcodes, and URLs in light blue matching IMG_0092.png
   const renderFormattedText = (text: string, rawMsg?: SmsMessage) => {
+    if (!text) return null;
     // Regex matches URLs, shortcodes like 30000, USSD like *799# or *777#
     const pattern = /(https?:\/\/[^\s]+|\*\d+#|\b\d{4,6}\b)/g;
     const parts = text.split(pattern);
@@ -155,16 +161,17 @@ export const AppleMessagesThread: React.FC<AppleMessagesThreadProps> = ({
         {isGeneric && thread?.messages && thread.messages.length > 0 ? (
           thread.messages.map((msg, index) => {
             const isOutgoing = msg.isOutgoing;
+            const tsStr = typeof msg?.timestamp === 'string' ? msg.timestamp : '';
             // Show timestamp header when appropriate
-            const showTimestamp = index === 0 || msg.timestamp.includes('Yesterday') || msg.timestamp.includes('Today');
+            const showTimestamp = index === 0 || tsStr.includes('Yesterday') || tsStr.includes('Today');
 
             return (
               <div key={msg.id || index} className="space-y-1">
                 {showTimestamp && (
                   <div className="text-center text-[12px] font-medium text-[#8e8e93] my-2.5">
-                    {msg.timestamp.includes('Yesterday') || msg.timestamp.includes('Today') 
-                      ? msg.timestamp 
-                      : `Today ${msg.timestamp}`}
+                    {tsStr.includes('Yesterday') || tsStr.includes('Today') 
+                      ? tsStr 
+                      : `Today ${tsStr}`}
                   </div>
                 )}
 
@@ -185,7 +192,7 @@ export const AppleMessagesThread: React.FC<AppleMessagesThreadProps> = ({
         ) : (
           /* CBE Banking SMS Messages (Recent transactions appear at top) */
           sortedMessages.map((msg, index) => {
-            const timeHeader = formatBubbleTime(msg.timestamp);
+            const timeHeader = formatBubbleTime(msg?.timestamp || new Date().toISOString());
 
             return (
               <div key={msg.id || index} className="space-y-1">
@@ -195,7 +202,7 @@ export const AppleMessagesThread: React.FC<AppleMessagesThreadProps> = ({
 
                 <div className="flex justify-start">
                   <div className="bg-[#26252a] text-white p-3.5 rounded-[20px] rounded-bl-[4px] max-w-[85%] text-[15px] leading-relaxed select-text shadow-xs">
-                    {renderFormattedText(msg.message, msg)}
+                    {renderFormattedText(msg?.message, msg)}
                   </div>
                 </div>
               </div>

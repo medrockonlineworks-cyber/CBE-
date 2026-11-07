@@ -496,7 +496,7 @@ export class SmsService {
       } catch {}
 
       if (modified) {
-        this.saveAccounts(list);
+        this.saveAccounts(list, false);
       }
       return list;
     } catch {
@@ -566,7 +566,7 @@ export class SmsService {
       }
 
       if (modified) {
-        this.saveAccounts(accounts, true);
+        this.saveAccounts(accounts, false);
       }
     } catch (err) {
       console.error('[SmsService] Error in ensureAccountsBatch:', err);
