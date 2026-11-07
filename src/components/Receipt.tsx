@@ -675,7 +675,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       onDoubleClick={handleScreenDoubleClick}
       onTouchStart={handleScreenTouchStart}
       onTouchEnd={handleScreenTouchEnd}
-      className="h-[100dvh] max-h-[100dvh] max-w-md mx-auto bg-[#70189F] text-slate-800 flex flex-col relative overflow-hidden select-none cursor-pointer"
+      className="h-[100dvh] max-h-[100dvh] max-w-md mx-auto bg-white text-slate-800 flex flex-col relative overflow-hidden select-none cursor-pointer"
     >
       
       {/* Floating Home Back Button when in clean screenshot view mode (like Image 1) */}
@@ -722,71 +722,72 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         </div>
       )}
 
-      {/* 1. Phone Top Status Bar & Receipt Master Container (Captures EXACT receipt view matching Image 2 on Android & iOS) */}
-      {/* 1. Phone Top Status Bar & Receipt Master Container (Captures EXACT receipt view matching Image 2 on Android & iOS) */}
+      {/* 1. Phone Top Status Bar & Receipt Master Container (Pure white background extending to bottom edge of device) */}
       <div 
         ref={receiptRef}
         id="cbe-full-receipt-capture-target"
         data-capturing={isCapturing ? "true" : "false"}
-        className="w-full flex-1 flex flex-col justify-between bg-[#70189F] relative select-none h-full overflow-hidden min-h-0"
+        className="w-full flex-1 flex flex-col justify-between bg-white relative select-none h-full overflow-hidden min-h-0"
       >
         {/* 2. RECEIPT CONTENT CONTAINER (Edge-to-Edge like real CBE Mobile Banking) */}
         <div 
           id="cbe-existing-receipt"
-          className="w-full flex-1 flex flex-col bg-[#70189F] relative select-none h-full overflow-hidden min-h-0"
+          className="w-full flex-1 flex flex-col bg-white relative select-none h-full overflow-hidden min-h-0"
         >
-          {/* Top Purple Navigation / App Header: Exact authentic CBE Bank top design with proper vertical height and curve position matching reference */}
-          <div className="pt-[max(calc(env(safe-area-inset-top,0px)+16px),52px)] sm:pt-[max(calc(env(safe-area-inset-top,0px)+20px),58px)] pb-14 sm:pb-16 px-5 bg-[#70189F] flex items-center justify-between text-white flex-shrink-0">
-            <div className="flex items-center gap-2.5">
-              {/* Solid White Shield with Purple Checkmark Icon matching original reference */}
-              <div className="w-8.5 h-8.5 flex-shrink-0 flex items-center justify-center">
-                <svg className="w-8.5 h-8.5 drop-shadow-xs" viewBox="0 0 24 24" fill="none">
-                  <path 
-                    d="M12 2.2c0.3 0 0.6 0.1 0.9 0.2l6.5 2.6c0.5 0.2 0.8 0.7 0.8 1.2v5.6c0 4.8-3.0 9.2-7.5 10.7-.5 0.2-1.0 0.2-1.4 0-4.5-1.5-7.5-5.9-7.5-10.7V6.2c0-.5.3-1 .8-1.2l6.5-2.6c.3-.1.6-.2.9-.2z" 
-                    fill="#ffffff" 
-                  />
-                  <path 
-                    d="M8.0 12.2L11.0 15.2L17.2 9.0" 
-                    stroke="#70189F" 
-                    strokeWidth="1.9" 
-                    strokeLinecap="butt" 
-                    strokeLinejoin="miter" 
-                    strokeMiterlimit="4" 
-                    shapeRendering="geometricPrecision"
-                  />
-                </svg>
+          {/* Top Purple Navigation / App Header: background extends behind rounded-t-[38px] curve */}
+          <div className="bg-[#70189F] pb-10 -mb-10 flex-shrink-0 relative z-10">
+            <div className="pt-[max(calc(env(safe-area-inset-top,0px)+16px),52px)] sm:pt-[max(calc(env(safe-area-inset-top,0px)+20px),58px)] pb-14 sm:pb-16 px-5 flex items-center justify-between text-white flex-shrink-0">
+              <div className="flex items-center gap-2.5">
+                {/* Solid White Shield with Purple Checkmark Icon matching original reference */}
+                <div className="w-8.5 h-8.5 flex-shrink-0 flex items-center justify-center">
+                  <svg className="w-8.5 h-8.5 drop-shadow-xs" viewBox="0 0 24 24" fill="none">
+                    <path 
+                      d="M12 2.2c0.3 0 0.6 0.1 0.9 0.2l6.5 2.6c0.5 0.2 0.8 0.7 0.8 1.2v5.6c0 4.8-3.0 9.2-7.5 10.7-.5 0.2-1.0 0.2-1.4 0-4.5-1.5-7.5-5.9-7.5-10.7V6.2c0-.5.3-1 .8-1.2l6.5-2.6c.3-.1.6-.2.9-.2z" 
+                      fill="#ffffff" 
+                    />
+                    <path 
+                      d="M8.0 12.2L11.0 15.2L17.2 9.0" 
+                      stroke="#70189F" 
+                      strokeWidth="1.9" 
+                      strokeLinecap="butt" 
+                      strokeLinejoin="miter" 
+                      strokeMiterlimit="4" 
+                      shapeRendering="geometricPrecision"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h2 
+                    className="font-bold text-[18px] sm:text-[19px] leading-snug text-white tracking-normal"
+                    style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif' }}
+                  >
+                    Thank you
+                  </h2>
+                  <p 
+                    className="text-[13px] sm:text-[13.5px] text-purple-100/90 font-normal leading-snug mt-0.5 tracking-normal"
+                    style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}
+                  >
+                    Success
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 
-                  className="font-bold text-[18px] sm:text-[19px] leading-snug text-white tracking-normal"
-                  style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif' }}
-                >
-                  Thank you
-                </h2>
-                <p 
-                  className="text-[13px] sm:text-[13.5px] text-purple-100/90 font-normal leading-snug mt-0.5 tracking-normal"
-                  style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}
-                >
-                  Success
-                </p>
-              </div>
+              {/* Top-Right Screenshot Icon Button (excluded from captured screenshot) */}
+              <button
+                type="button"
+                id="btn-top-screenshot"
+                data-screenshot-exclude="true"
+                onClick={handleScreenshot}
+                className="p-2 -mr-1 rounded-full text-white/90 hover:text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer flex items-center justify-center"
+                title="Take screenshot"
+                aria-label="Take screenshot"
+              >
+                <ScreenshotViewfinderIcon className="w-6 h-6 text-white" strokeWidth={1.9} />
+              </button>
             </div>
-            {/* Top-Right Screenshot Icon Button (excluded from captured screenshot) */}
-            <button
-              type="button"
-              id="btn-top-screenshot"
-              data-screenshot-exclude="true"
-              onClick={handleScreenshot}
-              className="p-2 -mr-1 rounded-full text-white/90 hover:text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer flex items-center justify-center"
-              title="Take screenshot"
-              aria-label="Take screenshot"
-            >
-              <ScreenshotViewfinderIcon className="w-6 h-6 text-white" strokeWidth={1.9} />
-            </button>
           </div>
 
           {/* STATIC/UNSCROLLEABLE TOP CURVE CAP WITH OVERLAPPING ANIMATED CHECKMARK BADGE */}
-          <div className="bg-white rounded-t-[38px] rounded-b-none relative flex-shrink-0 z-20 -mt-0.5 border-none outline-none">
+          <div className="bg-white rounded-t-[38px] rounded-b-none relative flex-shrink-0 z-20 border-none outline-none">
             {/* Overlapping Large Success Checkmark Badge (matching real CBE Bank: animated breathing pulse, strictly original size when taking screenshot) */}
             <div className="relative flex justify-center flex-shrink-0">
               <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 top-0 w-[90px] h-[90px] pointer-events-none select-none z-30 flex items-center justify-center">
@@ -1088,7 +1089,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           zIndex: -100,
           pointerEvents: 'none',
           opacity: 1,
-          backgroundColor: '#70189F',
+          backgroundColor: '#ffffff',
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
@@ -1096,7 +1097,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         }}
         aria-hidden="true"
       >
-        {/* Top Purple Header: Explicit inline styles for rock-solid Android rendering */}
+        {/* Top Purple Header: Explicit inline styles for rock-solid Android rendering with purple extension behind curve */}
         <div 
           style={{ 
             width: '100%', 
@@ -1107,6 +1108,10 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
             userSelect: 'none',
             flexShrink: 0,
+            paddingBottom: '38px',
+            marginBottom: '-38px',
+            position: 'relative',
+            zIndex: 1,
           }}
         >
           <div 
@@ -1167,7 +1172,6 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             backgroundColor: '#ffffff', 
             borderTopLeftRadius: '38px', 
             borderTopRightRadius: '38px', 
-            marginTop: '-2px',
             border: 'none',
             outline: 'none',
             paddingLeft: '16px', 
@@ -1181,6 +1185,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             userSelect: 'none', 
             minHeight: 0,
             boxSizing: 'border-box',
+            zIndex: 2,
           }}
         >
           {/* Overlapping Large Success Checkmark Badge (matching Image 2) */}

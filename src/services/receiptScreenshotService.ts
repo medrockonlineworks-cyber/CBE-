@@ -266,7 +266,7 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
       scale: pixelRatio,
       useCORS: true,
       allowTaint: true,
-      backgroundColor: element.id === 'cbe-screenshot-exact-target' ? '#70189F' : '#ffffff',
+      backgroundColor: '#ffffff',
       logging: false,
       imageTimeout: 15000,
       scrollX: 0,

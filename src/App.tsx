@@ -673,7 +673,7 @@ export default function App() {
       {/* Main Responsive Edge-to-Edge Canvas */}
       <div 
         id="app-main-canvas"
-        className={`w-full h-full min-h-[100dvh] h-[100dvh] ${activeView === 'auth' ? 'bg-white' : 'bg-[#70189F]'} relative flex flex-col overflow-hidden border-none shadow-none rounded-none transition-colors duration-200`}
+        className={`w-full h-full min-h-[100dvh] h-[100dvh] ${activeView === 'auth' || activeView === 'receipt' ? 'bg-white' : 'bg-[#70189F]'} relative flex flex-col overflow-hidden border-none shadow-none rounded-none transition-colors duration-200`}
       >
         {/* Real-time Offline Warning Banner */}
         <OfflineBanner />
@@ -694,7 +694,9 @@ export default function App() {
                     ? 'h-full overflow-hidden bg-white'
                     : activeView === 'telegram'
                       ? 'h-full overflow-hidden bg-slate-900'
-                      : 'h-full overflow-hidden'
+                      : activeView === 'receipt'
+                        ? 'h-full overflow-hidden bg-white'
+                        : 'h-full overflow-hidden'
         }`}>
           
           {activeView === 'auth' && (
@@ -736,8 +738,8 @@ export default function App() {
           )}
 
           {activeView === 'receipt' && selectedTransaction && (
-            <div className="flex-1 flex flex-col h-full w-full overflow-hidden relative">
-              <div className="flex-1 min-h-0 w-full overflow-hidden relative">
+            <div className="flex-1 flex flex-col h-full w-full overflow-hidden relative bg-white">
+              <div className="flex-1 min-h-0 w-full overflow-hidden relative bg-white">
                 <Receipt 
                   transaction={selectedTransaction}
                   onBack={() => {
