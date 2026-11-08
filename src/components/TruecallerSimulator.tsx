@@ -2755,7 +2755,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                     {/* Charcoal SMS Message Bubble matching screenshot */}
                     <div 
                       onClick={() => setBubbleActionTx(tx)}
-                      className="bg-[#20232a] hover:bg-[#252932] active:scale-[0.99] rounded-[18px] px-4 py-3.5 text-white shadow-md transition cursor-pointer border border-[#2d313b]/70"
+                      className="bg-[#20232a] hover:bg-[#252932] active:scale-[0.99] rounded-[18px] px-4 py-3.5 text-white shadow-md transition cursor-pointer border border-[#2d313b]/70 overflow-hidden break-words [overflow-wrap:anywhere]"
                     >
                       {/* Formatted message text with clickable receipt links */}
                       <div className="text-[13.5px] leading-[1.45] text-white whitespace-pre-line font-normal break-words">

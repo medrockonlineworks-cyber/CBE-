@@ -834,7 +834,7 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
                         isDarkMode 
                           ? 'bg-[#212226] text-[#e8eaed] border-neutral-800/40 shadow-sm' 
                           : 'bg-white text-[#1f2328] border-neutral-200/90 shadow-sm'
-                      } rounded-2xl rounded-tl-sm px-4 py-3 border relative group`}
+                      } rounded-2xl rounded-tl-sm px-4 py-3 border relative group break-words [overflow-wrap:anywhere] overflow-hidden`}
                     >
                       {/* Render text with hyperlinks */}
                       {renderMessageContent(msg)}

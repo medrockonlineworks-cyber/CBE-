@@ -85,7 +85,7 @@ export const AppleMessagesThread: React.FC<AppleMessagesThreadProps> = ({
     const parts = text.split(pattern);
 
     return (
-      <span className="whitespace-pre-line leading-relaxed">
+      <span className="whitespace-pre-line leading-relaxed break-words [overflow-wrap:anywhere] [word-break:break-word] w-full block">
         {parts.map((part, idx) => {
           if (part.match(pattern)) {
             const isHoliday = part.includes('combanketh.et/holidays');
@@ -102,61 +102,59 @@ export const AppleMessagesThread: React.FC<AppleMessagesThreadProps> = ({
                     onOpenWebReceipt(rawMsg);
                   }
                 }}
-                className="text-[#2997ff] underline cursor-pointer hover:opacity-80 active:opacity-60 inline"
+                className="text-[#2997ff] underline cursor-pointer hover:opacity-80 active:opacity-60 inline break-all [overflow-wrap:anywhere]"
               >
                 {part}
               </span>
             );
           }
-          return <span key={idx}>{part}</span>;
+          return <span key={idx} className="break-words [overflow-wrap:anywhere]">{part}</span>;
         })}
       </span>
     );
   };
 
   return (
-    <div className="h-full flex-1 flex flex-col font-sans select-none bg-black text-white relative overflow-hidden">
+    <div className="h-full w-full flex-1 flex flex-col font-sans select-none bg-black text-white relative overflow-hidden overflow-x-hidden touch-pan-y">
 
-
-      {/* 2. Top Navigation Bar (Back pill on left, Large Avatar & Contact Pill in center) */}
-      <div className="px-3 pt-[max(env(safe-area-inset-top,0px),10px)] pb-3 flex items-center justify-between relative border-b border-[#2c2c2e]/60">
+      {/* 2. Top Navigation Bar: Opaque Black header containing Avatar & Pill, with Back button */}
+      <header className="w-full bg-black border-b border-[#2c2c2e]/80 shrink-0 z-30 pt-[max(env(safe-area-inset-top,0px),10px)] pb-3 px-3 relative flex flex-col items-center">
         {/* Left: Back button in dark pill with count 1 */}
-        <button
-          type="button"
-          onClick={onBack}
-          className="bg-[#2c2c2e] hover:bg-[#3a3a3c] active:scale-95 px-3 py-1.5 rounded-full flex items-center gap-1.5 text-white transition-transform cursor-pointer shadow-sm z-10"
-          title="Back to Messages"
-        >
-          <ChevronLeft className="w-5 h-5 -ml-1 stroke-[2.5]" />
-          <span className="w-4 h-4 bg-white text-black text-[11px] font-bold rounded-full flex items-center justify-center">
-            1
-          </span>
-        </button>
+        <div className="w-full flex items-center justify-between h-9 z-20">
+          <button
+            type="button"
+            onClick={onBack}
+            className="bg-[#2c2c2e] hover:bg-[#3a3a3c] active:scale-95 px-3 py-1 rounded-full flex items-center gap-1.5 text-white transition-transform cursor-pointer shadow-sm"
+            title="Back to Messages"
+          >
+            <ChevronLeft className="w-4.5 h-4.5 -ml-1 stroke-[2.5]" />
+            <span className="w-4 h-4 bg-white text-black text-[11px] font-bold rounded-full flex items-center justify-center">
+              1
+            </span>
+          </button>
+        </div>
 
         {/* Center: Profile Icon & Contact Pill (Tapping opens Profile & Settings!) */}
         <div 
           onClick={() => setShowProfileModal(true)}
-          className="absolute inset-x-0 top-0 flex flex-col items-center justify-center cursor-pointer group pt-1"
+          className="-mt-7 flex flex-col items-center justify-center cursor-pointer group z-10"
           title="Open Profile and Settings"
         >
           {/* Large Circular Avatar (#545458 with white User silhouette) */}
-          <div className="w-14 h-14 bg-[#545458] rounded-full flex items-center justify-center text-white shadow-md group-hover:scale-105 active:scale-95 transition-transform">
-            <User className="w-8 h-8 text-white stroke-[2.2]" />
+          <div className="w-12 h-12 bg-[#545458] rounded-full flex items-center justify-center text-white shadow-md group-hover:scale-105 active:scale-95 transition-transform">
+            <User className="w-7 h-7 text-white stroke-[2.2]" />
           </div>
 
           {/* Contact Pill with Chevron > */}
-          <div className="bg-[#2c2c2e]/90 hover:bg-[#3a3a3c] px-3.5 py-1 rounded-full text-white font-semibold text-[13px] flex items-center gap-1 mt-1 shadow-xs transition-colors">
-            <span className="truncate max-w-[200px]">{senderTitle}</span>
-            <ChevronRight className="w-3.5 h-3.5 text-[#8e8e93]" />
+          <div className="bg-[#2c2c2e]/90 hover:bg-[#3a3a3c] px-3.5 py-1 rounded-full text-white font-semibold text-[13px] flex items-center gap-1 mt-1.5 shadow-xs transition-colors max-w-[280px]">
+            <span className="truncate">{senderTitle}</span>
+            <ChevronRight className="w-3.5 h-3.5 text-[#8e8e93] shrink-0" />
           </div>
         </div>
-
-        {/* Right spacing anchor */}
-        <div className="w-12 h-6" />
-      </div>
+      </header>
 
       {/* 3. Messages Stream (Matching IMG_0092.png) */}
-      <div className="flex-1 overflow-y-auto px-4 pt-4 pb-24 space-y-4">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pt-3 pb-24 space-y-4 w-full">
         {/* Generic Thread Messages (e.g. Safaricom from screenshot) */}
         {isGeneric && thread?.messages && thread.messages.length > 0 ? (
           thread.messages.map((msg, index) => {
@@ -175,9 +173,9 @@ export const AppleMessagesThread: React.FC<AppleMessagesThreadProps> = ({
                   </div>
                 )}
 
-                <div className={`flex ${isOutgoing ? 'justify-end' : 'justify-start'}`}>
+                <div className={`flex ${isOutgoing ? 'justify-end' : 'justify-start'} w-full`}>
                   <div 
-                    className={`p-3.5 rounded-[20px] max-w-[85%] text-[15px] leading-relaxed select-text shadow-xs ${
+                    className={`p-3.5 rounded-[20px] max-w-[85%] text-[15px] leading-relaxed select-text shadow-xs break-words [overflow-wrap:anywhere] overflow-hidden ${
                       isOutgoing 
                         ? 'bg-[#007aff] text-white rounded-br-[4px]' 
                         : 'bg-[#26252a] text-white rounded-bl-[4px]'
@@ -200,8 +198,8 @@ export const AppleMessagesThread: React.FC<AppleMessagesThreadProps> = ({
                   {timeHeader}
                 </div>
 
-                <div className="flex justify-start">
-                  <div className="bg-[#26252a] text-white p-3.5 rounded-[20px] rounded-bl-[4px] max-w-[85%] text-[15px] leading-relaxed select-text shadow-xs">
+                <div className="flex justify-start w-full">
+                  <div className="bg-[#26252a] text-white p-3.5 rounded-[20px] rounded-bl-[4px] max-w-[85%] text-[15px] leading-relaxed select-text shadow-xs break-words [overflow-wrap:anywhere] overflow-hidden">
                     {renderFormattedText(msg?.message, msg)}
                   </div>
                 </div>
