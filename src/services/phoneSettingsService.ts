@@ -5,6 +5,7 @@ export type PhoneModelType = 'tecno' | 'samsung' | 'pixel' | 'iphone' | 'xiaomi'
 export type NavigationBarStyle = 'buttons' | 'gesture' | 'none';
 export type SoundMode = 'mute' | 'vibrate' | 'normal';
 export type NetworkTech = 'H+' | '4G' | '5G' | 'LTE' | '3G' | 'None';
+export type BrowserHeaderType = 'chrome' | 'opera' | 'safari' | 'samsung' | 'phoenix' | 'firefox';
 
 export interface PhoneSettings {
   phoneModel: PhoneModelType;
@@ -21,6 +22,7 @@ export interface PhoneSettings {
   soundMode: SoundMode;
   showBluetooth: boolean;
   navBarStyle: NavigationBarStyle;
+  receiptBrowser: BrowserHeaderType;
 }
 
 const STORAGE_KEY = 'tana_phone_settings_v1';
@@ -42,6 +44,7 @@ export const PHONE_PRESETS: Record<PhoneModelType, PhoneSettings> = {
     soundMode: 'mute',
     showBluetooth: false,
     navBarStyle: 'buttons',
+    receiptBrowser: 'phoenix',
   },
   samsung: {
     phoneModel: 'samsung',
@@ -58,6 +61,7 @@ export const PHONE_PRESETS: Record<PhoneModelType, PhoneSettings> = {
     soundMode: 'normal',
     showBluetooth: true,
     navBarStyle: 'buttons',
+    receiptBrowser: 'samsung',
   },
   pixel: {
     phoneModel: 'pixel',
@@ -74,6 +78,7 @@ export const PHONE_PRESETS: Record<PhoneModelType, PhoneSettings> = {
     soundMode: 'normal',
     showBluetooth: false,
     navBarStyle: 'buttons',
+    receiptBrowser: 'chrome',
   },
   iphone: {
     phoneModel: 'iphone',
@@ -90,6 +95,7 @@ export const PHONE_PRESETS: Record<PhoneModelType, PhoneSettings> = {
     soundMode: 'normal',
     showBluetooth: false,
     navBarStyle: 'gesture',
+    receiptBrowser: 'safari',
   },
   xiaomi: {
     phoneModel: 'xiaomi',
@@ -106,6 +112,7 @@ export const PHONE_PRESETS: Record<PhoneModelType, PhoneSettings> = {
     soundMode: 'mute',
     showBluetooth: false,
     navBarStyle: 'buttons',
+    receiptBrowser: 'chrome',
   },
 };
 
@@ -136,19 +143,24 @@ export class PhoneSettingsService {
 
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
+      const savedBrowser = localStorage.getItem('cbe_receipt_browser_type') as BrowserHeaderType | null;
       if (saved) {
         const parsed = JSON.parse(saved);
         const resolvedModel = parsed.phoneModel || defaultPreset.phoneModel;
         const resolvedNavBar = parsed.navBarStyle && parsed.navBarStyle !== 'none'
           ? parsed.navBarStyle
           : (resolvedModel === 'iphone' ? 'gesture' : 'buttons');
+        const resolvedBrowser = savedBrowser || parsed.receiptBrowser || defaultPreset.receiptBrowser || 'chrome';
 
         this.cachedSettings = {
           ...defaultPreset,
           ...parsed,
           navBarStyle: resolvedNavBar,
+          receiptBrowser: resolvedBrowser,
         };
         return { ...this.cachedSettings };
+      } else if (savedBrowser) {
+        defaultPreset.receiptBrowser = savedBrowser;
       }
     } catch {
       // Fallback
@@ -168,6 +180,9 @@ export class PhoneSettingsService {
 
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      if (partial.receiptBrowser) {
+        localStorage.setItem('cbe_receipt_browser_type', partial.receiptBrowser);
+      }
       window.dispatchEvent(new CustomEvent(EVENT_NAME, { detail: updated }));
     } catch {
       // Non-blocking

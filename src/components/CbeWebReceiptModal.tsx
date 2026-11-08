@@ -56,8 +56,9 @@ import {
   ArrowDown,
   ArrowRight
 } from 'lucide-react';
+import { PhoneSettingsService, BrowserHeaderType } from '../services/phoneSettingsService';
 
-export type BrowserHeaderType = 'chrome' | 'phoenix' | 'opera' | 'samsung' | 'safari';
+export type { BrowserHeaderType };
 
 interface CbeWebReceiptModalProps {
   transaction?: Transaction | null;
@@ -191,41 +192,68 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [copiedUrl, setCopiedUrl] = useState(false);
 
-  // Browser bar customization state
+  // Browser bar customization state (synced with settings and localStorage)
   const [browserType, setBrowserType] = useState<BrowserHeaderType>(() => {
-    return (localStorage.getItem('cbe_receipt_browser_type') as BrowserHeaderType) || 'chrome';
+    try {
+      const saved = localStorage.getItem('cbe_receipt_browser_type') as BrowserHeaderType;
+      if (saved && ['chrome', 'opera', 'safari', 'samsung', 'phoenix', 'firefox'].includes(saved)) {
+        return saved;
+      }
+      const fromPhoneSettings = PhoneSettingsService.getSettings().receiptBrowser;
+      if (fromPhoneSettings) return fromPhoneSettings;
+      return PhoneSettingsService.isIPhoneDevice() ? 'safari' : 'chrome';
+    } catch {
+      return 'chrome';
+    }
   });
+
   const [tabCount, setTabCount] = useState<string>(() => {
-    return localStorage.getItem('cbe_receipt_tab_count') || '2';
+    try {
+      return localStorage.getItem('cbe_receipt_tab_count') || '2';
+    } catch {
+      return '2';
+    }
   });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [useLiveTime, setUseLiveTime] = useState<boolean>(() => {
-    return localStorage.getItem('cbe_receipt_live_time') === 'true';
-  });
-  const [currentTime, setCurrentTime] = useState<string>(() => {
-    const d = new Date();
-    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-  });
 
+  // Sync browserType with external changes in PhoneSettings
   useEffect(() => {
-    const timer = setInterval(() => {
-      const d = new Date();
-      setCurrentTime(`${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`);
-    }, 10000);
-    return () => clearInterval(timer);
-  }, []);
+    const unsubscribe = PhoneSettingsService.subscribe((settings) => {
+      if (settings.receiptBrowser && settings.receiptBrowser !== browserType) {
+        setBrowserType(settings.receiptBrowser);
+      }
+    });
+    return () => unsubscribe();
+  }, [browserType]);
+
+  // Sync native physical device status bar / browser theme color
+  useEffect(() => {
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    const prevColor = metaThemeColor?.getAttribute('content') || '#781d77';
+    
+    const browserThemeColors: Record<BrowserHeaderType, string> = {
+      chrome: '#121214',
+      opera: '#0e0e10',
+      safari: '#1c1c1e',
+      samsung: '#181920',
+      phoenix: '#131720',
+      firefox: '#1c1b22',
+    };
+
+    if (metaThemeColor) {
+      metaThemeColor.setAttribute('content', browserThemeColors[browserType] || '#121214');
+    }
+
+    return () => {
+      if (metaThemeColor) {
+        metaThemeColor.setAttribute('content', prevColor);
+      }
+    };
+  }, [browserType]);
+
   const stampFileInputRef = useRef<HTMLInputElement>(null);
   const pdfLogoFileInputRef = useRef<HTMLInputElement>(null);
-
-  // Double-tap/click to hide status bar
-  const [hideStatusBar, setHideStatusBar] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem('cbe_hide_status_bar') === 'true' || localStorage.getItem('cbe_hide_phone_bars') === 'true';
-    } catch {
-      return false;
-    }
-  });
 
   // View Mode: 'web' for mobile web receipt, 'pdf' for official CBE PDF document opened in browser
   const [viewMode, setViewMode] = useState<'web' | 'pdf'>('web');
@@ -254,7 +282,6 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
   const effectiveScale = isAutoFit ? autoFitScale : pdfZoom;
   const [barsToast, setBarsToast] = useState<string | null>(null);
   const barsToastTimerRef = useRef<any>(null);
-  const lastTapRef = useRef<{ time: number; x: number; y: number }>({ time: 0, x: 0, y: 0 });
 
   const showBarsToast = (msg: string) => {
     if (barsToastTimerRef.current) clearTimeout(barsToastTimerRef.current);
@@ -262,71 +289,6 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
     barsToastTimerRef.current = setTimeout(() => {
       setBarsToast(null);
     }, 2200);
-  };
-
-  const isTouchRef = useRef<boolean>(false);
-
-  const toggleStatusBar = () => {
-    setHideStatusBar(prev => {
-      const next = !prev;
-      try {
-        localStorage.setItem('cbe_hide_status_bar', String(next));
-      } catch {}
-      showBarsToast(next ? 'Phone status bar hidden (Double-tap to show)' : 'Phone status bar restored');
-      return next;
-    });
-  };
-
-  const handleScreenClick = (e: React.MouseEvent) => {
-    if (isTouchRef.current) {
-      isTouchRef.current = false;
-      return;
-    }
-    const target = e.target as HTMLElement;
-    if (target.closest('button') || target.closest('a') || target.closest('input') || target.closest('#browser-settings-modal') || target.closest('#stamp-position-toolbar') || target.closest('#cbe-stamp-container')) {
-      return;
-    }
-    const now = Date.now();
-    const timeDiff = now - lastTapRef.current.time;
-    const dist = Math.hypot(e.clientX - lastTapRef.current.x, e.clientY - lastTapRef.current.y);
-
-    if (timeDiff > 50 && timeDiff < 450 && dist < 50) {
-      toggleStatusBar();
-      lastTapRef.current = { time: 0, x: 0, y: 0 };
-    } else {
-      lastTapRef.current = { time: now, x: e.clientX, y: e.clientY };
-    }
-  };
-
-  const handleScreenTouchEnd = (e: React.TouchEvent) => {
-    isTouchRef.current = true;
-    const target = e.target as HTMLElement;
-    if (target.closest('button') || target.closest('a') || target.closest('input') || target.closest('#browser-settings-modal') || target.closest('#stamp-position-toolbar') || target.closest('#cbe-stamp-container')) {
-      return;
-    }
-    if (isDraggingStamp) return;
-
-    const touch = e.changedTouches[0];
-    if (!touch) return;
-
-    const now = Date.now();
-    const timeDiff = now - lastTapRef.current.time;
-    const dist = Math.hypot(touch.clientX - lastTapRef.current.x, touch.clientY - lastTapRef.current.y);
-
-    if (timeDiff > 50 && timeDiff < 450 && dist < 65) {
-      toggleStatusBar();
-      lastTapRef.current = { time: 0, x: 0, y: 0 };
-    } else {
-      lastTapRef.current = { time: now, x: touch.clientX, y: touch.clientY };
-    }
-  };
-
-  const handleScreenDoubleClick = (e: React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.closest('button') || target.closest('a') || target.closest('input') || target.closest('#browser-settings-modal') || target.closest('#stamp-position-toolbar') || target.closest('#cbe-stamp-container')) {
-      return;
-    }
-    toggleStatusBar();
   };
 
   // Retrieve admin uploaded logo and stamp from LocalDb and listen to updates
@@ -1132,7 +1094,19 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
 
   const handleSelectBrowser = (type: BrowserHeaderType) => {
     setBrowserType(type);
-    localStorage.setItem('cbe_receipt_browser_type', type);
+    try {
+      localStorage.setItem('cbe_receipt_browser_type', type);
+      PhoneSettingsService.updateSettings({ receiptBrowser: type });
+    } catch {}
+    const labels: Record<BrowserHeaderType, string> = {
+      chrome: 'Google Chrome',
+      opera: 'Opera Browser',
+      safari: 'Apple Safari',
+      samsung: 'Samsung Internet',
+      phoenix: 'Phoenix Browser',
+      firefox: 'Mozilla Firefox',
+    };
+    showBarsToast(`Browser switched to ${labels[type] || type}`);
   };
 
   const handleSelectTabCount = (count: string) => {
@@ -1198,10 +1172,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
 
   return (
     <div 
-      onClick={handleScreenClick}
-      onDoubleClick={handleScreenDoubleClick}
-      onTouchEnd={handleScreenTouchEnd}
-      className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex flex-col items-center justify-start overflow-hidden animate-fade-in select-none cursor-pointer"
+      className="fixed inset-0 z-50 bg-[#f0f2f5] flex flex-col items-stretch justify-start overflow-hidden w-full h-full min-h-[100dvh] select-none"
     >
       
       {/* Double Tap Floating Notification Toast */}
@@ -1233,106 +1204,35 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
         onChange={handleUploadPdfLogoFile}
       />
 
-      {/* 1. Mobile Phone Status Bar (Present in user screenshot: Clock 12:18 + Airplane, Bluetooth, Silent bell, 25.3 KB/S, Dual SIM H+ & 3G, Battery [62]) */}
-      <div 
-        id="cbe-phone-status-bar"
-        className={`w-full bg-[#121214] text-white px-3.5 pt-2 pb-1 flex items-center justify-between text-xs select-none flex-shrink-0 z-30 font-sans transition-opacity duration-200 ${hideStatusBar ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}
-      >
-        {/* Left: Clock 12:18 + Tilted Paper Airplane Navigation Indicator */}
-        <div className="flex items-center gap-1.5 pl-0.5">
-          <span className="text-[14px] font-semibold tracking-tight text-white font-sans">
-            {useLiveTime ? currentTime : browserType === 'opera' ? '12:19' : '12:18'}
-          </span>
-          {/* Tilted Paper Airplane icon matching image */}
-          <div className="flex items-center justify-center -rotate-45 ml-0.5 -mt-0.5">
-            <svg className="w-[12.5px] h-[12.5px] fill-white shrink-0" viewBox="0 0 24 24">
-              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-            </svg>
-          </div>
-        </div>
-
-        {/* Right Status Icons: Bluetooth, Mute Bell, Network Speed, Dual SIM (H+, 3G), Battery [62] */}
-        <div className="flex items-center gap-2 sm:gap-2.5 pr-0.5">
-          {/* Bluetooth */}
-          <svg className="w-[10px] h-[13px] text-white stroke-[2.2] shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5" />
-          </svg>
-
-          {/* Mute Bell with Slash (Top-Left to Bottom-Right) */}
-          <svg className="w-[13px] h-[13px] text-white shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-            <path d="M18.63 13A17.89 17.89 0 0 1 18 8" />
-            <path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14" />
-            <line x1="2" y1="2" x2="22" y2="22" />
-          </svg>
-
-          {/* Network Speed: 25.3 KB/S (Chrome Image 1) vs 0.00 KB/S (Opera Image 2) */}
-          <div className="flex flex-col items-end leading-[0.82] justify-center text-white shrink-0 font-mono">
-            <span className="text-[8.5px] font-bold tracking-tight">
-              {browserType === 'opera' ? '0.00' : '25.3'}
-            </span>
-            <span className="text-[6.8px] font-extrabold tracking-tighter opacity-90">
-              KB/S
-            </span>
-          </div>
-
-          {/* SIM 1 (H+ with signal bars - all 4 full white) */}
-          <div className="flex flex-col items-center leading-none text-white shrink-0">
-            <span className="text-[7.5px] font-black tracking-tighter mb-0.5">H+</span>
-            <div className="flex items-end gap-[1.2px] h-2">
-              <div className="w-[1.6px] h-0.5 bg-white rounded-2xs" />
-              <div className="w-[1.6px] h-1 bg-white rounded-2xs" />
-              <div className="w-[1.6px] h-1.5 bg-white rounded-2xs" />
-              <div className="w-[1.6px] h-2 bg-white rounded-2xs" />
-            </div>
-          </div>
-
-          {/* SIM 2 (3G with signal bars - all 4 full white) */}
-          <div className="flex flex-col items-center leading-none text-white shrink-0">
-            <span className="text-[7.5px] font-black tracking-tighter mb-0.5">3G</span>
-            <div className="flex items-end gap-[1.2px] h-2">
-              <div className="w-[1.6px] h-0.5 bg-white rounded-2xs" />
-              <div className="w-[1.6px] h-1 bg-white rounded-2xs" />
-              <div className="w-[1.6px] h-1.5 bg-white rounded-2xs" />
-              <div className="w-[1.6px] h-2 bg-white rounded-2xs" />
-            </div>
-          </div>
-
-          {/* Battery pill [ 62 ] */}
-          <div className="flex items-center gap-[1px] shrink-0">
-            <div className="w-7 h-[13px] rounded-[3.5px] border border-white/80 p-[1px] relative flex items-center overflow-hidden bg-[#121214]">
-              <div className="h-full bg-white rounded-xs" style={{ width: '62%' }} />
-              <span className="absolute inset-0 flex items-center justify-center text-[7.5px] font-black text-white mix-blend-difference tracking-tighter select-none">
-                62
-              </span>
-            </div>
-            <div className="w-[1.5px] h-[5px] bg-white/80 rounded-r-[1px]" />
-          </div>
-        </div>
-      </div>
-
-      {/* 2. Mobile Browser Header */}
+      {/* Mobile Browser Headers (Edge-to-Edge with Physical Device Safe-Area Top) */}
       {browserType === 'opera' ? (
-        /* ================= OPERA HEADER (IMAGE 2) ================= */
-        /* Deep black background, no home icon, flat full-width address bar with (i), circular reload arrow & 3-dots */
+        /* ================= 1. OPERA HEADER ================= */
         <header 
           id="cbe-opera-browser-header"
-          className="w-full px-3.5 py-2.5 bg-[#0e0e10] border-b border-neutral-900 flex items-center justify-between text-white flex-shrink-0 z-30 select-none"
+          className="w-full px-3.5 pt-[max(env(safe-area-inset-top,0px),8px)] pb-2.5 bg-[#0e0e10] border-b border-neutral-900 flex items-center justify-between text-white flex-shrink-0 z-30 select-none shadow-sm"
         >
+          {/* Back button */}
+          <button
+            onClick={onClose}
+            aria-label="Back"
+            className="p-1 -ml-1 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-full transition cursor-pointer flex items-center justify-center shrink-0 mr-1.5"
+            title="Return to App"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+
           {/* Left / Center: (i) Info icon + Exact URL: apps.cbe.com.et:100/?id=FT2... */}
           <div 
             onClick={handleCopyLink}
-            className="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer select-none pr-3 py-0.5"
+            className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer select-none pr-2 py-0.5"
             title="Click to copy receipt URL"
           >
-            {/* (i) Info circle icon */}
             <svg viewBox="0 0 24 24" className="w-5 h-5 text-white/95 shrink-0" fill="none" stroke="currentColor" strokeWidth="2.2">
               <circle cx="12" cy="12" r="9.5" />
               <path d="M12 7.5h.01M12 11v5" strokeWidth="2.2" strokeLinecap="round" />
             </svg>
 
-            {/* URL string matching Image 2 */}
-            <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis text-[14.5px] text-[#e5e5e5] font-normal tracking-tight font-sans">
+            <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis text-[14px] text-[#e5e5e5] font-normal tracking-tight font-sans">
               {viewMode === 'pdf' ? (
                 <span className="flex items-center gap-1.5">
                   <span className="bg-red-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-2xs leading-none">PDF</span>
@@ -1346,52 +1246,49 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
             </div>
           </div>
 
-          {/* Right: Circular Refresh Arrow + 3-Dots Menu */}
-          <div className="flex items-center gap-2.5 shrink-0">
-            {/* Circular Refresh Arrow (matching Opera Image 2) */}
+          {/* Right: Circular Refresh Arrow + Tabs count + 3-Dots Menu */}
+          <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={handleRefresh}
               className="p-1 text-neutral-200 hover:text-white transition cursor-pointer flex items-center justify-center"
               title="Reload page"
               aria-label="Reload page"
             >
-              <svg viewBox="0 0 24 24" className={`w-5 h-5 text-neutral-200 stroke-current ${isRefreshing ? 'animate-spin' : ''}`} fill="none" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <svg viewBox="0 0 24 24" className={`w-4.5 h-4.5 text-neutral-200 stroke-current ${isRefreshing ? 'animate-spin' : ''}`} fill="none" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 12a9 9 0 1 1-2.6-6.3L21 8" />
                 <path d="M21 3v5h-5" />
               </svg>
             </button>
 
-            {/* 3-dots */}
+            <button
+              onClick={() => setIsMenuOpen(true)}
+              className="w-5 h-5 rounded-[4px] border border-neutral-400 text-neutral-200 font-bold text-[10.5px] flex items-center justify-center hover:bg-white/10 transition cursor-pointer shrink-0"
+              title="Tabs / Browser Settings"
+            >
+              {tabCount}
+            </button>
+
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="p-1 text-white hover:bg-white/10 rounded-full transition cursor-pointer flex items-center justify-center"
               title="Opera menu & options"
               aria-label="Opera menu & options"
             >
-              <svg viewBox="0 0 24 24" className="w-5.5 h-5.5 fill-white">
-                <circle cx="12" cy="5" r="1.75" />
-                <circle cx="12" cy="12" r="1.75" />
-                <circle cx="12" cy="19" r="1.75" />
+              <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white">
+                <circle cx="12" cy="5" r="1.7" />
+                <circle cx="12" cy="12" r="1.7" />
+                <circle cx="12" cy="19" r="1.7" />
               </svg>
             </button>
           </div>
         </header>
       ) : browserType === 'chrome' ? (
-        /* ================= GOOGLE CHROME HEADER (IMAGE 1) ================= */
-        /* Exact match to user screenshot IMG_20260907_122015_019.png:
-           - Deep background #121214 seamlessly flowing from status bar
-           - Home outline button (clean pitched roof, straight walls, centered doorway opening)
-           - Capsule pill #28282b with (i) icon and s.cbe.com.et:100 (subtle soft fade on left of 's')
-           - Google Translate action icon (white back card with bold 'G', dark front card with white border, folded dog-ear & white '文')
-           - Tab switcher squircle [ 2 ] (white 2px border, rounded-4.5px, bold centered 2)
-           - 3-dots vertical button (three solid white dots)
-           - Thin bottom separator border #282a30
-        */
+        /* ================= 2. GOOGLE CHROME HEADER ================= */
         <header 
           id="cbe-chrome-browser-header"
-          className="w-full px-3 py-2 bg-[#121214] border-b border-[#282a30] flex items-center justify-between text-white flex-shrink-0 z-30 select-none"
+          className="w-full px-3 pt-[max(env(safe-area-inset-top,0px),8px)] pb-2 bg-[#121214] border-b border-[#282a30] flex items-center justify-between text-white flex-shrink-0 z-30 select-none shadow-sm"
         >
-          {/* Left: Home Button (outline house with pitched roof & open doorway) */}
+          {/* Left: Home Button */}
           <button
             onClick={onClose}
             aria-label="Home"
@@ -1406,28 +1303,25 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
           {/* Center: Address Bar Pill */}
           <div 
             onClick={handleCopyLink}
-            className="flex-1 bg-[#28282b] hover:bg-[#323236] h-10 rounded-full px-3.5 flex items-center gap-2.5 cursor-pointer transition select-none overflow-hidden mx-2.5 shadow-xs"
+            className="flex-1 bg-[#28282b] hover:bg-[#323236] h-9.5 rounded-full px-3.5 flex items-center gap-2.5 cursor-pointer transition select-none overflow-hidden mx-2 shadow-xs"
             title="Click to copy receipt URL"
           >
-            {/* (i) Info circle icon */}
-            <svg viewBox="0 0 24 24" className="w-[19px] h-[19px] text-white shrink-0" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg viewBox="0 0 24 24" className="w-[18px] h-[18px] text-white shrink-0" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="9" />
               <circle cx="12" cy="7.8" r="0.9" fill="currentColor" stroke="none" />
               <path d="M12 11.2v5.3" strokeWidth="2" strokeLinecap="round" />
             </svg>
 
-            {/* URL text matching Image 1: s.cbe.com.et:100 */}
             <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis flex items-center">
               {viewMode === 'pdf' ? (
-                <div className="flex items-center gap-1.5 text-[13.5px] text-[#e3e3e8] font-normal tracking-tight font-sans">
+                <div className="flex items-center gap-1.5 text-[13px] text-[#e3e3e8] font-normal tracking-tight font-sans">
                   <span className="bg-red-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-2xs leading-none">PDF</span>
                   <span className="truncate">apps.cbe.com.et:100/pdf/?id={receiptData.refId}</span>
                 </div>
               ) : copiedUrl ? (
                 <span className="text-emerald-400 font-bold text-xs">Copied URL to clipboard!</span>
               ) : (
-                <div className="text-[14.5px] text-[#e3e3e8] font-normal tracking-tight font-sans flex items-center">
-                  {/* The letter 's' with subtle left fade matching screenshot */}
+                <div className="text-[14px] text-[#e3e3e8] font-normal tracking-tight font-sans flex items-center">
                   <span className="inline-block opacity-65">s</span>
                   <span>.cbe.com.et:100</span>
                 </div>
@@ -1436,20 +1330,16 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
           </div>
 
           {/* Right: Google Translate, Tab count [2], 3-dots */}
-          <div className="flex items-center gap-2.5 shrink-0 pr-0.5">
-            {/* Google Translate action icon matching Image 1 */}
+          <div className="flex items-center gap-2 shrink-0 pr-0.5">
             <button
               onClick={handleCopyLink}
               className="p-1 text-white hover:bg-white/10 rounded-md transition cursor-pointer flex items-center justify-center shrink-0"
               title="Google Translate"
               aria-label="Google Translate"
             >
-              <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
-                {/* Back card with G (Solid white rounded rect) */}
+              <svg className="w-5.5 h-5.5" viewBox="0 0 24 24" fill="none">
                 <rect x="2.5" y="3.5" width="12" height="13.5" rx="2" fill="#ffffff" />
                 <text x="5.2" y="13" fill="#121214" fontSize="8" fontWeight="bold" fontFamily="system-ui, -apple-system, sans-serif">G</text>
-                
-                {/* Front card with Chinese character and folded bottom-right corner */}
                 <path 
                   d="M8.5 7.5a1.5 1.5 0 0 1 1.5-1.5h8.5a1.5 1.5 0 0 1 1.5 1.5v7.2a1.5 1.5 0 0 1-.44 1.06l-2.7 2.7A1.5 1.5 0 0 1 15.8 19H10a1.5 1.5 0 0 1-1.5-1.5v-10z" 
                   fill="#121214" 
@@ -1457,23 +1347,19 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                   strokeWidth="1.6" 
                   strokeLinejoin="round"
                 />
-                {/* Folded dog-ear triangle in front card */}
                 <path d="M16.5 18.8v-2.5a.8.8 0 0 1 .8-.8h2.5" fill="none" stroke="#ffffff" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
-                {/* Chinese Character '文' */}
                 <text x="11.2" y="15" fill="#ffffff" fontSize="8" fontWeight="bold" fontFamily="system-ui, -apple-system, sans-serif">文</text>
               </svg>
             </button>
 
-            {/* Tab Counter Square [ 2 ] matching Image 1 */}
             <button
               onClick={() => setIsMenuOpen(true)}
-              className="w-[21px] h-[21px] rounded-[4.5px] border-[2px] border-white text-white font-bold text-[12px] flex items-center justify-center hover:bg-white/10 transition cursor-pointer shrink-0 leading-none"
+              className="w-[20px] h-[20px] rounded-[4.5px] border-[1.8px] border-white text-white font-bold text-[11px] flex items-center justify-center hover:bg-white/10 transition cursor-pointer shrink-0 leading-none"
               title="Tabs (Click to customize)"
             >
               <span className="-translate-y-[0.5px]">{tabCount}</span>
             </button>
 
-            {/* 3-dots vertical button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="p-1 text-white hover:bg-white/10 rounded-full transition cursor-pointer flex items-center justify-center shrink-0"
@@ -1488,68 +1374,243 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
             </button>
           </div>
         </header>
-      ) : (
-        /* ================= FALLBACK (PHOENIX, SAMSUNG, SAFARI) ================= */
+      ) : browserType === 'safari' ? (
+        /* ================= 3. APPLE SAFARI (iOS) HEADER ================= */
         <header 
-          className={`w-full px-3 py-2 flex items-center justify-between gap-2 shadow-md flex-shrink-0 z-30 transition-colors ${
-            browserType === 'phoenix' 
-              ? 'bg-[#131720] text-[#e0e5ee] border-b border-[#202735]' 
-              : browserType === 'samsung'
-              ? 'bg-[#181920] text-[#e2e4ea] border-b border-neutral-800'
-              : 'bg-[#1c1c1e] text-[#f2f2f7] border-b border-neutral-800'
-          }`}
+          id="cbe-safari-browser-header"
+          className="w-full px-3.5 pt-[max(env(safe-area-inset-top,0px),8px)] pb-2.5 bg-[#1c1c1e]/98 backdrop-blur-md border-b border-neutral-800 flex items-center justify-between text-white flex-shrink-0 z-30 select-none shadow-sm"
         >
-          {/* Left Side Controls */}
-          <div className="flex items-center gap-1.5">
+          {/* Left: Done button */}
+          <button
+            onClick={onClose}
+            className="text-[#0a84ff] hover:text-blue-400 font-medium text-[15px] px-1 py-1 transition cursor-pointer shrink-0"
+            title="Done (Close Receipt)"
+          >
+            Done
+          </button>
+
+          {/* Center: Address Bar Capsule */}
+          <div 
+            onClick={handleCopyLink}
+            className="flex-1 bg-[#2c2c2e] hover:bg-[#38383a] h-9 rounded-xl px-3 flex items-center justify-between cursor-pointer transition select-none mx-2.5 border border-neutral-700/50 shadow-inner"
+            title="Click to copy receipt URL"
+          >
+            <span className="text-[11px] font-serif font-bold text-neutral-400 select-none tracking-tight">
+              <span className="text-sm">a</span>A
+            </span>
+
+            <div className="flex items-center gap-1.5 overflow-hidden mx-2">
+              <Lock className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+              <span className="text-[13.5px] text-[#f2f2f7] font-sans font-medium tracking-tight truncate">
+                {viewMode === 'pdf' ? `apps.cbe.com.et:100/pdf/?id=${receiptData.refId}` : 'apps.cbe.com.et:100'}
+              </span>
+            </div>
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleRefresh();
+              }}
+              className="text-neutral-400 hover:text-white transition"
+              title="Reload"
+            >
+              <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+
+          {/* Right: Share icon & Safari Settings */}
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={handleCopyLink}
+              className="p-1 text-[#0a84ff] hover:text-blue-400 transition cursor-pointer"
+              title="Share / Copy Link"
+            >
+              <Share2 className="w-4.5 h-4.5" />
+            </button>
+
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-1 text-[#0a84ff] hover:text-blue-400 transition cursor-pointer"
+              title="Safari Tabs & Settings"
+            >
+              <div className="w-4.5 h-4.5 border-2 border-current rounded-xs relative">
+                <div className="absolute -top-1 -right-1 w-3 h-3 border-t-2 border-r-2 border-current rounded-2xs" />
+              </div>
+            </button>
+          </div>
+        </header>
+      ) : browserType === 'samsung' ? (
+        /* ================= 4. SAMSUNG INTERNET HEADER ================= */
+        <header 
+          id="cbe-samsung-browser-header"
+          className="w-full px-3.5 pt-[max(env(safe-area-inset-top,0px),8px)] pb-2 bg-[#181920] border-b border-neutral-800 flex items-center justify-between text-[#e2e4ea] flex-shrink-0 z-30 select-none shadow-sm"
+        >
+          <button
+            onClick={onClose}
+            aria-label="Home"
+            className="p-1.5 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-full transition cursor-pointer shrink-0"
+            title="Return to App"
+          >
+            <Home className="w-4.5 h-4.5" />
+          </button>
+
+          <div 
+            onClick={handleCopyLink}
+            className="flex-1 bg-[#262730] hover:bg-[#30323c] h-9 rounded-full px-3.5 flex items-center justify-between cursor-pointer transition select-none mx-2 border border-neutral-700/60"
+            title="Click to copy receipt URL"
+          >
+            <div className="flex items-center gap-1.5 overflow-hidden">
+              <Lock className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+              <span className="text-[13.5px] text-white font-sans tracking-tight truncate">
+                {viewMode === 'pdf' ? `apps.cbe.com.et:100/pdf/?id=${receiptData.refId}` : 'apps.cbe.com.et:100'}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleRefresh();
+              }}
+              className="text-neutral-400 hover:text-white"
+            >
+              <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              onClick={() => showBarsToast('Bookmark saved')}
+              className="p-1 text-amber-400 hover:text-amber-300 transition"
+              title="Bookmark"
+            >
+              <Star className="w-4.5 h-4.5 fill-amber-400/20" />
+            </button>
+
+            <button
+              onClick={() => setIsMenuOpen(true)}
+              className="w-5.5 h-5.5 rounded-lg border border-neutral-400 text-white font-bold text-[10.5px] flex items-center justify-center hover:bg-neutral-800 transition"
+              title="Tabs"
+            >
+              {tabCount}
+            </button>
+
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-1 text-neutral-300 hover:text-white transition"
+              title="Samsung menu"
+            >
+              <MoreVertical className="w-4.5 h-4.5" />
+            </button>
+          </div>
+        </header>
+      ) : browserType === 'phoenix' ? (
+        /* ================= 5. PHOENIX BROWSER HEADER ================= */
+        <header 
+          id="cbe-phoenix-browser-header"
+          className="w-full px-3 pt-[max(env(safe-area-inset-top,0px),8px)] pb-2 bg-[#131720] border-b border-[#202735] flex items-center justify-between text-[#e0e5ee] flex-shrink-0 z-30 select-none shadow-sm"
+        >
+          <div className="flex items-center gap-1.5 shrink-0">
             <button 
               onClick={onClose}
               aria-label="Back"
-              className="p-1.5 rounded-full text-neutral-300 hover:text-white hover:bg-neutral-800 transition active:scale-95"
+              className="p-1 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-full transition"
               title="Return to App"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
-
-            {browserType === 'phoenix' && (
-              <div 
-                onClick={() => setIsMenuOpen(true)}
-                className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-400/60 flex items-center justify-center text-emerald-400 text-xs font-black select-none cursor-pointer shadow-xs"
-                title="Phoenix Browser (Phonex)"
-              >
-                P
-              </div>
-            )}
+            <div 
+              onClick={() => setIsMenuOpen(true)}
+              className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-400/60 flex items-center justify-center text-emerald-400 text-xs font-black select-none cursor-pointer"
+              title="Phoenix Browser"
+            >
+              P
+            </div>
           </div>
 
-          {/* Address Bar Pill */}
           <div 
             onClick={handleCopyLink}
-            className="flex-1 max-w-[285px] sm:max-w-xs mx-1 px-3 py-1 flex items-center justify-between cursor-pointer transition select-none bg-[#282a2d] hover:bg-[#323539] border border-[#3b3e44] rounded-full"
+            className="flex-1 bg-[#1e2433] hover:bg-[#283044] h-9 rounded-full px-3 flex items-center justify-between cursor-pointer transition select-none mx-2 border border-[#2b354a]"
             title="Click to copy receipt URL"
           >
             <div className="flex items-center gap-1.5 overflow-hidden">
-              <SlidersHorizontal className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
-              <span className="text-[13.5px] text-white font-sans tracking-tight truncate">
+              <SlidersHorizontal className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <span className="text-[13px] text-white font-sans tracking-tight truncate">
                 apps.cbe.com.et:100
               </span>
             </div>
           </div>
 
-          {/* Browser Tab Count Badge & 3-dots Menu */}
-          <div className="flex items-center gap-1">
-            <div 
+          <div className="flex items-center gap-1 shrink-0">
+            <button
               onClick={() => setIsMenuOpen(true)}
-              className="cursor-pointer transition select-none flex items-center justify-center font-bold w-5.5 h-5.5 border-[1.8px] border-neutral-300 rounded-[5px] text-neutral-200 text-[10.5px]"
-              title="Tabs switcher"
+              className="w-5.5 h-5.5 rounded-[5px] border-[1.8px] border-neutral-300 text-neutral-200 font-bold text-[10.5px] flex items-center justify-center hover:bg-neutral-800 transition"
+              title="Tabs"
             >
               {tabCount}
-            </div>
+            </button>
 
             <button 
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              aria-label="Browser options"
-              className="p-1 rounded-full text-neutral-300 hover:text-white hover:bg-neutral-800 transition"
-              title="Change browser type"
+              className="p-1 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-full transition"
+              title="Browser options"
+            >
+              <MoreVertical className="w-5 h-5" />
+            </button>
+          </div>
+        </header>
+      ) : (
+        /* ================= 6. MOZILLA FIREFOX HEADER ================= */
+        <header 
+          id="cbe-firefox-browser-header"
+          className="w-full px-3 pt-[max(env(safe-area-inset-top,0px),8px)] pb-2 bg-[#1c1b22] border-b border-[#2b2a33] flex items-center justify-between text-white flex-shrink-0 z-30 select-none shadow-sm"
+        >
+          <button 
+            onClick={onClose}
+            aria-label="Back"
+            className="p-1 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-full transition shrink-0"
+            title="Return to App"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+
+          <div 
+            onClick={handleCopyLink}
+            className="flex-1 bg-[#2b2a33] hover:bg-[#383742] h-9 rounded-xl px-3 flex items-center justify-between cursor-pointer transition select-none mx-2 border border-neutral-700/60"
+            title="Click to copy receipt URL"
+          >
+            <div className="flex items-center gap-1.5 overflow-hidden">
+              <Shield className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+              <Lock className="w-3 h-3 text-neutral-400 shrink-0" />
+              <span className="text-[13px] text-neutral-100 font-sans tracking-tight truncate">
+                apps.cbe.com.et:100
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleRefresh();
+              }}
+              className="text-neutral-400 hover:text-white"
+            >
+              <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              onClick={() => setIsMenuOpen(true)}
+              className="w-5.5 h-5.5 rounded-md border border-neutral-400 text-white font-bold text-[10.5px] flex items-center justify-center hover:bg-neutral-800 transition"
+              title="Tabs"
+            >
+              {tabCount}
+            </button>
+
+            <button 
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-1 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-full transition"
+              title="Firefox menu & options"
             >
               <MoreVertical className="w-5 h-5" />
             </button>
@@ -1568,6 +1629,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
 
           {/* Floating Options Card */}
           <div 
+            id="browser-settings-modal"
             className="fixed top-12 sm:top-14 right-2 sm:right-4 z-50 w-84 max-w-[calc(100vw-16px)] max-h-[calc(100vh-64px)] overflow-y-auto bg-[#1c1f26] text-white rounded-2xl shadow-2xl border border-neutral-700/90 p-4 animate-in fade-in zoom-in-95 duration-150 select-none"
             style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
           >
@@ -1593,25 +1655,25 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
               </button>
             </div>
 
-            {/* Browser Type Selector */}
+            {/* Browser Type Selector (All 6 Browsers) */}
             <div className="space-y-1.5 mb-4">
               <p className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-2">
                 Choose Browser Header Style
               </p>
 
-              {/* 1. Google Chrome (Screenshot 1) */}
+              {/* 1. Google Chrome */}
               <button
                 type="button"
                 onClick={() => handleSelectBrowser('chrome')}
-                className={`w-full px-3 py-2.5 rounded-xl flex items-center justify-between text-left transition cursor-pointer ${
+                className={`w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition cursor-pointer ${
                   browserType === 'chrome'
                     ? 'bg-emerald-500/20 border border-emerald-400/80 text-white'
                     : 'bg-neutral-800/60 hover:bg-neutral-800 border border-neutral-700/50 text-neutral-300'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-[#1f1f21] flex items-center justify-center border border-neutral-600 text-white font-bold text-xs">
-                    <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 text-white" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <div className="w-7 h-7 rounded-lg bg-[#1f1f21] flex items-center justify-center border border-neutral-600 text-white font-bold text-xs">
+                    <svg viewBox="0 0 24 24" className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M3 10.5L12 3l9 7.5V20a1.5 1.5 0 0 1-1.5 1.5H15v-6h-6v6H4.5A1.5 1.5 0 0 1 3 20v-9.5z" />
                     </svg>
                   </div>
@@ -1626,26 +1688,26 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                 {browserType === 'chrome' && <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />}
               </button>
 
-              {/* 2. Opera (Screenshot 2) */}
+              {/* 2. Opera */}
               <button
                 type="button"
                 onClick={() => handleSelectBrowser('opera')}
-                className={`w-full px-3 py-2.5 rounded-xl flex items-center justify-between text-left transition cursor-pointer ${
+                className={`w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition cursor-pointer ${
                   browserType === 'opera'
                     ? 'bg-emerald-500/20 border border-emerald-400/80 text-white'
                     : 'bg-neutral-800/60 hover:bg-neutral-800 border border-neutral-700/50 text-neutral-300'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-[#0e0e10] flex items-center justify-center border border-neutral-700 text-neutral-200">
-                    <svg viewBox="0 0 24 24" className="w-4.5 h-4.5 text-neutral-200" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                  <div className="w-7 h-7 rounded-lg bg-[#0e0e10] flex items-center justify-center border border-neutral-700 text-neutral-200">
+                    <svg viewBox="0 0 24 24" className="w-4 h-4 text-neutral-200" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M21 12a9 9 0 1 1-2.6-6.3L21 8" />
                       <path d="M21 3v5h-5" />
                     </svg>
                   </div>
                   <div>
                     <div className="text-[13px] font-bold flex items-center gap-1.5">
-                      <span>Opera</span>
+                      <span>Opera Browser</span>
                       <span className="text-[9.5px] bg-red-950 border border-red-500/50 text-red-300 px-1.5 py-0.2 rounded font-semibold">Image 2</span>
                     </div>
                     <div className="text-[10px] text-neutral-400">Flat black bar, full URL with ID, reload button</div>
@@ -1654,7 +1716,54 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                 {browserType === 'opera' && <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />}
               </button>
 
-              {/* 3. Phoenix Browser (Phonex) */}
+              {/* 3. Apple Safari (iOS) */}
+              <button
+                type="button"
+                onClick={() => handleSelectBrowser('safari')}
+                className={`w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition cursor-pointer ${
+                  browserType === 'safari'
+                    ? 'bg-emerald-500/20 border border-emerald-400/80 text-white'
+                    : 'bg-neutral-800/60 hover:bg-neutral-800 border border-neutral-700/50 text-neutral-300'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-[#1c1c1e] flex items-center justify-center border border-neutral-700 text-[#0a84ff]">
+                    <span className="text-[10px] font-serif font-black">aA</span>
+                  </div>
+                  <div>
+                    <div className="text-[13px] font-bold flex items-center gap-1.5">
+                      <span>Apple Safari</span>
+                      <span className="text-[9.5px] bg-blue-950 border border-blue-500/50 text-blue-300 px-1.5 py-0.2 rounded font-semibold">iOS Style</span>
+                    </div>
+                    <div className="text-[10px] text-neutral-400">Done button, aA text controls, lock pill & share</div>
+                  </div>
+                </div>
+                {browserType === 'safari' && <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />}
+              </button>
+
+              {/* 4. Samsung Internet */}
+              <button
+                type="button"
+                onClick={() => handleSelectBrowser('samsung')}
+                className={`w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition cursor-pointer ${
+                  browserType === 'samsung'
+                    ? 'bg-emerald-500/20 border border-emerald-400/80 text-white'
+                    : 'bg-neutral-800/60 hover:bg-neutral-800 border border-neutral-700/50 text-neutral-300'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-neutral-900 flex items-center justify-center border border-neutral-700 text-amber-400">
+                    <Star className="w-3.5 h-3.5 fill-amber-400/30 text-amber-400" />
+                  </div>
+                  <div>
+                    <div className="text-[13px] font-bold">Samsung Internet</div>
+                    <div className="text-[10px] text-neutral-400">Galaxy One UI style with bookmark star & tabs</div>
+                  </div>
+                </div>
+                {browserType === 'samsung' && <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />}
+              </button>
+
+              {/* 5. Phoenix Browser */}
               <button
                 type="button"
                 onClick={() => handleSelectBrowser('phoenix')}
@@ -1676,69 +1785,27 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                 {browserType === 'phoenix' && <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />}
               </button>
 
-              {/* 4. Samsung Internet */}
+              {/* 6. Mozilla Firefox */}
               <button
                 type="button"
-                onClick={() => handleSelectBrowser('samsung')}
+                onClick={() => handleSelectBrowser('firefox')}
                 className={`w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition cursor-pointer ${
-                  browserType === 'samsung'
+                  browserType === 'firefox'
                     ? 'bg-emerald-500/20 border border-emerald-400/80 text-white'
                     : 'bg-neutral-800/60 hover:bg-neutral-800 border border-neutral-700/50 text-neutral-300'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-neutral-900 flex items-center justify-center border border-neutral-700 text-amber-400">
-                    <Star className="w-4 h-4 fill-amber-400/30 text-amber-400" />
+                  <div className="w-7 h-7 rounded-lg bg-purple-950/80 flex items-center justify-center border border-purple-500/50 text-purple-400 font-bold text-xs">
+                    <Shield className="w-3.5 h-3.5 text-purple-400" />
                   </div>
                   <div>
-                    <div className="text-[13px] font-bold">Samsung Internet</div>
-                    <div className="text-[10px] text-neutral-400">Galaxy One UI browser</div>
+                    <div className="text-[13px] font-bold">Mozilla Firefox</div>
+                    <div className="text-[10px] text-neutral-400">Tracking shield & dark modern layout</div>
                   </div>
                 </div>
-                {browserType === 'samsung' && <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />}
+                {browserType === 'firefox' && <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />}
               </button>
-            </div>
-
-            {/* Status Bar Clock Mode */}
-            <div className="mb-4 pt-3 border-t border-neutral-700/80">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">
-                  Top Status Bar Clock
-                </span>
-                <span className="text-xs text-emerald-400 font-mono font-bold">
-                  {useLiveTime ? currentTime : browserType === 'opera' ? '12:19' : '12:18'}
-                </span>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUseLiveTime(false);
-                    localStorage.setItem('cbe_receipt_live_time', 'false');
-                  }}
-                  className={`py-1.5 px-2 rounded-lg text-xs font-semibold transition text-center cursor-pointer ${
-                    !useLiveTime
-                      ? 'bg-emerald-500 text-black font-bold shadow-xs'
-                      : 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300'
-                  }`}
-                >
-                  Screenshot ({browserType === 'opera' ? '12:19' : '12:18'})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setUseLiveTime(true);
-                    localStorage.setItem('cbe_receipt_live_time', 'true');
-                  }}
-                  className={`py-1.5 px-2 rounded-lg text-xs font-semibold transition text-center cursor-pointer ${
-                    useLiveTime
-                      ? 'bg-emerald-500 text-black font-bold shadow-xs'
-                      : 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300'
-                  }`}
-                >
-                  Live Device Clock
-                </button>
-              </div>
             </div>
 
             {/* Tab Counter Selector */}
@@ -2475,8 +2542,8 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
             </div>
           </div>
 
-          {/* Floating Mobile Bottom Action Pill in PDF mode */}
-          <div className="fixed bottom-3 inset-x-0 flex items-center justify-center gap-2 z-30 pointer-events-auto px-4">
+          {/* Floating Mobile Bottom Action Pill in PDF mode (Respects physical device navigation bar) */}
+          <div className="fixed bottom-[max(env(safe-area-inset-bottom,0px),16px)] inset-x-0 flex items-center justify-center gap-2 z-30 pointer-events-auto px-4">
             <button
               type="button"
               onClick={() => setViewMode('web')}
@@ -2499,7 +2566,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
       ) : (
         /* Web Receipt Mode */
         <>
-          <main className="w-full flex-1 overflow-y-auto px-2 pt-2.5 pb-24 bg-[#f0f2f5] flex justify-center">
+          <main className="w-full flex-1 overflow-y-auto px-2 pt-2.5 pb-[max(env(safe-area-inset-bottom,0px),96px)] bg-[#f0f2f5] flex justify-center">
         <div 
           ref={receiptCardRef}
           className={`bg-white w-full max-w-[460px] shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-gray-200/90 rounded-2xl overflow-hidden text-gray-900 self-start transition-opacity ${
@@ -2856,8 +2923,8 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
         </div>
       </main>
 
-      {/* Floating Download PDF Button matching reference screenshot */}
-          <div className="fixed bottom-3.5 inset-x-0 flex flex-col items-center gap-1.5 z-20 pointer-events-auto px-4">
+      {/* Floating Download PDF Button (Respects physical device navigation bar) */}
+          <div className="fixed bottom-[max(env(safe-area-inset-bottom,0px),16px)] inset-x-0 flex flex-col items-center gap-1.5 z-20 pointer-events-auto px-4">
             {downloadError && (
               <div className="bg-red-900/90 border border-red-500 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg max-w-sm text-center">
                 {downloadError}
@@ -2908,7 +2975,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
           id="stamp-position-toolbar"
           data-html2canvas-ignore="true"
           onClick={(e) => e.stopPropagation()}
-          className="fixed bottom-14 sm:bottom-16 inset-x-3 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-50 bg-[#171922]/95 backdrop-blur-md border border-purple-500/60 text-white rounded-2xl p-3 sm:p-3.5 shadow-2xl flex flex-col gap-2.5 max-w-sm sm:max-w-md w-full animate-in fade-in slide-in-from-bottom-3 duration-200 select-none"
+          className="fixed bottom-[max(env(safe-area-inset-bottom,0px),16px)] inset-x-3 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-50 bg-[#171922]/95 backdrop-blur-md border border-purple-500/60 text-white rounded-2xl p-3 sm:p-3.5 shadow-2xl flex flex-col gap-2.5 max-w-sm sm:max-w-md w-full animate-in fade-in slide-in-from-bottom-3 duration-200 select-none"
         >
           {/* Header */}
           <div className="flex items-center justify-between pb-2 border-b border-neutral-700/80">

@@ -14,7 +14,8 @@ import {
   Sliders, 
   Sparkles,
   Zap,
-  Activity
+  Activity,
+  Globe
 } from 'lucide-react';
 import { 
   PhoneSettingsService, 
@@ -23,6 +24,7 @@ import {
   NetworkTech, 
   SoundMode, 
   NavigationBarStyle,
+  BrowserHeaderType,
   PHONE_PRESETS 
 } from '../services/phoneSettingsService';
 import PhoneStatusBar from './PhoneStatusBar';
@@ -475,6 +477,56 @@ export const PhoneSettingsModal: React.FC<PhoneSettingsModalProps> = ({
                   <div className="text-[11px] text-blue-400 font-mono mt-0.5">{nav.sub}</div>
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* 7. Web Receipt Browser Style */}
+          <div className="bg-neutral-800/40 border border-neutral-800 rounded-xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold text-neutral-200 flex items-center gap-1.5">
+                <Globe className="w-4 h-4 text-emerald-400" />
+                Web Receipt Browser Header Style
+              </span>
+              <span className="text-[11px] text-emerald-400 font-semibold uppercase tracking-wider">
+                {settings.receiptBrowser || 'chrome'}
+              </span>
+            </div>
+            <p className="text-[11px] text-neutral-400">
+              When opening CBE web receipts from SMS or transaction details, choose which authentic browser appearance to display.
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {[
+                { id: 'chrome' as BrowserHeaderType, name: 'Google Chrome', tag: 'Android / Pixel', color: 'bg-neutral-800 border-neutral-700' },
+                { id: 'opera' as BrowserHeaderType, name: 'Opera Browser', tag: 'Red Accent', color: 'bg-red-950/40 border-red-800/40' },
+                { id: 'safari' as BrowserHeaderType, name: 'Apple Safari', tag: 'iPhone / iOS', color: 'bg-blue-950/40 border-blue-800/40' },
+                { id: 'samsung' as BrowserHeaderType, name: 'Samsung Internet', tag: 'Galaxy One UI', color: 'bg-purple-950/40 border-purple-800/40' },
+                { id: 'phoenix' as BrowserHeaderType, name: 'Phoenix Browser', tag: 'Tecno / Infinix', color: 'bg-emerald-950/40 border-emerald-800/40' },
+                { id: 'firefox' as BrowserHeaderType, name: 'Mozilla Firefox', tag: 'Dark Theme', color: 'bg-amber-950/40 border-amber-800/40' },
+              ].map((b) => {
+                const isSelected = (settings.receiptBrowser || 'chrome') === b.id;
+                return (
+                  <button
+                    key={b.id}
+                    type="button"
+                    onClick={() => handleUpdate({ receiptBrowser: b.id })}
+                    className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${
+                      isSelected
+                        ? 'bg-emerald-500/20 border-emerald-400 text-white shadow-sm ring-1 ring-emerald-400/50'
+                        : `${b.color} text-neutral-300 hover:bg-neutral-800`
+                    }`}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <span className="font-bold text-xs">{b.name}</span>
+                      {isSelected && (
+                        <span className="w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] shrink-0">
+                          <Check className="w-2.5 h-2.5 stroke-[3]" />
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-neutral-400 mt-1 block font-medium">{b.tag}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
