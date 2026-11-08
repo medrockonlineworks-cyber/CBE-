@@ -53,7 +53,7 @@ export const Header: React.FC<HeaderProps> = ({
   ];
 
   return (
-    <header className="relative z-30 pt-1.5 sm:pt-2 px-4 pb-1.5 max-w-md mx-auto w-full flex items-center justify-between text-white select-none">
+    <header className="relative z-30 pt-[max(env(safe-area-inset-top,0px),8px)] px-4 pb-1.5 max-w-md mx-auto w-full flex items-center justify-between text-white select-none">
       {/* Left Section: 2x2 Rounded Squares Apps Grid Menu Button & User Greeting */}
       <div className="flex items-center gap-2.5">
         {/* Apps Grid Menu Button */}

@@ -135,10 +135,14 @@ export class SystemBarsService {
 
     switch (view) {
       case 'auth':
-      case 'receipt':
         statusBarColor = '#ffffff';
         navBarColor = '#ffffff';
         isDarkStyle = false;
+        break;
+      case 'receipt':
+        statusBarColor = '#70189F';
+        navBarColor = '#ffffff';
+        isDarkStyle = true;
         break;
       case 'truecaller':
         statusBarColor = '#121316';

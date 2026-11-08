@@ -24,8 +24,6 @@ import { SystemBarsService } from './services/systemBarsService';
 import Navigation, { TabType } from './components/Navigation';
 import OfflineBanner from './components/OfflineBanner';
 import PhoneRecentAppsModal, { AppViewId } from './components/PhoneRecentAppsModal';
-import PhoneStatusBar from './components/PhoneStatusBar';
-import PhoneNavigationBar from './components/PhoneNavigationBar';
 import PhoneSettingsModal from './components/PhoneSettingsModal';
 import { ChevronLeft, ArrowLeft, RefreshCw, AlertCircle } from 'lucide-react';
 
@@ -777,12 +775,6 @@ export default function App() {
         {/* Real-time Offline Warning Banner */}
         <OfflineBanner />
 
-        {/* Fixed Mobile Status Bar: Theme-aligned across Truecaller, SMS, Phone, Dashen, Telebirr, Telegram, Receipt, Admin, and CBE */}
-        <PhoneStatusBar 
-          theme={viewThemeConfig.statusTheme}
-          className={`${viewThemeConfig.statusBarBg} shrink-0 z-40 transition-colors duration-200`}
-          onClick={() => setShowPhoneSettingsModal(true)}
-        />
 
         {/* Dynamic View Panel Router */}
         <main className={`flex-1 flex flex-col min-h-0 scrollbar-none overflow-hidden ${
@@ -975,22 +967,7 @@ export default function App() {
 
         </main>
 
-        {/* Fixed Mobile Navigation Bar: Theme-aligned per subapp (Home Indicator for iOS, 3-Buttons for Android) */}
-        <PhoneNavigationBar 
-          theme={viewThemeConfig.navTheme}
-          className={`${viewThemeConfig.navBarBg} shrink-0 z-40 transition-colors duration-200`}
-          onBack={() => {
-            if (activeView !== 'main') {
-              navigateTo('main', returnTab);
-            }
-          }}
-          onHome={() => {
-            navigateTo('main', 'home');
-          }}
-          onRecents={() => {
-            setIsRecentAppsOpen(true);
-          }}
-        />
+
       </div>
 
       {/* Android / iPhone Recent Multitasking Apps Modal */}
