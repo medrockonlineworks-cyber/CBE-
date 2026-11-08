@@ -57,6 +57,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { PhoneSettingsService, BrowserHeaderType } from '../services/phoneSettingsService';
+import { SystemBarsService } from '../services/systemBarsService';
 
 export type { BrowserHeaderType };
 
@@ -227,11 +228,8 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
     return () => unsubscribe();
   }, [browserType]);
 
-  // Sync native physical device status bar / browser theme color
+  // Sync native physical device status bar / browser theme color with active subapp
   useEffect(() => {
-    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    const prevColor = metaThemeColor?.getAttribute('content') || '#781d77';
-    
     const browserThemeColors: Record<BrowserHeaderType, string> = {
       chrome: '#121214',
       opera: '#0e0e10',
@@ -241,14 +239,15 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
       firefox: '#1c1b22',
     };
 
-    if (metaThemeColor) {
-      metaThemeColor.setAttribute('content', browserThemeColors[browserType] || '#121214');
-    }
+    const activeColor = browserThemeColors[browserType] || '#121214';
+    SystemBarsService.applyBars({
+      statusBarColor: activeColor,
+      navBarColor: activeColor,
+      isDarkStyle: true,
+    });
 
     return () => {
-      if (metaThemeColor) {
-        metaThemeColor.setAttribute('content', prevColor);
-      }
+      SystemBarsService.restoreFromModal();
     };
   }, [browserType]);
 

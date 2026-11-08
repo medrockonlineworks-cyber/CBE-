@@ -50,6 +50,13 @@ class ViewErrorBoundary extends React.Component<ViewErrorBoundaryProps, ViewErro
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error(`[ViewErrorBoundary:${this.props.viewName}]`, error, errorInfo);
+    try {
+      SystemBarsService.applyBars({
+        statusBarColor: '#000000',
+        navBarColor: '#000000',
+        isDarkStyle: true,
+      });
+    } catch {}
   }
 
   handleReset = () => {
@@ -152,8 +159,8 @@ export default function App() {
 
   // Ensure system status bar & navigation bar match the active view dynamically:
   useEffect(() => {
-    SystemBarsService.syncForView(activeView);
-  }, [activeView]);
+    SystemBarsService.syncForView(activeView, { isIPhone });
+  }, [activeView, isIPhone]);
 
   // Support mobile navigation bar buttons (Home & Recents) across all subapps
   useEffect(() => {
@@ -176,18 +183,18 @@ export default function App() {
     switch (activeView) {
       case 'truecaller':
         return {
-          rootBg: 'bg-[#121316]',
-          statusBarBg: 'bg-[#121316] text-white',
+          rootBg: isIPhone ? 'bg-black' : 'bg-[#121316]',
+          statusBarBg: isIPhone ? 'bg-black text-white' : 'bg-[#121316] text-white',
           statusTheme: 'dark' as const,
-          navBarBg: 'bg-[#121316] border-neutral-800/80 text-white',
+          navBarBg: isIPhone ? 'bg-black border-neutral-900 text-white' : 'bg-[#121316] border-neutral-800/80 text-white',
           navTheme: 'dark' as const,
         };
       case 'sms':
         return {
-          rootBg: 'bg-[#121212]',
-          statusBarBg: 'bg-[#121212] text-white',
+          rootBg: isIPhone ? 'bg-black' : 'bg-[#121212]',
+          statusBarBg: isIPhone ? 'bg-black text-white' : 'bg-[#121212] text-white',
           statusTheme: 'dark' as const,
-          navBarBg: 'bg-[#121212] border-neutral-800/80 text-white',
+          navBarBg: isIPhone ? 'bg-black border-neutral-900 text-white' : 'bg-[#121212] border-neutral-800/80 text-white',
           navTheme: 'dark' as const,
         };
       case 'phone':
@@ -769,9 +776,9 @@ export default function App() {
           activeView === 'admin'
             ? 'h-full overflow-y-auto overflow-x-hidden bg-slate-900 w-full max-w-full min-w-0'
             : activeView === 'sms' 
-            ? 'h-full overflow-hidden bg-[#121212]' 
+            ? (isIPhone ? 'h-full overflow-hidden bg-black' : 'h-full overflow-hidden bg-[#121212]') 
             : activeView === 'truecaller'
-              ? 'h-full overflow-hidden bg-[#121316]' 
+              ? (isIPhone ? 'h-full overflow-hidden bg-black' : 'h-full overflow-hidden bg-[#121316]') 
               : activeView === 'phone'
                 ? 'h-full overflow-hidden bg-black'
                 : activeView === 'dashen'

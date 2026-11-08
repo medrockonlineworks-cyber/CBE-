@@ -42,6 +42,7 @@ import { MessageThread } from '../types/messages';
 import { GoogleMessagesService } from '../services/googleMessagesData';
 import { CbeWebReceiptModal } from '../components/CbeWebReceiptModal';
 import { CbeHolidayCardModal } from '../components/CbeHolidayCardModal';
+import { SystemBarsService } from '../services/systemBarsService';
 
 interface SmsPageProps {
   onBack: () => void;
@@ -97,7 +98,13 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
     } catch {
       // ignore
     }
+    SystemBarsService.syncForView('sms', { isIPhone, theme: nextTheme });
   };
+
+  // Ensure native device status bar and navigation bar follow the SMS theme
+  useEffect(() => {
+    SystemBarsService.syncForView('sms', { isIPhone, theme });
+  }, [isIPhone, theme]);
 
   // UI States
   const [showMenu, setShowMenu] = useState(false);

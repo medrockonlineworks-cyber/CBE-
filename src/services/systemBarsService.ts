@@ -1,80 +1,71 @@
 /**
  * System Bars Service
  * Controls status bar and navigation bar styling across web, PWA, and Capacitor.
- * - Login / Auth view: White status bar and White navigation bar.
- * - Main App views: Purple status bar (#70189F) and White navigation bar.
+ * Ensures the device status bar and navigation bar strictly follow the active application theme.
  */
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
+import { PhoneSettingsService } from './phoneSettingsService';
+
+export interface SystemBarsConfig {
+  statusBarColor: string;
+  navBarColor: string;
+  isDarkStyle: boolean; // true = white text/icons on dark or colored bar; false = dark text/icons on light bar
+}
 
 export class SystemBarsService {
-  private static currentMode: 'white' | 'dual' = 'white';
+  private static currentConfig: SystemBarsConfig = {
+    statusBarColor: '#70189F',
+    navBarColor: '#ffffff',
+    isDarkStyle: true,
+  };
+  private static activeViewName: string = 'main';
 
-  static applyAllWhiteBars(): void {
-    this.currentMode = 'white';
-    if (typeof document === 'undefined') return;
-
-    const barColor = '#ffffff';
-
-    // Top status bar meta tags
-    const themeMetas = document.querySelectorAll(
-      'meta[name="theme-color"], meta[name="msapplication-navbutton-color"]'
-    );
-    themeMetas.forEach(meta => meta.setAttribute('content', barColor));
-
-    // Bottom navigation bar meta tags
-    const navMetas = document.querySelectorAll('meta[name="navigation-bar-color"]');
-    navMetas.forEach(meta => meta.setAttribute('content', barColor));
-
-    // iOS Safari apple-mobile-web-app-status-bar-style: default = black text on white status bar
-    const appleStatusBar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
-    if (appleStatusBar) {
-      appleStatusBar.setAttribute('content', 'default');
-    }
-
-    // Document root backgrounds
-    if (document.documentElement) {
-      document.documentElement.style.backgroundColor = barColor;
-    }
-    if (document.body) {
-      document.body.style.backgroundColor = barColor;
-    }
-
-    // Capacitor Native Bridge Support (Android & iOS)
-    if (Capacitor.isNativePlatform()) {
-      try {
-        StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
-        StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
-      } catch (err) {
-        console.warn('[SystemBars] Capacitor white status bar note:', err);
-      }
-    }
+  public static getCurrentConfig(): SystemBarsConfig {
+    return { ...this.currentConfig };
   }
 
-  static applyDualSystemBars(): void {
-    this.currentMode = 'dual';
+  public static applyBars(config: SystemBarsConfig): void {
+    this.currentConfig = { ...config };
     if (typeof document === 'undefined') return;
 
-    const statusBarColor = '#70189F';
-    const navBarColor = '#ffffff';
+    const { statusBarColor, navBarColor, isDarkStyle } = config;
 
-    // Top status bar
+    // 1. Top status bar meta tags (theme-color & msapplication-navbutton-color)
     const themeMetas = document.querySelectorAll(
       'meta[name="theme-color"], meta[name="msapplication-navbutton-color"]'
     );
-    themeMetas.forEach(meta => meta.setAttribute('content', statusBarColor));
+    themeMetas.forEach(meta => {
+      meta.setAttribute('content', statusBarColor);
+      meta.removeAttribute('media');
+    });
 
-    // Bottom navigation bar
-    const navMetas = document.querySelectorAll('meta[name="navigation-bar-color"]');
-    navMetas.forEach(meta => meta.setAttribute('content', navBarColor));
-
-    // iOS Safari apple-mobile-web-app-status-bar-style: black-translucent = white text over purple content
-    const appleStatusBar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
-    if (appleStatusBar) {
-      appleStatusBar.setAttribute('content', 'black-translucent');
+    if (!document.querySelector('meta[name="theme-color"]')) {
+      const meta = document.createElement('meta');
+      meta.name = 'theme-color';
+      meta.content = statusBarColor;
+      document.head.appendChild(meta);
     }
 
-    // Document root backgrounds: CBE purple #70189F so iOS notch/status bar is purple
+    // 2. Bottom navigation bar meta tags
+    const navMetas = document.querySelectorAll('meta[name="navigation-bar-color"]');
+    navMetas.forEach(meta => meta.setAttribute('content', navBarColor));
+    if (!document.querySelector('meta[name="navigation-bar-color"]')) {
+      const meta = document.createElement('meta');
+      meta.name = 'navigation-bar-color';
+      meta.content = navBarColor;
+      document.head.appendChild(meta);
+    }
+
+    // 3. iOS Safari apple-mobile-web-app-status-bar-style:
+    // black-translucent = white status bar text/icons over dark or colored background
+    // default = dark text/icons over light background
+    const appleStatusBar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
+    if (appleStatusBar) {
+      appleStatusBar.setAttribute('content', isDarkStyle ? 'black-translucent' : 'default');
+    }
+
+    // 4. Document root and body backgrounds (prevents purple/white bleeding at notch / home bar)
     if (document.documentElement) {
       document.documentElement.style.backgroundColor = statusBarColor;
     }
@@ -82,56 +73,61 @@ export class SystemBarsService {
       document.body.style.backgroundColor = statusBarColor;
     }
 
-    // Capacitor Native Bridge Support (Android & iOS)
+    const mainCanvas = document.getElementById('app-main-canvas');
+    if (mainCanvas) {
+      mainCanvas.style.backgroundColor = statusBarColor;
+    }
+
+    // 5. Capacitor Native Bridge Support (Android & iOS)
     if (Capacitor.isNativePlatform()) {
       try {
         StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
-        StatusBar.setStyle({ style: Style.Light }).catch(() => {});
+        StatusBar.setStyle({ style: isDarkStyle ? Style.Light : Style.Dark }).catch(() => {});
+        StatusBar.setBackgroundColor({ color: statusBarColor }).catch(() => {});
       } catch (err) {
-        console.warn('[SystemBars] Capacitor dual status bar note:', err);
+        // Safe non-blocking
       }
     }
   }
 
-  static applyModalOpenBars(): void {
-    if (typeof document === 'undefined') return;
-    const darkenedPurple = '#380c50';
-    const navBarColor = '#ffffff';
-
-    const themeMetas = document.querySelectorAll(
-      'meta[name="theme-color"], meta[name="msapplication-navbutton-color"]'
-    );
-    themeMetas.forEach(meta => meta.setAttribute('content', darkenedPurple));
-
-    const navMetas = document.querySelectorAll('meta[name="navigation-bar-color"]');
-    navMetas.forEach(meta => meta.setAttribute('content', navBarColor));
-
-    const appleStatusBar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
-    if (appleStatusBar) {
-      appleStatusBar.setAttribute('content', 'black-translucent');
-    }
-
-    if (document.documentElement) {
-      document.documentElement.style.backgroundColor = darkenedPurple;
-    }
-    if (document.body) {
-      document.body.style.backgroundColor = darkenedPurple;
-    }
-
-    if (Capacitor.isNativePlatform()) {
-      try {
-        StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
-        StatusBar.setStyle({ style: Style.Light }).catch(() => {});
-      } catch (err) {}
-    }
+  public static applyAllWhiteBars(): void {
+    this.applyBars({
+      statusBarColor: '#ffffff',
+      navBarColor: '#ffffff',
+      isDarkStyle: false,
+    });
   }
 
-  static syncForView(view: string): void {
-    if (typeof document === 'undefined') return;
+  public static applyDualSystemBars(): void {
+    this.applyBars({
+      statusBarColor: '#70189F',
+      navBarColor: '#ffffff',
+      isDarkStyle: true,
+    });
+  }
+
+  public static applyModalOpenBars(): void {
+    this.applyBars({
+      statusBarColor: '#380c50',
+      navBarColor: '#ffffff',
+      isDarkStyle: true,
+    });
+  }
+
+  public static syncForView(
+    view: string,
+    options?: {
+      isIPhone?: boolean;
+      theme?: 'dark' | 'light';
+      subView?: string;
+    }
+  ): void {
+    this.activeViewName = view;
+    const isIPhoneMode = options?.isIPhone ?? PhoneSettingsService.isIPhoneMode();
 
     let statusBarColor = '#70189F';
     let navBarColor = '#ffffff';
-    let isDarkStyle = false; // false = dark text/icons on light bar; true = light text/icons on dark/colored bar
+    let isDarkStyle = true;
 
     switch (view) {
       case 'auth':
@@ -139,42 +135,86 @@ export class SystemBarsService {
         navBarColor = '#ffffff';
         isDarkStyle = false;
         break;
+
       case 'receipt':
         statusBarColor = '#70189F';
         navBarColor = '#ffffff';
         isDarkStyle = true;
         break;
-      case 'truecaller':
-        statusBarColor = '#121316';
-        navBarColor = '#121316';
-        isDarkStyle = true;
+
+      case 'sms': {
+        const savedTheme = options?.theme || (() => {
+          try {
+            return (localStorage.getItem('sms_theme') as 'dark' | 'light') || 'dark';
+          } catch {
+            return 'dark';
+          }
+        })();
+
+        if (isIPhoneMode) {
+          // iPhone SMS (Apple Messages): pitch black
+          statusBarColor = '#000000';
+          navBarColor = '#000000';
+          isDarkStyle = true;
+        } else if (savedTheme === 'light') {
+          // Android Google Messages Light mode
+          statusBarColor = '#ffffff';
+          navBarColor = '#ffffff';
+          isDarkStyle = false;
+        } else {
+          // Android Google Messages Dark mode
+          statusBarColor = '#121212';
+          navBarColor = '#121212';
+          isDarkStyle = true;
+        }
         break;
-      case 'sms':
-        statusBarColor = '#121212';
-        navBarColor = '#121212';
-        isDarkStyle = true;
+      }
+
+      case 'truecaller': {
+        const subView = options?.subView;
+        if (isIPhoneMode) {
+          // iPhone Truecaller: pitch black
+          statusBarColor = '#000000';
+          navBarColor = '#000000';
+          isDarkStyle = true;
+        } else if (subView === 'inbox') {
+          statusBarColor = '#121316';
+          navBarColor = '#121316';
+          isDarkStyle = true;
+        } else {
+          // bank_thread or takeover
+          statusBarColor = '#000000';
+          navBarColor = '#000000';
+          isDarkStyle = true;
+        }
         break;
+      }
+
       case 'phone':
         statusBarColor = '#000000';
         navBarColor = '#000000';
         isDarkStyle = true;
         break;
+
       case 'dashen':
         statusBarColor = '#040b18';
         navBarColor = '#040b18';
         isDarkStyle = true;
         break;
+
       case 'telebirr':
         statusBarColor = '#005fa8';
         navBarColor = '#ffffff';
         isDarkStyle = true;
         break;
+
       case 'telegram':
       case 'admin':
         statusBarColor = '#0f172a';
         navBarColor = '#0f172a';
         isDarkStyle = true;
         break;
+
       case 'main':
       default:
         statusBarColor = '#70189F';
@@ -183,56 +223,22 @@ export class SystemBarsService {
         break;
     }
 
-    // Top status bar meta tags
-    const themeMetas = document.querySelectorAll(
-      'meta[name="theme-color"], meta[name="msapplication-navbutton-color"]'
-    );
-    themeMetas.forEach(meta => meta.setAttribute('content', statusBarColor));
-
-    // Bottom navigation bar meta tags
-    const navMetas = document.querySelectorAll('meta[name="navigation-bar-color"]');
-    navMetas.forEach(meta => meta.setAttribute('content', navBarColor));
-
-    // iOS Safari apple-mobile-web-app-status-bar-style:
-    // black-translucent shows white status bar icons/text over colored or dark background
-    // default shows dark icons over light background
-    const appleStatusBar = document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]');
-    if (appleStatusBar) {
-      appleStatusBar.setAttribute('content', isDarkStyle ? 'black-translucent' : 'default');
-    }
-
-    // Document root backgrounds
-    if (document.documentElement) {
-      document.documentElement.style.backgroundColor = statusBarColor;
-    }
-    if (document.body) {
-      document.body.style.backgroundColor = statusBarColor;
-    }
-
-    if (Capacitor.isNativePlatform()) {
-      try {
-        StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
-        StatusBar.setStyle({ style: isDarkStyle ? Style.Light : Style.Dark }).catch(() => {});
-      } catch (err) {
-        console.warn('[SystemBars] Capacitor status bar error:', err);
-      }
-    }
+    this.applyBars({
+      statusBarColor,
+      navBarColor,
+      isDarkStyle,
+    });
   }
 
-  static restoreFromModal(): void {
-    this.syncCurrent();
+  public static restoreFromModal(): void {
+    this.syncForView(this.activeViewName);
   }
 
-  static syncCurrent(): void {
-    if (this.currentMode === 'white') {
-      this.applyAllWhiteBars();
-    } else {
-      this.applyDualSystemBars();
-    }
+  public static syncCurrent(): void {
+    this.applyBars(this.currentConfig);
   }
 
-  static initAutoSync(): void {
-    this.syncCurrent();
+  public static initAutoSync(): void {
     if (typeof window !== 'undefined') {
       window.addEventListener('visibilitychange', () => {
         if (!document.hidden) {

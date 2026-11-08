@@ -89,6 +89,7 @@ import {
 } from '../services/truecallerService';
 import { LocalDb } from '../lib/mockData';
 import { Transaction } from '../types';
+import { SystemBarsService } from '../services/systemBarsService';
 
 interface TruecallerSimulatorProps {
   onBack: () => void;
@@ -309,6 +310,11 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
       }
     });
   }, []);
+
+  // Ensure native device status bar and navigation bar follow the Truecaller theme
+  useEffect(() => {
+    SystemBarsService.syncForView('truecaller', { isIPhone, subView: view });
+  }, [isIPhone, view]);
 
   // Popdown Typography Settings (Font Family & Text Size)
   const [popdownFontFamily, setPopdownFontFamily] = useState<PopdownFontFamily>(() => {
