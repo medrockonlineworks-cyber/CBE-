@@ -261,6 +261,69 @@ const INITIAL_DEMO_MESSAGES: SmsMessage[] = [
     timestamp: getRelativeDate(0, 8, 0), // Today at 8:00 AM (New Year morning)
     read: true,
   },
+  // Authentic CBE messages matching IMG_1139
+  {
+    id: 'sms-cbe-img1139-1',
+    transactionId: 'FT26245M0NV1',
+    accountNumber: '1000419524747',
+    accountName: 'Leykun Jemaneh Ylma',
+    role: 'sender',
+    bankName: 'CBE',
+    sender: 'CBE',
+    recipient: '1000284758657',
+    type: 'DEBIT',
+    amount: 4000.0,
+    serviceCharge: 10.0,
+    vat: 1.5,
+    disasterRecovery: 0.5,
+    totalDebited: 4012.0,
+    balance: 648.61,
+    message: `A debit transaction of ETB 4,000.00 has occurred on your account 1*********4747. Service charge of ETB 10.00 and VAT(15%) of ETB 1.50 and Disaster Recovery(5%) of 0.50 with total of ETB 4,012.00. Your current balance is ETB 648.61. Thanks for Banking with CBE. https://mbreciept.cbe.com.et/v2-hfHCxNVNr4EmpMilwtPL for feedback: https://forms.gle/kGNGQpG3mQCCk3iD6`,
+    receiptUrl: 'https://mbreciept.cbe.com.et/v2-hfHCxNVNr4EmpMilwtPL',
+    feedbackUrl: DEFAULT_FEEDBACK_URL,
+    timestamp: getRelativeDate(0, 11, 40),
+    read: true,
+  },
+  {
+    id: 'sms-cbe-img1139-2',
+    transactionId: 'FT26245M0NW2',
+    accountNumber: '1000419524747',
+    accountName: 'Leykun Jemaneh Ylma',
+    role: 'receiver',
+    bankName: 'CBE',
+    sender: 'CBE',
+    recipient: '1000419524747',
+    type: 'CREDIT',
+    amount: 10000.0,
+    balance: 10648.61,
+    message: `Dear Leykun Jemaneh Yilma You have received ETB 10,000.00 from account 1*********4715 (Ejere Lema Mekonen) to your account 1*********4747. Your current balance is ETB 10,648.61. Thanks for Banking with CBE. https://mbreciept.cbe.com.et/v2-hfHCxNW09Avo4u6Mf19I for feedback: https://forms.gle/kGNGQpG3mQCCk3iD6`,
+    receiptUrl: 'https://mbreciept.cbe.com.et/v2-hfHCxNW09Avo4u6Mf19I',
+    feedbackUrl: DEFAULT_FEEDBACK_URL,
+    timestamp: getRelativeDate(0, 13, 15),
+    read: true,
+  },
+  {
+    id: 'sms-cbe-img1139-3',
+    transactionId: 'FT26245M0TR3',
+    accountNumber: '1000419524747',
+    accountName: 'Leykun Jemaneh Ylma',
+    role: 'sender',
+    bankName: 'CBE',
+    sender: 'CBE',
+    recipient: '1000419529874',
+    type: 'DEBIT',
+    amount: 5000.0,
+    serviceCharge: 10.0,
+    vat: 1.5,
+    disasterRecovery: 0.5,
+    totalDebited: 5012.0,
+    balance: 5636.61,
+    message: `Dear Leykun Jemaneh Yilma You have successfully transferred ETB 5,000.00 to account 1*********9874 (Abubeker Abdullahi) from your account 1*********4747. Service charge of ETB 10.00 and VAT(15%) of ETB 1.50 and Disaster Recovery(5%) of 0.50 with total of ETB 5,012.00. Your current balance is ETB 5,636.61. Thanks for Banking with CBE. https://mbreciept.cbe.com.et/v2-hfHCxNW09Avo4u6Mf19J for feedback: https://forms.gle/kGNGQpG3mQCCk3iD6`,
+    receiptUrl: 'https://mbreciept.cbe.com.et/v2-hfHCxNW09Avo4u6Mf19J',
+    feedbackUrl: DEFAULT_FEEDBACK_URL,
+    timestamp: getRelativeDate(0, 14, 38),
+    read: true,
+  },
   {
     id: 'sms-cbe-seed-1',
     transactionId: 'FT25104MK01',
@@ -661,15 +724,15 @@ export class SmsService {
         if (!Array.isArray(list)) {
           list = [...INITIAL_DEMO_MESSAGES];
         } else {
-          // Self-heal: ensure sender (DEBIT) SMS messages exist for account 1000419524747
-          const hasSenderFor4747 = list.some(
-            m => m.accountNumber === '1000419524747' && (m.role === 'sender' || m.type === 'DEBIT')
+          // Self-heal: ensure authentic IMG_1139 messages exist for account 1000419524747
+          const hasImg1139 = list.some(
+            m => m.id === 'sms-cbe-img1139-1' || m.id === 'sms-cbe-img1139-2'
           );
-          if (!hasSenderFor4747) {
-            const seedSenders = INITIAL_DEMO_MESSAGES.filter(
-              m => m.accountNumber === '1000419524747' && m.role === 'sender'
+          if (!hasImg1139) {
+            const seed1139 = INITIAL_DEMO_MESSAGES.filter(
+              m => m.id?.startsWith('sms-cbe-img1139-')
             );
-            list.unshift(...seedSenders);
+            list.unshift(...seed1139);
             localStorage.setItem(STORAGE_MESSAGES_KEY, JSON.stringify(list));
           }
 

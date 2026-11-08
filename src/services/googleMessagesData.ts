@@ -5,74 +5,118 @@ const STORAGE_KEY = 'google_messages_custom_threads';
 
 export const DEFAULT_THREADS: MessageThread[] = [
   {
-    id: '131',
-    sender: '131',
-    avatarColor: '#0ea5e9',
-    snippet: 'Dear customer, Your airtime top-up has given you 2 Silver c...',
-    timestamp: new Date(Date.now() - 22 * 60 * 1000).toISOString(),
-    timeLabel: '22 min',
-    unreadCount: 2,
-    messages: [
-      {
-        id: 'msg-131-1',
-        text: 'Dear customer, your airtime balance has been topped up with ETB 50.00. Thank you for using Ethio telecom.',
-        timestamp: '12:40 PM',
-        sender: '131'
-      },
-      {
-        id: 'msg-131-2',
-        text: 'Dear customer, Your airtime top-up has given you 2 Silver coins. Dial *131# to redeem your rewards and win bonus packages and exciting gifts!',
-        timestamp: '1:06 PM',
-        sender: '131'
-      }
-    ]
-  },
-  {
-    id: 'ethio-tel',
-    sender: 'ethio tel',
-    avatarColor: '#9333ea',
-    snippet: 'አድማስ ዲጂታል ሎተሪ በ51ኛው ዙር የሽልማት መጠኑን ወደ 5 ሚሊየን ብ...',
-    timestamp: new Date(Date.now() - 22 * 60 * 1000).toISOString(),
-    timeLabel: '22 min',
-    unreadCount: 4,
-    messages: [
-      {
-        id: 'msg-ethio-1',
-        text: 'ውድ ደንበኛችን የሳምንታዊ የኢንተርኔት ጥቅልዎን በተሳካ ሁኔታ ገዝተዋል። ቀሪ ሂሳብዎን ለመመልከት *999# ይደውሉ።',
-        timestamp: '11:15 AM',
-        sender: 'ethio tel'
-      },
-      {
-        id: 'msg-ethio-2',
-        text: 'አድማስ ዲጂታል ሎተሪ በ51ኛው ዙር የሽልማት መጠኑን ወደ 5 ሚሊየን ብር አሳድጓል! አሁኑኑ ወደ 605 ፊደል \'A\' ልከው ይሳተፉ። ኢትዮ ቴሌኮም!',
-        timestamp: '1:06 PM',
-        sender: 'ethio tel'
-      }
-    ]
-  },
-  {
     id: 'CBE',
     sender: 'CBE',
-    avatarColor: '#8e24aa',
-    snippet: 'Dear Leykun Jemaneh Ylma A debit transaction of ETB 20.0. has occurred...',
-    timestamp: new Date(Date.now() - 32 * 60 * 1000).toISOString(),
-    timeLabel: '32 min',
+    avatarColor: '#545458',
+    tag: 'Unknown Sender',
+    snippet: 'Dear Leykun Jemaneh Yilma You have successfully transferred ETB 5,000....',
+    timestamp: new Date().toISOString(),
+    timeLabel: '2:38 PM',
     unreadCount: 1,
     isCbe: true,
   },
   {
-    id: '251994',
-    sender: '251994',
-    avatarColor: '#eab308',
-    snippet: 'Dear Customer, Your prepaid account has bee...',
-    timestamp: new Date(Date.now() - 32 * 60 * 1000).toISOString(),
-    timeLabel: '32 min',
+    id: '127',
+    sender: '127',
+    avatarColor: '#545458',
+    tag: 'Unknown Sender',
+    snippet: 'Dear Leykun You have transferred ETB 2,000.00 t...',
+    timestamp: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+    timeLabel: '15 min',
     unreadCount: 1,
     messages: [
       {
+        id: 'msg-127-1',
+        text: 'Dear Leykun You have transferred ETB 2,000.00 to account 1********3892. Your current balance is ETB 3,450.00. Thank you for using our service.',
+        timestamp: '2:23 PM',
+        sender: '127'
+      }
+    ]
+  },
+  {
+    id: 'boa',
+    sender: 'BOA',
+    avatarColor: '#545458',
+    tag: 'Unknown Sender',
+    snippet: 'Dear Leykun, your account 5*****96 was debited with ETB 1,812.00. Avail...',
+    timestamp: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
+    timeLabel: '45 min',
+    unreadCount: 1,
+    messages: [
+      {
+        id: 'msg-boa-1',
+        text: 'Dear Leykun, your account 5*****96 was debited with ETB 1,812.00. Available balance ETB 14,230.50. Bank of Abyssinia.',
+        timestamp: '1:53 PM',
+        sender: 'BOA'
+      }
+    ]
+  },
+  {
+    id: '830',
+    sender: '830',
+    avatarColor: '#545458',
+    tag: 'Unknown Sender',
+    snippet: 'በቴሌብር ስላደረጉት የገንዘብ ዝውውር እናመሰግናለን:: ወደ *830*1# በመደወ...',
+    timestamp: new Date(Date.now() - 90 * 60 * 1000).toISOString(),
+    timeLabel: '1:08 PM',
+    unreadCount: 1,
+    messages: [
+      {
+        id: 'msg-830-1',
+        text: 'በቴሌብር ስላደረጉት የገንዘብ ዝውውር እናመሰግናለን:: ወደ *830*1# በመደወል አገልግሎትዎን ያግኙ። telebirr!',
+        timestamp: '1:08 PM',
+        sender: '830'
+      }
+    ]
+  },
+  {
+    id: '251958190691',
+    sender: '+251 95 819 0691',
+    avatarColor: '#545458',
+    tag: 'Unknown Sender',
+    snippet: 'በአቢሲኒያ ቤት የእረፍት ቀኖችን ከ 400% ጉርሻ ጋር ያጣጥሙ !...',
+    timestamp: new Date(Date.now() - 3 * 3600 * 1000).toISOString(),
+    timeLabel: '11:38 AM',
+    unreadCount: 1,
+    messages: [
+      {
+        id: 'msg-25195-1',
+        text: 'በአቢሲኒያ ቤት የእረፍት ቀኖችን ከ 400% ጉርሻ ጋር ያጣጥሙ ! አሁኑኑ ይመዝገቡና ልዩ ሽልማቶችን ያሸንፉ!',
+        timestamp: '11:38 AM',
+        sender: '+251 95 819 0691'
+      }
+    ]
+  },
+  {
+    id: 'dashenbank',
+    sender: 'DashenBank',
+    avatarColor: '#545458',
+    snippet: "Dear, LEYKUN Your Account '5502******011' has been credited w...",
+    timestamp: new Date(Date.now() - 4 * 3600 * 1000).toISOString(),
+    timeLabel: '11:04 AM',
+    unreadCount: 1,
+    messages: [
+      {
+        id: 'msg-dash-1',
+        text: "Dear, LEYKUN Your Account '5502******011' has been credited with ETB 5,000.00. Current Balance: ETB 18,720.00. Dashen Bank.",
+        timestamp: '11:04 AM',
+        sender: 'DashenBank'
+      }
+    ]
+  },
+  {
+    id: '251994',
+    sender: '251994',
+    avatarColor: '#545458',
+    snippet: 'Dear Customer, your remaining...',
+    timestamp: new Date(Date.now() - 48 * 3600 * 1000).toISOString(),
+    timeLabel: 'Friday',
+    unreadCount: 0,
+    messages: [
+      {
         id: 'msg-251994-1',
-        text: 'Dear Customer, Your prepaid account has been recharged with ETB 100.00 on 2026-09-04 12:56:02. New balance: ETB 115.40. Thank you for choosing our service.',
-        timestamp: '12:56 PM',
+        text: 'Dear Customer, your remaining prepaid account balance is ETB 115.40. Thank you for choosing our service.',
+        timestamp: 'Friday 12:56 PM',
         sender: '251994'
       }
     ]

@@ -49,13 +49,13 @@ export const AppleMessagesThread: React.FC<AppleMessagesThreadProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const phoneSettings = PhoneSettingsService.getSettings();
 
-  // Sort messages newest first so recent transaction appears at top
+  // Chronological order: oldest at top, newest at bottom matching IMG_1139
   const sortedMessages = useMemo(() => {
     const valid = (messages || []).filter(Boolean);
     return valid.sort((a, b) => {
       const timeA = a?.timestamp ? new Date(a.timestamp).getTime() || 0 : 0;
       const timeB = b?.timestamp ? new Date(b.timestamp).getTime() || 0 : 0;
-      return timeB - timeA;
+      return timeA - timeB;
     });
   }, [messages]);
 
@@ -64,7 +64,7 @@ export const AppleMessagesThread: React.FC<AppleMessagesThreadProps> = ({
   }, [messages.length, thread?.messages?.length]);
 
   const isGeneric = !!thread;
-  const senderTitle = isGeneric ? thread.sender : 'Commercial Bank of Ethiopia';
+  const senderTitle = isGeneric ? thread.sender : 'CBE';
   const senderSubtitle = isGeneric
     ? (thread.phoneNumber || 'SMS Notification')
     : `127 • ${activeAccount ? maskAccountNumber(activeAccount.accountNumber) : 'Saving Account'}`;
@@ -77,19 +77,24 @@ export const AppleMessagesThread: React.FC<AppleMessagesThreadProps> = ({
     setInputText('');
   };
 
-  // Helper to highlight phone numbers, shortcodes, and URLs in light blue matching IMG_0092.png
+  // Helper to highlight URLs and shortcodes matching IMG_1139
   const renderFormattedText = (text: string, rawMsg?: SmsMessage) => {
     if (!text) return null;
-    // Regex matches URLs, shortcodes like 30000, USSD like *799# or *777#
     const pattern = /(https?:\/\/[^\s]+|\*\d+#|\b\d{4,6}\b)/g;
     const parts = text.split(pattern);
 
     return (
-      <span className="whitespace-pre-line leading-relaxed break-words [overflow-wrap:anywhere] [word-break:break-word] w-full block">
+      <span className="whitespace-pre-line leading-[1.38] break-words [overflow-wrap:anywhere] [word-break:break-word] w-full block">
         {parts.map((part, idx) => {
           if (part.match(pattern)) {
             const isHoliday = part.includes('combanketh.et/holidays');
-            const isReceipt = !isHoliday && (part.includes('mbreceipt') || part.includes('receipt') || part.includes('mreciept') || part.includes('cbe.com.et'));
+            const isReceipt = !isHoliday && (
+              part.includes('mbreciept') || 
+              part.includes('mbreceipt') || 
+              part.includes('receipt') || 
+              part.includes('mreciept') || 
+              part.includes('cbe.com.et')
+            );
 
             return (
               <span
@@ -102,7 +107,7 @@ export const AppleMessagesThread: React.FC<AppleMessagesThreadProps> = ({
                     onOpenWebReceipt(rawMsg);
                   }
                 }}
-                className="text-[#2997ff] underline cursor-pointer hover:opacity-80 active:opacity-60 inline break-all [overflow-wrap:anywhere]"
+                className="text-[#0a84ff] underline cursor-pointer hover:opacity-80 active:opacity-60 inline break-all [overflow-wrap:anywhere]"
               >
                 {part}
               </span>
@@ -117,68 +122,60 @@ export const AppleMessagesThread: React.FC<AppleMessagesThreadProps> = ({
   return (
     <div className="h-full w-full flex-1 flex flex-col font-sans select-none bg-black text-white relative overflow-hidden overflow-x-hidden touch-pan-y">
 
-      {/* 2. Top Navigation Bar: Opaque Black header containing Avatar & Pill, with Back button */}
-      <header className="w-full bg-black border-b border-[#2c2c2e]/80 shrink-0 z-30 pt-[max(env(safe-area-inset-top,0px),10px)] pb-3 px-3 relative flex flex-col items-center">
-        {/* Left: Back button in dark pill with count 1 */}
-        <div className="w-full flex items-center justify-between h-9 z-20">
+      {/* 2. Top Navigation Bar: Opaque Black header containing Avatar & Pill, with Back button (< 59) */}
+      <header className="w-full bg-black border-b border-[#2c2c2e]/80 shrink-0 z-30 pt-[max(env(safe-area-inset-top,0px),8px)] pb-2 px-3 relative">
+        <div className="w-full flex items-center justify-between">
+          {/* Left: Back button in dark pill with white oval badge 59 matching IMG_1139 */}
           <button
             type="button"
             onClick={onBack}
-            className="bg-[#2c2c2e] hover:bg-[#3a3a3c] active:scale-95 px-3 py-1 rounded-full flex items-center gap-1.5 text-white transition-transform cursor-pointer shadow-sm"
+            className="bg-[#2c2c2e] hover:bg-[#3a3a3c] active:scale-95 px-2.5 py-1 rounded-full flex items-center gap-1.5 text-white transition-transform cursor-pointer shadow-sm shrink-0"
             title="Back to Messages"
           >
-            <ChevronLeft className="w-4.5 h-4.5 -ml-1 stroke-[2.5]" />
-            <span className="w-4 h-4 bg-white text-black text-[11px] font-bold rounded-full flex items-center justify-center">
-              1
+            <ChevronLeft className="w-4.5 h-4.5 -ml-0.5 stroke-[2.8] text-white" />
+            <span className="bg-white text-black font-bold text-[12px] px-2 py-0.5 rounded-full min-w-[24px] text-center leading-none">
+              59
             </span>
           </button>
-        </div>
 
-        {/* Center: Profile Icon & Contact Pill (Tapping opens Profile & Settings!) */}
-        <div 
-          onClick={() => setShowProfileModal(true)}
-          className="-mt-7 flex flex-col items-center justify-center cursor-pointer group z-10"
-          title="Open Profile and Settings"
-        >
-          {/* Large Circular Avatar (#545458 with white User silhouette) */}
-          <div className="w-12 h-12 bg-[#545458] rounded-full flex items-center justify-center text-white shadow-md group-hover:scale-105 active:scale-95 transition-transform">
-            <User className="w-7 h-7 text-white stroke-[2.2]" />
+          {/* Center: Profile Icon & Contact Pill (Tapping opens Profile & Settings!) */}
+          <div 
+            onClick={() => setShowProfileModal(true)}
+            className="flex flex-col items-center justify-center cursor-pointer group z-10"
+            title="Open Profile and Settings"
+          >
+            {/* Large Circular Avatar (#545458 with white User silhouette) */}
+            <div className="w-11 h-11 bg-[#545458] rounded-full flex items-center justify-center text-white shadow-md group-hover:scale-105 active:scale-95 transition-transform">
+              <User className="w-6 h-6 text-white stroke-[2.2]" />
+            </div>
+
+            {/* Contact Pill with Chevron > (Matching IMG_1139: 'CBE ›') */}
+            <div className="bg-[#2c2c2e] hover:bg-[#3a3a3c] px-3.5 py-0.5 rounded-full text-white font-medium text-[13px] flex items-center gap-1 mt-1 shadow-xs transition-colors">
+              <span>{senderTitle}</span>
+              <ChevronRight className="w-3.5 h-3.5 text-white/80 shrink-0" />
+            </div>
           </div>
 
-          {/* Contact Pill with Chevron > */}
-          <div className="bg-[#2c2c2e]/90 hover:bg-[#3a3a3c] px-3.5 py-1 rounded-full text-white font-semibold text-[13px] flex items-center gap-1 mt-1.5 shadow-xs transition-colors max-w-[280px]">
-            <span className="truncate">{senderTitle}</span>
-            <ChevronRight className="w-3.5 h-3.5 text-[#8e8e93] shrink-0" />
-          </div>
+          {/* Right: Invisible spacer to balance the back button so avatar stays centered */}
+          <div className="w-[68px] shrink-0 pointer-events-none" />
         </div>
       </header>
 
-      {/* 3. Messages Stream (Matching IMG_0092.png) */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pt-3 pb-24 space-y-4 w-full">
+      {/* 3. Messages Stream (Matching IMG_1139) */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-4 pt-3 pb-24 space-y-3.5 w-full bg-black">
         {/* Generic Thread Messages (e.g. Safaricom from screenshot) */}
         {isGeneric && thread?.messages && thread.messages.length > 0 ? (
           thread.messages.map((msg, index) => {
             const isOutgoing = msg.isOutgoing;
-            const tsStr = typeof msg?.timestamp === 'string' ? msg.timestamp : '';
-            // Show timestamp header when appropriate
-            const showTimestamp = index === 0 || tsStr.includes('Yesterday') || tsStr.includes('Today');
 
             return (
               <div key={msg.id || index} className="space-y-1">
-                {showTimestamp && (
-                  <div className="text-center text-[12px] font-medium text-[#8e8e93] my-2.5">
-                    {tsStr.includes('Yesterday') || tsStr.includes('Today') 
-                      ? tsStr 
-                      : `Today ${tsStr}`}
-                  </div>
-                )}
-
                 <div className={`flex ${isOutgoing ? 'justify-end' : 'justify-start'} w-full`}>
                   <div 
-                    className={`p-3.5 rounded-[20px] max-w-[85%] text-[15px] leading-relaxed select-text shadow-xs break-words [overflow-wrap:anywhere] overflow-hidden ${
+                    className={`p-3.5 rounded-[20px] max-w-[94%] text-[15px] leading-[1.38] select-text shadow-xs break-words [overflow-wrap:anywhere] overflow-hidden ${
                       isOutgoing 
                         ? 'bg-[#007aff] text-white rounded-br-[4px]' 
-                        : 'bg-[#26252a] text-white rounded-bl-[4px]'
+                        : 'bg-[#262628] text-white rounded-bl-[4px]'
                     }`}
                   >
                     {renderFormattedText(msg.text)}
@@ -188,18 +185,12 @@ export const AppleMessagesThread: React.FC<AppleMessagesThreadProps> = ({
             );
           })
         ) : (
-          /* CBE Banking SMS Messages (Recent transactions appear at top) */
+          /* CBE Banking SMS Messages (Chronological order matching IMG_1139) */
           sortedMessages.map((msg, index) => {
-            const timeHeader = formatBubbleTime(msg?.timestamp || new Date().toISOString());
-
             return (
               <div key={msg.id || index} className="space-y-1">
-                <div className="text-center text-[12px] font-medium text-[#8e8e93] my-2.5">
-                  {timeHeader}
-                </div>
-
                 <div className="flex justify-start w-full">
-                  <div className="bg-[#26252a] text-white p-3.5 rounded-[20px] rounded-bl-[4px] max-w-[85%] text-[15px] leading-relaxed select-text shadow-xs break-words [overflow-wrap:anywhere] overflow-hidden">
+                  <div className="bg-[#262628] text-white px-4 py-3.5 rounded-[20px] rounded-bl-[4px] max-w-[94%] text-[15px] leading-[1.38] select-text shadow-xs break-words [overflow-wrap:anywhere] overflow-hidden">
                     {renderFormattedText(msg?.message, msg)}
                   </div>
                 </div>
@@ -211,7 +202,7 @@ export const AppleMessagesThread: React.FC<AppleMessagesThreadProps> = ({
       </div>
 
       {/* 4. Fixed Bottom Bar (+ button and Text Message input pill) */}
-      <div className="fixed bottom-0 inset-x-0 bg-black px-3 pt-2 pb-safe z-30 flex items-center gap-2 border-t border-[#1c1c1e]">
+      <div className="fixed bottom-0 inset-x-0 bg-black px-3 pt-2 pb-[max(env(safe-area-inset-bottom,0px),12px)] z-30 flex items-center gap-2 border-t border-[#1c1c1e]">
         {/* Circular Plus Button */}
         <button
           type="button"
@@ -223,7 +214,7 @@ export const AppleMessagesThread: React.FC<AppleMessagesThreadProps> = ({
         </button>
 
         {/* Input Bar Pill */}
-        <div className="flex-1 bg-[#1c1c1e] border border-[#2c2c2e] rounded-full px-4 py-2 flex items-center justify-between text-[15px]">
+        <div className="flex-1 bg-[#1c1c1e] border border-[#2c2c2e]/70 rounded-full px-4 py-2 flex items-center justify-between text-[15px]">
           <input
             type="text"
             placeholder="Text Message • SMS"

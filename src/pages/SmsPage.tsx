@@ -431,22 +431,37 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
 
     if (pageView === 'generic_thread' && selectedGenericThread) {
       return (
-        <AppleMessagesThread
-          messages={[]}
-          thread={selectedGenericThread}
-          onBack={() => {
-            refreshThreads();
-            setPageView('inbox');
-          }}
-          onBackToApp={onBack}
-          onSendMessage={(txt) => {
-            GoogleMessagesService.sendMessage(selectedGenericThread.id, txt);
-            refreshThreads();
-            const updated = GoogleMessagesService.getThreads().find(t => t.id === selectedGenericThread.id);
-            if (updated) setSelectedGenericThread(updated);
-          }}
-          isDarkMode={isDarkMode}
-        />
+        <>
+          <AppleMessagesThread
+            messages={[]}
+            thread={selectedGenericThread}
+            onBack={() => {
+              refreshThreads();
+              setPageView('inbox');
+            }}
+            onBackToApp={onBack}
+            onOpenWebReceipt={(msg) => setShowReceiptModal(msg)}
+            onOpenHolidayCard={() => setShowHolidayCardModal(true)}
+            onSendMessage={(txt) => {
+              GoogleMessagesService.sendMessage(selectedGenericThread.id, txt);
+              refreshThreads();
+              const updated = GoogleMessagesService.getThreads().find(t => t.id === selectedGenericThread.id);
+              if (updated) setSelectedGenericThread(updated);
+            }}
+            isDarkMode={isDarkMode}
+          />
+          {showReceiptModal && (
+            <CbeWebReceiptModal 
+              smsMessage={showReceiptModal} 
+              onClose={() => setShowReceiptModal(null)} 
+            />
+          )}
+          {showHolidayCardModal && (
+            <CbeHolidayCardModal 
+              onClose={() => setShowHolidayCardModal(false)} 
+            />
+          )}
+        </>
       );
     }
   }
