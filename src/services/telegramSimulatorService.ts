@@ -22,7 +22,7 @@ const DEFAULT_SETTINGS: TelegramChatSettings = {
   showReadTicks: true,
   showAvatars: false,
   showStatus: true,
-  showAndroidStatusBar: true,
+  showAndroidStatusBar: false,
   timeFormat: '12h',
   typingSimulation: false,
   typingDurationSec: 3,

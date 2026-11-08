@@ -1202,11 +1202,11 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
 
   return (
     <div 
-      className="relative w-full h-full max-w-md mx-auto bg-black text-white flex flex-col overflow-hidden font-sans select-none"
+      className="relative w-full h-full bg-black text-white flex flex-col overflow-hidden font-sans select-none"
       style={{ fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}
     >
       {/* 2. Top Header Row: Search & Settings Hexagon (Right-aligned matching Screenshot 1) */}
-      <div className="w-full px-4 pt-1 pb-1 flex items-center justify-between shrink-0 z-10">
+      <div className="w-full px-4 pt-[max(env(safe-area-inset-top,0px),8px)] pb-1 flex items-center justify-between shrink-0 z-10">
         <div>
           {onBack && (
             <button 

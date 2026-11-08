@@ -273,7 +273,7 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
   return (
     <div 
       id="admin-panel-container" 
-      className="w-full max-w-6xl mx-auto px-3 py-4 sm:p-5 md:p-6 bg-slate-900 text-slate-100 min-h-screen pb-24 rounded-2xl md:rounded-3xl shadow-2xl border border-slate-800/80 overflow-x-hidden min-w-0 box-border"
+      className="w-full min-h-screen px-3 py-4 sm:p-5 md:p-6 bg-slate-900 text-slate-100 pb-24 overflow-x-hidden min-w-0 box-border"
     >
       {/* Admin Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4 mb-4 sm:pb-6 sm:mb-6">

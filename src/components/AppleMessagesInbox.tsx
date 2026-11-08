@@ -45,7 +45,7 @@ export const AppleMessagesInbox: React.FC<AppleMessagesInboxProps> = ({
 
 
       {/* 2. Top Navigation Bar (Edit pill button on left, Filter icon button with unread count on right) */}
-      <div className="px-4 pt-2 pb-1 flex items-center justify-between">
+      <div className="px-4 pt-[max(env(safe-area-inset-top,0px),10px)] pb-1 flex items-center justify-between">
         {/* Left: Edit button in dark pill - Opens Profile & Settings */}
         <button
           type="button"

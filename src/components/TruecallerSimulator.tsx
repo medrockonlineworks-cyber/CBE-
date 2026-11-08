@@ -4001,18 +4001,18 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
   // "Then we submit it will show the message popdown like same future of Truecaller"
   // =========================================================================
   return (
-    <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center overflow-hidden select-none font-sans">
+    <div className="fixed inset-0 z-50 bg-black flex flex-col w-full h-full overflow-hidden select-none font-sans">
       
       {/* Toast popup */}
       {toastMessage && (
-        <div className="fixed top-12 z-50 bg-white text-slate-900 font-bold px-4 py-2 rounded-full shadow-2xl text-xs flex items-center space-x-2 border border-blue-500 animate-in fade-in slide-in-from-top-3 duration-150">
+        <div className="fixed top-12 left-1/2 -translate-x-1/2 z-50 bg-white text-slate-900 font-bold px-4 py-2 rounded-full shadow-2xl text-xs flex items-center space-x-2 border border-blue-500 animate-in fade-in slide-in-from-top-3 duration-150">
           <CheckCircle2 className="w-4 h-4 text-[#0066FF]" />
           <span>{toastMessage}</span>
         </div>
       )}
 
-      {/* PHONE DEVICE FRAME CONTAINER */}
-      <div className="relative w-full h-full max-w-[440px] max-h-[920px] bg-black sm:rounded-[38px] overflow-hidden sm:border-[5px] sm:border-neutral-800 shadow-[0_25px_70px_rgba(0,0,0,0.8)] flex flex-col">
+      {/* FULL SCREEN EDGE-TO-EDGE CONTAINER */}
+      <div className="relative w-full h-full bg-black overflow-hidden flex flex-col">
         
         {/* Selected Phone Screen (TikTok, YouTube, Telegram, Instagram, WhatsApp, LockScreen) */}
         <div className="relative w-full flex-1 overflow-hidden">

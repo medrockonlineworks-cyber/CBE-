@@ -398,7 +398,7 @@ export default function TelegramChatPreview({
         )}
 
         {/* 2. Floating Pill Header (Exact structure matching Screenshot_20260915-145508.png) */}
-        <header className="px-3 pt-1 pb-1 flex items-center justify-between shrink-0 pointer-events-auto">
+        <header className={`px-3 ${chat.settings.showAndroidStatusBar ? 'pt-1' : 'pt-[max(env(safe-area-inset-top,0px),8px)]'} pb-1 flex items-center justify-between shrink-0 pointer-events-auto`}>
           {/* Left Circular Back Button */}
           <button
             onClick={onBack}

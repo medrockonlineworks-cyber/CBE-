@@ -119,7 +119,7 @@ export const AppleMessagesThread: React.FC<AppleMessagesThreadProps> = ({
 
 
       {/* 2. Top Navigation Bar (Back pill on left, Large Avatar & Contact Pill in center) */}
-      <div className="px-3 pt-1 pb-3 flex items-center justify-between relative border-b border-[#2c2c2e]/60">
+      <div className="px-3 pt-[max(env(safe-area-inset-top,0px),10px)] pb-3 flex items-center justify-between relative border-b border-[#2c2c2e]/60">
         {/* Left: Back button in dark pill with count 1 */}
         <button
           type="button"

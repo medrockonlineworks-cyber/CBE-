@@ -675,7 +675,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       onDoubleClick={handleScreenDoubleClick}
       onTouchStart={handleScreenTouchStart}
       onTouchEnd={handleScreenTouchEnd}
-      className="h-[100dvh] max-h-[100dvh] max-w-md mx-auto bg-white text-slate-800 flex flex-col relative overflow-hidden select-none cursor-pointer"
+      className="w-full h-full min-h-[100dvh] h-[100dvh] bg-white text-slate-800 flex flex-col relative overflow-hidden select-none cursor-pointer"
     >
       
       {/* Floating Home Back Button when in clean screenshot view mode (like Image 1) */}

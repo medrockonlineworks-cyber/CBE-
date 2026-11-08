@@ -75,11 +75,11 @@ const TelebirrSuperAppContent: React.FC<TelebirrSuperAppContentProps> = ({
   return (
     <div 
       id="telebirr-superapp-viewport"
-      className="w-full h-full max-w-md mx-auto relative bg-[#F4F6F8] font-sans antialiased select-none flex flex-col justify-between overflow-hidden"
+      className="w-full h-full relative bg-[#F4F6F8] font-sans antialiased select-none flex flex-col justify-between overflow-hidden"
     >
       {/* 1. TOP BRAND HEADER (Clean Ethio Telecom Left, Telebirr Right matching Screenshot 1-4) */}
       {isHome && (
-        <div className="w-full bg-white px-3.5 py-1.5 flex items-center justify-between border-b border-gray-100 z-20 shrink-0 shadow-2xs">
+        <div className="w-full bg-white px-3.5 pt-[max(env(safe-area-inset-top,0px),6px)] pb-1.5 flex items-center justify-between border-b border-gray-100 z-20 shrink-0 shadow-2xs">
           {/* Ethio Telecom Logo & Back to CBE */}
           <div className="flex items-center gap-1.5 h-6">
             {isIPhone && (

@@ -73,7 +73,7 @@ export default function GoogleMessagesThread({
     } font-sans select-none`}>
       
       {/* Top App Bar */}
-      <header className={`px-3 py-2.5 flex items-center justify-between sticky top-0 z-20 border-b ${
+      <header className={`px-3 pt-[max(env(safe-area-inset-top,0px),10px)] pb-2.5 flex items-center justify-between sticky top-0 z-20 border-b ${
         isDarkMode ? 'bg-[#1a1b1e] border-neutral-800' : 'bg-white border-neutral-200'
       }`}>
         <div className="flex items-center space-x-2 min-w-0">

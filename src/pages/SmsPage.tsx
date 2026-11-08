@@ -485,7 +485,7 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
     <div className={`h-full min-h-[100dvh] h-[100dvh] w-full ${isDarkMode ? 'bg-[#121212] text-[#e3e3e3]' : 'bg-[#f4f5f7] text-[#1f2328]'} flex flex-col font-sans select-text antialiased transition-colors duration-150 overflow-hidden`}>
       
       {/* 2. Google Messages CBE Header Bar (Matching screenshot) */}
-      <header className={`w-full ${isDarkMode ? 'bg-[#121212] border-neutral-900/80 text-white' : 'bg-white border-neutral-200 text-neutral-900 shadow-sm'} border-b px-2 py-2 flex items-center justify-between relative z-40`}>
+      <header className={`w-full ${isDarkMode ? 'bg-[#121212] border-neutral-900/80 text-white' : 'bg-white border-neutral-200 text-neutral-900 shadow-sm'} border-b px-2 pt-[max(env(safe-area-inset-top,0px),8px)] pb-2 flex items-center justify-between relative z-40`}>
         <div className="flex items-center space-x-3">
           {/* Back button returning to Google Messages inbox */}
           <button

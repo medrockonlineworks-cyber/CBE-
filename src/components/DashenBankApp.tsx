@@ -300,7 +300,7 @@ export default function DashenBankApp({ currentUser, onBack, onOpenTelebirr }: D
 
   return (
     <div 
-      className="relative w-full h-full max-w-md mx-auto flex flex-col overflow-hidden select-none font-sans text-white bg-[#040b18]"
+      className="relative w-full h-full flex flex-col overflow-hidden select-none font-sans text-white bg-[#040b18]"
     >
       {/* Authentic Mount Dashen Background matching Screenshot 123028 (with optional custom image overlay) */}
       <DashenMountainBackdrop customBgImage={customBgImage} />
@@ -319,7 +319,7 @@ export default function DashenBankApp({ currentUser, onBack, onOpenTelebirr }: D
       {subScreen === 'send_dashen' ? (
         <div className="flex-1 flex flex-col h-full overflow-hidden animate-in slide-in-from-right-4 duration-200">
           {/* Header matching Screenshot 123050 */}
-          <div className="w-full px-4 pt-3 pb-3 flex items-center gap-3 shrink-0">
+          <div className="w-full px-4 pt-[max(env(safe-area-inset-top,0px),12px)] pb-3 flex items-center gap-3 shrink-0">
             <button 
               onClick={() => {
                 if (sendStep !== 'input_acc') {
@@ -802,7 +802,7 @@ export default function DashenBankApp({ currentUser, onBack, onOpenTelebirr }: D
           
           {/* TAB 1: HOME DASHBOARD (Exact match for Screenshot_20260909-123028.png) */}
           {currentTab === 'home' && (
-            <div className="flex-1 overflow-y-auto px-4 pb-20 scrollbar-none space-y-4 pt-2">
+            <div className="flex-1 overflow-y-auto px-4 pb-20 scrollbar-none space-y-4 pt-[max(env(safe-area-inset-top,0px),8px)]">
               
               {/* Top Header Row matching Screenshot 123028 */}
               <div className="flex items-center justify-between pt-1 pb-1">
