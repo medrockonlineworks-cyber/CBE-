@@ -537,7 +537,7 @@ export const Home: React.FC<HomeProps> = ({
 
   return (
     <div 
-      className="h-full w-full bg-[#70189F] font-sans relative flex flex-col overflow-hidden text-gray-900 select-none"
+      className="h-full w-full bg-white font-sans relative flex flex-col overflow-hidden text-gray-900 select-none"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}

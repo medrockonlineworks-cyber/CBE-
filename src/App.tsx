@@ -249,7 +249,7 @@ export default function App() {
       case 'main':
       default:
         return {
-          rootBg: 'bg-[#70189F]',
+          rootBg: 'bg-white',
           statusBarBg: 'bg-[#70189F] text-white',
           statusTheme: 'cbe' as const,
           navBarBg: 'bg-white border-neutral-200 text-neutral-800',

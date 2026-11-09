@@ -242,7 +242,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
     const activeColor = browserThemeColors[browserType] || '#121214';
     SystemBarsService.applyBars({
       statusBarColor: activeColor,
-      navBarColor: activeColor,
+      navBarColor: '#ffffff',
       isDarkStyle: true,
     });
 
@@ -2937,6 +2937,11 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
               <span>Download PDF</span>
             </button>
           </div>
+          {/* Solid White Device Navigation Bar Safe-Area Strip */}
+          <div 
+            data-html2canvas-ignore="true" 
+            className="fixed bottom-0 inset-x-0 h-[max(env(safe-area-inset-bottom,0px),0px)] bg-white pointer-events-none z-30" 
+          />
         </>
       )}
 

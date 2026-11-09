@@ -65,17 +65,18 @@ export class SystemBarsService {
       appleStatusBar.setAttribute('content', isDarkStyle ? 'black-translucent' : 'default');
     }
 
-    // 4. Document root and body backgrounds (prevents purple/white bleeding at notch / home bar)
+    // 4. Document root and body backgrounds:
+    // Top safe area aligns with statusBarColor; bottom safe area / nav bar aligns with navBarColor
     if (document.documentElement) {
       document.documentElement.style.backgroundColor = statusBarColor;
     }
     if (document.body) {
-      document.body.style.backgroundColor = statusBarColor;
+      document.body.style.backgroundColor = navBarColor;
     }
 
     const mainCanvas = document.getElementById('app-main-canvas');
     if (mainCanvas) {
-      mainCanvas.style.backgroundColor = statusBarColor;
+      mainCanvas.style.backgroundColor = navBarColor === '#ffffff' ? '#ffffff' : statusBarColor;
     }
 
     // 5. Capacitor Native Bridge Support (Android & iOS)
