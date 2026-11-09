@@ -15,7 +15,7 @@ export const BASE_MANIFEST = {
   display: 'standalone',
   display_override: ['standalone', 'minimal-ui', 'fullscreen', 'browser'],
   orientation: 'portrait-primary',
-  theme_color: '#70189F',
+  theme_color: '#ffffff',
   background_color: '#ffffff',
   lang: 'en',
   dir: 'ltr',
@@ -313,30 +313,26 @@ export async function updatePwaBranding(customLogoUrl?: string | null): Promise<
       maskIconLink.href = `/pwa-maskable-512x512.png${versionParam}`;
     }
 
-    // 5. Update system bars: Top Header / Status bar is CBE purple (#70189F), Bottom Navigation bar is pure white (#ffffff)
-    const activeHeaderColor = '#70189F';
+    // 5. Update system bars: Ensure bottom navigation bar is pure white (#ffffff)
     const activeNavColor = '#ffffff';
 
     const navMetas = document.querySelectorAll('meta[name="navigation-bar-color"], meta[name="msapplication-navbutton-color"]');
     navMetas.forEach(meta => meta.setAttribute('content', activeNavColor));
 
-    const themeMetas = document.querySelectorAll('meta[name="theme-color"]');
-    themeMetas.forEach(meta => meta.setAttribute('content', activeHeaderColor));
-
     let tileColorMeta = document.querySelector('meta[name="msapplication-TileColor"]') as HTMLMetaElement | null;
     if (tileColorMeta) {
-      tileColorMeta.content = activeHeaderColor;
+      tileColorMeta.content = '#ffffff';
     }
     let tileImageMeta = document.querySelector('meta[name="msapplication-TileImage"]') as HTMLMetaElement | null;
     if (tileImageMeta) {
       tileImageMeta.content = `/pwa-512x512.png${versionParam}`;
     }
 
-    // 6. Construct full dynamic manifest with active logo and splash screens
+    // 6. Construct full dynamic manifest with active logo and splash screens: Pure white edge-to-edge launch
     const dynamicManifest = {
       ...BASE_MANIFEST,
       background_color: '#ffffff',
-      theme_color: activeHeaderColor,
+      theme_color: '#ffffff',
       icons: [
         {
           src: `/pwa-192x192.png${versionParam}`,

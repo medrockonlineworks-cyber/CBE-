@@ -199,7 +199,7 @@ export default defineConfig(() => {
           display: 'standalone',
           display_override: ['standalone', 'minimal-ui', 'fullscreen', 'browser'],
           orientation: 'portrait-primary',
-          theme_color: '#70189F',
+          theme_color: '#ffffff',
           background_color: '#ffffff',
           lang: 'en',
           dir: 'ltr',

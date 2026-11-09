@@ -33,8 +33,8 @@ const cbeEmblemSvg = `
     </filter>
   </defs>
 
-  <!-- Background Base with Rounded Corners -->
-  <rect width="512" height="512" rx="104" fill="url(#bgGrad)"/>
+  <!-- Background Base with Rounded Corners: Pure White -->
+  <rect width="512" height="512" rx="104" fill="#ffffff"/>
 
   <!-- Subtle Outer Golden Ring -->
   <circle cx="256" cy="256" r="236" fill="none" stroke="#deb356" stroke-width="4" opacity="0.35"/>
@@ -94,8 +94,8 @@ const cbeMaskableSvg = `
     </radialGradient>
   </defs>
 
-  <!-- Full Bleed Background for Safe Masking -->
-  <rect width="512" height="512" fill="url(#bgGrad2)"/>
+  <!-- Full Bleed Pure White Background for Clean Edge-to-Edge Launch -->
+  <rect width="512" height="512" fill="#ffffff"/>
 
   <!-- Centered Scaled Content (80% Safe Zone) -->
   <g transform="translate(51.2, 51.2) scale(0.8)">
@@ -165,16 +165,12 @@ const cbeMobileScreenshotSvg = `
     </radialGradient>
   </defs>
 
-  <!-- Background -->
-  <rect width="540" height="1170" fill="url(#splashBg)"/>
+  <!-- Background: Pure White Edge-to-Edge -->
+  <rect width="540" height="1170" fill="#ffffff"/>
 
-  <!-- Subtle Ambient Glows -->
-  <circle cx="270" cy="460" r="280" fill="#deb356" opacity="0.06"/>
-  <circle cx="450" cy="180" r="180" fill="#a855f7" opacity="0.08"/>
-
-  <!-- Top Status / Brand Header -->
+  <!-- Top Status / Brand Header Indicator -->
   <g transform="translate(40, 70)">
-    <rect width="460" height="4" rx="2" fill="#deb356" opacity="0.4"/>
+    <rect width="460" height="4" rx="2" fill="#deb356" opacity="0.3"/>
   </g>
 
   <!-- Central CBE Emblem (High Resolution) -->
@@ -209,55 +205,55 @@ const cbeMobileScreenshotSvg = `
   <!-- Typography & Official Identity -->
   <g text-anchor="middle" font-family="system-ui, -apple-system, sans-serif">
     <!-- Amharic Official Title -->
-    <text x="270" y="660" font-size="28" font-weight="bold" fill="#deb356" letter-spacing="1">
+    <text x="270" y="660" font-size="28" font-weight="bold" fill="#b8860b" letter-spacing="1">
       የኢትዮጵያ ንግድ ባንክ
     </text>
 
     <!-- English Official Title -->
-    <text x="270" y="700" font-size="20" font-weight="600" fill="#E2E8F0" letter-spacing="1.5">
+    <text x="270" y="700" font-size="20" font-weight="600" fill="#1f2937" letter-spacing="1.5">
       Commercial Bank of Ethiopia
     </text>
 
     <!-- App Name Highlight -->
-    <text x="270" y="755" font-size="34" font-weight="900" fill="url(#goldText)" letter-spacing="2">
-      CBE Mobile Banking
+    <text x="270" y="755" font-size="34" font-weight="900" fill="#70189F" letter-spacing="2">
+      CBE Mobile
     </text>
 
     <!-- Official Slogan -->
-    <text x="270" y="795" font-size="16" font-weight="400" fill="#CBD5E1" letter-spacing="0.5">
+    <text x="270" y="795" font-size="16" font-weight="400" fill="#6b7280" letter-spacing="0.5">
       The Bank You Can Always Rely On
     </text>
   </g>
 
   <!-- Feature Highlights Box -->
   <g transform="translate(45, 840)">
-    <rect width="450" height="180" rx="24" fill="url(#cardGrad)" stroke="#deb356" stroke-width="1.5" stroke-opacity="0.3"/>
+    <rect width="450" height="180" rx="24" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1.5"/>
     
     <g transform="translate(30, 38)" font-family="system-ui, -apple-system, sans-serif">
       <!-- Item 1 -->
       <circle cx="16" cy="16" r="14" fill="#deb356" opacity="0.2"/>
-      <path d="M11 16 L15 20 L21 12" stroke="#deb356" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-      <text x="44" y="22" font-size="16" font-weight="bold" fill="#FFFFFF">Instant CBE Birr &amp; Interbank Transfers</text>
+      <path d="M11 16 L15 20 L21 12" stroke="#b8860b" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <text x="44" y="22" font-size="16" font-weight="bold" fill="#1f2937">Instant CBE Birr &amp; Interbank Transfers</text>
 
       <!-- Item 2 -->
       <g transform="translate(0, 50)">
         <circle cx="16" cy="16" r="14" fill="#deb356" opacity="0.2"/>
-        <path d="M11 16 L15 20 L21 12" stroke="#deb356" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-        <text x="44" y="22" font-size="16" font-weight="bold" fill="#FFFFFF">Official Digital Receipts with QR Code</text>
+        <path d="M11 16 L15 20 L21 12" stroke="#b8860b" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <text x="44" y="22" font-size="16" font-weight="bold" fill="#1f2937">Official Digital Receipts with QR Code</text>
       </g>
 
       <!-- Item 3 -->
       <g transform="translate(0, 100)">
         <circle cx="16" cy="16" r="14" fill="#deb356" opacity="0.2"/>
-        <path d="M11 16 L15 20 L21 12" stroke="#deb356" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-        <text x="44" y="22" font-size="16" font-weight="bold" fill="#FFFFFF">Secure Biometric &amp; End-to-End Encryption</text>
+        <path d="M11 16 L15 20 L21 12" stroke="#b8860b" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+        <text x="44" y="22" font-size="16" font-weight="bold" fill="#1f2937">Secure Biometric &amp; End-to-End Encryption</text>
       </g>
     </g>
   </g>
 
   <!-- Bottom Version & Security Footer -->
   <g text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" opacity="0.7">
-    <text x="270" y="1090" font-size="13" font-weight="500" fill="#94A3B8">
+    <text x="270" y="1090" font-size="13" font-weight="500" fill="#6b7280">
       Official Commercial Bank of Ethiopia PWA • Secured by CBE
     </text>
   </g>
@@ -300,22 +296,20 @@ const cbeWideScreenshotSvg = `
     </radialGradient>
   </defs>
 
-  <rect width="1280" height="800" fill="url(#wBg)"/>
-  <circle cx="950" cy="400" r="350" fill="#deb356" opacity="0.05"/>
-  <circle cx="200" cy="200" r="250" fill="#a855f7" opacity="0.06"/>
+  <rect width="1280" height="800" fill="#ffffff"/>
 
   <!-- Left Hero Section -->
   <g transform="translate(100, 200)" font-family="system-ui, -apple-system, sans-serif">
-    <text x="0" y="40" font-size="28" font-weight="bold" fill="#deb356" letter-spacing="1">
+    <text x="0" y="40" font-size="28" font-weight="bold" fill="#b8860b" letter-spacing="1">
       የኢትዮጵያ ንግድ ባንክ
     </text>
-    <text x="0" y="85" font-size="22" font-weight="600" fill="#E2E8F0" letter-spacing="1">
+    <text x="0" y="85" font-size="22" font-weight="600" fill="#1f2937" letter-spacing="1">
       Commercial Bank of Ethiopia
     </text>
-    <text x="0" y="160" font-size="52" font-weight="900" fill="url(#goldText)" letter-spacing="1">
-      CBE Mobile Banking
+    <text x="0" y="160" font-size="52" font-weight="900" fill="#70189F" letter-spacing="1">
+      CBE Mobile
     </text>
-    <text x="0" y="210" font-size="20" font-weight="400" fill="#CBD5E1">
+    <text x="0" y="210" font-size="20" font-weight="400" fill="#4b5563">
       The Bank You Can Always Rely On • Secure Digital Banking Anywhere
     </text>
 

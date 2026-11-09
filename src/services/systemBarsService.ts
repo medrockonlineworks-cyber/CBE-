@@ -15,11 +15,11 @@ export interface SystemBarsConfig {
 
 export class SystemBarsService {
   private static currentConfig: SystemBarsConfig = {
-    statusBarColor: '#70189F',
+    statusBarColor: '#ffffff',
     navBarColor: '#ffffff',
-    isDarkStyle: true,
+    isDarkStyle: false,
   };
-  private static activeViewName: string = 'main';
+  private static activeViewName: string = 'auth';
 
   public static getCurrentConfig(): SystemBarsConfig {
     return { ...this.currentConfig };

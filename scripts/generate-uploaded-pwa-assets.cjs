@@ -68,66 +68,40 @@ function generateUploadedPwaAssets() {
 </svg>
 `;
 
-  // 3. Mobile Splash / Screenshot (540x1170)
+  // 3. Mobile Splash / Screenshot (540x1170) - Pure White Edge-to-Edge
   const splashMobileSvg = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 1170" width="540" height="1170">
-  <defs>
-    <linearGradient id="splashBg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#2a053b"/>
-      <stop offset="50%" stop-color="#1b0326"/>
-      <stop offset="100%" stop-color="#0c0112"/>
-    </linearGradient>
-    <radialGradient id="splashGlow" cx="50%" cy="38%" r="45%">
-      <stop offset="0%" stop-color="rgba(222, 179, 86, 0.22)"/>
-      <stop offset="100%" stop-color="rgba(222, 179, 86, 0)"/>
-    </radialGradient>
-  </defs>
-
-  <rect width="540" height="1170" fill="url(#splashBg)"/>
-  <circle cx="270" cy="440" r="230" fill="url(#splashGlow)"/>
+  <rect width="540" height="1170" fill="#ffffff"/>
 
   <!-- Centered Uploaded Logo -->
   <image href="${dataUri}" x="150" y="320" width="240" height="240" preserveAspectRatio="xMidYMid meet"/>
 
   <!-- Amharic Official Title -->
-  <text x="270" y="620" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="bold" font-size="25" fill="#deb356">የኢትዮጵያ ንግድ ባንክ</text>
+  <text x="270" y="620" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="bold" font-size="25" fill="#b8860b">የኢትዮጵያ ንግድ ባንክ</text>
 
   <!-- English Title -->
-  <text x="270" y="656" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="600" font-size="17" fill="#E2E8F0">Commercial Bank of Ethiopia</text>
+  <text x="270" y="656" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="600" font-size="17" fill="#1f2937">Commercial Bank of Ethiopia</text>
 
   <!-- App Name -->
-  <text x="270" y="715" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="30" fill="#deb356">CBE Mobil</text>
+  <text x="270" y="715" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="30" fill="#70189F">CBE Mobile</text>
 
   <!-- Slogan -->
-  <text x="270" y="750" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="400" font-size="14" fill="#CBD5E1">The Bank You Can Always Rely On</text>
+  <text x="270" y="750" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="400" font-size="14" fill="#6b7280">The Bank You Can Always Rely On</text>
 </svg>
 `;
 
-  // 4. Wide Screenshot (1280x800)
+  // 4. Wide Screenshot (1280x800) - Pure White Edge-to-Edge
   const splashWideSvg = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 800" width="1280" height="800">
-  <defs>
-    <linearGradient id="wideBg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#2a053b"/>
-      <stop offset="50%" stop-color="#1b0326"/>
-      <stop offset="100%" stop-color="#0c0112"/>
-    </linearGradient>
-    <radialGradient id="wideGlow" cx="50%" cy="40%" r="45%">
-      <stop offset="0%" stop-color="rgba(222, 179, 86, 0.22)"/>
-      <stop offset="100%" stop-color="rgba(222, 179, 86, 0)"/>
-    </radialGradient>
-  </defs>
-
-  <rect width="1280" height="800" fill="url(#wideBg)"/>
-  <circle cx="640" cy="320" r="320" fill="url(#wideGlow)"/>
+  <rect width="1280" height="800" fill="#ffffff"/>
 
   <!-- Centered Uploaded Logo -->
   <image href="${dataUri}" x="520" y="200" width="240" height="240" preserveAspectRatio="xMidYMid meet"/>
 
-  <text x="640" y="490" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="bold" font-size="28" fill="#deb356">የኢትዮጵያ ንግድ ባንክ</text>
-  <text x="640" y="528" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="600" font-size="20" fill="#E2E8F0">Commercial Bank of Ethiopia</text>
-  <text x="640" y="585" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="34" fill="#deb356">CBE Mobil</text>
-  <text x="640" y="622" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="400" font-size="16" fill="#CBD5E1">The Bank You Can Always Rely On</text>
+  <text x="640" y="490" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="bold" font-size="28" fill="#b8860b">የኢትዮጵያ ንግድ ባንክ</text>
+  <text x="640" y="528" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="600" font-size="20" fill="#1f2937">Commercial Bank of Ethiopia</text>
+  <text x="640" y="585" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="34" fill="#70189F">CBE Mobile</text>
+  <text x="640" y="622" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-weight="400" font-size="16" fill="#6b7280">The Bank You Can Always Rely On</text>
 </svg>
 `;
 
