@@ -91,7 +91,7 @@ export const AppleMessagesInbox: React.FC<AppleMessagesInboxProps> = ({
           const isUnread = (thread.unreadCount ?? 0) > 0 || thread.sender === 'CBE' || thread.sender === '127' || thread.sender === 'BOA' || thread.sender === '830' || thread.sender === '+251 95 819 0691' || thread.sender === 'DashenBank';
 
           return (
-            <div key={thread.id || idx} className="relative">
+            <div key={`${thread.id}-${idx}`} className="relative">
               <div
                 onClick={() => {
                   if (isCbe) {

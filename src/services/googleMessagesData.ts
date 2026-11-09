@@ -209,7 +209,7 @@ export const DEFAULT_THREADS: MessageThread[] = [
     ]
   },
   {
-    id: 'boa',
+    id: 'boa-promo',
     sender: 'BOA',
     avatarColor: '#ef4444',
     snippet: 'ዓለም አቀፍ ግብይቶችን በቀላሉ ያድርጉ!...',
@@ -218,7 +218,7 @@ export const DEFAULT_THREADS: MessageThread[] = [
     unreadCount: 0,
     messages: [
       {
-        id: 'msg-boa-1',
+        id: 'msg-boa-promo-1',
         text: 'ዓለም አቀፍ ግብይቶችን በቀላሉ ያድርጉ! የባንክ ኦፍ አቢሲንያ ዲጂታል የክፍያ አማራጮችን አሁኑኑ ይጠቀሙ። ለተጨማሪ መረጃ 8397 ይደውሉ።',
         timestamp: 'Yesterday',
         sender: 'BOA'
@@ -271,20 +271,28 @@ export class GoogleMessagesService {
       if (data) {
         const parsed = JSON.parse(data);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Ensure all threads have required string fields
-          return parsed.map((t, idx) => ({
-            id: t?.id || `thread-${idx}`,
-            sender: t?.sender || 'Unknown',
-            avatarColor: t?.avatarColor || '#545458',
-            snippet: t?.snippet || '',
-            timestamp: t?.timestamp || new Date().toISOString(),
-            timeLabel: t?.timeLabel || '9:30 AM',
-            unreadCount: typeof t?.unreadCount === 'number' ? t.unreadCount : 0,
-            isCbe: Boolean(t?.isCbe || t?.id === 'CBE' || t?.sender === 'CBE'),
-            tag: t?.tag,
-            phoneNumber: t?.phoneNumber,
-            messages: Array.isArray(t?.messages) ? t.messages : [],
-          }));
+          const seen = new Set<string>();
+          // Ensure all threads have required string fields and unique IDs
+          return parsed.map((t, idx) => {
+            let threadId = t?.id || `thread-${idx}`;
+            if (seen.has(threadId)) {
+              threadId = `${threadId}-${idx}`;
+            }
+            seen.add(threadId);
+            return {
+              id: threadId,
+              sender: t?.sender || 'Unknown',
+              avatarColor: t?.avatarColor || '#545458',
+              snippet: t?.snippet || '',
+              timestamp: t?.timestamp || new Date().toISOString(),
+              timeLabel: t?.timeLabel || '9:30 AM',
+              unreadCount: typeof t?.unreadCount === 'number' ? t.unreadCount : 0,
+              isCbe: Boolean(t?.isCbe || t?.id === 'CBE' || t?.sender === 'CBE'),
+              tag: t?.tag,
+              phoneNumber: t?.phoneNumber,
+              messages: Array.isArray(t?.messages) ? t.messages : [],
+            };
+          });
         }
       }
     } catch {

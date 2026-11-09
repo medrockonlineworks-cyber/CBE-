@@ -166,9 +166,9 @@ export default function GoogleMessagesInbox({
             </p>
           </div>
         ) : (
-          filteredThreads.map(thread => (
+          filteredThreads.map((thread, idx) => (
             <div
-              key={thread.id}
+              key={`${thread.id}-${idx}`}
               onClick={() => onSelectThread(thread)}
               className={`w-full px-4 py-3.5 flex items-center justify-between cursor-pointer transition-colors ${
                 isDarkMode 
