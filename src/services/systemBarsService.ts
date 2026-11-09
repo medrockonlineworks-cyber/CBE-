@@ -50,22 +50,18 @@ export class SystemBarsService {
       document.head.appendChild(meta);
     }
 
-    // 2. Status bar & Theme color meta tags:
-    // On Android devices, Chrome and WebAPK use <meta name="theme-color"> to paint the 3-button navigation bar.
-    // If navBarColor is white (#ffffff), theme-color MUST be #ffffff so the device navigation bar is pure white!
-    // For dark subapps (like dark Apple Messages or Truecaller), theme-color follows their dark background.
-    const effectiveThemeColor = navBarColor === '#ffffff' ? '#ffffff' : statusBarColor;
-
+    // 2. Top status bar / Header meta tag:
+    // ALWAYS follows statusBarColor (#70189F for CBE) so the top header is authentic CBE purple!
     const themeMetas = document.querySelectorAll('meta[name="theme-color"]');
     themeMetas.forEach(meta => {
-      meta.setAttribute('content', effectiveThemeColor);
+      meta.setAttribute('content', statusBarColor);
       meta.removeAttribute('media');
     });
 
     if (!document.querySelector('meta[name="theme-color"]')) {
       const meta = document.createElement('meta');
       meta.name = 'theme-color';
-      meta.content = effectiveThemeColor;
+      meta.content = statusBarColor;
       document.head.appendChild(meta);
     }
 
@@ -78,10 +74,10 @@ export class SystemBarsService {
     }
 
     // 4. Document root and body backgrounds:
-    // When navBarColor is white (#ffffff), both documentElement and body are pure white to guarantee
-    // the white color extends completely to the bottom edge of the phone/device without purple strips.
+    // Top document root aligns with statusBarColor (#70189F) so the header and top notch are rich purple.
+    // Bottom body aligns with navBarColor (#ffffff) so the bottom navigation bar and phone edge are pure white.
     if (document.documentElement) {
-      document.documentElement.style.backgroundColor = navBarColor === '#ffffff' ? '#ffffff' : statusBarColor;
+      document.documentElement.style.backgroundColor = statusBarColor;
     }
     if (document.body) {
       document.body.style.backgroundColor = navBarColor;
