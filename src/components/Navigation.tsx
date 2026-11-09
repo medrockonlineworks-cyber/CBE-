@@ -90,7 +90,7 @@ export default function Navigation({
       <nav 
         id="cbe-bottom-navbar" 
         aria-label="Main Navigation"
-        className="w-full pointer-events-auto bg-white border-t border-gray-100 px-5 pt-0.5 pb-[max(env(safe-area-inset-bottom,0px),4px)] flex justify-between items-center shadow-[0_-1px_4px_rgba(0,0,0,0.02)] select-none min-h-[44px] shrink-0"
+        className="w-full pointer-events-auto bg-white border-t border-gray-100/80 px-5 pt-1 pb-[max(env(safe-area-inset-bottom,0px),8px)] flex justify-between items-center shadow-[0_-1px_4px_rgba(0,0,0,0.02)] select-none shrink-0"
       >
         {/* Item 1: Home */}
         <button
@@ -162,8 +162,6 @@ export default function Navigation({
           </span>
         </button>
       </nav>
-      {/* Solid White Device Navigation Bar Safe-Area Strip */}
-      <div className="w-full h-[max(env(safe-area-inset-bottom,0px),0px)] bg-white pointer-events-none" />
     </div>
   );
 }

@@ -138,7 +138,7 @@ export default function TransactionDetailModal({
   return (
     <div 
       id="transaction-detail-modal-overlay"
-      className="fixed inset-0 z-40 bg-black/50 backdrop-blur-[0.5px] flex flex-col justify-end items-center p-0 animate-in fade-in duration-200 select-none pointer-events-auto"
+      className="fixed inset-0 z-50 bg-black/55 backdrop-blur-[0.5px] flex flex-col justify-end items-center p-0 animate-in fade-in duration-200 select-none pointer-events-auto"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -148,8 +148,8 @@ export default function TransactionDetailModal({
         onClick={(e) => e.stopPropagation()}
         className={`w-full max-w-md bg-white rounded-b-none ${
           isIPhone 
-            ? 'rounded-t-[34px] px-6 pt-4 pb-[calc(52px+max(env(safe-area-inset-bottom,0px),12px))] shadow-[0_-12px_45px_rgba(0,0,0,0.22)] h-[68vh] min-h-[470px] max-h-[70vh]' 
-            : 'rounded-t-[28px] px-5 pt-3.5 pb-[calc(48px+max(env(safe-area-inset-bottom,0px),4px))] shadow-[0_-8px_35px_rgba(0,0,0,0.18)] h-[67vh] min-h-[460px] max-h-[69vh]'
+            ? 'rounded-t-[34px] px-6 pt-4 pb-[max(env(safe-area-inset-bottom,0px),16px)] shadow-[0_-12px_45px_rgba(0,0,0,0.25)] max-h-[85vh]' 
+            : 'rounded-t-[28px] px-5 pt-3.5 pb-[max(env(safe-area-inset-bottom,0px),12px)] shadow-[0_-8px_35px_rgba(0,0,0,0.2)] max-h-[85vh]'
         } mb-0 flex flex-col justify-between relative animate-in slide-in-from-bottom-5 duration-250 select-none overflow-y-auto`}
       >
         {/* Main Content Area */}
@@ -312,7 +312,7 @@ export default function TransactionDetailModal({
         </div>
 
         {/* Centered Purple VIEW RECEIPT Action Button (Matching Image 1 & Image 2) */}
-        <div className={`${isIPhone ? 'mt-3 mb-1 sm:mt-3.5 sm:mb-1' : 'mt-2.5 mb-1 sm:mt-3 sm:mb-1'} flex justify-center shrink-0`}>
+        <div className={`${isIPhone ? 'mt-4 mb-0 sm:mt-4.5 sm:mb-0' : 'mt-3 mb-0 sm:mt-3.5 sm:mb-0'} flex justify-center shrink-0`}>
           <button
             id="btn-view-full-receipt"
             type="button"
