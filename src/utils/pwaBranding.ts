@@ -48,15 +48,8 @@ function createSplashScreenshotDataUrl(sourceUrl: string, width = 540, height = 
           return;
         }
 
-        // Background Gradient (Deep Official CBE Purple)
-        ctx.fillStyle = '#70189F';
-        ctx.fillRect(0, 0, width, height);
-
-        // Ambient Gold Glow
-        const rad = ctx.createRadialGradient(width / 2, height * 0.38, 10, width / 2, height * 0.38, Math.min(width, height) * 0.45);
-        rad.addColorStop(0, 'rgba(222, 179, 86, 0.18)');
-        rad.addColorStop(1, 'rgba(222, 179, 86, 0)');
-        ctx.fillStyle = rad;
+        // Clean White Splash & Launch Background
+        ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, width, height);
 
         // Active Logo in Center
@@ -65,7 +58,7 @@ function createSplashScreenshotDataUrl(sourceUrl: string, width = 540, height = 
         const drawW = (img.naturalWidth || logoTargetSize) * scale;
         const drawH = (img.naturalHeight || logoTargetSize) * scale;
         const dx = (width - drawW) / 2;
-        const dy = height * 0.34 - drawH / 2;
+        const dy = height * 0.38 - drawH / 2;
 
         ctx.drawImage(img, dx, dy, drawW, drawH);
 
@@ -74,22 +67,22 @@ function createSplashScreenshotDataUrl(sourceUrl: string, width = 540, height = 
         
         // Amharic Official Title
         ctx.font = 'bold 26px system-ui, -apple-system, sans-serif';
-        ctx.fillStyle = '#deb356';
+        ctx.fillStyle = '#b8860b';
         ctx.fillText('የኢትዮጵያ ንግድ ባንክ', width / 2, dy + drawH + 68);
 
         // English Title
         ctx.font = '600 18px system-ui, -apple-system, sans-serif';
-        ctx.fillStyle = '#E2E8F0';
+        ctx.fillStyle = '#1f2937';
         ctx.fillText('Commercial Bank of Ethiopia', width / 2, dy + drawH + 102);
 
         // App Name: CBE Mobile
         ctx.font = '900 32px system-ui, -apple-system, sans-serif';
-        ctx.fillStyle = '#deb356';
+        ctx.fillStyle = '#70189F';
         ctx.fillText('CBE Mobile', width / 2, dy + drawH + 155);
 
         // Slogan
         ctx.font = '400 15px system-ui, -apple-system, sans-serif';
-        ctx.fillStyle = '#CBD5E1';
+        ctx.fillStyle = '#6b7280';
         ctx.fillText('The Bank You Can Always Rely On', width / 2, dy + drawH + 190);
 
         resolve(canvas.toDataURL('image/png'));
