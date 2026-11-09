@@ -162,6 +162,8 @@ export default function Navigation({
           </span>
         </button>
       </nav>
+      {/* Solid White Device Navigation Bar Safe-Area Strip */}
+      <div className="w-full h-[max(env(safe-area-inset-bottom,0px),0px)] bg-white pointer-events-none" />
     </div>
   );
 }

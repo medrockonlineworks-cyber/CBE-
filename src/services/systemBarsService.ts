@@ -31,29 +31,41 @@ export class SystemBarsService {
 
     const { statusBarColor, navBarColor, isDarkStyle } = config;
 
-    // 1. Top status bar meta tags (theme-color & msapplication-navbutton-color)
-    const themeMetas = document.querySelectorAll(
-      'meta[name="theme-color"], meta[name="msapplication-navbutton-color"]'
+    // 1. Bottom navigation bar meta tags:
+    // msapplication-navbutton-color & navigation-bar-color explicitly command the phone navigation bar color
+    const navMetas = document.querySelectorAll(
+      'meta[name="navigation-bar-color"], meta[name="msapplication-navbutton-color"]'
     );
+    navMetas.forEach(meta => meta.setAttribute('content', navBarColor));
+    if (!document.querySelector('meta[name="navigation-bar-color"]')) {
+      const meta = document.createElement('meta');
+      meta.name = 'navigation-bar-color';
+      meta.content = navBarColor;
+      document.head.appendChild(meta);
+    }
+    if (!document.querySelector('meta[name="msapplication-navbutton-color"]')) {
+      const meta = document.createElement('meta');
+      meta.name = 'msapplication-navbutton-color';
+      meta.content = navBarColor;
+      document.head.appendChild(meta);
+    }
+
+    // 2. Status bar & Theme color meta tags:
+    // On Android devices, Chrome and WebAPK use <meta name="theme-color"> to paint the 3-button navigation bar.
+    // If navBarColor is white (#ffffff), theme-color MUST be #ffffff so the device navigation bar is pure white!
+    // For dark subapps (like dark Apple Messages or Truecaller), theme-color follows their dark background.
+    const effectiveThemeColor = navBarColor === '#ffffff' ? '#ffffff' : statusBarColor;
+
+    const themeMetas = document.querySelectorAll('meta[name="theme-color"]');
     themeMetas.forEach(meta => {
-      meta.setAttribute('content', statusBarColor);
+      meta.setAttribute('content', effectiveThemeColor);
       meta.removeAttribute('media');
     });
 
     if (!document.querySelector('meta[name="theme-color"]')) {
       const meta = document.createElement('meta');
       meta.name = 'theme-color';
-      meta.content = statusBarColor;
-      document.head.appendChild(meta);
-    }
-
-    // 2. Bottom navigation bar meta tags
-    const navMetas = document.querySelectorAll('meta[name="navigation-bar-color"]');
-    navMetas.forEach(meta => meta.setAttribute('content', navBarColor));
-    if (!document.querySelector('meta[name="navigation-bar-color"]')) {
-      const meta = document.createElement('meta');
-      meta.name = 'navigation-bar-color';
-      meta.content = navBarColor;
+      meta.content = effectiveThemeColor;
       document.head.appendChild(meta);
     }
 
@@ -66,9 +78,10 @@ export class SystemBarsService {
     }
 
     // 4. Document root and body backgrounds:
-    // Top safe area aligns with statusBarColor; bottom safe area / nav bar aligns with navBarColor
+    // When navBarColor is white (#ffffff), both documentElement and body are pure white to guarantee
+    // the white color extends completely to the bottom edge of the phone/device without purple strips.
     if (document.documentElement) {
-      document.documentElement.style.backgroundColor = statusBarColor;
+      document.documentElement.style.backgroundColor = navBarColor === '#ffffff' ? '#ffffff' : statusBarColor;
     }
     if (document.body) {
       document.body.style.backgroundColor = navBarColor;

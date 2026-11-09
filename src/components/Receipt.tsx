@@ -50,6 +50,7 @@ import {
   getSafeReceiptFilename 
 } from '../services/receiptScreenshotService';
 import { renderAuthenticReceiptToCanvas } from '../services/receiptCanvasService';
+import { SystemBarsService } from '../services/systemBarsService';
 
 /**
  * Viewfinder focus screenshot icon matching exact reference (IMG_20260913_140907_194.jpg)
@@ -367,6 +368,14 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       window.removeEventListener('cbe_phone_back', handlePhoneBack);
     };
   }, [showDetailedModal]);
+
+  // Ensure device navigation bar is pure white (#ffffff) for Receipt view
+  useEffect(() => {
+    SystemBarsService.syncForView('receipt');
+    return () => {
+      SystemBarsService.syncForView('main');
+    };
+  }, []);
 
   const handleScreenTouchStart = (e: React.TouchEvent) => {
     if (e.touches && e.touches[0]) {
@@ -1034,6 +1043,12 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             </button>
           </div>
         )}
+
+        {/* Solid White Device Navigation Bar Safe-Area Strip extending to the bottom edge */}
+        <div 
+          data-html2canvas-ignore="true" 
+          className="fixed bottom-0 inset-x-0 h-[max(env(safe-area-inset-bottom,0px),0px)] bg-white pointer-events-none z-30" 
+        />
       </div>
 
       {/* When in Clean Screenshot Mode (matching Image 1) */}

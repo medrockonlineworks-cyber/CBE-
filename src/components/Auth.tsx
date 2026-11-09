@@ -694,6 +694,11 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
         </div>
       )}
 
+      {/* Solid White Device Navigation Bar Safe-Area Strip extending to the bottom edge */}
+      <div 
+        className="fixed bottom-0 inset-x-0 h-[max(env(safe-area-inset-bottom,0px),0px)] bg-white pointer-events-none z-30" 
+      />
+
     </div>
   );
 }

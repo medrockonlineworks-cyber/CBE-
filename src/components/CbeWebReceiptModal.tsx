@@ -3092,6 +3092,12 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
         </div>
       )}
 
+      {/* Permanent Solid White Device Navigation Bar Safe-Area Strip extending to device edge */}
+      <div 
+        data-html2canvas-ignore="true" 
+        className="fixed bottom-0 inset-x-0 h-[max(env(safe-area-inset-bottom,0px),0px)] bg-white pointer-events-none z-30" 
+      />
+
     </div>
   );
 };

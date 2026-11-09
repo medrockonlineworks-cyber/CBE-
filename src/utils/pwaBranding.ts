@@ -15,7 +15,7 @@ export const BASE_MANIFEST = {
   display: 'standalone',
   display_override: ['standalone', 'minimal-ui', 'fullscreen', 'browser'],
   orientation: 'portrait-primary',
-  theme_color: '#70189F',
+  theme_color: '#ffffff',
   background_color: '#ffffff',
   lang: 'en',
   dir: 'ltr',
@@ -320,19 +320,18 @@ export async function updatePwaBranding(customLogoUrl?: string | null): Promise<
       maskIconLink.href = `/pwa-maskable-512x512.png${versionParam}`;
     }
 
-    // 5. Update theme-color: Status bar is CBE purple (#70189F), navigation bar is white (#ffffff)
-    const activeStatusColor = '#70189F';
+    // 5. Update theme-color: Navigation bar and window background are pure white (#ffffff)
     const activeNavColor = '#ffffff';
 
-    const themeMetas = document.querySelectorAll('meta[name="theme-color"], meta[name="msapplication-navbutton-color"]');
-    themeMetas.forEach(meta => meta.setAttribute('content', activeStatusColor));
-
-    const navMetas = document.querySelectorAll('meta[name="navigation-bar-color"]');
+    const navMetas = document.querySelectorAll('meta[name="navigation-bar-color"], meta[name="msapplication-navbutton-color"]');
     navMetas.forEach(meta => meta.setAttribute('content', activeNavColor));
+
+    const themeMetas = document.querySelectorAll('meta[name="theme-color"]');
+    themeMetas.forEach(meta => meta.setAttribute('content', activeNavColor));
 
     let tileColorMeta = document.querySelector('meta[name="msapplication-TileColor"]') as HTMLMetaElement | null;
     if (tileColorMeta) {
-      tileColorMeta.content = activeStatusColor;
+      tileColorMeta.content = '#70189F';
     }
     let tileImageMeta = document.querySelector('meta[name="msapplication-TileImage"]') as HTMLMetaElement | null;
     if (tileImageMeta) {
@@ -342,8 +341,8 @@ export async function updatePwaBranding(customLogoUrl?: string | null): Promise<
     // 6. Construct full dynamic manifest with active logo and splash screens
     const dynamicManifest = {
       ...BASE_MANIFEST,
-      background_color: activeNavColor,
-      theme_color: activeStatusColor,
+      background_color: '#ffffff',
+      theme_color: '#ffffff',
       icons: [
         {
           src: `/pwa-192x192.png${versionParam}`,
