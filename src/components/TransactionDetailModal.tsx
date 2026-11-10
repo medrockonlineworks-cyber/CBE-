@@ -146,7 +146,7 @@ export default function TransactionDetailModal({
       <div 
         id="transaction-detail-sheet"
         onClick={(e) => e.stopPropagation()}
-        className="w-full bg-white rounded-t-[36px] rounded-b-none px-6 pt-3.5 pb-[calc(52px+max(env(safe-area-inset-bottom,0px),8px)+18px)] shadow-[0_-12px_45px_rgba(0,0,0,0.25)] flex flex-col justify-between relative animate-in slide-in-from-bottom-5 duration-250 select-none max-h-[85vh] overflow-y-auto"
+        className="w-full bg-white rounded-t-[36px] rounded-b-none px-6 pt-3.5 pb-[calc(52px+max(env(safe-area-inset-bottom,0px),8px)+18px)] shadow-[0_-12px_45px_rgba(0,0,0,0.25)] flex flex-col justify-between relative animate-in slide-in-from-bottom-5 duration-250 select-none h-[calc(100%-max(env(safe-area-inset-top,0px)+138px,182px))] min-h-[calc(100%-max(env(safe-area-inset-top,0px)+138px,182px))] overflow-y-auto"
       >
         {/* Subtle top drag pill handle matching genuine CBE on iPhone in reference photo */}
         <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-2 shrink-0" />
@@ -179,7 +179,7 @@ export default function TransactionDetailModal({
         </div>
 
         {/* Transaction Amount matching reference */}
-        <div className="text-center mt-2 mb-3.5 sm:mt-2.5 sm:mb-4 shrink-0">
+        <div className="text-center mt-2.5 mb-4 sm:mt-3 sm:mb-4.5 shrink-0">
           <h3 className="text-[30px] sm:text-[34px] font-black text-[#111827] tracking-tight font-sans leading-tight">
             {isCredit ? '+' : '-'}{transaction.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
           </h3>
@@ -189,7 +189,7 @@ export default function TransactionDetailModal({
         </div>
 
         {/* Key-Value Details List matching reference image */}
-        <div className="space-y-3.5 py-1 px-0.5 text-sm my-auto">
+        <div className="space-y-4 sm:space-y-4.5 py-1.5 px-0.5 text-sm my-auto">
           {/* 1. Date & Time */}
           <div className="flex items-center justify-between gap-3">
             <span className="text-gray-400 font-medium whitespace-nowrap text-[13px]">Date &amp; Time</span>
