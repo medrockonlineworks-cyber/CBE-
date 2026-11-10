@@ -884,8 +884,11 @@ export const Home: React.FC<HomeProps> = ({
           5. FIXED BOTTOM NAVIGATION BAR (Scan QR floating + Home, Transaction, Setting)
           ======================================================== */}
       <BottomNavigation
-        activeTab={activeNavTab}
-        onChangeTab={handleNavTabChange}
+        activeTab={selectedDetailTx ? 'transactions' : activeNavTab}
+        onChangeTab={(tab) => {
+          if (selectedDetailTx) setSelectedDetailTx(null);
+          handleNavTabChange(tab);
+        }}
         onOpenScanQr={() => setActiveModal('qr')}
         showScanQr={activeNavTab === 'home' && !selectedDetailTx && !activeModal}
       />

@@ -138,7 +138,7 @@ export default function TransactionDetailModal({
   return (
     <div 
       id="transaction-detail-modal-overlay"
-      className="fixed inset-0 z-50 bg-black/55 backdrop-blur-[0.5px] flex flex-col justify-end items-center p-0 animate-in fade-in duration-200 select-none pointer-events-auto"
+      className="fixed inset-0 z-40 bg-black/60 backdrop-blur-[0.5px] flex flex-col justify-end items-center px-3.5 sm:px-4 pb-[calc(56px+max(env(safe-area-inset-bottom,0px),10px))] animate-in fade-in duration-200 select-none pointer-events-auto"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -146,173 +146,130 @@ export default function TransactionDetailModal({
       <div 
         id="transaction-detail-sheet"
         onClick={(e) => e.stopPropagation()}
-        className={`w-full max-w-md bg-white rounded-b-none ${
-          isIPhone 
-            ? 'rounded-t-[34px] px-6 pt-4 pb-[max(env(safe-area-inset-bottom,0px),16px)] shadow-[0_-12px_45px_rgba(0,0,0,0.25)] max-h-[85vh]' 
-            : 'rounded-t-[28px] px-5 pt-3.5 pb-[max(env(safe-area-inset-bottom,0px),12px)] shadow-[0_-8px_35px_rgba(0,0,0,0.2)] max-h-[85vh]'
-        } mb-0 flex flex-col justify-between relative animate-in slide-in-from-bottom-5 duration-250 select-none overflow-y-auto`}
+        className="w-full max-w-[390px] bg-white rounded-[28px] sm:rounded-[32px] px-5 sm:px-6 pt-3.5 pb-5 shadow-[0_12px_45px_rgba(0,0,0,0.35)] flex flex-col justify-between relative animate-in slide-in-from-bottom-4 duration-250 select-none max-h-[76vh] overflow-y-auto"
       >
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col justify-between py-0.5">
-          {/* Top Header Group */}
-          <div className="shrink-0">
-            {/* Top Title Bar with Close Button */}
-            <div className={`flex items-center justify-between relative ${isIPhone ? 'mb-2 sm:mb-2.5' : 'mb-1.5 sm:mb-2'}`}>
-              <div className={isIPhone ? 'w-6' : 'w-5'} /> {/* Balance spacer */}
-              <h2 className={`${isIPhone ? 'text-[12px] sm:text-[12.5px]' : 'text-[11.5px] sm:text-[12px]'} font-bold text-gray-400 tracking-wider uppercase text-center flex-1 font-sans`}>
-                TRANSACTION DETAIL
-              </h2>
-              <button
-                id="btn-close-tx-detail"
-                type="button"
-                onClick={onClose}
-                className={`${isIPhone ? 'w-7 h-7' : 'w-6 h-6'} rounded-full flex items-center justify-center text-gray-400 hover:text-gray-700 transition cursor-pointer`}
-                aria-label="Close"
-              >
-                <X className={isIPhone ? 'w-4 h-4' : 'w-3.5 h-3.5'} />
-              </button>
-            </div>
+        {/* Subtle top drag pill handle matching genuine CBE on iPhone in reference photo */}
+        <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-2 shrink-0" />
 
-            {/* Status Pill Badge: Completed (Matching exact soft green in reference photos) */}
-            <div className={`flex justify-center ${isIPhone ? 'my-1.5 sm:my-2' : 'my-1.5'}`}>
-              <div className={`bg-[#eaf8f1] text-[#00b050] ${isIPhone ? 'px-4 py-1 text-xs' : 'px-3.5 py-0.5 text-[11.5px]'} rounded-full font-bold inline-flex items-center gap-1.5 shadow-2xs`}>
-                <span className="w-3.5 h-3.5 rounded-full bg-[#00b050] text-white flex items-center justify-center text-[9px] font-black">
-                  ✓
-                </span>
-                <span className={`${isIPhone ? 'text-[12px]' : 'text-[11.5px]'} font-bold tracking-tight`}>Completed</span>
-              </div>
-            </div>
-
-            {/* Transaction Amount matching Image 1 & 2 */}
-            <div className={`text-center ${isIPhone ? 'mt-3 mb-3.5 sm:mt-3.5 sm:mb-4' : 'mt-2.5 mb-3 sm:mt-3 sm:mb-3.5'}`}>
-              <h3 className={`${isIPhone ? 'text-3xl sm:text-[32px]' : 'text-[28px] sm:text-[30px]'} font-black text-[#111827] tracking-tight font-sans leading-tight`}>
-                {isCredit ? '+' : '-'}{transaction.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
-              </h3>
-              <p className={`${isIPhone ? 'text-[12.5px] sm:text-[13px] mt-0.5' : 'text-[12px] sm:text-[12.5px] mt-0.5'} text-gray-500 font-normal`}>
-                {isCredit ? 'from' : 'to'} {isCredit ? (transaction.senderName || 'Mosisa Teshome Tesfa') : (transaction.recipientName || 'Mosisa Teshome Tesfa')}
-              </p>
-            </div>
-          </div>
-
-          {/* Key-Value Details List matching Image 1 (Android space-y-3) & Image 2 (iOS space-y-3.5) */}
-          <div className={`my-auto ${isIPhone ? 'space-y-3.5 py-1 px-0.5' : 'space-y-3 py-1 px-0.5'} text-sm`}>
-            {/* 1. Date & Time */}
-            <div className="flex items-center justify-between gap-3">
-              <span className={`text-gray-400 font-medium whitespace-nowrap ${isIPhone ? 'text-[13px]' : 'text-[12.5px]'}`}>Date &amp; Time</span>
-              <span className={`font-bold text-gray-900 text-right ${isIPhone ? 'text-[13px]' : 'text-[12.5px]'}`}>{formattedDate}</span>
-            </div>
-
-            {/* 2. Type */}
-            <div className="flex items-center justify-between gap-3">
-              <span className={`text-gray-400 font-medium whitespace-nowrap ${isIPhone ? 'text-[13px]' : 'text-[12.5px]'}`}>Type</span>
-              <span className={`font-bold text-gray-900 text-right ${isIPhone ? 'text-[13px]' : 'text-[12.5px]'}`}>{typeLabel}</span>
-            </div>
-
-            {/* 3. Transaction ID */}
-            <div className="flex items-center justify-between gap-3">
-              <span className={`text-gray-400 font-medium whitespace-nowrap ${isIPhone ? 'text-[13px]' : 'text-[12.5px]'}`}>Transaction ID</span>
-              <div className="flex items-center gap-1.5">
-                <span className={`font-bold font-mono text-gray-900 ${isIPhone ? 'text-[13px]' : 'text-[12.5px]'}`}>{txId}</span>
-                <button
-                  id="btn-copy-txid"
-                  type="button"
-                  onClick={() => handleCopy(txId, 'txid')}
-                  className="p-1 text-gray-400 hover:text-[#70189F] hover:bg-purple-50 rounded transition cursor-pointer"
-                  title="Copy Transaction ID"
-                >
-                  {copiedField === 'txid' ? (
-                    <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />
-                  ) : (
-                    <svg className="w-3.5 h-3.5 text-purple-400/80 hover:text-[#70189F]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                    </svg>
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* 4. Receipt ID:
-                - Android Image 1: Single clean line "v2-hfHCxHMLTz6TX6TEmZJh" [copy]
-                - iOS Image 2: 3-line wrapped "v2-" / "hfHCxHMrxBOfkOHZPWo" [copy] / "p"
-            */}
-            <div className={`flex ${isIPhone ? 'items-start' : 'items-center'} justify-between gap-3`}>
-              <span className={`text-gray-400 font-medium whitespace-nowrap ${isIPhone ? 'text-[13px] pt-0.5' : 'text-[12.5px]'}`}>Receipt ID</span>
-              
-              {isIPhone ? (
-                <div className="flex flex-col items-end text-right">
-                  <span className="font-bold font-mono text-gray-900 text-[12px] sm:text-[12.5px] tracking-tight leading-tight block text-right">
-                    {receiptId.slice(0, 3)}
-                  </span>
-                  <div className="flex items-center gap-1.5 justify-end">
-                    <span className="font-bold font-mono text-gray-900 text-[12px] sm:text-[12.5px] tracking-tight leading-tight">
-                      {receiptId.slice(3, -1)}
-                    </span>
-                    <button
-                      id="btn-copy-receiptid"
-                      type="button"
-                      onClick={() => handleCopy(receiptId, 'receiptid')}
-                      className="p-0.5 text-gray-400 hover:text-[#70189F] hover:bg-purple-50 rounded transition cursor-pointer shrink-0"
-                      title="Copy Receipt ID"
-                    >
-                      {copiedField === 'receiptid' ? (
-                        <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />
-                      ) : (
-                        <svg className="w-3.5 h-3.5 text-purple-400/80 hover:text-[#70189F]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                        </svg>
-                      )}
-                    </button>
-                  </div>
-                  <span className="font-bold font-mono text-gray-900 text-[12px] sm:text-[12.5px] tracking-tight leading-tight block text-right">
-                    {receiptId.slice(-1)}
-                  </span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-1.5 text-right">
-                  <span className="font-bold font-mono text-gray-900 text-[12px] whitespace-nowrap tracking-tight">
-                    {receiptId}
-                  </span>
-                  <button
-                    id="btn-copy-receiptid"
-                    type="button"
-                    onClick={() => handleCopy(receiptId, 'receiptid')}
-                    className="p-1 text-gray-400 hover:text-[#70189F] hover:bg-purple-50 rounded transition cursor-pointer shrink-0"
-                    title="Copy Receipt ID"
-                  >
-                    {copiedField === 'receiptid' ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />
-                    ) : (
-                      <svg className="w-3.5 h-3.5 text-purple-400/80 hover:text-[#70189F]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                      </svg>
-                    )}
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* 5. Remark */}
-            <div className="flex items-start justify-between gap-3">
-              <span className={`text-gray-400 font-medium whitespace-nowrap mt-0.5 ${isIPhone ? 'text-[13px]' : 'text-[12.5px]'}`}>Remark</span>
-              <span className={`font-bold text-gray-900 text-right leading-snug ${isIPhone ? 'max-w-[220px] sm:max-w-[240px] text-[13px]' : 'max-w-[200px] text-[12.5px]'}`}>
-                {remark}
-              </span>
-            </div>
-          </div>
-
-          {/* Copied Notification Toast */}
-          {copiedField && (
-            <div className="my-1 py-1 px-3 bg-gray-900 text-white text-[11px] font-semibold rounded-lg text-center animate-in fade-in duration-150">
-              {copiedField === 'txid' ? 'Transaction ID' : 'Receipt ID'} copied to clipboard
-            </div>
-          )}
+        {/* Top Title Bar with Close Button */}
+        <div className="flex items-center justify-between relative mb-1.5 sm:mb-2 shrink-0">
+          <div className="w-6" /> {/* Balance spacer */}
+          <h2 className="text-[12px] sm:text-[12.5px] font-bold text-gray-400 tracking-wider uppercase text-center flex-1 font-sans">
+            TRANSACTION DETAIL
+          </h2>
+          <button
+            id="btn-close-tx-detail"
+            type="button"
+            onClick={onClose}
+            className="w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-700 transition cursor-pointer"
+            aria-label="Close"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
-        {/* Centered Purple VIEW RECEIPT Action Button (Matching Image 1 & Image 2) */}
-        <div className={`${isIPhone ? 'mt-4 mb-0 sm:mt-4.5 sm:mb-0' : 'mt-3 mb-0 sm:mt-3.5 sm:mb-0'} flex justify-center shrink-0`}>
+        {/* Status Pill Badge: Completed */}
+        <div className="flex justify-center my-1.5 shrink-0">
+          <div className="bg-[#eaf8f1] text-[#00b050] px-4 py-1 text-xs rounded-full font-bold inline-flex items-center gap-1.5 shadow-2xs">
+            <span className="w-3.5 h-3.5 rounded-full bg-[#00b050] text-white flex items-center justify-center text-[9px] font-black">
+              ✓
+            </span>
+            <span className="text-[12px] font-bold tracking-tight">Completed</span>
+          </div>
+        </div>
+
+        {/* Transaction Amount matching reference */}
+        <div className="text-center mt-2 mb-3.5 sm:mt-2.5 sm:mb-4 shrink-0">
+          <h3 className="text-[30px] sm:text-[34px] font-black text-[#111827] tracking-tight font-sans leading-tight">
+            {isCredit ? '+' : '-'}{transaction.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
+          </h3>
+          <p className="text-[13px] sm:text-[13.5px] mt-0.5 text-gray-500 font-normal">
+            {isCredit ? 'from' : 'to'} {isCredit ? (transaction.senderName || 'Mosisa Teshome Tesfa') : (transaction.recipientName || 'Mosisa Teshome Tesfa')}
+          </p>
+        </div>
+
+        {/* Key-Value Details List matching reference image */}
+        <div className="space-y-3.5 py-1 px-0.5 text-sm my-auto">
+          {/* 1. Date & Time */}
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-gray-400 font-medium whitespace-nowrap text-[13px]">Date &amp; Time</span>
+            <span className="font-bold text-gray-900 text-right text-[13px]">{formattedDate}</span>
+          </div>
+
+          {/* 2. Type */}
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-gray-400 font-medium whitespace-nowrap text-[13px]">Type</span>
+            <span className="font-bold text-gray-900 text-right text-[13px]">{typeLabel}</span>
+          </div>
+
+          {/* 3. Transaction ID */}
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-gray-400 font-medium whitespace-nowrap text-[13px]">Transaction ID</span>
+            <div className="flex items-center gap-1.5">
+              <span className="font-bold font-mono text-gray-900 text-[13px]">{txId}</span>
+              <button
+                id="btn-copy-txid"
+                type="button"
+                onClick={() => handleCopy(txId, 'txid')}
+                className="p-1 text-gray-400 hover:text-[#70189F] hover:bg-purple-50 rounded transition cursor-pointer"
+                title="Copy Transaction ID"
+              >
+                {copiedField === 'txid' ? (
+                  <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />
+                ) : (
+                  <svg className="w-3.5 h-3.5 text-purple-400/80 hover:text-[#70189F]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                  </svg>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* 4. Receipt ID */}
+          <div className="flex items-start justify-between gap-3">
+            <span className="text-gray-400 font-medium whitespace-nowrap text-[13px] pt-0.5">Receipt ID</span>
+            <div className="flex items-center gap-1.5 justify-end">
+              <span className="font-bold font-mono text-gray-900 text-[12.5px] tracking-tight leading-tight max-w-[210px] break-all text-right">
+                {receiptId}
+              </span>
+              <button
+                id="btn-copy-receiptid"
+                type="button"
+                onClick={() => handleCopy(receiptId, 'receiptid')}
+                className="p-0.5 text-gray-400 hover:text-[#70189F] hover:bg-purple-50 rounded transition cursor-pointer shrink-0"
+                title="Copy Receipt ID"
+              >
+                {copiedField === 'receiptid' ? (
+                  <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[2.5]" />
+                ) : (
+                  <svg className="w-3.5 h-3.5 text-purple-400/80 hover:text-[#70189F]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                  </svg>
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* 5. Remark */}
+          <div className="flex items-start justify-between gap-3">
+            <span className="text-gray-400 font-medium whitespace-nowrap mt-0.5 text-[13px]">Remark</span>
+            <span className="font-bold text-gray-900 text-right leading-snug max-w-[220px] sm:max-w-[240px] text-[13px]">
+              {remark}
+            </span>
+          </div>
+        </div>
+
+        {/* Copied Notification Toast */}
+        {copiedField && (
+          <div className="my-1 py-1 px-3 bg-gray-900 text-white text-[11px] font-semibold rounded-lg text-center animate-in fade-in duration-150 shrink-0">
+            {copiedField === 'txid' ? 'Transaction ID' : 'Receipt ID'} copied to clipboard
+          </div>
+        )}
+
+        {/* Centered Purple VIEW RECEIPT Action Button */}
+        <div className="mt-4 mb-1.5 flex justify-center shrink-0">
           <button
             id="btn-view-full-receipt"
             type="button"
@@ -325,14 +282,10 @@ export default function TransactionDetailModal({
               };
               onViewReceipt(normalizedTx);
             }}
-            className={`w-auto ${
-              isIPhone 
-                ? 'min-w-[210px] max-w-[250px] py-2.5 px-8 text-xs shadow-[0_4px_14px_rgba(112,24,159,0.35)]' 
-                : 'min-w-[190px] max-w-[230px] py-2 px-6 text-[11.5px] shadow-[0_4px_14px_rgba(112,24,159,0.3)]'
-            } bg-[#70189F] hover:bg-[#5e1286] active:scale-[0.98] text-white rounded-full font-bold uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer`}
+            className="w-auto min-w-[210px] max-w-[260px] py-2.5 px-8 text-xs bg-[#70189F] hover:bg-[#5e1286] active:scale-[0.98] text-white rounded-full font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_4px_14px_rgba(112,24,159,0.35)] transition-all cursor-pointer"
           >
             <svg 
-              className={`${isIPhone ? 'w-4 h-4' : 'w-3.5 h-3.5'} text-white shrink-0`} 
+              className="w-4 h-4 text-white shrink-0" 
               viewBox="0 0 24 24" 
               fill="none" 
               stroke="currentColor" 
@@ -345,7 +298,7 @@ export default function TransactionDetailModal({
               <path d="M16 12h-8" />
               <path d="M13 16h-5" />
             </svg>
-            <span className={`font-bold tracking-wider ${isIPhone ? 'text-[12px]' : 'text-[11.5px]'} whitespace-nowrap`}>VIEW RECEIPT</span>
+            <span className="font-bold tracking-wider text-[12px] whitespace-nowrap">VIEW RECEIPT</span>
           </button>
         </div>
       </div>
