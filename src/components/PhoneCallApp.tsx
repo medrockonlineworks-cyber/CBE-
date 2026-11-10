@@ -1207,18 +1207,7 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
     >
       {/* 2. Top Header Row: Search & Settings Hexagon (Right-aligned matching Screenshot 1) */}
       <div className="w-full px-4 pt-[max(env(safe-area-inset-top,0px),8px)] pb-1 flex items-center justify-between shrink-0 z-10">
-        <div>
-          {onBack && (
-            <button 
-              onClick={onBack}
-              aria-label="Back to App"
-              className="p-1 -ml-1 text-neutral-400 hover:text-white transition active:scale-95"
-              title="Return to Banking Profile"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-          )}
-        </div>
+        <div className="w-5" />
 
         <div className="flex items-center gap-3.5">
           <button 
@@ -1680,39 +1669,7 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
         </button>
       </div>
 
-      {/* 7. Android System 3-Button Navigation Bar at bottom (≡, ○, ⤶) */}
-      <div className="w-full bg-black px-10 py-1.5 flex items-center justify-between text-neutral-500 shrink-0 select-none border-t border-neutral-900/40">
-        {/* Recents apps button */}
-        <button 
-          onClick={onBack} 
-          className="p-1 text-neutral-500 hover:text-neutral-300 active:scale-90 transition"
-          title="App Overview"
-        >
-          <span className="text-base font-mono">≡</span>
-        </button>
-        {/* Home button */}
-        <button 
-          onClick={onBack}
-          className="p-1 text-neutral-500 hover:text-neutral-300 active:scale-90 transition"
-          title="Home"
-        >
-          <span className="text-sm">○</span>
-        </button>
-        {/* Back button */}
-        <button 
-          onClick={() => {
-            if (isKeypadOpen && !dialedNumber) {
-              setIsKeypadOpen(false);
-            } else if (onBack) {
-              onBack();
-            }
-          }}
-          className="p-1 text-neutral-500 hover:text-neutral-300 active:scale-90 transition"
-          title="Back"
-        >
-          <span className="text-sm">‹</span>
-        </button>
-      </div>
+
 
       {/* ------------------------------------------------------------- */}
       {/* 8. USSD POPUP MODAL (Exact match for Screenshots) */}

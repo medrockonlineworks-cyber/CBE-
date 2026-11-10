@@ -325,21 +325,7 @@ export default function GoogleMessagesInbox({
                 <ChevronRight className="w-4 h-4 text-neutral-400" />
               </button>
 
-              <button
-                onClick={() => {
-                  setShowProfileModal(false);
-                  onBackToApp();
-                }}
-                className={`w-full p-3 rounded-xl flex items-center justify-between text-sm font-medium transition-colors ${
-                  isDarkMode ? 'bg-neutral-800/70 hover:bg-neutral-800 text-neutral-200' : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-800'
-                }`}
-              >
-                <span className="flex items-center space-x-2.5">
-                  <ShieldCheck className="w-4 h-4 text-purple-400" />
-                  <span>Return to CBE Mobile Banking</span>
-                </span>
-                <ChevronRight className="w-4 h-4 text-neutral-400" />
-              </button>
+
 
               <button
                 onClick={() => {

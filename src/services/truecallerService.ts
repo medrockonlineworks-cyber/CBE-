@@ -265,7 +265,7 @@ const DEFAULT_ALERTS: TruecallerAlert[] = [
     timestamp: '2026-09-05T16:41:01Z',
     summaryText: 'Account 1*********4747 credited with ETB 50.00.',
     txId: 'FT26248KLR82',
-    fullSmsText: `Dear Leykun your Account 1*********4747 has been Credited with ETB 50.00 from Dejene Buta, on 05/09/2026 at 16:41:01 with Ref No FT26248KLR82 Your Current Balance is ETB 348.54. Thank you for Banking with CBE!\nhttps://apps.cbe.com.et:100/?id=FT26248KLR8219524747`,
+    fullSmsText: `Dear Leykun your Account 1*********4747 has been Credited with ETB 50.00 from Dejene Buta, on 05/09/2026 at 16:41:01 with Ref No FT26248KLR82 Your Current Balance is ETB 348.54. Thank you for Banking with CBE!\nhttps://mbreceipt.cbe.com.et/v2-hfHCxGFT26248KLR82 for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
     read: false,
     backgroundApp: 'tiktok',
   },
@@ -286,7 +286,7 @@ const DEFAULT_ALERTS: TruecallerAlert[] = [
     timestamp: new Date().toISOString(),
     summaryText: 'Account 1*********0913 credited with ETB 4,500.00.',
     txId: 'FT264500RC913',
-    fullSmsText: `Dear User Y (Abebe Bikila) You have received ETB 4,500.00 from account 1*********9165 (User X) to your account 1*********0913. Your current balance is ETB79,100.00. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxG4500RC913 for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
+    fullSmsText: `Dear User Y (Abebe Bikila) You have received ETB 4,500.00 from account 1*********9165 (User X) to your account 1*********0913. Your current balance is ETB79,100.00. Thanks for Banking with CBE.\nhttps://mbreceipt.cbe.com.et/v2-hfHCxG4500RC913 for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
     read: false,
     backgroundApp: 'tiktok',
   },
@@ -307,7 +307,7 @@ const DEFAULT_ALERTS: TruecallerAlert[] = [
     timestamp: new Date().toISOString(),
     summaryText: 'Account 1*********9165 debited with ETB 4,500.00.',
     txId: 'FT264500SD165',
-    fullSmsText: `Dear User X (Leykun Jemaneh) A debit transaction of ETB 4500.0. has occurred on your account 1*********9165. Service charge of ETB 0.00 and VAT(15%) of 0.0 and Disaster Recovery(5%) of 0.00 with total of ETB4500.00 .Your current balance is ETB920.50. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxG4500SD165 for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
+    fullSmsText: `Dear User X (Leykun Jemaneh) A debit transaction of ETB 4500.0. has occurred on your account 1*********9165. Service charge of ETB 0.00 and VAT(15%) of 0.0 and Disaster Recovery(5%) of 0.00 with total of ETB4500.00 .Your current balance is ETB920.50. Thanks for Banking with CBE.\nhttps://mbreceipt.cbe.com.et/v2-hfHCxG4500SD165 for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`,
     read: false,
     backgroundApp: 'tiktok',
   },
@@ -551,6 +551,31 @@ export const TruecallerService = {
               forAllUsers: true,
             };
             parsed.push(holidayAlert);
+          }
+
+          // Migrate any existing messages that contain mreciept.cbe.com.et, apps.cbe.com.et, or cbe.com.et/mbreceipt to exact SMS simulator format
+          let listModified = false;
+          parsed.forEach((a: TruecallerAlert) => {
+            if (a.fullSmsText) {
+              if (a.fullSmsText.includes('mreciept.cbe.com.et') || a.fullSmsText.includes('mbreciept.cbe.com.et')) {
+                a.fullSmsText = a.fullSmsText.replace(/m(?:b)?reciept\.cbe\.com\.et/g, 'mbreceipt.cbe.com.et');
+                listModified = true;
+              }
+              if (a.fullSmsText.includes('apps.cbe.com.et:100/?id=')) {
+                const match = a.fullSmsText.match(/apps\.cbe\.com\.et:100\/\?id=([a-zA-Z0-9]+)/);
+                const cleanId = match ? match[1] : (a.txId || 'FT26248KLR82');
+                a.fullSmsText = a.fullSmsText.replace(/https?:\/\/apps\.cbe\.com\.et:100\/\?id=[^\s]+/, `https://mbreceipt.cbe.com.et/v2-hfHCxG${cleanId} for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`);
+                listModified = true;
+              }
+              if (a.fullSmsText.includes('cbe.com.et/mbreceipt/')) {
+                const match = a.fullSmsText.match(/cbe\.com\.et\/mbreceipt\/([a-zA-Z0-9_-]+)/);
+                const cleanId = match ? match[1] : (a.txId || 'FT26248KLR82');
+                a.fullSmsText = a.fullSmsText.replace(/https?:\/\/cbe\.com\.et\/mbreceipt\/[^\s]+/, `https://mbreceipt.cbe.com.et/v2-hfHCxG${cleanId} for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`);
+                listModified = true;
+              }
+            }
+          });
+          if (!hasHoliday || listModified) {
             this.saveAlerts(parsed);
           }
           return parsed;
@@ -616,9 +641,15 @@ export const TruecallerService = {
     const generatedTxId = txId || `FT${Math.floor(10000000 + Math.random() * 90000000)}`;
     const formattedNewBal = newBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-    const fullSms = role === 'receiver'
-      ? `Dear ${account.holderName},\nYour Account ${account.accountNumber} has been Credited with ETB ${formattedAmount} on ${timeStr}${counterpartyName ? ` by ${counterpartyName}` : ''}.\nAvailable Balance is ETB ${formattedNewBal}.\nTxn Ref: ${generatedTxId}.\nThank you for banking with ${account.bankName}.\nhttps://cbe.com.et/mbreceipt/${generatedTxId}`
-      : `Dear ${account.holderName},\nA debit transaction of ETB ${formattedAmount} has occurred on your Account ${account.accountNumber} on ${timeStr}${counterpartyName ? ` to ${counterpartyName}` : ''}.\nAvailable Balance: ETB ${formattedNewBal}.\nTxn Ref: ${generatedTxId}.\nThank you for banking with ${account.bankName}.`;
+    const cleanId = generatedTxId.replace(/[^a-zA-Z0-9]/g, '').slice(-12) || 'FT26248KLR82';
+    const isCbe = account.bankKey === 'cbe' || !account.bankKey || account.bankName.includes('CBE') || account.bankName.includes('Commercial Bank');
+    const fullSms = isCbe
+      ? (role === 'receiver'
+          ? `Dear ${account.holderName} You have received ETB ${formattedAmount} from account 1*********4747 (${counterpartyName || 'Dejene Buta'}) to your account ${maskedAcc}. Your current balance is ETB${formattedNewBal}. Thanks for Banking with CBE.\nhttps://mbreceipt.cbe.com.et/v2-hfHCxG${cleanId} for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`
+          : `Dear ${account.holderName} A debit transaction of ETB ${formattedAmount} has occurred on your account ${maskedAcc}. Service charge of ETB 0.00 and VAT(15%) of 0.0 and Disaster Recovery(5%) of 0.00 with total of ETB${formattedAmount} .Your current balance is ETB${formattedNewBal}. Thanks for Banking with CBE.\nhttps://mbreceipt.cbe.com.et/v2-hfHCxG${cleanId} for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`)
+      : (role === 'receiver'
+          ? `Dear ${account.holderName},\nYour Account ${account.accountNumber} has been Credited with ETB ${formattedAmount} on ${timeStr}${counterpartyName ? ` by ${counterpartyName}` : ''}.\nAvailable Balance is ETB ${formattedNewBal}.\nTxn Ref: ${generatedTxId}.\nThank you for banking with ${account.bankName}.\nhttps://mbreceipt.cbe.com.et/v2-hfHCxG${cleanId} for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`
+          : `Dear ${account.holderName},\nA debit transaction of ETB ${formattedAmount} has occurred on your Account ${account.accountNumber} on ${timeStr}${counterpartyName ? ` to ${counterpartyName}` : ''}.\nAvailable Balance: ETB ${formattedNewBal}.\nTxn Ref: ${generatedTxId}.\nThank you for banking with ${account.bankName}.`);
 
     const newAlert: TruecallerAlert = {
       id: `tc-alert-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
@@ -766,7 +797,7 @@ export const TruecallerService = {
       summaryText: sendSummary,
       txId: `${txRef}-SD`,
       fullSmsText: bankKey === 'cbe' 
-        ? `Dear ${senderHolder.replace(/\s*\(Admin\)/i, '').replace(/\s*\(User [XY]\)/i, '').trim() || 'Leykun Jemaneh Ylma'} A debit transaction of ETB ${tx.amount % 1 === 0 ? `${tx.amount.toFixed(1)}.` : `${tx.amount.toFixed(2)}.`} has occurred on your account ${maskedSender}. Service charge of ETB 0.00 and VAT(15%) of 0.0 and Disaster Recovery(5%) of 0.00 with total of ETB${tx.amount.toFixed(2)} .Your current balance is ETB${formattedSenderBal}. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxG${txRef.replace(/[^a-zA-Z0-9]/g, '').slice(-12) || 'KNY8V0W9qoyCPX'} for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`
+        ? `Dear ${senderHolder.replace(/\s*\(Admin\)/i, '').replace(/\s*\(User [XY]\)/i, '').trim() || 'Leykun Jemaneh Ylma'} A debit transaction of ETB ${tx.amount % 1 === 0 ? `${tx.amount.toFixed(1)}.` : `${tx.amount.toFixed(2)}.`} has occurred on your account ${maskedSender}. Service charge of ETB 0.00 and VAT(15%) of 0.0 and Disaster Recovery(5%) of 0.00 with total of ETB${tx.amount.toFixed(2)} .Your current balance is ETB${formattedSenderBal}. Thanks for Banking with CBE.\nhttps://mbreceipt.cbe.com.et/v2-hfHCxG${txRef.replace(/[^a-zA-Z0-9]/g, '').slice(-12) || 'KNY8V0W9qoyCPX'} for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`
         : `Dear ${senderHolder},\nA debit transaction of ETB ${formattedAmount} has occurred on your Account ${senderAcc.accountNumber} on ${timeStr} to ${recipientHolder}.\nAvailable Balance: ETB ${formattedSenderBal}.\nTxn Ref: ${txRef}.\nThank you for banking with ${preset.name}.`,
       read: false,
       backgroundApp: senderAcc.backgroundApp || getDefaultBackgroundApp(bankKey),
@@ -793,7 +824,7 @@ export const TruecallerService = {
       summaryText: receiveSummary,
       txId: `${txRef}-RC`,
       fullSmsText: bankKey === 'cbe'
-        ? `Dear ${recipientHolder.replace(/\s*\(Admin\)/i, '').replace(/\s*\(User [XY]\)/i, '').trim() || 'Leykun Jemaneh Ylma'} You have received ETB ${formattedAmount} from account ${maskedSender} (${senderHolder.replace(/\s*\(Admin\)/i, '').replace(/\s*\(User [XY]\)/i, '').trim() || 'Kasahun Yematawork Lema'}) to your account ${maskedRecipient}. Your current balance is ETB${formattedRecipBal}. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxG${txRef.replace(/[^a-zA-Z0-9]/g, '').slice(-12) || 'wmcij7q3ExbiWb'} for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`
+        ? `Dear ${recipientHolder.replace(/\s*\(Admin\)/i, '').replace(/\s*\(User [XY]\)/i, '').trim() || 'Leykun Jemaneh Ylma'} You have received ETB ${formattedAmount} from account ${maskedSender} (${senderHolder.replace(/\s*\(Admin\)/i, '').replace(/\s*\(User [XY]\)/i, '').trim() || 'Kasahun Yematawork Lema'}) to your account ${maskedRecipient}. Your current balance is ETB${formattedRecipBal}. Thanks for Banking with CBE.\nhttps://mbreceipt.cbe.com.et/v2-hfHCxG${txRef.replace(/[^a-zA-Z0-9]/g, '').slice(-12) || 'wmcij7q3ExbiWb'} for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`
         : `Dear ${recipientHolder},\nYour Account ${recipientAcc.accountNumber} has been Credited with ETB ${formattedAmount} on ${timeStr} by ${senderHolder}.\nAvailable Balance is ETB ${formattedRecipBal}.\nTxn Ref: ${txRef}.\nThank you for banking with ${preset.name}.\nhttps://cbe.com.et/mbreceipt/${txRef}`,
       read: false,
       backgroundApp: recipientAcc.backgroundApp || getDefaultBackgroundApp(bankKey),
@@ -913,7 +944,7 @@ export const TruecallerService = {
       summaryText: `Account ${maskedSender} debited with ETB ${formattedAmount}.`,
       txId: `${txRef}-SD`,
       fullSmsText: bankKey === 'cbe'
-        ? `Dear ${senderName.replace(/\s*\(Admin\)/i, '').replace(/\s*\(User [XY]\)/i, '').trim() || 'Leykun Jemaneh Ylma'} A debit transaction of ETB ${amount % 1 === 0 ? `${amount.toFixed(1)}.` : `${amount.toFixed(2)}.`} has occurred on your account ${maskedSender}. Service charge of ETB 0.00 and VAT(15%) of 0.0 and Disaster Recovery(5%) of 0.00 with total of ETB${amount.toFixed(2)} .Your current balance is ETB${formattedSenderBal}. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxG${txRef.replace(/[^a-zA-Z0-9]/g, '').slice(-12) || 'KNY8V0W9qoyCPX'} for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`
+        ? `Dear ${senderName.replace(/\s*\(Admin\)/i, '').replace(/\s*\(User [XY]\)/i, '').trim() || 'Leykun Jemaneh Ylma'} A debit transaction of ETB ${amount % 1 === 0 ? `${amount.toFixed(1)}.` : `${amount.toFixed(2)}.`} has occurred on your account ${maskedSender}. Service charge of ETB 0.00 and VAT(15%) of 0.0 and Disaster Recovery(5%) of 0.00 with total of ETB${amount.toFixed(2)} .Your current balance is ETB${formattedSenderBal}. Thanks for Banking with CBE.\nhttps://mbreceipt.cbe.com.et/v2-hfHCxG${txRef.replace(/[^a-zA-Z0-9]/g, '').slice(-12) || 'KNY8V0W9qoyCPX'} for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`
         : `Dear ${senderName},\nA debit transaction of ETB ${formattedAmount} has occurred on your Account ${senderAccount} on ${timeString} to ${recipientName}.\nAvailable Balance: ETB ${formattedSenderBal}.\nTxn Ref: ${txRef}.\nThank you for banking with ${preset.name}.`,
       read: false,
       backgroundApp: senderAcc.backgroundApp || getDefaultBackgroundApp(bankKey),
@@ -938,7 +969,7 @@ export const TruecallerService = {
       summaryText: `Account ${maskedRecipient} credited with ETB ${formattedAmount}.`,
       txId: `${txRef}-RC`,
       fullSmsText: bankKey === 'cbe'
-        ? `Dear ${recipientName.replace(/\s*\(Admin\)/i, '').replace(/\s*\(User [XY]\)/i, '').trim() || 'Leykun Jemaneh Ylma'} You have received ETB ${formattedAmount} from account ${maskedSender} (${senderName.replace(/\s*\(Admin\)/i, '').replace(/\s*\(User [XY]\)/i, '').trim() || 'Kasahun Yematawork Lema'}) to your account ${maskedRecipient}. Your current balance is ETB${formattedRecipBal}. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxG${txRef.replace(/[^a-zA-Z0-9]/g, '').slice(-12) || 'wmcij7q3ExbiWb'} for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`
+        ? `Dear ${recipientName.replace(/\s*\(Admin\)/i, '').replace(/\s*\(User [XY]\)/i, '').trim() || 'Leykun Jemaneh Ylma'} You have received ETB ${formattedAmount} from account ${maskedSender} (${senderName.replace(/\s*\(Admin\)/i, '').replace(/\s*\(User [XY]\)/i, '').trim() || 'Kasahun Yematawork Lema'}) to your account ${maskedRecipient}. Your current balance is ETB${formattedRecipBal}. Thanks for Banking with CBE.\nhttps://mbreceipt.cbe.com.et/v2-hfHCxG${txRef.replace(/[^a-zA-Z0-9]/g, '').slice(-12) || 'wmcij7q3ExbiWb'} for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`
         : `Dear ${recipientName},\nYour Account ${recipientAccount} has been Credited with ETB ${formattedAmount} on ${timeString} by ${senderName}.\nAvailable Balance is ETB ${formattedRecipBal}.\nTxn Ref: ${txRef}.\nThank you for banking with ${preset.name}.\nhttps://cbe.com.et/mbreceipt/${txRef}`,
       read: false,
       backgroundApp: recipientAcc.backgroundApp || getDefaultBackgroundApp(bankKey),

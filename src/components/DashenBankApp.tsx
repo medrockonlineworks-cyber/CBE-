@@ -808,17 +808,6 @@ export default function DashenBankApp({ currentUser, onBack, onOpenTelebirr }: D
               <div className="flex items-center justify-between pt-1 pb-1">
                 {/* Dashen Bank Logo Box & Hello Leykun */}
                 <div className="flex items-center gap-2">
-                  {isIPhone && (
-                    <button
-                      type="button"
-                      onClick={onBack}
-                      className="text-[#38bdf8] hover:opacity-80 active:opacity-60 text-[15px] font-normal flex items-center gap-0.5 cursor-pointer -ml-1 mr-1"
-                      title="Back to CBE"
-                    >
-                      <ChevronLeft className="w-5 h-5 -ml-1 stroke-[2.5]" />
-                      <span>CBE</span>
-                    </button>
-                  )}
                   <DashenLogo 
                     src={customLogo} 
                     onClick={() => setShowLogoModal(true)} 
@@ -1749,12 +1738,6 @@ export default function DashenBankApp({ currentUser, onBack, onOpenTelebirr }: D
                   <RefreshCw className="w-4 h-4" />
                 </button>
 
-                <button 
-                  onClick={onBack}
-                  className="w-full py-3.5 bg-neutral-800 hover:bg-neutral-700 text-white font-semibold rounded-2xl transition cursor-pointer"
-                >
-                  Back to Banking Suite
-                </button>
               </div>
             </div>
           )}

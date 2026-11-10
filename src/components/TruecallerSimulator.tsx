@@ -659,9 +659,9 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
         txId: 'v2-hfHCxGwmcij7q3ExbiWb',
         simSlot: 2,
         isSpam: true,
-        receiptUrl: 'https://mreciept.cbe.com.et/v2-hfHCxGwmcij7q3ExbiWb',
+        receiptUrl: 'https://mbreceipt.cbe.com.et/v2-hfHCxGwmcij7q3ExbiWb',
         feedbackUrl: 'https://forms.gle/kGNGQpG3mQCCk3iD6',
-        fullMessageText: `Dear ${curHolderName} You have received ETB 50.00 from account 1*********8925 (Kasahun Yematawork Lema) to your account ${curMasked}. Your current balance is ETB1,805.47. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxGwmcij7q3ExbiWb for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`
+        fullMessageText: `Dear ${curHolderName} You have received ETB 50.00 from account 1*********8925 (Kasahun Yematawork Lema) to your account ${curMasked}. Your current balance is ETB1,805.47. Thanks for Banking with CBE.\nhttps://mbreceipt.cbe.com.et/v2-hfHCxGwmcij7q3ExbiWb for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`
       },
       {
         id: `tx-cbe-promo-${curAccount}`,
@@ -718,9 +718,9 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
         txId: 'v2-hfHCxGKNY8V0W9qoyCPX',
         simSlot: 2,
         isSpam: true,
-        receiptUrl: 'https://mreciept.cbe.com.et/v2-hfHCxGKNY8V0W9qoyCPX',
+        receiptUrl: 'https://mbreceipt.cbe.com.et/v2-hfHCxGKNY8V0W9qoyCPX',
         feedbackUrl: 'https://forms.gle/kGNGQpG3mQCCk3iD6',
-        fullMessageText: `Dear ${curHolderName} A debit transaction of ETB 20.0. has occurred on your account ${curMasked}. Service charge of ETB 0.00 and VAT(15%) of 0.0 and Disaster Recovery(5%) of 0.00 with total of ETB20.00 .Your current balance is ETB${curBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxGKNY8V0W9qoyCPX for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`
+        fullMessageText: `Dear ${curHolderName} A debit transaction of ETB 20.0. has occurred on your account ${curMasked}. Service charge of ETB 0.00 and VAT(15%) of 0.0 and Disaster Recovery(5%) of 0.00 with total of ETB20.00 .Your current balance is ETB${curBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}. Thanks for Banking with CBE.\nhttps://mbreceipt.cbe.com.et/v2-hfHCxGKNY8V0W9qoyCPX for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`
       },
       {
         id: `tx-cbe-credit-${curAccount}`,
@@ -739,8 +739,9 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
         txId: 'FT26248KLR82',
         simSlot: 2,
         isSpam: true,
-        receiptUrl: `https://apps.cbe.com.et:100/?id=FT26248KLR82${curBranchSuffix}`,
-        fullMessageText: `Dear ${curFirstName} your Account ${curMasked} has been Credited with ETB 50.00 from Dejene Buta, on 05/09/2026 at 16:41:01 with Ref No FT26248KLR82 Your Current Balance is ETB ${curCreditBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}. Thank you for Banking with CBE!\nhttps://apps.cbe.com.et:100/?id=FT26248KLR82${curBranchSuffix}`
+        receiptUrl: 'https://mbreceipt.cbe.com.et/v2-hfHCxGFT26248KLR82',
+        feedbackUrl: 'https://forms.gle/kGNGQpG3mQCCk3iD6',
+        fullMessageText: `Dear ${curFirstName} You have received ETB 50.00 from account 1*********8925 (Dejene Buta) to your account ${curMasked}. Your current balance is ETB${curCreditBalance.toLocaleString('en-US', { minimumFractionDigits: 2 })}. Thanks for Banking with CBE.\nhttps://mbreceipt.cbe.com.et/v2-hfHCxGFT26248KLR82 for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`
       }
     ];
 
@@ -809,16 +810,16 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
             const senderAccMasked = a.counterpartyAccount ? maskTruecallerAccount(a.counterpartyAccount) : '1*********8925';
             const senderName = a.counterpartyName || 'Kasahun Yematawork Lema';
             const rCode = (a.txId || 'wmcij7q3ExbiWb').replace(/[^a-zA-Z0-9]/g, '').slice(-12);
-            fullMsg = `Dear ${a.holderName || curHolderName} You have received ETB ${formattedAmt} from account ${senderAccMasked} (${senderName}) to your account ${curMasked}. Your current balance is ETB${formattedCalcBal}. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxG${rCode} for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`;
+            fullMsg = `Dear ${a.holderName || curHolderName} You have received ETB ${formattedAmt} from account ${senderAccMasked} (${senderName}) to your account ${curMasked}. Your current balance is ETB${formattedCalcBal}. Thanks for Banking with CBE.\nhttps://mbreceipt.cbe.com.et/v2-hfHCxG${rCode} for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`;
           } else {
-            fullMsg = `Dear ${a.holderName || curHolderName},\nYour Account ${a.fullAccount || curAccount} has been Credited with ETB ${a.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} on ${a.timeString || 'Now'}${a.counterpartyName ? ` by ${a.counterpartyName}` : ''}.\nAvailable Balance is ETB ${formattedCalcBal}.\nTxn Ref: ${a.txId || 'FT26248MK0913'}.\nThank you for banking with ${a.bankName || 'CBE'}.\nhttps://cbe.com.et/mbreceipt/${a.txId || 'FT26248MK0913'}`;
+            fullMsg = `Dear ${a.holderName || curHolderName},\nYour Account ${a.fullAccount || curAccount} has been Credited with ETB ${a.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} on ${a.timeString || 'Now'}${a.counterpartyName ? ` by ${a.counterpartyName}` : ''}.\nAvailable Balance is ETB ${formattedCalcBal}.\nTxn Ref: ${a.txId || 'FT26248MK0913'}.\nThank you for banking with ${a.bankName || 'CBE'}.\nhttps://mbreceipt.cbe.com.et/v2-hfHCxG${a.txId || 'FT26248MK0913'}`;
           }
         } else {
           if (isCbe) {
             const amtStr = a.amount % 1 === 0 ? `${a.amount.toFixed(1)}.` : `${a.amount.toFixed(2)}.`;
             const totStr = a.amount.toFixed(2);
             const rCode = (a.txId || 'KNY8V0W9qoyCPX').replace(/[^a-zA-Z0-9]/g, '').slice(-12);
-            fullMsg = `Dear ${a.holderName || curHolderName} A debit transaction of ETB ${amtStr} has occurred on your account ${curMasked}. Service charge of ETB 0.00 and VAT(15%) of 0.0 and Disaster Recovery(5%) of 0.00 with total of ETB${totStr} .Your current balance is ETB${formattedCalcBal}. Thanks for Banking with CBE.\nhttps://mreciept.cbe.com.et/v2-hfHCxG${rCode} for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`;
+            fullMsg = `Dear ${a.holderName || curHolderName} A debit transaction of ETB ${amtStr} has occurred on your account ${curMasked}. Service charge of ETB 0.00 and VAT(15%) of 0.0 and Disaster Recovery(5%) of 0.00 with total of ETB${totStr} .Your current balance is ETB${formattedCalcBal}. Thanks for Banking with CBE.\nhttps://mbreceipt.cbe.com.et/v2-hfHCxG${rCode} for feedback:\nhttps://forms.gle/kGNGQpG3mQCCk3iD6`;
           } else {
             fullMsg = `Dear ${a.holderName || curHolderName},\nA debit transaction of ETB ${a.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })} has occurred on your Account ${a.fullAccount || curAccount} on ${a.timeString || 'Now'}${a.counterpartyName ? ` to ${a.counterpartyName}` : ''}.\nAvailable Balance: ETB ${formattedCalcBal}.\nTxn Ref: ${a.txId || 'FT269446FP77'}.\nThank you for banking with ${a.bankName || 'CBE'}.`;
           }
@@ -827,6 +828,8 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
         // Dynamically ensure the SMS message text reflects the mathematically accurate available balance
         fullMsg = updateSmsAvailableBalance(fullMsg, calculatedBalanceAfter);
       }
+
+      const receiptRef = (a.txId || 'FT26248MK0913').replace(/[^a-zA-Z0-9]/g, '');
 
       return {
         id: a.id,
@@ -844,7 +847,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
         txId: a.txId,
         simSlot: 2,
         isSpam: true,
-        receiptUrl: `https://apps.cbe.com.et:100/?id=${a.txId || 'FT26248MK0913'}`,
+        receiptUrl: `https://mbreceipt.cbe.com.et/v2-hfHCxG${receiptRef}`,
         fullMessageText: fullMsg
       };
     });
@@ -2323,15 +2326,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
           {/* iOS Top Navigation Bar for Truecaller */}
           <header className="sticky top-0 z-30 px-4 pt-[max(env(safe-area-inset-top,0px),10px)] pb-2 backdrop-blur-xl bg-black/90 border-b border-[#38383A]">
             <div className="flex items-center justify-between h-11">
-              {/* Back to CBE */}
-              <button
-                type="button"
-                onClick={onBack}
-                className="text-[#007AFF] hover:opacity-80 active:opacity-60 text-[17px] font-normal flex items-center gap-0.5 cursor-pointer"
-              >
-                <ChevronLeft className="w-5 h-5 -ml-1.5 stroke-[2.5]" />
-                <span>CBE</span>
-              </button>
+              <div className="w-8" />
 
               {/* Center Truecaller Brand */}
               <div className="flex items-center gap-1.5">
@@ -2515,16 +2510,13 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                 </button>
 
                 {/* User Profile Avatar with Cyan Ring */}
-                <button
-                  type="button"
-                  onClick={onBack}
-                  className="relative flex items-center justify-center p-[2px] rounded-full border-2 border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 cursor-pointer"
-                  title="Back to Banking App"
+                <div
+                  className="relative flex items-center justify-center p-[2px] rounded-full border-2 border-cyan-400 select-none"
                 >
                   <div className="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center text-white font-semibold text-sm shadow-sm">
                     L
                   </div>
-                </button>
+                </div>
               </div>
             </>
           ) : (
@@ -2558,21 +2550,6 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
           )}
         </header>
 
-        {/* Informative Header / Back to Banking Bar */}
-        <div className="px-4 py-1.5 bg-neutral-900/60 border-b border-neutral-800/80 flex items-center justify-between text-xs text-neutral-400">
-          <div className="flex items-center space-x-2">
-            <span className="w-2 h-2 rounded-full bg-purple-500 animate-pulse"></span>
-            <span>Click <strong>CBE</strong> below to see transaction history &amp; pop-down</span>
-          </div>
-          <button
-            type="button"
-            onClick={onBack}
-            className="text-cyan-400 hover:text-cyan-300 font-semibold text-[11px] flex items-center space-x-1 cursor-pointer"
-          >
-            <span>Return to CBE</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </button>
-        </div>
 
         {/* Conversation Threads List */}
         <div className="flex-1 overflow-y-auto pb-24 divide-y divide-transparent">
@@ -3542,20 +3519,6 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                 </div>
               )}
 
-              {/* Bottom Quick Return to Inbox Button */}
-              <div className="pt-2 border-t border-neutral-800">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowThreeDotMenu(false);
-                    setView('inbox');
-                  }}
-                  className="w-full py-2 px-3 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs font-bold transition flex items-center justify-center space-x-1.5 cursor-pointer"
-                >
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Return to Google Messages Inbox</span>
-                </button>
-              </div>
             </div>
           </div>
         )}
@@ -4198,7 +4161,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                 type="button"
                 onClick={() => setView('bank_thread')}
                 className="flex items-center justify-center space-x-1 py-2.5 px-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-[11px] font-bold transition active:scale-95 border border-white/10 cursor-pointer"
-                title="Back to CBE Transactions"
+                title="Back to Message Thread"
               >
                 <ArrowLeft className="w-3.5 h-3.5 text-neutral-300 flex-shrink-0" />
                 <span className="truncate">Back</span>

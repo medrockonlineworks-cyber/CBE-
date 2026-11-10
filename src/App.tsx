@@ -98,7 +98,7 @@ class ViewErrorBoundary extends React.Component<ViewErrorBoundaryProps, ViewErro
               className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 rounded-xl text-xs font-semibold flex items-center gap-2 cursor-pointer transition active:scale-95"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>Back to CBE</span>
+              <span>Return to App</span>
             </button>
           </div>
         </div>
@@ -696,70 +696,22 @@ export default function App() {
       className={`h-full min-h-[100dvh] h-[100dvh] w-full ${viewThemeConfig.rootBg} flex flex-col p-0 m-0 font-sans overflow-hidden antialiased select-none relative transition-colors duration-200`}
     >
       
-      {/* Quick App Switcher Dock: Floating unobtrusively in top-right corner only on main screen */}
+      {/* Phone Preset Switcher (desktop preview helper only) */}
       {activeView === 'main' && (
-        <nav aria-label="Apps Switcher" className="hidden md:flex fixed top-2 right-3 items-center gap-1.5 px-2.5 py-1 bg-slate-900/80 hover:bg-slate-900 border border-slate-700/60 rounded-full shadow-lg z-50 backdrop-blur-md transition-all">
-          <button
-            onClick={() => navigateTo('main', 'home')}
-            className="px-2.5 py-0.5 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 bg-[#70189F] text-white shadow-xs"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-            CBE Birr
-          </button>
-          <button
-            onClick={() => navigateTo('telebirr')}
-            className="px-2.5 py-0.5 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 text-slate-400 hover:text-white"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-lime-200" />
-            Telebirr
-          </button>
-          <button
-            onClick={() => navigateTo('telegram')}
-            className="px-2.5 py-0.5 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 text-slate-400 hover:text-white"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-sky-300" />
-            Telegram
-          </button>
-          <button
-            onClick={() => navigateTo('dashen')}
-            className="px-2.5 py-0.5 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 text-slate-400 hover:text-white"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-sky-300" />
-            Dashen Amole
-          </button>
-          <button
-            onClick={() => navigateTo('sms')}
-            className="px-2.5 py-0.5 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 text-slate-400 hover:text-white"
-          >
-            SMS
-          </button>
-          <button
-            onClick={() => navigateTo('phone')}
-            className="px-2.5 py-0.5 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 text-slate-400 hover:text-white"
-          >
-            Phone (*889#)
-          </button>
-          <button
-            onClick={() => navigateTo('truecaller')}
-            className="px-2.5 py-0.5 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 text-slate-400 hover:text-white"
-          >
-            Truecaller
-          </button>
-
-          <div className="h-3 w-px bg-slate-700 mx-0.5" />
+        <div className="hidden md:flex fixed top-2 right-3 items-center z-50">
           <button
             onClick={() => {
               const newModel = isIPhone ? 'tecno' : 'iphone';
               PhoneSettingsService.applyPreset(newModel);
             }}
-            className={`px-2.5 py-0.5 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-1 ${
-              isIPhone ? 'bg-sky-600 text-white shadow-xs' : 'bg-emerald-700 text-white shadow-xs'
+            className={`px-2.5 py-1 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-1 shadow-lg backdrop-blur-md border border-slate-700/60 ${
+              isIPhone ? 'bg-sky-600/90 text-white' : 'bg-emerald-700/90 text-white'
             }`}
             title="Toggle between iPhone (iOS) and Android modes"
           >
             <span>{isIPhone ? '🍎 iOS' : '🤖 Android'}</span>
           </button>
-        </nav>
+        </div>
       )}
 
       {/* Main Responsive Edge-to-Edge Canvas */}
@@ -961,7 +913,6 @@ export default function App() {
           )}
 
         </main>
-
 
       </div>
 

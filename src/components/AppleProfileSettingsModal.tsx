@@ -185,21 +185,7 @@ export const AppleProfileSettingsModal: React.FC<AppleProfileSettingsModalProps>
               </button>
             )}
 
-            {onBackToApp && (
-              <button
-                type="button"
-                onClick={() => {
-                  onClose();
-                  onBackToApp();
-                }}
-                className="w-full p-4 flex items-center gap-3 text-left hover:bg-white/5 active:bg-white/10 transition-colors text-purple-300 cursor-pointer"
-              >
-                <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center shrink-0">
-                  <ArrowLeft className="w-4 h-4" />
-                </div>
-                <span className="text-[15px] font-medium">Return to CBE Mobile Banking App</span>
-              </button>
-            )}
+
           </div>
         </div>
       </div>

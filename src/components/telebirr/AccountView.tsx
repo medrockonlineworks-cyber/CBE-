@@ -177,18 +177,6 @@ export const AccountView: React.FC<AccountViewProps> = ({ onBack, onOpenCbe }) =
           <span className="text-xs font-bold">Home</span>
         </button>
 
-        <button
-          type="button"
-          onClick={() => {
-            if (onOpenCbe) onOpenCbe();
-            else if (onBack) onBack();
-          }}
-          className="px-2.5 py-1 rounded-full bg-white/20 hover:bg-white/30 text-white text-[11px] font-bold flex items-center gap-1.5 transition cursor-pointer border border-white/25"
-          title="Return to CBE Mobile Banking"
-        >
-          <span className="w-2 h-2 rounded-full bg-amber-300"></span>
-          <span>Open CBE Banking</span>
-        </button>
       </div>
 
       {/* Top Profile Header matching Screenshot 2 */}
@@ -214,29 +202,6 @@ export const AccountView: React.FC<AccountViewProps> = ({ onBack, onOpenCbe }) =
       </div>
 
       <div className="p-4 flex flex-col gap-4">
-        {/* FAST SWITCH TO CBE MAIN APPLICATION */}
-        <div 
-          onClick={() => {
-            if (onOpenCbe) onOpenCbe();
-            else if (onBack) onBack();
-          }}
-          className="w-full bg-gradient-to-r from-[#530d66] to-[#70189F] rounded-3xl p-4 text-white shadow-md flex items-center justify-between cursor-pointer hover:shadow-lg active:scale-98 transition group border border-purple-400/30"
-          title="Return to Commercial Bank of Ethiopia (CBE) App"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl bg-white/15 flex items-center justify-center border border-white/20 shrink-0">
-              <Building2 className="w-6 h-6 text-amber-300" />
-            </div>
-            <div className="flex flex-col">
-              <span className="text-sm font-extrabold text-white flex items-center gap-1.5">
-                <span>Commercial Bank of Ethiopia</span>
-                <span className="bg-amber-400 text-slate-950 text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase">CBE</span>
-              </span>
-              <span className="text-[11.5px] text-white/80 mt-0.5">Switch back to CBE Mobile Banking App</span>
-            </div>
-          </div>
-          <ArrowRight className="w-5 h-5 text-white/80 group-hover:text-white group-hover:translate-x-1 transition-transform shrink-0" />
-        </div>
         {/* SECTION 1: Upload Custom Image / Wallpaper matching Screenshot 2 */}
         <div className="w-full bg-white rounded-3xl p-5 shadow-xs border border-gray-100 flex flex-col gap-4">
           <div className="flex items-center gap-3">

@@ -82,17 +82,7 @@ const TelebirrSuperAppContent: React.FC<TelebirrSuperAppContentProps> = ({
         <div className="w-full bg-white px-3.5 pt-[max(env(safe-area-inset-top,0px),6px)] pb-1.5 flex items-center justify-between border-b border-gray-100 z-20 shrink-0 shadow-2xs">
           {/* Ethio Telecom Logo & Back to CBE */}
           <div className="flex items-center gap-1.5 h-6">
-            {isIPhone && (
-              <button
-                type="button"
-                onClick={handlePhoneBack}
-                className="text-[#0072ce] hover:opacity-80 active:opacity-60 text-[14px] font-medium flex items-center gap-0.5 cursor-pointer -ml-1 mr-1"
-                title="Back to CBE"
-              >
-                <ChevronLeft className="w-4.5 h-4.5 -ml-1 stroke-[2.5]" />
-                <span>CBE</span>
-              </button>
-            )}
+
             <div className="flex items-center h-6 max-w-[140px] overflow-hidden">
               {customEthioLogo ? (
                 <img src={customEthioLogo} alt="Ethio telecom" className="h-6 object-contain" />
@@ -218,23 +208,7 @@ const TelebirrSuperAppContent: React.FC<TelebirrSuperAppContentProps> = ({
               </button>
             </div>
 
-            {/* CBE Mobile Banking Card */}
-            <div 
-              onClick={() => {
-                setShowAppSwitcher(false);
-                if (onOpenCbe) onOpenCbe();
-                else if (onBack) onBack();
-              }}
-              className="p-3.5 rounded-2xl bg-[#70189F] hover:bg-[#58106c] cursor-pointer active:scale-98 transition flex items-center gap-3 border border-purple-400/30"
-            >
-              <div className="w-10 h-10 rounded-xl bg-amber-400 flex items-center justify-center text-slate-950 font-black text-sm">
-                CBE
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm font-extrabold text-white">CBE Mobile Banking</span>
-                <span className="text-[11px] text-purple-200">Switch to Commercial Bank of Ethiopia</span>
-              </div>
-            </div>
+
 
             {/* Telebirr SuperApp Card */}
             <div 

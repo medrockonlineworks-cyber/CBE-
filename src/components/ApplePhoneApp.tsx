@@ -164,14 +164,7 @@ export const ApplePhoneApp: React.FC<ApplePhoneAppProps> = ({
     <div className="min-h-full flex flex-col font-sans select-none bg-black text-white pb-safe relative">
       {/* iOS Top Navigation Bar with Back to CBE */}
       <header className="px-4 pt-[max(env(safe-area-inset-top,0px),10px)] pb-1 flex items-center justify-between z-20">
-        <button
-          type="button"
-          onClick={onBack}
-          className="text-[#007AFF] hover:opacity-80 active:opacity-60 text-[17px] font-normal flex items-center gap-0.5 cursor-pointer"
-        >
-          <ChevronLeft className="w-5 h-5 -ml-1.5 stroke-[2.5]" />
-          <span>CBE</span>
-        </button>
+        <div className="w-8" />
 
         {activeTab === 'recents' && (
           <div className="flex items-center bg-[#1C1C1E] p-0.5 rounded-lg border border-neutral-800">
