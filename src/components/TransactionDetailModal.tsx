@@ -138,7 +138,7 @@ export default function TransactionDetailModal({
   return (
     <div 
       id="transaction-detail-modal-overlay"
-      className="fixed inset-0 z-40 bg-black/60 backdrop-blur-[0.5px] flex flex-col justify-end items-center px-3.5 sm:px-4 pb-[calc(56px+max(env(safe-area-inset-bottom,0px),10px))] animate-in fade-in duration-200 select-none pointer-events-auto"
+      className="fixed inset-0 z-40 bg-black/60 backdrop-blur-[0.5px] flex flex-col justify-end items-center p-0 animate-in fade-in duration-200 select-none pointer-events-auto"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -146,7 +146,7 @@ export default function TransactionDetailModal({
       <div 
         id="transaction-detail-sheet"
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-[390px] bg-white rounded-[28px] sm:rounded-[32px] px-5 sm:px-6 pt-3.5 pb-5 shadow-[0_12px_45px_rgba(0,0,0,0.35)] flex flex-col justify-between relative animate-in slide-in-from-bottom-4 duration-250 select-none max-h-[76vh] overflow-y-auto"
+        className="w-full bg-white rounded-t-[36px] rounded-b-none px-6 pt-3.5 pb-[calc(52px+max(env(safe-area-inset-bottom,0px),8px)+18px)] shadow-[0_-12px_45px_rgba(0,0,0,0.25)] flex flex-col justify-between relative animate-in slide-in-from-bottom-5 duration-250 select-none max-h-[85vh] overflow-y-auto"
       >
         {/* Subtle top drag pill handle matching genuine CBE on iPhone in reference photo */}
         <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-2 shrink-0" />

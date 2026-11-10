@@ -90,7 +90,7 @@ export default function Navigation({
       <nav 
         id="cbe-bottom-navbar" 
         aria-label="Main Navigation"
-        className="w-full pointer-events-auto bg-white border-t border-gray-100/80 px-5 pt-1 pb-[max(env(safe-area-inset-bottom,0px),8px)] flex justify-between items-center shadow-[0_-1px_4px_rgba(0,0,0,0.02)] select-none shrink-0"
+        className="w-full pointer-events-auto bg-white border-t border-gray-100/40 px-5 pt-1 pb-[max(env(safe-area-inset-bottom,0px),8px)] flex justify-between items-center select-none shrink-0"
       >
         {/* Item 1: Home */}
         <button
