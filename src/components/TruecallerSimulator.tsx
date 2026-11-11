@@ -63,7 +63,8 @@ import {
   Type,
   Eye,
   ShoppingBag,
-  QrCode
+  QrCode,
+  Palette
 } from 'lucide-react';
 import { CbeWebReceiptModal } from './CbeWebReceiptModal';
 import { CbeHolidayCardModal } from './CbeHolidayCardModal';
@@ -75,13 +76,18 @@ import {
   TruecallerBackgroundApp,
   TruecallerPhoneType,
   PopdownFontFamily,
-  PopdownFontSize
+  PopdownFontSize,
+  TruecallerBaseTheme,
+  TruecallerColorAccent,
+  TruecallerThemeConfig
 } from '../types/truecaller';
 import PhoneSettingsModal from './PhoneSettingsModal';
 import { PhoneSettingsService, PhoneModelType } from '../services/phoneSettingsService';
 import { 
   TruecallerService, 
   BANK_PRESETS, 
+  TRUECALLER_ACCENT_PRESETS,
+  TRUECALLER_BASE_THEMES,
   maskTruecallerAccount, 
   formatCurrentTimeString,
   formatTimeFromIso,
@@ -311,10 +317,32 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
     });
   }, []);
 
+  // Truecaller Color Theme & Base Appearance Settings
+  const [themeConfig, setThemeConfigState] = useState<TruecallerThemeConfig>(() => TruecallerService.getThemeConfig());
+  const currentAccent = useMemo(() => TruecallerService.getAccent(themeConfig.accentId), [themeConfig.accentId]);
+  const currentBaseTheme = useMemo(() => TruecallerService.getBaseTheme(themeConfig.base), [themeConfig.base]);
+  const isLightMode = themeConfig.base === 'light';
+  const isMidnightMode = themeConfig.base === 'midnight';
+  const isAmoledMode = themeConfig.base === 'amoled';
+
+  const handleUpdateAccent = (accentId: string) => {
+    const updated = TruecallerService.setThemeConfig({ accentId });
+    setThemeConfigState(updated);
+    SystemBarsService.syncForView('truecaller', { isIPhone, subView: view });
+    showToast(`Color theme set to ${TruecallerService.getAccent(accentId).name}`);
+  };
+
+  const handleUpdateBaseTheme = (base: TruecallerBaseTheme) => {
+    const updated = TruecallerService.setThemeConfig({ base });
+    setThemeConfigState(updated);
+    SystemBarsService.syncForView('truecaller', { isIPhone, subView: view });
+    showToast(`Appearance set to ${TruecallerService.getBaseTheme(base).name}`);
+  };
+
   // Ensure native device status bar and navigation bar follow the Truecaller theme
   useEffect(() => {
     SystemBarsService.syncForView('truecaller', { isIPhone, subView: view });
-  }, [isIPhone, view]);
+  }, [isIPhone, view, themeConfig.base]);
 
   // Popdown Typography Settings (Font Family & Text Size)
   const [popdownFontFamily, setPopdownFontFamily] = useState<PopdownFontFamily>(() => {
@@ -2484,16 +2512,33 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
     }
 
     // -------------------------------------------------------------
+    // -------------------------------------------------------------
     // TRUECALLER FOR ANDROID (Clean edge-to-edge layout without fake bars)
     // -------------------------------------------------------------
+    const inboxContainerBg = isLightMode
+      ? 'bg-[#F8F9FA] text-slate-900'
+      : isAmoledMode
+      ? 'bg-black text-white'
+      : isMidnightMode
+      ? 'bg-[#0a1128] text-white'
+      : 'bg-[#121316] text-white';
+
+    const inboxHeaderBg = isLightMode
+      ? 'bg-white/95 border-b border-slate-200/80 backdrop-blur-md'
+      : isAmoledMode
+      ? 'bg-black/95 border-b border-neutral-900/60 backdrop-blur-md'
+      : isMidnightMode
+      ? 'bg-[#0a1128]/95 border-b border-blue-950/40 backdrop-blur-md'
+      : 'bg-[#121316]/95 border-b border-neutral-800/40 backdrop-blur-md';
+
     return (
-      <div className="h-full w-full flex-1 bg-[#121316] text-white flex flex-col font-sans select-none relative overflow-hidden">
+      <div className={`h-full w-full flex-1 ${inboxContainerBg} flex flex-col font-sans select-none relative overflow-hidden`}>
         {/* Google Messages Top App Bar with safe-area spacing */}
-        <header className="px-4 pt-[max(env(safe-area-inset-top,0px),10px)] pb-2 flex items-center justify-between sticky top-0 z-30 bg-[#121316]">
+        <header className={`px-4 pt-[max(env(safe-area-inset-top,0px),10px)] pb-2 flex items-center justify-between sticky top-0 z-30 ${inboxHeaderBg}`}>
           {!isSearching ? (
             <>
               <div className="flex items-center space-x-2">
-                <h1 className="text-[22px] sm:text-[24px] font-medium tracking-normal text-white">
+                <h1 className={`text-[22px] sm:text-[24px] font-medium tracking-normal ${isLightMode ? 'text-slate-900' : 'text-white'}`}>
                   Messages
                 </h1>
               </div>
@@ -2503,17 +2548,23 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                 <button 
                   type="button"
                   onClick={() => setIsSearching(true)}
-                  className="p-2 rounded-full hover:bg-neutral-800 text-neutral-200 transition-colors cursor-pointer"
+                  className={`p-2 rounded-full transition-colors cursor-pointer ${
+                    isLightMode ? 'hover:bg-slate-100 text-slate-700' : 'hover:bg-neutral-800 text-neutral-200'
+                  }`}
                   title="Search conversations"
                 >
                   <Search className="w-5 h-5" />
                 </button>
 
-                {/* User Profile Avatar with Cyan Ring */}
+                {/* User Profile Avatar with Accent Ring */}
                 <div
-                  className="relative flex items-center justify-center p-[2px] rounded-full border-2 border-cyan-400 select-none"
+                  className="relative flex items-center justify-center p-[2px] rounded-full border-2 select-none"
+                  style={{ borderColor: currentAccent.primary }}
                 >
-                  <div className="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center text-white font-semibold text-sm shadow-sm">
+                  <div 
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm"
+                    style={{ backgroundColor: currentAccent.primary }}
+                  >
                     L
                   </div>
                 </div>
@@ -2521,19 +2572,23 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
             </>
           ) : (
             /* Inline Search Mode */
-            <div className="w-full flex items-center space-x-2 px-3 py-1.5 rounded-full bg-neutral-800/90 text-white">
-              <Search className="w-4 h-4 text-neutral-400 flex-shrink-0" />
+            <div className={`w-full flex items-center space-x-2 px-3 py-1.5 rounded-full ${
+              isLightMode ? 'bg-slate-200/80 text-slate-900' : 'bg-neutral-800/90 text-white'
+            }`}>
+              <Search className={`w-4 h-4 flex-shrink-0 ${isLightMode ? 'text-slate-500' : 'text-neutral-400'}`} />
               <input 
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search images, videos & more"
                 autoFocus
-                className="bg-transparent border-none outline-none w-full text-sm placeholder-neutral-400"
+                className={`bg-transparent border-none outline-none w-full text-sm ${
+                  isLightMode ? 'placeholder-slate-500 text-slate-900' : 'placeholder-neutral-400 text-white'
+                }`}
               />
               {searchQuery && (
                 <button type="button" onClick={() => setSearchQuery('')} className="p-1 cursor-pointer">
-                  <X className="w-4 h-4 text-neutral-400" />
+                  <X className={`w-4 h-4 ${isLightMode ? 'text-slate-500' : 'text-neutral-400'}`} />
                 </button>
               )}
               <button 
@@ -2542,7 +2597,8 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                   setIsSearching(false);
                   setSearchQuery('');
                 }}
-                className="text-xs font-semibold text-blue-400 px-2 py-1 cursor-pointer"
+                className="text-xs font-semibold px-2 py-1 cursor-pointer"
+                style={{ color: currentAccent.primary }}
               >
                 Cancel
               </button>
@@ -2561,7 +2617,11 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                 onClick={() => handleSelectThread(thread)}
                 className={`w-full px-4 py-3.5 flex items-center justify-between cursor-pointer transition-colors ${
                   isCbeThread 
-                    ? 'hover:bg-purple-950/30 active:bg-purple-900/40 bg-purple-950/10' 
+                    ? isLightMode
+                      ? 'hover:bg-purple-50 active:bg-purple-100 bg-purple-50/60'
+                      : 'hover:bg-purple-950/30 active:bg-purple-900/40 bg-purple-950/10' 
+                    : isLightMode
+                    ? 'hover:bg-slate-100/70 active:bg-slate-200/60'
                     : 'hover:bg-neutral-800/50 active:bg-neutral-800/80'
                 }`}
               >
@@ -2578,7 +2638,9 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
 
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center space-x-2">
-                      <h2 className="text-[15.5px] font-semibold truncate text-neutral-100">
+                      <h2 className={`text-[15.5px] font-semibold truncate ${
+                        isLightMode ? 'text-slate-900' : 'text-neutral-100'
+                      }`}>
                         {thread.sender}
                       </h2>
                       {isCbeThread && (
@@ -2588,7 +2650,9 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                       )}
                     </div>
                     <p className={`text-[13.5px] truncate mt-0.5 leading-snug ${
-                      thread.unreadCount > 0 ? 'text-neutral-200 font-medium' : 'text-neutral-400'
+                      thread.unreadCount > 0 
+                        ? isLightMode ? 'text-slate-800 font-semibold' : 'text-neutral-200 font-medium'
+                        : isLightMode ? 'text-slate-500' : 'text-neutral-400'
                     }`}>
                       {thread.snippet}
                     </p>
@@ -2597,13 +2661,18 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
 
                 <div className="flex flex-col items-end flex-shrink-0 space-y-1.5 pl-2">
                   <span className={`text-[12px] font-normal ${
-                    thread.unreadCount > 0 ? 'text-blue-400 font-medium' : 'text-neutral-400'
+                    thread.unreadCount > 0 
+                      ? isLightMode ? 'text-blue-600 font-semibold' : 'text-blue-400 font-medium'
+                      : isLightMode ? 'text-slate-400' : 'text-neutral-400'
                   }`}>
                     {thread.timeLabel}
                   </span>
 
                   {thread.unreadCount > 0 && (
-                    <span className="w-5 h-5 rounded-full bg-[#1a73e8] text-white text-[11px] font-semibold flex items-center justify-center shadow-sm">
+                    <span 
+                      className="w-5 h-5 rounded-full text-white text-[11px] font-semibold flex items-center justify-center shadow-sm"
+                      style={{ backgroundColor: currentAccent.primary }}
+                    >
                       {thread.unreadCount}
                     </span>
                   )}
@@ -2615,8 +2684,12 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
 
         {/* Floating Action Buttons: Start Chat + Gemini sparkle */}
         <div className="fixed bottom-10 right-5 flex flex-col items-end space-y-3 z-30">
-          <div className="w-11 h-11 rounded-full bg-neutral-800/90 text-cyan-400 border border-neutral-700 flex items-center justify-center shadow-xl cursor-pointer hover:bg-neutral-700 transition">
-            <Sparkles className="w-5 h-5" />
+          <div className={`w-11 h-11 rounded-full border flex items-center justify-center shadow-xl cursor-pointer transition ${
+            isLightMode 
+              ? 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50' 
+              : 'bg-neutral-800/90 text-cyan-400 border-neutral-700 hover:bg-neutral-700'
+          }`}>
+            <Sparkles className="w-5 h-5" style={{ color: currentAccent.primary }} />
           </div>
 
           <div 
@@ -2625,7 +2698,8 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
               setActiveBankSenderName('CBE');
               setView('bank_thread');
             }}
-            className="px-5 py-3 rounded-full bg-[#1a73e8] hover:bg-[#1558b0] active:scale-95 text-white font-semibold text-sm flex items-center space-x-2.5 shadow-2xl cursor-pointer transition"
+            className="px-5 py-3 rounded-full active:scale-95 text-white font-semibold text-sm flex items-center space-x-2.5 shadow-2xl cursor-pointer transition"
+            style={{ backgroundColor: currentAccent.primary }}
           >
             <MessageSquare className="w-4 h-4 fill-white" />
             <span>Start chat</span>
@@ -2643,8 +2717,20 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
   // 2. BANK CBE TRANSACTION STREAM: "click the Bank CBE and open we can see the list transaction made"
   // =========================================================================
   if (view === 'bank_thread') {
+    const threadBg = isLightMode 
+      ? 'bg-[#f8fafc] text-slate-900' 
+      : (isMidnightMode 
+        ? 'bg-[#0a1128] text-white' 
+        : (isAmoledMode ? 'bg-black text-white' : 'bg-[#121316] text-white'));
+
+    const threadHeaderBg = isLightMode
+      ? 'bg-white border-b border-slate-200 text-slate-900'
+      : (isMidnightMode
+        ? 'bg-[#0a1128] border-b border-blue-900/30 text-white'
+        : (isAmoledMode ? 'bg-black border-b border-neutral-900 text-white' : 'bg-[#121316] border-b border-neutral-900 text-white'));
+
     return (
-      <div className="h-full w-full flex-1 bg-black text-white flex flex-col font-sans select-none relative overflow-y-auto">
+      <div className={`h-full w-full flex-1 ${threadBg} flex flex-col font-sans select-none relative overflow-y-auto`}>
         
         {/* Toast popup */}
         {toastMessage && (
@@ -2655,7 +2741,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
         )}
 
         {/* Bank Thread App Bar matching screenshot */}
-        <header className="w-full bg-black border-b border-neutral-900 px-3 py-2 flex items-center justify-between sticky top-0 z-30 pt-[max(env(safe-area-inset-top,0px),8px)]">
+        <header className={`w-full ${threadHeaderBg} px-3 py-2 flex items-center justify-between sticky top-0 z-30 pt-[max(env(safe-area-inset-top,0px),8px)]`}>
           <div className="flex items-center space-x-3">
             {/* Back Button */}
             <button
@@ -2663,22 +2749,30 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
               onClick={() => {
                 setView('inbox');
               }}
-              className="p-1 rounded-full hover:bg-neutral-900 text-white transition-colors active:scale-95 cursor-pointer flex items-center gap-1"
+              className={`p-1 rounded-full transition-colors active:scale-95 cursor-pointer flex items-center gap-1 ${
+                isLightMode ? 'hover:bg-slate-100 text-slate-900' : 'hover:bg-neutral-900 text-white'
+              }`}
               title="Back to Messages"
             >
               {isIPhone ? (
-                <div className="text-[#007AFF] text-[17px] font-normal flex items-center gap-0.5">
+                <div className="text-[17px] font-normal flex items-center gap-0.5" style={{ color: currentAccent.primary }}>
                   <ChevronLeft className="w-5 h-5 -ml-1 stroke-[2.5]" />
                   <span>Messages</span>
                 </div>
               ) : (
-                <ArrowLeft className="w-6 h-6 text-white" />
+                <ArrowLeft className={`w-6 h-6 ${isLightMode ? 'text-slate-900' : 'text-white'}`} />
               )}
             </button>
 
             {/* Bank Avatar: Dark Navy Circle with Bank Facade Columns Pediment Icon */}
-            <div className="w-10 h-10 rounded-full bg-[#18263b] flex items-center justify-center flex-shrink-0 border border-blue-900/40 shadow-sm">
-              <svg className="w-5 h-5 text-white fill-current" viewBox="0 0 24 24">
+            <div 
+              className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm border"
+              style={{ 
+                backgroundColor: isLightMode ? currentAccent.lightBg : '#18263b',
+                borderColor: `${currentAccent.primary}40`
+              }}
+            >
+              <svg className="w-5 h-5 fill-current" style={{ color: isLightMode ? currentAccent.primary : '#ffffff' }} viewBox="0 0 24 24">
                 <path d="M12 2L2 7h20L12 2z"/>
                 <rect x="3" y="8" width="18" height="2"/>
                 <rect x="4" y="11" width="2.5" height="7"/>
@@ -2691,26 +2785,39 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
 
             {/* Bank Title & Mobile Banking Label - Clean header without account name or number */}
             <div>
-              <h1 className="text-[17px] font-bold tracking-normal leading-tight text-white">
-                CBE
-              </h1>
-              <p className="text-[12px] text-[#8e9aa8] leading-tight">
+              <div className="flex items-center gap-1.5">
+                <h1 className={`text-[17px] font-bold tracking-normal leading-tight ${isLightMode ? 'text-slate-900' : 'text-white'}`}>
+                  CBE
+                </h1>
+                {currentAccent.isGold && (
+                  <span className="text-[9px] bg-amber-400/20 text-amber-500 px-1.5 py-0.2 rounded-full font-bold flex items-center gap-0.5">
+                    <span>👑</span>
+                    <span>VIP</span>
+                  </span>
+                )}
+              </div>
+              <p className={`text-[12px] leading-tight ${isLightMode ? 'text-slate-500' : 'text-[#8e9aa8]'}`}>
                 (Mobile Banking)
               </p>
             </div>
           </div>
 
-          {/* 3-Dot Options Button with blue notification dot from screenshot */}
+          {/* 3-Dot Options Button with notification dot in theme accent */}
           <div className="flex items-center space-x-1">
             <button 
               type="button"
               onClick={() => setShowThreeDotMenu(true)}
-              className="relative p-2 rounded-full hover:bg-neutral-900 text-white cursor-pointer transition-colors active:scale-95"
+              className={`relative p-2 rounded-full cursor-pointer transition-colors active:scale-95 ${
+                isLightMode ? 'hover:bg-slate-100 text-slate-800' : 'hover:bg-neutral-900 text-white'
+              }`}
               title="Options & Registered Accounts"
             >
-              <MoreVertical className="w-6 h-6 text-white" />
-              {/* Blue notification badge dot from screenshot */}
-              <span className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full bg-[#0066FF] ring-2 ring-black" />
+              <MoreVertical className="w-6 h-6" />
+              {/* Notification badge dot in active theme accent */}
+              <span 
+                className="absolute top-2 right-2 w-2.5 h-2.5 rounded-full ring-2 ring-black"
+                style={{ backgroundColor: currentAccent.primary }}
+              />
             </button>
           </div>
         </header>
@@ -2911,9 +3018,10 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                   onClick={() => setThreeDotTab('accounts')}
                   className={`flex-1 py-1.5 px-2 rounded-xl transition flex items-center justify-center space-x-1.5 cursor-pointer ${
                     threeDotTab === 'accounts'
-                      ? 'bg-[#0066FF] text-white shadow-md'
+                      ? 'text-white shadow-md'
                       : 'text-neutral-400 hover:text-white'
                   }`}
+                  style={threeDotTab === 'accounts' ? { backgroundColor: currentAccent.primary } : undefined}
                 >
                   <CreditCard className="w-3.5 h-3.5" />
                   <span>Accounts</span>
@@ -2924,9 +3032,10 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                   onClick={() => setThreeDotTab('settings')}
                   className={`flex-1 py-1.5 px-2 rounded-xl transition flex items-center justify-center space-x-1.5 cursor-pointer ${
                     threeDotTab === 'settings'
-                      ? 'bg-[#0066FF] text-white shadow-md'
+                      ? 'text-white shadow-md'
                       : 'text-neutral-400 hover:text-white'
                   }`}
+                  style={threeDotTab === 'settings' ? { backgroundColor: currentAccent.primary } : undefined}
                 >
                   <Settings className="w-3.5 h-3.5" />
                   <span>Settings</span>
@@ -2937,9 +3046,10 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                   onClick={() => setThreeDotTab('simulate')}
                   className={`flex-1 py-1.5 px-2 rounded-xl transition flex items-center justify-center space-x-1.5 cursor-pointer ${
                     threeDotTab === 'simulate'
-                      ? 'bg-[#0066FF] text-white shadow-md'
+                      ? 'text-white shadow-md'
                       : 'text-neutral-400 hover:text-white'
                   }`}
+                  style={threeDotTab === 'simulate' ? { backgroundColor: currentAccent.primary } : undefined}
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>Simulate</span>
@@ -2950,9 +3060,10 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                   onClick={() => setThreeDotTab('profile')}
                   className={`flex-1 py-1.5 px-2 rounded-xl transition flex items-center justify-center space-x-1.5 cursor-pointer ${
                     threeDotTab === 'profile'
-                      ? 'bg-[#0066FF] text-white shadow-md'
+                      ? 'text-white shadow-md'
                       : 'text-neutral-400 hover:text-white'
                   }`}
+                  style={threeDotTab === 'profile' ? { backgroundColor: currentAccent.primary } : undefined}
                 >
                   <Info className="w-3.5 h-3.5" />
                   <span>Profile</span>
@@ -3075,6 +3186,203 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
               {/* TAB 2: SETTINGS */}
               {threeDotTab === 'settings' && (
                 <div className="space-y-3 animate-in fade-in duration-100 text-xs">
+                  {/* COLOR THEME & APPEARANCE SYSTEM */}
+                  <div className="p-3.5 rounded-2xl bg-neutral-900/90 border border-neutral-800 space-y-3.5 shadow-lg">
+                    {/* Header */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2 text-white font-bold text-xs">
+                        <Palette className="w-4 h-4" style={{ color: currentAccent.primary }} />
+                        <span>Truecaller Color Theme</span>
+                      </div>
+                      <span 
+                        className="text-[10px] font-bold px-2 py-0.5 rounded-full border shadow-2xs flex items-center gap-1"
+                        style={{ 
+                          backgroundColor: `${currentAccent.primary}20`,
+                          borderColor: `${currentAccent.primary}50`,
+                          color: currentAccent.primary
+                        }}
+                      >
+                        {currentAccent.isGold && <span>👑</span>}
+                        <span>{currentAccent.name}</span>
+                        <span>•</span>
+                        <span>{currentBaseTheme.name}</span>
+                      </span>
+                    </div>
+
+                    {/* Base Theme Modes: Dark Slate, AMOLED Black, Midnight Navy, Clean Light */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
+                          Base Appearance Mode
+                        </span>
+                        <span className="text-[10.5px] text-neutral-400 font-medium">
+                          {currentBaseTheme.desc}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                        {TRUECALLER_BASE_THEMES.map(b => {
+                          const isSelected = themeConfig.base === b.id;
+                          return (
+                            <button
+                              key={b.id}
+                              type="button"
+                              onClick={() => handleUpdateBaseTheme(b.id)}
+                              className={`p-2 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${
+                                isSelected
+                                  ? 'ring-2 shadow-md text-white'
+                                  : 'bg-neutral-850 border-neutral-800 text-neutral-300 hover:border-neutral-700'
+                              }`}
+                              style={isSelected ? { 
+                                borderColor: currentAccent.primary, 
+                                backgroundColor: `${currentAccent.primary}18`
+                              } : undefined}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="w-3.5 h-3.5 rounded-full border border-white/20" style={{ backgroundColor: b.bg }} />
+                                {isSelected && (
+                                  <Check className="w-3 h-3" style={{ color: currentAccent.primary }} />
+                                )}
+                              </div>
+                              <div className="mt-1">
+                                <div className="text-[11px] font-bold truncate">{b.name}</div>
+                                <div className="text-[9.5px] text-neutral-400 truncate">{b.desc}</div>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Color Accent Themes: 8 Swatches */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
+                          Theme Accent Colors
+                        </span>
+                        <span className="text-[10px] font-mono font-bold" style={{ color: currentAccent.primary }}>
+                          {currentAccent.primary}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                        {TRUECALLER_ACCENT_PRESETS.map(acc => {
+                          const isSelected = themeConfig.accentId === acc.id;
+                          return (
+                            <button
+                              key={acc.id}
+                              type="button"
+                              onClick={() => handleUpdateAccent(acc.id)}
+                              className={`p-2 rounded-xl border text-left transition cursor-pointer relative overflow-hidden flex flex-col justify-between ${
+                                isSelected
+                                  ? 'bg-neutral-800 border-white/50 text-white shadow-md ring-2'
+                                  : 'bg-neutral-850 border-neutral-800 text-neutral-300 hover:border-neutral-700'
+                              }`}
+                              style={isSelected ? { 
+                                borderColor: acc.primary
+                              } : undefined}
+                            >
+                              {/* Swatch circle with gradient & glow */}
+                              <div className="flex items-center justify-between mb-1.5">
+                                <div 
+                                  className="w-5 h-5 rounded-full shadow-sm flex items-center justify-center border border-white/30"
+                                  style={{ 
+                                    background: `linear-gradient(135deg, ${acc.gradientFrom}, ${acc.gradientTo})`,
+                                    boxShadow: `0 0 10px ${acc.glow}`
+                                  }}
+                                >
+                                  {acc.isGold && <span className="text-[9px]">👑</span>}
+                                </div>
+                                <span 
+                                  className="text-[9px] font-bold px-1.5 py-0.2 rounded-full"
+                                  style={{ backgroundColor: `${acc.primary}25`, color: acc.primary }}
+                                >
+                                  {acc.badgeText}
+                                </span>
+                              </div>
+
+                              <div className="text-[11px] font-bold text-white truncate flex items-center gap-1">
+                                {acc.name}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Live Popdown Preview Card in Selected Color Theme */}
+                    <div className="space-y-1.5">
+                      <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block">
+                        Live Preview (Popdown &amp; Badges)
+                      </span>
+                      <div 
+                        className="rounded-2xl p-[2.5px] shadow-lg transition-all"
+                        style={{ backgroundColor: currentAccent.primary }}
+                      >
+                        {/* Top Banner with Theme Gradient */}
+                        <div 
+                          className="px-3 py-1.5 rounded-t-[14px] flex items-center justify-between text-white select-none"
+                          style={{ background: `linear-gradient(135deg, ${currentAccent.gradientFrom}, ${currentAccent.gradientTo})` }}
+                        >
+                          <div className="flex items-center space-x-1.5">
+                            <span className="font-extrabold text-[13px] tracking-tight lowercase">
+                              truecaller
+                            </span>
+                            {currentAccent.isGold && (
+                              <span className="bg-amber-300/30 text-amber-200 text-[8.5px] px-1.5 py-0.2 rounded font-black uppercase tracking-wider">
+                                GOLD
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[11px] text-white/90 font-medium">SMS • 11:58 AM</span>
+                          <X className="w-3 h-3 text-white/80" />
+                        </div>
+
+                        {/* White/Dark body inset */}
+                        <div className="bg-white rounded-b-[14px] p-2.5 text-slate-900">
+                          <div className="flex items-center space-x-2">
+                            <div 
+                              className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
+                              style={{ backgroundColor: currentAccent.lightBg, color: currentAccent.primary }}
+                            >
+                              <Building2 className="w-3.5 h-3.5" style={{ color: currentAccent.primary }} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="font-extrabold text-[12px] text-slate-900 leading-tight">
+                                CBE (Commercial Bank)
+                              </div>
+                              <div className="text-[11px] font-bold text-slate-800 truncate">
+                                Account 1********0913 credited with <span style={{ color: currentAccent.primary }}>ETB 4,500.00</span>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              className="px-2.5 py-1 rounded-full text-white font-bold text-[10px] shadow-xs flex-shrink-0 cursor-pointer"
+                              style={{ backgroundColor: currentAccent.primary }}
+                            >
+                              View
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Reset Button */}
+                    <div className="flex justify-end pt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleUpdateAccent('classic_blue');
+                          handleUpdateBaseTheme('dark');
+                          showToast('Reset to Truecaller Classic Blue and Dark mode');
+                        }}
+                        className="text-[10px] text-neutral-400 hover:text-white px-2.5 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-750 transition cursor-pointer flex items-center space-x-1"
+                      >
+                        <RotateCcw className="w-2.5 h-2.5" />
+                        <span>Reset Theme Defaults</span>
+                      </button>
+                    </div>
+                  </div>
+
                   {/* Phone Model & Status Bar Global Customizer */}
                   <div className="p-3.5 rounded-2xl bg-gradient-to-r from-blue-950/40 via-purple-950/30 to-neutral-900 border border-blue-500/30 space-y-2.5">
                     <div className="flex items-center justify-between">
@@ -4009,14 +4317,24 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
               }`}
             >
               <div 
-                className="w-full rounded-[24px] overflow-hidden bg-[#0066FF] p-[3px] shadow-[0_20px_60px_rgba(0,0,0,0.85)] border border-[#0066FF] transition-all"
+                className="w-full rounded-[24px] overflow-hidden p-[3px] shadow-[0_20px_60px_rgba(0,0,0,0.85)] border transition-all"
+                style={{ backgroundColor: currentAccent.primary, borderColor: currentAccent.primary }}
               >
-                {/* Signature Royal Blue Truecaller Header Bar */}
-                <div className="bg-[#0066FF] px-3.5 pt-2 pb-1.5 flex items-center justify-between text-white select-none">
+                {/* Signature Truecaller Header Bar with Accent Gradient */}
+                <div 
+                  className="px-3.5 pt-2 pb-1.5 flex items-center justify-between text-white select-none"
+                  style={{ background: `linear-gradient(135deg, ${currentAccent.gradientFrom}, ${currentAccent.gradientTo})` }}
+                >
                   <div className="flex items-center space-x-2">
                     <span className="font-extrabold text-[16.5px] tracking-tight lowercase text-white">
                       truecaller
                     </span>
+                    {currentAccent.isGold && (
+                      <span className="bg-amber-300/30 text-amber-200 text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-wider flex items-center gap-0.5">
+                        <span>👑</span>
+                        <span>GOLD</span>
+                      </span>
+                    )}
                   </div>
 
                   <div className="text-[13px] text-white/95 font-medium tracking-wide">
@@ -4041,7 +4359,10 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                   <div className="px-4 pt-3.5 pb-3 space-y-2.5">
                     {/* Bank Avatar & Name Header */}
                     <div className="flex items-center space-x-2.5">
-                      <div className="w-9 h-9 rounded-full bg-[#dbe8ff] text-[#0066FF] flex items-center justify-center flex-shrink-0">
+                      <div 
+                        className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{ backgroundColor: currentAccent.lightBg, color: currentAccent.primary }}
+                      >
                         <Building2 className="w-5 h-5 text-[#2c3e50]" />
                       </div>
                       <div>
@@ -4078,9 +4399,10 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                       <button
                         type="button"
                         onClick={() => setShowAiBreakdown(!showAiBreakdown)}
-                        className="inline-flex items-center space-x-1.5 text-slate-600 hover:text-[#0066FF] text-[14px] font-medium transition cursor-pointer"
+                        className="inline-flex items-center space-x-1.5 text-slate-600 hover:opacity-80 text-[14px] font-medium transition cursor-pointer"
+                        style={{ color: showAiBreakdown ? currentAccent.primary : undefined }}
                       >
-                        <Sparkles className="w-4 h-4 text-[#0066FF] fill-[#0066FF]" />
+                        <Sparkles className="w-4 h-4" style={{ color: currentAccent.primary, fill: currentAccent.primary }} />
                         <span className="font-medium text-slate-600">AI summary</span>
                       </button>
 
@@ -4116,21 +4438,21 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                     </div>
                   </div>
 
-                  {/* Bottom Soft Blue Action Strip matching reference image IMG_20260905_131647_440.jpg */}
-                  <div className="bg-[#ebf3fe] px-4 py-3 text-center border-t border-[#d8e5fa]/60 rounded-b-[21px]">
+                  {/* Bottom Action Strip matching reference image IMG_20260905_131647_440.jpg */}
+                  <div 
+                    className="px-4 py-3 text-center border-t rounded-b-[21px]"
+                    style={{ backgroundColor: `${currentAccent.lightBg}65`, borderColor: `${currentAccent.primary}25` }}
+                  >
                     <button
                       type="button"
                       onClick={handleMarkAsRead}
-                      className={`w-full py-0.5 text-center font-bold text-[17px] transition cursor-pointer flex items-center justify-center space-x-1.5 ${
-                        currentAlert.read 
-                          ? 'text-emerald-600' 
-                          : 'text-[#0066FF] hover:text-[#0052cc] active:scale-98'
-                      }`}
+                      className="w-full py-0.5 text-center font-bold text-[17px] transition cursor-pointer flex items-center justify-center space-x-1.5 active:scale-98"
+                      style={!currentAlert.read ? { color: currentAccent.primary } : undefined}
                     >
                       {currentAlert.read ? (
                         <>
-                          <CheckCheck className="w-4 h-4" />
-                          <span>Read</span>
+                          <CheckCheck className="w-4 h-4 text-emerald-600" />
+                          <span className="text-emerald-600">Read</span>
                         </>
                       ) : (
                         <span>Mark as read</span>

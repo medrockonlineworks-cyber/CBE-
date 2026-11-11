@@ -68,3 +68,23 @@ export interface PopdownTypographyConfig {
   customScale: number; // 80 to 150
 }
 
+export type TruecallerBaseTheme = 'dark' | 'light' | 'midnight' | 'amoled';
+
+export interface TruecallerColorAccent {
+  id: string;
+  name: string;
+  primary: string;
+  secondary: string;
+  gradientFrom: string;
+  gradientTo: string;
+  lightBg: string;
+  glow: string;
+  badgeText: string;
+  isGold?: boolean;
+}
+
+export interface TruecallerThemeConfig {
+  base: TruecallerBaseTheme;
+  accentId: string;
+}
+

@@ -3,7 +3,10 @@ import {
   TruecallerAlert, 
   TruecallerRole, 
   TruecallerBankKey,
-  TruecallerBackgroundApp
+  TruecallerBackgroundApp,
+  TruecallerBaseTheme,
+  TruecallerColorAccent,
+  TruecallerThemeConfig
 } from '../types/truecaller';
 import { Transaction } from '../types';
 import { ALL_NEW_REGISTERED_ENTRIES } from '../lib/additionalAccountsData';
@@ -11,6 +14,107 @@ import { ALL_NEW_REGISTERED_ENTRIES } from '../lib/additionalAccountsData';
 const STORAGE_TC_ACCOUNTS_KEY = 'tc_sim_accounts_v2';
 const STORAGE_TC_ALERTS_KEY = 'tc_sim_alerts_v2';
 const STORAGE_TC_ACTIVE_ACC_KEY = 'tc_sim_active_account_id';
+const STORAGE_TC_BASE_THEME_KEY = 'tc_theme_base';
+const STORAGE_TC_ACCENT_THEME_KEY = 'tc_theme_accent';
+
+export const TRUECALLER_ACCENT_PRESETS: TruecallerColorAccent[] = [
+  {
+    id: 'classic_blue',
+    name: 'Truecaller Blue',
+    primary: '#0066FF',
+    secondary: '#0052cc',
+    gradientFrom: '#003882',
+    gradientTo: '#0066FF',
+    lightBg: '#dbe8ff',
+    glow: 'rgba(0, 102, 255, 0.4)',
+    badgeText: 'Classic'
+  },
+  {
+    id: 'truecaller_gold',
+    name: 'Truecaller Gold',
+    primary: '#D4AF37',
+    secondary: '#B89218',
+    gradientFrom: '#8C6D1F',
+    gradientTo: '#FFD700',
+    lightBg: '#FEF3C7',
+    glow: 'rgba(212, 175, 55, 0.45)',
+    badgeText: 'VIP Gold',
+    isGold: true
+  },
+  {
+    id: 'cbe_purple',
+    name: 'CBE Purple',
+    primary: '#70189F',
+    secondary: '#541278',
+    gradientFrom: '#3B0754',
+    gradientTo: '#8A2BE2',
+    lightBg: '#F3E8FF',
+    glow: 'rgba(112, 24, 159, 0.4)',
+    badgeText: 'CBE Bank'
+  },
+  {
+    id: 'emerald_green',
+    name: 'Verified Emerald',
+    primary: '#10B981',
+    secondary: '#059669',
+    gradientFrom: '#064E3B',
+    gradientTo: '#10B981',
+    lightBg: '#D1FAE5',
+    glow: 'rgba(16, 185, 129, 0.4)',
+    badgeText: 'Shield'
+  },
+  {
+    id: 'sunset_orange',
+    name: 'Sunset Orange',
+    primary: '#F97316',
+    secondary: '#EA580C',
+    gradientFrom: '#7C2D12',
+    gradientTo: '#F97316',
+    lightBg: '#FFEDD5',
+    glow: 'rgba(249, 115, 22, 0.4)',
+    badgeText: 'Vibrant'
+  },
+  {
+    id: 'electric_cyan',
+    name: 'Cyber Cyan',
+    primary: '#06B6D4',
+    secondary: '#0891B2',
+    gradientFrom: '#164E63',
+    gradientTo: '#06B6D4',
+    lightBg: '#CFFAFE',
+    glow: 'rgba(6, 182, 212, 0.4)',
+    badgeText: 'Neon'
+  },
+  {
+    id: 'crimson_red',
+    name: 'Crimson Red',
+    primary: '#EF4444',
+    secondary: '#DC2626',
+    gradientFrom: '#7F1D1D',
+    gradientTo: '#EF4444',
+    lightBg: '#FEE2E2',
+    glow: 'rgba(239, 68, 68, 0.4)',
+    badgeText: 'Alert'
+  },
+  {
+    id: 'rose_pink',
+    name: 'Rose Pink',
+    primary: '#EC4899',
+    secondary: '#DB2777',
+    gradientFrom: '#831843',
+    gradientTo: '#EC4899',
+    lightBg: '#FCE7F3',
+    glow: 'rgba(236, 72, 153, 0.4)',
+    badgeText: 'Vivid'
+  }
+];
+
+export const TRUECALLER_BASE_THEMES: { id: TruecallerBaseTheme; name: string; desc: string; bg: string; cardBg: string }[] = [
+  { id: 'dark', name: 'Dark Slate', desc: 'Standard dark theme', bg: '#121316', cardBg: '#1a1d24' },
+  { id: 'amoled', name: 'AMOLED Black', desc: 'Pure pitch black OLED', bg: '#000000', cardBg: '#111111' },
+  { id: 'midnight', name: 'Midnight Navy', desc: 'Deep ocean blue dark', bg: '#0a1128', cardBg: '#111c38' },
+  { id: 'light', name: 'Clean Light', desc: 'Crisp bright white', bg: '#f8fafc', cardBg: '#ffffff' },
+];
 
 export const BANK_PRESETS: { key: TruecallerBankKey; name: string; shortName: string; color: string; defaultPrefix: string; accLength: number; defaultApp: TruecallerBackgroundApp }[] = [
   { key: 'cbe', name: 'CBE', shortName: 'CBE', color: '#5e1887', defaultPrefix: '1000', accLength: 13, defaultApp: 'tiktok' },
@@ -1009,5 +1113,41 @@ export const TruecallerService = {
 
   getUnreadCount(): number {
     return this.getAlerts().filter(a => !a.read).length;
+  },
+
+  getThemeConfig(): TruecallerThemeConfig {
+    try {
+      const base = (localStorage.getItem(STORAGE_TC_BASE_THEME_KEY) as TruecallerBaseTheme) || 'dark';
+      const accentId = localStorage.getItem(STORAGE_TC_ACCENT_THEME_KEY) || 'classic_blue';
+      return { base, accentId };
+    } catch {
+      return { base: 'dark', accentId: 'classic_blue' };
+    }
+  },
+
+  setThemeConfig(config: Partial<TruecallerThemeConfig>): TruecallerThemeConfig {
+    const current = this.getThemeConfig();
+    const updated: TruecallerThemeConfig = {
+      base: config.base || current.base,
+      accentId: config.accentId || current.accentId,
+    };
+    try {
+      localStorage.setItem(STORAGE_TC_BASE_THEME_KEY, updated.base);
+      localStorage.setItem(STORAGE_TC_ACCENT_THEME_KEY, updated.accentId);
+    } catch {}
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('tc_theme_changed', { detail: updated }));
+    }
+    return updated;
+  },
+
+  getAccent(accentId?: string): TruecallerColorAccent {
+    const id = accentId || this.getThemeConfig().accentId;
+    return TRUECALLER_ACCENT_PRESETS.find(a => a.id === id) || TRUECALLER_ACCENT_PRESETS[0];
+  },
+
+  getBaseTheme(baseId?: TruecallerBaseTheme) {
+    const id = baseId || this.getThemeConfig().base;
+    return TRUECALLER_BASE_THEMES.find(b => b.id === id) || TRUECALLER_BASE_THEMES[0];
   }
 };

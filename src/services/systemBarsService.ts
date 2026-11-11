@@ -181,8 +181,23 @@ export class SystemBarsService {
 
       case 'truecaller': {
         const subView = options?.subView;
-        if (isIPhoneMode) {
-          // iPhone Truecaller: pitch black
+        const savedBase = (() => {
+          try {
+            return localStorage.getItem('tc_theme_base') || 'dark';
+          } catch {
+            return 'dark';
+          }
+        })();
+
+        if (savedBase === 'light') {
+          statusBarColor = '#f8fafc';
+          navBarColor = '#f8fafc';
+          isDarkStyle = false;
+        } else if (savedBase === 'midnight') {
+          statusBarColor = '#0a1128';
+          navBarColor = '#0a1128';
+          isDarkStyle = true;
+        } else if (isIPhoneMode || savedBase === 'amoled') {
           statusBarColor = '#000000';
           navBarColor = '#000000';
           isDarkStyle = true;
@@ -191,7 +206,6 @@ export class SystemBarsService {
           navBarColor = '#121316';
           isDarkStyle = true;
         } else {
-          // bank_thread or takeover
           statusBarColor = '#000000';
           navBarColor = '#000000';
           isDarkStyle = true;

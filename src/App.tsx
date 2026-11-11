@@ -178,17 +178,32 @@ export default function App() {
     };
   }, []);
 
+  // Truecaller base theme tracking (dark, amoled, midnight, light)
+  const [tcBaseTheme, setTcBaseTheme] = useState<string>(() => {
+    try {
+      return localStorage.getItem('tc_theme_base') || 'dark';
+    } catch {
+      return 'dark';
+    }
+  });
+
   // Theme Alignment configuration for Fixed Status Bar and Navigation Bar per subapp
   const viewThemeConfig = useMemo(() => {
     switch (activeView) {
-      case 'truecaller':
+      case 'truecaller': {
+        const isLight = tcBaseTheme === 'light';
+        const isMidnight = tcBaseTheme === 'midnight';
+        const isAmoled = tcBaseTheme === 'amoled' || isIPhone;
+        const bg = isLight ? 'bg-[#f8fafc]' : (isMidnight ? 'bg-[#0a1128]' : (isAmoled ? 'bg-black' : 'bg-[#121316]'));
+        const navBg = isLight ? 'bg-[#f8fafc] border-neutral-200 text-neutral-800' : (isMidnight ? 'bg-[#0a1128] border-neutral-800 text-white' : (isAmoled ? 'bg-black border-neutral-900 text-white' : 'bg-[#121316] border-neutral-800/80 text-white'));
         return {
-          rootBg: isIPhone ? 'bg-black' : 'bg-[#121316]',
-          statusBarBg: isIPhone ? 'bg-black text-white' : 'bg-[#121316] text-white',
-          statusTheme: 'dark' as const,
-          navBarBg: isIPhone ? 'bg-black border-neutral-900 text-white' : 'bg-[#121316] border-neutral-800/80 text-white',
-          navTheme: 'dark' as const,
+          rootBg: bg,
+          statusBarBg: isLight ? 'bg-[#f8fafc] text-neutral-900' : `${bg} text-white`,
+          statusTheme: isLight ? ('light' as const) : ('dark' as const),
+          navBarBg: navBg,
+          navTheme: isLight ? ('light' as const) : ('dark' as const),
         };
+      }
       case 'sms':
         return {
           rootBg: isIPhone ? 'bg-black' : 'bg-[#121212]',
@@ -292,12 +307,21 @@ export default function App() {
       }
     };
     window.addEventListener('cbe_navigate_tab' as any, handleCbeNavigateTab);
+
+    const handleTcThemeChanged = (e: any) => {
+      if (e?.detail?.base) {
+        setTcBaseTheme(e.detail.base);
+      }
+    };
+    window.addEventListener('tc_theme_changed' as any, handleTcThemeChanged);
+
     return () => {
       window.removeEventListener('cbe_balance_updated' as any, handleBalanceSync);
       window.removeEventListener('cbe_transaction_completed' as any, handleBalanceSync);
       window.removeEventListener('cbe_accounts_updated' as any, handleBalanceSync);
       window.removeEventListener('cbe_account_switched' as any, handleAccountSwitched);
       window.removeEventListener('cbe_navigate_tab' as any, handleCbeNavigateTab);
+      window.removeEventListener('tc_theme_changed' as any, handleTcThemeChanged);
     };
   }, []);
 
@@ -738,7 +762,7 @@ export default function App() {
             : activeView === 'sms' 
             ? (isIPhone ? 'h-full overflow-hidden bg-black' : 'h-full overflow-hidden bg-[#121212]') 
             : activeView === 'truecaller'
-              ? (isIPhone ? 'h-full overflow-hidden bg-black' : 'h-full overflow-hidden bg-[#121316]') 
+              ? (tcBaseTheme === 'light' ? 'h-full overflow-hidden bg-[#f8fafc]' : (tcBaseTheme === 'midnight' ? 'h-full overflow-hidden bg-[#0a1128]' : (isIPhone || tcBaseTheme === 'amoled' ? 'h-full overflow-hidden bg-black' : 'h-full overflow-hidden bg-[#121316]')))
               : activeView === 'phone'
                 ? 'h-full overflow-hidden bg-black'
                 : activeView === 'dashen'
