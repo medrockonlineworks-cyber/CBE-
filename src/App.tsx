@@ -284,12 +284,20 @@ export default function App() {
     window.addEventListener('cbe_balance_updated' as any, handleBalanceSync);
     window.addEventListener('cbe_transaction_completed' as any, handleBalanceSync);
     window.addEventListener('cbe_accounts_updated' as any, handleBalanceSync);
-    window.addEventListener('cbe_account_switched' as any, handleAccountSwitched);
+    const handleCbeNavigateTab = (e: any) => {
+      const targetTab = e?.detail?.tab;
+      if (targetTab) {
+        setActiveView('main');
+        setActiveTab(targetTab === 'transactions' ? 'history' : targetTab);
+      }
+    };
+    window.addEventListener('cbe_navigate_tab' as any, handleCbeNavigateTab);
     return () => {
       window.removeEventListener('cbe_balance_updated' as any, handleBalanceSync);
       window.removeEventListener('cbe_transaction_completed' as any, handleBalanceSync);
       window.removeEventListener('cbe_accounts_updated' as any, handleBalanceSync);
       window.removeEventListener('cbe_account_switched' as any, handleAccountSwitched);
+      window.removeEventListener('cbe_navigate_tab' as any, handleCbeNavigateTab);
     };
   }, []);
 

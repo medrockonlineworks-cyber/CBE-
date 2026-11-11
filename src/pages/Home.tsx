@@ -1778,6 +1778,10 @@ export const Home: React.FC<HomeProps> = ({
           }}
           currentUserId={activeUser.id}
           currentUserAccount={activeUser.accountNumber}
+          onNavigateTab={(tab) => {
+            setSelectedDetailTx(null);
+            handleNavTabChange(tab as any);
+          }}
         />
       )}
 

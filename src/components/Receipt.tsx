@@ -846,15 +846,17 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
               </h1>
 
               {/* Main Transaction Summary Gray Card */}
-              <div className="bg-[#f2f3f5] rounded-[26px] p-4.5 sm:p-5 space-y-3.5 border-none shadow-xs">
-                <p className="text-[#8e8e93] font-normal text-[13.5px] sm:text-[14px] mb-2.5">Transaction Summary</p>
+              <div className="bg-[#f2f3f5] rounded-[26px] p-4.5 sm:p-5 border-none shadow-xs">
+                <p className="text-[#8e8e93] font-normal text-[13.5px] sm:text-[14px] mb-2">Transaction Summary</p>
 
                 {/* Paragraph Text with bold highlights and floating PAID badge */}
-                <div className="relative">
+                <div className="relative mb-0 pb-0">
                   {isCredit ? (
                     <p 
-                      className="text-[14.5px] sm:text-[15px] leading-[1.65] text-[#1f2937] font-normal select-text tracking-[0.012em]"
+                      className="text-[14.5px] sm:text-[15px] leading-[1.65] text-[#1f2937] font-normal select-text tracking-[0.012em] m-0 p-0"
                       style={{ 
+                        margin: 0,
+                        padding: 0,
                         fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' 
                       }}
                     >
@@ -862,8 +864,10 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                     </p>
                   ) : (
                     <p 
-                      className="text-[14.5px] sm:text-[15px] leading-[1.65] text-[#1f2937] font-normal select-text tracking-[0.012em]"
+                      className="text-[14.5px] sm:text-[15px] leading-[1.65] text-[#1f2937] font-normal select-text tracking-[0.012em] m-0 p-0"
                       style={{ 
+                        margin: 0,
+                        padding: 0,
                         fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' 
                       }}
                     >
@@ -889,11 +893,12 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                   )}
                 </div>
 
-                {/* Realistic QR Code Centered with authentic rounded grey frame matching reference */}
-                <div className="flex justify-center !mt-[5px] mb-0">
+                {/* Realistic QR Code Centered with strictly 3px vertical spacing from text above */}
+                <div className="flex justify-center mb-0" style={{ marginTop: '3px' }}>
                   <div 
                     id="receipt-qr-container"
                     className="bg-white p-2 rounded-[18px] border-[2px] border-[#737373] shadow-xs inline-flex items-center justify-center select-none"
+                    style={{ marginTop: '0px' }}
                   >
                     <div className="w-[114px] h-[114px] sm:w-[118px] sm:h-[118px] flex items-center justify-center">
                       {customQrCode ? (
@@ -1271,27 +1276,27 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 border: 'none', 
                 display: 'flex', 
                 flexDirection: 'column', 
-                gap: '12px',
+                gap: '0px',
                 boxSizing: 'border-box',
               }}
             >
-              <p style={{ margin: '0 0 2px 0', color: '#8e8e93', fontWeight: 400, fontSize: '13.5px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
+              <p style={{ margin: '0 0 8px 0', color: '#8e8e93', fontWeight: 400, fontSize: '13.5px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
                 Transaction Summary
               </p>
 
               {/* Paragraph Text with bold highlights matching CBE reference */}
               {isCredit ? (
-                <p style={{ margin: 0, fontSize: '14.5px', lineHeight: 1.65, color: '#1f2937', fontWeight: 400, letterSpacing: '0.15px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
+                <p style={{ margin: '0 0 0px 0', padding: 0, fontSize: '14.5px', lineHeight: 1.65, color: '#1f2937', fontWeight: 400, letterSpacing: '0.15px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
                   ETB <span style={{ fontWeight: 700, color: '#000000' }}>{amountFormatted}</span> has been credited to <span style={{ fontWeight: 700, color: '#000000' }}>{recipientName}</span> {recipientSuffix} from <span style={{ fontWeight: 700, color: '#000000' }}>{senderName}</span> {senderSuffix} on <span style={{ fontWeight: 700, color: '#000000' }}>{formattedDate}</span> with transaction ID: <span style={{ fontWeight: 700, color: '#000000' }}>{txId}.</span> Reason: {reason}
                 </p>
               ) : (
-                <p style={{ margin: 0, fontSize: '14.5px', lineHeight: 1.65, color: '#1f2937', fontWeight: 400, letterSpacing: '0.15px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
+                <p style={{ margin: '0 0 0px 0', padding: 0, fontSize: '14.5px', lineHeight: 1.65, color: '#1f2937', fontWeight: 400, letterSpacing: '0.15px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
                   ETB <span style={{ fontWeight: 700, color: '#000000' }}>{amountFormatted}</span> has been debited from <span style={{ fontWeight: 700, color: '#000000' }}>{senderName}</span> {senderSuffix} for <span style={{ fontWeight: 700, color: '#000000' }}>{recipientName}</span> {recipientSuffix} on <span style={{ fontWeight: 700, color: '#000000' }}>{formattedDate}</span> with transaction ID: <span style={{ fontWeight: 700, color: '#000000' }}>{txId}.</span> Reason: {reason} Total Amount Debited: ETB{totalDebitedFormatted} with Service Charge of ETB{serviceChargeFormatted}, VAT (15%) of ETB{vatFormatted} and Disaster Recovery (5%) of ETB{disasterRecoveryFormatted}.
                 </p>
               )}
 
-              {/* Realistic QR Code Centered with authentic rounded grey frame matching reference */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '5px', marginBottom: '0px' }}>
+              {/* Realistic QR Code Centered with strictly 3px vertical spacing from text above */}
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '3px', marginBottom: '0px' }}>
                 <div 
                   style={{ 
                     backgroundColor: '#ffffff', 

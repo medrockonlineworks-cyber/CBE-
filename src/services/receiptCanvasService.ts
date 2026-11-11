@@ -335,7 +335,7 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   // Summary title -> paragraph -> snug QR box -> CBE logo footer matching image two
   const summaryTitleY = cardTop + cardPadY + (12 * scale);
   const paragraphStartY = summaryTitleY + (14 * scale);
-  const qrBoxTop = paragraphStartY + paragraphHeight + (5 * scale);
+  const qrBoxTop = paragraphStartY + paragraphHeight + (3 * scale);
   const qrBoxSize = 130 * scale;
   const qrBoxX = (width - qrBoxSize) / 2;
   const qrImgSize = 114 * scale;
