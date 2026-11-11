@@ -146,8 +146,11 @@ export default function TransactionDetailModal({
       <div 
         id="transaction-detail-sheet"
         onClick={(e) => e.stopPropagation()}
-        className="w-full bg-white rounded-t-[36px] rounded-b-none px-6 pt-4.5 pb-[calc(52px+max(env(safe-area-inset-bottom,0px),8px)+16px)] shadow-[0_-12px_45px_rgba(0,0,0,0.25)] flex flex-col justify-between relative animate-in slide-in-from-bottom-5 duration-250 select-none h-[calc(100%-max(env(safe-area-inset-top,0px),0px)-114px)] min-h-[calc(100%-max(env(safe-area-inset-top,0px),0px)-114px)] overflow-y-auto"
+        className="w-full bg-white rounded-t-[32px] sm:rounded-t-[36px] rounded-b-none px-6 pt-2.5 pb-[calc(52px+max(env(safe-area-inset-bottom,0px),8px)+16px)] shadow-[0_-12px_45px_rgba(0,0,0,0.25)] flex flex-col justify-between relative animate-in slide-in-from-bottom-5 duration-250 select-none h-[calc(100%-max(env(safe-area-inset-top,0px),0px)-132px)] min-h-[calc(100%-max(env(safe-area-inset-top,0px),0px)-132px)] overflow-y-auto"
       >
+        {/* Subtle top drag pill handle matching reference image */}
+        <div className="w-10 h-1 bg-gray-300/80 rounded-full mx-auto mb-2.5 mt-0.5 shrink-0" />
+
         {/* Top Title Bar with Close Button (matching reference image) */}
         <div className="flex items-center justify-between relative mb-1.5 sm:mb-2 shrink-0">
           <div className="w-6" /> {/* Balance spacer */}

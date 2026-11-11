@@ -73,19 +73,18 @@ export class SystemBarsService {
       appleStatusBar.setAttribute('content', isDarkStyle ? 'black-translucent' : 'default');
     }
 
-    // 4. Document root and body backgrounds:
-    // Top document root aligns with statusBarColor (#70189F) so the header and top notch are rich purple.
-    // Bottom body aligns with navBarColor (#ffffff) so the bottom navigation bar and phone edge are pure white.
+    // 4. Document root, body, and canvas backgrounds:
+    // Ensures the top header and device status bar/notch are seamless rich purple #70189F with zero extra layers.
     if (document.documentElement) {
       document.documentElement.style.backgroundColor = statusBarColor;
     }
     if (document.body) {
-      document.body.style.backgroundColor = navBarColor;
+      document.body.style.backgroundColor = statusBarColor;
     }
 
     const mainCanvas = document.getElementById('app-main-canvas');
     if (mainCanvas) {
-      mainCanvas.style.backgroundColor = navBarColor === '#ffffff' ? '#ffffff' : statusBarColor;
+      mainCanvas.style.backgroundColor = statusBarColor;
     }
 
     // 5. Capacitor Native Bridge Support (Android & iOS)
