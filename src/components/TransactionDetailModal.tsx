@@ -138,17 +138,11 @@ export default function TransactionDetailModal({
   return (
     <div 
       id="transaction-detail-modal-overlay"
-      className="fixed inset-0 z-50 bg-black/65 backdrop-blur-[0.5px] flex flex-col justify-end items-center p-0 animate-in fade-in duration-200 select-none pointer-events-auto"
+      className="fixed inset-0 z-40 bg-black/60 backdrop-blur-[0.5px] flex flex-col justify-end items-center p-0 animate-in fade-in duration-200 select-none pointer-events-auto"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      {/* Top Status Bar Dark Filter Overlay: Ensures top status bar / notch area has exact dark filter applied with zero color difference */}
-      <div 
-        id="modal-status-bar-dark-filter"
-        className="fixed top-0 inset-x-0 h-[max(env(safe-area-inset-top,0px),24px)] bg-[#270838] pointer-events-none z-50"
-        aria-hidden="true"
-      />
       <div 
         id="transaction-detail-sheet"
         onClick={(e) => e.stopPropagation()}
