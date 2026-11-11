@@ -23,6 +23,11 @@ import {
   ADDITIONAL_USERS_SEED, 
   ADDITIONAL_BANK_ACCOUNTS 
 } from './additionalAccountsData';
+import {
+  BULK_DIRECTORY_ACCOUNTS,
+  BULK_USERS_SEED,
+  BULK_BANK_ACCOUNTS
+} from './bulkRegisteredAccounts';
 
 // Helper to generate IDs
 const generateId = () => Math.random().toString(36).substring(2, 11).toUpperCase();
@@ -603,7 +608,8 @@ export const VERIFIED_DIRECTORY_ACCOUNTS: RegisteredAccountInfo[] = [
     isVerified: true,
     accountType: 'Savings Account'
   },
-  ...ADDITIONAL_DIRECTORY_ACCOUNTS
+  ...ADDITIONAL_DIRECTORY_ACCOUNTS,
+  ...BULK_DIRECTORY_ACCOUNTS
 ];
 
 const now = Date.now();
@@ -1455,6 +1461,27 @@ export class LocalDb {
       }
     }
 
+    // Ensure all 377 bulk registered accounts exist in users list
+    for (const seed of BULK_USERS_SEED) {
+      const idx = users.findIndex(u => u.id === seed.id || (u.accountNumber === seed.accountNumber && u.name.toLowerCase() === seed.name.toLowerCase()));
+      if (idx !== -1) {
+        let changed = false;
+        if (users[idx].balance === undefined || users[idx].balance === null || isNaN(users[idx].balance)) {
+          users[idx].balance = seed.balance;
+          users[idx].availableBalance = seed.availableBalance;
+          changed = true;
+        }
+        if (users[idx].accountNumber !== seed.accountNumber) {
+          users[idx].accountNumber = seed.accountNumber;
+          changed = true;
+        }
+        if (changed) modified = true;
+      } else {
+        users.push({ ...seed });
+        modified = true;
+      }
+    }
+
     // Ensure any custom registered directory accounts exist as user profiles
     try {
       const customAccounts = loadData<RegisteredAccountInfo[]>('tana_custom_directory_accounts', []);
@@ -1627,6 +1654,21 @@ export class LocalDb {
 
     // Ensure all unique additional accounts exist in BankAccount registry
     for (const seed of ADDITIONAL_BANK_ACCOUNTS) {
+      const existingAcc = accounts.find(a => a.accountNumber === seed.accountNumber);
+      if (!existingAcc) {
+        accounts.push({ ...seed });
+        modified = true;
+      } else {
+        if (existingAcc.balance === undefined || existingAcc.balance === null || isNaN(existingAcc.balance)) {
+          existingAcc.balance = seed.balance;
+          existingAcc.availableBalance = seed.availableBalance;
+          modified = true;
+        }
+      }
+    }
+
+    // Ensure all unique bulk registered accounts exist in BankAccount registry
+    for (const seed of BULK_BANK_ACCOUNTS) {
       const existingAcc = accounts.find(a => a.accountNumber === seed.accountNumber);
       if (!existingAcc) {
         accounts.push({ ...seed });
