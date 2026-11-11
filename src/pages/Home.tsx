@@ -537,7 +537,7 @@ export const Home: React.FC<HomeProps> = ({
 
   return (
     <div 
-      className="h-full w-full bg-[#70189F] font-sans relative flex flex-col overflow-hidden text-gray-900 select-none"
+      className="h-full w-full bg-white font-sans relative flex flex-col overflow-hidden text-gray-900 select-none"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -680,7 +680,7 @@ export const Home: React.FC<HomeProps> = ({
       {/* ========================================================
           SCROLLABLE CONTENT AREA (From Yellow Line Downwards)
           ======================================================== */}
-      <main ref={mainScrollRef as any} className="flex-1 min-h-0 overflow-y-auto overscroll-contain overflow-x-hidden scrollbar-none relative z-10 w-full pb-6 sm:pb-8 bg-[#F7F7F7]">
+      <main ref={mainScrollRef as any} className="flex-1 min-h-0 overflow-y-auto overscroll-contain overflow-x-hidden scrollbar-none relative z-10 w-full pb-14 sm:pb-16 bg-[#F7F7F7]">
         {/* DYNAMIC CONTENT UNDER CARD BASED ON ACTIVE TAB */}
         {activeNavTab === 'history' ? (
           /* ========================================================

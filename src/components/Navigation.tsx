@@ -30,11 +30,11 @@ export default function Navigation({
   const shouldRenderScanQr = showScanQr && isHomeActive;
 
   return (
-    <div className="w-full relative z-50 select-none shrink-0">
+    <div className="w-full relative z-50 select-none shrink-0 bg-white">
       
-      {/* 1. Floating Center "Scan QR" Pill Button (Snug above bottom bar matching Image 2) */}
+      {/* 1. Floating Center "Scan QR" Pill Button (Snug above bottom bar matching Image) */}
       {shouldRenderScanQr && (
-        <div className="absolute -top-6.5 sm:-top-7 left-0 right-0 flex justify-center items-center pointer-events-auto select-none z-50">
+        <div className="absolute -top-3.5 sm:-top-4 left-0 right-0 flex justify-center items-center pointer-events-auto select-none z-50">
           <button
             id="btn-nav-scan-qr"
             type="button"
@@ -46,7 +46,7 @@ export default function Navigation({
                 onChangeTab('transfer');
               }
             }}
-            className="bg-[#70189F] hover:bg-[#5a1280] active:scale-95 text-white h-[28px] sm:h-[30px] px-3 rounded-full flex items-center justify-center gap-1.5 shadow-[0_3px_12px_rgba(112,24,159,0.35)] transition-all cursor-pointer border border-white/20 select-none group"
+            className="bg-[#70189F] hover:bg-[#5a1280] active:scale-95 text-white h-[28px] sm:h-[30px] px-3.5 rounded-full flex items-center justify-center gap-1.5 shadow-[0_4px_14px_rgba(112,24,159,0.35)] transition-all cursor-pointer border border-white/30 select-none group"
           >
             {/* Left Corner Scanner Brackets (Top & Bottom) */}
             <svg 
@@ -64,7 +64,7 @@ export default function Navigation({
             </svg>
 
             {/* Centered Text */}
-            <span className="text-[11.5px] font-bold tracking-tight text-white whitespace-nowrap leading-none">
+            <span className="text-[12px] font-bold tracking-tight text-white whitespace-nowrap leading-none">
               Scan QR
             </span>
 
@@ -86,11 +86,11 @@ export default function Navigation({
         </div>
       )}
 
-      {/* 2. Primary Bottom Bar: Ultra-Slim, Flush Edge-to-Edge with zero bottom gap */}
+      {/* 2. White Bottom Navigation Bar with Ample White Safe-Area Space on iPhone */}
       <nav 
         id="cbe-bottom-navbar" 
         aria-label="Main Navigation"
-        className="w-full pointer-events-auto bg-white border-t border-gray-100/40 px-5 pt-1 pb-[max(env(safe-area-inset-bottom,0px),8px)] flex justify-between items-center select-none shrink-0"
+        className="w-full pointer-events-auto bg-white border-t border-gray-100/50 px-6 pt-2 pb-[max(env(safe-area-inset-bottom,0px),26px)] flex justify-between items-center select-none shrink-0"
       >
         {/* Item 1: Home */}
         <button
@@ -101,16 +101,16 @@ export default function Navigation({
           onClick={() => onChangeTab('home')}
           className="flex flex-col items-center justify-center flex-1 pt-0.5 pb-0 text-[#70189F] hover:opacity-90 active:scale-95 transition cursor-pointer group"
         >
-          <div className={`w-[44px] sm:w-[48px] h-[21px] sm:h-[22px] rounded-full flex items-center justify-center transition-all ${
+          <div className={`w-[54px] sm:w-[56px] h-[26px] sm:h-[28px] rounded-full flex items-center justify-center transition-all ${
             isHomeActive ? 'bg-[#faeed6]' : 'bg-transparent'
           }`}>
             <BottomNavHomeIcon 
-              size={17} 
+              size={18} 
               color={isHomeActive ? '#70189F' : '#70189Faa'}
               className="transition-transform" 
             />
           </div>
-          <span className={`text-[9.5px] sm:text-[10px] mt-[1px] mb-0 tracking-tight leading-none ${isHomeActive ? 'font-bold text-[#70189F]' : 'font-medium text-[#70189F]/75'}`}>
+          <span className={`text-[11px] sm:text-[11.5px] mt-1 mb-0 tracking-tight leading-none ${isHomeActive ? 'font-bold text-[#70189F]' : 'font-medium text-[#70189F]/75'}`}>
             Home
           </span>
         </button>
@@ -124,17 +124,17 @@ export default function Navigation({
           onClick={() => onChangeTab('history')}
           className="flex flex-col items-center justify-center flex-1 pt-0.5 pb-0 text-[#70189F] hover:opacity-90 active:scale-95 transition cursor-pointer group"
         >
-          <div className={`w-[44px] sm:w-[48px] h-[21px] sm:h-[22px] rounded-full flex items-center justify-center transition-all ${
+          <div className={`w-[54px] sm:w-[56px] h-[26px] sm:h-[28px] rounded-full flex items-center justify-center transition-all ${
             isTransactionActive ? 'bg-[#faeed6]' : 'bg-transparent'
           }`}>
             <BottomNavTransactionsIcon 
-              size={17} 
+              size={19} 
               color={isTransactionActive ? '#70189F' : '#70189Faa'}
               strokeWidth={isTransactionActive ? 2 : 1.7}
               className="transition-transform" 
             />
           </div>
-          <span className={`text-[9.5px] sm:text-[10px] mt-[1px] mb-0 tracking-tight leading-none ${isTransactionActive ? 'font-bold text-[#70189F]' : 'font-medium text-[#70189F]/75'}`}>
+          <span className={`text-[11px] sm:text-[11.5px] mt-1 mb-0 tracking-tight leading-none ${isTransactionActive ? 'font-bold text-[#70189F]' : 'font-medium text-[#70189F]/75'}`}>
             Transactions
           </span>
         </button>
@@ -148,16 +148,16 @@ export default function Navigation({
           onClick={() => onChangeTab('profile')}
           className="flex flex-col items-center justify-center flex-1 pt-0.5 pb-0 text-[#70189F] hover:opacity-90 active:scale-95 transition cursor-pointer group"
         >
-          <div className={`w-[44px] sm:w-[48px] h-[21px] sm:h-[22px] rounded-full flex items-center justify-center transition-all ${
+          <div className={`w-[54px] sm:w-[56px] h-[26px] sm:h-[28px] rounded-full flex items-center justify-center transition-all ${
             isSettingActive ? 'bg-[#faeed6]' : 'bg-transparent'
           }`}>
             <BottomNavSettingsIcon 
-              size={17} 
+              size={19} 
               color={isSettingActive ? '#70189F' : '#70189Faa'}
               className="transition-transform" 
             />
           </div>
-          <span className={`text-[9.5px] sm:text-[10px] mt-[1px] mb-0 tracking-tight leading-none ${isSettingActive ? 'font-bold text-[#70189F]' : 'font-medium text-[#70189F]/75'}`}>
+          <span className={`text-[11px] sm:text-[11.5px] mt-1 mb-0 tracking-tight leading-none ${isSettingActive ? 'font-bold text-[#70189F]' : 'font-medium text-[#70189F]/75'}`}>
             Settings
           </span>
         </button>
