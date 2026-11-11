@@ -146,12 +146,9 @@ export default function TransactionDetailModal({
       <div 
         id="transaction-detail-sheet"
         onClick={(e) => e.stopPropagation()}
-        className="w-full bg-white rounded-t-[36px] rounded-b-none px-6 pt-3.5 pb-[calc(52px+max(env(safe-area-inset-bottom,0px),8px)+18px)] shadow-[0_-12px_45px_rgba(0,0,0,0.25)] flex flex-col justify-between relative animate-in slide-in-from-bottom-5 duration-250 select-none h-[calc(100%-max(env(safe-area-inset-top,0px)+138px,182px))] min-h-[calc(100%-max(env(safe-area-inset-top,0px)+138px,182px))] overflow-y-auto"
+        className="w-full bg-white rounded-t-[36px] rounded-b-none px-6 pt-4.5 pb-[calc(52px+max(env(safe-area-inset-bottom,0px),8px)+16px)] shadow-[0_-12px_45px_rgba(0,0,0,0.25)] flex flex-col justify-between relative animate-in slide-in-from-bottom-5 duration-250 select-none h-[calc(100%-max(env(safe-area-inset-top,0px),0px)-114px)] min-h-[calc(100%-max(env(safe-area-inset-top,0px),0px)-114px)] overflow-y-auto"
       >
-        {/* Subtle top drag pill handle matching genuine CBE on iPhone in reference photo */}
-        <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-2 shrink-0" />
-
-        {/* Top Title Bar with Close Button */}
+        {/* Top Title Bar with Close Button (matching reference image) */}
         <div className="flex items-center justify-between relative mb-1.5 sm:mb-2 shrink-0">
           <div className="w-6" /> {/* Balance spacer */}
           <h2 className="text-[12px] sm:text-[12.5px] font-bold text-gray-400 tracking-wider uppercase text-center flex-1 font-sans">
@@ -282,7 +279,7 @@ export default function TransactionDetailModal({
               };
               onViewReceipt(normalizedTx);
             }}
-            className="w-auto min-w-[210px] max-w-[260px] py-2.5 px-8 text-xs bg-[#70189F] hover:bg-[#5e1286] active:scale-[0.98] text-white rounded-full font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_4px_14px_rgba(112,24,159,0.35)] transition-all cursor-pointer"
+            className="w-auto min-w-[168px] max-w-[192px] h-[46px] sm:h-[48px] px-5 py-3 text-xs bg-[#70189F] hover:bg-[#5e1286] active:scale-[0.98] text-white rounded-full font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_4px_14px_rgba(112,24,159,0.35)] transition-all cursor-pointer"
           >
             <svg 
               className="w-4 h-4 text-white shrink-0" 
