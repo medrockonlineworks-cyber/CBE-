@@ -74,18 +74,17 @@ export class SystemBarsService {
     }
 
     // 4. Document root, body, and canvas backgrounds:
-    // Top status bar / notch follows statusBarColor (#70189F for CBE)
-    // Bottom navigation bar / home indicator area follows navBarColor (#ffffff for CBE)
+    // Ensures the app itself extends with authentic CBE purple seamlessly into the edge of the device with no separate status bar layer
     if (document.documentElement) {
       document.documentElement.style.backgroundColor = statusBarColor;
     }
     if (document.body) {
-      document.body.style.backgroundColor = navBarColor;
+      document.body.style.backgroundColor = statusBarColor;
     }
 
     const mainCanvas = document.getElementById('app-main-canvas');
     if (mainCanvas) {
-      mainCanvas.style.backgroundColor = navBarColor;
+      mainCanvas.style.backgroundColor = statusBarColor;
     }
 
     // 5. Capacitor Native Bridge Support (Android & iOS)

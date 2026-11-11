@@ -249,7 +249,7 @@ export default function App() {
       case 'main':
       default:
         return {
-          rootBg: 'bg-white',
+          rootBg: 'bg-[#70189F]',
           statusBarBg: 'bg-[#70189F] text-white',
           statusTheme: 'cbe' as const,
           navBarBg: 'bg-white border-neutral-200 text-neutral-800',
@@ -779,6 +779,12 @@ export default function App() {
                   showScanQr={false}
                 />
               )}
+
+              {/* Bottom Safe Area Pure White Base for iPhone */}
+              <div 
+                className="fixed bottom-0 inset-x-0 h-[max(env(safe-area-inset-bottom,0px),0px)] bg-white pointer-events-none z-30"
+                aria-hidden="true"
+              />
             </div>
           )}
 

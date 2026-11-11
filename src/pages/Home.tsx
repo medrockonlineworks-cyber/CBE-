@@ -537,7 +537,7 @@ export const Home: React.FC<HomeProps> = ({
 
   return (
     <div 
-      className="h-full w-full bg-white font-sans relative flex flex-col overflow-hidden text-gray-900 select-none"
+      className="h-full w-full bg-[#70189F] font-sans relative flex flex-col overflow-hidden text-gray-900 select-none"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -891,6 +891,12 @@ export const Home: React.FC<HomeProps> = ({
         }}
         onOpenScanQr={() => setActiveModal('qr')}
         showScanQr={activeNavTab === 'home' && !selectedDetailTx && !activeModal}
+      />
+
+      {/* Bottom Safe Area Pure White Base for iPhone */}
+      <div 
+        className="fixed bottom-0 inset-x-0 h-[max(env(safe-area-inset-bottom,0px),0px)] bg-white pointer-events-none z-40"
+        aria-hidden="true"
       />
 
       {/* ========================================================
