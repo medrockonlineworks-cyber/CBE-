@@ -226,12 +226,15 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   ctx.textBaseline = 'alphabetic';
   ctx.fillText('Transaction Completed Successfully!', width / 2, headlineY);
 
-  // 8. Main Transaction Summary Gray Card: #f2f3f5 (positioned cleanly under headline matching Image 2)
+  // 8. Main Transaction Summary Gray Card: #f2f3f5
+  // For iPhone users: increase vertical space below headline matching reference (Screenshot_20261112-104837)
+  const isIos = !!options.isIPhone;
   const cardMarginX = 16 * scale;
-  const cardTop = headlineY + (16 * scale);
+  const cardTopGap = isIos ? (28 * scale) : (16 * scale);
+  const cardTop = headlineY + cardTopGap;
   const cardWidth = width - (cardMarginX * 2);
-  const cardPadX = 18 * scale;
-  const cardPadY = 18 * scale;
+  const cardPadX = (isIos ? 20 : 18) * scale;
+  const cardPadY = (isIos ? 22 : 18) * scale;
   const textStartX = cardMarginX + cardPadX;
   const textMaxW = cardWidth - (cardPadX * 2);
 
@@ -333,18 +336,26 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   const paragraphHeight = lines.length * lineHeight;
 
   // 10. Position inside Card:
-  // Summary title -> paragraph -> snug QR box -> CBE logo footer matching image two
+  // Summary title -> paragraph -> QR box -> CBE logo footer matching reference (Screenshot_20261112-104837)
   const summaryTitleY = cardTop + cardPadY + (12 * scale);
-  const paragraphStartY = summaryTitleY + (14 * scale);
-  const qrBoxTop = paragraphStartY + paragraphHeight + (3 * scale);
+  const paragraphGap = isIos ? (16 * scale) : (14 * scale);
+  const paragraphStartY = summaryTitleY + paragraphGap;
+
+  // Space between paragraph text and QR code:
+  // For iPhone users: increased vertical space (13 * scale = 26px at 2x) matching reference screenshot
+  const qrBoxGap = isIos ? (13 * scale) : (3 * scale);
+  const qrBoxTop = paragraphStartY + paragraphHeight + qrBoxGap;
   const qrBoxSize = 130 * scale;
   const qrBoxX = (width - qrBoxSize) / 2;
   const qrImgSize = 114 * scale;
   const qrImgOffset = (qrBoxSize - qrImgSize) / 2;
 
-  const footerY = qrBoxTop + qrBoxSize + (5 * scale);
+  // Space between QR code and CBE Logo footer:
+  // For iPhone users: increased vertical space (15 * scale = 30px at 2x) matching reference screenshot
+  const footerGap = isIos ? (15 * scale) : (5 * scale);
+  const footerY = qrBoxTop + qrBoxSize + footerGap;
   const footerLogoSize = 42 * scale;
-  const cardBottomPadding = 18 * scale;
+  const cardBottomPadding = (isIos ? 26 : 18) * scale;
   const cardHeight = (footerY + footerLogoSize + cardBottomPadding) - cardTop;
 
   // Draw Card Background: #f2f3f5 with radius 26px and border shadow matching Image One
@@ -403,7 +414,7 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   // Draw Commercial Bank of Ethiopia Footer: Logo on left, aligned with text margin, matching reference image two
   const footerTitleFont = `bold ${15 * scale}px ${fontSans}`;
   const footerSloganFont = `normal ${12.5 * scale}px ${fontSans}`;
-  const footerGap = 12 * scale;
+  const footerHorizontalGap = 12 * scale;
   const footerX = textStartX; // Aligned with the text margin!
 
   // Gold CBE emblem
@@ -411,7 +422,7 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
     ctx.drawImage(logoImg, footerX, footerY, footerLogoSize, footerLogoSize);
   }
 
-  const footerTextX = footerX + footerLogoSize + footerGap;
+  const footerTextX = footerX + footerLogoSize + footerHorizontalGap;
   ctx.fillStyle = '#1f2937';
   ctx.font = footerTitleFont;
   ctx.textAlign = 'left';

@@ -6,6 +6,26 @@ import { exec } from 'child_process';
 import {defineConfig} from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
+function patchViteClientPlugin() {
+  return {
+    name: 'patch-vite-client-safe-send',
+    transform(code: string, id: string) {
+      if (id.includes('@vite/client') || id.includes('vite/dist/client/client.mjs') || id.endsWith('client.mjs')) {
+        return code
+          .replace(
+            /ws\.send\(JSON\.stringify\(data\)\);/g,
+            'if (typeof ws !== "undefined" && ws && ws.readyState === 1) { ws.send(JSON.stringify(data)); }'
+          )
+          .replace(
+            /wsTransport\.send\(data\);/g,
+            'try { wsTransport?.send?.(data); } catch (e) {}'
+          );
+      }
+      return null;
+    }
+  };
+}
+
 function pwaBrandingSyncPlugin() {
   return {
     name: 'pwa-branding-server-sync',
@@ -171,6 +191,7 @@ function pwaBrandingSyncPlugin() {
 export default defineConfig(() => {
   return {
     plugins: [
+      patchViteClientPlugin(),
       react(),
       tailwindcss(),
       pwaBrandingSyncPlugin(),

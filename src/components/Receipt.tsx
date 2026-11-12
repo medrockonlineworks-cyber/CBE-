@@ -958,15 +958,15 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             <div className="space-y-4 pb-2">
               {/* Headline */}
               <h1 
-                className="text-center text-[16px] sm:text-[16.5px] font-medium text-[#111827] tracking-normal mt-1 mb-4.5"
+                className={`text-center text-[16px] sm:text-[16.5px] font-medium text-[#111827] tracking-normal mt-1 ${isIPhone ? 'mb-6 sm:mb-7' : 'mb-4.5'}`}
                 style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif' }}
               >
                 Transaction Completed Successfully!
               </h1>
 
               {/* Main Transaction Summary Gray Card with visible border shadow matching Image One */}
-              <div className="bg-[#f2f3f5] rounded-[26px] p-4.5 sm:p-5 border border-black/[0.04] shadow-[0_8px_24px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04)]">
-                <p className="text-[#8e8e93] font-normal text-[13.5px] sm:text-[14px] mb-2">Transaction Summary</p>
+              <div className={`bg-[#f2f3f5] rounded-[26px] ${isIPhone ? 'p-5 sm:p-6 pb-6 sm:pb-7' : 'p-4.5 sm:p-5'} border border-black/[0.04] shadow-[0_8px_24px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04)]`}>
+                <p className={`text-[#8e8e93] font-normal text-[13.5px] sm:text-[14px] ${isIPhone ? 'mb-3.5' : 'mb-2'}`}>Transaction Summary</p>
 
                 {/* Paragraph Text with bold highlights and floating PAID badge */}
                 <div className="relative mb-0 pb-0">
@@ -1012,8 +1012,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                   )}
                 </div>
 
-                {/* Realistic QR Code Centered with strictly 3px vertical spacing from text above */}
-                <div className="flex justify-center mb-0" style={{ marginTop: '3px' }}>
+                {/* Realistic QR Code Centered: increased vertical spacing for iPhone matching reference */}
+                <div className="flex justify-center mb-0" style={{ marginTop: isIPhone ? '13px' : '3px' }}>
                   <div 
                     id="receipt-qr-container"
                     className="bg-white p-2 rounded-[18px] border-[2px] border-[#737373] shadow-xs inline-flex items-center justify-center select-none"
@@ -1060,8 +1060,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                   </div>
                 </div>
 
-                {/* Commercial Bank of Ethiopia Footer Inset: Logo on left, aligned with text margin, matching reference image two */}
-                <div className="flex items-center w-full !mt-[5px] pt-0 pb-1 px-1">
+                {/* Commercial Bank of Ethiopia Footer Inset: increased vertical space for iPhone matching reference */}
+                <div className={`flex items-center w-full pt-0 pb-1 px-1 ${isIPhone ? '!mt-[15px]' : '!mt-[5px]'}`}>
                   <div 
                     id="cbe-receipt-bottom-bar"
                     className="flex items-center gap-3 w-full select-none"
@@ -1440,11 +1440,11 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           <div style={{ height: '48px', flexShrink: 0 }} />
 
           {/* Main Content Area - Matching Image 2 */}
-          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', flex: 1, paddingTop: '0px', minHeight: 0, gap: '14px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', flex: 1, paddingTop: '0px', minHeight: 0, gap: isIPhone ? '20px' : '14px' }}>
             {/* Headline exactly matching reference screenshot */}
             <h1 
               style={{ 
-                margin: '4px 0 8px 0', 
+                margin: isIPhone ? '4px 0 22px 0' : '4px 0 8px 0', 
                 textAlign: 'center', 
                 fontSize: '16px', 
                 fontWeight: 500, 
@@ -1462,7 +1462,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
               style={{ 
                 backgroundColor: '#f2f3f5', 
                 borderRadius: '26px', 
-                padding: '18px', 
+                padding: isIPhone ? '22px 18px 26px 18px' : '18px', 
                 border: '1px solid rgba(0, 0, 0, 0.04)', 
                 boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04)',
                 display: 'flex', 
@@ -1471,7 +1471,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 boxSizing: 'border-box',
               }}
             >
-              <p style={{ margin: '0 0 8px 0', color: '#8e8e93', fontWeight: 400, fontSize: '13.5px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
+              <p style={{ margin: isIPhone ? '0 0 14px 0' : '0 0 8px 0', color: '#8e8e93', fontWeight: 400, fontSize: '13.5px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
                 Transaction Summary
               </p>
 
@@ -1486,8 +1486,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 </p>
               )}
 
-              {/* Realistic QR Code Centered with strictly 3px vertical spacing from text above */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '3px', marginBottom: '0px' }}>
+              {/* Realistic QR Code Centered with strictly 3px vertical spacing from text above (or 13px for iPhone) */}
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: isIPhone ? '13px' : '3px', marginBottom: '0px' }}>
                 <div 
                   style={{ 
                     backgroundColor: '#ffffff', 
@@ -1547,7 +1547,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                   display: 'flex', 
                   alignItems: 'center', 
                   width: '100%', 
-                  marginTop: '5px', 
+                  marginTop: isIPhone ? '15px' : '5px', 
                   paddingTop: '0px', 
                   paddingBottom: '2px', 
                   paddingLeft: '4px',

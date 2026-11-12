@@ -34,15 +34,19 @@
     <script>
       // Suppress Vite HMR WebSocket errors in sandboxed iframe environment
       window.addEventListener('error', function(e) {
-        if (e.message && (e.message.includes("reading 'send'") || e.message.includes('WebSocket') || e.message.includes('vite') || e.message.includes('HMR'))) {
+        var msg = (e.message || '') + ' ' + ((e.error && e.error.message) || '') + ' ' + ((e.error && e.error.stack) || '');
+        if (msg.includes("reading 'send'") || msg.includes('WebSocket') || msg.includes('vite') || msg.includes('HMR')) {
           e.stopImmediatePropagation();
           e.preventDefault();
+          return true;
         }
       }, true);
       window.addEventListener('unhandledrejection', function(e) {
-        if (e.reason && (String(e.reason).includes("reading 'send'") || String(e.reason).includes('WebSocket') || String(e.reason).includes('vite') || String(e.reason).includes('HMR'))) {
+        var msg = (e.reason ? (e.reason.message || e.reason.stack || String(e.reason)) : '');
+        if (msg.includes("reading 'send'") || msg.includes('WebSocket') || msg.includes('vite') || msg.includes('HMR')) {
           e.stopImmediatePropagation();
           e.preventDefault();
+          return true;
         }
       }, true);
 
