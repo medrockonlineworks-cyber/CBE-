@@ -194,7 +194,7 @@ export default function TransactionDetailModal({
           </div>
 
           {/* Key-Value Details List matching reference image */}
-          <div className="space-y-3.5 sm:space-y-4 py-1 px-0.5 text-sm my-auto">
+          <div className="space-y-[20px] py-1 px-0.5 text-sm my-auto">
             {/* 1. Date & Time */}
             <div className="flex items-center justify-between gap-3">
               <span className="text-gray-400 font-medium whitespace-nowrap text-[13px]">Date &amp; Time</span>

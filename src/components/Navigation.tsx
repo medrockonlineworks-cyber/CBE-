@@ -41,9 +41,9 @@ export default function Navigation({
   return (
     <div className="w-full relative z-50 select-none shrink-0 bg-white">
       
-      {/* 1. Floating Center "Scan QR" Pill Button (Snug above bottom bar matching Image) */}
+      {/* 1. Floating Center "Scan QR" Pill Button (Clean clearance above bottom bar - Zero overlap to button) */}
       {shouldRenderScanQr && (
-        <div className="absolute -top-3.5 sm:-top-4 left-0 right-0 flex justify-center items-center pointer-events-auto select-none z-50">
+        <div className="absolute bottom-[calc(100%+6px)] sm:bottom-[calc(100%+8px)] left-0 right-0 flex justify-center items-center pointer-events-auto select-none z-50">
           <button
             id="btn-nav-scan-qr"
             type="button"
@@ -55,11 +55,11 @@ export default function Navigation({
                 onChangeTab('transfer');
               }
             }}
-            className="bg-[#70189F] hover:bg-[#5a1280] active:scale-95 text-white h-[28px] sm:h-[30px] px-3.5 rounded-full flex items-center justify-center gap-1.5 shadow-[0_4px_14px_rgba(112,24,159,0.35)] transition-all cursor-pointer border border-white/30 select-none group"
+            className="bg-[#70189F] hover:bg-[#5a1280] active:scale-95 text-white h-[34px] sm:h-[36px] px-2.5 sm:px-3 rounded-full flex items-center justify-center gap-1 shadow-[0_4px_14px_rgba(112,24,159,0.35)] transition-all cursor-pointer border border-white/30 select-none group"
           >
             {/* Left Corner Scanner Brackets (Top & Bottom) */}
             <svg 
-              className="w-2.5 h-4 text-white flex-shrink-0" 
+              className="w-2 h-4 text-white flex-shrink-0" 
               viewBox="0 0 14 26" 
               fill="none" 
               stroke="currentColor" 
@@ -73,13 +73,13 @@ export default function Navigation({
             </svg>
 
             {/* Centered Text */}
-            <span className="text-[12px] font-bold tracking-tight text-white whitespace-nowrap leading-none">
+            <span className="text-[11.5px] sm:text-[12px] font-bold tracking-tight text-white whitespace-nowrap leading-none">
               Scan QR
             </span>
 
             {/* Right Corner Scanner Brackets (Top & Bottom) */}
             <svg 
-              className="w-2.5 h-4 text-white flex-shrink-0" 
+              className="w-2 h-4 text-white flex-shrink-0" 
               viewBox="0 0 14 26" 
               fill="none" 
               stroke="currentColor" 
