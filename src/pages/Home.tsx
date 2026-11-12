@@ -106,19 +106,10 @@ export const Home: React.FC<HomeProps> = ({
   const [currentDateTime, setCurrentDateTime] = useState('01 Jul 2026 • 10:14 AM');
   const [customLogoUrl, setCustomLogoUrl] = useState<string | null>(null);
 
-  // Pull-To-Refresh States
-  const [pullDistance, setPullDistance] = useState(0);
-  const [pullState, setPullState] = useState<'idle' | 'pulling' | 'threshold' | 'refreshing' | 'success'>('idle');
+  // Account Sync Feedback State (Triggered ONLY by rotating button, matching IMG_1213)
+  const [showAccountSynced, setShowAccountSynced] = useState(false);
+  const accountSyncedTimerRef = useRef<any>(null);
   const mainScrollRef = useRef<HTMLElement | null>(null);
-  const touchStartYRef = useRef(0);
-  const touchStartXRef = useRef(0);
-  const canPullRef = useRef(false);
-  const thresholdHapticRef = useRef(false);
-  const isMouseDownRef = useRef(false);
-  const mouseStartYRef = useRef(0);
-
-  const PULL_THRESHOLD = 60;
-  const MAX_PULL = 90;
 
   // Transaction history filter state
   const [historyFilter, setHistoryFilter] = useState<'all' | 'debited' | 'credited'>('all');
@@ -245,24 +236,23 @@ export const Home: React.FC<HomeProps> = ({
     return () => clearInterval(interval);
   }, [loadTransactions, updateTime]);
 
-  // Pull-to-refresh execution
-  const triggerPullRefresh = useCallback(async () => {
+  // Refresh triggered ONLY by rotating button in top header
+  const handleRefresh = useCallback(async () => {
+    if (isRefreshing) return;
     setIsRefreshing(true);
-    setPullState('refreshing');
-    setPullDistance(48);
+    setShowAccountSynced(true);
+
+    if (accountSyncedTimerRef.current) {
+      clearTimeout(accountSyncedTimerRef.current);
+    }
 
     // 1. Fetch freshest user data from LocalDb
     const users = LocalDb.getUsers();
     const freshUser = users.find(u => u.id === activeUser.id || u.accountNumber === activeUser.accountNumber) || activeUser;
     
-    // 2. Refresh transactions & update statuses
+    // 2. Refresh transactions & update clock
     const txs = LocalDb.getTransactions();
-    
-    // 3. Update live clock
     updateTime();
-
-    // Natural delay so user perceives the refresh animation smoothly
-    await new Promise(r => setTimeout(r, 650));
 
     setActiveUser({ ...freshUser });
     setAllTransactions(txs);
@@ -272,117 +262,25 @@ export const Home: React.FC<HomeProps> = ({
     // Notify other components if needed
     window.dispatchEvent(new CustomEvent('cbe_balance_refreshed', { detail: { balance: freshUser.balance } }));
 
-    // Show success feedback
-    setPullState('success');
-    await new Promise(r => setTimeout(r, 600));
+    // Stop button spinning after 850ms
+    setTimeout(() => {
+      setIsRefreshing(false);
+    }, 850);
 
-    // Smooth return to resting state
-    setPullDistance(0);
-    setIsRefreshing(false);
-    setPullState('idle');
-    thresholdHapticRef.current = false;
-  }, [activeUser, onUpdateCurrentUser, updateTime]);
+    // Keep "Account Synced!" pill badge visible for 2.6s, matching IMG_1213
+    accountSyncedTimerRef.current = setTimeout(() => {
+      setShowAccountSynced(false);
+    }, 2600);
+  }, [activeUser, isRefreshing, onUpdateCurrentUser, updateTime]);
 
-  const handleRefresh = useCallback(() => {
-    triggerPullRefresh();
-  }, [triggerPullRefresh]);
-
-  // Touch handlers for pull to refresh
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (pullState === 'refreshing' || pullState === 'success') return;
-    if (e.touches.length === 1) {
-      const mainEl = mainScrollRef.current;
-      const atTop = !mainEl || mainEl.scrollTop <= 0;
-      if (atTop) {
-        touchStartYRef.current = e.touches[0].clientY;
-        touchStartXRef.current = e.touches[0].clientX;
-        canPullRef.current = true;
-        thresholdHapticRef.current = false;
-      } else {
-        canPullRef.current = false;
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (accountSyncedTimerRef.current) {
+        clearTimeout(accountSyncedTimerRef.current);
       }
-    }
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!canPullRef.current || pullState === 'refreshing' || pullState === 'success') return;
-    const mainEl = mainScrollRef.current;
-    if (mainEl && mainEl.scrollTop > 0) {
-      canPullRef.current = false;
-      setPullDistance(0);
-      setPullState('idle');
-      return;
-    }
-
-    const currentY = e.touches[0].clientY;
-    const currentX = e.touches[0].clientX;
-    const deltaY = currentY - touchStartYRef.current;
-    const deltaX = Math.abs(currentX - touchStartXRef.current);
-
-    if (deltaY > 0 && deltaY > deltaX) {
-      const distance = Math.min(MAX_PULL, Math.pow(deltaY, 0.85) * 1.8);
-      setPullDistance(distance);
-
-      if (distance >= PULL_THRESHOLD) {
-        setPullState('threshold');
-        if (!thresholdHapticRef.current) {
-          thresholdHapticRef.current = true;
-          if (typeof navigator !== 'undefined' && navigator.vibrate) {
-            try { navigator.vibrate(12); } catch {}
-          }
-        }
-      } else {
-        setPullState('pulling');
-        thresholdHapticRef.current = false;
-      }
-    } else if (deltaY < 0) {
-      setPullDistance(0);
-      setPullState('idle');
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (!canPullRef.current || pullState === 'refreshing' || pullState === 'success') return;
-    canPullRef.current = false;
-
-    if (pullDistance >= PULL_THRESHOLD) {
-      triggerPullRefresh();
-    } else {
-      setPullDistance(0);
-      setPullState('idle');
-    }
-  };
-
-  // Mouse handlers for desktop preview
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (pullState === 'refreshing' || pullState === 'success') return;
-    const mainEl = mainScrollRef.current;
-    if (!mainEl || mainEl.scrollTop <= 0) {
-      isMouseDownRef.current = true;
-      mouseStartYRef.current = e.clientY;
-    }
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isMouseDownRef.current || pullState === 'refreshing' || pullState === 'success') return;
-    const deltaY = e.clientY - mouseStartYRef.current;
-    if (deltaY > 5) {
-      const distance = Math.min(MAX_PULL, Math.pow(deltaY, 0.85) * 1.8);
-      setPullDistance(distance);
-      setPullState(distance >= PULL_THRESHOLD ? 'threshold' : 'pulling');
-    }
-  };
-
-  const handleMouseUp = () => {
-    if (!isMouseDownRef.current) return;
-    isMouseDownRef.current = false;
-    if (pullDistance >= PULL_THRESHOLD) {
-      triggerPullRefresh();
-    } else {
-      setPullDistance(0);
-      setPullState('idle');
-    }
-  };
+    };
+  }, []);
 
   // Listen to Phone Navigation Bar Back and Home actions
   useEffect(() => {
@@ -538,65 +436,13 @@ export const Home: React.FC<HomeProps> = ({
   return (
     <div 
       className="h-full w-full bg-[#70189F] font-sans relative flex flex-col overflow-hidden text-gray-900 select-none"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
     >
-      {/* PULL-TO-REFRESH FLOATING PILL INDICATOR */}
-      <div 
-        className="w-full flex justify-center pointer-events-none transition-all duration-200 ease-out z-50 absolute left-0 right-0 px-4"
-        style={{
-          top: '12px',
-          transform: `translateY(${pullState === 'refreshing' ? 36 : Math.min(pullDistance, 50)}px)`,
-          opacity: pullDistance > 6 || pullState === 'refreshing' || pullState === 'success' ? 1 : 0
-        }}
-      >
-        <div className="bg-[#18191c]/95 text-white px-4 py-2 rounded-full shadow-2xl border border-white/20 backdrop-blur-md flex items-center gap-2.5 text-xs font-semibold">
-          {pullState === 'refreshing' ? (
-            <>
-              <RefreshIcon size={16} className="text-[#deb356] animate-spin" />
-              <span className="text-[#deb356] tracking-tight">Refreshing wallet balance &amp; status...</span>
-            </>
-          ) : pullState === 'success' ? (
-            <>
-              <div className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
-                <Check className="w-3 h-3 stroke-[3]" />
-              </div>
-              <span className="text-emerald-400 tracking-tight">Wallet balance &amp; status updated!</span>
-            </>
-          ) : pullState === 'threshold' ? (
-            <>
-              <div className="w-4 h-4 text-[#deb356] rotate-180 transition-transform duration-150">
-                <RefreshIcon size={16} />
-              </div>
-              <span className="text-white font-bold tracking-tight">Release to refresh</span>
-            </>
-          ) : (
-            <>
-              <div 
-                className="w-4 h-4 text-white/80 transition-transform duration-75"
-                style={{ transform: `rotate(${Math.min(180, (pullDistance / PULL_THRESHOLD) * 180)}deg)` }}
-              >
-                <RefreshIcon size={16} />
-              </div>
-              <span className="text-white/80 tracking-tight">Pull down to refresh</span>
-            </>
-          )}
-        </div>
-      </div>
-      
       {/* ========================================================
           STATIC / UNSCROLLABLE TOP SECTION (Above Yellow Line)
           Includes Purple Hero Background, Top Header, Black Account Card, and Gold Line
           ======================================================== */}
       <div 
-        className="flex-shrink-0 w-full relative z-20 select-none transition-transform duration-200 ease-out"
-        style={{
-          transform: `translateY(${Math.min(pullDistance * 0.35, 24)}px)`
-        }}
+        className="flex-shrink-0 w-full relative z-20 select-none"
       >
         {/* HERO BACKGROUND WITH SMOOTH CURVED WAVE TRANSITION */}
         <div 
@@ -675,6 +521,21 @@ export const Home: React.FC<HomeProps> = ({
             </div>
           </div>
         </div>
+
+        {/* ACCOUNT SYNCED SUCCESS PILL BADGE (Matching IMG_1213 exactly) */}
+        {showAccountSynced && (
+          <div 
+            id="cbe-account-synced-badge"
+            className="absolute left-1/2 -translate-x-1/2 top-[calc(100%+14px)] z-50 pointer-events-none select-none animate-in fade-in zoom-in-95 duration-200"
+          >
+            <div className="bg-[#48c774] text-white px-5 py-2 sm:px-6 sm:py-2.5 rounded-full shadow-lg shadow-black/15 flex items-center gap-2 select-none border border-white/20">
+              <Check className="w-5 h-5 text-white stroke-[3]" />
+              <span className="text-[14px] sm:text-[15px] font-bold tracking-tight text-white font-sans whitespace-nowrap">
+                Account Synced!
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ========================================================
