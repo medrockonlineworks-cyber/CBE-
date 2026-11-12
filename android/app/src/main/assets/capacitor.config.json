@@ -1,6 +1,6 @@
 {
 	"appId": "et.cbe.tanadigitalbank",
-	"appName": "Tana Digital Bank",
+	"appName": "CBE Mobile",
 	"webDir": "dist",
 	"bundledWebRuntime": false,
 	"server": {
@@ -24,7 +24,6 @@
 		},
 		"StatusBar": {
 			"style": "DARK",
-			"backgroundColor": "#ffffff",
 			"overlaysWebView": true
 		},
 		"NavigationBar": {

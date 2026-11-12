@@ -671,6 +671,15 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             } catch {}
           }
 
+          // 2. If running as an installed native iOS app, save directly into Apple Photos via native Media plugin
+          if (Capacitor.isNativePlatform()) {
+            try {
+              await saveAndShareReceiptImage(dataUrl, txId, false);
+            } catch (nativeSaveErr) {
+              console.warn('Native iOS photo save note:', nativeSaveErr);
+            }
+          }
+
           // Show authentic clean CBE toast with ZERO sheets and ZERO popups
           setCopiedToast('Screenshot saved to gallery');
         } else {

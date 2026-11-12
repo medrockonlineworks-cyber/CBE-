@@ -1,6 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
+import { Media } from '@capacitor-community/media';
 import html2canvas from 'html2canvas-pro';
 import { LocalDb, DEFAULT_CBE_LOGO } from '../lib/mockData';
 import { CBE_DEFAULT_LOGO_BASE64 } from '../assets/cbeLogoBase64';
@@ -476,6 +477,17 @@ export async function saveAndShareReceiptImage(
 
   if (isNative) {
     try {
+      // 1. Direct native save into Apple Photos (iOS) or Camera Roll (Android) via Media plugin
+      try {
+        await Media.savePhoto({
+          path: dataUrl,
+          fileName: filename.replace(/\.png$/i, ''),
+        });
+        return { saved: true };
+      } catch (mediaErr) {
+        console.warn('Native Media.savePhoto direct gallery save note:', mediaErr);
+      }
+
       const base64Data = dataUrl.replace(/^data:image\/png;base64,/, '');
 
       // 1. Write PNG file into Cache directory (safe, temporary, no special permissions required)
