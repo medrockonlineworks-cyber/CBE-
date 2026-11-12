@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   BottomNavHomeIcon, 
   BottomNavTransactionsIcon, 
   BottomNavSettingsIcon 
 } from './CbeCustomIcons';
 import { UserProfile } from '../types';
+import { PhoneSettingsService } from '../services/phoneSettingsService';
 
 export type TabType = 'home' | 'transfer' | 'payments' | 'history' | 'profile';
 
@@ -23,6 +24,14 @@ export default function Navigation({
   onOpenScanQr,
   showScanQr = false 
 }: NavigationProps) {
+  const [isIPhone, setIsIPhone] = useState<boolean>(() => PhoneSettingsService.isIPhoneMode());
+
+  useEffect(() => {
+    return PhoneSettingsService.subscribe(() => {
+      setIsIPhone(PhoneSettingsService.isIPhoneMode());
+    });
+  }, []);
+
   const isHomeActive = activeTab === 'home';
   const isTransactionActive = activeTab === 'history' || activeTab === 'transfer' || activeTab === 'payments';
   const isSettingActive = activeTab === 'profile';
@@ -86,11 +95,15 @@ export default function Navigation({
         </div>
       )}
 
-      {/* 2. White Bottom Navigation Bar with Ample White Safe-Area Space on iPhone */}
+      {/* 2. White Bottom Navigation Bar - Flush down to the edge of device for iPhone */}
       <nav 
         id="cbe-bottom-navbar" 
         aria-label="Main Navigation"
-        className="w-full pointer-events-auto bg-white border-t border-gray-100/50 px-6 pt-2 pb-[max(env(safe-area-inset-bottom,0px),26px)] flex justify-between items-center select-none shrink-0"
+        className={`w-full pointer-events-auto bg-white border-t border-gray-100/50 px-6 select-none shrink-0 flex justify-between items-center ${
+          isIPhone 
+            ? 'pt-1.5 pb-[max(env(safe-area-inset-bottom,0px),8px)]' 
+            : 'pt-2 pb-[max(env(safe-area-inset-bottom,0px),10px)]'
+        }`}
       >
         {/* Item 1: Home */}
         <button

@@ -308,7 +308,7 @@ export default function TransactionDetailModal({
         </div>
 
         {/* Authentic CBE Bottom Navigation Bar (Home, Transactions active pill, Settings) */}
-        <div className="w-full shrink-0 bg-white border-t border-gray-100/60 z-10">
+        <div className="w-full shrink-0 bg-white z-10">
           <BottomNavigation
             activeTab="transactions"
             showScanQr={false}
