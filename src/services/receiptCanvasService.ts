@@ -20,6 +20,7 @@ export interface ReceiptDrawOptions {
   customBankLogo?: string | null;
   targetWidth?: number;
   targetHeight?: number;
+  isIPhone?: boolean;
 }
 
 interface TextToken {
@@ -423,12 +424,14 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   ctx.font = footerSloganFont;
   ctx.fillText('The bank you can always rely on!', footerTextX, footerY + (34 * scale));
 
-  // Bottom edge color change matching Image One (IMG_1210_75ffdd7f.jpeg)
-  const bottomBarHeight = 64 * scale;
-  ctx.fillStyle = '#f4f5f7';
-  ctx.fillRect(0, height - bottomBarHeight, width, bottomBarHeight);
-  ctx.fillStyle = '#edf0f3';
-  ctx.fillRect(0, height - bottomBarHeight, width, 1 * scale);
+  // Bottom edge color change matching Image One (for iPhone users only; Android users keep pure white bottom)
+  if (options.isIPhone) {
+    const bottomBarHeight = 64 * scale;
+    ctx.fillStyle = '#f4f5f7';
+    ctx.fillRect(0, height - bottomBarHeight, width, bottomBarHeight);
+    ctx.fillStyle = '#edf0f3';
+    ctx.fillRect(0, height - bottomBarHeight, width, 1 * scale);
+  }
 
   return canvas.toDataURL('image/png', 1.0);
 }

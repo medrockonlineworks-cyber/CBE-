@@ -626,6 +626,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           customBankLogo,
           targetWidth: screenshotDimensions.width,
           targetHeight: screenshotDimensions.height,
+          isIPhone,
         });
       }
 
@@ -1394,18 +1395,20 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             <div style={{ flex: 1, backgroundColor: '#ffffff', minHeight: '36px' }} />
           </div>
 
-          {/* Bottom edge color change matching Image One (IMG_1210_75ffdd7f.jpeg) */}
-          <div 
-            style={{ 
-              width: 'calc(100% + 32px)', 
-              marginLeft: '-16px', 
-              marginRight: '-16px', 
-              height: '64px', 
-              backgroundColor: '#f4f5f7', 
-              borderTop: '1px solid #edf0f3',
-              flexShrink: 0,
-            }} 
-          />
+          {/* Bottom edge color change matching Image One (IMG_1210_75ffdd7f.jpeg) for iPhone user only; Android users keep clean pure white bottom */}
+          {isIPhone && (
+            <div 
+              style={{ 
+                width: 'calc(100% + 32px)', 
+                marginLeft: '-16px', 
+                marginRight: '-16px', 
+                height: '64px', 
+                backgroundColor: '#f4f5f7', 
+                borderTop: '1px solid #edf0f3',
+                flexShrink: 0,
+              }} 
+            />
+          )}
         </div>
       </div>
 
