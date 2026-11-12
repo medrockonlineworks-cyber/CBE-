@@ -949,16 +949,16 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
               </div>
             </div>
 
-            {/* Spacer for the overlapping badge matching exact original layout */}
-            <div className="h-12 flex-shrink-0" />
+            {/* Spacer for the overlapping badge matching exact bottom edge */}
+            <div className="h-[45px] flex-shrink-0" />
           </div>
 
           {/* SCROLLABLE MIDDLE TEXT & CARD PART: Only this upper text area scrolls between the static header and static bottom buttons */}
           <div className={`bg-white -mt-px px-4 sm:px-5 ${hideUiElements ? 'pb-12' : 'pb-4'} flex-1 overflow-y-auto overscroll-contain scrollbar-none min-h-0`}>
-            <div className="space-y-4 pb-2">
-              {/* Headline */}
+            <div className="pb-2">
+              {/* Headline - perfectly balanced space from top badge and bottom card */}
               <h1 
-                className={`text-center text-[16px] sm:text-[16.5px] font-medium text-[#111827] tracking-normal mt-1 ${isIPhone ? 'mb-6 sm:mb-7' : 'mb-4.5'}`}
+                className={`text-center text-[16px] sm:text-[16.5px] font-medium text-[#111827] tracking-normal ${isIPhone ? 'mt-5 mb-5' : 'mt-4 mb-4'}`}
                 style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif' }}
               >
                 Transaction Completed Successfully!
@@ -1437,14 +1437,14 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           </div>
 
           {/* Spacer for bottom half of overlapping badge */}
-          <div style={{ height: '48px', flexShrink: 0 }} />
+          <div style={{ height: '45px', flexShrink: 0 }} />
 
           {/* Main Content Area - Matching Image 2 */}
-          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', flex: 1, paddingTop: '0px', minHeight: 0, gap: isIPhone ? '20px' : '14px' }}>
-            {/* Headline exactly matching reference screenshot */}
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', flex: 1, paddingTop: '0px', minHeight: 0 }}>
+            {/* Headline with perfectly balanced vertical space from top badge and bottom card */}
             <h1 
               style={{ 
-                margin: isIPhone ? '4px 0 22px 0' : '4px 0 8px 0', 
+                margin: isIPhone ? '20px 0 20px 0' : '16px 0 16px 0', 
                 textAlign: 'center', 
                 fontSize: '16px', 
                 fontWeight: 500, 

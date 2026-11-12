@@ -219,19 +219,24 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   ctx.restore();
 
   // 7. Headline: "Transaction Completed Successfully!" (matching Image 2)
-  const headlineY = sheetTop + (54 * scale);
+  // Perfectly balanced vertical space from top element (checkmark badge) and bottom element (gray card)
+  const isIos = !!options.isIPhone;
+  const badgeBottom = badgeCenterY + badgeRadius + (3 * scale); // Exact bottom of 6*scale white outer stroke
+  const balancedGap = isIos ? (20 * scale) : (16 * scale);
+  const headlineTop = badgeBottom + balancedGap;
+  const headlineBaseline = headlineTop + (12 * scale);
+  const headlineBottom = headlineTop + (15 * scale);
+
   ctx.fillStyle = '#111827';
   ctx.font = `500 ${16 * scale}px ${fontSans}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
-  ctx.fillText('Transaction Completed Successfully!', width / 2, headlineY);
+  ctx.fillText('Transaction Completed Successfully!', width / 2, headlineBaseline);
 
   // 8. Main Transaction Summary Gray Card: #f2f3f5
-  // For iPhone users: increase vertical space below headline matching reference (Screenshot_20261112-104837)
-  const isIos = !!options.isIPhone;
+  // Placed exactly balancedGap below the headline to ensure equal space above and below
   const cardMarginX = 16 * scale;
-  const cardTopGap = isIos ? (28 * scale) : (16 * scale);
-  const cardTop = headlineY + cardTopGap;
+  const cardTop = headlineBottom + balancedGap;
   const cardWidth = width - (cardMarginX * 2);
   const cardPadX = (isIos ? 20 : 18) * scale;
   const cardPadY = (isIos ? 22 : 18) * scale;
