@@ -37,15 +37,20 @@ export function dataUrlToBlob(dataUrl: string): Blob {
   return new Blob([u8arr], { type: mime });
 }
 
+import { PhoneSettingsService } from './phoneSettingsService';
+
 /**
- * Accurately detects iOS devices (iPhone, iPad, iPod, or iPadOS Safari on MacIntel).
+ * Accurately detects iOS devices (iPhone, iPad, iPod, or iPadOS Safari on MacIntel,
+ * plus user-selected iPhone mode).
  */
 export function checkIsIOS(): boolean {
   if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
-  const ua = navigator.userAgent || '';
-  const isIos = /iPhone|iPad|iPod/i.test(ua);
-  const isMacTouch = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
-  return isIos || isMacTouch;
+  const ua = navigator.userAgent || (navigator as any).vendor || '';
+  const isIosUa = /iPhone|iPad|iPod/i.test(ua);
+  const isMacTouch = (navigator.platform === 'MacIntel' || navigator.platform === 'iPad' || navigator.platform === 'iPhone') && navigator.maxTouchPoints > 1;
+  const isIosWebKit = /WebKit/i.test(ua) && !/Chrome|CriOS|Android/i.test(ua) && /Mobile/i.test(ua);
+  const isPhoneSetting = PhoneSettingsService.isIPhoneDevice() || PhoneSettingsService.isIPhoneMode();
+  return isIosUa || isMacTouch || isIosWebKit || isPhoneSetting;
 }
 
 /**
@@ -549,24 +554,26 @@ export async function saveAndShareReceiptImage(
       const blob = dataUrlToBlob(dataUrl);
       const file = new File([blob], filename, { type: 'image/png' });
 
-      // 1. Direct browser file download: saves silently & automatically to device on iOS & Android
-      try {
-        const blobUrl = URL.createObjectURL(blob);
-        const downloadLink = document.createElement('a');
-        downloadLink.href = blobUrl;
-        downloadLink.download = filename;
-        downloadLink.setAttribute('download', filename);
-        downloadLink.style.display = 'none';
-        document.body.appendChild(downloadLink);
-        downloadLink.click();
-        setTimeout(() => {
-          try {
-            document.body.removeChild(downloadLink);
-            URL.revokeObjectURL(blobUrl);
-          } catch {}
-        }, 3000);
-      } catch (downloadErr) {
-        console.warn('Download link fallback notice:', downloadErr);
+      // 1. Direct browser file download: saves silently on Android; skip on iOS/Safari so Safari never opens the black preview screen
+      if (!isIos) {
+        try {
+          const blobUrl = URL.createObjectURL(blob);
+          const downloadLink = document.createElement('a');
+          downloadLink.href = blobUrl;
+          downloadLink.download = filename;
+          downloadLink.setAttribute('download', filename);
+          downloadLink.style.display = 'none';
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          setTimeout(() => {
+            try {
+              document.body.removeChild(downloadLink);
+              URL.revokeObjectURL(blobUrl);
+            } catch {}
+          }, 3000);
+        } catch (downloadErr) {
+          console.warn('Download link fallback notice:', downloadErr);
+        }
       }
 
       // 2. Clipboard copy: silently saves full image to clipboard on iOS and desktop

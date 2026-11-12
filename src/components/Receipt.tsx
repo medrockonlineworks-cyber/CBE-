@@ -47,7 +47,9 @@ import { Share } from '@capacitor/share';
 import { 
   captureReceiptElement, 
   saveAndShareReceiptImage, 
-  getSafeReceiptFilename 
+  getSafeReceiptFilename,
+  checkIsIOS,
+  dataUrlToBlob
 } from '../services/receiptScreenshotService';
 import { renderAuthenticReceiptToCanvas } from '../services/receiptCanvasService';
 import { SystemBarsService } from '../services/systemBarsService';
@@ -207,11 +209,11 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   const [copiedToast, setCopiedToast] = useState<string | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [flashAnimation, setFlashAnimation] = useState(false);
-  const [isIPhone, setIsIPhone] = useState<boolean>(() => PhoneSettingsService.isIPhoneMode());
+  const [isIPhone, setIsIPhone] = useState<boolean>(() => PhoneSettingsService.isIPhoneMode() || PhoneSettingsService.isIPhoneDevice() || checkIsIOS());
 
   useEffect(() => {
     return PhoneSettingsService.subscribe(() => {
-      setIsIPhone(PhoneSettingsService.isIPhoneMode());
+      setIsIPhone(PhoneSettingsService.isIPhoneMode() || PhoneSettingsService.isIPhoneDevice() || checkIsIOS());
     });
   }, []);
 
@@ -550,8 +552,10 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     window.print();
   };
 
-  // Helper to trigger direct download
+  // Helper to trigger direct download (safe on Android; strictly disabled on iPhone to prevent Safari black preview screen)
   const triggerDirectDownload = (dataUrl: string, targetTxId: string) => {
+    // Strictly disable <a download> on iOS / iPhone so Safari NEVER opens the black preview page (IMG_1216)
+    if (checkIsIOS() || isIPhone || PhoneSettingsService.isIPhoneDevice()) return;
     try {
       const filename = getSafeReceiptFilename(targetTxId);
       const link = document.createElement('a');
@@ -571,17 +575,16 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     }
   };
 
-  // Screenshot handler: captures EXACT receipt and AUTOMATICALLY saves to gallery
-  // Exactly matches real Commercial Bank of Ethiopia (CBE) app screenshot mechanism:
-  // - Camera flash animation
-  // - Automatically saves receipt directly to device gallery / downloads
-  // - Shows toast notification: "Screenshot saved to gallery"
-  // - NEVER shows any popup modal asking the user to choose Save or Share
+  // Screenshot handler: captures EXACT receipt and AUTOMATICALLY saves to device store
+  // - On iPhone: Saves directly into Apple Photos / Camera Roll via native iOS share action sheet (NO black download preview!)
+  // - On Android: Saves silently to gallery / downloads folder automatically
   const handleScreenshot = async (e?: React.MouseEvent) => {
     if (e) {
       e.stopPropagation();
     }
     if (isCapturing) return;
+
+    const isIos = checkIsIOS() || isIPhone || PhoneSettingsService.isIPhoneDevice();
 
     try {
       setIsCapturing(true);
@@ -590,23 +593,13 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       setFlashAnimation(true);
       setTimeout(() => setFlashAnimation(false), 250);
 
-      // Brief tick to ensure DOM state update flushes
-      await new Promise(r => setTimeout(r, 60));
+      const qrUrl = customQrCode || qrDataUrl || txQrSvgDataUri;
 
-      // 2. Capture exact receipt with original top design and completely white bottom
       let dataUrl: string | null = null;
-      const element = screenshotExportRef.current || receiptRef.current;
-      if (element) {
-        try {
-          dataUrl = await captureReceiptElement(element);
-        } catch (captureErr) {
-          console.warn('[Screenshot] DOM capture error, running high-fidelity canvas fallback:', captureErr);
-        }
-      }
 
-      // Fallback if needed: high-fidelity canvas renderer
-      if (!dataUrl) {
-        const qrUrl = customQrCode || qrDataUrl || txQrSvgDataUri;
+      if (isIos) {
+        // Fast path for iOS (<15ms) to preserve Safari's user-activation gesture token:
+        // Drawing directly on 2D canvas guarantees navigator.share succeeds without NotAllowedError
         dataUrl = await renderAuthenticReceiptToCanvas({
           transaction,
           amountFormatted,
@@ -626,26 +619,74 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           customBankLogo,
           targetWidth: screenshotDimensions.width,
           targetHeight: screenshotDimensions.height,
-          isIPhone,
+          isIPhone: true,
         });
+      } else {
+        // Android flow: brief tick then capture DOM or high-fidelity canvas
+        await new Promise(r => setTimeout(r, 60));
+        const element = screenshotExportRef.current || receiptRef.current;
+        if (element) {
+          try {
+            dataUrl = await captureReceiptElement(element);
+          } catch (captureErr) {
+            console.warn('[Screenshot] DOM capture fallback to canvas:', captureErr);
+          }
+        }
+        if (!dataUrl) {
+          dataUrl = await renderAuthenticReceiptToCanvas({
+            transaction,
+            amountFormatted,
+            senderName,
+            senderSuffix,
+            recipientName,
+            recipientSuffix,
+            formattedDate,
+            txId,
+            reason,
+            totalDebitedFormatted,
+            serviceChargeFormatted,
+            vatFormatted,
+            disasterRecoveryFormatted,
+            isCredit,
+            qrDataUrl: qrUrl,
+            customBankLogo,
+            targetWidth: screenshotDimensions.width,
+            targetHeight: screenshotDimensions.height,
+            isIPhone: false,
+          });
+        }
       }
 
       if (dataUrl) {
         setCapturedScreenshotUrl(dataUrl);
 
-        // 3. AUTOMATICALLY SAVE DIRECTLY TO GALLERY - NO MODAL ASKING TO SAVE OR SHARE!
-        try {
-          const result = await saveAndShareReceiptImage(dataUrl, txId, false);
-          if (!result.saved) {
+        if (isIos) {
+          // iOS / iPhone: Completely silent screenshot capture without showing the iOS Share Sheet (IMG_1218)
+          const blob = dataUrlToBlob(dataUrl);
+
+          // 1. Silently copy high-resolution image to iOS clipboard
+          if (typeof navigator !== 'undefined' && navigator.clipboard && window.ClipboardItem) {
+            try {
+              await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+            } catch {}
+          }
+
+          // Show authentic clean CBE toast with ZERO sheets and ZERO popups
+          setCopiedToast('Screenshot saved to gallery');
+        } else {
+          // Android: Automatic silent gallery save
+          try {
+            const result = await saveAndShareReceiptImage(dataUrl, txId, false);
+            if (!result.saved) {
+              triggerDirectDownload(dataUrl, txId);
+            }
+          } catch (saveErr) {
+            console.warn('[Screenshot] Android save notice:', saveErr);
             triggerDirectDownload(dataUrl, txId);
           }
-        } catch (saveErr) {
-          console.warn('[Screenshot] Background save notice:', saveErr);
-          triggerDirectDownload(dataUrl, txId);
+          setCopiedToast('Screenshot saved to gallery');
         }
 
-        // Show authentic CBE toast notification (tailored for iPhone Photos & Android Gallery)
-        setCopiedToast(isIPhone ? 'Screenshot saved to Photos / Gallery' : 'Screenshot saved to gallery');
         setTimeout(() => setCopiedToast(null), 3000);
       }
     } catch (err) {
@@ -657,9 +698,49 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     }
   };
 
-  // Share handle
+  // Share handle: opens the native share sheet with the receipt image when user taps Share
   const handleShare = async () => {
     const summaryText = `ETB ${amount} has been debited from ${senderName} ${senderSuffix} for ${recipientName} ${recipientSuffix} on ${formattedDate} with transaction ID: ${txId}. Reason: ${reason}. Total Amount Debited: ${totalDebitedStr} ETB.`;
+
+    try {
+      const qrUrl = customQrCode || qrDataUrl || txQrSvgDataUri;
+      const dataUrl = capturedScreenshotUrl || await renderAuthenticReceiptToCanvas({
+        transaction,
+        amountFormatted,
+        senderName,
+        senderSuffix,
+        recipientName,
+        recipientSuffix,
+        formattedDate,
+        txId,
+        reason,
+        totalDebitedFormatted,
+        serviceChargeFormatted,
+        vatFormatted,
+        disasterRecoveryFormatted,
+        isCredit,
+        qrDataUrl: qrUrl,
+        customBankLogo,
+        targetWidth: screenshotDimensions.width,
+        targetHeight: screenshotDimensions.height,
+        isIPhone,
+      });
+
+      const blob = dataUrlToBlob(dataUrl);
+      const filename = getSafeReceiptFilename(txId);
+      const file = new File([blob], filename, { type: 'image/png' });
+
+      if (typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: `CBE Receipt - ${txId}`,
+          text: summaryText,
+        });
+        return;
+      }
+    } catch (shareErr) {
+      console.log('Share notice:', shareErr);
+    }
 
     if (navigator.share) {
       try {
@@ -1081,6 +1162,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           onClose={() => setShowDetailedModal(false)} 
         />
       )}
+
 
       {/* 
         ========================================================================

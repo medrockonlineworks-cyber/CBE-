@@ -58,6 +58,7 @@ import {
 } from 'lucide-react';
 import { PhoneSettingsService, BrowserHeaderType } from '../services/phoneSettingsService';
 import { SystemBarsService } from '../services/systemBarsService';
+import { checkIsIOS, dataUrlToBlob } from '../services/receiptScreenshotService';
 
 export type { BrowserHeaderType };
 
@@ -1060,12 +1061,27 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
         imageTimeout: 15000,
       });
       const imgData = canvas.toDataURL('image/png');
-      const link = document.createElement('a');
-      link.href = imgData;
-      link.download = `CBE_Customer_Receipt_${receiptData.refId || 'FT'}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const isIos = checkIsIOS();
+      if (isIos) {
+        const blob = dataUrlToBlob(imgData);
+        const filename = `CBE_Customer_Receipt_${receiptData.refId || 'FT'}.png`;
+        const file = new File([blob], filename, { type: 'image/png' });
+        if (typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: `CBE Customer Receipt`,
+            });
+          } catch {}
+        }
+      } else {
+        const link = document.createElement('a');
+        link.href = imgData;
+        link.download = `CBE_Customer_Receipt_${receiptData.refId || 'FT'}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
 
       setDownloadSuccess(true);
       setTimeout(() => setDownloadSuccess(false), 3000);
