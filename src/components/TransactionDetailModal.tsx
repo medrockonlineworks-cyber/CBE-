@@ -152,7 +152,7 @@ export default function TransactionDetailModal({
         className="w-full bg-white rounded-t-[32px] sm:rounded-t-[36px] rounded-b-none shadow-[0_-12px_45px_rgba(0,0,0,0.25)] flex flex-col relative animate-in slide-in-from-bottom-5 duration-250 select-none h-[calc(100%-max(env(safe-area-inset-top,0px),0px)-152px)] min-h-[calc(100%-max(env(safe-area-inset-top,0px),0px)-152px)] overflow-hidden"
       >
         {/* Scrollable Upper Body with Proportional Vertical Spacing Matching Image One */}
-        <div className="flex-1 overflow-y-auto px-6 pt-3 pb-2 flex flex-col justify-between min-h-0">
+        <div className="flex-1 overflow-y-auto px-6 pt-3 pb-0 flex flex-col justify-between min-h-0">
           {/* Subtle top drag pill handle matching reference image */}
           <div className="w-10 h-1 bg-gray-300/80 rounded-full mx-auto mb-2 mt-0.5 shrink-0" />
 
@@ -281,7 +281,7 @@ export default function TransactionDetailModal({
           )}
 
           {/* Centered Purple VIEW RECEIPT Action Button Matching Image One */}
-          <div className="mt-4 mb-2 flex justify-center shrink-0">
+          <div className="mt-[12px] mb-[12px] flex justify-center shrink-0">
             <button
               id="btn-view-full-receipt"
               type="button"

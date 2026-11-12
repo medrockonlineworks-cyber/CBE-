@@ -346,10 +346,23 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   const cardBottomPadding = 18 * scale;
   const cardHeight = (footerY + footerLogoSize + cardBottomPadding) - cardTop;
 
-  // Draw Card Background: #f2f3f5 with radius 26px
+  // Draw Card Background: #f2f3f5 with radius 26px and border shadow matching Image One
+  ctx.save();
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.08)';
+  ctx.shadowBlur = 24 * scale;
+  ctx.shadowOffsetY = 6 * scale;
   ctx.fillStyle = '#f2f3f5';
   roundRect(ctx, cardMarginX, cardTop, cardWidth, cardHeight, 26 * scale);
   ctx.fill();
+  ctx.restore();
+
+  // Subtle border matching Image One
+  ctx.save();
+  ctx.strokeStyle = 'rgba(0, 0, 0, 0.04)';
+  ctx.lineWidth = 1 * scale;
+  roundRect(ctx, cardMarginX, cardTop, cardWidth, cardHeight, 26 * scale);
+  ctx.stroke();
+  ctx.restore();
 
   // Draw "Transaction Summary"
   ctx.fillStyle = '#8e8e93';
@@ -410,6 +423,12 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   ctx.font = footerSloganFont;
   ctx.fillText('The bank you can always rely on!', footerTextX, footerY + (34 * scale));
 
-  // Pure clean white sheet extends all the way to bottom edge (zero bottom bar, zero horizontal lines)
+  // Bottom edge color change matching Image One (IMG_1210_75ffdd7f.jpeg)
+  const bottomBarHeight = 64 * scale;
+  ctx.fillStyle = '#f4f5f7';
+  ctx.fillRect(0, height - bottomBarHeight, width, bottomBarHeight);
+  ctx.fillStyle = '#edf0f3';
+  ctx.fillRect(0, height - bottomBarHeight, width, 1 * scale);
+
   return canvas.toDataURL('image/png', 1.0);
 }

@@ -845,8 +845,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 Transaction Completed Successfully!
               </h1>
 
-              {/* Main Transaction Summary Gray Card */}
-              <div className="bg-[#f2f3f5] rounded-[26px] p-4.5 sm:p-5 border-none shadow-xs">
+              {/* Main Transaction Summary Gray Card with visible border shadow matching Image One */}
+              <div className="bg-[#f2f3f5] rounded-[26px] p-4.5 sm:p-5 border border-black/[0.04] shadow-[0_8px_24px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04)]">
                 <p className="text-[#8e8e93] font-normal text-[13.5px] sm:text-[14px] mb-2">Transaction Summary</p>
 
                 {/* Paragraph Text with bold highlights and floating PAID badge */}
@@ -1197,7 +1197,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             paddingLeft: '16px', 
             paddingRight: '16px', 
             paddingTop: '0px', 
-            paddingBottom: '24px', 
+            paddingBottom: '0px', 
             display: 'flex', 
             flexDirection: 'column', 
             justifyContent: 'space-between', 
@@ -1267,13 +1267,14 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
               Transaction Completed Successfully!
             </h1>
 
-            {/* Main Transaction Summary Gray Card */}
+            {/* Main Transaction Summary Gray Card with border shadow matching Image One */}
             <div 
               style={{ 
                 backgroundColor: '#f2f3f5', 
                 borderRadius: '26px', 
                 padding: '18px', 
-                border: 'none', 
+                border: '1px solid rgba(0, 0, 0, 0.04)', 
+                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04)',
                 display: 'flex', 
                 flexDirection: 'column', 
                 gap: '0px',
@@ -1389,10 +1390,22 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
             </div>
 
-            {/* Generous clean white space extending flat all the way to the bottom edge of device */}
-            <div style={{ flex: 1, backgroundColor: '#ffffff', minHeight: '40px' }} />
+            {/* Generous clean white space extending to the bottom edge */}
+            <div style={{ flex: 1, backgroundColor: '#ffffff', minHeight: '36px' }} />
           </div>
 
+          {/* Bottom edge color change matching Image One (IMG_1210_75ffdd7f.jpeg) */}
+          <div 
+            style={{ 
+              width: 'calc(100% + 32px)', 
+              marginLeft: '-16px', 
+              marginRight: '-16px', 
+              height: '64px', 
+              backgroundColor: '#f4f5f7', 
+              borderTop: '1px solid #edf0f3',
+              flexShrink: 0,
+            }} 
+          />
         </div>
       </div>
 
