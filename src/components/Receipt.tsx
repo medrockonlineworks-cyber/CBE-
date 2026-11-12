@@ -210,6 +210,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   const [isCapturing, setIsCapturing] = useState(false);
   const [flashAnimation, setFlashAnimation] = useState(false);
   const [isIPhone, setIsIPhone] = useState<boolean>(() => PhoneSettingsService.isIPhoneMode() || PhoneSettingsService.isIPhoneDevice() || checkIsIOS());
+  const [showIosPhotoPreview, setShowIosPhotoPreview] = useState<boolean>(false);
 
   useEffect(() => {
     return PhoneSettingsService.subscribe(() => {
@@ -661,8 +662,9 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         setCapturedScreenshotUrl(dataUrl);
 
         if (isIos) {
-          // iOS / iPhone: Completely silent screenshot capture without showing the iOS Share Sheet (IMG_1218)
           const blob = dataUrlToBlob(dataUrl);
+          const filename = getSafeReceiptFilename(txId);
+          const file = new File([blob], filename, { type: 'image/png' });
 
           // 1. Silently copy high-resolution image to iOS clipboard
           if (typeof navigator !== 'undefined' && navigator.clipboard && window.ClipboardItem) {
@@ -675,13 +677,39 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           if (Capacitor.isNativePlatform()) {
             try {
               await saveAndShareReceiptImage(dataUrl, txId, false);
+              setCopiedToast('Screenshot saved to Photos');
+              setTimeout(() => setCopiedToast(null), 3000);
+              return;
             } catch (nativeSaveErr) {
               console.warn('Native iOS photo save note:', nativeSaveErr);
             }
           }
 
-          // Show authentic clean CBE toast with ZERO sheets and ZERO popups
-          setCopiedToast('Screenshot saved to gallery');
+          // 3. In Safari on iOS: Prompt the native Action Sheet with "Save Image" to actually save to Apple Photos
+          let sharedSuccessfully = false;
+          if (typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
+            setCopiedToast('Tap "Save Image" to save to Apple Photos 👇');
+            try {
+              await navigator.share({
+                files: [file],
+                title: 'CBE Receipt',
+              });
+              sharedSuccessfully = true;
+              setCopiedToast('Screenshot saved to Apple Photos!');
+            } catch (shareErr: any) {
+              if (shareErr?.name === 'AbortError') {
+                // User dismissed the sheet
+                sharedSuccessfully = true;
+              } else {
+                console.warn('iOS share notice:', shareErr);
+              }
+            }
+          }
+
+          if (!sharedSuccessfully) {
+            setShowIosPhotoPreview(true);
+            setCopiedToast('Touch & hold image to Save to Photos');
+          }
         } else {
           // Android: Automatic silent gallery save
           try {
@@ -1170,6 +1198,76 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           initialQrCode={customQrCode || txQrSvgDataUri || qrDataUrl}
           onClose={() => setShowDetailedModal(false)} 
         />
+      )}
+
+      {/* iOS Direct Apple Photos Preview & Save Modal */}
+      {showIosPhotoPreview && capturedScreenshotUrl && (
+        <div 
+          data-html2canvas-ignore="true" 
+          data-screenshot-exclude="true"
+          className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-md flex flex-col justify-end sm:justify-center items-center p-4 animate-in fade-in duration-200"
+          onClick={() => setShowIosPhotoPreview(false)}
+        >
+          <div 
+            className="w-full max-w-sm bg-white rounded-3xl p-5 shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-12 h-1 bg-neutral-300 rounded-full mb-3 sm:hidden" />
+            
+            <div className="w-11 h-11 rounded-full bg-purple-50 text-[#70189F] flex items-center justify-center mb-2.5">
+              <Camera className="w-6 h-6 stroke-[2.2]" />
+            </div>
+
+            <h3 className="text-base font-bold text-gray-900 mb-1">
+              Save to Apple Photos
+            </h3>
+            
+            <p className="text-xs text-gray-500 mb-3 px-2 leading-relaxed">
+              Touch and hold the receipt image below, then tap <strong className="text-gray-800">"Save to Photos"</strong>.
+            </p>
+
+            {/* Receipt Preview Thumbnail with Touch & Hold capability */}
+            <div className="w-full max-h-[300px] overflow-hidden rounded-2xl border border-gray-200 shadow-inner bg-gray-50 mb-4 flex items-center justify-center p-2">
+              <img 
+                src={capturedScreenshotUrl} 
+                alt="Receipt Screenshot" 
+                className="max-h-[280px] w-auto object-contain rounded-lg select-auto pointer-events-auto shadow-md"
+              />
+            </div>
+
+            <div className="w-full flex flex-col gap-2">
+              {typeof navigator !== 'undefined' && 'share' in navigator && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      const blob = dataUrlToBlob(capturedScreenshotUrl);
+                      const filename = getSafeReceiptFilename(txId);
+                      const file = new File([blob], filename, { type: 'image/png' });
+                      await navigator.share({
+                        files: [file],
+                        title: 'CBE Receipt',
+                      });
+                      setShowIosPhotoPreview(false);
+                    } catch {}
+                  }}
+                  className="w-full py-2.5 rounded-full bg-[#70189F] hover:bg-[#5b1482] text-white font-semibold text-xs transition active:scale-95 shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Share2 className="w-4 h-4" />
+                  <span>Open iOS Save Menu</span>
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setShowIosPhotoPreview(false)}
+                className="w-full py-2.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold text-xs transition active:scale-95 cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
 
