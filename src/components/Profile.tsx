@@ -5,7 +5,6 @@ import { SmsService } from '../services/smsService';
 import { TruecallerService } from '../services/truecallerService';
 import { BiometricAuthService } from '../services/biometricAuthService';
 import { CbeLogo } from './CbeLogo';
-import { CbeFaceIdIcon } from './Auth';
 import { 
   User, 
   Lock, 
@@ -347,7 +346,6 @@ export default function Profile({
 
   const handleToggleBiometrics = () => {
     const nextVal = !biometrics;
-    const methodLabel = BiometricAuthService.getBiometricMethod() === 'faceid' ? 'Face ID' : 'Fingerprint';
     setBiometrics(nextVal);
     const updated = { ...currentUser, biometricEnabled: nextVal };
     onUpdateUser(updated);
@@ -364,7 +362,7 @@ export default function Profile({
       LocalDb.setUsers(users);
     }
 
-    LocalDb.addNotification(currentUser.id, 'Biometric Settings Updated', `${methodLabel} login has been ${nextVal ? 'enabled' : 'disabled'}.`, 'info');
+    LocalDb.addNotification(currentUser.id, 'Biometric Settings Updated', `Touch/Face ID has been successfully ${nextVal ? 'enabled' : 'disabled'}.`, 'info');
   };
 
   const handlePinChange = (e: React.FormEvent) => {
@@ -630,25 +628,15 @@ export default function Profile({
         <div className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 space-y-4">
           <h3 className="text-xs font-extrabold text-emerald-950 uppercase tracking-wider">Security &amp; Device Access</h3>
           
-          {/* Device Biometrics (Face ID on iPhone / Fingerprint on Android) */}
+          {/* Simulated Biometrics */}
           <div className="flex justify-between items-center py-1">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-emerald-50 text-emerald-800 rounded-xl">
-                {BiometricAuthService.getBiometricMethod() === 'faceid' ? (
-                  <CbeFaceIdIcon size={20} strokeColor="#065f46" strokeWidth={2.0} />
-                ) : (
-                  <Fingerprint className="w-5 h-5" />
-                )}
+                <Fingerprint className="w-5 h-5" />
               </div>
               <div>
-                <p className="text-sm font-bold text-gray-800">
-                  {BiometricAuthService.getBiometricMethod() === 'faceid' ? 'Face ID Login' : 'Fingerprint Login'}
-                </p>
-                <p className="text-[10px] text-gray-400">
-                  {BiometricAuthService.getBiometricMethod() === 'faceid'
-                    ? 'Unlock app via device Face ID'
-                    : 'Unlock app via device Fingerprint'}
-                </p>
+                <p className="text-sm font-bold text-gray-800">Biometric Verification</p>
+                <p className="text-[10px] text-gray-400">Unlock app via Fingerprint / Face ID</p>
               </div>
             </div>
             <button

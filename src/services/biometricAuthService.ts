@@ -4,9 +4,8 @@ import { PhoneSettingsService } from './phoneSettingsService';
 export type BiometricMethod = 'faceid' | 'fingerprint';
 
 export interface BiometricAttemptResult {
-  status: 'success' | 'cancelled' | 'needs_system_sheet' | 'error';
+  status: 'success' | 'cancelled' | 'iframe_blocked' | 'unsupported' | 'error';
   method: BiometricMethod;
-  source?: 'webauthn' | 'system_sheet';
   message?: string;
 }
 
@@ -62,28 +61,8 @@ export class BiometricAuthService {
     return PhoneSettingsService.isIPhoneMode() ? 'faceid' : 'fingerprint';
   }
 
-  public static getLabels(method: BiometricMethod = this.getBiometricMethod()) {
-    if (method === 'faceid') {
-      return {
-        methodName: 'Face ID',
-        idleButtonText: 'USE FACE ID',
-        scanningButtonText: 'Verifying Face ID...',
-        keypadButtonText: 'Use Face ID',
-        cancelledMessage: 'Face ID authentication cancelled. Try again or enter PIN.',
-        promptTitle: 'Face ID',
-        promptSubtitle: 'Sign in to Commercial Bank of Ethiopia',
-      };
-    }
-
-    return {
-      methodName: 'Fingerprint',
-      idleButtonText: 'USE FINGERPRINT',
-      scanningButtonText: 'Scanning Fingerprint...',
-      keypadButtonText: 'Use Fingerprint',
-      cancelledMessage: 'Fingerprint authentication cancelled. Try again or enter PIN.',
-      promptTitle: 'Verify your identity',
-      promptSubtitle: 'Touch the fingerprint sensor to sign in to CBE Mobile',
-    };
+  public static getDeviceBiometricName(method: BiometricMethod = this.getBiometricMethod()): string {
+    return method === 'faceid' ? 'Face ID' : 'Fingerprint';
   }
 
   public static getStoredCredential(userId: string): StoredWebAuthnCredential | null {
@@ -117,36 +96,6 @@ export class BiometricAuthService {
     }
   }
 
-  private static isWebAuthnBlockedByIframePolicy(): boolean {
-    if (typeof window === 'undefined' || typeof document === 'undefined') return true;
-    const inIframe = window.self !== window.top;
-    if (!inIframe) return false;
-
-    const docAny = document as unknown as {
-      featurePolicy?: { allowsFeature?: (name: string) => boolean };
-      permissionsPolicy?: { allowsFeature?: (name: string) => boolean };
-    };
-
-    try {
-      if (docAny.permissionsPolicy?.allowsFeature) {
-        if (
-          !docAny.permissionsPolicy.allowsFeature('publickey-credentials-get') ||
-          !docAny.permissionsPolicy.allowsFeature('publickey-credentials-create')
-        ) {
-          return true;
-        }
-      }
-      if (docAny.featurePolicy?.allowsFeature) {
-        if (!docAny.featurePolicy.allowsFeature('publickey-credentials-get')) {
-          return true;
-        }
-      }
-    } catch {
-      // Ignore introspection failures
-    }
-    return false;
-  }
-
   public static async isPlatformAuthenticatorAvailable(): Promise<boolean> {
     if (
       typeof window === 'undefined' ||
@@ -172,31 +121,34 @@ export class BiometricAuthService {
     const userIdBytes = utf8ToBytes(user.id || 'cbe_user');
     const challenge = generateChallenge(32);
 
-    const credential = (await navigator.credentials.create({
-      publicKey: {
-        challenge: challenge.buffer as ArrayBuffer,
-        rp: {
-          name: 'Commercial Bank of Ethiopia',
-          id: rpId,
-        },
-        user: {
-          id: userIdBytes.buffer as ArrayBuffer,
-          name: user.accountNumber || user.email || user.id,
-          displayName: user.name || 'CBE Customer',
-        },
-        pubKeyCredParams: [
-          { type: 'public-key', alg: -7 }, // ES256 (Secure Enclave / Android Keystore)
-          { type: 'public-key', alg: -257 }, // RS256 fallback
-        ],
-        authenticatorSelection: {
-          authenticatorAttachment: 'platform',
-          userVerification: 'required',
-          residentKey: 'preferred',
-          requireResidentKey: false,
-        },
-        timeout: 60000,
-        attestation: 'none',
+    const publicKeyOptions: PublicKeyCredentialCreationOptions & { hints?: string[] } = {
+      challenge: challenge.buffer as ArrayBuffer,
+      rp: {
+        name: 'Commercial Bank of Ethiopia',
+        id: rpId,
       },
+      user: {
+        id: userIdBytes.buffer as ArrayBuffer,
+        name: user.accountNumber || user.email || user.id,
+        displayName: user.name || 'CBE Customer',
+      },
+      pubKeyCredParams: [
+        { type: 'public-key', alg: -7 },   // ES256 (iOS Secure Enclave / Android Keystore)
+        { type: 'public-key', alg: -257 }, // RS256 fallback
+      ],
+      authenticatorSelection: {
+        authenticatorAttachment: 'platform',
+        userVerification: 'required',
+        residentKey: 'preferred',
+        requireResidentKey: false,
+      },
+      hints: ['client-device'],
+      timeout: 60000,
+      attestation: 'none',
+    };
+
+    const credential = (await navigator.credentials.create({
+      publicKey: publicKeyOptions,
     })) as PublicKeyCredential | null;
 
     if (!credential || !credential.rawId) {
@@ -216,20 +168,23 @@ export class BiometricAuthService {
     const challenge = generateChallenge(32);
     const idBytes = base64UrlToBytes(credId);
 
+    const publicKeyOptions: PublicKeyCredentialRequestOptions & { hints?: string[] } = {
+      challenge: challenge.buffer as ArrayBuffer,
+      rpId,
+      allowCredentials: [
+        {
+          id: idBytes.buffer as ArrayBuffer,
+          type: 'public-key',
+          transports: ['internal'],
+        },
+      ],
+      hints: ['client-device'],
+      userVerification: 'required',
+      timeout: 60000,
+    };
+
     const assertion = (await navigator.credentials.get({
-      publicKey: {
-        challenge: challenge.buffer as ArrayBuffer,
-        rpId,
-        allowCredentials: [
-          {
-            id: idBytes.buffer as ArrayBuffer,
-            type: 'public-key',
-            transports: ['internal'],
-          },
-        ],
-        userVerification: 'required',
-        timeout: 60000,
-      },
+      publicKey: publicKeyOptions,
     })) as PublicKeyCredential | null;
 
     if (!assertion || !assertion.rawId) {
@@ -238,38 +193,28 @@ export class BiometricAuthService {
   }
 
   /**
-   * Attempts authentication using the real device login system (iPhone Face ID / Android Fingerprint via WebAuthn).
-   * - If WebAuthn is allowed and supported by the device, launches the native OS Face ID / Fingerprint prompt.
-   * - If the user explicitly cancels or fails the native prompt, returns 'cancelled' (does NOT bypass).
-   * - If running inside an iframe/environment where WebAuthn is blocked by Permissions-Policy or unsupported,
-   *   returns 'needs_system_sheet' so the UI can show the device-matched biometric prompt sheet.
+   * Activates the real OS device security login system (Face ID on iPhone / Fingerprint on Android)
+   * using WebAuthn Platform Authenticator (`navigator.credentials`).
+   * Never fakes or bypasses verification.
    */
   public static async authenticateWithDevice(user: UserProfile): Promise<BiometricAttemptResult> {
     const method = this.getBiometricMethod();
-    const labels = this.getLabels(method);
+    const methodName = this.getDeviceBiometricName(method);
 
     if (typeof window === 'undefined' || !window.isSecureContext || !navigator.credentials || !window.PublicKeyCredential) {
       return {
-        status: 'needs_system_sheet',
+        status: 'unsupported',
         method,
-        message: 'Native WebAuthn requires a secure browser context.',
-      };
-    }
-
-    if (this.isWebAuthnBlockedByIframePolicy()) {
-      return {
-        status: 'needs_system_sheet',
-        method,
-        message: 'Embedded frame restricts direct WebAuthn prompt.',
+        message: `${methodName} requires a secure HTTPS browser with device biometrics enabled.`,
       };
     }
 
     const platformSupported = await this.isPlatformAuthenticatorAvailable();
     if (!platformSupported) {
       return {
-        status: 'needs_system_sheet',
+        status: 'unsupported',
         method,
-        message: 'Device platform authenticator is unavailable in this browser.',
+        message: `${methodName} is not configured on this device/browser. Please enter your PIN.`,
       };
     }
 
@@ -281,33 +226,21 @@ export class BiometricAuthService {
       if (stored && stored.rpId === currentHost) {
         try {
           await this.verifyPlatformCredential(stored.credId, currentHost);
-          return {
-            status: 'success',
-            method,
-            source: 'webauthn',
-          };
+          return { status: 'success', method };
         } catch (verifyErr: unknown) {
           const errName = verifyErr instanceof DOMException ? verifyErr.name : '';
-          // If stored credential was removed from device keychain/settings, re-enroll cleanly
+          // If the device key was removed from iCloud Keychain / Android biometrics, re-enroll via real OS prompt
           if (errName === 'InvalidStateError' || errName === 'NotFoundError') {
             this.clearStoredCredential(user.id);
             await this.enrollPlatformCredential(user, method);
-            return {
-              status: 'success',
-              method,
-              source: 'webauthn',
-            };
+            return { status: 'success', method };
           }
           throw verifyErr;
         }
       } else {
-        // First time on this device/origin: enroll & immediately verify with native Face ID / Fingerprint
+        // Enroll on this device & verify immediately using real OS Face ID / Fingerprint dialog
         await this.enrollPlatformCredential(user, method);
-        return {
-          status: 'success',
-          method,
-          source: 'webauthn',
-        };
+        return { status: 'success', method };
       }
     } catch (err: unknown) {
       const elapsedMs = Date.now() - startedAt;
@@ -315,32 +248,32 @@ export class BiometricAuthService {
       const errMsg = err instanceof Error ? err.message : String(err);
       const inIframe = window.self !== window.top;
 
-      // Permissions policy / cross-origin iframe block (browser rejected instantly without showing OS sheet)
+      // Detect when an embedded iframe Permissions Policy blocks WebAuthn before showing the OS dialog
       if (
-        errName === 'SecurityError' ||
-        /feature is not enabled|permissions policy|not allowed in this document|cross-origin/i.test(errMsg) ||
-        (inIframe && errName === 'NotAllowedError' && elapsedMs < 180)
+        inIframe &&
+        (errName === 'SecurityError' ||
+          /feature is not enabled|permissions policy|not allowed in this document|publickey-credentials/i.test(errMsg) ||
+          (errName === 'NotAllowedError' && elapsedMs < 250))
       ) {
         return {
-          status: 'needs_system_sheet',
+          status: 'iframe_blocked',
           method,
-          message: errMsg,
+          message: `Open this app directly in ${method === 'faceid' ? 'Safari' : 'your browser'} to authenticate with device ${methodName}.`,
         };
       }
 
-      // Real user cancellation or timeout on the native OS Face ID / Fingerprint dialog
       if (errName === 'NotAllowedError' || errName === 'AbortError') {
         return {
           status: 'cancelled',
           method,
-          message: labels.cancelledMessage,
+          message: `${methodName} verification was cancelled or failed.`,
         };
       }
 
       return {
         status: 'error',
         method,
-        message: errMsg || labels.cancelledMessage,
+        message: errMsg || `${methodName} verification failed. Please use your PIN.`,
       };
     }
   }
