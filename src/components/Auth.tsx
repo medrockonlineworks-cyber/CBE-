@@ -129,10 +129,12 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
   // On iPhone -> Face ID + notch safe area; on Android -> Fingerprint
   const [isIOSDevice, setIsIOSDevice] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
-    return PhoneSettingsService.isIPhoneMode();
+    return PhoneSettingsService.isIPhoneDevice() || PhoneSettingsService.isIPhoneMode();
   });
 
-  const biometricMethod: BiometricMethod = isIOSDevice ? 'faceid' : 'fingerprint';
+  const [biometricMethod, setBiometricMethod] = useState<BiometricMethod>(() =>
+    BiometricAuthService.getBiometricMethod()
+  );
 
   // Active account selection
   const [usersList, setUsersList] = useState<UserProfile[]>(() => LocalDb.getUsers());
@@ -163,11 +165,13 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
       setUsersList(LocalDb.getUsers());
     };
     const handleSettingsChange = () => {
-      setIsIOSDevice(PhoneSettingsService.isIPhoneMode());
+      setIsIOSDevice(PhoneSettingsService.isIPhoneDevice() || PhoneSettingsService.isIPhoneMode());
+      setBiometricMethod(BiometricAuthService.getBiometricMethod());
     };
 
     const unsubPhoneSettings = PhoneSettingsService.subscribe(() => {
-      setIsIOSDevice(PhoneSettingsService.isIPhoneMode());
+      setIsIOSDevice(PhoneSettingsService.isIPhoneDevice() || PhoneSettingsService.isIPhoneMode());
+      setBiometricMethod(BiometricAuthService.getBiometricMethod());
     });
 
     window.addEventListener('storage', handleUpdate);
@@ -687,11 +691,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
               disabled={isBiometricScanning}
               className="text-[#6b7280] text-[11.5px] font-semibold tracking-[0.18em] uppercase mt-4 cursor-pointer hover:text-[#70189F] transition font-sans disabled:opacity-70"
             >
-              {isBiometricScanning
-                ? biometricMethod === 'faceid'
-                  ? 'Scanning Face ID...'
-                  : 'Scanning Fingerprint...'
-                : 'USE BIOMETRICS'}
+              USE BIOMETRICS
             </button>
 
             {/* Underlined "Use PIN" link -> reveals PIN input method */}
@@ -750,11 +750,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
               disabled={isBiometricScanning}
               className="text-[#1f2937] text-[11px] font-bold tracking-[0.16em] uppercase mt-3 cursor-pointer hover:text-[#70189F] transition font-sans disabled:opacity-70"
             >
-              {isBiometricScanning
-                ? biometricMethod === 'faceid'
-                  ? 'Scanning Face ID...'
-                  : 'Scanning Fingerprint...'
-                : 'USE BIOMETRICS'}
+              USE BIOMETRICS
             </button>
 
             <button

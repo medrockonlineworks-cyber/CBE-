@@ -70,10 +70,24 @@ function utf8ToBytes(value: string): Uint8Array {
 
 export class BiometricAuthService {
   /**
-   * Returns 'faceid' on iPhone/iPad (real device OR iPhone simulator preset),
+   * Returns 'faceid' on iPhone/iPad (native iOS, physical iOS device, or iPhone simulator preset),
    * and 'fingerprint' on Android devices/presets.
+   * Hardware OS always takes priority on real mobile devices.
    */
   public static getBiometricMethod(): BiometricMethod {
+    if (typeof window !== 'undefined') {
+      if (Capacitor.isNativePlatform()) {
+        const platform = Capacitor.getPlatform();
+        if (platform === 'ios') return 'faceid';
+        if (platform === 'android') return 'fingerprint';
+      }
+      if (PhoneSettingsService.isIPhoneDevice()) {
+        return 'faceid';
+      }
+      if (typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent || '')) {
+        return 'fingerprint';
+      }
+    }
     return PhoneSettingsService.isIPhoneMode() ? 'faceid' : 'fingerprint';
   }
 
@@ -172,9 +186,21 @@ export class BiometricAuthService {
       attestation: 'none',
     };
 
-    const credential = (await navigator.credentials.create({
-      publicKey: publicKeyOptions,
-    })) as PublicKeyCredential | null;
+    let credential: PublicKeyCredential | null;
+    try {
+      credential = (await navigator.credentials.create({
+        publicKey: publicKeyOptions,
+      })) as PublicKeyCredential | null;
+    } catch (createErr) {
+      if (createErr instanceof TypeError) {
+        const { hints: _ignoredHints, ...legacyOptions } = publicKeyOptions;
+        credential = (await navigator.credentials.create({
+          publicKey: legacyOptions,
+        })) as PublicKeyCredential | null;
+      } else {
+        throw createErr;
+      }
+    }
 
     if (!credential || !credential.rawId) {
       throw new Error('Device biometric registration returned empty credential.');
@@ -208,9 +234,21 @@ export class BiometricAuthService {
       timeout: 60000,
     };
 
-    const assertion = (await navigator.credentials.get({
-      publicKey: publicKeyOptions,
-    })) as PublicKeyCredential | null;
+    let assertion: PublicKeyCredential | null;
+    try {
+      assertion = (await navigator.credentials.get({
+        publicKey: publicKeyOptions,
+      })) as PublicKeyCredential | null;
+    } catch (getErr) {
+      if (getErr instanceof TypeError) {
+        const { hints: _ignoredHints, ...legacyOptions } = publicKeyOptions;
+        assertion = (await navigator.credentials.get({
+          publicKey: legacyOptions,
+        })) as PublicKeyCredential | null;
+      } else {
+        throw getErr;
+      }
+    }
 
     if (!assertion || !assertion.rawId) {
       throw new Error('Biometric verification did not return an assertion.');
@@ -286,8 +324,19 @@ export class BiometricAuthService {
       };
     }
 
+    const inIframe = window.self !== window.top;
     const platformSupported = await this.isPlatformAuthenticatorAvailable();
     if (!platformSupported) {
+      const isRealMobile =
+        PhoneSettingsService.isIPhoneDevice() ||
+        (typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent || ''));
+      if (inIframe && isRealMobile) {
+        return {
+          status: 'iframe_blocked',
+          method,
+          message: `Open this app directly in ${method === 'faceid' ? 'Safari' : 'your browser'} to authenticate with device ${methodName}.`,
+        };
+      }
       return {
         status: 'unsupported',
         method,

@@ -1,6 +1,6 @@
-import { W as WebPlugin, b as buildRequestInit, E as Encoding } from "./index-CANFKtwF.js";
-import "./vendor-canvas-Bg4kmK37.js";
-import "./vendor-icons-AbieflsO.js";
+import { W as WebPlugin, b as buildRequestInit, E as Encoding } from "./index-VlX0KE_N.js";
+import "./vendor-canvas--47Moheq.js";
+import "./vendor-icons-Cfc7v2mT.js";
 import "./vendor-firebase-CsBT4PN2.js";
 function resolve(path) {
   const posix = path.split("/").filter((item) => item !== ".");

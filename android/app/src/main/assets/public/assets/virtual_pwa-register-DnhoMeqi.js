@@ -1,4 +1,4 @@
-import { _ as __vitePreload } from "./vendor-canvas-Bg4kmK37.js";
+import { _ as __vitePreload } from "./vendor-canvas--47Moheq.js";
 function registerSW(options = {}) {
   const {
     immediate = false,

@@ -1,6 +1,6 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/web-CBG8vYoG.js","assets/vendor-canvas-Bg4kmK37.js","assets/vendor-icons-AbieflsO.js","assets/vendor-firebase-CsBT4PN2.js","assets/web-Btv_ujrR.js","assets/web-DKpNPigR.js","assets/virtual_pwa-register-Dcg30mLj.js"])))=>i.map(i=>d[i]);
-import { _ as __vitePreload, h as html2canvas, E, a as html2canvas$1 } from "./vendor-canvas-Bg4kmK37.js";
-import { r as requireReact, g as getDefaultExportFromCjs, a as reactExports, B as Bell, X, U as Users, C as Check, P as Plus, b as ChevronDown, R as React, c as Phone, d as Building2, S as ShieldCheck, e as Store, f as Plane, h as ShoppingBag, F as Film, i as FileSpreadsheet, A as ArrowLeft, j as Building, k as UserPlus, l as Search, m as CircleCheck, n as Copy, o as ArrowRight, p as ArrowDown, q as ArrowUp, s as Scan, Q as QrCode, t as ChevronRight, u as Receipt$1, M as MessageSquare, v as Smartphone, w as PhoneCall, x as Sparkles, y as ArrowUpRight, z as ArrowDownLeft, D as ChevronLeft, E as CircleAlert, G as EyeOff, H as Eye, W as Wallet, I as Calculator, J as CirclePlus, T as Trash2, K as Delete, L as LoaderCircle, N as Tv, O as Wifi, V as Droplet, Z as Zap, Y as Image$1, _ as Stamp, $ as Upload, a0 as Link, a1 as RotateCcw, a2 as SlidersVertical, a3 as Minus, a4 as Feather, a5 as Download, a6 as Maximize2, a7 as Info, a8 as ExternalLink, a9 as CircleQuestionMark, aa as User, ab as ShieldAlert, ac as Flame, ad as UserCheck, ae as Layers, af as TextAlignStart, ag as Compass, ah as Star, ai as Shuffle, aj as PenLine, ak as CreditCard, al as Fingerprint, am as KeyRound, an as Lock, ao as Languages, ap as FileText, aq as LogOut, ar as Save, as as RotateCw, at as Share2, au as House, av as EllipsisVertical, aw as SlidersHorizontal, ax as Shield, ay as Globe, az as Move, aA as RefreshCw, aB as Printer, aC as Database, aD as CircleCheckBig, aE as Pen, aF as CircleX, aG as TrendingUp, aH as Activity, aI as OctagonAlert, aJ as ArrowLeftRight, aK as Ban, aL as VolumeX, aM as BatteryCharging, aN as Battery, aO as Bluetooth, aP as Clock, aQ as Vibrate, aR as Volume2, aS as Sun, aT as Moon, aU as CheckCheck, aV as Send, aW as Paperclip, aX as Smile, aY as Mic, aZ as Landmark, a_ as SquarePen, a$ as Settings, b0 as Palette, b1 as Type, b2 as Music, b3 as Heart, b4 as MessageCircle, b5 as Bookmark, b6 as Video, b7 as Play, b8 as ThumbsUp, b9 as ThumbsDown, ba as Voicemail, bb as Grid3x3, bc as MicOff, bd as Hexagon, be as PhoneIncoming, bf as Calendar, bg as Paintbrush, bh as LayoutGrid, bi as Trophy, bj as Award, bk as Gift, bl as BookUser, bm as Droplets, bn as Car, bo as GraduationCap, bp as Gamepad2, bq as HeartHandshake, br as Flashlight, bs as Camera, bt as AtSign, bu as Signal, bv as ZoomIn, bw as TriangleAlert, bx as FileJson, by as FileImage, bz as WifiOff } from "./vendor-icons-AbieflsO.js";
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/web-CON5pxuX.js","assets/vendor-canvas--47Moheq.js","assets/vendor-icons-Cfc7v2mT.js","assets/vendor-firebase-CsBT4PN2.js","assets/web-Di8TABU6.js","assets/web-BOLL-Khj.js","assets/virtual_pwa-register-DnhoMeqi.js"])))=>i.map(i=>d[i]);
+import { _ as __vitePreload, h as html2canvas, E, a as html2canvas$1 } from "./vendor-canvas--47Moheq.js";
+import { r as requireReact, g as getDefaultExportFromCjs, a as reactExports, B as Bell, X, U as Users, C as Check, P as Plus, b as ChevronDown, R as React, c as Phone, d as Building2, S as ShieldCheck, e as Store, f as Plane, h as ShoppingBag, F as Film, i as FileSpreadsheet, j as Sparkles, A as ArrowLeft, L as Lock, k as RotateCw, l as Share2, H as House, m as Star, E as EllipsisVertical, n as SlidersHorizontal, o as Shield, G as Globe, p as CircleCheck, q as Stamp, s as SlidersVertical, M as Minus, t as Feather, u as Move, v as RotateCcw, w as FileText, D as Download, x as Copy, y as RefreshCw, z as Upload, T as Trash2, I as Link, J as Printer, K as ArrowUp, N as ArrowDown, O as ArrowRight, Q as Save, V as Building, W as UserPlus, Y as Search, Z as Scan, _ as QrCode, $ as ChevronRight, a0 as Receipt$1, a1 as MessageSquare, a2 as Smartphone, a3 as PhoneCall, a4 as ArrowUpRight, a5 as ArrowDownLeft, a6 as ChevronLeft, a7 as CircleAlert, a8 as EyeOff, a9 as Eye, aa as Wallet, ab as Calculator, ac as CirclePlus, ad as Delete, ae as LoaderCircle, af as Tv, ag as Wifi, ah as Droplet, ai as Zap, aj as Image$1, ak as Maximize2, al as Info, am as ExternalLink, an as CircleQuestionMark, ao as User, ap as ShieldAlert, aq as Flame, ar as UserCheck, as as Layers, at as TextAlignStart, au as Compass, av as Shuffle, aw as PenLine, ax as CreditCard, ay as Fingerprint, az as KeyRound, aA as Languages, aB as LogOut, aC as Camera, aD as Database, aE as CircleCheckBig, aF as Pen, aG as CircleX, aH as TrendingUp, aI as Activity, aJ as OctagonAlert, aK as ArrowLeftRight, aL as Ban, aM as VolumeX, aN as BatteryCharging, aO as Battery, aP as Bluetooth, aQ as Clock, aR as Vibrate, aS as Volume2, aT as Sun, aU as Moon, aV as CheckCheck, aW as Send, aX as Paperclip, aY as Smile, aZ as Mic, a_ as Landmark, a$ as SquarePen, b0 as Settings, b1 as Palette, b2 as Type, b3 as Music, b4 as Heart, b5 as MessageCircle, b6 as Bookmark, b7 as Video, b8 as Play, b9 as ThumbsUp, ba as ThumbsDown, bb as Voicemail, bc as Grid3x3, bd as MicOff, be as Hexagon, bf as PhoneIncoming, bg as Calendar, bh as Paintbrush, bi as LayoutGrid, bj as Trophy, bk as Award, bl as Gift, bm as BookUser, bn as Droplets, bo as Car, bp as GraduationCap, bq as Gamepad2, br as HeartHandshake, bs as Flashlight, bt as AtSign, bu as Signal, bv as ZoomIn, bw as TriangleAlert, bx as FileJson, by as FileImage, bz as WifiOff } from "./vendor-icons-Cfc7v2mT.js";
 import { g as getApps, i as initializeApp, a as getApp, b as initializeFirestore, c as getFirestore, d as getAuth, e as doc, s as setDoc, f as serverTimestamp, h as collection, j as getDocs } from "./vendor-firebase-CsBT4PN2.js";
 (function polyfill() {
   const relList = document.createElement("link").relList;
@@ -27929,7 +27929,7 @@ const _SystemBarsService = class _SystemBarsService {
         isDarkStyle = false;
         break;
       case "receipt":
-        statusBarColor = "#70189F";
+        statusBarColor = "#7A1FA2";
         navBarColor = "#ffffff";
         isDarkStyle = true;
         break;
@@ -28048,6 +28048,324 @@ _SystemBarsService.currentConfig = {
 };
 _SystemBarsService.activeViewName = "auth";
 let SystemBarsService = _SystemBarsService;
+const DeviceBiometricsNative = registerPlugin("DeviceBiometrics");
+const CRED_STORAGE_PREFIX = "cbe_device_biometric_cred_v1_";
+const DEVICE_CRED_KEY = "cbe_device_biometric_cred_v1_device";
+function bytesToBase64Url(bytes) {
+  let binary = "";
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function base64UrlToBytes(base64url) {
+  const padded = base64url.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((base64url.length + 3) % 4);
+  const binary = atob(padded);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+function generateChallenge(size = 32) {
+  const buf = new Uint8Array(size);
+  if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
+    crypto.getRandomValues(buf);
+  } else {
+    for (let i = 0; i < size; i++) {
+      buf[i] = Math.floor(Math.random() * 256);
+    }
+  }
+  return buf;
+}
+function utf8ToBytes(value) {
+  return new TextEncoder().encode(value);
+}
+class BiometricAuthService {
+  /**
+   * Returns 'faceid' on iPhone/iPad (native iOS, physical iOS device, or iPhone simulator preset),
+   * and 'fingerprint' on Android devices/presets.
+   * Hardware OS always takes priority on real mobile devices.
+   */
+  static getBiometricMethod() {
+    if (typeof window !== "undefined") {
+      if (Capacitor.isNativePlatform()) {
+        const platform = Capacitor.getPlatform();
+        if (platform === "ios") return "faceid";
+        if (platform === "android") return "fingerprint";
+      }
+      if (PhoneSettingsService.isIPhoneDevice()) {
+        return "faceid";
+      }
+      if (typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent || "")) {
+        return "fingerprint";
+      }
+    }
+    return PhoneSettingsService.isIPhoneMode() ? "faceid" : "fingerprint";
+  }
+  static getDeviceBiometricName(method = this.getBiometricMethod()) {
+    return method === "faceid" ? "Face ID" : "Fingerprint";
+  }
+  static getStoredCredential(userId) {
+    if (typeof window === "undefined") return null;
+    try {
+      const userRaw = localStorage.getItem(`${CRED_STORAGE_PREFIX}${userId}`);
+      if (userRaw) {
+        const parsed = JSON.parse(userRaw);
+        if ((parsed == null ? void 0 : parsed.credId) && (parsed == null ? void 0 : parsed.rpId)) return parsed;
+      }
+      const deviceRaw = localStorage.getItem(DEVICE_CRED_KEY);
+      if (deviceRaw) {
+        const parsed = JSON.parse(deviceRaw);
+        if ((parsed == null ? void 0 : parsed.credId) && (parsed == null ? void 0 : parsed.rpId)) return parsed;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+  static saveStoredCredential(userId, cred) {
+    if (typeof window === "undefined") return;
+    try {
+      const serialized = JSON.stringify(cred);
+      localStorage.setItem(`${CRED_STORAGE_PREFIX}${userId}`, serialized);
+      localStorage.setItem(DEVICE_CRED_KEY, serialized);
+    } catch {
+    }
+  }
+  static clearStoredCredential(userId) {
+    if (typeof window === "undefined") return;
+    try {
+      localStorage.removeItem(`${CRED_STORAGE_PREFIX}${userId}`);
+      localStorage.removeItem(DEVICE_CRED_KEY);
+    } catch {
+    }
+  }
+  static async isPlatformAuthenticatorAvailable() {
+    if (typeof window === "undefined" || typeof window.PublicKeyCredential === "undefined" || !navigator.credentials) {
+      return false;
+    }
+    if (typeof window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable !== "function") {
+      return false;
+    }
+    try {
+      return await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+    } catch {
+      return false;
+    }
+  }
+  static async enrollPlatformCredential(user, method) {
+    const rpId = window.location.hostname;
+    const userIdBytes = utf8ToBytes(user.id || "cbe_user");
+    const challenge = generateChallenge(32);
+    const publicKeyOptions = {
+      challenge: challenge.buffer,
+      rp: {
+        name: "CBE Mobile Banking",
+        id: rpId
+      },
+      user: {
+        id: userIdBytes.buffer,
+        name: user.accountNumber || user.email || user.id,
+        displayName: user.name || "CBE Customer"
+      },
+      pubKeyCredParams: [
+        { type: "public-key", alg: -7 },
+        // ES256 (iOS Secure Enclave / Android Keystore)
+        { type: "public-key", alg: -257 }
+        // RS256 fallback
+      ],
+      authenticatorSelection: {
+        authenticatorAttachment: "platform",
+        userVerification: "required",
+        residentKey: "preferred",
+        requireResidentKey: false
+      },
+      hints: ["client-device"],
+      timeout: 6e4,
+      attestation: "none"
+    };
+    let credential;
+    try {
+      credential = await navigator.credentials.create({
+        publicKey: publicKeyOptions
+      });
+    } catch (createErr) {
+      if (createErr instanceof TypeError) {
+        const { hints: _ignoredHints, ...legacyOptions } = publicKeyOptions;
+        credential = await navigator.credentials.create({
+          publicKey: legacyOptions
+        });
+      } else {
+        throw createErr;
+      }
+    }
+    if (!credential || !credential.rawId) {
+      throw new Error("Device biometric registration returned empty credential.");
+    }
+    const credId = bytesToBase64Url(new Uint8Array(credential.rawId));
+    this.saveStoredCredential(user.id, {
+      credId,
+      rpId,
+      method,
+      createdAt: (/* @__PURE__ */ new Date()).toISOString()
+    });
+  }
+  static async verifyPlatformCredential(credId, rpId) {
+    const challenge = generateChallenge(32);
+    const idBytes = base64UrlToBytes(credId);
+    const publicKeyOptions = {
+      challenge: challenge.buffer,
+      rpId,
+      allowCredentials: [
+        {
+          id: idBytes.buffer,
+          type: "public-key",
+          transports: ["internal"]
+        }
+      ],
+      hints: ["client-device"],
+      userVerification: "required",
+      timeout: 6e4
+    };
+    let assertion;
+    try {
+      assertion = await navigator.credentials.get({
+        publicKey: publicKeyOptions
+      });
+    } catch (getErr) {
+      if (getErr instanceof TypeError) {
+        const { hints: _ignoredHints, ...legacyOptions } = publicKeyOptions;
+        assertion = await navigator.credentials.get({
+          publicKey: legacyOptions
+        });
+      } else {
+        throw getErr;
+      }
+    }
+    if (!assertion || !assertion.rawId) {
+      throw new Error("Biometric verification did not return an assertion.");
+    }
+  }
+  /**
+   * Activates the real OS device security login system:
+   * 1. Native Capacitor (iOS LAContext Face ID / Android BiometricPrompt Fingerprint) when running in native app
+   * 2. WebAuthn Platform Authenticator (Face ID in iOS Safari/PWA / Fingerprint in Android Chrome)
+   */
+  static async authenticateWithDevice(user) {
+    const method = this.getBiometricMethod();
+    const methodName = this.getDeviceBiometricName(method);
+    if (typeof window !== "undefined" && Capacitor.isNativePlatform()) {
+      try {
+        const res = await DeviceBiometricsNative.authenticate({
+          reason: method === "faceid" ? "Sign in to Commercial Bank of Ethiopia" : "Authenticate to continue."
+        });
+        const resolvedMethod = (res == null ? void 0 : res.method) === "faceid" ? "faceid" : (res == null ? void 0 : res.method) === "fingerprint" ? "fingerprint" : method;
+        if (res == null ? void 0 : res.verified) {
+          return { status: "success", method: resolvedMethod };
+        }
+        if (res == null ? void 0 : res.unavailable) {
+          return {
+            status: "unsupported",
+            method: resolvedMethod,
+            message: res.error || `${methodName} is not configured on this device.`
+          };
+        }
+        if (res == null ? void 0 : res.cancelled) {
+          return {
+            status: "cancelled",
+            method: resolvedMethod,
+            message: `${methodName} verification was cancelled.`
+          };
+        }
+        return {
+          status: "error",
+          method: resolvedMethod,
+          message: (res == null ? void 0 : res.error) || `${methodName} verification failed.`
+        };
+      } catch (nativeErr) {
+        const errMsg = nativeErr instanceof Error ? nativeErr.message : String(nativeErr);
+        if (!/not implemented|UNIMPLEMENTED/i.test(errMsg)) {
+          return {
+            status: "error",
+            method,
+            message: errMsg || `${methodName} verification failed.`
+          };
+        }
+      }
+    }
+    if (typeof window === "undefined" || !window.isSecureContext || !navigator.credentials || !window.PublicKeyCredential) {
+      return {
+        status: "unsupported",
+        method,
+        message: `${methodName} requires a secure HTTPS browser with device biometrics enabled.`
+      };
+    }
+    const inIframe = window.self !== window.top;
+    const platformSupported = await this.isPlatformAuthenticatorAvailable();
+    if (!platformSupported) {
+      const isRealMobile = PhoneSettingsService.isIPhoneDevice() || typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent || "");
+      if (inIframe && isRealMobile) {
+        return {
+          status: "iframe_blocked",
+          method,
+          message: `Open this app directly in ${method === "faceid" ? "Safari" : "your browser"} to authenticate with device ${methodName}.`
+        };
+      }
+      return {
+        status: "unsupported",
+        method,
+        message: `${methodName} is not configured on this device/browser. Please enter your PIN.`
+      };
+    }
+    const currentHost = window.location.hostname;
+    const stored = this.getStoredCredential(user.id);
+    const startedAt = Date.now();
+    try {
+      if (stored && stored.rpId === currentHost) {
+        try {
+          await this.verifyPlatformCredential(stored.credId, currentHost);
+          return { status: "success", method };
+        } catch (verifyErr) {
+          const errName = verifyErr instanceof DOMException ? verifyErr.name : "";
+          if (errName === "InvalidStateError" || errName === "NotFoundError") {
+            this.clearStoredCredential(user.id);
+            await this.enrollPlatformCredential(user, method);
+            return { status: "success", method };
+          }
+          throw verifyErr;
+        }
+      } else {
+        await this.enrollPlatformCredential(user, method);
+        return { status: "success", method };
+      }
+    } catch (err) {
+      const elapsedMs = Date.now() - startedAt;
+      const errName = err instanceof DOMException ? err.name : "";
+      const errMsg = err instanceof Error ? err.message : String(err);
+      const inIframe2 = window.self !== window.top;
+      if (inIframe2 && (errName === "SecurityError" || /feature is not enabled|permissions policy|not allowed in this document|publickey-credentials/i.test(errMsg) || errName === "NotAllowedError" && elapsedMs < 250)) {
+        return {
+          status: "iframe_blocked",
+          method,
+          message: `Open this app directly in ${method === "faceid" ? "Safari" : "your browser"} to authenticate with device ${methodName}.`
+        };
+      }
+      if (errName === "NotAllowedError" || errName === "AbortError") {
+        return {
+          status: "cancelled",
+          method,
+          message: `${methodName} verification was cancelled or not recognized.`
+        };
+      }
+      return {
+        status: "error",
+        method,
+        message: errMsg || `${methodName} verification failed. Please use your PIN.`
+      };
+    }
+  }
+}
 const CBE_DEFAULT_LOGO_BASE64 = "data:image/png;base64,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";
 const CbeGoldenEmblemSvg = ({ className = "w-10 h-10", style }) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
   "svg",
@@ -28208,9 +28526,41 @@ function CbeFingerprintIcon({
     }
   );
 }
+function CbeFaceIdIcon({
+  size = 28,
+  strokeColor = "#ffffff",
+  strokeWidth = 1.9,
+  className = ""
+}) {
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "svg",
+    {
+      width: size,
+      height: size,
+      viewBox: "0 0 24 24",
+      fill: "none",
+      stroke: strokeColor,
+      strokeWidth,
+      strokeLinecap: "round",
+      strokeLinejoin: "round",
+      className,
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M4 8.2V6.2A2.2 2.2 0 0 1 6.2 4h2" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M15.8 4h2A2.2 2.2 0 0 1 20 6.2v2" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M4 15.8v2A2.2 2.2 0 0 0 6.2 20h2" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M15.8 20h2A2.2 2.2 0 0 0 20 17.8v-2" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M9 9.2v1.6" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M15 9.2v1.6" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12 9.2v3.3a1 1 0 0 1-1 1h-.5" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M8.8 15.8a4.3 4.3 0 0 0 6.4 0" })
+      ]
+    }
+  );
+}
 function Auth({ onLoginSuccess }) {
   const [pin, setPin] = reactExports.useState("");
-  const [showError, setShowError] = reactExports.useState(true);
+  const [loginMode, setLoginMode] = reactExports.useState("biometric");
+  const [showError, setShowError] = reactExports.useState(false);
   const [errorMessage, setErrorMessage] = reactExports.useState("This field is required");
   const [showKeypad, setShowKeypad] = reactExports.useState(false);
   const [selectedLanguage, setSelectedLanguage] = reactExports.useState("English");
@@ -28218,14 +28568,15 @@ function Auth({ onLoginSuccess }) {
   const [showAccountSwitcher, setShowAccountSwitcher] = reactExports.useState(false);
   const [showNotificationToast, setShowNotificationToast] = reactExports.useState(false);
   const [isBiometricScanning, setIsBiometricScanning] = reactExports.useState(false);
+  const [androidFingerprintPhase, setAndroidFingerprintPhase] = reactExports.useState(null);
+  const [iframeBlockedNotice, setIframeBlockedNotice] = reactExports.useState(null);
   const [isIOSDevice, setIsIOSDevice] = reactExports.useState(() => {
     if (typeof window === "undefined") return false;
-    const ua = window.navigator.userAgent || "";
-    const isApple = /iPhone|iPad|iPod/.test(ua) || window.navigator.platform === "MacIntel" && window.navigator.maxTouchPoints > 1;
-    const savedSettings = localStorage.getItem("tana_phone_settings_v1");
-    const isIPhonePreset = savedSettings ? savedSettings.includes('"iphone"') : false;
-    return isApple || isIPhonePreset;
+    return PhoneSettingsService.isIPhoneDevice() || PhoneSettingsService.isIPhoneMode();
   });
+  const [biometricMethod, setBiometricMethod] = reactExports.useState(
+    () => BiometricAuthService.getBiometricMethod()
+  );
   const [usersList, setUsersList] = reactExports.useState(() => LocalDb.getUsers());
   const [selectedUser, setSelectedUser] = reactExports.useState(() => {
     const list = LocalDb.getUsers();
@@ -28252,12 +28603,13 @@ function Auth({ onLoginSuccess }) {
       setUsersList(LocalDb.getUsers());
     };
     const handleSettingsChange = () => {
-      const ua = window.navigator.userAgent || "";
-      const isApple = /iPhone|iPad|iPod/.test(ua) || window.navigator.platform === "MacIntel" && window.navigator.maxTouchPoints > 1;
-      const savedSettings = localStorage.getItem("tana_phone_settings_v1");
-      const isIPhonePreset = savedSettings ? savedSettings.includes('"iphone"') : false;
-      setIsIOSDevice(isApple || isIPhonePreset);
+      setIsIOSDevice(PhoneSettingsService.isIPhoneDevice() || PhoneSettingsService.isIPhoneMode());
+      setBiometricMethod(BiometricAuthService.getBiometricMethod());
     };
+    const unsubPhoneSettings = PhoneSettingsService.subscribe(() => {
+      setIsIOSDevice(PhoneSettingsService.isIPhoneDevice() || PhoneSettingsService.isIPhoneMode());
+      setBiometricMethod(BiometricAuthService.getBiometricMethod());
+    });
     window.addEventListener("storage", handleUpdate);
     window.addEventListener("cbe_account_switched", handleUpdate);
     window.addEventListener("tana_phone_settings_changed", handleSettingsChange);
@@ -28272,6 +28624,7 @@ function Auth({ onLoginSuccess }) {
       clearTimeout(t1);
       clearTimeout(t2);
       clearTimeout(t3);
+      unsubPhoneSettings();
       window.removeEventListener("storage", handleUpdate);
       window.removeEventListener("cbe_account_switched", handleUpdate);
       window.removeEventListener("tana_phone_settings_changed", handleSettingsChange);
@@ -28280,7 +28633,7 @@ function Auth({ onLoginSuccess }) {
   }, []);
   reactExports.useEffect(() => {
     const handleKeyDown = (e) => {
-      if (showAccountSwitcher) return;
+      if (showAccountSwitcher || loginMode !== "pin") return;
       if (e.key >= "0" && e.key <= "9") {
         e.preventDefault();
         setShowError(false);
@@ -28302,7 +28655,7 @@ function Auth({ onLoginSuccess }) {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [pin, selectedUser, showAccountSwitcher]);
+  }, [pin, selectedUser, showAccountSwitcher, loginMode]);
   const handleKeypadPress = (digit) => {
     setShowError(false);
     if (pin.length < 6) {
@@ -28334,23 +28687,63 @@ function Auth({ onLoginSuccess }) {
     localStorage.setItem("tana_active_user_id", selectedUser.id);
     onLoginSuccess(selectedUser);
   };
-  const handleBiometricsLogin = () => {
+  const handleBiometricsLogin = async () => {
+    if (isBiometricScanning || androidFingerprintPhase) return;
     setIsBiometricScanning(true);
     setShowError(false);
-    setTimeout(() => {
-      setIsBiometricScanning(false);
-      LocalDb.addAuditLog(selectedUser.id, selectedUser.email, "BIOMETRIC_LOGIN", `User ${selectedUser.name} logged in via CBE Biometrics (Fingerprint).`);
+    let authTimer = null;
+    if (biometricMethod === "fingerprint") {
+      setAndroidFingerprintPhase("scanning");
+      authTimer = setTimeout(() => {
+        setAndroidFingerprintPhase((prev) => prev === "scanning" ? "authenticating" : prev);
+      }, 1100);
+    }
+    const result = await BiometricAuthService.authenticateWithDevice(selectedUser);
+    if (authTimer) clearTimeout(authTimer);
+    if (result.status === "success") {
+      const methodLabel = result.method === "faceid" ? "Face ID" : "Fingerprint";
+      LocalDb.addAuditLog(
+        selectedUser.id,
+        selectedUser.email,
+        "BIOMETRIC_LOGIN",
+        `User ${selectedUser.name} logged in via device ${methodLabel} authentication.`
+      );
       localStorage.setItem("tana_active_user_id", selectedUser.id);
+      if (result.method === "fingerprint") {
+        setAndroidFingerprintPhase("authenticating");
+        await new Promise((resolve) => setTimeout(resolve, 260));
+        setAndroidFingerprintPhase("authenticated");
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        setAndroidFingerprintPhase(null);
+      }
+      setIsBiometricScanning(false);
       onLoginSuccess(selectedUser);
-    }, 600);
+      return;
+    }
+    setAndroidFingerprintPhase(null);
+    setIsBiometricScanning(false);
+    if (result.status === "iframe_blocked") {
+      setIframeBlockedNotice(result.method);
+      return;
+    }
+    setShowError(true);
+    setErrorMessage(
+      result.message || `${BiometricAuthService.getDeviceBiometricName(result.method)} verification failed.`
+    );
   };
   const handleSelectAccount = (user) => {
     setSelectedUser(user);
     localStorage.setItem("tana_active_user_id", user.id);
     setShowAccountSwitcher(false);
-    setShowError(true);
+    setShowError(false);
     setErrorMessage("This field is required");
     setPin("");
+  };
+  const handleOpenPinMode = () => {
+    setShowError(false);
+    setErrorMessage("This field is required");
+    setLoginMode("pin");
+    setShowKeypad(true);
   };
   return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "h-full min-h-[100dvh] w-full bg-white text-neutral-900 flex flex-col justify-between relative overflow-hidden select-none font-sans", children: [
     showNotificationToast && /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -28555,80 +28948,131 @@ function Auth({ onLoginSuccess }) {
         ]
       }
     ),
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: `px-6 max-w-md mx-auto w-full flex flex-col justify-center ${showKeypad ? "pt-2 pb-1" : "py-4 flex-1 my-auto"}`, children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col items-center text-center", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-18 h-18 sm:w-20 sm:h-20 flex items-center justify-center mb-2.5", children: /* @__PURE__ */ jsxRuntimeExports.jsx(CbeLogo, { className: "w-18 h-18 sm:w-20 sm:h-20 object-contain drop-shadow-xs" }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-[#c09349] font-semibold text-[20px] sm:text-[21px] tracking-normal leading-tight font-['Noto_Serif_Ethiopic','Noto_Sans_Ethiopic',serif]", children: "የኢትዮጵያ ንግድ ባንክ" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-[#374151] font-semibold text-[10.5px] sm:text-[11px] tracking-[0.24em] uppercase mt-1 font-sans", children: "COMMERCIAL BANK OF ETHIOPIA" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-32 h-[1px] bg-neutral-200/90 mt-3.5 mb-3.5" }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-[#8e8e93] font-normal text-[15.5px] font-sans", children: "Welcome back" })
-      ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-5 mb-1", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          "div",
+    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+      "div",
+      {
+        className: `px-6 max-w-md mx-auto w-full flex flex-col justify-center ${loginMode === "pin" && showKeypad ? "pt-2 pb-1" : loginMode === "pin" ? "py-4 flex-1 my-auto" : "pt-8 sm:pt-10 pb-2"}`,
+        children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col items-center text-center", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-18 h-18 sm:w-20 sm:h-20 flex items-center justify-center mb-3", children: /* @__PURE__ */ jsxRuntimeExports.jsx(CbeLogo, { className: "w-18 h-18 sm:w-20 sm:h-20 object-contain drop-shadow-xs" }) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-[#c09349] font-semibold text-[20px] sm:text-[21px] tracking-normal leading-tight font-['Noto_Serif_Ethiopic','Noto_Sans_Ethiopic',serif]", children: "የኢትዮጵያ ንግድ ባንክ" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-[#374151] font-semibold text-[10.5px] sm:text-[11px] tracking-[0.24em] uppercase mt-1.5 font-sans", children: "COMMERCIAL BANK OF ETHIOPIA" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-40 h-[1px] bg-neutral-200/90 mt-4 mb-4" }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-[#6b7280] font-normal text-[16px] font-sans", children: "Welcome back" })
+          ] }),
+          loginMode === "pin" && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-5 mb-1 animate-in fade-in duration-150", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "div",
+              {
+                id: "cbe-pin-input-box",
+                onClick: () => setShowKeypad(true),
+                className: `w-full rounded-[18px] bg-white border py-3.5 px-4 flex items-center gap-3 transition-all cursor-pointer shadow-xs ${showError ? "border-[#e05347] border-[1.5px] bg-[#fffcfc]" : showKeypad ? "border-[#c58c2b] ring-2 ring-[#c58c2b]/20" : "border-neutral-300 hover:border-neutral-400"}`,
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "19", height: "19", viewBox: "0 0 24 24", fill: "none", className: "shrink-0", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "path",
+                      {
+                        d: "M7 10V7a5 5 0 0 1 10 0v3",
+                        stroke: "#d49a37",
+                        strokeWidth: "2.2",
+                        strokeLinecap: "round"
+                      }
+                    ),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "rect",
+                      {
+                        x: "4.5",
+                        y: "10",
+                        width: "15",
+                        height: "11",
+                        rx: "2.5",
+                        fill: "#d49a37"
+                      }
+                    ),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "14.5", r: "1.2", fill: "#ffffff" }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12 15.5v2", stroke: "#ffffff", strokeWidth: "1.5", strokeLinecap: "round" })
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex-1 flex items-center text-neutral-800 text-[15px] font-normal min-h-[24px]", children: pin.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center text-[#9ca3af] tracking-normal font-normal", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "w-[1.5px] h-5 bg-[#e05347] animate-pulse mr-1.5" }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "tracking-wide", children: "PIN" })
+                  ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+                    Array.from({ length: pin.length }).map((_, i) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "span",
+                      {
+                        className: "w-2.5 h-2.5 rounded-full bg-neutral-800 inline-block"
+                      },
+                      i
+                    )),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "w-[1.5px] h-5 bg-[#e05347] animate-pulse ml-0.5" })
+                  ] }) }),
+                  pin.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: (e) => {
+                        e.stopPropagation();
+                        setPin("");
+                        setShowError(true);
+                        setErrorMessage("This field is required");
+                      },
+                      className: "text-neutral-400 hover:text-neutral-600 p-1 cursor-pointer",
+                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "w-4 h-4" })
+                    }
+                  )
+                ]
+              }
+            ),
+            showError && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-[#e05347] text-[12px] font-normal mt-2 text-center animate-in fade-in", children: errorMessage })
+          ] })
+        ]
+      }
+    ),
+    loginMode === "biometric" && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "px-6 max-w-md mx-auto w-full flex-1 flex flex-col justify-between pb-6 animate-in fade-in duration-150", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-1 flex flex-col items-center justify-center pb-6", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
           {
-            id: "cbe-pin-input-box",
-            onClick: () => setShowKeypad(true),
-            className: `w-full rounded-[18px] bg-white border py-3.5 px-4 flex items-center gap-3 transition-all cursor-pointer shadow-xs ${showError ? "border-[#e05347] border-[1.5px] bg-[#fffcfc]" : showKeypad ? "border-[#c58c2b] ring-2 ring-[#c58c2b]/20" : "border-neutral-300 hover:border-neutral-400"}`,
-            children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { width: "19", height: "19", viewBox: "0 0 24 24", fill: "none", className: "shrink-0", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  "path",
-                  {
-                    d: "M7 10V7a5 5 0 0 1 10 0v3",
-                    stroke: "#d49a37",
-                    strokeWidth: "2.2",
-                    strokeLinecap: "round"
-                  }
-                ),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  "rect",
-                  {
-                    x: "4.5",
-                    y: "10",
-                    width: "15",
-                    height: "11",
-                    rx: "2.5",
-                    fill: "#d49a37"
-                  }
-                ),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "14.5", r: "1.2", fill: "#ffffff" }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12 15.5v2", stroke: "#ffffff", strokeWidth: "1.5", strokeLinecap: "round" })
-              ] }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex-1 flex items-center text-neutral-800 text-[15px] font-normal min-h-[24px]", children: pin.length === 0 ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center text-[#9ca3af] tracking-normal font-normal", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "w-[1.5px] h-5 bg-[#e05347] animate-pulse mr-1.5" }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "tracking-wide", children: "PIN" })
-              ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
-                Array.from({ length: pin.length }).map((_, i) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  "span",
-                  {
-                    className: "w-2.5 h-2.5 rounded-full bg-neutral-800 inline-block"
-                  },
-                  i
-                )),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "w-[1.5px] h-5 bg-[#e05347] animate-pulse ml-0.5" })
-              ] }) }),
-              pin.length > 0 && /* @__PURE__ */ jsxRuntimeExports.jsx(
-                "button",
-                {
-                  type: "button",
-                  onClick: (e) => {
-                    e.stopPropagation();
-                    setPin("");
-                    setShowError(true);
-                    setErrorMessage("This field is required");
-                  },
-                  className: "text-neutral-400 hover:text-neutral-600 p-1 cursor-pointer",
-                  children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "w-4 h-4" })
-                }
-              )
-            ]
+            id: "btn-use-biometrics",
+            type: "button",
+            "aria-label": "Use Biometrics",
+            onClick: handleBiometricsLogin,
+            disabled: isBiometricScanning,
+            className: `w-[84px] h-[84px] rounded-full bg-[#841ca6]/18 p-[5px] flex items-center justify-center transition-all cursor-pointer active:scale-95 ${isBiometricScanning ? "animate-pulse ring-4 ring-purple-300/60" : "hover:bg-[#841ca6]/24"}`,
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "w-full h-full rounded-full bg-[#841ca6] hover:bg-[#731693] border-[2px] border-white flex items-center justify-center text-white shadow-sm transition-colors", children: biometricMethod === "faceid" ? /* @__PURE__ */ jsxRuntimeExports.jsx(CbeFaceIdIcon, { size: 35, strokeColor: "#ffffff", strokeWidth: 1.9 }) : /* @__PURE__ */ jsxRuntimeExports.jsx(CbeFingerprintIcon, { size: 37, strokeColor: "#ffffff", strokeWidth: 1.9 }) })
           }
         ),
-        showError && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-[#e05347] text-[12px] font-normal mt-2 text-center animate-in fade-in", children: errorMessage })
-      ] })
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
+          {
+            type: "button",
+            onClick: handleBiometricsLogin,
+            disabled: isBiometricScanning,
+            className: "text-[#6b7280] text-[11.5px] font-semibold tracking-[0.18em] uppercase mt-4 cursor-pointer hover:text-[#70189F] transition font-sans disabled:opacity-70",
+            children: "USE BIOMETRICS"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
+          {
+            id: "btn-use-pin",
+            type: "button",
+            onClick: handleOpenPinMode,
+            className: "text-[#6b7280] hover:text-[#1f2937] text-[14px] font-medium underline underline-offset-[4px] decoration-[#6b7280]/75 mt-5 cursor-pointer transition font-sans",
+            children: "Use PIN"
+          }
+        ),
+        showError && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-[#e05347] text-[12px] font-normal mt-4 text-center max-w-xs animate-in fade-in", children: errorMessage })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(
+        "div",
+        {
+          style: { paddingBottom: "max(calc(env(safe-area-inset-bottom, 0px) + 8px), 16px)" },
+          className: "text-center text-[#737882] text-[12px] font-normal font-sans",
+          children: "© Commercial Bank of Ethiopia"
+        }
+      )
     ] }),
-    !showKeypad && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "px-6 max-w-md mx-auto w-full flex-1 flex flex-col justify-between pb-6 animate-in fade-in duration-150", children: [
+    loginMode === "pin" && !showKeypad && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "px-6 max-w-md mx-auto w-full flex-1 flex flex-col justify-between pb-6 animate-in fade-in duration-150", children: [
       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col items-center mt-6", children: [
         /* @__PURE__ */ jsxRuntimeExports.jsx(
           "button",
@@ -28639,7 +29083,7 @@ function Auth({ onLoginSuccess }) {
             onClick: handleBiometricsLogin,
             disabled: isBiometricScanning,
             className: `w-14 h-14 rounded-full bg-[#70189F] hover:bg-[#5e1385] active:scale-95 text-white flex items-center justify-center shadow-md transition-all cursor-pointer relative ${isBiometricScanning ? "animate-pulse ring-4 ring-purple-300" : ""}`,
-            children: /* @__PURE__ */ jsxRuntimeExports.jsx(CbeFingerprintIcon, { size: 32, strokeColor: "#ffffff", strokeWidth: 1.9 })
+            children: biometricMethod === "faceid" ? /* @__PURE__ */ jsxRuntimeExports.jsx(CbeFaceIdIcon, { size: 30, strokeColor: "#ffffff", strokeWidth: 1.9 }) : /* @__PURE__ */ jsxRuntimeExports.jsx(CbeFingerprintIcon, { size: 32, strokeColor: "#ffffff", strokeWidth: 1.9 })
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -28647,8 +29091,22 @@ function Auth({ onLoginSuccess }) {
           {
             type: "button",
             onClick: handleBiometricsLogin,
-            className: "text-[#1f2937] text-[11px] font-bold tracking-[0.16em] uppercase mt-3 cursor-pointer hover:text-[#70189F] transition font-sans",
-            children: isBiometricScanning ? "Scanning Fingerprint..." : "USE BIOMETRICS"
+            disabled: isBiometricScanning,
+            className: "text-[#1f2937] text-[11px] font-bold tracking-[0.16em] uppercase mt-3 cursor-pointer hover:text-[#70189F] transition font-sans disabled:opacity-70",
+            children: "USE BIOMETRICS"
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "button",
+          {
+            type: "button",
+            onClick: () => {
+              setShowError(false);
+              setShowKeypad(false);
+              setLoginMode("biometric");
+            },
+            className: "text-[#6b7280] hover:text-[#1f2937] text-xs font-medium underline underline-offset-4 mt-3 cursor-pointer font-sans",
+            children: "Back to Biometrics"
           }
         )
       ] }),
@@ -28679,7 +29137,7 @@ function Auth({ onLoginSuccess }) {
         )
       ] })
     ] }),
-    showKeypad && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    loginMode === "pin" && showKeypad && /* @__PURE__ */ jsxRuntimeExports.jsxs(
       "div",
       {
         style: { paddingBottom: "max(calc(env(safe-area-inset-bottom, 0px) + 12px), 24px)" },
@@ -28744,9 +29202,10 @@ function Auth({ onLoginSuccess }) {
               {
                 type: "button",
                 onClick: handleBiometricsLogin,
-                className: "flex items-center gap-1.5 text-xs font-bold text-[#70189F] hover:underline cursor-pointer",
+                disabled: isBiometricScanning,
+                className: "flex items-center gap-1.5 text-xs font-bold text-[#70189F] hover:underline cursor-pointer disabled:opacity-70",
                 children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(CbeFingerprintIcon, { size: 18, strokeColor: "#70189F", strokeWidth: 2 }),
+                  biometricMethod === "faceid" ? /* @__PURE__ */ jsxRuntimeExports.jsx(CbeFaceIdIcon, { size: 18, strokeColor: "#70189F", strokeWidth: 2 }) : /* @__PURE__ */ jsxRuntimeExports.jsx(CbeFingerprintIcon, { size: 18, strokeColor: "#70189F", strokeWidth: 2 }),
                   /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Use Biometrics" })
                 ]
               }
@@ -28762,6 +29221,98 @@ function Auth({ onLoginSuccess }) {
             )
           ] })
         ]
+      }
+    ),
+    androidFingerprintPhase && /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "div",
+      {
+        className: `fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-6 pointer-events-none animate-in fade-in duration-150 ${androidFingerprintPhase === "authenticated" ? "" : "pb-28 sm:pb-24"}`,
+        children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-[86%] max-w-[318px] min-h-[168px] rounded-[24px] bg-white shadow-[0_18px_48px_rgba(0,0,0,0.28)] px-6 py-7 flex flex-col items-center justify-center text-center", children: androidFingerprintPhase === "authenticated" ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-[70px] h-[70px] rounded-full bg-[#22c55e] flex items-center justify-center shadow-sm animate-in zoom-in-75 duration-200", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Check, { className: "w-10 h-10 text-white stroke-[3]" }) }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-[#22c55e] text-[15.5px] font-medium mt-4 tracking-normal", children: "Authenticated!" })
+        ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative w-[82px] h-[82px] flex items-center justify-center", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "svg",
+              {
+                className: "absolute inset-0 w-full h-full animate-spin",
+                style: { animationDuration: "1.1s" },
+                viewBox: "0 0 84 84",
+                fill: "none",
+                children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "circle",
+                  {
+                    cx: "42",
+                    cy: "42",
+                    r: "38",
+                    stroke: "#dc2626",
+                    strokeWidth: "2.6",
+                    strokeLinecap: "round",
+                    strokeDasharray: "112 130"
+                  }
+                )
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(CbeFingerprintIcon, { size: 46, strokeColor: "#7c22a8", strokeWidth: 2 })
+          ] }),
+          androidFingerprintPhase === "authenticating" && /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-[#6b7280] text-[14.5px] font-medium mt-3.5 animate-in fade-in duration-150", children: "Authenticating..." })
+        ] }) })
+      }
+    ),
+    iframeBlockedNotice && /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "div",
+      {
+        onClick: () => setIframeBlockedNotice(null),
+        className: "fixed inset-0 z-50 bg-black/45 backdrop-blur-[2px] flex items-center justify-center px-5 animate-in fade-in duration-150",
+        children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "div",
+          {
+            onClick: (e) => e.stopPropagation(),
+            className: "w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl border border-neutral-100 text-center",
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-14 h-14 rounded-full bg-purple-100 text-[#70189F] flex items-center justify-center mx-auto mb-3", children: iframeBlockedNotice === "faceid" ? /* @__PURE__ */ jsxRuntimeExports.jsx(CbeFaceIdIcon, { size: 28, strokeColor: "#70189F", strokeWidth: 2 }) : /* @__PURE__ */ jsxRuntimeExports.jsx(CbeFingerprintIcon, { size: 30, strokeColor: "#70189F", strokeWidth: 2 }) }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("h3", { className: "text-base font-bold text-neutral-900", children: [
+                "Open Directly for Device ",
+                iframeBlockedNotice === "faceid" ? "Face ID" : "Fingerprint"
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs text-neutral-600 mt-1.5 leading-relaxed", children: [
+                "Your browser blocks native device ",
+                iframeBlockedNotice === "faceid" ? "Face ID" : "Fingerprint",
+                " inside an embedded preview frame. Open the app directly in ",
+                iframeBlockedNotice === "faceid" ? "Safari" : "Chrome",
+                " or install it to use real device biometrics."
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-5 flex flex-col gap-2", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  "a",
+                  {
+                    href: typeof window !== "undefined" ? window.location.href : "/",
+                    target: "_blank",
+                    rel: "noopener noreferrer",
+                    onClick: () => setIframeBlockedNotice(null),
+                    className: "w-full py-2.5 rounded-2xl bg-[#70189F] hover:bg-[#5e1385] text-white font-semibold text-xs transition flex items-center justify-center",
+                    children: [
+                      "Open in ",
+                      iframeBlockedNotice === "faceid" ? "Safari" : "Browser"
+                    ]
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "button",
+                  {
+                    type: "button",
+                    onClick: () => {
+                      setIframeBlockedNotice(null);
+                      handleOpenPinMode();
+                    },
+                    className: "w-full py-2.5 rounded-2xl bg-neutral-100 hover:bg-neutral-200 text-neutral-800 font-semibold text-xs transition cursor-pointer",
+                    children: "Enter PIN Instead"
+                  }
+                )
+              ] })
+            ]
+          }
+        )
       }
     ),
     /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -30396,6 +30947,3928 @@ const BottomNavigation = ({
     )
   ] });
 };
+const CbeOfficialPdfReceipt = reactExports.forwardRef(({
+  receiptData,
+  qrCodeDataUrl,
+  activeStamp,
+  stampWeight = "normal",
+  stampSize = 330,
+  stampPosition,
+  customPdfLogo,
+  isPreview = false,
+  tableRef,
+  isEditingStampPosition = false,
+  isDraggingStamp = false,
+  onStampPointerDown,
+  onStampClick,
+  onStampDoubleClick,
+  onStampTouchEnd
+}, ref) => {
+  const effectiveStamp = activeStamp || getOfficialCbeStampSvg(stampWeight) || OFFICIAL_CBE_STAMP_LOGO;
+  const effectiveStampSize = stampSize || LocalDb.getPdfStampSize() || 330;
+  const effectiveStampPos = stampPosition || LocalDb.getPdfStampPosition();
+  const effectiveQr = qrCodeDataUrl || LocalDb.getCustomQrCode() || getAuthenticCbeQrSvgDataUri(receiptData.refId || "FT26248KLR82");
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "div",
+    {
+      ref,
+      className: "cbe-official-pdf-document",
+      style: {
+        width: "640px",
+        display: "flex",
+        flexDirection: "column",
+        gap: isPreview ? "24px" : "0px",
+        backgroundColor: "transparent"
+      },
+      children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "div",
+          {
+            id: "cbe-pdf-page-1",
+            "data-page": "1",
+            style: {
+              width: "640px",
+              minHeight: "880px",
+              backgroundColor: "#ffffff",
+              color: "#000000",
+              fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+              padding: "28px 32px 36px 32px",
+              boxSizing: "border-box",
+              position: "relative",
+              boxShadow: isPreview ? "0 8px 36px rgba(0,0,0,0.38), 0 2px 8px rgba(0,0,0,0.22)" : "none",
+              borderRadius: isPreview ? "2px" : "0px"
+            },
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                "div",
+                {
+                  style: {
+                    backgroundColor: "#781d77",
+                    borderRadius: "8px 8px 0 0",
+                    padding: "13px 18px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    color: "#ffffff",
+                    position: "relative"
+                  },
+                  children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: "48px", height: "48px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }, children: (() => {
+                      const effectiveLogo = customPdfLogo || LocalDb.getCustomBankLogo() || CBE_DEFAULT_LOGO_BASE64;
+                      return /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        "img",
+                        {
+                          src: effectiveLogo,
+                          alt: "Bank Logo",
+                          style: { width: "48px", height: "48px", objectFit: "contain" },
+                          crossOrigin: "anonymous",
+                          onError: (e) => {
+                            const target = e.currentTarget;
+                            if (target.src !== CBE_DEFAULT_LOGO_BASE64) {
+                              target.src = CBE_DEFAULT_LOGO_BASE64;
+                            }
+                          }
+                        }
+                      );
+                    })() }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { flex: 1, textAlign: "center", paddingRight: "48px" }, children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { style: { margin: 0, fontSize: "18px", fontWeight: 700, letterSpacing: "-0.2px", color: "#ffffff", lineHeight: 1.2 }, children: "Commercial Bank of Ethiopia" }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: "13.5px", fontWeight: 400, marginTop: "2.5px", color: "#ffffff", lineHeight: 1.2 }, children: "Customer Receipt" }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: "11px", fontWeight: 700, marginTop: "2.5px", letterSpacing: "0.2px", color: "#ffffff" }, children: "Status: COMPLETED" })
+                    ] })
+                  ]
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                "div",
+                {
+                  style: {
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "24px",
+                    marginTop: "16px",
+                    fontSize: "11px",
+                    lineHeight: 1.4,
+                    color: "#000000"
+                  },
+                  children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: "12px", fontWeight: 700, color: "#000000", lineHeight: 1.25, marginBottom: "5px", paddingBottom: "3px", borderBottom: "1px solid #e5e7eb" }, children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { children: "Company Address & Other" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { children: "Information" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: "11px" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: [
+                        { label: "Country:", val: "Ethiopia" },
+                        { label: "City:", val: "Addis Ababa" },
+                        { label: "Address:", val: "Ras Desta Damtew St, 01, Kirkos" },
+                        { label: "Postal code:", val: "255" },
+                        { label: "SWIFT Code:", val: "CBETETAA" },
+                        { label: "Email:", val: "info@cbe.com.et" },
+                        { label: "Tel:", val: "+251-551-50-04" },
+                        { label: "Fax:", val: "+251-551-45-22" },
+                        { label: "Tin:", val: "0000006966" },
+                        { label: "VAT Receipt No:", val: receiptData.refId },
+                        { label: "VAT Registration No:", val: "011140" },
+                        { label: "VAT Registration Date:", val: "01/01/2003" }
+                      ].map((row, idx) => /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { style: { height: "17px" }, children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("td", { style: { color: "#374151", fontWeight: 400, padding: "1px 0", verticalAlign: "top", whiteSpace: "nowrap" }, children: row.label }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("td", { style: { textAlign: "right", fontWeight: 400, color: "#000000", padding: "1px 0", verticalAlign: "top" }, children: row.val })
+                      ] }, idx)) }) })
+                    ] }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: "12px", fontWeight: 700, color: "#000000", lineHeight: 1.25, marginBottom: "5px", paddingBottom: "3px", borderBottom: "1px solid #e5e7eb" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { children: "Customer Information" }) }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: "11px" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: [
+                        { label: "Customer Name:", val: receiptData.customerName || receiptData.payerName },
+                        { label: "Region:", val: "-" },
+                        { label: "City:", val: "-" },
+                        { label: "Sub City:", val: "-" },
+                        { label: "Wereda/Kebele:", val: "-" },
+                        { label: "VAT Registration No:", val: "-" },
+                        { label: "VAT Registration Date:", val: "-" },
+                        { label: "TIN (TAX ID):", val: "-" },
+                        { label: "Branch:", val: "-" }
+                      ].map((row, idx) => /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { style: { height: "17px" }, children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("td", { style: { color: "#374151", fontWeight: 400, padding: "1px 0", verticalAlign: "top", whiteSpace: "nowrap" }, children: row.label }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("td", { style: { textAlign: "right", fontWeight: 400, color: "#000000", padding: "1px 0", verticalAlign: "top" }, children: row.val })
+                      ] }, idx)) }) })
+                    ] })
+                  ]
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                "div",
+                {
+                  ref: tableRef,
+                  style: {
+                    marginTop: "16px",
+                    border: "1px solid #d1d5db",
+                    borderRadius: "6px",
+                    position: "relative",
+                    overflow: "hidden",
+                    backgroundColor: "#ffffff"
+                  },
+                  children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "div",
+                      {
+                        style: {
+                          textAlign: "center",
+                          fontWeight: 700,
+                          fontSize: "13px",
+                          color: "#000000",
+                          padding: "7px 0",
+                          borderBottom: "1px solid #d1d5db",
+                          backgroundColor: "#ffffff"
+                        },
+                        children: "Payment / Transaction Informations"
+                      }
+                    ),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: "11.5px" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: (() => {
+                      const formatEtb = (val) => (Number(val) || 0).toFixed(2) + " ETB";
+                      return [
+                        { label: "Payer:", val: receiptData.payerName, bold: false, boldVal: false },
+                        { label: "Account:", val: receiptData.payerAccount, bold: false, boldVal: false },
+                        { label: "Receiver:", val: receiptData.receiverName, bold: false, boldVal: false },
+                        { label: "Account:", val: receiptData.receiverAccount, bold: false, boldVal: false },
+                        { label: "Payment Type:", val: receiptData.paymentType || "A2A", bold: false, boldVal: false },
+                        { label: "Payment Date & Time:", val: receiptData.paymentDate, bold: false, boldVal: false },
+                        { label: "Reference No. (VAT Invoice No):", val: receiptData.refId, bold: false, boldVal: false },
+                        { label: "Reason / Type of service:", val: receiptData.reason || "-", bold: false, boldVal: false },
+                        { label: "Transferred Amount:", val: formatEtb(receiptData.amount), bold: false, boldVal: false },
+                        { label: "Service Charge:", val: formatEtb(receiptData.serviceCharge), bold: false, boldVal: false },
+                        { label: "VAT (15% of service charge):", val: formatEtb(receiptData.vat), bold: false, boldVal: false },
+                        { label: "Disaster Risk Response Fund (5% of service charge):", val: formatEtb(receiptData.disasterRecovery), bold: false, boldVal: false },
+                        // Bold number is ONLY the last one like Image 1
+                        { label: "Total amount debited from customer's account:", val: formatEtb(receiptData.totalDebited), bold: true, boldVal: true }
+                      ].map((row, idx, arr) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                        "tr",
+                        {
+                          style: {
+                            borderBottom: idx < arr.length - 1 ? "1px solid #e5e7eb" : "none",
+                            height: "24px",
+                            backgroundColor: row.bold ? "#ffffff" : "transparent"
+                          },
+                          children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { style: {
+                              padding: "5px 14px",
+                              color: row.bold ? "#000000" : "#374151",
+                              fontWeight: row.bold ? 700 : 400,
+                              fontSize: row.bold ? "12px" : "11.5px",
+                              whiteSpace: "nowrap"
+                            }, children: row.label }),
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { style: {
+                              padding: "5px 14px",
+                              textAlign: "right",
+                              color: "#000000",
+                              fontWeight: row.boldVal ? 700 : 400,
+                              fontSize: row.boldVal ? "12.5px" : "11.5px",
+                              whiteSpace: "nowrap"
+                            }, children: row.val })
+                          ]
+                        },
+                        idx
+                      ));
+                    })() }) }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                      "div",
+                      {
+                        id: isPreview ? "cbe-stamp-container" : void 0,
+                        style: {
+                          position: "absolute",
+                          top: `${effectiveStampPos.yPercent}%`,
+                          left: `${effectiveStampPos.xPercent}%`,
+                          transform: "translate(-50%, -50%)",
+                          width: `${effectiveStampSize}px`,
+                          height: `${effectiveStampSize}px`,
+                          maxWidth: "92%",
+                          aspectRatio: "1 / 1",
+                          pointerEvents: isPreview ? "auto" : "none",
+                          cursor: isPreview ? isEditingStampPosition ? isDraggingStamp ? "grabbing" : "grab" : "pointer" : "default",
+                          zIndex: 10,
+                          touchAction: isPreview ? "none" : "auto"
+                        },
+                        onPointerDown: isPreview && isEditingStampPosition ? onStampPointerDown : void 0,
+                        onClick: isPreview ? onStampClick : void 0,
+                        onDoubleClick: isPreview ? onStampDoubleClick : void 0,
+                        onTouchEnd: isPreview ? onStampTouchEnd : void 0,
+                        children: [
+                          isPreview && isEditingStampPosition && /* @__PURE__ */ jsxRuntimeExports.jsx(
+                            "div",
+                            {
+                              "data-html2canvas-ignore": "true",
+                              style: {
+                                position: "absolute",
+                                inset: -6,
+                                border: "2.5px dashed #9333ea",
+                                borderRadius: "50%",
+                                pointerEvents: "none",
+                                boxShadow: "0 0 0 2px rgba(255,255,255,0.8), 0 4px 14px rgba(147, 51, 234, 0.45)"
+                              }
+                            }
+                          ),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(
+                            "img",
+                            {
+                              src: effectiveStamp,
+                              alt: "Bank Stamp",
+                              crossOrigin: "anonymous",
+                              style: {
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "contain",
+                                transform: "rotate(-13deg)",
+                                opacity: stampWeight === "light" ? 0.88 : stampWeight === "normal" ? 0.96 : 1
+                              }
+                            }
+                          ),
+                          isPreview && isEditingStampPosition && /* @__PURE__ */ jsxRuntimeExports.jsx(
+                            "div",
+                            {
+                              "data-html2canvas-ignore": "true",
+                              style: {
+                                position: "absolute",
+                                top: "50%",
+                                left: "50%",
+                                transform: "translate(-50%, -50%)",
+                                backgroundColor: "rgba(126, 34, 206, 0.95)",
+                                color: "#ffffff",
+                                fontSize: "10px",
+                                fontWeight: 800,
+                                padding: "3px 9px",
+                                borderRadius: "9999px",
+                                boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "4px",
+                                pointerEvents: "none",
+                                whiteSpace: "nowrap",
+                                border: "1px solid rgba(255,255,255,0.5)"
+                              },
+                              children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: isDraggingStamp ? "Moving..." : "Drag to Move" })
+                            }
+                          )
+                        ]
+                      }
+                    )
+                  ]
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                "div",
+                {
+                  style: {
+                    marginTop: "18px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "16px"
+                  },
+                  children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                      "div",
+                      {
+                        style: {
+                          flex: 1,
+                          backgroundColor: "#f8f9fa",
+                          border: "1px solid #d1d5db",
+                          borderRadius: "8px",
+                          padding: "12px 18px",
+                          textAlign: "center"
+                        },
+                        children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: "12px", fontWeight: 700, color: "#000000" }, children: "Amount in Word:" }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: "11.5px", color: "#1f2937", marginTop: "3px", fontWeight: 400, lineHeight: 1.4 }, children: receiptData.words })
+                        ]
+                      }
+                    ),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: "84px", height: "84px", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }, children: effectiveQr ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "img",
+                      {
+                        id: "cbe-pdf-official-qr-image",
+                        src: effectiveQr,
+                        alt: "Receipt Verification QR",
+                        crossOrigin: "anonymous",
+                        style: { width: "80px", height: "80px", objectFit: "contain", display: "block" }
+                      }
+                    ) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: "80px", height: "80px", backgroundColor: "#e5e7eb" } }) })
+                  ]
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "div",
+                {
+                  style: {
+                    position: "absolute",
+                    bottom: "12px",
+                    left: "16px",
+                    backgroundColor: "#e5e7eb",
+                    color: "#4b5563",
+                    fontSize: "10px",
+                    fontWeight: 600,
+                    padding: "2px 8px",
+                    borderRadius: "4px",
+                    opacity: isPreview ? 0.9 : 0
+                  },
+                  children: "1"
+                }
+              )
+            ]
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "div",
+          {
+            id: "cbe-pdf-page-2",
+            "data-page": "2",
+            style: {
+              width: "640px",
+              minHeight: "880px",
+              backgroundColor: "#ffffff",
+              color: "#000000",
+              fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+              padding: "28px 32px 36px 32px",
+              boxSizing: "border-box",
+              position: "relative",
+              boxShadow: isPreview ? "0 8px 36px rgba(0,0,0,0.38), 0 2px 8px rgba(0,0,0,0.22)" : "none",
+              borderRadius: isPreview ? "2px" : "0px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "flex-start",
+              paddingTop: "130px"
+            },
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { textAlign: "center" }, children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { color: "#781d77", fontWeight: 700, fontSize: "13px" }, children: "The Bank you can always rely on." }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { color: "#6b7280", fontSize: "10.5px", marginTop: "4px", fontWeight: 400 }, children: "© 2026 Commercial Bank of Ethiopia. All rights reserved." })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "div",
+                {
+                  style: {
+                    position: "absolute",
+                    bottom: "12px",
+                    left: "16px",
+                    backgroundColor: "#e5e7eb",
+                    color: "#4b5563",
+                    fontSize: "10px",
+                    fontWeight: 600,
+                    padding: "2px 8px",
+                    borderRadius: "4px",
+                    opacity: isPreview ? 0.9 : 0
+                  },
+                  children: "2"
+                }
+              )
+            ]
+          }
+        )
+      ]
+    }
+  );
+});
+CbeOfficialPdfReceipt.displayName = "CbeOfficialPdfReceipt";
+function s(t) {
+  t.CapacitorUtils.Synapse = new Proxy(
+    {},
+    {
+      get(e, n) {
+        return new Proxy({}, {
+          get(w, o) {
+            return (c, p, r) => {
+              const i = t.Capacitor.Plugins[n];
+              if (i === void 0) {
+                r(new Error(`Capacitor plugin ${n} not found`));
+                return;
+              }
+              if (typeof i[o] != "function") {
+                r(new Error(`Method ${o} not found in Capacitor plugin ${n}`));
+                return;
+              }
+              (async () => {
+                try {
+                  const a = await i[o](c);
+                  p(a);
+                } catch (a) {
+                  r(a);
+                }
+              })();
+            };
+          }
+        });
+      }
+    }
+  );
+}
+function u(t) {
+  t.CapacitorUtils.Synapse = new Proxy(
+    {},
+    {
+      get(e, n) {
+        return t.cordova.plugins[n];
+      }
+    }
+  );
+}
+function f(t = false) {
+  typeof window > "u" || (window.CapacitorUtils = window.CapacitorUtils || {}, window.Capacitor !== void 0 && !t ? s(window) : window.cordova !== void 0 && u(window));
+}
+var Directory;
+(function(Directory2) {
+  Directory2["Documents"] = "DOCUMENTS";
+  Directory2["Data"] = "DATA";
+  Directory2["Library"] = "LIBRARY";
+  Directory2["Cache"] = "CACHE";
+  Directory2["External"] = "EXTERNAL";
+  Directory2["ExternalStorage"] = "EXTERNAL_STORAGE";
+  Directory2["ExternalCache"] = "EXTERNAL_CACHE";
+  Directory2["LibraryNoCloud"] = "LIBRARY_NO_CLOUD";
+  Directory2["Temporary"] = "TEMPORARY";
+})(Directory || (Directory = {}));
+var Encoding;
+(function(Encoding2) {
+  Encoding2["UTF8"] = "utf8";
+  Encoding2["ASCII"] = "ascii";
+  Encoding2["UTF16"] = "utf16";
+})(Encoding || (Encoding = {}));
+const Filesystem = registerPlugin("Filesystem", {
+  web: () => __vitePreload(() => import("./web-CON5pxuX.js"), true ? __vite__mapDeps([0,1,2,3]) : void 0).then((m) => new m.FilesystemWeb())
+});
+f();
+const Share = registerPlugin("Share", {
+  web: () => __vitePreload(() => import("./web-Di8TABU6.js"), true ? __vite__mapDeps([4,1,2,3]) : void 0).then((m) => new m.ShareWeb())
+});
+const Media = registerPlugin("Media", {
+  web: () => __vitePreload(() => import("./web-BOLL-Khj.js"), true ? __vite__mapDeps([5,1,2,3]) : void 0).then((m) => new m.MediaWeb())
+});
+function getSafeReceiptFilename(txId) {
+  const d = /* @__PURE__ */ new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  const dateStr = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
+  const timeStr = `${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
+  const sanitized = (txId || "receipt").trim().replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 30);
+  return `Screenshot_${dateStr}-${timeStr}_CBE_${sanitized}.png`;
+}
+function dataUrlToBlob$1(dataUrl) {
+  var _a;
+  const parts = dataUrl.split(",");
+  const mime = ((_a = parts[0].match(/:(.*?);/)) == null ? void 0 : _a[1]) || "image/png";
+  const bstr = atob(parts[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while (n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new Blob([u8arr], { type: mime });
+}
+function checkIsIOS() {
+  if (typeof window === "undefined" || typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent || navigator.vendor || "";
+  const isIosUa = /iPhone|iPad|iPod/i.test(ua);
+  const isMacTouch = (navigator.platform === "MacIntel" || navigator.platform === "iPad" || navigator.platform === "iPhone") && navigator.maxTouchPoints > 1;
+  const isIosWebKit = /WebKit/i.test(ua) && !/Chrome|CriOS|Android/i.test(ua) && /Mobile/i.test(ua);
+  const isPhoneSetting = PhoneSettingsService.isIPhoneDevice() || PhoneSettingsService.isIPhoneMode();
+  return isIosUa || isMacTouch || isIosWebKit || isPhoneSetting;
+}
+async function rasterizeSvgToPngDataUrl(svgDataUrl, width = 450, height = 450) {
+  return new Promise((resolve) => {
+    try {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      const timer = setTimeout(() => resolve(svgDataUrl), 1500);
+      img.onload = () => {
+        clearTimeout(timer);
+        try {
+          const canvas2 = document.createElement("canvas");
+          canvas2.width = width;
+          canvas2.height = height;
+          const ctx = canvas2.getContext("2d");
+          if (!ctx) return resolve(svgDataUrl);
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, width, height);
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas2.toDataURL("image/png"));
+        } catch {
+          resolve(svgDataUrl);
+        }
+      };
+      img.onerror = () => {
+        clearTimeout(timer);
+        resolve(svgDataUrl);
+      };
+      img.src = svgDataUrl;
+    } catch {
+      resolve(svgDataUrl);
+    }
+  });
+}
+async function inlineImageElement(img) {
+  var _a, _b;
+  const isCbeLogo = img.getAttribute("data-cbe-logo") === "true" || ((_a = img.alt) == null ? void 0 : _a.toLowerCase().includes("commercial bank")) || ((_b = img.id) == null ? void 0 : _b.includes("cbe-logo"));
+  if (isCbeLogo) {
+    const savedCustomLogo = LocalDb.getCustomBankLogo();
+    if (savedCustomLogo && savedCustomLogo.startsWith("data:image/")) {
+      img.src = savedCustomLogo;
+    } else {
+      img.src = CBE_DEFAULT_LOGO_BASE64;
+    }
+    if ("decode" in img) {
+      await img.decode().catch(() => {
+      });
+    }
+    return;
+  }
+  if (img.src && img.src.startsWith("data:image/svg")) {
+    try {
+      const pngData = await rasterizeSvgToPngDataUrl(img.src, 450, 450);
+      img.src = pngData;
+      if ("decode" in img) {
+        await img.decode().catch(() => {
+        });
+      }
+      return;
+    } catch {
+    }
+  }
+  if (img.src && img.src.startsWith("data:")) {
+    if ("decode" in img) {
+      await img.decode().catch(() => {
+      });
+    }
+    return;
+  }
+  if (!img.src || img.src.includes("custom-bank-logo") || img.src.includes("cbe-gold-logo")) {
+    img.src = CBE_DEFAULT_LOGO_BASE64;
+    if ("decode" in img) {
+      await img.decode().catch(() => {
+      });
+    }
+    return;
+  }
+  try {
+    const resp = await fetch(img.src);
+    if (resp.ok) {
+      const blob = await resp.blob();
+      const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (typeof reader.result === "string") resolve(reader.result);
+          else reject(new Error("Reader result not string"));
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+      img.src = dataUrl;
+      if ("decode" in img) {
+        await img.decode().catch(() => {
+        });
+      }
+      return;
+    }
+  } catch {
+  }
+  try {
+    if (img.complete && img.naturalWidth > 0) {
+      const offCanvas = document.createElement("canvas");
+      offCanvas.width = img.naturalWidth;
+      offCanvas.height = img.naturalHeight;
+      const offCtx = offCanvas.getContext("2d");
+      if (offCtx) {
+        offCtx.drawImage(img, 0, 0);
+        const inlinedSrc = offCanvas.toDataURL("image/png");
+        img.src = inlinedSrc;
+        if ("decode" in img) {
+          await img.decode().catch(() => {
+          });
+        }
+      }
+    }
+  } catch (canvasErr) {
+    console.warn("[ScreenshotService] Canvas inlining note:", canvasErr);
+  }
+}
+async function captureReceiptElement(element, options) {
+  const innerScrollable = element.querySelector(".overflow-y-auto");
+  const initialInnerScrollTop = innerScrollable ? innerScrollable.scrollTop : 0;
+  const scrollWrapper = document.getElementById("receipt-screen-wrapper") || element.closest(".overflow-y-auto") || element.parentElement;
+  const initialScrollTop = scrollWrapper ? scrollWrapper.scrollTop : window.scrollY;
+  if (innerScrollable) {
+    innerScrollable.scrollTop = 0;
+  }
+  if (scrollWrapper) {
+    scrollWrapper.scrollTop = 0;
+  }
+  await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  const images = Array.from(element.querySelectorAll("img"));
+  await Promise.all(
+    images.map(async (img) => {
+      if (!img.complete || img.naturalHeight === 0) {
+        await new Promise((resolve) => {
+          const onDone = () => {
+            img.removeEventListener("load", onDone);
+            img.removeEventListener("error", onDone);
+            resolve();
+          };
+          img.addEventListener("load", onDone);
+          img.addEventListener("error", onDone);
+          setTimeout(resolve, 800);
+        });
+      }
+      await inlineImageElement(img);
+    })
+  );
+  if (typeof document !== "undefined" && "fonts" in document && document.fonts.ready) {
+    try {
+      await document.fonts.ready;
+    } catch {
+    }
+  }
+  const rect = element.getBoundingClientRect();
+  const isExactTarget = element.id === "cbe-screenshot-exact-target";
+  const shouldAddGrayStrip = (options == null ? void 0 : options.addGrayBottomStrip) ?? true;
+  const fullWidth = isExactTarget ? parseInt(element.style.width, 10) || element.offsetWidth || 412 : Math.max(Math.ceil(rect.width), element.offsetWidth, 360);
+  let fullHeight;
+  if (isExactTarget) {
+    fullHeight = parseInt(element.style.height, 10) || element.offsetHeight || 915;
+  } else {
+    const viewportH = Math.max(Math.ceil(rect.height), element.offsetHeight, 700);
+    const extraScroll = innerScrollable ? Math.max(0, innerScrollable.scrollHeight - innerScrollable.clientHeight) : 0;
+    const bottomActions = element.querySelector("#cbe-receipt-bottom-actions-container");
+    const bottomActionsH = bottomActions ? bottomActions.offsetHeight : 0;
+    const bottomReserve = shouldAddGrayStrip ? 92 : 36;
+    const neededContentHeight = viewportH - bottomActionsH + extraScroll + bottomReserve;
+    fullHeight = Math.max(viewportH, neededContentHeight, 700);
+  }
+  const rawDpr = typeof window !== "undefined" ? window.devicePixelRatio || 2 : 2;
+  const pixelRatio = Math.min(2.5, Math.max(2, rawDpr));
+  const isExcluded = (node) => {
+    return node.getAttribute("data-screenshot-temporary") === "true" || node.getAttribute("data-screenshot-exclude") === "true" && node.id !== "btn-top-screenshot";
+  };
+  const prepareClonedReceiptDom = (clonedDoc, clonedElement) => {
+    var _a;
+    (_a = clonedDoc.defaultView) == null ? void 0 : _a.scrollTo(0, 0);
+    if (clonedDoc.documentElement) {
+      clonedDoc.documentElement.style.overflow = "visible";
+      clonedDoc.documentElement.style.height = "auto";
+      clonedDoc.documentElement.style.backgroundColor = "#ffffff";
+    }
+    if (clonedDoc.body) {
+      clonedDoc.body.style.overflow = "visible";
+      clonedDoc.body.style.height = "auto";
+      clonedDoc.body.style.backgroundColor = "#ffffff";
+    }
+    const clonedWrapper = clonedDoc.getElementById("receipt-screen-wrapper");
+    if (clonedWrapper) {
+      clonedWrapper.scrollTop = 0;
+      clonedWrapper.scrollLeft = 0;
+      clonedWrapper.style.overflow = "visible";
+      clonedWrapper.style.height = `${fullHeight}px`;
+      clonedWrapper.style.maxHeight = "none";
+    }
+    clonedElement.style.overflow = "hidden";
+    clonedElement.style.width = `${fullWidth}px`;
+    clonedElement.style.height = `${fullHeight}px`;
+    clonedElement.style.minHeight = `${fullHeight}px`;
+    clonedElement.style.maxHeight = "none";
+    clonedElement.style.transform = "none";
+    clonedElement.style.backgroundColor = "#ffffff";
+    try {
+      const mainStyles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'));
+      mainStyles.forEach((styleTag) => {
+        clonedDoc.head.appendChild(styleTag.cloneNode(true));
+      });
+    } catch {
+    }
+    if (clonedElement.id === "cbe-screenshot-exact-target") {
+      clonedDoc.body.appendChild(clonedElement);
+      const rootElement = clonedDoc.getElementById("root");
+      if (rootElement && rootElement !== clonedElement) {
+        rootElement.style.display = "none";
+      }
+      clonedElement.style.position = "relative";
+      clonedElement.style.top = "0";
+      clonedElement.style.left = "0";
+      clonedElement.style.zIndex = "9999";
+      clonedElement.style.opacity = "1";
+      clonedElement.style.visibility = "visible";
+      clonedElement.style.display = "flex";
+      clonedElement.style.flexDirection = "column";
+      clonedElement.style.width = `${fullWidth}px`;
+      clonedElement.style.height = `${fullHeight}px`;
+      clonedElement.style.minHeight = `${fullHeight}px`;
+      clonedElement.style.maxHeight = `${fullHeight}px`;
+      clonedElement.style.margin = "0";
+      clonedElement.style.padding = "0";
+      clonedElement.style.boxSizing = "border-box";
+      clonedElement.style.backgroundColor = "#7A1FA2";
+      clonedDoc.body.style.width = `${fullWidth}px`;
+      clonedDoc.body.style.height = `${fullHeight}px`;
+      clonedDoc.body.style.backgroundColor = "#7A1FA2";
+      clonedDoc.body.style.margin = "0";
+      clonedDoc.body.style.padding = "0";
+      clonedDoc.body.style.overflow = "hidden";
+      if (clonedDoc.documentElement) {
+        clonedDoc.documentElement.style.width = `${fullWidth}px`;
+        clonedDoc.documentElement.style.height = `${fullHeight}px`;
+        clonedDoc.documentElement.style.margin = "0";
+        clonedDoc.documentElement.style.padding = "0";
+        clonedDoc.documentElement.style.overflow = "hidden";
+      }
+    } else {
+      const stripHeight = 58;
+      const receiptContentHeight = shouldAddGrayStrip ? Math.max(600, fullHeight - stripHeight) : fullHeight;
+      const existingReceipt = clonedDoc.getElementById("cbe-existing-receipt");
+      if (existingReceipt) {
+        existingReceipt.style.height = `${receiptContentHeight}px`;
+        existingReceipt.style.minHeight = `${receiptContentHeight}px`;
+        existingReceipt.style.flex = "1 1 auto";
+        existingReceipt.style.overflow = "visible";
+        existingReceipt.style.backgroundColor = "#ffffff";
+      }
+      const clonedScrollable = clonedElement.querySelector(".overflow-y-auto");
+      if (clonedScrollable) {
+        clonedScrollable.scrollTop = 0;
+        clonedScrollable.style.overflow = "visible";
+        clonedScrollable.style.height = "auto";
+        clonedScrollable.style.maxHeight = "none";
+        clonedScrollable.style.flex = "1 1 auto";
+        clonedScrollable.style.backgroundColor = "#ffffff";
+      }
+      const bottomBar = clonedDoc.getElementById("cbe-receipt-bottom-actions-container");
+      if (bottomBar) {
+        bottomBar.style.display = "none";
+      }
+      if (shouldAddGrayStrip && !clonedDoc.getElementById("cbe-live-gray-bottom-strip")) {
+        const stripEl = clonedDoc.createElement("div");
+        stripEl.id = "cbe-live-gray-bottom-strip";
+        stripEl.style.width = "100%";
+        stripEl.style.height = `${stripHeight}px`;
+        stripEl.style.minHeight = `${stripHeight}px`;
+        stripEl.style.flexShrink = "0";
+        stripEl.style.backgroundColor = "#f0f1f4";
+        stripEl.style.borderTop = "1px solid #e2e4e8";
+        stripEl.style.boxSizing = "border-box";
+        clonedElement.appendChild(stripEl);
+      }
+      const topScreenshotBtn = clonedDoc.getElementById("btn-top-screenshot");
+      if (topScreenshotBtn) {
+        topScreenshotBtn.style.visibility = "hidden";
+      }
+      const animatedBadges = clonedElement.querySelectorAll(".animate-cbe-pulse");
+      animatedBadges.forEach((badge) => {
+        badge.style.animation = "none";
+        badge.style.transform = "scale(1)";
+      });
+    }
+    const temporaryNodes = clonedDoc.querySelectorAll(
+      '[data-screenshot-exclude="true"]:not(#btn-top-screenshot), [data-screenshot-temporary="true"]'
+    );
+    temporaryNodes.forEach((node) => {
+      node.style.display = "none";
+    });
+    const clonedImgs = clonedDoc.querySelectorAll("img");
+    clonedImgs.forEach((clonedImg) => {
+      if (!clonedImg.src || clonedImg.src.includes("custom-bank-logo") || clonedImg.src.includes("cbe-gold-logo")) {
+        clonedImg.src = CBE_DEFAULT_LOGO_BASE64;
+      }
+    });
+  };
+  const paintGrayBottomStripOnCanvas = (targetCanvas, scaleFactor) => {
+    if (!shouldAddGrayStrip) return;
+    const targetCtx = targetCanvas.getContext("2d");
+    if (!targetCtx) return;
+    targetCtx.save();
+    targetCtx.setTransform(1, 0, 0, 1, 0, 0);
+    targetCtx.globalAlpha = 1;
+    targetCtx.globalCompositeOperation = "source-over";
+    const bottomStripH = Math.round(58 * scaleFactor);
+    const stripTopY = Math.max(0, targetCanvas.height - bottomStripH);
+    targetCtx.fillStyle = "#f0f1f4";
+    targetCtx.fillRect(0, stripTopY, targetCanvas.width, bottomStripH);
+    targetCtx.fillStyle = "#e2e4e8";
+    targetCtx.fillRect(0, stripTopY, targetCanvas.width, Math.max(1, Math.round(1 * scaleFactor)));
+    targetCtx.restore();
+  };
+  try {
+    const canvas2 = await html2canvas(element, {
+      scale: pixelRatio,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: "#ffffff",
+      logging: false,
+      imageTimeout: 15e3,
+      scrollX: 0,
+      scrollY: 0,
+      width: fullWidth,
+      height: fullHeight,
+      windowWidth: fullWidth,
+      windowHeight: fullHeight,
+      ignoreElements: isExcluded,
+      onclone: prepareClonedReceiptDom
+    });
+    const ctx = canvas2.getContext("2d");
+    if (ctx) {
+      try {
+        const sampleTop = ctx.getImageData(Math.round(canvas2.width / 2), Math.round(25 * pixelRatio), 1, 1).data;
+        const isTopPurple = sampleTop[0] > 60 && sampleTop[0] < 165 && sampleTop[1] < 65 && sampleTop[2] > 110 && sampleTop[3] > 200;
+        if (!isTopPurple) {
+          console.warn("[ScreenshotService] Detected unstyled capture (missing CBE purple header), rejecting for canvas fallback");
+          throw new Error("Unstyled capture detected: missing purple header");
+        }
+        const midY = Math.round(canvas2.height / 2);
+        const sampleMid = ctx.getImageData(Math.round(canvas2.width / 2), midY, 1, 1).data;
+        const isMidPurple = sampleMid[0] > 60 && sampleMid[0] < 165 && sampleMid[1] < 65 && sampleMid[2] > 110;
+        if (isMidPurple) {
+          console.warn("[ScreenshotService] Detected blank solid purple capture, rejecting for canvas fallback");
+          throw new Error("Blank solid purple capture detected");
+        }
+      } catch (checkErr) {
+        if (checkErr instanceof Error && (checkErr.message.includes("Unstyled capture") || checkErr.message.includes("Blank solid purple"))) {
+          throw checkErr;
+        }
+      }
+    }
+    paintGrayBottomStripOnCanvas(canvas2, pixelRatio);
+    const dataUrl = canvas2.toDataURL("image/png");
+    if (dataUrl && dataUrl.length > 1e3) {
+      return dataUrl;
+    }
+    throw new Error("html2canvas canvas data was empty");
+  } catch (primaryErr) {
+    console.warn("[ScreenshotService] html2canvas-pro capture retry with standard options:", primaryErr);
+    try {
+      const fallbackCanvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+        scrollX: 0,
+        scrollY: 0,
+        width: fullWidth,
+        height: fullHeight,
+        windowWidth: fullWidth,
+        windowHeight: fullHeight,
+        ignoreElements: isExcluded,
+        onclone: prepareClonedReceiptDom
+      });
+      paintGrayBottomStripOnCanvas(fallbackCanvas, 2);
+      return fallbackCanvas.toDataURL("image/png");
+    } catch (fallbackErr) {
+      console.error("[ScreenshotService] All capture methods failed:", fallbackErr);
+      throw fallbackErr;
+    }
+  } finally {
+    if (innerScrollable) {
+      innerScrollable.scrollTop = initialInnerScrollTop;
+    }
+    if (scrollWrapper) {
+      scrollWrapper.scrollTop = initialScrollTop;
+    }
+  }
+}
+async function saveAndShareReceiptImage(dataUrl, txId, triggerShareModal = false) {
+  var _a, _b;
+  const filename = getSafeReceiptFilename(txId);
+  const isNative = Capacitor.isNativePlatform();
+  const platform = Capacitor.getPlatform();
+  const isIos = platform === "ios" || checkIsIOS();
+  if (isNative) {
+    try {
+      try {
+        await Media.savePhoto({
+          path: dataUrl,
+          fileName: filename.replace(/\.png$/i, "")
+        });
+        return { saved: true };
+      } catch (mediaErr) {
+        console.warn("Native Media.savePhoto direct gallery save note:", mediaErr);
+      }
+      const base64Data = dataUrl.replace(/^data:image\/png;base64,/, "");
+      const writeResult = await Filesystem.writeFile({
+        path: filename,
+        data: base64Data,
+        directory: Directory.Cache
+      });
+      const fileUri = writeResult.uri;
+      if (platform === "android") {
+        try {
+          await Filesystem.writeFile({
+            path: filename,
+            data: base64Data,
+            directory: Directory.Documents
+          });
+        } catch (docErr) {
+          console.warn("Documents directory write note:", docErr);
+        }
+        try {
+          await Filesystem.writeFile({
+            path: filename,
+            data: base64Data,
+            directory: Directory.ExternalStorage
+          });
+        } catch (extErr) {
+          console.warn("ExternalStorage directory write note:", extErr);
+        }
+      }
+      if (platform === "ios") {
+        try {
+          await Filesystem.writeFile({
+            path: filename,
+            data: base64Data,
+            directory: Directory.Documents
+          });
+        } catch (iosDocErr) {
+          console.warn("iOS Documents directory write note:", iosDocErr);
+        }
+      }
+      if (triggerShareModal) {
+        try {
+          await Share.share({
+            title: `CBE Receipt ${txId}`,
+            text: `Commercial Bank of Ethiopia Transaction Receipt #${txId}`,
+            files: [fileUri],
+            dialogTitle: "Share Receipt"
+          });
+        } catch (shareErr) {
+          if ((shareErr == null ? void 0 : shareErr.name) === "AbortError" || ((_a = shareErr == null ? void 0 : shareErr.message) == null ? void 0 : _a.includes("canceled")) || ((_b = shareErr == null ? void 0 : shareErr.message) == null ? void 0 : _b.includes("cancelled"))) {
+            return { saved: true, fileUri };
+          }
+          console.warn("Native share dialog note:", shareErr);
+        }
+      }
+      return { saved: true, fileUri };
+    } catch (nativeErr) {
+      console.warn("Native Capacitor save notice:", nativeErr);
+      return { saved: false };
+    }
+  } else {
+    try {
+      const blob = dataUrlToBlob$1(dataUrl);
+      const file = new File([blob], filename, { type: "image/png" });
+      if (!isIos) {
+        try {
+          const blobUrl = URL.createObjectURL(blob);
+          const downloadLink = document.createElement("a");
+          downloadLink.href = blobUrl;
+          downloadLink.download = filename;
+          downloadLink.setAttribute("download", filename);
+          downloadLink.style.display = "none";
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          setTimeout(() => {
+            try {
+              document.body.removeChild(downloadLink);
+              URL.revokeObjectURL(blobUrl);
+            } catch {
+            }
+          }, 3e3);
+        } catch (downloadErr) {
+          console.warn("Download link fallback notice:", downloadErr);
+        }
+      }
+      if (typeof navigator !== "undefined" && navigator.clipboard && window.ClipboardItem) {
+        try {
+          await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+        } catch {
+        }
+      }
+      if (triggerShareModal && typeof navigator !== "undefined" && navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            files: [file],
+            title: `CBE Receipt - ${txId}`,
+            text: `Commercial Bank of Ethiopia Transaction Receipt #${txId}`
+          });
+          return { saved: true };
+        } catch (shareErr) {
+          if ((shareErr == null ? void 0 : shareErr.name) === "AbortError") {
+            return { saved: true };
+          }
+          console.log("Share dialog note:", shareErr);
+        }
+      }
+      return { saved: true };
+    } catch (browserErr) {
+      console.warn("Browser save note:", browserErr);
+      return { saved: true };
+    }
+  }
+}
+function numberToCbeWords(amount) {
+  const ones = [
+    "",
+    "One",
+    "Two",
+    "Three",
+    "Four",
+    "Five",
+    "Six",
+    "Seven",
+    "Eight",
+    "Nine",
+    "Ten",
+    "Eleven",
+    "Twelve",
+    "Thirteen",
+    "Fourteen",
+    "Fifteen",
+    "Sixteen",
+    "Seventeen",
+    "Eighteen",
+    "Nineteen"
+  ];
+  const tens = [
+    "",
+    "",
+    "Twenty",
+    "Thirty",
+    "Forty",
+    "Fifty",
+    "Sixty",
+    "Seventy",
+    "Eighty",
+    "Ninety"
+  ];
+  function convertGroup(n) {
+    let group = "";
+    if (n >= 100) {
+      group += ones[Math.floor(n / 100)] + " Hundred ";
+      n %= 100;
+    }
+    if (n >= 20) {
+      group += tens[Math.floor(n / 10)] + (n % 10 !== 0 ? " " + ones[n % 10] : "") + " ";
+    } else if (n > 0) {
+      group += ones[n] + " ";
+    }
+    return group.trim();
+  }
+  const rounded = Math.round(amount * 100) / 100;
+  const intPart = Math.floor(rounded);
+  const decPart = Math.round((rounded - intPart) * 100);
+  if (intPart === 0 && decPart === 0) return "Zero ETB";
+  let words = "";
+  if (intPart >= 1e9) {
+    const billions = Math.floor(intPart / 1e9);
+    words += convertGroup(billions) + " Billion ";
+  }
+  const remMillions = intPart % 1e9;
+  if (remMillions >= 1e6) {
+    const millions = Math.floor(remMillions / 1e6);
+    words += convertGroup(millions) + " Million ";
+  }
+  const remThousands = intPart % 1e6;
+  if (remThousands >= 1e3) {
+    const thousands = Math.floor(remThousands / 1e3);
+    words += convertGroup(thousands) + " Thousand ";
+  }
+  const remUnits = intPart % 1e3;
+  if (remUnits > 0) {
+    words += convertGroup(remUnits) + " ";
+  }
+  words = words.trim();
+  if (!words) words = "Zero";
+  words += " ETB";
+  if (decPart > 0) {
+    words += " and " + convertGroup(decPart) + (decPart === 1 ? " cent" : " cents");
+  }
+  return words;
+}
+function formatCbeMask(raw) {
+  if (!raw) return "1****4747";
+  const digits = raw.replace(/\D/g, "");
+  if (digits.length >= 5) {
+    return `${digits[0]}****${digits.slice(-4)}`;
+  }
+  return raw;
+}
+function formatCbeReceiptDate(dateStr) {
+  const d = dateStr ? new Date(dateStr) : /* @__PURE__ */ new Date();
+  if (isNaN(d.getTime())) {
+    return "Aug 21, 2026, 6:51 PM";
+  }
+  const dateFormatted = d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric"
+  });
+  const timeFormatted = d.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true
+  });
+  return `${dateFormatted}, ${timeFormatted}`;
+}
+const CbeWebReceiptModal = ({
+  transaction,
+  smsMessage,
+  onClose,
+  initialViewMode = "web",
+  initialQrCode
+}) => {
+  const receiptCardRef = reactExports.useRef(null);
+  const pdfTemplateRef = reactExports.useRef(null);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = reactExports.useState(() => {
+    if (initialQrCode) return initialQrCode;
+    const custom = LocalDb.getCustomQrCode();
+    if (custom) return custom;
+    return "";
+  });
+  const [isDownloading, setIsDownloading] = reactExports.useState(false);
+  const [downloadSuccess, setDownloadSuccess] = reactExports.useState(false);
+  const [downloadError, setDownloadError] = reactExports.useState(null);
+  const [copiedUrl, setCopiedUrl] = reactExports.useState(false);
+  const [browserType, setBrowserType] = reactExports.useState(() => {
+    try {
+      const saved = localStorage.getItem("cbe_receipt_browser_type");
+      if (saved && ["chrome", "opera", "safari", "samsung", "phoenix", "firefox"].includes(saved)) {
+        return saved;
+      }
+      const fromPhoneSettings = PhoneSettingsService.getSettings().receiptBrowser;
+      if (fromPhoneSettings) return fromPhoneSettings;
+      return PhoneSettingsService.isIPhoneDevice() ? "safari" : "chrome";
+    } catch {
+      return "chrome";
+    }
+  });
+  const [tabCount, setTabCount] = reactExports.useState(() => {
+    try {
+      return localStorage.getItem("cbe_receipt_tab_count") || "2";
+    } catch {
+      return "2";
+    }
+  });
+  const [isMenuOpen, setIsMenuOpen] = reactExports.useState(false);
+  const [isRefreshing, setIsRefreshing] = reactExports.useState(false);
+  reactExports.useEffect(() => {
+    const unsubscribe = PhoneSettingsService.subscribe((settings) => {
+      if (settings.receiptBrowser && settings.receiptBrowser !== browserType) {
+        setBrowserType(settings.receiptBrowser);
+      }
+    });
+    return () => unsubscribe();
+  }, [browserType]);
+  reactExports.useEffect(() => {
+    const browserThemeColors = {
+      chrome: "#121214",
+      opera: "#0e0e10",
+      safari: "#1c1c1e",
+      samsung: "#181920",
+      phoenix: "#131720",
+      firefox: "#1c1b22"
+    };
+    const activeColor = browserThemeColors[browserType] || "#121214";
+    SystemBarsService.applyBars({
+      statusBarColor: activeColor,
+      navBarColor: "#ffffff",
+      isDarkStyle: true
+    });
+    return () => {
+      SystemBarsService.restoreFromModal();
+    };
+  }, [browserType]);
+  const stampFileInputRef = reactExports.useRef(null);
+  const pdfLogoFileInputRef = reactExports.useRef(null);
+  const [viewMode, setViewMode] = reactExports.useState("web");
+  const [pdfZoom, setPdfZoom] = reactExports.useState(1);
+  const [isAutoFit, setIsAutoFit] = reactExports.useState(true);
+  const [viewportWidth, setViewportWidth] = reactExports.useState(typeof window !== "undefined" ? window.innerWidth : 640);
+  const pdfContainerRef = reactExports.useRef(null);
+  reactExports.useEffect(() => {
+    const handleResize = () => {
+      setViewportWidth(window.innerWidth);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+  const autoFitScale = reactExports.useMemo(() => {
+    const available = Math.max(280, viewportWidth - 28);
+    if (available < 640) {
+      return Number((available / 640).toFixed(3));
+    }
+    return 1;
+  }, [viewportWidth]);
+  const effectiveScale = isAutoFit ? autoFitScale : pdfZoom;
+  const [barsToast, setBarsToast] = reactExports.useState(null);
+  const barsToastTimerRef = reactExports.useRef(null);
+  const showBarsToast = (msg) => {
+    if (barsToastTimerRef.current) clearTimeout(barsToastTimerRef.current);
+    setBarsToast(msg);
+    barsToastTimerRef.current = setTimeout(() => {
+      setBarsToast(null);
+    }, 2200);
+  };
+  const [adminLogo, setAdminLogo] = reactExports.useState(() => LocalDb.getCustomBankLogo());
+  const [customPdfLogo, setCustomPdfLogo] = reactExports.useState(() => LocalDb.getCustomPdfLogo());
+  const [pdfLogoUrlInput, setPdfLogoUrlInput] = reactExports.useState(() => LocalDb.getCustomPdfLogo() || "");
+  const [customStamp, setCustomStamp] = reactExports.useState(() => LocalDb.getCustomBankStamp());
+  const [webStampSize, setWebStampSize] = reactExports.useState(() => LocalDb.getWebStampSize());
+  const [webStampWeight, setWebStampWeight] = reactExports.useState(() => LocalDb.getWebStampWeight());
+  const [webStampPosition, setWebStampPosition] = reactExports.useState(() => LocalDb.getWebStampPosition());
+  const [pdfStampSize, setPdfStampSize] = reactExports.useState(() => LocalDb.getPdfStampSize());
+  const [pdfStampWeight, setPdfStampWeight] = reactExports.useState(() => LocalDb.getPdfStampWeight());
+  const [pdfStampPosition, setPdfStampPosition] = reactExports.useState(() => LocalDb.getPdfStampPosition());
+  const [isPdfMenuOpen, setIsPdfMenuOpen] = reactExports.useState(false);
+  const [isEditingStampPosition, setIsEditingStampPosition] = reactExports.useState(false);
+  const [isDraggingStamp, setIsDraggingStamp] = reactExports.useState(false);
+  const [hasUnsavedStampPos, setHasUnsavedStampPos] = reactExports.useState(false);
+  const transactionTableRef = reactExports.useRef(null);
+  const pdfTableRef = reactExports.useRef(null);
+  const dragStartRef = reactExports.useRef(null);
+  const stampLastTapRef = reactExports.useRef({ time: 0, x: 0, y: 0 });
+  const wakeUpStampRearrange = () => {
+    setIsEditingStampPosition(true);
+    showBarsToast(`${viewMode === "pdf" ? "PDF" : "Web"} stamp rearrange active — drag to move, saved for all receipts`);
+  };
+  const handleStampClick = (e) => {
+    e.stopPropagation();
+    if (isEditingStampPosition) return;
+    const now = Date.now();
+    const timeDiff = now - stampLastTapRef.current.time;
+    const dist = Math.hypot(e.clientX - stampLastTapRef.current.x, e.clientY - stampLastTapRef.current.y);
+    if (timeDiff > 40 && timeDiff < 480 && dist < 60) {
+      wakeUpStampRearrange();
+      stampLastTapRef.current = { time: 0, x: 0, y: 0 };
+    } else {
+      stampLastTapRef.current = { time: now, x: e.clientX, y: e.clientY };
+    }
+  };
+  const handleStampTouchEnd = (e) => {
+    e.stopPropagation();
+    if (isEditingStampPosition) return;
+    const touch = e.changedTouches[0];
+    if (!touch) return;
+    const now = Date.now();
+    const timeDiff = now - stampLastTapRef.current.time;
+    const dist = Math.hypot(touch.clientX - stampLastTapRef.current.x, touch.clientY - stampLastTapRef.current.y);
+    if (timeDiff > 40 && timeDiff < 480 && dist < 65) {
+      wakeUpStampRearrange();
+      stampLastTapRef.current = { time: 0, x: 0, y: 0 };
+    } else {
+      stampLastTapRef.current = { time: now, x: touch.clientX, y: touch.clientY };
+    }
+  };
+  const handleStampDoubleClick = (e) => {
+    e.stopPropagation();
+    wakeUpStampRearrange();
+  };
+  const webActiveStamp = reactExports.useMemo(() => {
+    if (customStamp) return customStamp;
+    return getOfficialCbeStampSvg(webStampWeight);
+  }, [customStamp, webStampWeight]);
+  const pdfActiveStamp = reactExports.useMemo(() => {
+    if (customStamp) return customStamp;
+    return getOfficialCbeStampSvg(pdfStampWeight);
+  }, [customStamp, pdfStampWeight]);
+  const [rasterizedPdfStampPng, setRasterizedPdfStampPng] = reactExports.useState(null);
+  reactExports.useEffect(() => {
+    let isCancelled = false;
+    rasterizeSvgToPng(pdfActiveStamp, 640).then((pngUrl) => {
+      if (!isCancelled && pngUrl) {
+        setRasterizedPdfStampPng(pngUrl);
+      }
+    });
+    return () => {
+      isCancelled = true;
+    };
+  }, [pdfActiveStamp]);
+  reactExports.useEffect(() => {
+    const handleSyncLogo = () => {
+      setAdminLogo(LocalDb.getCustomBankLogo());
+    };
+    const handleSyncPdfLogo = () => {
+      const val = LocalDb.getCustomPdfLogo();
+      setCustomPdfLogo(val);
+      setPdfLogoUrlInput(val || "");
+    };
+    const handleSyncStamp = () => {
+      setCustomStamp(LocalDb.getCustomBankStamp());
+    };
+    const handleSyncWebStampSize = (e) => {
+      var _a;
+      const customEvt = e;
+      if ((_a = customEvt.detail) == null ? void 0 : _a.size) {
+        setWebStampSize(customEvt.detail.size);
+      } else {
+        setWebStampSize(LocalDb.getWebStampSize());
+      }
+    };
+    const handleSyncWebStampWeight = (e) => {
+      var _a;
+      const customEvt = e;
+      if ((_a = customEvt.detail) == null ? void 0 : _a.weight) {
+        setWebStampWeight(customEvt.detail.weight);
+      } else {
+        setWebStampWeight(LocalDb.getWebStampWeight());
+      }
+    };
+    const handleSyncWebStampPosition = (e) => {
+      var _a;
+      const customEvt = e;
+      if ((_a = customEvt.detail) == null ? void 0 : _a.position) {
+        setWebStampPosition(customEvt.detail.position);
+      } else {
+        setWebStampPosition(LocalDb.getWebStampPosition());
+      }
+      setHasUnsavedStampPos(false);
+    };
+    const handleSyncPdfStampSize = (e) => {
+      var _a;
+      const customEvt = e;
+      if ((_a = customEvt.detail) == null ? void 0 : _a.size) {
+        setPdfStampSize(customEvt.detail.size);
+      } else {
+        setPdfStampSize(LocalDb.getPdfStampSize());
+      }
+    };
+    const handleSyncPdfStampWeight = (e) => {
+      var _a;
+      const customEvt = e;
+      if ((_a = customEvt.detail) == null ? void 0 : _a.weight) {
+        setPdfStampWeight(customEvt.detail.weight);
+      } else {
+        setPdfStampWeight(LocalDb.getPdfStampWeight());
+      }
+    };
+    const handleSyncPdfStampPosition = (e) => {
+      var _a;
+      const customEvt = e;
+      if ((_a = customEvt.detail) == null ? void 0 : _a.position) {
+        setPdfStampPosition(customEvt.detail.position);
+      } else {
+        setPdfStampPosition(LocalDb.getPdfStampPosition());
+      }
+      setHasUnsavedStampPos(false);
+    };
+    window.addEventListener("cbe_logo_updated", handleSyncLogo);
+    window.addEventListener("cbe_pdf_logo_updated", handleSyncPdfLogo);
+    window.addEventListener("cbe_stamp_updated", handleSyncStamp);
+    window.addEventListener("cbe_web_stamp_size_updated", handleSyncWebStampSize);
+    window.addEventListener("cbe_stamp_size_updated", handleSyncWebStampSize);
+    window.addEventListener("cbe_web_stamp_weight_updated", handleSyncWebStampWeight);
+    window.addEventListener("cbe_stamp_weight_updated", handleSyncWebStampWeight);
+    window.addEventListener("cbe_web_stamp_position_updated", handleSyncWebStampPosition);
+    window.addEventListener("cbe_stamp_position_updated", handleSyncWebStampPosition);
+    window.addEventListener("cbe_pdf_stamp_size_updated", handleSyncPdfStampSize);
+    window.addEventListener("cbe_pdf_stamp_weight_updated", handleSyncPdfStampWeight);
+    window.addEventListener("cbe_pdf_stamp_position_updated", handleSyncPdfStampPosition);
+    window.addEventListener("storage", handleSyncLogo);
+    window.addEventListener("storage", handleSyncPdfLogo);
+    window.addEventListener("storage", handleSyncStamp);
+    return () => {
+      window.removeEventListener("cbe_logo_updated", handleSyncLogo);
+      window.removeEventListener("cbe_pdf_logo_updated", handleSyncPdfLogo);
+      window.removeEventListener("cbe_stamp_updated", handleSyncStamp);
+      window.removeEventListener("cbe_web_stamp_size_updated", handleSyncWebStampSize);
+      window.removeEventListener("cbe_stamp_size_updated", handleSyncWebStampSize);
+      window.removeEventListener("cbe_web_stamp_weight_updated", handleSyncWebStampWeight);
+      window.removeEventListener("cbe_stamp_weight_updated", handleSyncWebStampWeight);
+      window.removeEventListener("cbe_web_stamp_position_updated", handleSyncWebStampPosition);
+      window.removeEventListener("cbe_stamp_position_updated", handleSyncWebStampPosition);
+      window.removeEventListener("cbe_pdf_stamp_size_updated", handleSyncPdfStampSize);
+      window.removeEventListener("cbe_pdf_stamp_weight_updated", handleSyncPdfStampWeight);
+      window.removeEventListener("cbe_pdf_stamp_position_updated", handleSyncPdfStampPosition);
+      window.removeEventListener("storage", handleSyncLogo);
+      window.removeEventListener("storage", handleSyncPdfLogo);
+      window.removeEventListener("storage", handleSyncStamp);
+    };
+  }, []);
+  const handleUpdateWebStampWidth = (newSize) => {
+    const clamped = Math.max(160, Math.min(480, Math.round(newSize)));
+    LocalDb.setWebStampSize(clamped);
+    setWebStampSize(clamped);
+    showBarsToast(`Web stamp size set to ${clamped}px (saved for web receipts)`);
+  };
+  const handleUpdateWebStampWeight = (newWeight) => {
+    LocalDb.setWebStampWeight(newWeight);
+    setWebStampWeight(newWeight);
+    showBarsToast(`Web stamp weight set to ${newWeight} (saved for web receipts)`);
+  };
+  const handleUpdatePdfStampWidth = (newSize) => {
+    const clamped = Math.max(160, Math.min(480, Math.round(newSize)));
+    LocalDb.setPdfStampSize(clamped);
+    setPdfStampSize(clamped);
+    showBarsToast(`PDF stamp size set to ${clamped}px (saved for PDF receipts)`);
+  };
+  const handleUpdatePdfStampWeight = (newWeight) => {
+    LocalDb.setPdfStampWeight(newWeight);
+    setPdfStampWeight(newWeight);
+    showBarsToast(`PDF stamp weight set to ${newWeight} (saved for PDF receipts)`);
+  };
+  const handleStampPointerDown = (e) => {
+    if (!isEditingStampPosition) return;
+    if (e.button !== 0 && e.pointerType === "mouse") return;
+    e.stopPropagation();
+    e.preventDefault();
+    setIsDraggingStamp(true);
+    const activePos = viewMode === "pdf" ? pdfStampPosition : webStampPosition;
+    dragStartRef.current = {
+      clientX: e.clientX,
+      clientY: e.clientY,
+      startXPercent: activePos.xPercent,
+      startYPercent: activePos.yPercent
+    };
+    const handlePointerMove = (moveEvt) => {
+      if (!dragStartRef.current) return;
+      const targetTable = viewMode === "pdf" ? pdfTableRef.current : transactionTableRef.current;
+      if (!targetTable) return;
+      const rect = targetTable.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+      const deltaX = moveEvt.clientX - dragStartRef.current.clientX;
+      const deltaY = moveEvt.clientY - dragStartRef.current.clientY;
+      const deltaXPercent = deltaX / rect.width * 100;
+      const deltaYPercent = deltaY / rect.height * 100;
+      const newXPercent = Math.max(5, Math.min(95, Math.round((dragStartRef.current.startXPercent + deltaXPercent) * 10) / 10));
+      const newYPercent = Math.max(5, Math.min(95, Math.round((dragStartRef.current.startYPercent + deltaYPercent) * 10) / 10));
+      if (viewMode === "pdf") {
+        setPdfStampPosition({ xPercent: newXPercent, yPercent: newYPercent });
+      } else {
+        setWebStampPosition({ xPercent: newXPercent, yPercent: newYPercent });
+      }
+      setHasUnsavedStampPos(true);
+    };
+    const handlePointerUp = () => {
+      setIsDraggingStamp(false);
+      dragStartRef.current = null;
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("pointercancel", handlePointerUp);
+      if (viewMode === "pdf") {
+        setPdfStampPosition((current) => {
+          LocalDb.setPdfStampPosition(current);
+          return current;
+        });
+        showBarsToast("PDF stamp position saved for all receipts");
+      } else {
+        setWebStampPosition((current) => {
+          LocalDb.setWebStampPosition(current);
+          return current;
+        });
+        showBarsToast("Web stamp position saved for all receipts");
+      }
+      setHasUnsavedStampPos(false);
+    };
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
+    window.addEventListener("pointercancel", handlePointerUp);
+  };
+  const handleSaveStampPosition = () => {
+    if (viewMode === "pdf") {
+      LocalDb.setPdfStampPosition(pdfStampPosition);
+      showBarsToast("PDF stamp position saved for all receipts");
+    } else {
+      LocalDb.setWebStampPosition(webStampPosition);
+      showBarsToast("Web stamp position saved for all receipts");
+    }
+    setHasUnsavedStampPos(false);
+  };
+  const handleResetStampPosition = () => {
+    const defaultPos = { xPercent: 48, yPercent: 52 };
+    if (viewMode === "pdf") {
+      LocalDb.setPdfStampPosition(defaultPos);
+      setPdfStampPosition(defaultPos);
+      showBarsToast("PDF stamp position reset to center (saved for all receipts)");
+    } else {
+      LocalDb.setWebStampPosition(defaultPos);
+      setWebStampPosition(defaultPos);
+      showBarsToast("Web stamp position reset to center (saved for all receipts)");
+    }
+    setHasUnsavedStampPos(false);
+  };
+  const handleNudgeStamp = (dx, dy) => {
+    if (viewMode === "pdf") {
+      setPdfStampPosition((prev) => {
+        const nextX = Math.max(5, Math.min(95, Math.round((prev.xPercent + dx) * 10) / 10));
+        const nextY = Math.max(5, Math.min(95, Math.round((prev.yPercent + dy) * 10) / 10));
+        const nextPos = { xPercent: nextX, yPercent: nextY };
+        LocalDb.setPdfStampPosition(nextPos);
+        setHasUnsavedStampPos(false);
+        return nextPos;
+      });
+    } else {
+      setWebStampPosition((prev) => {
+        const nextX = Math.max(5, Math.min(95, Math.round((prev.xPercent + dx) * 10) / 10));
+        const nextY = Math.max(5, Math.min(95, Math.round((prev.yPercent + dy) * 10) / 10));
+        const nextPos = { xPercent: nextX, yPercent: nextY };
+        LocalDb.setWebStampPosition(nextPos);
+        setHasUnsavedStampPos(false);
+        return nextPos;
+      });
+    }
+  };
+  const receiptData = reactExports.useMemo(() => {
+    if (transaction) {
+      const refId = formatTo12CharTxId(transaction.id || transaction.reference || "FT26233ZJ908");
+      const amount = Number(transaction.amount) || 0;
+      const serviceCharge = transaction.serviceCharge !== void 0 ? Number(transaction.serviceCharge) : amount >= 1e4 ? 3 : amount >= 500 ? 10 : 0.5;
+      const vat = transaction.vat !== void 0 ? Number(transaction.vat) : Math.round(serviceCharge * 0.15 * 100) / 100;
+      const disasterRecovery = transaction.disasterRecovery !== void 0 ? Number(transaction.disasterRecovery) : Math.round(serviceCharge * 0.05 * 100) / 100;
+      const totalDebited = transaction.totalDebited !== void 0 ? Number(transaction.totalDebited) : Math.round((amount + serviceCharge + vat + disasterRecovery) * 100) / 100;
+      const payerName = transaction.senderName || "Kasahun Yematawork Lema";
+      const payerAccount = formatCbeMask(transaction.senderAccount || "1000482918925");
+      const receiverName = transaction.recipientName || "Leykun Jemaneh Ylma";
+      const receiverAccount = formatCbeMask(transaction.recipientAccount || "1000419524747");
+      const paymentDate = formatCbeReceiptDate(transaction.createdAt);
+      const reason = transaction.description && transaction.description.trim().length > 0 ? transaction.description : String(Math.round(amount));
+      return {
+        refId,
+        payerName,
+        payerAccount,
+        receiverName,
+        receiverAccount,
+        paymentType: "A2A",
+        paymentDate,
+        reason,
+        amount,
+        serviceCharge,
+        vat,
+        disasterRecovery,
+        totalDebited,
+        words: numberToCbeWords(totalDebited),
+        customerName: payerName
+      };
+    }
+    if (smsMessage) {
+      const msg = smsMessage.message || "";
+      const ftMatch = msg.match(/FT\d{5,8}[A-Z0-9]{3,6}/i);
+      let refId = smsMessage.transactionId;
+      if (!refId && ftMatch) {
+        refId = ftMatch[0];
+      }
+      if (!refId) {
+        refId = "FT26233ZJ908";
+      }
+      const isCredit = smsMessage.type === "CREDIT" || msg.toLowerCase().includes("you have received");
+      let payerName = "Kasahun Yematawork Lema";
+      let payerAccount = "1****8925";
+      let receiverName = "Leykun Jemaneh Ylma";
+      let receiverAccount = "1****4747";
+      if (isCredit) {
+        const fromMatch = msg.match(/from account\s+([\d*]+)\s*\(([^)]+)\)/i);
+        if (fromMatch) {
+          payerAccount = formatCbeMask(fromMatch[1]);
+          payerName = fromMatch[2].trim();
+        } else if (smsMessage.sender) {
+          payerName = smsMessage.sender;
+        }
+        const toMatch = msg.match(/to your account\s+([\d*]+)/i);
+        if (toMatch) {
+          receiverAccount = formatCbeMask(toMatch[1]);
+        } else if (smsMessage.accountNumber) {
+          receiverAccount = formatCbeMask(smsMessage.accountNumber);
+        }
+        receiverName = smsMessage.accountName || "Leykun Jemaneh Ylma";
+      } else {
+        payerName = smsMessage.accountName || "Leykun Jemaneh Yilma";
+        payerAccount = formatCbeMask(smsMessage.accountNumber || "1000419524747");
+        receiverName = smsMessage.recipient || "Kasahun Yematawork Desta";
+        receiverAccount = "1****9999";
+      }
+      const amount = smsMessage.amount !== void 0 ? Number(smsMessage.amount) : 50;
+      const serviceCharge = smsMessage.serviceCharge !== void 0 ? Number(smsMessage.serviceCharge) : amount >= 3e4 ? 3 : amount >= 500 ? 10 : 0.5;
+      const vat = smsMessage.vat !== void 0 ? Number(smsMessage.vat) : Math.round(serviceCharge * 0.15 * 100) / 100;
+      const disasterRecovery = smsMessage.disasterRecovery !== void 0 ? Number(smsMessage.disasterRecovery) : Math.round(serviceCharge * 0.05 * 100) / 100;
+      const totalDebited = smsMessage.totalDebited !== void 0 ? Number(smsMessage.totalDebited) : Math.round((amount + serviceCharge + vat + disasterRecovery) * 100) / 100;
+      const reason = isCredit ? String(Math.round(amount)) : "MB transfer";
+      return {
+        refId,
+        payerName,
+        payerAccount,
+        receiverName,
+        receiverAccount,
+        paymentType: "A2A",
+        paymentDate: formatCbeReceiptDate(smsMessage.timestamp),
+        reason,
+        amount,
+        serviceCharge,
+        vat,
+        disasterRecovery,
+        totalDebited,
+        words: numberToCbeWords(totalDebited),
+        customerName: isCredit ? payerName : smsMessage.accountName || payerName
+      };
+    }
+    return {
+      refId: "FT26233ZJ908",
+      payerName: "Kasahun Yematawork Lema",
+      payerAccount: "1****8925",
+      receiverName: "Leykun Jemaneh Ylma",
+      receiverAccount: "1****4747",
+      paymentType: "A2A",
+      paymentDate: "Aug 21, 2026, 6:51 PM",
+      reason: "50",
+      amount: 50,
+      serviceCharge: 0.5,
+      vat: 0.08,
+      disasterRecovery: 0.03,
+      totalDebited: 50.61,
+      words: "Fifty ETB and Sixty One cents",
+      customerName: "Kasahun Yematawork Lema"
+    };
+  }, [transaction, smsMessage]);
+  const webReceiptUrl = `https://apps.cbe.com.et:100/?id=${receiptData.refId}`;
+  const convertSvgDataUriToPng = (svgDataUri, size = 450) => {
+    return new Promise((resolve) => {
+      if (!svgDataUri || svgDataUri.startsWith("data:image/png")) {
+        resolve(svgDataUri);
+        return;
+      }
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        try {
+          const c = document.createElement("canvas");
+          c.width = size;
+          c.height = size;
+          const ctx = c.getContext("2d");
+          if (ctx) {
+            ctx.fillStyle = "#ffffff";
+            ctx.fillRect(0, 0, size, size);
+            ctx.drawImage(img, 0, 0, size, size);
+            resolve(c.toDataURL("image/png", 1));
+            return;
+          }
+        } catch (err) {
+          console.warn("Canvas SVG to PNG conversion fallback:", err);
+        }
+        resolve(svgDataUri);
+      };
+      img.onerror = () => resolve(svgDataUri);
+      img.src = svgDataUri;
+    });
+  };
+  reactExports.useEffect(() => {
+    let isMounted = true;
+    const customQr = LocalDb.getCustomQrCode();
+    if (customQr) {
+      if (customQr.startsWith("data:image/svg")) {
+        convertSvgDataUriToPng(customQr).then((png) => {
+          if (isMounted) setQrCodeDataUrl(png);
+        });
+      } else {
+        setQrCodeDataUrl(customQr);
+      }
+      return;
+    }
+    if (initialQrCode) {
+      if (initialQrCode.startsWith("data:image/svg")) {
+        convertSvgDataUriToPng(initialQrCode).then((png) => {
+          if (isMounted) setQrCodeDataUrl(png);
+        });
+      } else {
+        setQrCodeDataUrl(initialQrCode);
+      }
+      return;
+    }
+    const txId = receiptData.refId;
+    if (!txId) return;
+    try {
+      const svgUri = getAuthenticCbeQrSvgDataUri(txId);
+      if (svgUri && isMounted) {
+        setQrCodeDataUrl(svgUri);
+      }
+    } catch {
+    }
+    getAuthenticCbeQrPngDataUrl(txId, 450).then((pngUrl) => {
+      if (isMounted && pngUrl) {
+        setQrCodeDataUrl(pngUrl);
+      }
+    }).catch((err) => console.error("Failed to generate authentic CBE QR:", err));
+    return () => {
+      isMounted = false;
+    };
+  }, [receiptData.refId, initialQrCode]);
+  reactExports.useEffect(() => {
+    const handleQrUpdate = () => {
+      const customQr = LocalDb.getCustomQrCode();
+      if (customQr) {
+        if (customQr.startsWith("data:image/svg")) {
+          convertSvgDataUriToPng(customQr).then((png) => setQrCodeDataUrl(png));
+        } else {
+          setQrCodeDataUrl(customQr);
+        }
+      } else if (receiptData.refId) {
+        getAuthenticCbeQrPngDataUrl(receiptData.refId, 450).then((pngUrl) => setQrCodeDataUrl(pngUrl)).catch(() => {
+        });
+      }
+    };
+    window.addEventListener("cbe_qr_updated", handleQrUpdate);
+    window.addEventListener("storage", handleQrUpdate);
+    return () => {
+      window.removeEventListener("cbe_qr_updated", handleQrUpdate);
+      window.removeEventListener("storage", handleQrUpdate);
+    };
+  }, [receiptData.refId]);
+  const handleOpenPdfView = () => {
+    setViewMode("pdf");
+    showBarsToast("Official CBE PDF opened — double-tap stamp to rearrange, or click Save PDF");
+  };
+  const handleDownloadPdf = async () => {
+    var _a;
+    if (isDownloading) return;
+    try {
+      setIsDownloading(true);
+      setDownloadError(null);
+      showBarsToast("Generating high-resolution official CBE PDF...");
+      let exactQr = qrCodeDataUrl;
+      const webReceiptQrImg = (_a = receiptCardRef.current) == null ? void 0 : _a.querySelector('img[alt="Official CBE Receipt QR"]');
+      if (webReceiptQrImg && webReceiptQrImg.src) {
+        exactQr = webReceiptQrImg.src;
+      }
+      if (exactQr && (exactQr.startsWith("data:image/svg") || exactQr.includes("<svg"))) {
+        try {
+          exactQr = await convertSvgDataUriToPng(exactQr, 450);
+          setQrCodeDataUrl(exactQr);
+        } catch {
+          const genPng = await getAuthenticCbeQrPngDataUrl(receiptData.refId || "FT26248KLR82", 450);
+          if (genPng) {
+            exactQr = genPng;
+            setQrCodeDataUrl(exactQr);
+          }
+        }
+      }
+      if (!exactQr) {
+        exactQr = await getAuthenticCbeQrPngDataUrl(receiptData.refId || "FT26248KLR82", 450);
+        if (exactQr) setQrCodeDataUrl(exactQr);
+      }
+      await new Promise((r) => setTimeout(r, 200));
+      const targetContainer = pdfTemplateRef.current || document.getElementById("cbe-official-pdf-render-canvas");
+      if (!targetContainer || !document.body.contains(targetContainer)) {
+        throw new Error("Receipt document template is not ready. Please try again.");
+      }
+      const page1Element = targetContainer.querySelector("#cbe-pdf-page-1") || targetContainer;
+      const page2Element = targetContainer.querySelector("#cbe-pdf-page-2");
+      const qrImageInPage1 = page1Element.querySelector("#cbe-pdf-official-qr-image");
+      if (qrImageInPage1 && exactQr) {
+        qrImageInPage1.src = exactQr;
+        if (!qrImageInPage1.complete) {
+          await new Promise((resolve) => {
+            qrImageInPage1.onload = () => resolve();
+            qrImageInPage1.onerror = () => resolve();
+            setTimeout(resolve, 300);
+          });
+        }
+      }
+      const canvas1 = await html2canvas(page1Element, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+        imageTimeout: 15e3,
+        windowWidth: 640
+      });
+      const imgData1 = canvas1.toDataURL("image/png", 1);
+      let canvas2 = null;
+      let imgData2 = null;
+      if (page2Element) {
+        canvas2 = await html2canvas(page2Element, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: "#ffffff",
+          logging: false,
+          imageTimeout: 15e3,
+          windowWidth: 640
+        });
+        imgData2 = canvas2.toDataURL("image/png", 1);
+      }
+      const pdf = new E({
+        orientation: "portrait",
+        unit: "mm",
+        format: "a4",
+        compress: true
+      });
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const marginX = 12;
+      const marginY = 12;
+      const printableWidth = pageWidth - marginX * 2;
+      const printableHeight = pageHeight - marginY * 2;
+      let renderWidth1 = printableWidth;
+      let renderHeight1 = canvas1.height * renderWidth1 / canvas1.width;
+      if (renderHeight1 > printableHeight) {
+        const ratio = printableHeight / renderHeight1;
+        renderHeight1 = printableHeight;
+        renderWidth1 = renderWidth1 * ratio;
+      }
+      const startX1 = marginX + (printableWidth - renderWidth1) / 2;
+      pdf.addImage(imgData1, "PNG", startX1, marginY, renderWidth1, renderHeight1, void 0, "FAST");
+      if (imgData2 && canvas2) {
+        pdf.addPage();
+        let renderWidth2 = printableWidth;
+        let renderHeight2 = canvas2.height * renderWidth2 / canvas2.width;
+        if (renderHeight2 > printableHeight) {
+          const ratio = printableHeight / renderHeight2;
+          renderHeight2 = printableHeight;
+          renderWidth2 = renderWidth2 * ratio;
+        }
+        const startX2 = marginX + (printableWidth - renderWidth2) / 2;
+        pdf.addImage(imgData2, "PNG", startX2, marginY, renderWidth2, renderHeight2, void 0, "FAST");
+      }
+      pdf.save(`CBE_Customer_Receipt_${receiptData.refId || "FT"}.pdf`);
+      setDownloadSuccess(true);
+      setTimeout(() => setDownloadSuccess(false), 3e3);
+    } catch (err) {
+      console.error("PDF Download error:", err);
+      setDownloadError((err == null ? void 0 : err.message) || "Failed to generate PDF. Please try again.");
+      setTimeout(() => setDownloadError(null), 4e3);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+  const handlePrintPdf = () => {
+    window.print();
+  };
+  const handleDownloadPng = async () => {
+    const rawTarget = pdfTemplateRef.current || receiptCardRef.current;
+    if (!rawTarget || isDownloading) return;
+    const targetElement = rawTarget.querySelector("#cbe-pdf-page-1") || rawTarget;
+    try {
+      setIsDownloading(true);
+      setDownloadError(null);
+      const canvas2 = await html2canvas(targetElement, {
+        scale: 3,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+        logging: false,
+        imageTimeout: 15e3
+      });
+      const imgData = canvas2.toDataURL("image/png");
+      const isIos = checkIsIOS();
+      if (isIos) {
+        const blob = dataUrlToBlob$1(imgData);
+        const filename = `CBE_Customer_Receipt_${receiptData.refId || "FT"}.png`;
+        const file = new File([blob], filename, { type: "image/png" });
+        if (typeof navigator !== "undefined" && navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: `CBE Customer Receipt`
+            });
+          } catch {
+          }
+        }
+      } else {
+        const link = document.createElement("a");
+        link.href = imgData;
+        link.download = `CBE_Customer_Receipt_${receiptData.refId || "FT"}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+      setDownloadSuccess(true);
+      setTimeout(() => setDownloadSuccess(false), 3e3);
+    } catch (err) {
+      console.error("PNG Download error:", err);
+      setDownloadError((err == null ? void 0 : err.message) || "Failed to save image. Please try again.");
+      setTimeout(() => setDownloadError(null), 4e3);
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(webReceiptUrl);
+    setCopiedUrl(true);
+    setTimeout(() => setCopiedUrl(false), 2500);
+  };
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    setTimeout(() => {
+      setIsRefreshing(false);
+    }, 500);
+  };
+  const handleSelectBrowser = (type) => {
+    setBrowserType(type);
+    try {
+      localStorage.setItem("cbe_receipt_browser_type", type);
+      PhoneSettingsService.updateSettings({ receiptBrowser: type });
+    } catch {
+    }
+    const labels = {
+      chrome: "Google Chrome",
+      opera: "Opera Browser",
+      safari: "Apple Safari",
+      samsung: "Samsung Internet",
+      phoenix: "Phoenix Browser",
+      firefox: "Mozilla Firefox"
+    };
+    showBarsToast(`Browser switched to ${labels[type] || type}`);
+  };
+  const handleSelectTabCount = (count) => {
+    const clean = count.replace(/[^0-9+]/g, "").slice(0, 4) || "1";
+    setTabCount(clean);
+    localStorage.setItem("cbe_receipt_tab_count", clean);
+  };
+  const handleUploadStampFile = (e) => {
+    var _a;
+    const file = (_a = e.target.files) == null ? void 0 : _a[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      var _a2;
+      const dataUrl = (_a2 = event.target) == null ? void 0 : _a2.result;
+      if (dataUrl) {
+        LocalDb.setCustomBankStamp(dataUrl);
+        setCustomStamp(dataUrl);
+        setIsMenuOpen(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+  const handleResetStamp = () => {
+    LocalDb.setCustomBankStamp(null);
+    setCustomStamp(null);
+  };
+  const handleUploadPdfLogoFile = (e) => {
+    var _a;
+    const file = (_a = e.target.files) == null ? void 0 : _a[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      var _a2;
+      const dataUrl = (_a2 = event.target) == null ? void 0 : _a2.result;
+      if (dataUrl) {
+        LocalDb.setCustomPdfLogo(dataUrl);
+        setCustomPdfLogo(dataUrl);
+        setPdfLogoUrlInput(dataUrl);
+        showBarsToast("PDF logo updated (PDF only)");
+        setIsMenuOpen(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+  const handleApplyPdfLogoUrl = (inputUrl) => {
+    const target = pdfLogoUrlInput.trim();
+    if (!target) {
+      handleResetPdfLogo();
+      return;
+    }
+    LocalDb.setCustomPdfLogo(target);
+    setCustomPdfLogo(target);
+    showBarsToast("PDF logo updated by URL (PDF only)");
+  };
+  const handleResetPdfLogo = () => {
+    LocalDb.setCustomPdfLogo(null);
+    setCustomPdfLogo(null);
+    setPdfLogoUrlInput("");
+    showBarsToast("PDF logo reset to official CBE emblem");
+  };
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
+    "div",
+    {
+      className: "fixed inset-0 z-[80] bg-[#f0f2f5] flex flex-col items-stretch justify-start overflow-hidden w-full h-full min-h-[100dvh] select-none",
+      children: [
+        barsToast && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "div",
+          {
+            "data-html2canvas-ignore": "true",
+            className: "fixed top-5 left-1/2 -translate-x-1/2 bg-gray-950/95 backdrop-blur-md text-white text-[12px] font-semibold py-2 px-4 rounded-full shadow-2xl z-[90] flex items-center gap-2 border border-white/20 pointer-events-none animate-in fade-in zoom-in-95 duration-200",
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsx(Sparkles, { className: "w-3.5 h-3.5 text-amber-300 shrink-0" }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: barsToast })
+            ]
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "input",
+          {
+            ref: stampFileInputRef,
+            type: "file",
+            accept: "image/*",
+            className: "hidden",
+            onChange: handleUploadStampFile
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "input",
+          {
+            ref: pdfLogoFileInputRef,
+            type: "file",
+            accept: "image/*",
+            className: "hidden",
+            onChange: handleUploadPdfLogoFile
+          }
+        ),
+        browserType === "opera" ? (
+          /* ================= 1. OPERA HEADER ================= */
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "header",
+            {
+              id: "cbe-opera-browser-header",
+              className: "w-full px-3.5 pt-[max(env(safe-area-inset-top,0px),8px)] pb-2.5 bg-[#0e0e10] border-b border-neutral-900 flex items-center justify-between text-white flex-shrink-0 z-30 select-none shadow-sm",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "button",
+                  {
+                    onClick: onClose,
+                    "aria-label": "Back",
+                    className: "p-1 -ml-1 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-full transition cursor-pointer flex items-center justify-center shrink-0 mr-1.5",
+                    title: "Return to App",
+                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "w-5 h-5" })
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  "div",
+                  {
+                    onClick: handleCopyLink,
+                    className: "flex items-center gap-2 flex-1 min-w-0 cursor-pointer select-none pr-2 py-0.5",
+                    title: "Click to copy receipt URL",
+                    children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { viewBox: "0 0 24 24", className: "w-5 h-5 text-white/95 shrink-0", fill: "none", stroke: "currentColor", strokeWidth: "2.2", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "12", r: "9.5" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12 7.5h.01M12 11v5", strokeWidth: "2.2", strokeLinecap: "round" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex-1 overflow-hidden whitespace-nowrap text-ellipsis text-[14px] text-[#e5e5e5] font-normal tracking-tight font-sans", children: viewMode === "pdf" ? /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "flex items-center gap-1.5", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bg-red-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-2xs leading-none", children: "PDF" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "truncate", children: [
+                          "apps.cbe.com.et:100/pdf/?id=",
+                          receiptData.refId
+                        ] })
+                      ] }) : copiedUrl ? /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-emerald-400 font-bold text-xs", children: "Copied URL to clipboard!" }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+                        "apps.cbe.com.et:100/?id=",
+                        receiptData.refId
+                      ] }) })
+                    ]
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 shrink-0", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      onClick: handleRefresh,
+                      className: "p-1 text-neutral-200 hover:text-white transition cursor-pointer flex items-center justify-center",
+                      title: "Reload page",
+                      "aria-label": "Reload page",
+                      children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { viewBox: "0 0 24 24", className: `w-4.5 h-4.5 text-neutral-200 stroke-current ${isRefreshing ? "animate-spin" : ""}`, fill: "none", strokeWidth: "2.4", strokeLinecap: "round", strokeLinejoin: "round", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M21 12a9 9 0 1 1-2.6-6.3L21 8" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M21 3v5h-5" })
+                      ] })
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      onClick: () => setIsMenuOpen(true),
+                      className: "w-5 h-5 rounded-[4px] border border-neutral-400 text-neutral-200 font-bold text-[10.5px] flex items-center justify-center hover:bg-white/10 transition cursor-pointer shrink-0",
+                      title: "Tabs / Browser Settings",
+                      children: tabCount
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      onClick: () => setIsMenuOpen(!isMenuOpen),
+                      className: "p-1 text-white hover:bg-white/10 rounded-full transition cursor-pointer flex items-center justify-center",
+                      title: "Opera menu & options",
+                      "aria-label": "Opera menu & options",
+                      children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { viewBox: "0 0 24 24", className: "w-5 h-5 fill-white", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "5", r: "1.7" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "12", r: "1.7" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "19", r: "1.7" })
+                      ] })
+                    }
+                  )
+                ] })
+              ]
+            }
+          )
+        ) : browserType === "chrome" ? (
+          /* ================= 2. GOOGLE CHROME HEADER ================= */
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "header",
+            {
+              id: "cbe-chrome-browser-header",
+              className: "w-full px-3 pt-[max(env(safe-area-inset-top,0px),8px)] pb-2 bg-[#121214] border-b border-[#282a30] flex items-center justify-between text-white flex-shrink-0 z-30 select-none shadow-sm",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "button",
+                  {
+                    onClick: onClose,
+                    "aria-label": "Home",
+                    className: "p-1 text-white hover:bg-white/10 rounded-full transition cursor-pointer flex items-center justify-center shrink-0",
+                    title: "Home (Close Receipt)",
+                    children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { viewBox: "0 0 24 24", className: "w-[22px] h-[22px] text-white", fill: "none", stroke: "currentColor", strokeWidth: "2.2", strokeLinecap: "round", strokeLinejoin: "round", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M3 10.5L12 3l9 7.5V20a1.5 1.5 0 0 1-1.5 1.5H15v-6a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v6H4.5A1.5 1.5 0 0 1 3 20v-9.5z" }) })
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  "div",
+                  {
+                    onClick: handleCopyLink,
+                    className: "flex-1 bg-[#28282b] hover:bg-[#323236] h-9.5 rounded-full px-3.5 flex items-center gap-2.5 cursor-pointer transition select-none overflow-hidden mx-2 shadow-xs",
+                    title: "Click to copy receipt URL",
+                    children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { viewBox: "0 0 24 24", className: "w-[18px] h-[18px] text-white shrink-0", fill: "none", stroke: "currentColor", strokeWidth: "2", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "12", r: "9" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "7.8", r: "0.9", fill: "currentColor", stroke: "none" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12 11.2v5.3", strokeWidth: "2", strokeLinecap: "round" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex-1 overflow-hidden whitespace-nowrap text-ellipsis flex items-center", children: viewMode === "pdf" ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5 text-[13px] text-[#e3e3e8] font-normal tracking-tight font-sans", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bg-red-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-2xs leading-none", children: "PDF" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "truncate", children: [
+                          "apps.cbe.com.et:100/pdf/?id=",
+                          receiptData.refId
+                        ] })
+                      ] }) : copiedUrl ? /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-emerald-400 font-bold text-xs", children: "Copied URL to clipboard!" }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-[14px] text-[#e3e3e8] font-normal tracking-tight font-sans flex items-center", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "inline-block opacity-65", children: "s" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: ".cbe.com.et:100" })
+                      ] }) })
+                    ]
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 shrink-0 pr-0.5", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      onClick: handleCopyLink,
+                      className: "p-1 text-white hover:bg-white/10 rounded-md transition cursor-pointer flex items-center justify-center shrink-0",
+                      title: "Google Translate",
+                      "aria-label": "Google Translate",
+                      children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { className: "w-5.5 h-5.5", viewBox: "0 0 24 24", fill: "none", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: "2.5", y: "3.5", width: "12", height: "13.5", rx: "2", fill: "#ffffff" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("text", { x: "5.2", y: "13", fill: "#121214", fontSize: "8", fontWeight: "bold", fontFamily: "system-ui, -apple-system, sans-serif", children: "G" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(
+                          "path",
+                          {
+                            d: "M8.5 7.5a1.5 1.5 0 0 1 1.5-1.5h8.5a1.5 1.5 0 0 1 1.5 1.5v7.2a1.5 1.5 0 0 1-.44 1.06l-2.7 2.7A1.5 1.5 0 0 1 15.8 19H10a1.5 1.5 0 0 1-1.5-1.5v-10z",
+                            fill: "#121214",
+                            stroke: "#ffffff",
+                            strokeWidth: "1.6",
+                            strokeLinejoin: "round"
+                          }
+                        ),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M16.5 18.8v-2.5a.8.8 0 0 1 .8-.8h2.5", fill: "none", stroke: "#ffffff", strokeWidth: "1.4", strokeLinecap: "round", strokeLinejoin: "round" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("text", { x: "11.2", y: "15", fill: "#ffffff", fontSize: "8", fontWeight: "bold", fontFamily: "system-ui, -apple-system, sans-serif", children: "文" })
+                      ] })
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      onClick: () => setIsMenuOpen(true),
+                      className: "w-[20px] h-[20px] rounded-[4.5px] border-[1.8px] border-white text-white font-bold text-[11px] flex items-center justify-center hover:bg-white/10 transition cursor-pointer shrink-0 leading-none",
+                      title: "Tabs (Click to customize)",
+                      children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "-translate-y-[0.5px]", children: tabCount })
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      onClick: () => setIsMenuOpen(!isMenuOpen),
+                      className: "p-1 text-white hover:bg-white/10 rounded-full transition cursor-pointer flex items-center justify-center shrink-0",
+                      title: "Chrome menu",
+                      "aria-label": "Chrome menu",
+                      children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { viewBox: "0 0 24 24", className: "w-5 h-5 fill-white", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "5", r: "1.6" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "12", r: "1.6" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "19", r: "1.6" })
+                      ] })
+                    }
+                  )
+                ] })
+              ]
+            }
+          )
+        ) : browserType === "safari" ? (
+          /* ================= 3. APPLE SAFARI (iOS) HEADER ================= */
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "header",
+            {
+              id: "cbe-safari-browser-header",
+              className: "w-full px-3.5 pt-[max(env(safe-area-inset-top,0px),8px)] pb-2.5 bg-[#1c1c1e]/98 backdrop-blur-md border-b border-neutral-800 flex items-center justify-between text-white flex-shrink-0 z-30 select-none shadow-sm",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "button",
+                  {
+                    onClick: onClose,
+                    className: "text-[#0a84ff] hover:text-blue-400 font-medium text-[15px] px-1 py-1 transition cursor-pointer shrink-0",
+                    title: "Done (Close Receipt)",
+                    children: "Done"
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  "div",
+                  {
+                    onClick: handleCopyLink,
+                    className: "flex-1 bg-[#2c2c2e] hover:bg-[#38383a] h-9 rounded-xl px-3 flex items-center justify-between cursor-pointer transition select-none mx-2.5 border border-neutral-700/50 shadow-inner",
+                    title: "Click to copy receipt URL",
+                    children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-[11px] font-serif font-bold text-neutral-400 select-none tracking-tight", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm", children: "a" }),
+                        "A"
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5 overflow-hidden mx-2", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(Lock, { className: "w-3.5 h-3.5 text-neutral-400 shrink-0" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[13.5px] text-[#f2f2f7] font-sans font-medium tracking-tight truncate", children: viewMode === "pdf" ? `apps.cbe.com.et:100/pdf/?id=${receiptData.refId}` : "apps.cbe.com.et:100" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        "button",
+                        {
+                          type: "button",
+                          onClick: (e) => {
+                            e.stopPropagation();
+                            handleRefresh();
+                          },
+                          className: "text-neutral-400 hover:text-white transition",
+                          title: "Reload",
+                          children: /* @__PURE__ */ jsxRuntimeExports.jsx(RotateCw, { className: `w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}` })
+                        }
+                      )
+                    ]
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 shrink-0", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      onClick: handleCopyLink,
+                      className: "p-1 text-[#0a84ff] hover:text-blue-400 transition cursor-pointer",
+                      title: "Share / Copy Link",
+                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(Share2, { className: "w-4.5 h-4.5" })
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      onClick: () => setIsMenuOpen(!isMenuOpen),
+                      className: "p-1 text-[#0a84ff] hover:text-blue-400 transition cursor-pointer",
+                      title: "Safari Tabs & Settings",
+                      children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-4.5 h-4.5 border-2 border-current rounded-xs relative", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "absolute -top-1 -right-1 w-3 h-3 border-t-2 border-r-2 border-current rounded-2xs" }) })
+                    }
+                  )
+                ] })
+              ]
+            }
+          )
+        ) : browserType === "samsung" ? (
+          /* ================= 4. SAMSUNG INTERNET HEADER ================= */
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "header",
+            {
+              id: "cbe-samsung-browser-header",
+              className: "w-full px-3.5 pt-[max(env(safe-area-inset-top,0px),8px)] pb-2 bg-[#181920] border-b border-neutral-800 flex items-center justify-between text-[#e2e4ea] flex-shrink-0 z-30 select-none shadow-sm",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "button",
+                  {
+                    onClick: onClose,
+                    "aria-label": "Home",
+                    className: "p-1.5 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-full transition cursor-pointer shrink-0",
+                    title: "Return to App",
+                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(House, { className: "w-4.5 h-4.5" })
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  "div",
+                  {
+                    onClick: handleCopyLink,
+                    className: "flex-1 bg-[#262730] hover:bg-[#30323c] h-9 rounded-full px-3.5 flex items-center justify-between cursor-pointer transition select-none mx-2 border border-neutral-700/60",
+                    title: "Click to copy receipt URL",
+                    children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5 overflow-hidden", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(Lock, { className: "w-3.5 h-3.5 text-neutral-400 shrink-0" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[13.5px] text-white font-sans tracking-tight truncate", children: viewMode === "pdf" ? `apps.cbe.com.et:100/pdf/?id=${receiptData.refId}` : "apps.cbe.com.et:100" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        "button",
+                        {
+                          type: "button",
+                          onClick: (e) => {
+                            e.stopPropagation();
+                            handleRefresh();
+                          },
+                          className: "text-neutral-400 hover:text-white",
+                          children: /* @__PURE__ */ jsxRuntimeExports.jsx(RotateCw, { className: `w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}` })
+                        }
+                      )
+                    ]
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5 shrink-0", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      onClick: () => showBarsToast("Bookmark saved"),
+                      className: "p-1 text-amber-400 hover:text-amber-300 transition",
+                      title: "Bookmark",
+                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(Star, { className: "w-4.5 h-4.5 fill-amber-400/20" })
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      onClick: () => setIsMenuOpen(true),
+                      className: "w-5.5 h-5.5 rounded-lg border border-neutral-400 text-white font-bold text-[10.5px] flex items-center justify-center hover:bg-neutral-800 transition",
+                      title: "Tabs",
+                      children: tabCount
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      onClick: () => setIsMenuOpen(!isMenuOpen),
+                      className: "p-1 text-neutral-300 hover:text-white transition",
+                      title: "Samsung menu",
+                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(EllipsisVertical, { className: "w-4.5 h-4.5" })
+                    }
+                  )
+                ] })
+              ]
+            }
+          )
+        ) : browserType === "phoenix" ? (
+          /* ================= 5. PHOENIX BROWSER HEADER ================= */
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "header",
+            {
+              id: "cbe-phoenix-browser-header",
+              className: "w-full px-3 pt-[max(env(safe-area-inset-top,0px),8px)] pb-2 bg-[#131720] border-b border-[#202735] flex items-center justify-between text-[#e0e5ee] flex-shrink-0 z-30 select-none shadow-sm",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5 shrink-0", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      onClick: onClose,
+                      "aria-label": "Back",
+                      className: "p-1 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-full transition",
+                      title: "Return to App",
+                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "w-5 h-5" })
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "div",
+                    {
+                      onClick: () => setIsMenuOpen(true),
+                      className: "w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-400/60 flex items-center justify-center text-emerald-400 text-xs font-black select-none cursor-pointer",
+                      title: "Phoenix Browser",
+                      children: "P"
+                    }
+                  )
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "div",
+                  {
+                    onClick: handleCopyLink,
+                    className: "flex-1 bg-[#1e2433] hover:bg-[#283044] h-9 rounded-full px-3 flex items-center justify-between cursor-pointer transition select-none mx-2 border border-[#2b354a]",
+                    title: "Click to copy receipt URL",
+                    children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5 overflow-hidden", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(SlidersHorizontal, { className: "w-3.5 h-3.5 text-emerald-400 shrink-0" }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[13px] text-white font-sans tracking-tight truncate", children: "apps.cbe.com.et:100" })
+                    ] })
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1 shrink-0", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      onClick: () => setIsMenuOpen(true),
+                      className: "w-5.5 h-5.5 rounded-[5px] border-[1.8px] border-neutral-300 text-neutral-200 font-bold text-[10.5px] flex items-center justify-center hover:bg-neutral-800 transition",
+                      title: "Tabs",
+                      children: tabCount
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      onClick: () => setIsMenuOpen(!isMenuOpen),
+                      className: "p-1 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-full transition",
+                      title: "Browser options",
+                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(EllipsisVertical, { className: "w-5 h-5" })
+                    }
+                  )
+                ] })
+              ]
+            }
+          )
+        ) : (
+          /* ================= 6. MOZILLA FIREFOX HEADER ================= */
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "header",
+            {
+              id: "cbe-firefox-browser-header",
+              className: "w-full px-3 pt-[max(env(safe-area-inset-top,0px),8px)] pb-2 bg-[#1c1b22] border-b border-[#2b2a33] flex items-center justify-between text-white flex-shrink-0 z-30 select-none shadow-sm",
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "button",
+                  {
+                    onClick: onClose,
+                    "aria-label": "Back",
+                    className: "p-1 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-full transition shrink-0",
+                    title: "Return to App",
+                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "w-5 h-5" })
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  "div",
+                  {
+                    onClick: handleCopyLink,
+                    className: "flex-1 bg-[#2b2a33] hover:bg-[#383742] h-9 rounded-xl px-3 flex items-center justify-between cursor-pointer transition select-none mx-2 border border-neutral-700/60",
+                    title: "Click to copy receipt URL",
+                    children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5 overflow-hidden", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(Shield, { className: "w-3.5 h-3.5 text-purple-400 shrink-0" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(Lock, { className: "w-3 h-3 text-neutral-400 shrink-0" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[13px] text-neutral-100 font-sans tracking-tight truncate", children: "apps.cbe.com.et:100" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        "button",
+                        {
+                          type: "button",
+                          onClick: (e) => {
+                            e.stopPropagation();
+                            handleRefresh();
+                          },
+                          className: "text-neutral-400 hover:text-white",
+                          children: /* @__PURE__ */ jsxRuntimeExports.jsx(RotateCw, { className: `w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}` })
+                        }
+                      )
+                    ]
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5 shrink-0", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      onClick: () => setIsMenuOpen(true),
+                      className: "w-5.5 h-5.5 rounded-md border border-neutral-400 text-white font-bold text-[10.5px] flex items-center justify-center hover:bg-neutral-800 transition",
+                      title: "Tabs",
+                      children: tabCount
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      onClick: () => setIsMenuOpen(!isMenuOpen),
+                      className: "p-1 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-full transition",
+                      title: "Firefox menu & options",
+                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(EllipsisVertical, { className: "w-5 h-5" })
+                    }
+                  )
+                ] })
+              ]
+            }
+          )
+        ),
+        isMenuOpen && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "div",
+            {
+              className: "fixed inset-0 z-40 bg-black/40 backdrop-blur-2xs animate-fade-in",
+              onClick: () => setIsMenuOpen(false)
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(
+            "div",
+            {
+              id: "browser-settings-modal",
+              className: "fixed top-12 sm:top-14 right-2 sm:right-4 z-50 w-84 max-w-[calc(100vw-16px)] max-h-[calc(100vh-64px)] overflow-y-auto bg-[#1c1f26] text-white rounded-2xl shadow-2xl border border-neutral-700/90 p-4 animate-in fade-in zoom-in-95 duration-150 select-none",
+              style: { fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
+              children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between pb-3 border-b border-neutral-700/80 mb-3", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(Globe, { className: "w-4.5 h-4.5 text-emerald-400" }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("h3", { className: "text-[14px] font-bold tracking-tight flex items-center gap-1.5", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Web Receipt Settings" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[9.5px] bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 px-1.5 py-0.2 rounded font-bold", children: "Web View" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-[10px] text-neutral-400", children: "Header style & web receipt stamp options" })
+                    ] })
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      onClick: () => setIsMenuOpen(false),
+                      className: "p-1 rounded-full hover:bg-neutral-800 text-neutral-400 hover:text-white transition",
+                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "w-4 h-4" })
+                    }
+                  )
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1.5 mb-4", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-2", children: "Choose Browser Header Style" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: () => handleSelectBrowser("chrome"),
+                      className: `w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition cursor-pointer ${browserType === "chrome" ? "bg-emerald-500/20 border border-emerald-400/80 text-white" : "bg-neutral-800/60 hover:bg-neutral-800 border border-neutral-700/50 text-neutral-300"}`,
+                      children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2.5", children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-7 h-7 rounded-lg bg-[#1f1f21] flex items-center justify-center border border-neutral-600 text-white font-bold text-xs", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { viewBox: "0 0 24 24", className: "w-4 h-4 text-white", fill: "none", stroke: "currentColor", strokeWidth: "2.2", strokeLinecap: "round", strokeLinejoin: "round", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M3 10.5L12 3l9 7.5V20a1.5 1.5 0 0 1-1.5 1.5H15v-6h-6v6H4.5A1.5 1.5 0 0 1 3 20v-9.5z" }) }) }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-[13px] font-bold flex items-center gap-1.5", children: [
+                              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Google Chrome" }),
+                              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[9.5px] bg-neutral-700 text-white px-1.5 py-0.2 rounded font-semibold", children: "Image 1" })
+                            ] }),
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[10px] text-neutral-400", children: "Home icon, pill bar, Google Translate & tabs" })
+                          ] })
+                        ] }),
+                        browserType === "chrome" && /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheck, { className: "w-4 h-4 text-emerald-400 shrink-0" })
+                      ]
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: () => handleSelectBrowser("opera"),
+                      className: `w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition cursor-pointer ${browserType === "opera" ? "bg-emerald-500/20 border border-emerald-400/80 text-white" : "bg-neutral-800/60 hover:bg-neutral-800 border border-neutral-700/50 text-neutral-300"}`,
+                      children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2.5", children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-7 h-7 rounded-lg bg-[#0e0e10] flex items-center justify-center border border-neutral-700 text-neutral-200", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { viewBox: "0 0 24 24", className: "w-4 h-4 text-neutral-200", fill: "none", stroke: "currentColor", strokeWidth: "2.4", strokeLinecap: "round", strokeLinejoin: "round", children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M21 12a9 9 0 1 1-2.6-6.3L21 8" }),
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M21 3v5h-5" })
+                          ] }) }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-[13px] font-bold flex items-center gap-1.5", children: [
+                              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Opera Browser" }),
+                              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[9.5px] bg-red-950 border border-red-500/50 text-red-300 px-1.5 py-0.2 rounded font-semibold", children: "Image 2" })
+                            ] }),
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[10px] text-neutral-400", children: "Flat black bar, full URL with ID, reload button" })
+                          ] })
+                        ] }),
+                        browserType === "opera" && /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheck, { className: "w-4 h-4 text-emerald-400 shrink-0" })
+                      ]
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: () => handleSelectBrowser("safari"),
+                      className: `w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition cursor-pointer ${browserType === "safari" ? "bg-emerald-500/20 border border-emerald-400/80 text-white" : "bg-neutral-800/60 hover:bg-neutral-800 border border-neutral-700/50 text-neutral-300"}`,
+                      children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2.5", children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-7 h-7 rounded-lg bg-[#1c1c1e] flex items-center justify-center border border-neutral-700 text-[#0a84ff]", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[10px] font-serif font-black", children: "aA" }) }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-[13px] font-bold flex items-center gap-1.5", children: [
+                              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Apple Safari" }),
+                              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[9.5px] bg-blue-950 border border-blue-500/50 text-blue-300 px-1.5 py-0.2 rounded font-semibold", children: "iOS Style" })
+                            ] }),
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[10px] text-neutral-400", children: "Done button, aA text controls, lock pill & share" })
+                          ] })
+                        ] }),
+                        browserType === "safari" && /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheck, { className: "w-4 h-4 text-emerald-400 shrink-0" })
+                      ]
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: () => handleSelectBrowser("samsung"),
+                      className: `w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition cursor-pointer ${browserType === "samsung" ? "bg-emerald-500/20 border border-emerald-400/80 text-white" : "bg-neutral-800/60 hover:bg-neutral-800 border border-neutral-700/50 text-neutral-300"}`,
+                      children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2.5", children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-7 h-7 rounded-lg bg-neutral-900 flex items-center justify-center border border-neutral-700 text-amber-400", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Star, { className: "w-3.5 h-3.5 fill-amber-400/30 text-amber-400" }) }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[13px] font-bold", children: "Samsung Internet" }),
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[10px] text-neutral-400", children: "Galaxy One UI style with bookmark star & tabs" })
+                          ] })
+                        ] }),
+                        browserType === "samsung" && /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheck, { className: "w-4 h-4 text-emerald-400 shrink-0" })
+                      ]
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: () => handleSelectBrowser("phoenix"),
+                      className: `w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition cursor-pointer ${browserType === "phoenix" ? "bg-emerald-500/20 border border-emerald-400/80 text-white" : "bg-neutral-800/60 hover:bg-neutral-800 border border-neutral-700/50 text-neutral-300"}`,
+                      children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2.5", children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-7 h-7 rounded-lg bg-emerald-950/80 flex items-center justify-center border border-emerald-500/50 text-emerald-400 font-black text-xs", children: "P" }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[13px] font-bold", children: "Phoenix Browser" }),
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[10px] text-neutral-400", children: "Tecno, Infinix & Itel mobile style" })
+                          ] })
+                        ] }),
+                        browserType === "phoenix" && /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheck, { className: "w-4 h-4 text-emerald-400 shrink-0" })
+                      ]
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: () => handleSelectBrowser("firefox"),
+                      className: `w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition cursor-pointer ${browserType === "firefox" ? "bg-emerald-500/20 border border-emerald-400/80 text-white" : "bg-neutral-800/60 hover:bg-neutral-800 border border-neutral-700/50 text-neutral-300"}`,
+                      children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2.5", children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-7 h-7 rounded-lg bg-purple-950/80 flex items-center justify-center border border-purple-500/50 text-purple-400 font-bold text-xs", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Shield, { className: "w-3.5 h-3.5 text-purple-400" }) }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[13px] font-bold", children: "Mozilla Firefox" }),
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[10px] text-neutral-400", children: "Tracking shield & dark modern layout" })
+                          ] })
+                        ] }),
+                        browserType === "firefox" && /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheck, { className: "w-4 h-4 text-emerald-400 shrink-0" })
+                      ]
+                    }
+                  )
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mb-4 pt-3 border-t border-neutral-700/80", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between mb-2", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[11px] font-semibold text-neutral-400 uppercase tracking-wider", children: "Tab Counter Badge" }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-xs text-emerald-400 font-mono font-bold", children: [
+                      "[",
+                      tabCount,
+                      "]"
+                    ] })
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex items-center gap-1.5", children: ["2", "1", "4", "12", "80", "99+"].map((num) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: () => handleSelectTabCount(num),
+                      className: `flex-1 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${tabCount === num ? "bg-emerald-500 text-black shadow-xs" : "bg-neutral-800 hover:bg-neutral-700 text-neutral-300"}`,
+                      children: num
+                    },
+                    num
+                  )) })
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mb-4 pt-3 border-t border-neutral-700/80 space-y-3", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-[11px] font-semibold text-neutral-300 uppercase tracking-wider flex items-center gap-1.5", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(Stamp, { className: "w-3.5 h-3.5 text-purple-400" }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Web Stamp Width & Weight" })
+                    ] }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-[10px] text-purple-300 font-mono font-bold bg-purple-900/60 border border-purple-500/40 px-2 py-0.5 rounded-full", children: [
+                      webStampSize,
+                      "px • ",
+                      webStampWeight.toUpperCase()
+                    ] })
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-neutral-850/80 border border-neutral-700/70 rounded-xl p-2.5 space-y-2", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between text-xs", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "font-semibold text-neutral-200 flex items-center gap-1.5", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(SlidersVertical, { className: "w-3.5 h-3.5 text-purple-400" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Web Stamp Width (ስፋት)" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(
+                          "button",
+                          {
+                            type: "button",
+                            onClick: () => handleUpdateWebStampWidth(webStampSize - 10),
+                            className: "w-5 h-5 rounded bg-neutral-700 hover:bg-neutral-600 text-neutral-200 flex items-center justify-center font-bold text-xs transition cursor-pointer",
+                            title: "Decrease width by 10px",
+                            children: /* @__PURE__ */ jsxRuntimeExports.jsx(Minus, { className: "w-3 h-3" })
+                          }
+                        ),
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-xs text-purple-300 font-mono font-bold px-1 min-w-[46px] text-center", children: [
+                          webStampSize,
+                          "px"
+                        ] }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(
+                          "button",
+                          {
+                            type: "button",
+                            onClick: () => handleUpdateWebStampWidth(webStampSize + 10),
+                            className: "w-5 h-5 rounded bg-neutral-700 hover:bg-neutral-600 text-neutral-200 flex items-center justify-center font-bold text-xs transition cursor-pointer",
+                            title: "Increase width by 10px",
+                            children: /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { className: "w-3 h-3" })
+                          }
+                        )
+                      ] })
+                    ] }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "input",
+                      {
+                        type: "range",
+                        min: "160",
+                        max: "480",
+                        step: "5",
+                        value: webStampSize,
+                        onChange: (e) => handleUpdateWebStampWidth(Number(e.target.value)),
+                        className: "w-full accent-purple-500 h-1.5 bg-neutral-700 rounded-lg cursor-pointer"
+                      }
+                    ),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-5 gap-1 pt-0.5", children: [
+                      { label: "220px", size: 220, name: "Small" },
+                      { label: "260px", size: 260, name: "Normal" },
+                      { label: "330px", size: 330, name: "Med" },
+                      { label: "380px", size: 380, name: "Large" },
+                      { label: "440px", size: 440, name: "Jumbo" }
+                    ].map((preset) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "button",
+                      {
+                        type: "button",
+                        onClick: () => handleUpdateWebStampWidth(preset.size),
+                        className: `py-1 px-0.5 rounded-lg text-[10px] font-semibold transition text-center cursor-pointer ${webStampSize === preset.size ? "bg-purple-600 text-white font-bold shadow-xs" : "bg-neutral-800 hover:bg-neutral-700 text-neutral-300"}`,
+                        children: preset.name
+                      },
+                      preset.size
+                    )) })
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-neutral-850/80 border border-neutral-700/70 rounded-xl p-2.5 space-y-2", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between text-xs", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "font-semibold text-neutral-200 flex items-center gap-1.5", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(Feather, { className: "w-3.5 h-3.5 text-purple-400" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Web Stamp Weight / Ink (ክብደት)" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-purple-300 font-medium text-[10.5px]", children: webStampWeight === "light" ? "Light (ቀላል)" : webStampWeight === "normal" ? "Normal (መደበኛ)" : webStampWeight === "medium" ? "Medium (መካከለኛ)" : webStampWeight === "bold" ? "Bold (ደማቅ)" : "Heavy (እጅግ ደማቅ)" })
+                    ] }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-5 gap-1", children: ["light", "normal", "medium", "bold", "heavy"].map((w) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "button",
+                      {
+                        type: "button",
+                        onClick: () => handleUpdateWebStampWeight(w),
+                        className: `py-1.5 px-0.5 rounded-lg text-[10px] font-semibold transition text-center capitalize cursor-pointer ${webStampWeight === w ? "bg-purple-600 text-white font-bold shadow-xs" : "bg-neutral-800 hover:bg-neutral-700 text-neutral-300"}`,
+                        children: w
+                      },
+                      w
+                    )) })
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-neutral-850/80 border border-neutral-700/70 rounded-xl p-2.5 space-y-2", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between text-xs", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "font-semibold text-neutral-200 flex items-center gap-1.5", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(Move, { className: "w-3.5 h-3.5 text-purple-400" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Web Stamp Position (ቦታ)" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-[10px] text-purple-300 font-mono font-bold bg-purple-900/40 px-1.5 py-0.5 rounded border border-purple-500/30", children: [
+                        "X: ",
+                        webStampPosition.xPercent,
+                        "% • Y: ",
+                        webStampPosition.yPercent,
+                        "%"
+                      ] })
+                    ] }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                        "button",
+                        {
+                          type: "button",
+                          onClick: () => {
+                            setIsEditingStampPosition(true);
+                            setIsMenuOpen(false);
+                            showBarsToast("Click & drag stamp to position anywhere on web receipt, then click Save");
+                          },
+                          className: "flex-1 py-1.5 px-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-95 shadow-md shadow-purple-600/30",
+                          children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsx(Move, { className: "w-3.5 h-3.5" }),
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Rearrange Position" })
+                          ]
+                        }
+                      ),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                        "button",
+                        {
+                          type: "button",
+                          onClick: handleResetStampPosition,
+                          className: "py-1.5 px-2.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white text-xs font-semibold flex items-center justify-center gap-1 transition cursor-pointer border border-neutral-700 active:scale-95",
+                          title: "Reset web stamp to default center",
+                          children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsx(RotateCcw, { className: "w-3 h-3" }),
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Center" })
+                          ]
+                        }
+                      )
+                    ] })
+                  ] })
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "pt-3 border-t border-neutral-700/80 space-y-1.5", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: () => {
+                        handleOpenPdfView();
+                        setIsMenuOpen(false);
+                      },
+                      className: "w-full px-3 py-2 rounded-xl bg-purple-900/40 hover:bg-purple-900/70 border border-purple-500/40 text-purple-200 hover:text-white text-xs font-semibold flex items-center justify-between transition cursor-pointer",
+                      children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "flex items-center gap-2", children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(FileText, { className: "w-3.5 h-3.5 text-purple-400" }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Open Official PDF View" })
+                        ] }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[10px] text-purple-300 font-bold bg-purple-800/60 px-1.5 py-0.5 rounded", children: ".PDF" })
+                      ]
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: () => {
+                        handleDownloadPdf();
+                        setIsMenuOpen(false);
+                      },
+                      className: "w-full px-3 py-2 rounded-xl bg-neutral-800/80 hover:bg-neutral-800 border border-neutral-700/80 text-neutral-300 hover:text-white text-xs font-medium flex items-center justify-between transition cursor-pointer",
+                      children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "flex items-center gap-2", children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "w-3.5 h-3.5 text-emerald-400" }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Direct Download PDF" })
+                        ] }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[10px] text-neutral-400 font-medium", children: "Save" })
+                      ]
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: () => {
+                        handleDownloadPng();
+                        setIsMenuOpen(false);
+                      },
+                      className: "w-full px-3 py-2 rounded-xl bg-neutral-800/60 hover:bg-neutral-800 text-neutral-200 hover:text-white text-xs font-medium flex items-center justify-between transition cursor-pointer",
+                      children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "flex items-center gap-2", children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "w-3.5 h-3.5 text-neutral-400" }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Save Receipt as Image" })
+                        ] }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[10px] text-neutral-400 font-semibold", children: ".PNG" })
+                      ]
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: () => {
+                        handleCopyLink();
+                        setIsMenuOpen(false);
+                      },
+                      className: "w-full px-3 py-2 rounded-xl bg-neutral-800/60 hover:bg-neutral-800 text-neutral-200 hover:text-white text-xs font-medium flex items-center gap-2 transition cursor-pointer",
+                      children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(Copy, { className: "w-3.5 h-3.5 text-neutral-400" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Copy Receipt URL (apps.cbe.com.et:100)" })
+                      ]
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: () => {
+                        handleRefresh();
+                        setIsMenuOpen(false);
+                      },
+                      className: "w-full px-3 py-2 rounded-xl bg-neutral-800/60 hover:bg-neutral-800 text-neutral-200 hover:text-white text-xs font-medium flex items-center gap-2 transition cursor-pointer",
+                      children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(RefreshCw, { className: "w-3.5 h-3.5 text-neutral-400" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Refresh / Reload Receipt Page" })
+                      ]
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: () => {
+                        var _a;
+                        (_a = stampFileInputRef.current) == null ? void 0 : _a.click();
+                      },
+                      className: "w-full px-3 py-2 rounded-xl bg-neutral-800/60 hover:bg-neutral-800 text-neutral-200 hover:text-white text-xs font-medium flex items-center justify-between transition cursor-pointer",
+                      children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "flex items-center gap-2", children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(Upload, { className: "w-3.5 h-3.5 text-neutral-400" }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Upload Custom Bank Stamp" })
+                        ] }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[10px] text-emerald-400 font-semibold", children: "Image" })
+                      ]
+                    }
+                  ),
+                  customStamp && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: handleResetStamp,
+                      className: "w-full px-3 py-2 rounded-xl bg-red-950/40 hover:bg-red-950/70 text-red-300 text-xs font-medium flex items-center gap-2 transition cursor-pointer",
+                      children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { className: "w-3.5 h-3.5 text-red-400" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Reset Stamp to CBE Official" })
+                      ]
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-neutral-850/80 border border-neutral-700/80 rounded-xl p-2.5 space-y-2", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "flex items-center gap-1.5 text-xs font-semibold text-purple-200", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { className: "w-3.5 h-3.5 text-purple-400" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "PDF Logo (by URL)" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[10px] text-purple-300 font-bold bg-purple-900/60 px-1.5 py-0.5 rounded", children: "PDF Only" })
+                    ] }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        "input",
+                        {
+                          type: "url",
+                          value: pdfLogoUrlInput,
+                          onChange: (e) => setPdfLogoUrlInput(e.target.value),
+                          onKeyDown: (e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleApplyPdfLogoUrl();
+                            }
+                          },
+                          placeholder: "https://... image URL",
+                          className: "flex-1 bg-neutral-900 border border-neutral-700 focus:border-purple-500 rounded-lg px-2.5 py-1.5 text-xs text-neutral-100 placeholder-neutral-500 outline-none transition"
+                        }
+                      ),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        "button",
+                        {
+                          type: "button",
+                          onClick: () => handleApplyPdfLogoUrl(),
+                          className: "bg-purple-700 hover:bg-purple-600 active:bg-purple-800 text-white font-semibold text-xs px-3 py-1.5 rounded-lg transition shrink-0 cursor-pointer shadow-sm",
+                          children: "Apply"
+                        }
+                      )
+                    ] }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between pt-1 border-t border-neutral-700/50 text-[11px]", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                        "button",
+                        {
+                          type: "button",
+                          onClick: () => {
+                            var _a;
+                            return (_a = pdfLogoFileInputRef.current) == null ? void 0 : _a.click();
+                          },
+                          className: "text-neutral-400 hover:text-neutral-200 flex items-center gap-1 transition cursor-pointer",
+                          children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsx(Upload, { className: "w-3 h-3" }),
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Or upload file" })
+                          ]
+                        }
+                      ),
+                      customPdfLogo && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                        "button",
+                        {
+                          type: "button",
+                          onClick: handleResetPdfLogo,
+                          className: "text-red-400 hover:text-red-300 flex items-center gap-1 transition cursor-pointer",
+                          children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { className: "w-3 h-3" }),
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Reset to default" })
+                          ]
+                        }
+                      )
+                    ] })
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: () => {
+                        setIsMenuOpen(false);
+                        onClose();
+                      },
+                      className: "w-full px-3 py-2 rounded-xl bg-neutral-800/90 hover:bg-neutral-700 text-neutral-300 hover:text-white text-xs font-medium flex items-center gap-2 transition cursor-pointer pt-2 mt-1 border-t border-neutral-700",
+                      children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "w-3.5 h-3.5 text-neutral-400" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Close Receipt & Return to App" })
+                      ]
+                    }
+                  )
+                ] })
+              ]
+            }
+          )
+        ] }),
+        viewMode === "pdf" ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-full flex-1 flex flex-col overflow-hidden bg-[#525659]", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-full bg-[#2a2b2e] text-white px-3 py-2 border-b border-neutral-700/90 flex items-center justify-between z-20 shrink-0 select-none shadow-md", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                "button",
+                {
+                  type: "button",
+                  onClick: () => setViewMode("web"),
+                  className: "flex items-center gap-1.5 text-xs font-semibold text-purple-200 hover:text-white bg-purple-900/60 hover:bg-purple-800/80 px-2.5 py-1.5 rounded-lg border border-purple-500/50 transition cursor-pointer active:scale-95",
+                  title: "Switch back to Web Receipt view",
+                  children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "w-3.5 h-3.5" }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Web Receipt" })
+                  ]
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "hidden sm:flex items-center gap-1.5 text-xs text-neutral-300 font-mono bg-neutral-850 px-2.5 py-1 rounded border border-neutral-700/80", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(FileText, { className: "w-3.5 h-3.5 text-red-400 shrink-0" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "truncate max-w-[190px]", children: [
+                  "CBE_Customer_Receipt_",
+                  receiptData.refId,
+                  ".pdf"
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[10px] text-neutral-400 font-sans ml-1", children: "2 pages" })
+              ] })
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5 sm:gap-2", children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center bg-neutral-800/90 rounded-lg p-0.5 border border-neutral-700", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "button",
+                  {
+                    type: "button",
+                    onClick: () => {
+                      setIsAutoFit(false);
+                      setPdfZoom((prev) => Math.max(0.4, Number((prev - 0.15).toFixed(2))));
+                    },
+                    className: "p-1 text-neutral-300 hover:text-white hover:bg-neutral-700 rounded transition cursor-pointer",
+                    title: "Zoom Out",
+                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(Minus, { className: "w-3 h-3" })
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "button",
+                  {
+                    type: "button",
+                    onClick: () => {
+                      setIsAutoFit((prev) => !prev);
+                      if (!isAutoFit) setPdfZoom(1);
+                    },
+                    className: `px-1.5 py-0.5 text-[10.5px] font-bold rounded transition cursor-pointer ${isAutoFit ? "text-purple-300 bg-purple-950/60" : "text-neutral-300 hover:text-white"}`,
+                    title: isAutoFit ? "Auto-Fit to Screen Width" : "Reset to 100%",
+                    children: isAutoFit ? "Fit" : `${Math.round(pdfZoom * 100)}%`
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "button",
+                  {
+                    type: "button",
+                    onClick: () => {
+                      setIsAutoFit(false);
+                      setPdfZoom((prev) => Math.min(1.8, Number((prev + 0.15).toFixed(2))));
+                    },
+                    className: "p-1 text-neutral-300 hover:text-white hover:bg-neutral-700 rounded transition cursor-pointer",
+                    title: "Zoom In",
+                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { className: "w-3 h-3" })
+                  }
+                )
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  type: "button",
+                  onClick: handlePrintPdf,
+                  className: "hidden sm:flex p-1.5 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-lg transition cursor-pointer",
+                  title: "Print Receipt",
+                  children: /* @__PURE__ */ jsxRuntimeExports.jsx(Printer, { className: "w-4 h-4" })
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                "button",
+                {
+                  type: "button",
+                  onClick: () => handleDownloadPdf(),
+                  disabled: isDownloading,
+                  className: "flex items-center gap-1.5 text-xs font-bold text-white bg-[#781d77] hover:bg-[#70189F] active:bg-[#580f68] px-3 py-1.5 rounded-lg shadow-md transition cursor-pointer disabled:opacity-75 active:scale-95",
+                  title: "Save PDF file to device storage",
+                  children: [
+                    isDownloading ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "w-3.5 h-3.5" }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Save PDF" })
+                  ]
+                }
+              ),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  type: "button",
+                  onClick: () => setIsPdfMenuOpen((prev) => !prev),
+                  "aria-label": "PDF Receipt Form Options",
+                  className: `p-1.5 rounded-lg transition cursor-pointer flex items-center justify-center ${isPdfMenuOpen ? "bg-purple-700 text-white shadow-sm ring-1 ring-white/50" : "text-neutral-300 hover:text-white hover:bg-neutral-800"}`,
+                  title: "PDF Receipt Settings (Stamp Size, Weight, Position & Logo)",
+                  children: /* @__PURE__ */ jsxRuntimeExports.jsx(EllipsisVertical, { className: "w-4 h-4" })
+                }
+              )
+            ] })
+          ] }),
+          isPdfMenuOpen && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "div",
+              {
+                className: "fixed inset-0 z-40 bg-black/40 backdrop-blur-2xs animate-fade-in",
+                onClick: () => setIsPdfMenuOpen(false)
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "div",
+              {
+                className: "fixed top-12 sm:top-14 right-2 sm:right-4 z-50 w-84 max-w-[calc(100vw-16px)] max-h-[calc(100vh-64px)] overflow-y-auto bg-[#1c1f26] text-white rounded-2xl shadow-2xl border border-neutral-700/90 p-4 animate-in fade-in zoom-in-95 duration-150 select-none",
+                style: { fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between pb-3 border-b border-neutral-700/80 mb-3", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(FileText, { className: "w-4.5 h-4.5 text-red-400" }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("h3", { className: "text-[14px] font-bold tracking-tight flex items-center gap-1.5", children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "PDF Receipt Settings" }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[9.5px] bg-red-950/80 border border-red-500/50 text-red-300 px-1.5 py-0.2 rounded font-bold", children: "PDF View" })
+                        ] }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-[10px] text-neutral-400", children: "PDF receipt stamp & logo options" })
+                      ] })
+                    ] }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "button",
+                      {
+                        onClick: () => setIsPdfMenuOpen(false),
+                        className: "p-1 rounded-full hover:bg-neutral-800 text-neutral-400 hover:text-white transition cursor-pointer",
+                        children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "w-4 h-4" })
+                      }
+                    )
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-3 mb-4", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-[11px] font-semibold text-neutral-300 uppercase tracking-wider flex items-center gap-1.5", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(Stamp, { className: "w-3.5 h-3.5 text-purple-400" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "PDF Stamp Width & Weight" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-[10px] text-purple-300 font-mono font-bold bg-purple-900/60 border border-purple-500/40 px-2 py-0.5 rounded-full", children: [
+                        pdfStampSize,
+                        "px • ",
+                        pdfStampWeight.toUpperCase()
+                      ] })
+                    ] }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-neutral-850/80 border border-neutral-700/70 rounded-xl p-2.5 space-y-2", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between text-xs", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "font-semibold text-neutral-200 flex items-center gap-1.5", children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(SlidersVertical, { className: "w-3.5 h-3.5 text-purple-400" }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "PDF Stamp Width (ስፋት)" })
+                        ] }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1", children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(
+                            "button",
+                            {
+                              type: "button",
+                              onClick: () => handleUpdatePdfStampWidth(pdfStampSize - 10),
+                              className: "w-5 h-5 rounded bg-neutral-700 hover:bg-neutral-600 text-neutral-200 flex items-center justify-center font-bold text-xs transition cursor-pointer",
+                              title: "Decrease PDF stamp width by 10px",
+                              children: /* @__PURE__ */ jsxRuntimeExports.jsx(Minus, { className: "w-3 h-3" })
+                            }
+                          ),
+                          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-xs text-purple-300 font-mono font-bold px-1 min-w-[46px] text-center", children: [
+                            pdfStampSize,
+                            "px"
+                          ] }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(
+                            "button",
+                            {
+                              type: "button",
+                              onClick: () => handleUpdatePdfStampWidth(pdfStampSize + 10),
+                              className: "w-5 h-5 rounded bg-neutral-700 hover:bg-neutral-600 text-neutral-200 flex items-center justify-center font-bold text-xs transition cursor-pointer",
+                              title: "Increase PDF stamp width by 10px",
+                              children: /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { className: "w-3 h-3" })
+                            }
+                          )
+                        ] })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        "input",
+                        {
+                          type: "range",
+                          min: "160",
+                          max: "480",
+                          step: "5",
+                          value: pdfStampSize,
+                          onChange: (e) => handleUpdatePdfStampWidth(Number(e.target.value)),
+                          className: "w-full accent-purple-500 h-1.5 bg-neutral-700 rounded-lg cursor-pointer"
+                        }
+                      ),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-5 gap-1 pt-0.5", children: [
+                        { label: "220px", size: 220, name: "Small" },
+                        { label: "260px", size: 260, name: "Normal" },
+                        { label: "330px", size: 330, name: "Med" },
+                        { label: "380px", size: 380, name: "Large" },
+                        { label: "440px", size: 440, name: "Jumbo" }
+                      ].map((preset) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        "button",
+                        {
+                          type: "button",
+                          onClick: () => handleUpdatePdfStampWidth(preset.size),
+                          className: `py-1 px-0.5 rounded-lg text-[10px] font-semibold transition text-center cursor-pointer ${pdfStampSize === preset.size ? "bg-purple-600 text-white font-bold shadow-xs" : "bg-neutral-800 hover:bg-neutral-700 text-neutral-300"}`,
+                          children: preset.name
+                        },
+                        preset.size
+                      )) })
+                    ] }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-neutral-850/80 border border-neutral-700/70 rounded-xl p-2.5 space-y-2", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between text-xs", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "font-semibold text-neutral-200 flex items-center gap-1.5", children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(Feather, { className: "w-3.5 h-3.5 text-purple-400" }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "PDF Stamp Weight / Ink (ክብደት)" })
+                        ] }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-purple-300 font-medium text-[10.5px]", children: pdfStampWeight === "light" ? "Light (ቀላል)" : pdfStampWeight === "normal" ? "Normal (መደበኛ)" : pdfStampWeight === "medium" ? "Medium (መካከለኛ)" : pdfStampWeight === "bold" ? "Bold (ደማቅ)" : "Heavy (እጅግ ደማቅ)" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-5 gap-1", children: ["light", "normal", "medium", "bold", "heavy"].map((w) => /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        "button",
+                        {
+                          type: "button",
+                          onClick: () => handleUpdatePdfStampWeight(w),
+                          className: `py-1.5 px-0.5 rounded-lg text-[10px] font-semibold transition text-center capitalize cursor-pointer ${pdfStampWeight === w ? "bg-purple-600 text-white font-bold shadow-xs" : "bg-neutral-800 hover:bg-neutral-700 text-neutral-300"}`,
+                          children: w
+                        },
+                        w
+                      )) })
+                    ] }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-neutral-850/80 border border-neutral-700/70 rounded-xl p-2.5 space-y-2", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between text-xs", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "font-semibold text-neutral-200 flex items-center gap-1.5", children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(Move, { className: "w-3.5 h-3.5 text-purple-400" }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "PDF Stamp Position (ቦታ)" })
+                        ] }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-[10px] text-purple-300 font-mono font-bold bg-purple-900/40 px-1.5 py-0.5 rounded border border-purple-500/30", children: [
+                          "X: ",
+                          pdfStampPosition.xPercent,
+                          "% • Y: ",
+                          pdfStampPosition.yPercent,
+                          "%"
+                        ] })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                          "button",
+                          {
+                            type: "button",
+                            onClick: () => {
+                              setIsEditingStampPosition(true);
+                              setIsPdfMenuOpen(false);
+                              showBarsToast("Click & drag stamp anywhere on PDF receipt, then click Save");
+                            },
+                            className: "flex-1 py-1.5 px-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-95 shadow-md shadow-purple-600/30",
+                            children: [
+                              /* @__PURE__ */ jsxRuntimeExports.jsx(Move, { className: "w-3.5 h-3.5" }),
+                              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Rearrange Position" })
+                            ]
+                          }
+                        ),
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                          "button",
+                          {
+                            type: "button",
+                            onClick: handleResetStampPosition,
+                            className: "py-1.5 px-2.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white text-xs font-semibold flex items-center justify-center gap-1 transition cursor-pointer border border-neutral-700 active:scale-95",
+                            title: "Reset PDF stamp to default center",
+                            children: [
+                              /* @__PURE__ */ jsxRuntimeExports.jsx(RotateCcw, { className: "w-3 h-3" }),
+                              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Center" })
+                            ]
+                          }
+                        )
+                      ] })
+                    ] })
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "pt-3 border-t border-neutral-700/80 space-y-2 mb-3", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-[11px] font-semibold text-neutral-300 uppercase tracking-wider flex items-center gap-1.5", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx(FileText, { className: "w-3.5 h-3.5 text-purple-400" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "PDF Official Header Logo" })
+                      ] }),
+                      customPdfLogo && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[9.5px] bg-purple-900/60 border border-purple-500/40 text-purple-300 px-1.5 py-0.2 rounded font-bold", children: "Custom" })
+                    ] }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        "input",
+                        {
+                          type: "url",
+                          value: pdfLogoUrlInput,
+                          onChange: (e) => setPdfLogoUrlInput(e.target.value),
+                          onKeyDown: (e) => {
+                            if (e.key === "Enter") {
+                              e.preventDefault();
+                              handleApplyPdfLogoUrl();
+                            }
+                          },
+                          placeholder: "https://... image URL",
+                          className: "flex-1 bg-neutral-900 border border-neutral-700 focus:border-purple-500 rounded-lg px-2.5 py-1.5 text-xs text-neutral-100 placeholder-neutral-500 outline-none transition"
+                        }
+                      ),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        "button",
+                        {
+                          type: "button",
+                          onClick: () => handleApplyPdfLogoUrl(),
+                          className: "bg-purple-700 hover:bg-purple-600 active:bg-purple-800 text-white font-semibold text-xs px-3 py-1.5 rounded-lg transition shrink-0 cursor-pointer shadow-sm",
+                          children: "Apply"
+                        }
+                      )
+                    ] }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between pt-1 border-t border-neutral-700/50 text-[11px]", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                        "button",
+                        {
+                          type: "button",
+                          onClick: () => {
+                            var _a;
+                            return (_a = pdfLogoFileInputRef.current) == null ? void 0 : _a.click();
+                          },
+                          className: "text-neutral-400 hover:text-neutral-200 flex items-center gap-1 transition cursor-pointer",
+                          children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsx(Upload, { className: "w-3 h-3" }),
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Or upload file" })
+                          ]
+                        }
+                      ),
+                      customPdfLogo && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                        "button",
+                        {
+                          type: "button",
+                          onClick: handleResetPdfLogo,
+                          className: "text-red-400 hover:text-red-300 flex items-center gap-1 transition cursor-pointer",
+                          children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { className: "w-3 h-3" }),
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Reset to default" })
+                          ]
+                        }
+                      )
+                    ] })
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: () => setIsPdfMenuOpen(false),
+                      className: "w-full px-3 py-2 rounded-xl bg-neutral-800/90 hover:bg-neutral-700 text-neutral-300 hover:text-white text-xs font-medium flex items-center justify-center gap-2 transition cursor-pointer border border-neutral-700",
+                      children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Done" })
+                    }
+                  )
+                ]
+              }
+            )
+          ] }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(
+            "div",
+            {
+              ref: pdfContainerRef,
+              className: "flex-1 overflow-auto p-3 sm:p-6 flex flex-col items-center justify-start relative select-none",
+              children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "div",
+                {
+                  className: "transition-transform duration-200 ease-out origin-top flex flex-col items-center",
+                  style: {
+                    width: effectiveScale < 1 ? `${640 * effectiveScale}px` : "640px",
+                    height: effectiveScale < 1 ? `calc(1860px * ${effectiveScale})` : "auto",
+                    marginBottom: effectiveScale < 1 ? "36px" : "64px"
+                  },
+                  children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "div",
+                    {
+                      style: {
+                        width: "640px",
+                        transform: effectiveScale !== 1 ? `scale(${effectiveScale})` : void 0,
+                        transformOrigin: "top center"
+                      },
+                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        CbeOfficialPdfReceipt,
+                        {
+                          receiptData,
+                          qrCodeDataUrl,
+                          activeStamp: rasterizedPdfStampPng || pdfActiveStamp,
+                          stampWeight: pdfStampWeight,
+                          stampSize: pdfStampSize,
+                          stampPosition: pdfStampPosition,
+                          customPdfLogo,
+                          isPreview: true,
+                          tableRef: pdfTableRef,
+                          isEditingStampPosition: isEditingStampPosition && viewMode === "pdf",
+                          isDraggingStamp,
+                          onStampPointerDown: handleStampPointerDown,
+                          onStampClick: handleStampClick,
+                          onStampDoubleClick: handleStampDoubleClick,
+                          onStampTouchEnd: handleStampTouchEnd
+                        }
+                      )
+                    }
+                  )
+                }
+              )
+            }
+          ),
+          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "fixed bottom-[max(env(safe-area-inset-bottom,0px),16px)] inset-x-0 flex items-center justify-center gap-2 z-30 pointer-events-auto px-4", children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "button",
+              {
+                type: "button",
+                onClick: () => setViewMode("web"),
+                className: "bg-neutral-900/95 hover:bg-neutral-800 text-white font-semibold text-xs py-2 px-4 rounded-full shadow-2xl border border-white/20 flex items-center gap-1.5 transition active:scale-95 cursor-pointer backdrop-blur-md",
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "w-3.5 h-3.5 text-purple-400" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Back to Web Receipt" })
+                ]
+              }
+            ),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "button",
+              {
+                type: "button",
+                onClick: () => handleDownloadPdf(),
+                disabled: isDownloading,
+                className: "bg-[#781d77] hover:bg-[#70189F] text-white font-bold text-xs py-2 px-4 rounded-full shadow-2xl flex items-center gap-1.5 transition active:scale-95 cursor-pointer disabled:opacity-75",
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "w-3.5 h-3.5" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: isDownloading ? "Saving..." : "Save PDF" })
+                ]
+              }
+            )
+          ] })
+        ] }) : (
+          /* Web Receipt Mode */
+          /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+            /* @__PURE__ */ jsxRuntimeExports.jsx("main", { className: "w-full flex-1 overflow-y-auto px-2 pt-2.5 pb-[max(env(safe-area-inset-bottom,0px),96px)] bg-[#f0f2f5] flex justify-center", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "div",
+              {
+                ref: receiptCardRef,
+                className: `bg-white w-full max-w-[460px] shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-gray-200/90 rounded-2xl overflow-hidden text-gray-900 self-start transition-opacity ${isRefreshing ? "opacity-40 scale-[0.99]" : "opacity-100"}`,
+                style: { fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-[#781d77] relative px-3 py-3.5 sm:px-4 sm:py-4 rounded-t-2xl flex items-center justify-center min-h-[76px] overflow-hidden", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-12 sm:h-12 shrink-0 flex items-center justify-center select-none", children: /* @__PURE__ */ jsxRuntimeExports.jsx(CbeLogo, { className: "w-11 h-11 sm:w-12 sm:h-12 object-contain", src: adminLogo }) }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-center px-12 sm:px-14 select-none", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-white font-bold text-[17.5px] sm:text-[19px] leading-tight tracking-tight whitespace-nowrap", children: "Commercial Bank of Ethiopia" }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-white text-[13.5px] sm:text-[14px] font-normal leading-tight mt-1 whitespace-nowrap", children: "Customer Receipt" }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[#86efac] font-bold text-[10.5px] sm:text-[11px] tracking-[0.16em] uppercase mt-1 whitespace-nowrap", children: "Status: COMPLETED" })
+                    ] })
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "p-3 sm:p-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-2 gap-3 sm:gap-4 text-[11px] leading-[1.38]", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-0.5 text-[#111827]", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("h2", { className: "font-bold text-black text-[12px] leading-tight pb-1 mb-1 border-b border-gray-200", children: [
+                        "Company Address & Other",
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("br", {}),
+                        "Information"
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "Country:" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "Ethiopia" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "City:" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "Addis Ababa" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "Address: Ras Desta Damtew" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "St, 01, Kirkos" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "Postal code:" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "255" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "SWIFT Code:" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "CBETETAA" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "Email:" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black truncate", children: "info@cbe.com.et" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "Tel:" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "+251-551-50-04" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "Fax:" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "+251-551-45-22" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "Tin:" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "0000006966" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-baseline", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "VAT Receipt" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: receiptData.refId })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-gray-700 font-normal -mt-0.5", children: "No:" }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "VAT Registration No:" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "011140" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-baseline", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "VAT Registration" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "01/01/2003" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-gray-700 font-normal -mt-0.5", children: "Date:" })
+                    ] }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-0.5 text-black", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-bold text-black text-[12px] leading-tight pb-1 mb-1 border-b border-gray-200", children: "Customer Information" }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-start", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal shrink-0", children: "Customer" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black leading-tight max-w-[130px]", children: receiptData.customerName })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-gray-700 font-normal -mt-0.5", children: "Name:" }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "Region:" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "-" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "City:" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "-" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "Sub City:" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "-" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "Wereda/Kebele:" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "-" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "VAT Registration No:" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "-" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "VAT Registration Date:" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "-" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "TIN (TAX ID):" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "-" })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "Branch:" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "-" })
+                      ] })
+                    ] })
+                  ] }) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "p-3 sm:p-4 relative", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-[#d1d5db] rounded-t-md bg-white py-1.5 px-3", children: /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-center font-bold text-black text-[13px] sm:text-[13.5px]", children: "Payment / Transaction Informations" }) }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { ref: transactionTableRef, className: "border-x border-b border-[#d1d5db] rounded-b-md overflow-hidden text-[11.5px] leading-tight relative", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center px-3 py-2 border-b border-gray-200", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-800 font-normal", children: "Payer:" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-black font-normal text-right", children: receiptData.payerName })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center px-3 py-2 border-b border-gray-200", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-800 font-normal", children: "Account:" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-black font-normal text-right", children: receiptData.payerAccount })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center px-3 py-2 border-b border-gray-200", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-800 font-normal", children: "Receiver:" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-black font-normal text-right", children: receiptData.receiverName })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center px-3 py-2 border-b border-gray-200", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-800 font-normal", children: "Account:" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-black font-normal text-right", children: receiptData.receiverAccount })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center px-3 py-2 border-b border-gray-200", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-800 font-normal", children: "Payment Type:" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-black font-normal text-right", children: receiptData.paymentType })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center px-3 py-2 border-b border-gray-200", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-800 font-normal", children: "Payment Date & Time:" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-black font-normal text-right", children: receiptData.paymentDate })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center px-3 py-2 border-b border-gray-200", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-gray-800 font-normal leading-tight", children: [
+                          "Reference No. (VAT Invoice",
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("br", {}),
+                          "No):"
+                        ] }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-black font-normal text-right self-center", children: receiptData.refId })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center px-3 py-2 border-b border-gray-200", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-800 font-normal", children: "Reason / Type of service:" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-black font-normal text-right", children: receiptData.reason })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center px-3 py-2 border-b border-gray-200", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-800 font-normal", children: "Transferred Amount:" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-black font-normal text-right", children: [
+                          (Number(receiptData.amount) || 0).toFixed(2),
+                          " ETB"
+                        ] })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center px-3 py-2 border-b border-gray-200", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-800 font-normal", children: "Service Charge:" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-black font-normal text-right", children: [
+                          (Number(receiptData.serviceCharge) || 0).toFixed(2),
+                          " ETB"
+                        ] })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center px-3 py-2 border-b border-gray-200", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-800 font-normal", children: "VAT (15% of service charge):" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-black font-normal text-right", children: [
+                          (Number(receiptData.vat) || 0).toFixed(2),
+                          " ETB"
+                        ] })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center px-3 py-2 border-b border-gray-200", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-gray-800 font-normal leading-tight", children: [
+                          "Disaster Risk Response Fund",
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("br", {}),
+                          "(5% of service charge):"
+                        ] }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-black font-normal text-right self-center", children: [
+                          (Number(receiptData.disasterRecovery) || 0).toFixed(2),
+                          " ETB"
+                        ] })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center px-3 py-2.5 bg-white", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-bold text-black text-[12px] sm:text-[12.5px] max-w-[200px] leading-snug", children: "Total amount debited from customer's account:" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "font-bold text-black text-right text-[12.5px] sm:text-[13px] self-center", children: [
+                          (Number(receiptData.totalDebited) || 0).toFixed(2),
+                          " ETB"
+                        ] })
+                      ] }),
+                      webActiveStamp && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                        "div",
+                        {
+                          id: "cbe-stamp-container",
+                          onPointerDown: isEditingStampPosition && viewMode === "web" ? handleStampPointerDown : void 0,
+                          onClick: handleStampClick,
+                          onDoubleClick: handleStampDoubleClick,
+                          onTouchEnd: handleStampTouchEnd,
+                          className: `absolute select-none z-20 shrink-0 touch-none transition-all ${isEditingStampPosition && viewMode === "web" ? "cursor-grab active:cursor-grabbing ring-2 ring-purple-600 ring-offset-2 ring-offset-white rounded-full" : "cursor-pointer hover:ring-2 hover:ring-purple-400/60 hover:ring-offset-1 rounded-full"}`,
+                          style: {
+                            top: `${webStampPosition.yPercent}%`,
+                            left: `${webStampPosition.xPercent}%`,
+                            transform: "translate(-50%, -50%)",
+                            width: `${webStampSize}px`,
+                            height: `${webStampSize}px`,
+                            maxWidth: "min(98vw, 490px)",
+                            maxHeight: "min(98vw, 490px)",
+                            aspectRatio: "1 / 1"
+                          },
+                          title: isEditingStampPosition && viewMode === "web" ? "Drag stamp to position anywhere" : "Double-tap stamp to rearrange position",
+                          children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsx(
+                              "img",
+                              {
+                                src: webActiveStamp,
+                                alt: "Official Bank Stamp",
+                                draggable: false,
+                                className: "w-full h-full object-contain pointer-events-none select-none transition-all duration-150",
+                                style: {
+                                  transform: "rotate(-13deg)",
+                                  opacity: webStampWeight === "light" ? 0.88 : webStampWeight === "normal" ? 0.96 : 1
+                                }
+                              }
+                            ),
+                            isEditingStampPosition && viewMode === "web" && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                              "div",
+                              {
+                                "data-html2canvas-ignore": "true",
+                                className: "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-purple-700/90 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-xl flex items-center gap-1.5 pointer-events-none border border-white/40 backdrop-blur-xs whitespace-nowrap animate-in fade-in zoom-in-90 duration-150",
+                                children: [
+                                  /* @__PURE__ */ jsxRuntimeExports.jsx(Move, { className: "w-3.5 h-3.5 text-amber-300" }),
+                                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: isDraggingStamp ? "Moving..." : "Drag to Move" })
+                                ]
+                              }
+                            )
+                          ]
+                        }
+                      )
+                    ] }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-3.5 bg-white border border-[#d1d5db] rounded-xl overflow-hidden shadow-xs", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-[#f8f9fa] pt-3 pb-3.5 px-3.5 text-center border-b border-gray-200/70", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-bold text-black text-[12px] sm:text-[12.5px]", children: "Amount in Word:" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[#1f2937] text-[11.5px] sm:text-[12px] font-normal mt-1 leading-relaxed max-w-[340px] mx-auto", children: receiptData.words })
+                      ] }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "py-4 px-3 flex flex-col items-center justify-center bg-white", children: qrCodeDataUrl ? /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        "img",
+                        {
+                          src: qrCodeDataUrl,
+                          alt: "Official CBE Receipt QR",
+                          className: "w-24 h-24 sm:w-26 sm:h-26 object-contain block"
+                        }
+                      ) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-24 h-24 sm:w-26 sm:h-26 bg-gray-100 animate-pulse" }) })
+                    ] }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-full border-t border-gray-200 mt-4 mb-3" }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-center pb-2", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-[#781d77] font-bold text-[12px]", children: "The Bank you can always rely on." }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-gray-500 text-[10px] mt-0.5", children: "© 2026 Commercial Bank of Ethiopia. All rights reserved." })
+                    ] })
+                  ] })
+                ]
+              }
+            ) }),
+            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "fixed bottom-[max(env(safe-area-inset-bottom,0px),16px)] inset-x-0 flex flex-col items-center gap-1.5 z-20 pointer-events-auto px-4", children: [
+              downloadError && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bg-red-900/90 border border-red-500 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg max-w-sm text-center", children: downloadError }),
+              /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "button",
+                {
+                  type: "button",
+                  onClick: handleOpenPdfView,
+                  className: "bg-[#781d77] hover:bg-[#70189F] active:bg-[#580f68] text-white font-semibold text-[13px] sm:text-[13.5px] py-2 px-7 rounded-xl shadow-lg shadow-purple-950/25 flex items-center justify-center transition active:scale-95 cursor-pointer",
+                  children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Download PDF" })
+                }
+              )
+            ] }),
+            /* @__PURE__ */ jsxRuntimeExports.jsx(
+              "div",
+              {
+                "data-html2canvas-ignore": "true",
+                className: "fixed bottom-0 inset-x-0 h-[max(env(safe-area-inset-bottom,0px),0px)] bg-white pointer-events-none z-30"
+              }
+            )
+          ] })
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "div",
+          {
+            id: "cbe-official-pdf-render-canvas",
+            style: {
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "640px",
+              zIndex: -100,
+              pointerEvents: "none",
+              opacity: 1,
+              backgroundColor: "#ffffff",
+              overflow: "hidden"
+            },
+            "aria-hidden": "true",
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+              CbeOfficialPdfReceipt,
+              {
+                ref: pdfTemplateRef,
+                receiptData,
+                qrCodeDataUrl,
+                activeStamp: rasterizedPdfStampPng || pdfActiveStamp,
+                stampWeight: pdfStampWeight,
+                stampSize: pdfStampSize,
+                stampPosition: pdfStampPosition,
+                customPdfLogo
+              }
+            )
+          }
+        ),
+        isEditingStampPosition && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "div",
+          {
+            id: "stamp-position-toolbar",
+            "data-html2canvas-ignore": "true",
+            onClick: (e) => e.stopPropagation(),
+            className: "fixed bottom-[max(env(safe-area-inset-bottom,0px),16px)] inset-x-3 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-50 bg-[#171922]/95 backdrop-blur-md border border-purple-500/60 text-white rounded-2xl p-3 sm:p-3.5 shadow-2xl flex flex-col gap-2.5 max-w-sm sm:max-w-md w-full animate-in fade-in slide-in-from-bottom-3 duration-200 select-none",
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between pb-2 border-b border-neutral-700/80", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-6 h-6 rounded-full bg-purple-600/30 border border-purple-400 flex items-center justify-center text-purple-300", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Move, { className: "w-3.5 h-3.5" }) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-xs font-bold text-white flex items-center gap-1.5", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+                        "Rearrange ",
+                        viewMode === "pdf" ? "PDF" : "Web",
+                        " Stamp Position"
+                      ] }),
+                      hasUnsavedStampPos && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded font-semibold border border-amber-500/30", children: "Unsaved" })
+                    ] }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-[10px] text-neutral-300", children: [
+                      "Drag ",
+                      viewMode === "pdf" ? "PDF" : "web",
+                      " stamp anywhere (saved for all receipts)"
+                    ] })
+                  ] })
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx(
+                  "button",
+                  {
+                    type: "button",
+                    onClick: () => setIsEditingStampPosition(false),
+                    className: "p-1 rounded-full text-neutral-400 hover:text-white hover:bg-neutral-800 transition cursor-pointer",
+                    title: "Close editor",
+                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "w-4 h-4" })
+                  }
+                )
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between bg-neutral-800/80 rounded-xl px-3 py-2 border border-neutral-700/60 text-xs", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1 font-mono text-[11px] text-purple-300", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+                    "X: ",
+                    (viewMode === "pdf" ? pdfStampPosition : webStampPosition).xPercent,
+                    "%"
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-neutral-500", children: "•" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
+                    "Y: ",
+                    (viewMode === "pdf" ? pdfStampPosition : webStampPosition).yPercent,
+                    "%"
+                  ] })
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: () => handleNudgeStamp(-2, 0),
+                      className: "w-7 h-7 bg-neutral-700 hover:bg-neutral-600 active:bg-neutral-500 rounded flex items-center justify-center text-neutral-200 transition active:scale-95 cursor-pointer",
+                      title: "Nudge Left",
+                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "w-3.5 h-3.5" })
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: () => handleNudgeStamp(0, -2),
+                      className: "w-7 h-7 bg-neutral-700 hover:bg-neutral-600 active:bg-neutral-500 rounded flex items-center justify-center text-neutral-200 transition active:scale-95 cursor-pointer",
+                      title: "Nudge Up",
+                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowUp, { className: "w-3.5 h-3.5" })
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: () => handleNudgeStamp(0, 2),
+                      className: "w-7 h-7 bg-neutral-700 hover:bg-neutral-600 active:bg-neutral-500 rounded flex items-center justify-center text-neutral-200 transition active:scale-95 cursor-pointer",
+                      title: "Nudge Down",
+                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowDown, { className: "w-3.5 h-3.5" })
+                    }
+                  ),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      type: "button",
+                      onClick: () => handleNudgeStamp(2, 0),
+                      className: "w-7 h-7 bg-neutral-700 hover:bg-neutral-600 active:bg-neutral-500 rounded flex items-center justify-center text-neutral-200 transition active:scale-95 cursor-pointer",
+                      title: "Nudge Right",
+                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowRight, { className: "w-3.5 h-3.5" })
+                    }
+                  )
+                ] })
+              ] }),
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-3 gap-2 pt-0.5", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  "button",
+                  {
+                    type: "button",
+                    onClick: handleSaveStampPosition,
+                    className: "col-span-1 py-1.5 px-2 rounded-xl bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-purple-600/30 transition active:scale-95 cursor-pointer",
+                    children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(Save, { className: "w-3.5 h-3.5" }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Save" })
+                    ]
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  "button",
+                  {
+                    type: "button",
+                    onClick: handleResetStampPosition,
+                    className: "col-span-1 py-1.5 px-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white text-xs font-semibold flex items-center justify-center gap-1.5 border border-neutral-700 transition active:scale-95 cursor-pointer",
+                    children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(RotateCcw, { className: "w-3 h-3 text-neutral-400" }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Center" })
+                    ]
+                  }
+                ),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                  "button",
+                  {
+                    type: "button",
+                    onClick: () => {
+                      if (hasUnsavedStampPos) handleSaveStampPosition();
+                      setIsEditingStampPosition(false);
+                    },
+                    className: "col-span-1 py-1.5 px-2 rounded-xl bg-neutral-750 hover:bg-neutral-700 text-white text-xs font-semibold flex items-center justify-center gap-1.5 border border-neutral-700 transition active:scale-95 cursor-pointer",
+                    children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(Check, { className: "w-3.5 h-3.5 text-emerald-400" }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Done" })
+                    ]
+                  }
+                )
+              ] })
+            ]
+          }
+        ),
+        /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "div",
+          {
+            "data-html2canvas-ignore": "true",
+            className: "fixed bottom-0 inset-x-0 h-[max(env(safe-area-inset-bottom,0px),0px)] bg-white pointer-events-none z-30"
+          }
+        )
+      ]
+    }
+  );
+};
 function formatCbeDetailDate(dateInput) {
   const d = new Date(dateInput);
   if (isNaN(d.getTime())) return "09-Nov-26 6:20 PM";
@@ -30436,6 +34909,7 @@ function TransactionDetailModal({
   onNavigateTab
 }) {
   const [copiedField, setCopiedField] = reactExports.useState(null);
+  const [showWebReceipt, setShowWebReceipt] = reactExports.useState(false);
   const [isIPhone, setIsIPhone] = reactExports.useState(() => PhoneSettingsService.isIPhoneMode());
   reactExports.useEffect(() => {
     return PhoneSettingsService.subscribe(() => {
@@ -30448,6 +34922,25 @@ function TransactionDetailModal({
       SystemBarsService.restoreFromModal();
     };
   }, []);
+  reactExports.useEffect(() => {
+    if (!showWebReceipt) {
+      SystemBarsService.applyModalOpenBars();
+    }
+  }, [showWebReceipt]);
+  reactExports.useEffect(() => {
+    if (!showWebReceipt) return;
+    const handlePhoneBack = (e) => {
+      var _a, _b, _c, _d;
+      setShowWebReceipt(false);
+      (_b = (_a = e == null ? void 0 : e.detail) == null ? void 0 : _a.setHandled) == null ? void 0 : _b.call(_a);
+      (_c = e == null ? void 0 : e.stopImmediatePropagation) == null ? void 0 : _c.call(e);
+      (_d = e == null ? void 0 : e.preventDefault) == null ? void 0 : _d.call(e);
+    };
+    window.addEventListener("cbe_phone_back", handlePhoneBack, true);
+    return () => {
+      window.removeEventListener("cbe_phone_back", handlePhoneBack, true);
+    };
+  }, [showWebReceipt]);
   const txType = transaction.type;
   const isCredit = txType === "receive" || transaction.senderName === "Deposit" || currentUserId && transaction.recipientId === currentUserId || currentUserAccount && transaction.recipientAccount === currentUserAccount || !transaction.recipientId && !transaction.senderId && txType === "receive";
   const txId = formatTo12CharTxId(transaction.id || transaction.reference);
@@ -30483,175 +34976,184 @@ function TransactionDetailModal({
     } catch {
     }
   };
-  return /* @__PURE__ */ jsxRuntimeExports.jsx(
-    "div",
-    {
-      id: "transaction-detail-modal-overlay",
-      className: "fixed inset-0 z-40 bg-black/60 backdrop-blur-[0.5px] flex flex-col justify-end items-center p-0 animate-in fade-in duration-200 select-none pointer-events-auto",
-      onClick: (e) => {
-        if (e.target === e.currentTarget) onClose();
-      },
-      children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
-        "div",
-        {
-          id: "transaction-detail-sheet",
-          onClick: (e) => e.stopPropagation(),
-          className: "w-full bg-white rounded-t-[32px] sm:rounded-t-[36px] rounded-b-none shadow-[0_-12px_45px_rgba(0,0,0,0.25)] flex flex-col relative animate-in slide-in-from-bottom-5 duration-250 select-none h-[calc(100%-max(env(safe-area-inset-top,0px),0px)-152px)] min-h-[calc(100%-max(env(safe-area-inset-top,0px),0px)-152px)] overflow-hidden",
-          children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-1 overflow-y-auto px-6 pt-3 pb-0 flex flex-col justify-between min-h-0", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-10 h-1 bg-gray-300/80 rounded-full mx-auto mb-2 mt-0.5 shrink-0" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between relative mb-2 shrink-0", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-6" }),
-                " ",
-                /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-[12.5px] sm:text-[13px] font-semibold text-gray-400 tracking-wider uppercase text-center flex-1 font-sans", children: "TRANSACTION DETAIL" }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "div",
+      {
+        id: "transaction-detail-modal-overlay",
+        className: "fixed inset-0 z-40 bg-black/60 backdrop-blur-[0.5px] flex flex-col justify-end items-center p-0 animate-in fade-in duration-200 select-none pointer-events-auto",
+        onClick: (e) => {
+          if (e.target === e.currentTarget) onClose();
+        },
+        children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+          "div",
+          {
+            id: "transaction-detail-sheet",
+            onClick: (e) => e.stopPropagation(),
+            className: "w-full bg-white rounded-t-[32px] sm:rounded-t-[36px] rounded-b-none shadow-[0_-12px_45px_rgba(0,0,0,0.25)] flex flex-col relative animate-in slide-in-from-bottom-5 duration-250 select-none h-[calc(100%-max(env(safe-area-inset-top,0px),0px)-152px)] min-h-[calc(100%-max(env(safe-area-inset-top,0px),0px)-152px)] overflow-hidden",
+            children: [
+              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex-1 overflow-y-auto px-6 pt-3 pb-0 flex flex-col justify-between min-h-0", children: [
+                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-10 h-1 bg-gray-300/80 rounded-full mx-auto mb-2 mt-0.5 shrink-0" }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between relative mb-2 shrink-0", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-6" }),
+                  " ",
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-[12.5px] sm:text-[13px] font-semibold text-gray-400 tracking-wider uppercase text-center flex-1 font-sans", children: "TRANSACTION DETAIL" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "button",
+                    {
+                      id: "btn-close-tx-detail",
+                      type: "button",
+                      onClick: onClose,
+                      className: "w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-700 transition cursor-pointer",
+                      "aria-label": "Close",
+                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "w-4 h-4" })
+                    }
+                  )
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex justify-center mb-2.5 shrink-0", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-[#eaf8f1] text-[#00b050] px-4 py-1 text-xs rounded-full font-bold inline-flex items-center gap-1.5 shadow-2xs", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "w-3.5 h-3.5 rounded-full bg-[#00b050] text-white flex items-center justify-center text-[9px] font-black", children: "✓" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[12.5px] font-bold tracking-tight text-[#00b050]", children: "Completed" })
+                ] }) }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-center mb-4 sm:mb-5 shrink-0", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("h3", { className: "text-[32px] sm:text-[34px] font-black text-[#111827] tracking-tight font-sans leading-tight", children: [
+                    isCredit ? "+" : "-",
+                    transaction.amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+                    " ETB"
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-[14px] sm:text-[14.5px] mt-1 text-gray-500 font-normal", children: [
+                    isCredit ? "from" : "to",
+                    " ",
+                    isCredit ? transaction.senderName || "Mosisa Teshome Tesfa" : transaction.recipientName || "Mosisa Teshome Tesfa"
+                  ] })
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-[20px] py-1 px-0.5 my-auto", children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between gap-3", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-500 font-medium whitespace-nowrap text-[14.5px] sm:text-[15px]", children: "Date & Time" }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-bold text-gray-900 text-right text-[14.5px] sm:text-[15px]", children: formattedDate })
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between gap-3", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-500 font-medium whitespace-nowrap text-[14.5px] sm:text-[15px]", children: "Type" }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-bold text-gray-900 text-right text-[14.5px] sm:text-[15px]", children: typeLabel })
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between gap-3", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-500 font-medium whitespace-nowrap text-[14.5px] sm:text-[15px]", children: "Transaction ID" }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-bold font-mono text-gray-900 text-[14.5px] sm:text-[15px]", children: txId }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        "button",
+                        {
+                          id: "btn-copy-txid",
+                          type: "button",
+                          onClick: () => handleCopy(txId, "txid"),
+                          className: "p-1 text-gray-400 hover:text-[#70189F] hover:bg-purple-50 rounded transition cursor-pointer",
+                          title: "Copy Transaction ID",
+                          children: copiedField === "txid" ? /* @__PURE__ */ jsxRuntimeExports.jsx(Check, { className: "w-4 h-4 text-emerald-600 stroke-[2.5]" }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { className: "w-4 h-4 text-gray-400 hover:text-[#70189F]", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round", children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: "9", y: "9", width: "13", height: "13", rx: "2", ry: "2" }),
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" })
+                          ] })
+                        }
+                      )
+                    ] })
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start justify-between gap-3", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-500 font-medium whitespace-nowrap text-[14.5px] sm:text-[15px] pt-0.5", children: "Receipt ID" }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5 justify-end", children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-bold font-mono text-gray-900 text-[14px] sm:text-[14.5px] tracking-tight leading-tight max-w-[210px] break-all text-right", children: receiptId.startsWith("v2-") ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "v2-" }),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("br", {}),
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: receiptId.slice(3) })
+                      ] }) : receiptId }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        "button",
+                        {
+                          id: "btn-copy-receiptid",
+                          type: "button",
+                          onClick: () => handleCopy(receiptId, "receiptid"),
+                          className: "p-1 text-gray-400 hover:text-[#70189F] hover:bg-purple-50 rounded transition cursor-pointer shrink-0",
+                          title: "Copy Receipt ID",
+                          children: copiedField === "receiptid" ? /* @__PURE__ */ jsxRuntimeExports.jsx(Check, { className: "w-4 h-4 text-emerald-600 stroke-[2.5]" }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { className: "w-4 h-4 text-gray-400 hover:text-[#70189F]", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round", children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: "9", y: "9", width: "13", height: "13", rx: "2", ry: "2" }),
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" })
+                          ] })
+                        }
+                      )
+                    ] })
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start justify-between gap-3", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-500 font-medium whitespace-nowrap mt-0.5 text-[14.5px] sm:text-[15px]", children: "Remark" }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-bold text-gray-900 text-right leading-snug max-w-[220px] sm:max-w-[250px] text-[14.5px] sm:text-[15px]", children: remark })
+                  ] })
+                ] }),
+                copiedField && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "my-1 py-1 px-3 bg-gray-900 text-white text-[11px] font-semibold rounded-lg text-center animate-in fade-in duration-150 shrink-0", children: [
+                  copiedField === "txid" ? "Transaction ID" : "Receipt ID",
+                  " copied to clipboard"
+                ] }),
+                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-[12px] mb-[12px] flex justify-center shrink-0", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
                   "button",
                   {
-                    id: "btn-close-tx-detail",
+                    id: "btn-view-full-receipt",
                     type: "button",
-                    onClick: onClose,
-                    className: "w-7 h-7 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-700 transition cursor-pointer",
-                    "aria-label": "Close",
-                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "w-4 h-4" })
+                    onClick: () => {
+                      setShowWebReceipt(true);
+                    },
+                    className: "w-auto min-w-[172px] max-w-[196px] h-[44px] sm:h-[46px] px-6 py-2.5 text-xs bg-[#70189F] hover:bg-[#5e1286] active:scale-[0.98] text-white rounded-full font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_4px_14px_rgba(112,24,159,0.35)] transition-all cursor-pointer",
+                    children: [
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                        "svg",
+                        {
+                          className: "w-4 h-4 text-white shrink-0",
+                          viewBox: "0 0 24 24",
+                          fill: "none",
+                          stroke: "currentColor",
+                          strokeWidth: "2",
+                          strokeLinecap: "round",
+                          strokeLinejoin: "round",
+                          children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" }),
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M16 8h-8" }),
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M16 12h-8" }),
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M13 16h-5" })
+                          ]
+                        }
+                      ),
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-bold tracking-wider text-[12px] whitespace-nowrap", children: "VIEW RECEIPT" })
+                    ]
                   }
-                )
+                ) })
               ] }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex justify-center mb-2.5 shrink-0", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-[#eaf8f1] text-[#00b050] px-4 py-1 text-xs rounded-full font-bold inline-flex items-center gap-1.5 shadow-2xs", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "w-3.5 h-3.5 rounded-full bg-[#00b050] text-white flex items-center justify-center text-[9px] font-black", children: "✓" }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[12.5px] font-bold tracking-tight text-[#00b050]", children: "Completed" })
-              ] }) }),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-center mb-4 sm:mb-5 shrink-0", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("h3", { className: "text-[32px] sm:text-[34px] font-black text-[#111827] tracking-tight font-sans leading-tight", children: [
-                  isCredit ? "+" : "-",
-                  transaction.amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
-                  " ETB"
-                ] }),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-[14px] sm:text-[14.5px] mt-1 text-gray-500 font-normal", children: [
-                  isCredit ? "from" : "to",
-                  " ",
-                  isCredit ? transaction.senderName || "Mosisa Teshome Tesfa" : transaction.recipientName || "Mosisa Teshome Tesfa"
-                ] })
-              ] }),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-[20px] py-1 px-0.5 my-auto", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between gap-3", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-500 font-medium whitespace-nowrap text-[14.5px] sm:text-[15px]", children: "Date & Time" }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-bold text-gray-900 text-right text-[14.5px] sm:text-[15px]", children: formattedDate })
-                ] }),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between gap-3", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-500 font-medium whitespace-nowrap text-[14.5px] sm:text-[15px]", children: "Type" }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-bold text-gray-900 text-right text-[14.5px] sm:text-[15px]", children: typeLabel })
-                ] }),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between gap-3", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-500 font-medium whitespace-nowrap text-[14.5px] sm:text-[15px]", children: "Transaction ID" }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5", children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-bold font-mono text-gray-900 text-[14.5px] sm:text-[15px]", children: txId }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsx(
-                      "button",
-                      {
-                        id: "btn-copy-txid",
-                        type: "button",
-                        onClick: () => handleCopy(txId, "txid"),
-                        className: "p-1 text-gray-400 hover:text-[#70189F] hover:bg-purple-50 rounded transition cursor-pointer",
-                        title: "Copy Transaction ID",
-                        children: copiedField === "txid" ? /* @__PURE__ */ jsxRuntimeExports.jsx(Check, { className: "w-4 h-4 text-emerald-600 stroke-[2.5]" }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { className: "w-4 h-4 text-gray-400 hover:text-[#70189F]", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round", children: [
-                          /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: "9", y: "9", width: "13", height: "13", rx: "2", ry: "2" }),
-                          /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" })
-                        ] })
-                      }
-                    )
-                  ] })
-                ] }),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start justify-between gap-3", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-500 font-medium whitespace-nowrap text-[14.5px] sm:text-[15px] pt-0.5", children: "Receipt ID" }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5 justify-end", children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-bold font-mono text-gray-900 text-[14px] sm:text-[14.5px] tracking-tight leading-tight max-w-[210px] break-all text-right", children: receiptId.startsWith("v2-") ? /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "v2-" }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("br", {}),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: receiptId.slice(3) })
-                    ] }) : receiptId }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsx(
-                      "button",
-                      {
-                        id: "btn-copy-receiptid",
-                        type: "button",
-                        onClick: () => handleCopy(receiptId, "receiptid"),
-                        className: "p-1 text-gray-400 hover:text-[#70189F] hover:bg-purple-50 rounded transition cursor-pointer shrink-0",
-                        title: "Copy Receipt ID",
-                        children: copiedField === "receiptid" ? /* @__PURE__ */ jsxRuntimeExports.jsx(Check, { className: "w-4 h-4 text-emerald-600 stroke-[2.5]" }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { className: "w-4 h-4 text-gray-400 hover:text-[#70189F]", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "1.8", strokeLinecap: "round", strokeLinejoin: "round", children: [
-                          /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: "9", y: "9", width: "13", height: "13", rx: "2", ry: "2" }),
-                          /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" })
-                        ] })
-                      }
-                    )
-                  ] })
-                ] }),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-start justify-between gap-3", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-500 font-medium whitespace-nowrap mt-0.5 text-[14.5px] sm:text-[15px]", children: "Remark" }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-bold text-gray-900 text-right leading-snug max-w-[220px] sm:max-w-[250px] text-[14.5px] sm:text-[15px]", children: remark })
-                ] })
-              ] }),
-              copiedField && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "my-1 py-1 px-3 bg-gray-900 text-white text-[11px] font-semibold rounded-lg text-center animate-in fade-in duration-150 shrink-0", children: [
-                copiedField === "txid" ? "Transaction ID" : "Receipt ID",
-                " copied to clipboard"
-              ] }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "mt-[12px] mb-[12px] flex justify-center shrink-0", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                "button",
+              /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-full shrink-0 bg-white z-10", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                BottomNavigation,
                 {
-                  id: "btn-view-full-receipt",
-                  type: "button",
-                  onClick: () => {
-                    const normalizedTx = {
-                      ...transaction,
-                      id: txId,
-                      reference: txId
-                    };
-                    onViewReceipt(normalizedTx);
-                  },
-                  className: "w-auto min-w-[172px] max-w-[196px] h-[44px] sm:h-[46px] px-6 py-2.5 text-xs bg-[#70189F] hover:bg-[#5e1286] active:scale-[0.98] text-white rounded-full font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_4px_14px_rgba(112,24,159,0.35)] transition-all cursor-pointer",
-                  children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                      "svg",
-                      {
-                        className: "w-4 h-4 text-white shrink-0",
-                        viewBox: "0 0 24 24",
-                        fill: "none",
-                        stroke: "currentColor",
-                        strokeWidth: "2",
-                        strokeLinecap: "round",
-                        strokeLinejoin: "round",
-                        children: [
-                          /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" }),
-                          /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M16 8h-8" }),
-                          /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M16 12h-8" }),
-                          /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M13 16h-5" })
-                        ]
-                      }
-                    ),
-                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-bold tracking-wider text-[12px] whitespace-nowrap", children: "VIEW RECEIPT" })
-                  ]
+                  activeTab: "transactions",
+                  showScanQr: false,
+                  onChangeTab: (tab) => {
+                    onClose();
+                    if (onNavigateTab) {
+                      onNavigateTab(tab);
+                    } else {
+                      window.dispatchEvent(new CustomEvent("cbe_navigate_tab", { detail: { tab } }));
+                    }
+                  }
                 }
               ) })
-            ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-full shrink-0 bg-white z-10", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-              BottomNavigation,
-              {
-                activeTab: "transactions",
-                showScanQr: false,
-                onChangeTab: (tab) => {
-                  onClose();
-                  if (onNavigateTab) {
-                    onNavigateTab(tab);
-                  } else {
-                    window.dispatchEvent(new CustomEvent("cbe_navigate_tab", { detail: { tab } }));
-                  }
-                }
-              }
-            ) })
-          ]
-        }
-      )
-    }
-  );
+            ]
+          }
+        )
+      }
+    ),
+    showWebReceipt && /* @__PURE__ */ jsxRuntimeExports.jsx(
+      CbeWebReceiptModal,
+      {
+        transaction: {
+          ...transaction,
+          id: txId,
+          reference: txId,
+          description: remark
+        },
+        onClose: () => setShowWebReceipt(false)
+      }
+    )
+  ] });
 }
 const RegisteredAccountsModal = ({
   isOpen,
@@ -33302,8 +37804,8 @@ async function compressImageFile(file, maxDimension = 400, quality = 0.9) {
 }
 const BASE_MANIFEST = {
   id: "/",
-  short_name: "CBE Mobile",
-  name: "CBE Mobile",
+  short_name: "CBE Mobile Banking",
+  name: "CBE Mobile Banking",
   description: "Official Commercial Bank of Ethiopia (CBE) Mobile Banking application with instant transfers, bill payments, and secure account management.",
   start_url: "/",
   scope: "/",
@@ -33352,9 +37854,9 @@ function createSplashScreenshotDataUrl(sourceUrl, width = 540, height = 1170) {
         ctx.font = "600 18px system-ui, -apple-system, sans-serif";
         ctx.fillStyle = "#1f2937";
         ctx.fillText("Commercial Bank of Ethiopia", width / 2, dy + drawH + 102);
-        ctx.font = "900 32px system-ui, -apple-system, sans-serif";
+        ctx.font = "900 30px system-ui, -apple-system, sans-serif";
         ctx.fillStyle = "#70189F";
-        ctx.fillText("CBE Mobile", width / 2, dy + drawH + 155);
+        ctx.fillText("CBE Mobile Banking", width / 2, dy + drawH + 155);
         ctx.font = "400 15px system-ui, -apple-system, sans-serif";
         ctx.fillStyle = "#6b7280";
         ctx.fillText("The Bank You Can Always Rely On", width / 2, dy + drawH + 190);
@@ -33427,7 +37929,7 @@ function createSizedIconDataUrl(sourceUrl, size, maskable = false) {
     img.src = sourceUrl;
   });
 }
-function dataUrlToBlob$1(dataUrl) {
+function dataUrlToBlob(dataUrl) {
   if (dataUrl.startsWith("data:")) {
     const parts = dataUrl.split(",");
     const mimeMatch = parts[0].match(/:(.*?);/);
@@ -33591,14 +38093,14 @@ async function updatePwaBranding(customLogoUrl) {
           sizes: "540x1170",
           type: "image/png",
           form_factor: "narrow",
-          label: "CBE Mobile"
+          label: "CBE Mobile Banking"
         },
         {
           src: `/pwa-screenshot-wide.png${versionParam}`,
           sizes: "1280x800",
           type: "image/png",
           form_factor: "wide",
-          label: "CBE Mobile Desktop"
+          label: "CBE Mobile Banking Desktop"
         }
       ]
     };
@@ -33609,11 +38111,11 @@ async function updatePwaBranding(customLogoUrl) {
     }
     if ("caches" in window) {
       try {
-        const blob192 = dataUrlToBlob$1(icon192);
-        const blob512 = dataUrlToBlob$1(icon512);
-        const blobMaskable = dataUrlToBlob$1(iconMaskable);
-        const blobSplashMobile = splashMobile ? dataUrlToBlob$1(splashMobile) : null;
-        const blobSplashWide = splashWide ? dataUrlToBlob$1(splashWide) : null;
+        const blob192 = dataUrlToBlob(icon192);
+        const blob512 = dataUrlToBlob(icon512);
+        const blobMaskable = dataUrlToBlob(iconMaskable);
+        const blobSplashMobile = splashMobile ? dataUrlToBlob(splashMobile) : null;
+        const blobSplashWide = splashWide ? dataUrlToBlob(splashWide) : null;
         const manifestBlob = new Blob([manifestJsonString], { type: "application/manifest+json" });
         const targetCacheNames = ["cbe-custom-branding-cache"];
         const existingCaches = await caches.keys();
@@ -57631,6 +62133,9 @@ function Profile({
     setBiometrics(nextVal);
     const updated = { ...currentUser, biometricEnabled: nextVal };
     onUpdateUser(updated);
+    if (!nextVal) {
+      BiometricAuthService.clearStoredCredential(currentUser.id);
+    }
     const users = LocalDb.getUsers();
     const idx = users.findIndex((u2) => u2.id === currentUser.id);
     if (idx !== -1) {
@@ -58719,3851 +63224,6 @@ function Profile({
     )
   ] });
 }
-const CbeOfficialPdfReceipt = reactExports.forwardRef(({
-  receiptData,
-  qrCodeDataUrl,
-  activeStamp,
-  stampWeight = "normal",
-  stampSize = 330,
-  stampPosition,
-  customPdfLogo,
-  isPreview = false,
-  tableRef,
-  isEditingStampPosition = false,
-  isDraggingStamp = false,
-  onStampPointerDown,
-  onStampClick,
-  onStampDoubleClick,
-  onStampTouchEnd
-}, ref) => {
-  const effectiveStamp = activeStamp || getOfficialCbeStampSvg(stampWeight) || OFFICIAL_CBE_STAMP_LOGO;
-  const effectiveStampSize = stampSize || LocalDb.getPdfStampSize() || 330;
-  const effectiveStampPos = stampPosition || LocalDb.getPdfStampPosition();
-  const effectiveQr = qrCodeDataUrl || LocalDb.getCustomQrCode() || getAuthenticCbeQrSvgDataUri(receiptData.refId || "FT26248KLR82");
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
-    "div",
-    {
-      ref,
-      className: "cbe-official-pdf-document",
-      style: {
-        width: "640px",
-        display: "flex",
-        flexDirection: "column",
-        gap: isPreview ? "24px" : "0px",
-        backgroundColor: "transparent"
-      },
-      children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          "div",
-          {
-            id: "cbe-pdf-page-1",
-            "data-page": "1",
-            style: {
-              width: "640px",
-              minHeight: "880px",
-              backgroundColor: "#ffffff",
-              color: "#000000",
-              fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-              padding: "28px 32px 36px 32px",
-              boxSizing: "border-box",
-              position: "relative",
-              boxShadow: isPreview ? "0 8px 36px rgba(0,0,0,0.38), 0 2px 8px rgba(0,0,0,0.22)" : "none",
-              borderRadius: isPreview ? "2px" : "0px"
-            },
-            children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                "div",
-                {
-                  style: {
-                    backgroundColor: "#781d77",
-                    borderRadius: "8px 8px 0 0",
-                    padding: "13px 18px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    color: "#ffffff",
-                    position: "relative"
-                  },
-                  children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: "48px", height: "48px", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, overflow: "hidden" }, children: (() => {
-                      const effectiveLogo = customPdfLogo || LocalDb.getCustomBankLogo() || CBE_DEFAULT_LOGO_BASE64;
-                      return /* @__PURE__ */ jsxRuntimeExports.jsx(
-                        "img",
-                        {
-                          src: effectiveLogo,
-                          alt: "Bank Logo",
-                          style: { width: "48px", height: "48px", objectFit: "contain" },
-                          crossOrigin: "anonymous",
-                          onError: (e) => {
-                            const target = e.currentTarget;
-                            if (target.src !== CBE_DEFAULT_LOGO_BASE64) {
-                              target.src = CBE_DEFAULT_LOGO_BASE64;
-                            }
-                          }
-                        }
-                      );
-                    })() }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { flex: 1, textAlign: "center", paddingRight: "48px" }, children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { style: { margin: 0, fontSize: "18px", fontWeight: 700, letterSpacing: "-0.2px", color: "#ffffff", lineHeight: 1.2 }, children: "Commercial Bank of Ethiopia" }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: "13.5px", fontWeight: 400, marginTop: "2.5px", color: "#ffffff", lineHeight: 1.2 }, children: "Customer Receipt" }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: "11px", fontWeight: 700, marginTop: "2.5px", letterSpacing: "0.2px", color: "#ffffff" }, children: "Status: COMPLETED" })
-                    ] })
-                  ]
-                }
-              ),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                "div",
-                {
-                  style: {
-                    display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
-                    gap: "24px",
-                    marginTop: "16px",
-                    fontSize: "11px",
-                    lineHeight: 1.4,
-                    color: "#000000"
-                  },
-                  children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { fontSize: "12px", fontWeight: 700, color: "#000000", lineHeight: 1.25, marginBottom: "5px", paddingBottom: "3px", borderBottom: "1px solid #e5e7eb" }, children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { children: "Company Address & Other" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { children: "Information" })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: "11px" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: [
-                        { label: "Country:", val: "Ethiopia" },
-                        { label: "City:", val: "Addis Ababa" },
-                        { label: "Address:", val: "Ras Desta Damtew St, 01, Kirkos" },
-                        { label: "Postal code:", val: "255" },
-                        { label: "SWIFT Code:", val: "CBETETAA" },
-                        { label: "Email:", val: "info@cbe.com.et" },
-                        { label: "Tel:", val: "+251-551-50-04" },
-                        { label: "Fax:", val: "+251-551-45-22" },
-                        { label: "Tin:", val: "0000006966" },
-                        { label: "VAT Receipt No:", val: receiptData.refId },
-                        { label: "VAT Registration No:", val: "011140" },
-                        { label: "VAT Registration Date:", val: "01/01/2003" }
-                      ].map((row, idx) => /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { style: { height: "17px" }, children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("td", { style: { color: "#374151", fontWeight: 400, padding: "1px 0", verticalAlign: "top", whiteSpace: "nowrap" }, children: row.label }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("td", { style: { textAlign: "right", fontWeight: 400, color: "#000000", padding: "1px 0", verticalAlign: "top" }, children: row.val })
-                      ] }, idx)) }) })
-                    ] }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: "12px", fontWeight: 700, color: "#000000", lineHeight: 1.25, marginBottom: "5px", paddingBottom: "3px", borderBottom: "1px solid #e5e7eb" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { children: "Customer Information" }) }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: "11px" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: [
-                        { label: "Customer Name:", val: receiptData.customerName || receiptData.payerName },
-                        { label: "Region:", val: "-" },
-                        { label: "City:", val: "-" },
-                        { label: "Sub City:", val: "-" },
-                        { label: "Wereda/Kebele:", val: "-" },
-                        { label: "VAT Registration No:", val: "-" },
-                        { label: "VAT Registration Date:", val: "-" },
-                        { label: "TIN (TAX ID):", val: "-" },
-                        { label: "Branch:", val: "-" }
-                      ].map((row, idx) => /* @__PURE__ */ jsxRuntimeExports.jsxs("tr", { style: { height: "17px" }, children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("td", { style: { color: "#374151", fontWeight: 400, padding: "1px 0", verticalAlign: "top", whiteSpace: "nowrap" }, children: row.label }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("td", { style: { textAlign: "right", fontWeight: 400, color: "#000000", padding: "1px 0", verticalAlign: "top" }, children: row.val })
-                      ] }, idx)) }) })
-                    ] })
-                  ]
-                }
-              ),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                "div",
-                {
-                  ref: tableRef,
-                  style: {
-                    marginTop: "16px",
-                    border: "1px solid #d1d5db",
-                    borderRadius: "6px",
-                    position: "relative",
-                    overflow: "hidden",
-                    backgroundColor: "#ffffff"
-                  },
-                  children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsx(
-                      "div",
-                      {
-                        style: {
-                          textAlign: "center",
-                          fontWeight: 700,
-                          fontSize: "13px",
-                          color: "#000000",
-                          padding: "7px 0",
-                          borderBottom: "1px solid #d1d5db",
-                          backgroundColor: "#ffffff"
-                        },
-                        children: "Payment / Transaction Informations"
-                      }
-                    ),
-                    /* @__PURE__ */ jsxRuntimeExports.jsx("table", { style: { width: "100%", borderCollapse: "collapse", fontSize: "11.5px" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx("tbody", { children: (() => {
-                      const formatEtb = (val) => (Number(val) || 0).toFixed(2) + " ETB";
-                      return [
-                        { label: "Payer:", val: receiptData.payerName, bold: false, boldVal: false },
-                        { label: "Account:", val: receiptData.payerAccount, bold: false, boldVal: false },
-                        { label: "Receiver:", val: receiptData.receiverName, bold: false, boldVal: false },
-                        { label: "Account:", val: receiptData.receiverAccount, bold: false, boldVal: false },
-                        { label: "Payment Type:", val: receiptData.paymentType || "A2A", bold: false, boldVal: false },
-                        { label: "Payment Date & Time:", val: receiptData.paymentDate, bold: false, boldVal: false },
-                        { label: "Reference No. (VAT Invoice No):", val: receiptData.refId, bold: false, boldVal: false },
-                        { label: "Reason / Type of service:", val: receiptData.reason || "-", bold: false, boldVal: false },
-                        { label: "Transferred Amount:", val: formatEtb(receiptData.amount), bold: false, boldVal: false },
-                        { label: "Service Charge:", val: formatEtb(receiptData.serviceCharge), bold: false, boldVal: false },
-                        { label: "VAT (15% of service charge):", val: formatEtb(receiptData.vat), bold: false, boldVal: false },
-                        { label: "Disaster Risk Response Fund (5% of service charge):", val: formatEtb(receiptData.disasterRecovery), bold: false, boldVal: false },
-                        // Bold number is ONLY the last one like Image 1
-                        { label: "Total amount debited from customer's account:", val: formatEtb(receiptData.totalDebited), bold: true, boldVal: true }
-                      ].map((row, idx, arr) => /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                        "tr",
-                        {
-                          style: {
-                            borderBottom: idx < arr.length - 1 ? "1px solid #e5e7eb" : "none",
-                            height: "24px",
-                            backgroundColor: row.bold ? "#ffffff" : "transparent"
-                          },
-                          children: [
-                            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { style: {
-                              padding: "5px 14px",
-                              color: row.bold ? "#000000" : "#374151",
-                              fontWeight: row.bold ? 700 : 400,
-                              fontSize: row.bold ? "12px" : "11.5px",
-                              whiteSpace: "nowrap"
-                            }, children: row.label }),
-                            /* @__PURE__ */ jsxRuntimeExports.jsx("td", { style: {
-                              padding: "5px 14px",
-                              textAlign: "right",
-                              color: "#000000",
-                              fontWeight: row.boldVal ? 700 : 400,
-                              fontSize: row.boldVal ? "12.5px" : "11.5px",
-                              whiteSpace: "nowrap"
-                            }, children: row.val })
-                          ]
-                        },
-                        idx
-                      ));
-                    })() }) }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                      "div",
-                      {
-                        id: isPreview ? "cbe-stamp-container" : void 0,
-                        style: {
-                          position: "absolute",
-                          top: `${effectiveStampPos.yPercent}%`,
-                          left: `${effectiveStampPos.xPercent}%`,
-                          transform: "translate(-50%, -50%)",
-                          width: `${effectiveStampSize}px`,
-                          height: `${effectiveStampSize}px`,
-                          maxWidth: "92%",
-                          aspectRatio: "1 / 1",
-                          pointerEvents: isPreview ? "auto" : "none",
-                          cursor: isPreview ? isEditingStampPosition ? isDraggingStamp ? "grabbing" : "grab" : "pointer" : "default",
-                          zIndex: 10,
-                          touchAction: isPreview ? "none" : "auto"
-                        },
-                        onPointerDown: isPreview && isEditingStampPosition ? onStampPointerDown : void 0,
-                        onClick: isPreview ? onStampClick : void 0,
-                        onDoubleClick: isPreview ? onStampDoubleClick : void 0,
-                        onTouchEnd: isPreview ? onStampTouchEnd : void 0,
-                        children: [
-                          isPreview && isEditingStampPosition && /* @__PURE__ */ jsxRuntimeExports.jsx(
-                            "div",
-                            {
-                              "data-html2canvas-ignore": "true",
-                              style: {
-                                position: "absolute",
-                                inset: -6,
-                                border: "2.5px dashed #9333ea",
-                                borderRadius: "50%",
-                                pointerEvents: "none",
-                                boxShadow: "0 0 0 2px rgba(255,255,255,0.8), 0 4px 14px rgba(147, 51, 234, 0.45)"
-                              }
-                            }
-                          ),
-                          /* @__PURE__ */ jsxRuntimeExports.jsx(
-                            "img",
-                            {
-                              src: effectiveStamp,
-                              alt: "Bank Stamp",
-                              crossOrigin: "anonymous",
-                              style: {
-                                width: "100%",
-                                height: "100%",
-                                objectFit: "contain",
-                                transform: "rotate(-13deg)",
-                                opacity: stampWeight === "light" ? 0.88 : stampWeight === "normal" ? 0.96 : 1
-                              }
-                            }
-                          ),
-                          isPreview && isEditingStampPosition && /* @__PURE__ */ jsxRuntimeExports.jsx(
-                            "div",
-                            {
-                              "data-html2canvas-ignore": "true",
-                              style: {
-                                position: "absolute",
-                                top: "50%",
-                                left: "50%",
-                                transform: "translate(-50%, -50%)",
-                                backgroundColor: "rgba(126, 34, 206, 0.95)",
-                                color: "#ffffff",
-                                fontSize: "10px",
-                                fontWeight: 800,
-                                padding: "3px 9px",
-                                borderRadius: "9999px",
-                                boxShadow: "0 4px 12px rgba(0,0,0,0.5)",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: "4px",
-                                pointerEvents: "none",
-                                whiteSpace: "nowrap",
-                                border: "1px solid rgba(255,255,255,0.5)"
-                              },
-                              children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: isDraggingStamp ? "Moving..." : "Drag to Move" })
-                            }
-                          )
-                        ]
-                      }
-                    )
-                  ]
-                }
-              ),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                "div",
-                {
-                  style: {
-                    marginTop: "18px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: "16px"
-                  },
-                  children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                      "div",
-                      {
-                        style: {
-                          flex: 1,
-                          backgroundColor: "#f8f9fa",
-                          border: "1px solid #d1d5db",
-                          borderRadius: "8px",
-                          padding: "12px 18px",
-                          textAlign: "center"
-                        },
-                        children: [
-                          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: "12px", fontWeight: 700, color: "#000000" }, children: "Amount in Word:" }),
-                          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { fontSize: "11.5px", color: "#1f2937", marginTop: "3px", fontWeight: 400, lineHeight: 1.4 }, children: receiptData.words })
-                        ]
-                      }
-                    ),
-                    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: "84px", height: "84px", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }, children: effectiveQr ? /* @__PURE__ */ jsxRuntimeExports.jsx(
-                      "img",
-                      {
-                        id: "cbe-pdf-official-qr-image",
-                        src: effectiveQr,
-                        alt: "Receipt Verification QR",
-                        crossOrigin: "anonymous",
-                        style: { width: "80px", height: "80px", objectFit: "contain", display: "block" }
-                      }
-                    ) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { width: "80px", height: "80px", backgroundColor: "#e5e7eb" } }) })
-                  ]
-                }
-              ),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
-                "div",
-                {
-                  style: {
-                    position: "absolute",
-                    bottom: "12px",
-                    left: "16px",
-                    backgroundColor: "#e5e7eb",
-                    color: "#4b5563",
-                    fontSize: "10px",
-                    fontWeight: 600,
-                    padding: "2px 8px",
-                    borderRadius: "4px",
-                    opacity: isPreview ? 0.9 : 0
-                  },
-                  children: "1"
-                }
-              )
-            ]
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          "div",
-          {
-            id: "cbe-pdf-page-2",
-            "data-page": "2",
-            style: {
-              width: "640px",
-              minHeight: "880px",
-              backgroundColor: "#ffffff",
-              color: "#000000",
-              fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-              padding: "28px 32px 36px 32px",
-              boxSizing: "border-box",
-              position: "relative",
-              boxShadow: isPreview ? "0 8px 36px rgba(0,0,0,0.38), 0 2px 8px rgba(0,0,0,0.22)" : "none",
-              borderRadius: isPreview ? "2px" : "0px",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "flex-start",
-              paddingTop: "130px"
-            },
-            children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { textAlign: "center" }, children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { color: "#781d77", fontWeight: 700, fontSize: "13px" }, children: "The Bank you can always rely on." }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { color: "#6b7280", fontSize: "10.5px", marginTop: "4px", fontWeight: 400 }, children: "© 2026 Commercial Bank of Ethiopia. All rights reserved." })
-              ] }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
-                "div",
-                {
-                  style: {
-                    position: "absolute",
-                    bottom: "12px",
-                    left: "16px",
-                    backgroundColor: "#e5e7eb",
-                    color: "#4b5563",
-                    fontSize: "10px",
-                    fontWeight: 600,
-                    padding: "2px 8px",
-                    borderRadius: "4px",
-                    opacity: isPreview ? 0.9 : 0
-                  },
-                  children: "2"
-                }
-              )
-            ]
-          }
-        )
-      ]
-    }
-  );
-});
-CbeOfficialPdfReceipt.displayName = "CbeOfficialPdfReceipt";
-function s(t) {
-  t.CapacitorUtils.Synapse = new Proxy(
-    {},
-    {
-      get(e, n) {
-        return new Proxy({}, {
-          get(w, o) {
-            return (c, p, r) => {
-              const i = t.Capacitor.Plugins[n];
-              if (i === void 0) {
-                r(new Error(`Capacitor plugin ${n} not found`));
-                return;
-              }
-              if (typeof i[o] != "function") {
-                r(new Error(`Method ${o} not found in Capacitor plugin ${n}`));
-                return;
-              }
-              (async () => {
-                try {
-                  const a = await i[o](c);
-                  p(a);
-                } catch (a) {
-                  r(a);
-                }
-              })();
-            };
-          }
-        });
-      }
-    }
-  );
-}
-function u(t) {
-  t.CapacitorUtils.Synapse = new Proxy(
-    {},
-    {
-      get(e, n) {
-        return t.cordova.plugins[n];
-      }
-    }
-  );
-}
-function f(t = false) {
-  typeof window > "u" || (window.CapacitorUtils = window.CapacitorUtils || {}, window.Capacitor !== void 0 && !t ? s(window) : window.cordova !== void 0 && u(window));
-}
-var Directory;
-(function(Directory2) {
-  Directory2["Documents"] = "DOCUMENTS";
-  Directory2["Data"] = "DATA";
-  Directory2["Library"] = "LIBRARY";
-  Directory2["Cache"] = "CACHE";
-  Directory2["External"] = "EXTERNAL";
-  Directory2["ExternalStorage"] = "EXTERNAL_STORAGE";
-  Directory2["ExternalCache"] = "EXTERNAL_CACHE";
-  Directory2["LibraryNoCloud"] = "LIBRARY_NO_CLOUD";
-  Directory2["Temporary"] = "TEMPORARY";
-})(Directory || (Directory = {}));
-var Encoding;
-(function(Encoding2) {
-  Encoding2["UTF8"] = "utf8";
-  Encoding2["ASCII"] = "ascii";
-  Encoding2["UTF16"] = "utf16";
-})(Encoding || (Encoding = {}));
-const Filesystem = registerPlugin("Filesystem", {
-  web: () => __vitePreload(() => import("./web-CBG8vYoG.js"), true ? __vite__mapDeps([0,1,2,3]) : void 0).then((m) => new m.FilesystemWeb())
-});
-f();
-const Share = registerPlugin("Share", {
-  web: () => __vitePreload(() => import("./web-Btv_ujrR.js"), true ? __vite__mapDeps([4,1,2,3]) : void 0).then((m) => new m.ShareWeb())
-});
-const Media = registerPlugin("Media", {
-  web: () => __vitePreload(() => import("./web-DKpNPigR.js"), true ? __vite__mapDeps([5,1,2,3]) : void 0).then((m) => new m.MediaWeb())
-});
-function getSafeReceiptFilename(txId) {
-  const d = /* @__PURE__ */ new Date();
-  const pad = (n) => String(n).padStart(2, "0");
-  const dateStr = `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
-  const timeStr = `${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
-  const sanitized = (txId || "receipt").trim().replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 30);
-  return `Screenshot_${dateStr}-${timeStr}_CBE_${sanitized}.png`;
-}
-function dataUrlToBlob(dataUrl) {
-  var _a;
-  const parts = dataUrl.split(",");
-  const mime = ((_a = parts[0].match(/:(.*?);/)) == null ? void 0 : _a[1]) || "image/png";
-  const bstr = atob(parts[1]);
-  let n = bstr.length;
-  const u8arr = new Uint8Array(n);
-  while (n--) {
-    u8arr[n] = bstr.charCodeAt(n);
-  }
-  return new Blob([u8arr], { type: mime });
-}
-function checkIsIOS() {
-  if (typeof window === "undefined" || typeof navigator === "undefined") return false;
-  const ua = navigator.userAgent || navigator.vendor || "";
-  const isIosUa = /iPhone|iPad|iPod/i.test(ua);
-  const isMacTouch = (navigator.platform === "MacIntel" || navigator.platform === "iPad" || navigator.platform === "iPhone") && navigator.maxTouchPoints > 1;
-  const isIosWebKit = /WebKit/i.test(ua) && !/Chrome|CriOS|Android/i.test(ua) && /Mobile/i.test(ua);
-  const isPhoneSetting = PhoneSettingsService.isIPhoneDevice() || PhoneSettingsService.isIPhoneMode();
-  return isIosUa || isMacTouch || isIosWebKit || isPhoneSetting;
-}
-async function rasterizeSvgToPngDataUrl(svgDataUrl, width = 450, height = 450) {
-  return new Promise((resolve) => {
-    try {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      const timer = setTimeout(() => resolve(svgDataUrl), 1500);
-      img.onload = () => {
-        clearTimeout(timer);
-        try {
-          const canvas2 = document.createElement("canvas");
-          canvas2.width = width;
-          canvas2.height = height;
-          const ctx = canvas2.getContext("2d");
-          if (!ctx) return resolve(svgDataUrl);
-          ctx.fillStyle = "#ffffff";
-          ctx.fillRect(0, 0, width, height);
-          ctx.drawImage(img, 0, 0, width, height);
-          resolve(canvas2.toDataURL("image/png"));
-        } catch {
-          resolve(svgDataUrl);
-        }
-      };
-      img.onerror = () => {
-        clearTimeout(timer);
-        resolve(svgDataUrl);
-      };
-      img.src = svgDataUrl;
-    } catch {
-      resolve(svgDataUrl);
-    }
-  });
-}
-async function inlineImageElement(img) {
-  var _a, _b;
-  const isCbeLogo = img.getAttribute("data-cbe-logo") === "true" || ((_a = img.alt) == null ? void 0 : _a.toLowerCase().includes("commercial bank")) || ((_b = img.id) == null ? void 0 : _b.includes("cbe-logo"));
-  if (isCbeLogo) {
-    const savedCustomLogo = LocalDb.getCustomBankLogo();
-    if (savedCustomLogo && savedCustomLogo.startsWith("data:image/")) {
-      img.src = savedCustomLogo;
-    } else {
-      img.src = CBE_DEFAULT_LOGO_BASE64;
-    }
-    if ("decode" in img) {
-      await img.decode().catch(() => {
-      });
-    }
-    return;
-  }
-  if (img.src && img.src.startsWith("data:image/svg")) {
-    try {
-      const pngData = await rasterizeSvgToPngDataUrl(img.src, 450, 450);
-      img.src = pngData;
-      if ("decode" in img) {
-        await img.decode().catch(() => {
-        });
-      }
-      return;
-    } catch {
-    }
-  }
-  if (img.src && img.src.startsWith("data:")) {
-    if ("decode" in img) {
-      await img.decode().catch(() => {
-      });
-    }
-    return;
-  }
-  if (!img.src || img.src.includes("custom-bank-logo") || img.src.includes("cbe-gold-logo")) {
-    img.src = CBE_DEFAULT_LOGO_BASE64;
-    if ("decode" in img) {
-      await img.decode().catch(() => {
-      });
-    }
-    return;
-  }
-  try {
-    const resp = await fetch(img.src);
-    if (resp.ok) {
-      const blob = await resp.blob();
-      const dataUrl = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          if (typeof reader.result === "string") resolve(reader.result);
-          else reject(new Error("Reader result not string"));
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-      img.src = dataUrl;
-      if ("decode" in img) {
-        await img.decode().catch(() => {
-        });
-      }
-      return;
-    }
-  } catch {
-  }
-  try {
-    if (img.complete && img.naturalWidth > 0) {
-      const offCanvas = document.createElement("canvas");
-      offCanvas.width = img.naturalWidth;
-      offCanvas.height = img.naturalHeight;
-      const offCtx = offCanvas.getContext("2d");
-      if (offCtx) {
-        offCtx.drawImage(img, 0, 0);
-        const inlinedSrc = offCanvas.toDataURL("image/png");
-        img.src = inlinedSrc;
-        if ("decode" in img) {
-          await img.decode().catch(() => {
-          });
-        }
-      }
-    }
-  } catch (canvasErr) {
-    console.warn("[ScreenshotService] Canvas inlining note:", canvasErr);
-  }
-}
-async function captureReceiptElement(element) {
-  const scrollWrapper = document.getElementById("receipt-screen-wrapper") || element.closest(".overflow-y-auto") || element.parentElement;
-  const initialScrollTop = scrollWrapper ? scrollWrapper.scrollTop : window.scrollY;
-  if (scrollWrapper) {
-    scrollWrapper.scrollTop = 0;
-  }
-  await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-  const images = Array.from(element.querySelectorAll("img"));
-  await Promise.all(
-    images.map(async (img) => {
-      if (!img.complete || img.naturalHeight === 0) {
-        await new Promise((resolve) => {
-          const onDone = () => {
-            img.removeEventListener("load", onDone);
-            img.removeEventListener("error", onDone);
-            resolve();
-          };
-          img.addEventListener("load", onDone);
-          img.addEventListener("error", onDone);
-          setTimeout(resolve, 800);
-        });
-      }
-      await inlineImageElement(img);
-    })
-  );
-  if (typeof document !== "undefined" && "fonts" in document && document.fonts.ready) {
-    try {
-      await document.fonts.ready;
-    } catch {
-    }
-  }
-  const rect = element.getBoundingClientRect();
-  const isExactTarget = element.id === "cbe-screenshot-exact-target";
-  const fullWidth = isExactTarget ? parseInt(element.style.width, 10) || element.offsetWidth || 412 : Math.max(element.scrollWidth, element.offsetWidth, Math.ceil(rect.width), 360);
-  const fullHeight = isExactTarget ? parseInt(element.style.height, 10) || element.offsetHeight || 915 : Math.max(element.scrollHeight, element.offsetHeight, Math.ceil(rect.height), 700);
-  const rawDpr = typeof window !== "undefined" ? window.devicePixelRatio || 2 : 2;
-  const pixelRatio = Math.min(2.5, Math.max(2, rawDpr));
-  const isExcluded = (node) => {
-    return node.getAttribute("data-screenshot-exclude") === "true" || node.getAttribute("data-screenshot-temporary") === "true" || node.id === "btn-top-screenshot";
-  };
-  try {
-    const canvas2 = await html2canvas(element, {
-      scale: pixelRatio,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: "#ffffff",
-      logging: false,
-      imageTimeout: 15e3,
-      scrollX: 0,
-      scrollY: 0,
-      width: fullWidth,
-      height: fullHeight,
-      windowWidth: fullWidth,
-      windowHeight: fullHeight,
-      ignoreElements: isExcluded,
-      onclone: (clonedDoc, clonedElement) => {
-        var _a;
-        (_a = clonedDoc.defaultView) == null ? void 0 : _a.scrollTo(0, 0);
-        if (clonedDoc.documentElement) {
-          clonedDoc.documentElement.style.overflow = "visible";
-          clonedDoc.documentElement.style.height = "auto";
-          clonedDoc.documentElement.style.backgroundColor = "#ffffff";
-        }
-        if (clonedDoc.body) {
-          clonedDoc.body.style.overflow = "visible";
-          clonedDoc.body.style.height = "auto";
-          clonedDoc.body.style.backgroundColor = "#ffffff";
-        }
-        const clonedWrapper = clonedDoc.getElementById("receipt-screen-wrapper");
-        if (clonedWrapper) {
-          clonedWrapper.scrollTop = 0;
-          clonedWrapper.scrollLeft = 0;
-          clonedWrapper.style.overflow = "visible";
-          clonedWrapper.style.height = "auto";
-          clonedWrapper.style.maxHeight = "none";
-        }
-        clonedElement.style.overflow = "visible";
-        clonedElement.style.height = "auto";
-        clonedElement.style.minHeight = "100%";
-        clonedElement.style.maxHeight = "none";
-        clonedElement.style.transform = "none";
-        try {
-          const mainStyles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'));
-          mainStyles.forEach((styleTag) => {
-            clonedDoc.head.appendChild(styleTag.cloneNode(true));
-          });
-        } catch {
-        }
-        if (clonedElement.id === "cbe-screenshot-exact-target") {
-          clonedDoc.body.appendChild(clonedElement);
-          const rootElement = clonedDoc.getElementById("root");
-          if (rootElement && rootElement !== clonedElement) {
-            rootElement.style.display = "none";
-          }
-          clonedElement.style.position = "relative";
-          clonedElement.style.top = "0";
-          clonedElement.style.left = "0";
-          clonedElement.style.zIndex = "9999";
-          clonedElement.style.opacity = "1";
-          clonedElement.style.visibility = "visible";
-          clonedElement.style.display = "flex";
-          clonedElement.style.flexDirection = "column";
-          clonedElement.style.width = `${fullWidth}px`;
-          clonedElement.style.height = `${fullHeight}px`;
-          clonedElement.style.minHeight = `${fullHeight}px`;
-          clonedElement.style.maxHeight = `${fullHeight}px`;
-          clonedElement.style.margin = "0";
-          clonedElement.style.padding = "0";
-          clonedElement.style.boxSizing = "border-box";
-          clonedElement.style.backgroundColor = "#70189F";
-          clonedDoc.body.style.width = `${fullWidth}px`;
-          clonedDoc.body.style.height = `${fullHeight}px`;
-          clonedDoc.body.style.backgroundColor = "#70189F";
-          clonedDoc.body.style.margin = "0";
-          clonedDoc.body.style.padding = "0";
-          clonedDoc.body.style.overflow = "hidden";
-          if (clonedDoc.documentElement) {
-            clonedDoc.documentElement.style.width = `${fullWidth}px`;
-            clonedDoc.documentElement.style.height = `${fullHeight}px`;
-            clonedDoc.documentElement.style.margin = "0";
-            clonedDoc.documentElement.style.padding = "0";
-            clonedDoc.documentElement.style.overflow = "hidden";
-          }
-        }
-        const whiteSheet = clonedElement.querySelector(".bg-white");
-        if (whiteSheet) {
-          whiteSheet.style.overflow = "visible";
-          whiteSheet.style.height = "auto";
-          whiteSheet.style.backgroundColor = "#ffffff";
-        }
-        if (clonedElement.id !== "cbe-screenshot-exact-target") {
-          const bottomBar = clonedDoc.getElementById("cbe-receipt-bottom-actions-container");
-          if (bottomBar) {
-            bottomBar.style.display = "block";
-            bottomBar.style.visibility = "visible";
-            bottomBar.style.opacity = "1";
-          }
-        }
-        const temporaryNodes = clonedDoc.querySelectorAll(
-          '[data-screenshot-exclude="true"], [data-screenshot-temporary="true"], #btn-top-screenshot'
-        );
-        temporaryNodes.forEach((node) => {
-          node.style.display = "none";
-        });
-        const clonedImgs = clonedDoc.querySelectorAll("img");
-        clonedImgs.forEach((clonedImg) => {
-          if (!clonedImg.src || clonedImg.src.includes("custom-bank-logo") || clonedImg.src.includes("cbe-gold-logo")) {
-            clonedImg.src = CBE_DEFAULT_LOGO_BASE64;
-          }
-        });
-      }
-    });
-    const ctx = canvas2.getContext("2d");
-    if (ctx) {
-      try {
-        const sampleTop = ctx.getImageData(Math.round(canvas2.width / 2), Math.round(25 * pixelRatio), 1, 1).data;
-        const isTopPurple = sampleTop[0] > 60 && sampleTop[0] < 160 && sampleTop[1] < 60 && sampleTop[2] > 110 && sampleTop[3] > 200;
-        if (!isTopPurple) {
-          console.warn("[ScreenshotService] Detected unstyled capture (missing CBE purple header), rejecting for canvas fallback");
-          throw new Error("Unstyled capture detected: missing purple header");
-        }
-        const midY = Math.round(canvas2.height / 2);
-        const sampleMid = ctx.getImageData(Math.round(canvas2.width / 2), midY, 1, 1).data;
-        const isMidPurple = sampleMid[0] > 60 && sampleMid[0] < 160 && sampleMid[1] < 60 && sampleMid[2] > 110;
-        if (isMidPurple) {
-          console.warn("[ScreenshotService] Detected blank solid purple capture, rejecting for canvas fallback");
-          throw new Error("Blank solid purple capture detected");
-        }
-      } catch (checkErr) {
-        if (checkErr instanceof Error && (checkErr.message.includes("Unstyled capture") || checkErr.message.includes("Blank solid purple"))) {
-          throw checkErr;
-        }
-      }
-    }
-    const dataUrl = canvas2.toDataURL("image/png");
-    if (dataUrl && dataUrl.length > 1e3) {
-      return dataUrl;
-    }
-    throw new Error("html2canvas canvas data was empty");
-  } catch (primaryErr) {
-    console.warn("[ScreenshotService] html2canvas-pro capture retry with standard options:", primaryErr);
-    try {
-      const fallbackCanvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: "#ffffff",
-        logging: false,
-        scrollX: 0,
-        scrollY: 0,
-        ignoreElements: isExcluded
-      });
-      return fallbackCanvas.toDataURL("image/png");
-    } catch (fallbackErr) {
-      console.error("[ScreenshotService] All capture methods failed:", fallbackErr);
-      throw fallbackErr;
-    }
-  } finally {
-    if (scrollWrapper) {
-      scrollWrapper.scrollTop = initialScrollTop;
-    }
-  }
-}
-async function saveAndShareReceiptImage(dataUrl, txId, triggerShareModal = false) {
-  var _a, _b;
-  const filename = getSafeReceiptFilename(txId);
-  const isNative = Capacitor.isNativePlatform();
-  const platform = Capacitor.getPlatform();
-  const isIos = platform === "ios" || checkIsIOS();
-  if (isNative) {
-    try {
-      try {
-        await Media.savePhoto({
-          path: dataUrl,
-          fileName: filename.replace(/\.png$/i, "")
-        });
-        return { saved: true };
-      } catch (mediaErr) {
-        console.warn("Native Media.savePhoto direct gallery save note:", mediaErr);
-      }
-      const base64Data = dataUrl.replace(/^data:image\/png;base64,/, "");
-      const writeResult = await Filesystem.writeFile({
-        path: filename,
-        data: base64Data,
-        directory: Directory.Cache
-      });
-      const fileUri = writeResult.uri;
-      if (platform === "android") {
-        try {
-          await Filesystem.writeFile({
-            path: filename,
-            data: base64Data,
-            directory: Directory.Documents
-          });
-        } catch (docErr) {
-          console.warn("Documents directory write note:", docErr);
-        }
-        try {
-          await Filesystem.writeFile({
-            path: filename,
-            data: base64Data,
-            directory: Directory.ExternalStorage
-          });
-        } catch (extErr) {
-          console.warn("ExternalStorage directory write note:", extErr);
-        }
-      }
-      if (platform === "ios") {
-        try {
-          await Filesystem.writeFile({
-            path: filename,
-            data: base64Data,
-            directory: Directory.Documents
-          });
-        } catch (iosDocErr) {
-          console.warn("iOS Documents directory write note:", iosDocErr);
-        }
-      }
-      if (triggerShareModal) {
-        try {
-          await Share.share({
-            title: `CBE Receipt ${txId}`,
-            text: `Commercial Bank of Ethiopia Transaction Receipt #${txId}`,
-            files: [fileUri],
-            dialogTitle: "Share Receipt"
-          });
-        } catch (shareErr) {
-          if ((shareErr == null ? void 0 : shareErr.name) === "AbortError" || ((_a = shareErr == null ? void 0 : shareErr.message) == null ? void 0 : _a.includes("canceled")) || ((_b = shareErr == null ? void 0 : shareErr.message) == null ? void 0 : _b.includes("cancelled"))) {
-            return { saved: true, fileUri };
-          }
-          console.warn("Native share dialog note:", shareErr);
-        }
-      }
-      return { saved: true, fileUri };
-    } catch (nativeErr) {
-      console.warn("Native Capacitor save notice:", nativeErr);
-      return { saved: false };
-    }
-  } else {
-    try {
-      const blob = dataUrlToBlob(dataUrl);
-      const file = new File([blob], filename, { type: "image/png" });
-      if (!isIos) {
-        try {
-          const blobUrl = URL.createObjectURL(blob);
-          const downloadLink = document.createElement("a");
-          downloadLink.href = blobUrl;
-          downloadLink.download = filename;
-          downloadLink.setAttribute("download", filename);
-          downloadLink.style.display = "none";
-          document.body.appendChild(downloadLink);
-          downloadLink.click();
-          setTimeout(() => {
-            try {
-              document.body.removeChild(downloadLink);
-              URL.revokeObjectURL(blobUrl);
-            } catch {
-            }
-          }, 3e3);
-        } catch (downloadErr) {
-          console.warn("Download link fallback notice:", downloadErr);
-        }
-      }
-      if (typeof navigator !== "undefined" && navigator.clipboard && window.ClipboardItem) {
-        try {
-          await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-        } catch {
-        }
-      }
-      if (triggerShareModal && typeof navigator !== "undefined" && navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({
-            files: [file],
-            title: `CBE Receipt - ${txId}`,
-            text: `Commercial Bank of Ethiopia Transaction Receipt #${txId}`
-          });
-          return { saved: true };
-        } catch (shareErr) {
-          if ((shareErr == null ? void 0 : shareErr.name) === "AbortError") {
-            return { saved: true };
-          }
-          console.log("Share dialog note:", shareErr);
-        }
-      }
-      return { saved: true };
-    } catch (browserErr) {
-      console.warn("Browser save note:", browserErr);
-      return { saved: true };
-    }
-  }
-}
-function numberToCbeWords(amount) {
-  const ones = [
-    "",
-    "One",
-    "Two",
-    "Three",
-    "Four",
-    "Five",
-    "Six",
-    "Seven",
-    "Eight",
-    "Nine",
-    "Ten",
-    "Eleven",
-    "Twelve",
-    "Thirteen",
-    "Fourteen",
-    "Fifteen",
-    "Sixteen",
-    "Seventeen",
-    "Eighteen",
-    "Nineteen"
-  ];
-  const tens = [
-    "",
-    "",
-    "Twenty",
-    "Thirty",
-    "Forty",
-    "Fifty",
-    "Sixty",
-    "Seventy",
-    "Eighty",
-    "Ninety"
-  ];
-  function convertGroup(n) {
-    let group = "";
-    if (n >= 100) {
-      group += ones[Math.floor(n / 100)] + " Hundred ";
-      n %= 100;
-    }
-    if (n >= 20) {
-      group += tens[Math.floor(n / 10)] + (n % 10 !== 0 ? " " + ones[n % 10] : "") + " ";
-    } else if (n > 0) {
-      group += ones[n] + " ";
-    }
-    return group.trim();
-  }
-  const rounded = Math.round(amount * 100) / 100;
-  const intPart = Math.floor(rounded);
-  const decPart = Math.round((rounded - intPart) * 100);
-  if (intPart === 0 && decPart === 0) return "Zero ETB";
-  let words = "";
-  if (intPart >= 1e9) {
-    const billions = Math.floor(intPart / 1e9);
-    words += convertGroup(billions) + " Billion ";
-  }
-  const remMillions = intPart % 1e9;
-  if (remMillions >= 1e6) {
-    const millions = Math.floor(remMillions / 1e6);
-    words += convertGroup(millions) + " Million ";
-  }
-  const remThousands = intPart % 1e6;
-  if (remThousands >= 1e3) {
-    const thousands = Math.floor(remThousands / 1e3);
-    words += convertGroup(thousands) + " Thousand ";
-  }
-  const remUnits = intPart % 1e3;
-  if (remUnits > 0) {
-    words += convertGroup(remUnits) + " ";
-  }
-  words = words.trim();
-  if (!words) words = "Zero";
-  words += " ETB";
-  if (decPart > 0) {
-    words += " and " + convertGroup(decPart) + (decPart === 1 ? " cent" : " cents");
-  }
-  return words;
-}
-function formatCbeMask(raw) {
-  if (!raw) return "1****4747";
-  const digits = raw.replace(/\D/g, "");
-  if (digits.length >= 5) {
-    return `${digits[0]}****${digits.slice(-4)}`;
-  }
-  return raw;
-}
-function formatCbeReceiptDate(dateStr) {
-  const d = dateStr ? new Date(dateStr) : /* @__PURE__ */ new Date();
-  if (isNaN(d.getTime())) {
-    return "Aug 21, 2026, 6:51 PM";
-  }
-  const dateFormatted = d.toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric"
-  });
-  const timeFormatted = d.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true
-  });
-  return `${dateFormatted}, ${timeFormatted}`;
-}
-const CbeWebReceiptModal = ({
-  transaction,
-  smsMessage,
-  onClose,
-  initialViewMode = "web",
-  initialQrCode
-}) => {
-  const receiptCardRef = reactExports.useRef(null);
-  const pdfTemplateRef = reactExports.useRef(null);
-  const [qrCodeDataUrl, setQrCodeDataUrl] = reactExports.useState(() => {
-    if (initialQrCode) return initialQrCode;
-    const custom = LocalDb.getCustomQrCode();
-    if (custom) return custom;
-    return "";
-  });
-  const [isDownloading, setIsDownloading] = reactExports.useState(false);
-  const [downloadSuccess, setDownloadSuccess] = reactExports.useState(false);
-  const [downloadError, setDownloadError] = reactExports.useState(null);
-  const [copiedUrl, setCopiedUrl] = reactExports.useState(false);
-  const [browserType, setBrowserType] = reactExports.useState(() => {
-    try {
-      const saved = localStorage.getItem("cbe_receipt_browser_type");
-      if (saved && ["chrome", "opera", "safari", "samsung", "phoenix", "firefox"].includes(saved)) {
-        return saved;
-      }
-      const fromPhoneSettings = PhoneSettingsService.getSettings().receiptBrowser;
-      if (fromPhoneSettings) return fromPhoneSettings;
-      return PhoneSettingsService.isIPhoneDevice() ? "safari" : "chrome";
-    } catch {
-      return "chrome";
-    }
-  });
-  const [tabCount, setTabCount] = reactExports.useState(() => {
-    try {
-      return localStorage.getItem("cbe_receipt_tab_count") || "2";
-    } catch {
-      return "2";
-    }
-  });
-  const [isMenuOpen, setIsMenuOpen] = reactExports.useState(false);
-  const [isRefreshing, setIsRefreshing] = reactExports.useState(false);
-  reactExports.useEffect(() => {
-    const unsubscribe = PhoneSettingsService.subscribe((settings) => {
-      if (settings.receiptBrowser && settings.receiptBrowser !== browserType) {
-        setBrowserType(settings.receiptBrowser);
-      }
-    });
-    return () => unsubscribe();
-  }, [browserType]);
-  reactExports.useEffect(() => {
-    const browserThemeColors = {
-      chrome: "#121214",
-      opera: "#0e0e10",
-      safari: "#1c1c1e",
-      samsung: "#181920",
-      phoenix: "#131720",
-      firefox: "#1c1b22"
-    };
-    const activeColor = browserThemeColors[browserType] || "#121214";
-    SystemBarsService.applyBars({
-      statusBarColor: activeColor,
-      navBarColor: "#ffffff",
-      isDarkStyle: true
-    });
-    return () => {
-      SystemBarsService.restoreFromModal();
-    };
-  }, [browserType]);
-  const stampFileInputRef = reactExports.useRef(null);
-  const pdfLogoFileInputRef = reactExports.useRef(null);
-  const [viewMode, setViewMode] = reactExports.useState("web");
-  const [pdfZoom, setPdfZoom] = reactExports.useState(1);
-  const [isAutoFit, setIsAutoFit] = reactExports.useState(true);
-  const [viewportWidth, setViewportWidth] = reactExports.useState(typeof window !== "undefined" ? window.innerWidth : 640);
-  const pdfContainerRef = reactExports.useRef(null);
-  reactExports.useEffect(() => {
-    const handleResize = () => {
-      setViewportWidth(window.innerWidth);
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-  const autoFitScale = reactExports.useMemo(() => {
-    const available = Math.max(280, viewportWidth - 28);
-    if (available < 640) {
-      return Number((available / 640).toFixed(3));
-    }
-    return 1;
-  }, [viewportWidth]);
-  const effectiveScale = isAutoFit ? autoFitScale : pdfZoom;
-  const [barsToast, setBarsToast] = reactExports.useState(null);
-  const barsToastTimerRef = reactExports.useRef(null);
-  const showBarsToast = (msg) => {
-    if (barsToastTimerRef.current) clearTimeout(barsToastTimerRef.current);
-    setBarsToast(msg);
-    barsToastTimerRef.current = setTimeout(() => {
-      setBarsToast(null);
-    }, 2200);
-  };
-  const [adminLogo, setAdminLogo] = reactExports.useState(() => LocalDb.getCustomBankLogo());
-  const [customPdfLogo, setCustomPdfLogo] = reactExports.useState(() => LocalDb.getCustomPdfLogo());
-  const [pdfLogoUrlInput, setPdfLogoUrlInput] = reactExports.useState(() => LocalDb.getCustomPdfLogo() || "");
-  const [customStamp, setCustomStamp] = reactExports.useState(() => LocalDb.getCustomBankStamp());
-  const [webStampSize, setWebStampSize] = reactExports.useState(() => LocalDb.getWebStampSize());
-  const [webStampWeight, setWebStampWeight] = reactExports.useState(() => LocalDb.getWebStampWeight());
-  const [webStampPosition, setWebStampPosition] = reactExports.useState(() => LocalDb.getWebStampPosition());
-  const [pdfStampSize, setPdfStampSize] = reactExports.useState(() => LocalDb.getPdfStampSize());
-  const [pdfStampWeight, setPdfStampWeight] = reactExports.useState(() => LocalDb.getPdfStampWeight());
-  const [pdfStampPosition, setPdfStampPosition] = reactExports.useState(() => LocalDb.getPdfStampPosition());
-  const [isPdfMenuOpen, setIsPdfMenuOpen] = reactExports.useState(false);
-  const [isEditingStampPosition, setIsEditingStampPosition] = reactExports.useState(false);
-  const [isDraggingStamp, setIsDraggingStamp] = reactExports.useState(false);
-  const [hasUnsavedStampPos, setHasUnsavedStampPos] = reactExports.useState(false);
-  const transactionTableRef = reactExports.useRef(null);
-  const pdfTableRef = reactExports.useRef(null);
-  const dragStartRef = reactExports.useRef(null);
-  const stampLastTapRef = reactExports.useRef({ time: 0, x: 0, y: 0 });
-  const wakeUpStampRearrange = () => {
-    setIsEditingStampPosition(true);
-    showBarsToast(`${viewMode === "pdf" ? "PDF" : "Web"} stamp rearrange active — drag to move, saved for all receipts`);
-  };
-  const handleStampClick = (e) => {
-    e.stopPropagation();
-    if (isEditingStampPosition) return;
-    const now = Date.now();
-    const timeDiff = now - stampLastTapRef.current.time;
-    const dist = Math.hypot(e.clientX - stampLastTapRef.current.x, e.clientY - stampLastTapRef.current.y);
-    if (timeDiff > 40 && timeDiff < 480 && dist < 60) {
-      wakeUpStampRearrange();
-      stampLastTapRef.current = { time: 0, x: 0, y: 0 };
-    } else {
-      stampLastTapRef.current = { time: now, x: e.clientX, y: e.clientY };
-    }
-  };
-  const handleStampTouchEnd = (e) => {
-    e.stopPropagation();
-    if (isEditingStampPosition) return;
-    const touch = e.changedTouches[0];
-    if (!touch) return;
-    const now = Date.now();
-    const timeDiff = now - stampLastTapRef.current.time;
-    const dist = Math.hypot(touch.clientX - stampLastTapRef.current.x, touch.clientY - stampLastTapRef.current.y);
-    if (timeDiff > 40 && timeDiff < 480 && dist < 65) {
-      wakeUpStampRearrange();
-      stampLastTapRef.current = { time: 0, x: 0, y: 0 };
-    } else {
-      stampLastTapRef.current = { time: now, x: touch.clientX, y: touch.clientY };
-    }
-  };
-  const handleStampDoubleClick = (e) => {
-    e.stopPropagation();
-    wakeUpStampRearrange();
-  };
-  const webActiveStamp = reactExports.useMemo(() => {
-    if (customStamp) return customStamp;
-    return getOfficialCbeStampSvg(webStampWeight);
-  }, [customStamp, webStampWeight]);
-  const pdfActiveStamp = reactExports.useMemo(() => {
-    if (customStamp) return customStamp;
-    return getOfficialCbeStampSvg(pdfStampWeight);
-  }, [customStamp, pdfStampWeight]);
-  const [rasterizedPdfStampPng, setRasterizedPdfStampPng] = reactExports.useState(null);
-  reactExports.useEffect(() => {
-    let isCancelled = false;
-    rasterizeSvgToPng(pdfActiveStamp, 640).then((pngUrl) => {
-      if (!isCancelled && pngUrl) {
-        setRasterizedPdfStampPng(pngUrl);
-      }
-    });
-    return () => {
-      isCancelled = true;
-    };
-  }, [pdfActiveStamp]);
-  reactExports.useEffect(() => {
-    const handleSyncLogo = () => {
-      setAdminLogo(LocalDb.getCustomBankLogo());
-    };
-    const handleSyncPdfLogo = () => {
-      const val = LocalDb.getCustomPdfLogo();
-      setCustomPdfLogo(val);
-      setPdfLogoUrlInput(val || "");
-    };
-    const handleSyncStamp = () => {
-      setCustomStamp(LocalDb.getCustomBankStamp());
-    };
-    const handleSyncWebStampSize = (e) => {
-      var _a;
-      const customEvt = e;
-      if ((_a = customEvt.detail) == null ? void 0 : _a.size) {
-        setWebStampSize(customEvt.detail.size);
-      } else {
-        setWebStampSize(LocalDb.getWebStampSize());
-      }
-    };
-    const handleSyncWebStampWeight = (e) => {
-      var _a;
-      const customEvt = e;
-      if ((_a = customEvt.detail) == null ? void 0 : _a.weight) {
-        setWebStampWeight(customEvt.detail.weight);
-      } else {
-        setWebStampWeight(LocalDb.getWebStampWeight());
-      }
-    };
-    const handleSyncWebStampPosition = (e) => {
-      var _a;
-      const customEvt = e;
-      if ((_a = customEvt.detail) == null ? void 0 : _a.position) {
-        setWebStampPosition(customEvt.detail.position);
-      } else {
-        setWebStampPosition(LocalDb.getWebStampPosition());
-      }
-      setHasUnsavedStampPos(false);
-    };
-    const handleSyncPdfStampSize = (e) => {
-      var _a;
-      const customEvt = e;
-      if ((_a = customEvt.detail) == null ? void 0 : _a.size) {
-        setPdfStampSize(customEvt.detail.size);
-      } else {
-        setPdfStampSize(LocalDb.getPdfStampSize());
-      }
-    };
-    const handleSyncPdfStampWeight = (e) => {
-      var _a;
-      const customEvt = e;
-      if ((_a = customEvt.detail) == null ? void 0 : _a.weight) {
-        setPdfStampWeight(customEvt.detail.weight);
-      } else {
-        setPdfStampWeight(LocalDb.getPdfStampWeight());
-      }
-    };
-    const handleSyncPdfStampPosition = (e) => {
-      var _a;
-      const customEvt = e;
-      if ((_a = customEvt.detail) == null ? void 0 : _a.position) {
-        setPdfStampPosition(customEvt.detail.position);
-      } else {
-        setPdfStampPosition(LocalDb.getPdfStampPosition());
-      }
-      setHasUnsavedStampPos(false);
-    };
-    window.addEventListener("cbe_logo_updated", handleSyncLogo);
-    window.addEventListener("cbe_pdf_logo_updated", handleSyncPdfLogo);
-    window.addEventListener("cbe_stamp_updated", handleSyncStamp);
-    window.addEventListener("cbe_web_stamp_size_updated", handleSyncWebStampSize);
-    window.addEventListener("cbe_stamp_size_updated", handleSyncWebStampSize);
-    window.addEventListener("cbe_web_stamp_weight_updated", handleSyncWebStampWeight);
-    window.addEventListener("cbe_stamp_weight_updated", handleSyncWebStampWeight);
-    window.addEventListener("cbe_web_stamp_position_updated", handleSyncWebStampPosition);
-    window.addEventListener("cbe_stamp_position_updated", handleSyncWebStampPosition);
-    window.addEventListener("cbe_pdf_stamp_size_updated", handleSyncPdfStampSize);
-    window.addEventListener("cbe_pdf_stamp_weight_updated", handleSyncPdfStampWeight);
-    window.addEventListener("cbe_pdf_stamp_position_updated", handleSyncPdfStampPosition);
-    window.addEventListener("storage", handleSyncLogo);
-    window.addEventListener("storage", handleSyncPdfLogo);
-    window.addEventListener("storage", handleSyncStamp);
-    return () => {
-      window.removeEventListener("cbe_logo_updated", handleSyncLogo);
-      window.removeEventListener("cbe_pdf_logo_updated", handleSyncPdfLogo);
-      window.removeEventListener("cbe_stamp_updated", handleSyncStamp);
-      window.removeEventListener("cbe_web_stamp_size_updated", handleSyncWebStampSize);
-      window.removeEventListener("cbe_stamp_size_updated", handleSyncWebStampSize);
-      window.removeEventListener("cbe_web_stamp_weight_updated", handleSyncWebStampWeight);
-      window.removeEventListener("cbe_stamp_weight_updated", handleSyncWebStampWeight);
-      window.removeEventListener("cbe_web_stamp_position_updated", handleSyncWebStampPosition);
-      window.removeEventListener("cbe_stamp_position_updated", handleSyncWebStampPosition);
-      window.removeEventListener("cbe_pdf_stamp_size_updated", handleSyncPdfStampSize);
-      window.removeEventListener("cbe_pdf_stamp_weight_updated", handleSyncPdfStampWeight);
-      window.removeEventListener("cbe_pdf_stamp_position_updated", handleSyncPdfStampPosition);
-      window.removeEventListener("storage", handleSyncLogo);
-      window.removeEventListener("storage", handleSyncPdfLogo);
-      window.removeEventListener("storage", handleSyncStamp);
-    };
-  }, []);
-  const handleUpdateWebStampWidth = (newSize) => {
-    const clamped = Math.max(160, Math.min(480, Math.round(newSize)));
-    LocalDb.setWebStampSize(clamped);
-    setWebStampSize(clamped);
-    showBarsToast(`Web stamp size set to ${clamped}px (saved for web receipts)`);
-  };
-  const handleUpdateWebStampWeight = (newWeight) => {
-    LocalDb.setWebStampWeight(newWeight);
-    setWebStampWeight(newWeight);
-    showBarsToast(`Web stamp weight set to ${newWeight} (saved for web receipts)`);
-  };
-  const handleUpdatePdfStampWidth = (newSize) => {
-    const clamped = Math.max(160, Math.min(480, Math.round(newSize)));
-    LocalDb.setPdfStampSize(clamped);
-    setPdfStampSize(clamped);
-    showBarsToast(`PDF stamp size set to ${clamped}px (saved for PDF receipts)`);
-  };
-  const handleUpdatePdfStampWeight = (newWeight) => {
-    LocalDb.setPdfStampWeight(newWeight);
-    setPdfStampWeight(newWeight);
-    showBarsToast(`PDF stamp weight set to ${newWeight} (saved for PDF receipts)`);
-  };
-  const handleStampPointerDown = (e) => {
-    if (!isEditingStampPosition) return;
-    if (e.button !== 0 && e.pointerType === "mouse") return;
-    e.stopPropagation();
-    e.preventDefault();
-    setIsDraggingStamp(true);
-    const activePos = viewMode === "pdf" ? pdfStampPosition : webStampPosition;
-    dragStartRef.current = {
-      clientX: e.clientX,
-      clientY: e.clientY,
-      startXPercent: activePos.xPercent,
-      startYPercent: activePos.yPercent
-    };
-    const handlePointerMove = (moveEvt) => {
-      if (!dragStartRef.current) return;
-      const targetTable = viewMode === "pdf" ? pdfTableRef.current : transactionTableRef.current;
-      if (!targetTable) return;
-      const rect = targetTable.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) return;
-      const deltaX = moveEvt.clientX - dragStartRef.current.clientX;
-      const deltaY = moveEvt.clientY - dragStartRef.current.clientY;
-      const deltaXPercent = deltaX / rect.width * 100;
-      const deltaYPercent = deltaY / rect.height * 100;
-      const newXPercent = Math.max(5, Math.min(95, Math.round((dragStartRef.current.startXPercent + deltaXPercent) * 10) / 10));
-      const newYPercent = Math.max(5, Math.min(95, Math.round((dragStartRef.current.startYPercent + deltaYPercent) * 10) / 10));
-      if (viewMode === "pdf") {
-        setPdfStampPosition({ xPercent: newXPercent, yPercent: newYPercent });
-      } else {
-        setWebStampPosition({ xPercent: newXPercent, yPercent: newYPercent });
-      }
-      setHasUnsavedStampPos(true);
-    };
-    const handlePointerUp = () => {
-      setIsDraggingStamp(false);
-      dragStartRef.current = null;
-      window.removeEventListener("pointermove", handlePointerMove);
-      window.removeEventListener("pointerup", handlePointerUp);
-      window.removeEventListener("pointercancel", handlePointerUp);
-      if (viewMode === "pdf") {
-        setPdfStampPosition((current) => {
-          LocalDb.setPdfStampPosition(current);
-          return current;
-        });
-        showBarsToast("PDF stamp position saved for all receipts");
-      } else {
-        setWebStampPosition((current) => {
-          LocalDb.setWebStampPosition(current);
-          return current;
-        });
-        showBarsToast("Web stamp position saved for all receipts");
-      }
-      setHasUnsavedStampPos(false);
-    };
-    window.addEventListener("pointermove", handlePointerMove);
-    window.addEventListener("pointerup", handlePointerUp);
-    window.addEventListener("pointercancel", handlePointerUp);
-  };
-  const handleSaveStampPosition = () => {
-    if (viewMode === "pdf") {
-      LocalDb.setPdfStampPosition(pdfStampPosition);
-      showBarsToast("PDF stamp position saved for all receipts");
-    } else {
-      LocalDb.setWebStampPosition(webStampPosition);
-      showBarsToast("Web stamp position saved for all receipts");
-    }
-    setHasUnsavedStampPos(false);
-  };
-  const handleResetStampPosition = () => {
-    const defaultPos = { xPercent: 48, yPercent: 52 };
-    if (viewMode === "pdf") {
-      LocalDb.setPdfStampPosition(defaultPos);
-      setPdfStampPosition(defaultPos);
-      showBarsToast("PDF stamp position reset to center (saved for all receipts)");
-    } else {
-      LocalDb.setWebStampPosition(defaultPos);
-      setWebStampPosition(defaultPos);
-      showBarsToast("Web stamp position reset to center (saved for all receipts)");
-    }
-    setHasUnsavedStampPos(false);
-  };
-  const handleNudgeStamp = (dx, dy) => {
-    if (viewMode === "pdf") {
-      setPdfStampPosition((prev) => {
-        const nextX = Math.max(5, Math.min(95, Math.round((prev.xPercent + dx) * 10) / 10));
-        const nextY = Math.max(5, Math.min(95, Math.round((prev.yPercent + dy) * 10) / 10));
-        const nextPos = { xPercent: nextX, yPercent: nextY };
-        LocalDb.setPdfStampPosition(nextPos);
-        setHasUnsavedStampPos(false);
-        return nextPos;
-      });
-    } else {
-      setWebStampPosition((prev) => {
-        const nextX = Math.max(5, Math.min(95, Math.round((prev.xPercent + dx) * 10) / 10));
-        const nextY = Math.max(5, Math.min(95, Math.round((prev.yPercent + dy) * 10) / 10));
-        const nextPos = { xPercent: nextX, yPercent: nextY };
-        LocalDb.setWebStampPosition(nextPos);
-        setHasUnsavedStampPos(false);
-        return nextPos;
-      });
-    }
-  };
-  const receiptData = reactExports.useMemo(() => {
-    if (transaction) {
-      const refId = formatTo12CharTxId(transaction.id || transaction.reference || "FT26233ZJ908");
-      const amount = Number(transaction.amount) || 0;
-      const serviceCharge = transaction.serviceCharge !== void 0 ? Number(transaction.serviceCharge) : amount >= 1e4 ? 3 : amount >= 500 ? 10 : 0.5;
-      const vat = transaction.vat !== void 0 ? Number(transaction.vat) : Math.round(serviceCharge * 0.15 * 100) / 100;
-      const disasterRecovery = transaction.disasterRecovery !== void 0 ? Number(transaction.disasterRecovery) : Math.round(serviceCharge * 0.05 * 100) / 100;
-      const totalDebited = transaction.totalDebited !== void 0 ? Number(transaction.totalDebited) : Math.round((amount + serviceCharge + vat + disasterRecovery) * 100) / 100;
-      const payerName = transaction.senderName || "Kasahun Yematawork Lema";
-      const payerAccount = formatCbeMask(transaction.senderAccount || "1000482918925");
-      const receiverName = transaction.recipientName || "Leykun Jemaneh Ylma";
-      const receiverAccount = formatCbeMask(transaction.recipientAccount || "1000419524747");
-      const paymentDate = formatCbeReceiptDate(transaction.createdAt);
-      const reason = transaction.description && transaction.description.trim().length > 0 ? transaction.description : String(Math.round(amount));
-      return {
-        refId,
-        payerName,
-        payerAccount,
-        receiverName,
-        receiverAccount,
-        paymentType: "A2A",
-        paymentDate,
-        reason,
-        amount,
-        serviceCharge,
-        vat,
-        disasterRecovery,
-        totalDebited,
-        words: numberToCbeWords(totalDebited),
-        customerName: payerName
-      };
-    }
-    if (smsMessage) {
-      const msg = smsMessage.message || "";
-      const ftMatch = msg.match(/FT\d{5,8}[A-Z0-9]{3,6}/i);
-      let refId = smsMessage.transactionId;
-      if (!refId && ftMatch) {
-        refId = ftMatch[0];
-      }
-      if (!refId) {
-        refId = "FT26233ZJ908";
-      }
-      const isCredit = smsMessage.type === "CREDIT" || msg.toLowerCase().includes("you have received");
-      let payerName = "Kasahun Yematawork Lema";
-      let payerAccount = "1****8925";
-      let receiverName = "Leykun Jemaneh Ylma";
-      let receiverAccount = "1****4747";
-      if (isCredit) {
-        const fromMatch = msg.match(/from account\s+([\d*]+)\s*\(([^)]+)\)/i);
-        if (fromMatch) {
-          payerAccount = formatCbeMask(fromMatch[1]);
-          payerName = fromMatch[2].trim();
-        } else if (smsMessage.sender) {
-          payerName = smsMessage.sender;
-        }
-        const toMatch = msg.match(/to your account\s+([\d*]+)/i);
-        if (toMatch) {
-          receiverAccount = formatCbeMask(toMatch[1]);
-        } else if (smsMessage.accountNumber) {
-          receiverAccount = formatCbeMask(smsMessage.accountNumber);
-        }
-        receiverName = smsMessage.accountName || "Leykun Jemaneh Ylma";
-      } else {
-        payerName = smsMessage.accountName || "Leykun Jemaneh Yilma";
-        payerAccount = formatCbeMask(smsMessage.accountNumber || "1000419524747");
-        receiverName = smsMessage.recipient || "Kasahun Yematawork Desta";
-        receiverAccount = "1****9999";
-      }
-      const amount = smsMessage.amount !== void 0 ? Number(smsMessage.amount) : 50;
-      const serviceCharge = smsMessage.serviceCharge !== void 0 ? Number(smsMessage.serviceCharge) : amount >= 3e4 ? 3 : amount >= 500 ? 10 : 0.5;
-      const vat = smsMessage.vat !== void 0 ? Number(smsMessage.vat) : Math.round(serviceCharge * 0.15 * 100) / 100;
-      const disasterRecovery = smsMessage.disasterRecovery !== void 0 ? Number(smsMessage.disasterRecovery) : Math.round(serviceCharge * 0.05 * 100) / 100;
-      const totalDebited = smsMessage.totalDebited !== void 0 ? Number(smsMessage.totalDebited) : Math.round((amount + serviceCharge + vat + disasterRecovery) * 100) / 100;
-      const reason = isCredit ? String(Math.round(amount)) : "MB transfer";
-      return {
-        refId,
-        payerName,
-        payerAccount,
-        receiverName,
-        receiverAccount,
-        paymentType: "A2A",
-        paymentDate: formatCbeReceiptDate(smsMessage.timestamp),
-        reason,
-        amount,
-        serviceCharge,
-        vat,
-        disasterRecovery,
-        totalDebited,
-        words: numberToCbeWords(totalDebited),
-        customerName: isCredit ? payerName : smsMessage.accountName || payerName
-      };
-    }
-    return {
-      refId: "FT26233ZJ908",
-      payerName: "Kasahun Yematawork Lema",
-      payerAccount: "1****8925",
-      receiverName: "Leykun Jemaneh Ylma",
-      receiverAccount: "1****4747",
-      paymentType: "A2A",
-      paymentDate: "Aug 21, 2026, 6:51 PM",
-      reason: "50",
-      amount: 50,
-      serviceCharge: 0.5,
-      vat: 0.08,
-      disasterRecovery: 0.03,
-      totalDebited: 50.61,
-      words: "Fifty ETB and Sixty One cents",
-      customerName: "Kasahun Yematawork Lema"
-    };
-  }, [transaction, smsMessage]);
-  const webReceiptUrl = `https://apps.cbe.com.et:100/?id=${receiptData.refId}`;
-  const convertSvgDataUriToPng = (svgDataUri, size = 450) => {
-    return new Promise((resolve) => {
-      if (!svgDataUri || svgDataUri.startsWith("data:image/png")) {
-        resolve(svgDataUri);
-        return;
-      }
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => {
-        try {
-          const c = document.createElement("canvas");
-          c.width = size;
-          c.height = size;
-          const ctx = c.getContext("2d");
-          if (ctx) {
-            ctx.fillStyle = "#ffffff";
-            ctx.fillRect(0, 0, size, size);
-            ctx.drawImage(img, 0, 0, size, size);
-            resolve(c.toDataURL("image/png", 1));
-            return;
-          }
-        } catch (err) {
-          console.warn("Canvas SVG to PNG conversion fallback:", err);
-        }
-        resolve(svgDataUri);
-      };
-      img.onerror = () => resolve(svgDataUri);
-      img.src = svgDataUri;
-    });
-  };
-  reactExports.useEffect(() => {
-    let isMounted = true;
-    const customQr = LocalDb.getCustomQrCode();
-    if (customQr) {
-      if (customQr.startsWith("data:image/svg")) {
-        convertSvgDataUriToPng(customQr).then((png) => {
-          if (isMounted) setQrCodeDataUrl(png);
-        });
-      } else {
-        setQrCodeDataUrl(customQr);
-      }
-      return;
-    }
-    if (initialQrCode) {
-      if (initialQrCode.startsWith("data:image/svg")) {
-        convertSvgDataUriToPng(initialQrCode).then((png) => {
-          if (isMounted) setQrCodeDataUrl(png);
-        });
-      } else {
-        setQrCodeDataUrl(initialQrCode);
-      }
-      return;
-    }
-    const txId = receiptData.refId;
-    if (!txId) return;
-    try {
-      const svgUri = getAuthenticCbeQrSvgDataUri(txId);
-      if (svgUri && isMounted) {
-        setQrCodeDataUrl(svgUri);
-      }
-    } catch {
-    }
-    getAuthenticCbeQrPngDataUrl(txId, 450).then((pngUrl) => {
-      if (isMounted && pngUrl) {
-        setQrCodeDataUrl(pngUrl);
-      }
-    }).catch((err) => console.error("Failed to generate authentic CBE QR:", err));
-    return () => {
-      isMounted = false;
-    };
-  }, [receiptData.refId, initialQrCode]);
-  reactExports.useEffect(() => {
-    const handleQrUpdate = () => {
-      const customQr = LocalDb.getCustomQrCode();
-      if (customQr) {
-        if (customQr.startsWith("data:image/svg")) {
-          convertSvgDataUriToPng(customQr).then((png) => setQrCodeDataUrl(png));
-        } else {
-          setQrCodeDataUrl(customQr);
-        }
-      } else if (receiptData.refId) {
-        getAuthenticCbeQrPngDataUrl(receiptData.refId, 450).then((pngUrl) => setQrCodeDataUrl(pngUrl)).catch(() => {
-        });
-      }
-    };
-    window.addEventListener("cbe_qr_updated", handleQrUpdate);
-    window.addEventListener("storage", handleQrUpdate);
-    return () => {
-      window.removeEventListener("cbe_qr_updated", handleQrUpdate);
-      window.removeEventListener("storage", handleQrUpdate);
-    };
-  }, [receiptData.refId]);
-  const handleOpenPdfView = () => {
-    setViewMode("pdf");
-    showBarsToast("Official CBE PDF opened — double-tap stamp to rearrange, or click Save PDF");
-  };
-  const handleDownloadPdf = async () => {
-    var _a;
-    if (isDownloading) return;
-    try {
-      setIsDownloading(true);
-      setDownloadError(null);
-      showBarsToast("Generating high-resolution official CBE PDF...");
-      let exactQr = qrCodeDataUrl;
-      const webReceiptQrImg = (_a = receiptCardRef.current) == null ? void 0 : _a.querySelector('img[alt="Official CBE Receipt QR"]');
-      if (webReceiptQrImg && webReceiptQrImg.src) {
-        exactQr = webReceiptQrImg.src;
-      }
-      if (exactQr && (exactQr.startsWith("data:image/svg") || exactQr.includes("<svg"))) {
-        try {
-          exactQr = await convertSvgDataUriToPng(exactQr, 450);
-          setQrCodeDataUrl(exactQr);
-        } catch {
-          const genPng = await getAuthenticCbeQrPngDataUrl(receiptData.refId || "FT26248KLR82", 450);
-          if (genPng) {
-            exactQr = genPng;
-            setQrCodeDataUrl(exactQr);
-          }
-        }
-      }
-      if (!exactQr) {
-        exactQr = await getAuthenticCbeQrPngDataUrl(receiptData.refId || "FT26248KLR82", 450);
-        if (exactQr) setQrCodeDataUrl(exactQr);
-      }
-      await new Promise((r) => setTimeout(r, 200));
-      const targetContainer = pdfTemplateRef.current || document.getElementById("cbe-official-pdf-render-canvas");
-      if (!targetContainer || !document.body.contains(targetContainer)) {
-        throw new Error("Receipt document template is not ready. Please try again.");
-      }
-      const page1Element = targetContainer.querySelector("#cbe-pdf-page-1") || targetContainer;
-      const page2Element = targetContainer.querySelector("#cbe-pdf-page-2");
-      const qrImageInPage1 = page1Element.querySelector("#cbe-pdf-official-qr-image");
-      if (qrImageInPage1 && exactQr) {
-        qrImageInPage1.src = exactQr;
-        if (!qrImageInPage1.complete) {
-          await new Promise((resolve) => {
-            qrImageInPage1.onload = () => resolve();
-            qrImageInPage1.onerror = () => resolve();
-            setTimeout(resolve, 300);
-          });
-        }
-      }
-      const canvas1 = await html2canvas(page1Element, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: "#ffffff",
-        logging: false,
-        imageTimeout: 15e3,
-        windowWidth: 640
-      });
-      const imgData1 = canvas1.toDataURL("image/png", 1);
-      let canvas2 = null;
-      let imgData2 = null;
-      if (page2Element) {
-        canvas2 = await html2canvas(page2Element, {
-          scale: 2,
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: "#ffffff",
-          logging: false,
-          imageTimeout: 15e3,
-          windowWidth: 640
-        });
-        imgData2 = canvas2.toDataURL("image/png", 1);
-      }
-      const pdf = new E({
-        orientation: "portrait",
-        unit: "mm",
-        format: "a4",
-        compress: true
-      });
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const marginX = 12;
-      const marginY = 12;
-      const printableWidth = pageWidth - marginX * 2;
-      const printableHeight = pageHeight - marginY * 2;
-      let renderWidth1 = printableWidth;
-      let renderHeight1 = canvas1.height * renderWidth1 / canvas1.width;
-      if (renderHeight1 > printableHeight) {
-        const ratio = printableHeight / renderHeight1;
-        renderHeight1 = printableHeight;
-        renderWidth1 = renderWidth1 * ratio;
-      }
-      const startX1 = marginX + (printableWidth - renderWidth1) / 2;
-      pdf.addImage(imgData1, "PNG", startX1, marginY, renderWidth1, renderHeight1, void 0, "FAST");
-      if (imgData2 && canvas2) {
-        pdf.addPage();
-        let renderWidth2 = printableWidth;
-        let renderHeight2 = canvas2.height * renderWidth2 / canvas2.width;
-        if (renderHeight2 > printableHeight) {
-          const ratio = printableHeight / renderHeight2;
-          renderHeight2 = printableHeight;
-          renderWidth2 = renderWidth2 * ratio;
-        }
-        const startX2 = marginX + (printableWidth - renderWidth2) / 2;
-        pdf.addImage(imgData2, "PNG", startX2, marginY, renderWidth2, renderHeight2, void 0, "FAST");
-      }
-      pdf.save(`CBE_Customer_Receipt_${receiptData.refId || "FT"}.pdf`);
-      setDownloadSuccess(true);
-      setTimeout(() => setDownloadSuccess(false), 3e3);
-    } catch (err) {
-      console.error("PDF Download error:", err);
-      setDownloadError((err == null ? void 0 : err.message) || "Failed to generate PDF. Please try again.");
-      setTimeout(() => setDownloadError(null), 4e3);
-    } finally {
-      setIsDownloading(false);
-    }
-  };
-  const handlePrintPdf = () => {
-    window.print();
-  };
-  const handleDownloadPng = async () => {
-    const rawTarget = pdfTemplateRef.current || receiptCardRef.current;
-    if (!rawTarget || isDownloading) return;
-    const targetElement = rawTarget.querySelector("#cbe-pdf-page-1") || rawTarget;
-    try {
-      setIsDownloading(true);
-      setDownloadError(null);
-      const canvas2 = await html2canvas(targetElement, {
-        scale: 3,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: "#ffffff",
-        logging: false,
-        imageTimeout: 15e3
-      });
-      const imgData = canvas2.toDataURL("image/png");
-      const isIos = checkIsIOS();
-      if (isIos) {
-        const blob = dataUrlToBlob(imgData);
-        const filename = `CBE_Customer_Receipt_${receiptData.refId || "FT"}.png`;
-        const file = new File([blob], filename, { type: "image/png" });
-        if (typeof navigator !== "undefined" && navigator.canShare && navigator.canShare({ files: [file] })) {
-          try {
-            await navigator.share({
-              files: [file],
-              title: `CBE Customer Receipt`
-            });
-          } catch {
-          }
-        }
-      } else {
-        const link = document.createElement("a");
-        link.href = imgData;
-        link.download = `CBE_Customer_Receipt_${receiptData.refId || "FT"}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-      setDownloadSuccess(true);
-      setTimeout(() => setDownloadSuccess(false), 3e3);
-    } catch (err) {
-      console.error("PNG Download error:", err);
-      setDownloadError((err == null ? void 0 : err.message) || "Failed to save image. Please try again.");
-      setTimeout(() => setDownloadError(null), 4e3);
-    } finally {
-      setIsDownloading(false);
-    }
-  };
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(webReceiptUrl);
-    setCopiedUrl(true);
-    setTimeout(() => setCopiedUrl(false), 2500);
-  };
-  const handleRefresh = () => {
-    setIsRefreshing(true);
-    setTimeout(() => {
-      setIsRefreshing(false);
-    }, 500);
-  };
-  const handleSelectBrowser = (type) => {
-    setBrowserType(type);
-    try {
-      localStorage.setItem("cbe_receipt_browser_type", type);
-      PhoneSettingsService.updateSettings({ receiptBrowser: type });
-    } catch {
-    }
-    const labels = {
-      chrome: "Google Chrome",
-      opera: "Opera Browser",
-      safari: "Apple Safari",
-      samsung: "Samsung Internet",
-      phoenix: "Phoenix Browser",
-      firefox: "Mozilla Firefox"
-    };
-    showBarsToast(`Browser switched to ${labels[type] || type}`);
-  };
-  const handleSelectTabCount = (count) => {
-    const clean = count.replace(/[^0-9+]/g, "").slice(0, 4) || "1";
-    setTabCount(clean);
-    localStorage.setItem("cbe_receipt_tab_count", clean);
-  };
-  const handleUploadStampFile = (e) => {
-    var _a;
-    const file = (_a = e.target.files) == null ? void 0 : _a[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      var _a2;
-      const dataUrl = (_a2 = event.target) == null ? void 0 : _a2.result;
-      if (dataUrl) {
-        LocalDb.setCustomBankStamp(dataUrl);
-        setCustomStamp(dataUrl);
-        setIsMenuOpen(false);
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-  const handleResetStamp = () => {
-    LocalDb.setCustomBankStamp(null);
-    setCustomStamp(null);
-  };
-  const handleUploadPdfLogoFile = (e) => {
-    var _a;
-    const file = (_a = e.target.files) == null ? void 0 : _a[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      var _a2;
-      const dataUrl = (_a2 = event.target) == null ? void 0 : _a2.result;
-      if (dataUrl) {
-        LocalDb.setCustomPdfLogo(dataUrl);
-        setCustomPdfLogo(dataUrl);
-        setPdfLogoUrlInput(dataUrl);
-        showBarsToast("PDF logo updated (PDF only)");
-        setIsMenuOpen(false);
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-  const handleApplyPdfLogoUrl = (inputUrl) => {
-    const target = pdfLogoUrlInput.trim();
-    if (!target) {
-      handleResetPdfLogo();
-      return;
-    }
-    LocalDb.setCustomPdfLogo(target);
-    setCustomPdfLogo(target);
-    showBarsToast("PDF logo updated by URL (PDF only)");
-  };
-  const handleResetPdfLogo = () => {
-    LocalDb.setCustomPdfLogo(null);
-    setCustomPdfLogo(null);
-    setPdfLogoUrlInput("");
-    showBarsToast("PDF logo reset to official CBE emblem");
-  };
-  return /* @__PURE__ */ jsxRuntimeExports.jsxs(
-    "div",
-    {
-      className: "fixed inset-0 z-50 bg-[#f0f2f5] flex flex-col items-stretch justify-start overflow-hidden w-full h-full min-h-[100dvh] select-none",
-      children: [
-        barsToast && /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          "div",
-          {
-            "data-html2canvas-ignore": "true",
-            className: "fixed top-5 left-1/2 -translate-x-1/2 bg-gray-950/95 backdrop-blur-md text-white text-[12px] font-semibold py-2 px-4 rounded-full shadow-2xl z-[90] flex items-center gap-2 border border-white/20 pointer-events-none animate-in fade-in zoom-in-95 duration-200",
-            children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(Sparkles, { className: "w-3.5 h-3.5 text-amber-300 shrink-0" }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: barsToast })
-            ]
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "input",
-          {
-            ref: stampFileInputRef,
-            type: "file",
-            accept: "image/*",
-            className: "hidden",
-            onChange: handleUploadStampFile
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "input",
-          {
-            ref: pdfLogoFileInputRef,
-            type: "file",
-            accept: "image/*",
-            className: "hidden",
-            onChange: handleUploadPdfLogoFile
-          }
-        ),
-        browserType === "opera" ? (
-          /* ================= 1. OPERA HEADER ================= */
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(
-            "header",
-            {
-              id: "cbe-opera-browser-header",
-              className: "w-full px-3.5 pt-[max(env(safe-area-inset-top,0px),8px)] pb-2.5 bg-[#0e0e10] border-b border-neutral-900 flex items-center justify-between text-white flex-shrink-0 z-30 select-none shadow-sm",
-              children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  "button",
-                  {
-                    onClick: onClose,
-                    "aria-label": "Back",
-                    className: "p-1 -ml-1 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-full transition cursor-pointer flex items-center justify-center shrink-0 mr-1.5",
-                    title: "Return to App",
-                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "w-5 h-5" })
-                  }
-                ),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                  "div",
-                  {
-                    onClick: handleCopyLink,
-                    className: "flex items-center gap-2 flex-1 min-w-0 cursor-pointer select-none pr-2 py-0.5",
-                    title: "Click to copy receipt URL",
-                    children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { viewBox: "0 0 24 24", className: "w-5 h-5 text-white/95 shrink-0", fill: "none", stroke: "currentColor", strokeWidth: "2.2", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "12", r: "9.5" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12 7.5h.01M12 11v5", strokeWidth: "2.2", strokeLinecap: "round" })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex-1 overflow-hidden whitespace-nowrap text-ellipsis text-[14px] text-[#e5e5e5] font-normal tracking-tight font-sans", children: viewMode === "pdf" ? /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "flex items-center gap-1.5", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bg-red-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-2xs leading-none", children: "PDF" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "truncate", children: [
-                          "apps.cbe.com.et:100/pdf/?id=",
-                          receiptData.refId
-                        ] })
-                      ] }) : copiedUrl ? /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-emerald-400 font-bold text-xs", children: "Copied URL to clipboard!" }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
-                        "apps.cbe.com.et:100/?id=",
-                        receiptData.refId
-                      ] }) })
-                    ]
-                  }
-                ),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 shrink-0", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    "button",
-                    {
-                      onClick: handleRefresh,
-                      className: "p-1 text-neutral-200 hover:text-white transition cursor-pointer flex items-center justify-center",
-                      title: "Reload page",
-                      "aria-label": "Reload page",
-                      children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { viewBox: "0 0 24 24", className: `w-4.5 h-4.5 text-neutral-200 stroke-current ${isRefreshing ? "animate-spin" : ""}`, fill: "none", strokeWidth: "2.4", strokeLinecap: "round", strokeLinejoin: "round", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M21 12a9 9 0 1 1-2.6-6.3L21 8" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M21 3v5h-5" })
-                      ] })
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    "button",
-                    {
-                      onClick: () => setIsMenuOpen(true),
-                      className: "w-5 h-5 rounded-[4px] border border-neutral-400 text-neutral-200 font-bold text-[10.5px] flex items-center justify-center hover:bg-white/10 transition cursor-pointer shrink-0",
-                      title: "Tabs / Browser Settings",
-                      children: tabCount
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    "button",
-                    {
-                      onClick: () => setIsMenuOpen(!isMenuOpen),
-                      className: "p-1 text-white hover:bg-white/10 rounded-full transition cursor-pointer flex items-center justify-center",
-                      title: "Opera menu & options",
-                      "aria-label": "Opera menu & options",
-                      children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { viewBox: "0 0 24 24", className: "w-5 h-5 fill-white", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "5", r: "1.7" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "12", r: "1.7" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "19", r: "1.7" })
-                      ] })
-                    }
-                  )
-                ] })
-              ]
-            }
-          )
-        ) : browserType === "chrome" ? (
-          /* ================= 2. GOOGLE CHROME HEADER ================= */
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(
-            "header",
-            {
-              id: "cbe-chrome-browser-header",
-              className: "w-full px-3 pt-[max(env(safe-area-inset-top,0px),8px)] pb-2 bg-[#121214] border-b border-[#282a30] flex items-center justify-between text-white flex-shrink-0 z-30 select-none shadow-sm",
-              children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  "button",
-                  {
-                    onClick: onClose,
-                    "aria-label": "Home",
-                    className: "p-1 text-white hover:bg-white/10 rounded-full transition cursor-pointer flex items-center justify-center shrink-0",
-                    title: "Home (Close Receipt)",
-                    children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { viewBox: "0 0 24 24", className: "w-[22px] h-[22px] text-white", fill: "none", stroke: "currentColor", strokeWidth: "2.2", strokeLinecap: "round", strokeLinejoin: "round", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M3 10.5L12 3l9 7.5V20a1.5 1.5 0 0 1-1.5 1.5H15v-6a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v6H4.5A1.5 1.5 0 0 1 3 20v-9.5z" }) })
-                  }
-                ),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                  "div",
-                  {
-                    onClick: handleCopyLink,
-                    className: "flex-1 bg-[#28282b] hover:bg-[#323236] h-9.5 rounded-full px-3.5 flex items-center gap-2.5 cursor-pointer transition select-none overflow-hidden mx-2 shadow-xs",
-                    title: "Click to copy receipt URL",
-                    children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { viewBox: "0 0 24 24", className: "w-[18px] h-[18px] text-white shrink-0", fill: "none", stroke: "currentColor", strokeWidth: "2", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "12", r: "9" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "7.8", r: "0.9", fill: "currentColor", stroke: "none" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M12 11.2v5.3", strokeWidth: "2", strokeLinecap: "round" })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex-1 overflow-hidden whitespace-nowrap text-ellipsis flex items-center", children: viewMode === "pdf" ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5 text-[13px] text-[#e3e3e8] font-normal tracking-tight font-sans", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "bg-red-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-2xs leading-none", children: "PDF" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "truncate", children: [
-                          "apps.cbe.com.et:100/pdf/?id=",
-                          receiptData.refId
-                        ] })
-                      ] }) : copiedUrl ? /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-emerald-400 font-bold text-xs", children: "Copied URL to clipboard!" }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-[14px] text-[#e3e3e8] font-normal tracking-tight font-sans flex items-center", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "inline-block opacity-65", children: "s" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: ".cbe.com.et:100" })
-                      ] }) })
-                    ]
-                  }
-                ),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 shrink-0 pr-0.5", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    "button",
-                    {
-                      onClick: handleCopyLink,
-                      className: "p-1 text-white hover:bg-white/10 rounded-md transition cursor-pointer flex items-center justify-center shrink-0",
-                      title: "Google Translate",
-                      "aria-label": "Google Translate",
-                      children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { className: "w-5.5 h-5.5", viewBox: "0 0 24 24", fill: "none", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("rect", { x: "2.5", y: "3.5", width: "12", height: "13.5", rx: "2", fill: "#ffffff" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("text", { x: "5.2", y: "13", fill: "#121214", fontSize: "8", fontWeight: "bold", fontFamily: "system-ui, -apple-system, sans-serif", children: "G" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(
-                          "path",
-                          {
-                            d: "M8.5 7.5a1.5 1.5 0 0 1 1.5-1.5h8.5a1.5 1.5 0 0 1 1.5 1.5v7.2a1.5 1.5 0 0 1-.44 1.06l-2.7 2.7A1.5 1.5 0 0 1 15.8 19H10a1.5 1.5 0 0 1-1.5-1.5v-10z",
-                            fill: "#121214",
-                            stroke: "#ffffff",
-                            strokeWidth: "1.6",
-                            strokeLinejoin: "round"
-                          }
-                        ),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M16.5 18.8v-2.5a.8.8 0 0 1 .8-.8h2.5", fill: "none", stroke: "#ffffff", strokeWidth: "1.4", strokeLinecap: "round", strokeLinejoin: "round" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("text", { x: "11.2", y: "15", fill: "#ffffff", fontSize: "8", fontWeight: "bold", fontFamily: "system-ui, -apple-system, sans-serif", children: "文" })
-                      ] })
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    "button",
-                    {
-                      onClick: () => setIsMenuOpen(true),
-                      className: "w-[20px] h-[20px] rounded-[4.5px] border-[1.8px] border-white text-white font-bold text-[11px] flex items-center justify-center hover:bg-white/10 transition cursor-pointer shrink-0 leading-none",
-                      title: "Tabs (Click to customize)",
-                      children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "-translate-y-[0.5px]", children: tabCount })
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    "button",
-                    {
-                      onClick: () => setIsMenuOpen(!isMenuOpen),
-                      className: "p-1 text-white hover:bg-white/10 rounded-full transition cursor-pointer flex items-center justify-center shrink-0",
-                      title: "Chrome menu",
-                      "aria-label": "Chrome menu",
-                      children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { viewBox: "0 0 24 24", className: "w-5 h-5 fill-white", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "5", r: "1.6" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "12", r: "1.6" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "12", cy: "19", r: "1.6" })
-                      ] })
-                    }
-                  )
-                ] })
-              ]
-            }
-          )
-        ) : browserType === "safari" ? (
-          /* ================= 3. APPLE SAFARI (iOS) HEADER ================= */
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(
-            "header",
-            {
-              id: "cbe-safari-browser-header",
-              className: "w-full px-3.5 pt-[max(env(safe-area-inset-top,0px),8px)] pb-2.5 bg-[#1c1c1e]/98 backdrop-blur-md border-b border-neutral-800 flex items-center justify-between text-white flex-shrink-0 z-30 select-none shadow-sm",
-              children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  "button",
-                  {
-                    onClick: onClose,
-                    className: "text-[#0a84ff] hover:text-blue-400 font-medium text-[15px] px-1 py-1 transition cursor-pointer shrink-0",
-                    title: "Done (Close Receipt)",
-                    children: "Done"
-                  }
-                ),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                  "div",
-                  {
-                    onClick: handleCopyLink,
-                    className: "flex-1 bg-[#2c2c2e] hover:bg-[#38383a] h-9 rounded-xl px-3 flex items-center justify-between cursor-pointer transition select-none mx-2.5 border border-neutral-700/50 shadow-inner",
-                    title: "Click to copy receipt URL",
-                    children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-[11px] font-serif font-bold text-neutral-400 select-none tracking-tight", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-sm", children: "a" }),
-                        "A"
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5 overflow-hidden mx-2", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(Lock, { className: "w-3.5 h-3.5 text-neutral-400 shrink-0" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[13.5px] text-[#f2f2f7] font-sans font-medium tracking-tight truncate", children: viewMode === "pdf" ? `apps.cbe.com.et:100/pdf/?id=${receiptData.refId}` : "apps.cbe.com.et:100" })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(
-                        "button",
-                        {
-                          type: "button",
-                          onClick: (e) => {
-                            e.stopPropagation();
-                            handleRefresh();
-                          },
-                          className: "text-neutral-400 hover:text-white transition",
-                          title: "Reload",
-                          children: /* @__PURE__ */ jsxRuntimeExports.jsx(RotateCw, { className: `w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}` })
-                        }
-                      )
-                    ]
-                  }
-                ),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2 shrink-0", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    "button",
-                    {
-                      onClick: handleCopyLink,
-                      className: "p-1 text-[#0a84ff] hover:text-blue-400 transition cursor-pointer",
-                      title: "Share / Copy Link",
-                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(Share2, { className: "w-4.5 h-4.5" })
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    "button",
-                    {
-                      onClick: () => setIsMenuOpen(!isMenuOpen),
-                      className: "p-1 text-[#0a84ff] hover:text-blue-400 transition cursor-pointer",
-                      title: "Safari Tabs & Settings",
-                      children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-4.5 h-4.5 border-2 border-current rounded-xs relative", children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "absolute -top-1 -right-1 w-3 h-3 border-t-2 border-r-2 border-current rounded-2xs" }) })
-                    }
-                  )
-                ] })
-              ]
-            }
-          )
-        ) : browserType === "samsung" ? (
-          /* ================= 4. SAMSUNG INTERNET HEADER ================= */
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(
-            "header",
-            {
-              id: "cbe-samsung-browser-header",
-              className: "w-full px-3.5 pt-[max(env(safe-area-inset-top,0px),8px)] pb-2 bg-[#181920] border-b border-neutral-800 flex items-center justify-between text-[#e2e4ea] flex-shrink-0 z-30 select-none shadow-sm",
-              children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  "button",
-                  {
-                    onClick: onClose,
-                    "aria-label": "Home",
-                    className: "p-1.5 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-full transition cursor-pointer shrink-0",
-                    title: "Return to App",
-                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(House, { className: "w-4.5 h-4.5" })
-                  }
-                ),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                  "div",
-                  {
-                    onClick: handleCopyLink,
-                    className: "flex-1 bg-[#262730] hover:bg-[#30323c] h-9 rounded-full px-3.5 flex items-center justify-between cursor-pointer transition select-none mx-2 border border-neutral-700/60",
-                    title: "Click to copy receipt URL",
-                    children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5 overflow-hidden", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(Lock, { className: "w-3.5 h-3.5 text-neutral-400 shrink-0" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[13.5px] text-white font-sans tracking-tight truncate", children: viewMode === "pdf" ? `apps.cbe.com.et:100/pdf/?id=${receiptData.refId}` : "apps.cbe.com.et:100" })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(
-                        "button",
-                        {
-                          type: "button",
-                          onClick: (e) => {
-                            e.stopPropagation();
-                            handleRefresh();
-                          },
-                          className: "text-neutral-400 hover:text-white",
-                          children: /* @__PURE__ */ jsxRuntimeExports.jsx(RotateCw, { className: `w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}` })
-                        }
-                      )
-                    ]
-                  }
-                ),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5 shrink-0", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    "button",
-                    {
-                      onClick: () => showBarsToast("Bookmark saved"),
-                      className: "p-1 text-amber-400 hover:text-amber-300 transition",
-                      title: "Bookmark",
-                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(Star, { className: "w-4.5 h-4.5 fill-amber-400/20" })
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    "button",
-                    {
-                      onClick: () => setIsMenuOpen(true),
-                      className: "w-5.5 h-5.5 rounded-lg border border-neutral-400 text-white font-bold text-[10.5px] flex items-center justify-center hover:bg-neutral-800 transition",
-                      title: "Tabs",
-                      children: tabCount
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    "button",
-                    {
-                      onClick: () => setIsMenuOpen(!isMenuOpen),
-                      className: "p-1 text-neutral-300 hover:text-white transition",
-                      title: "Samsung menu",
-                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(EllipsisVertical, { className: "w-4.5 h-4.5" })
-                    }
-                  )
-                ] })
-              ]
-            }
-          )
-        ) : browserType === "phoenix" ? (
-          /* ================= 5. PHOENIX BROWSER HEADER ================= */
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(
-            "header",
-            {
-              id: "cbe-phoenix-browser-header",
-              className: "w-full px-3 pt-[max(env(safe-area-inset-top,0px),8px)] pb-2 bg-[#131720] border-b border-[#202735] flex items-center justify-between text-[#e0e5ee] flex-shrink-0 z-30 select-none shadow-sm",
-              children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5 shrink-0", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    "button",
-                    {
-                      onClick: onClose,
-                      "aria-label": "Back",
-                      className: "p-1 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-full transition",
-                      title: "Return to App",
-                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "w-5 h-5" })
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    "div",
-                    {
-                      onClick: () => setIsMenuOpen(true),
-                      className: "w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-400/60 flex items-center justify-center text-emerald-400 text-xs font-black select-none cursor-pointer",
-                      title: "Phoenix Browser",
-                      children: "P"
-                    }
-                  )
-                ] }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  "div",
-                  {
-                    onClick: handleCopyLink,
-                    className: "flex-1 bg-[#1e2433] hover:bg-[#283044] h-9 rounded-full px-3 flex items-center justify-between cursor-pointer transition select-none mx-2 border border-[#2b354a]",
-                    title: "Click to copy receipt URL",
-                    children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5 overflow-hidden", children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(SlidersHorizontal, { className: "w-3.5 h-3.5 text-emerald-400 shrink-0" }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[13px] text-white font-sans tracking-tight truncate", children: "apps.cbe.com.et:100" })
-                    ] })
-                  }
-                ),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1 shrink-0", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    "button",
-                    {
-                      onClick: () => setIsMenuOpen(true),
-                      className: "w-5.5 h-5.5 rounded-[5px] border-[1.8px] border-neutral-300 text-neutral-200 font-bold text-[10.5px] flex items-center justify-center hover:bg-neutral-800 transition",
-                      title: "Tabs",
-                      children: tabCount
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    "button",
-                    {
-                      onClick: () => setIsMenuOpen(!isMenuOpen),
-                      className: "p-1 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-full transition",
-                      title: "Browser options",
-                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(EllipsisVertical, { className: "w-5 h-5" })
-                    }
-                  )
-                ] })
-              ]
-            }
-          )
-        ) : (
-          /* ================= 6. MOZILLA FIREFOX HEADER ================= */
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(
-            "header",
-            {
-              id: "cbe-firefox-browser-header",
-              className: "w-full px-3 pt-[max(env(safe-area-inset-top,0px),8px)] pb-2 bg-[#1c1b22] border-b border-[#2b2a33] flex items-center justify-between text-white flex-shrink-0 z-30 select-none shadow-sm",
-              children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  "button",
-                  {
-                    onClick: onClose,
-                    "aria-label": "Back",
-                    className: "p-1 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-full transition shrink-0",
-                    title: "Return to App",
-                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "w-5 h-5" })
-                  }
-                ),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                  "div",
-                  {
-                    onClick: handleCopyLink,
-                    className: "flex-1 bg-[#2b2a33] hover:bg-[#383742] h-9 rounded-xl px-3 flex items-center justify-between cursor-pointer transition select-none mx-2 border border-neutral-700/60",
-                    title: "Click to copy receipt URL",
-                    children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5 overflow-hidden", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(Shield, { className: "w-3.5 h-3.5 text-purple-400 shrink-0" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(Lock, { className: "w-3 h-3 text-neutral-400 shrink-0" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[13px] text-neutral-100 font-sans tracking-tight truncate", children: "apps.cbe.com.et:100" })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(
-                        "button",
-                        {
-                          type: "button",
-                          onClick: (e) => {
-                            e.stopPropagation();
-                            handleRefresh();
-                          },
-                          className: "text-neutral-400 hover:text-white",
-                          children: /* @__PURE__ */ jsxRuntimeExports.jsx(RotateCw, { className: `w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}` })
-                        }
-                      )
-                    ]
-                  }
-                ),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5 shrink-0", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    "button",
-                    {
-                      onClick: () => setIsMenuOpen(true),
-                      className: "w-5.5 h-5.5 rounded-md border border-neutral-400 text-white font-bold text-[10.5px] flex items-center justify-center hover:bg-neutral-800 transition",
-                      title: "Tabs",
-                      children: tabCount
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    "button",
-                    {
-                      onClick: () => setIsMenuOpen(!isMenuOpen),
-                      className: "p-1 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-full transition",
-                      title: "Firefox menu & options",
-                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(EllipsisVertical, { className: "w-5 h-5" })
-                    }
-                  )
-                ] })
-              ]
-            }
-          )
-        ),
-        isMenuOpen && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "div",
-            {
-              className: "fixed inset-0 z-40 bg-black/40 backdrop-blur-2xs animate-fade-in",
-              onClick: () => setIsMenuOpen(false)
-            }
-          ),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(
-            "div",
-            {
-              id: "browser-settings-modal",
-              className: "fixed top-12 sm:top-14 right-2 sm:right-4 z-50 w-84 max-w-[calc(100vw-16px)] max-h-[calc(100vh-64px)] overflow-y-auto bg-[#1c1f26] text-white rounded-2xl shadow-2xl border border-neutral-700/90 p-4 animate-in fade-in zoom-in-95 duration-150 select-none",
-              style: { fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
-              children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between pb-3 border-b border-neutral-700/80 mb-3", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsx(Globe, { className: "w-4.5 h-4.5 text-emerald-400" }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("h3", { className: "text-[14px] font-bold tracking-tight flex items-center gap-1.5", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Web Receipt Settings" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[9.5px] bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 px-1.5 py-0.2 rounded font-bold", children: "Web View" })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-[10px] text-neutral-400", children: "Header style & web receipt stamp options" })
-                    ] })
-                  ] }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    "button",
-                    {
-                      onClick: () => setIsMenuOpen(false),
-                      className: "p-1 rounded-full hover:bg-neutral-800 text-neutral-400 hover:text-white transition",
-                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "w-4 h-4" })
-                    }
-                  )
-                ] }),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-1.5 mb-4", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-2", children: "Choose Browser Header Style" }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                    "button",
-                    {
-                      type: "button",
-                      onClick: () => handleSelectBrowser("chrome"),
-                      className: `w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition cursor-pointer ${browserType === "chrome" ? "bg-emerald-500/20 border border-emerald-400/80 text-white" : "bg-neutral-800/60 hover:bg-neutral-800 border border-neutral-700/50 text-neutral-300"}`,
-                      children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2.5", children: [
-                          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-7 h-7 rounded-lg bg-[#1f1f21] flex items-center justify-center border border-neutral-600 text-white font-bold text-xs", children: /* @__PURE__ */ jsxRuntimeExports.jsx("svg", { viewBox: "0 0 24 24", className: "w-4 h-4 text-white", fill: "none", stroke: "currentColor", strokeWidth: "2.2", strokeLinecap: "round", strokeLinejoin: "round", children: /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M3 10.5L12 3l9 7.5V20a1.5 1.5 0 0 1-1.5 1.5H15v-6h-6v6H4.5A1.5 1.5 0 0 1 3 20v-9.5z" }) }) }),
-                          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-                            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-[13px] font-bold flex items-center gap-1.5", children: [
-                              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Google Chrome" }),
-                              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[9.5px] bg-neutral-700 text-white px-1.5 py-0.2 rounded font-semibold", children: "Image 1" })
-                            ] }),
-                            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[10px] text-neutral-400", children: "Home icon, pill bar, Google Translate & tabs" })
-                          ] })
-                        ] }),
-                        browserType === "chrome" && /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheck, { className: "w-4 h-4 text-emerald-400 shrink-0" })
-                      ]
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                    "button",
-                    {
-                      type: "button",
-                      onClick: () => handleSelectBrowser("opera"),
-                      className: `w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition cursor-pointer ${browserType === "opera" ? "bg-emerald-500/20 border border-emerald-400/80 text-white" : "bg-neutral-800/60 hover:bg-neutral-800 border border-neutral-700/50 text-neutral-300"}`,
-                      children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2.5", children: [
-                          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-7 h-7 rounded-lg bg-[#0e0e10] flex items-center justify-center border border-neutral-700 text-neutral-200", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { viewBox: "0 0 24 24", className: "w-4 h-4 text-neutral-200", fill: "none", stroke: "currentColor", strokeWidth: "2.4", strokeLinecap: "round", strokeLinejoin: "round", children: [
-                            /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M21 12a9 9 0 1 1-2.6-6.3L21 8" }),
-                            /* @__PURE__ */ jsxRuntimeExports.jsx("path", { d: "M21 3v5h-5" })
-                          ] }) }),
-                          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-                            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-[13px] font-bold flex items-center gap-1.5", children: [
-                              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Opera Browser" }),
-                              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[9.5px] bg-red-950 border border-red-500/50 text-red-300 px-1.5 py-0.2 rounded font-semibold", children: "Image 2" })
-                            ] }),
-                            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[10px] text-neutral-400", children: "Flat black bar, full URL with ID, reload button" })
-                          ] })
-                        ] }),
-                        browserType === "opera" && /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheck, { className: "w-4 h-4 text-emerald-400 shrink-0" })
-                      ]
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                    "button",
-                    {
-                      type: "button",
-                      onClick: () => handleSelectBrowser("safari"),
-                      className: `w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition cursor-pointer ${browserType === "safari" ? "bg-emerald-500/20 border border-emerald-400/80 text-white" : "bg-neutral-800/60 hover:bg-neutral-800 border border-neutral-700/50 text-neutral-300"}`,
-                      children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2.5", children: [
-                          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-7 h-7 rounded-lg bg-[#1c1c1e] flex items-center justify-center border border-neutral-700 text-[#0a84ff]", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[10px] font-serif font-black", children: "aA" }) }),
-                          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-                            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-[13px] font-bold flex items-center gap-1.5", children: [
-                              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Apple Safari" }),
-                              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[9.5px] bg-blue-950 border border-blue-500/50 text-blue-300 px-1.5 py-0.2 rounded font-semibold", children: "iOS Style" })
-                            ] }),
-                            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[10px] text-neutral-400", children: "Done button, aA text controls, lock pill & share" })
-                          ] })
-                        ] }),
-                        browserType === "safari" && /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheck, { className: "w-4 h-4 text-emerald-400 shrink-0" })
-                      ]
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                    "button",
-                    {
-                      type: "button",
-                      onClick: () => handleSelectBrowser("samsung"),
-                      className: `w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition cursor-pointer ${browserType === "samsung" ? "bg-emerald-500/20 border border-emerald-400/80 text-white" : "bg-neutral-800/60 hover:bg-neutral-800 border border-neutral-700/50 text-neutral-300"}`,
-                      children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2.5", children: [
-                          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-7 h-7 rounded-lg bg-neutral-900 flex items-center justify-center border border-neutral-700 text-amber-400", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Star, { className: "w-3.5 h-3.5 fill-amber-400/30 text-amber-400" }) }),
-                          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-                            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[13px] font-bold", children: "Samsung Internet" }),
-                            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[10px] text-neutral-400", children: "Galaxy One UI style with bookmark star & tabs" })
-                          ] })
-                        ] }),
-                        browserType === "samsung" && /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheck, { className: "w-4 h-4 text-emerald-400 shrink-0" })
-                      ]
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                    "button",
-                    {
-                      type: "button",
-                      onClick: () => handleSelectBrowser("phoenix"),
-                      className: `w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition cursor-pointer ${browserType === "phoenix" ? "bg-emerald-500/20 border border-emerald-400/80 text-white" : "bg-neutral-800/60 hover:bg-neutral-800 border border-neutral-700/50 text-neutral-300"}`,
-                      children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2.5", children: [
-                          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-7 h-7 rounded-lg bg-emerald-950/80 flex items-center justify-center border border-emerald-500/50 text-emerald-400 font-black text-xs", children: "P" }),
-                          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-                            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[13px] font-bold", children: "Phoenix Browser" }),
-                            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[10px] text-neutral-400", children: "Tecno, Infinix & Itel mobile style" })
-                          ] })
-                        ] }),
-                        browserType === "phoenix" && /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheck, { className: "w-4 h-4 text-emerald-400 shrink-0" })
-                      ]
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                    "button",
-                    {
-                      type: "button",
-                      onClick: () => handleSelectBrowser("firefox"),
-                      className: `w-full px-3 py-2 rounded-xl flex items-center justify-between text-left transition cursor-pointer ${browserType === "firefox" ? "bg-emerald-500/20 border border-emerald-400/80 text-white" : "bg-neutral-800/60 hover:bg-neutral-800 border border-neutral-700/50 text-neutral-300"}`,
-                      children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2.5", children: [
-                          /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-7 h-7 rounded-lg bg-purple-950/80 flex items-center justify-center border border-purple-500/50 text-purple-400 font-bold text-xs", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Shield, { className: "w-3.5 h-3.5 text-purple-400" }) }),
-                          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-                            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[13px] font-bold", children: "Mozilla Firefox" }),
-                            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[10px] text-neutral-400", children: "Tracking shield & dark modern layout" })
-                          ] })
-                        ] }),
-                        browserType === "firefox" && /* @__PURE__ */ jsxRuntimeExports.jsx(CircleCheck, { className: "w-4 h-4 text-emerald-400 shrink-0" })
-                      ]
-                    }
-                  )
-                ] }),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mb-4 pt-3 border-t border-neutral-700/80", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between mb-2", children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[11px] font-semibold text-neutral-400 uppercase tracking-wider", children: "Tab Counter Badge" }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-xs text-emerald-400 font-mono font-bold", children: [
-                      "[",
-                      tabCount,
-                      "]"
-                    ] })
-                  ] }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex items-center gap-1.5", children: ["2", "1", "4", "12", "80", "99+"].map((num) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    "button",
-                    {
-                      type: "button",
-                      onClick: () => handleSelectTabCount(num),
-                      className: `flex-1 py-1 rounded-lg text-xs font-bold transition cursor-pointer ${tabCount === num ? "bg-emerald-500 text-black shadow-xs" : "bg-neutral-800 hover:bg-neutral-700 text-neutral-300"}`,
-                      children: num
-                    },
-                    num
-                  )) })
-                ] }),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mb-4 pt-3 border-t border-neutral-700/80 space-y-3", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-[11px] font-semibold text-neutral-300 uppercase tracking-wider flex items-center gap-1.5", children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(Stamp, { className: "w-3.5 h-3.5 text-purple-400" }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Web Stamp Width & Weight" })
-                    ] }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-[10px] text-purple-300 font-mono font-bold bg-purple-900/60 border border-purple-500/40 px-2 py-0.5 rounded-full", children: [
-                      webStampSize,
-                      "px • ",
-                      webStampWeight.toUpperCase()
-                    ] })
-                  ] }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-neutral-850/80 border border-neutral-700/70 rounded-xl p-2.5 space-y-2", children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between text-xs", children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "font-semibold text-neutral-200 flex items-center gap-1.5", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(SlidersVertical, { className: "w-3.5 h-3.5 text-purple-400" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Web Stamp Width (ስፋት)" })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(
-                          "button",
-                          {
-                            type: "button",
-                            onClick: () => handleUpdateWebStampWidth(webStampSize - 10),
-                            className: "w-5 h-5 rounded bg-neutral-700 hover:bg-neutral-600 text-neutral-200 flex items-center justify-center font-bold text-xs transition cursor-pointer",
-                            title: "Decrease width by 10px",
-                            children: /* @__PURE__ */ jsxRuntimeExports.jsx(Minus, { className: "w-3 h-3" })
-                          }
-                        ),
-                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-xs text-purple-300 font-mono font-bold px-1 min-w-[46px] text-center", children: [
-                          webStampSize,
-                          "px"
-                        ] }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(
-                          "button",
-                          {
-                            type: "button",
-                            onClick: () => handleUpdateWebStampWidth(webStampSize + 10),
-                            className: "w-5 h-5 rounded bg-neutral-700 hover:bg-neutral-600 text-neutral-200 flex items-center justify-center font-bold text-xs transition cursor-pointer",
-                            title: "Increase width by 10px",
-                            children: /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { className: "w-3 h-3" })
-                          }
-                        )
-                      ] })
-                    ] }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsx(
-                      "input",
-                      {
-                        type: "range",
-                        min: "160",
-                        max: "480",
-                        step: "5",
-                        value: webStampSize,
-                        onChange: (e) => handleUpdateWebStampWidth(Number(e.target.value)),
-                        className: "w-full accent-purple-500 h-1.5 bg-neutral-700 rounded-lg cursor-pointer"
-                      }
-                    ),
-                    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-5 gap-1 pt-0.5", children: [
-                      { label: "220px", size: 220, name: "Small" },
-                      { label: "260px", size: 260, name: "Normal" },
-                      { label: "330px", size: 330, name: "Med" },
-                      { label: "380px", size: 380, name: "Large" },
-                      { label: "440px", size: 440, name: "Jumbo" }
-                    ].map((preset) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-                      "button",
-                      {
-                        type: "button",
-                        onClick: () => handleUpdateWebStampWidth(preset.size),
-                        className: `py-1 px-0.5 rounded-lg text-[10px] font-semibold transition text-center cursor-pointer ${webStampSize === preset.size ? "bg-purple-600 text-white font-bold shadow-xs" : "bg-neutral-800 hover:bg-neutral-700 text-neutral-300"}`,
-                        children: preset.name
-                      },
-                      preset.size
-                    )) })
-                  ] }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-neutral-850/80 border border-neutral-700/70 rounded-xl p-2.5 space-y-2", children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between text-xs", children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "font-semibold text-neutral-200 flex items-center gap-1.5", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(Feather, { className: "w-3.5 h-3.5 text-purple-400" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Web Stamp Weight / Ink (ክብደት)" })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-purple-300 font-medium text-[10.5px]", children: webStampWeight === "light" ? "Light (ቀላል)" : webStampWeight === "normal" ? "Normal (መደበኛ)" : webStampWeight === "medium" ? "Medium (መካከለኛ)" : webStampWeight === "bold" ? "Bold (ደማቅ)" : "Heavy (እጅግ ደማቅ)" })
-                    ] }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-5 gap-1", children: ["light", "normal", "medium", "bold", "heavy"].map((w) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-                      "button",
-                      {
-                        type: "button",
-                        onClick: () => handleUpdateWebStampWeight(w),
-                        className: `py-1.5 px-0.5 rounded-lg text-[10px] font-semibold transition text-center capitalize cursor-pointer ${webStampWeight === w ? "bg-purple-600 text-white font-bold shadow-xs" : "bg-neutral-800 hover:bg-neutral-700 text-neutral-300"}`,
-                        children: w
-                      },
-                      w
-                    )) })
-                  ] }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-neutral-850/80 border border-neutral-700/70 rounded-xl p-2.5 space-y-2", children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between text-xs", children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "font-semibold text-neutral-200 flex items-center gap-1.5", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(Move, { className: "w-3.5 h-3.5 text-purple-400" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Web Stamp Position (ቦታ)" })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-[10px] text-purple-300 font-mono font-bold bg-purple-900/40 px-1.5 py-0.5 rounded border border-purple-500/30", children: [
-                        "X: ",
-                        webStampPosition.xPercent,
-                        "% • Y: ",
-                        webStampPosition.yPercent,
-                        "%"
-                      ] })
-                    ] }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                        "button",
-                        {
-                          type: "button",
-                          onClick: () => {
-                            setIsEditingStampPosition(true);
-                            setIsMenuOpen(false);
-                            showBarsToast("Click & drag stamp to position anywhere on web receipt, then click Save");
-                          },
-                          className: "flex-1 py-1.5 px-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-95 shadow-md shadow-purple-600/30",
-                          children: [
-                            /* @__PURE__ */ jsxRuntimeExports.jsx(Move, { className: "w-3.5 h-3.5" }),
-                            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Rearrange Position" })
-                          ]
-                        }
-                      ),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                        "button",
-                        {
-                          type: "button",
-                          onClick: handleResetStampPosition,
-                          className: "py-1.5 px-2.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white text-xs font-semibold flex items-center justify-center gap-1 transition cursor-pointer border border-neutral-700 active:scale-95",
-                          title: "Reset web stamp to default center",
-                          children: [
-                            /* @__PURE__ */ jsxRuntimeExports.jsx(RotateCcw, { className: "w-3 h-3" }),
-                            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Center" })
-                          ]
-                        }
-                      )
-                    ] })
-                  ] })
-                ] }),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "pt-3 border-t border-neutral-700/80 space-y-1.5", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                    "button",
-                    {
-                      type: "button",
-                      onClick: () => {
-                        handleOpenPdfView();
-                        setIsMenuOpen(false);
-                      },
-                      className: "w-full px-3 py-2 rounded-xl bg-purple-900/40 hover:bg-purple-900/70 border border-purple-500/40 text-purple-200 hover:text-white text-xs font-semibold flex items-center justify-between transition cursor-pointer",
-                      children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "flex items-center gap-2", children: [
-                          /* @__PURE__ */ jsxRuntimeExports.jsx(FileText, { className: "w-3.5 h-3.5 text-purple-400" }),
-                          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Open Official PDF View" })
-                        ] }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[10px] text-purple-300 font-bold bg-purple-800/60 px-1.5 py-0.5 rounded", children: ".PDF" })
-                      ]
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                    "button",
-                    {
-                      type: "button",
-                      onClick: () => {
-                        handleDownloadPdf();
-                        setIsMenuOpen(false);
-                      },
-                      className: "w-full px-3 py-2 rounded-xl bg-neutral-800/80 hover:bg-neutral-800 border border-neutral-700/80 text-neutral-300 hover:text-white text-xs font-medium flex items-center justify-between transition cursor-pointer",
-                      children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "flex items-center gap-2", children: [
-                          /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "w-3.5 h-3.5 text-emerald-400" }),
-                          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Direct Download PDF" })
-                        ] }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[10px] text-neutral-400 font-medium", children: "Save" })
-                      ]
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                    "button",
-                    {
-                      type: "button",
-                      onClick: () => {
-                        handleDownloadPng();
-                        setIsMenuOpen(false);
-                      },
-                      className: "w-full px-3 py-2 rounded-xl bg-neutral-800/60 hover:bg-neutral-800 text-neutral-200 hover:text-white text-xs font-medium flex items-center justify-between transition cursor-pointer",
-                      children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "flex items-center gap-2", children: [
-                          /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "w-3.5 h-3.5 text-neutral-400" }),
-                          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Save Receipt as Image" })
-                        ] }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[10px] text-neutral-400 font-semibold", children: ".PNG" })
-                      ]
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                    "button",
-                    {
-                      type: "button",
-                      onClick: () => {
-                        handleCopyLink();
-                        setIsMenuOpen(false);
-                      },
-                      className: "w-full px-3 py-2 rounded-xl bg-neutral-800/60 hover:bg-neutral-800 text-neutral-200 hover:text-white text-xs font-medium flex items-center gap-2 transition cursor-pointer",
-                      children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(Copy, { className: "w-3.5 h-3.5 text-neutral-400" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Copy Receipt URL (apps.cbe.com.et:100)" })
-                      ]
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                    "button",
-                    {
-                      type: "button",
-                      onClick: () => {
-                        handleRefresh();
-                        setIsMenuOpen(false);
-                      },
-                      className: "w-full px-3 py-2 rounded-xl bg-neutral-800/60 hover:bg-neutral-800 text-neutral-200 hover:text-white text-xs font-medium flex items-center gap-2 transition cursor-pointer",
-                      children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(RefreshCw, { className: "w-3.5 h-3.5 text-neutral-400" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Refresh / Reload Receipt Page" })
-                      ]
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                    "button",
-                    {
-                      type: "button",
-                      onClick: () => {
-                        var _a;
-                        (_a = stampFileInputRef.current) == null ? void 0 : _a.click();
-                      },
-                      className: "w-full px-3 py-2 rounded-xl bg-neutral-800/60 hover:bg-neutral-800 text-neutral-200 hover:text-white text-xs font-medium flex items-center justify-between transition cursor-pointer",
-                      children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "flex items-center gap-2", children: [
-                          /* @__PURE__ */ jsxRuntimeExports.jsx(Upload, { className: "w-3.5 h-3.5 text-neutral-400" }),
-                          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Upload Custom Bank Stamp" })
-                        ] }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[10px] text-emerald-400 font-semibold", children: "Image" })
-                      ]
-                    }
-                  ),
-                  customStamp && /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                    "button",
-                    {
-                      type: "button",
-                      onClick: handleResetStamp,
-                      className: "w-full px-3 py-2 rounded-xl bg-red-950/40 hover:bg-red-950/70 text-red-300 text-xs font-medium flex items-center gap-2 transition cursor-pointer",
-                      children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { className: "w-3.5 h-3.5 text-red-400" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Reset Stamp to CBE Official" })
-                      ]
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-neutral-850/80 border border-neutral-700/80 rounded-xl p-2.5 space-y-2", children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "flex items-center gap-1.5 text-xs font-semibold text-purple-200", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(Link, { className: "w-3.5 h-3.5 text-purple-400" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "PDF Logo (by URL)" })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[10px] text-purple-300 font-bold bg-purple-900/60 px-1.5 py-0.5 rounded", children: "PDF Only" })
-                    ] }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5", children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(
-                        "input",
-                        {
-                          type: "url",
-                          value: pdfLogoUrlInput,
-                          onChange: (e) => setPdfLogoUrlInput(e.target.value),
-                          onKeyDown: (e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              handleApplyPdfLogoUrl();
-                            }
-                          },
-                          placeholder: "https://... image URL",
-                          className: "flex-1 bg-neutral-900 border border-neutral-700 focus:border-purple-500 rounded-lg px-2.5 py-1.5 text-xs text-neutral-100 placeholder-neutral-500 outline-none transition"
-                        }
-                      ),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(
-                        "button",
-                        {
-                          type: "button",
-                          onClick: () => handleApplyPdfLogoUrl(),
-                          className: "bg-purple-700 hover:bg-purple-600 active:bg-purple-800 text-white font-semibold text-xs px-3 py-1.5 rounded-lg transition shrink-0 cursor-pointer shadow-sm",
-                          children: "Apply"
-                        }
-                      )
-                    ] }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between pt-1 border-t border-neutral-700/50 text-[11px]", children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                        "button",
-                        {
-                          type: "button",
-                          onClick: () => {
-                            var _a;
-                            return (_a = pdfLogoFileInputRef.current) == null ? void 0 : _a.click();
-                          },
-                          className: "text-neutral-400 hover:text-neutral-200 flex items-center gap-1 transition cursor-pointer",
-                          children: [
-                            /* @__PURE__ */ jsxRuntimeExports.jsx(Upload, { className: "w-3 h-3" }),
-                            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Or upload file" })
-                          ]
-                        }
-                      ),
-                      customPdfLogo && /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                        "button",
-                        {
-                          type: "button",
-                          onClick: handleResetPdfLogo,
-                          className: "text-red-400 hover:text-red-300 flex items-center gap-1 transition cursor-pointer",
-                          children: [
-                            /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { className: "w-3 h-3" }),
-                            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Reset to default" })
-                          ]
-                        }
-                      )
-                    ] })
-                  ] }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                    "button",
-                    {
-                      type: "button",
-                      onClick: () => {
-                        setIsMenuOpen(false);
-                        onClose();
-                      },
-                      className: "w-full px-3 py-2 rounded-xl bg-neutral-800/90 hover:bg-neutral-700 text-neutral-300 hover:text-white text-xs font-medium flex items-center gap-2 transition cursor-pointer pt-2 mt-1 border-t border-neutral-700",
-                      children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "w-3.5 h-3.5 text-neutral-400" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Close Receipt & Return to App" })
-                      ]
-                    }
-                  )
-                ] })
-              ]
-            }
-          )
-        ] }),
-        viewMode === "pdf" ? /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-full flex-1 flex flex-col overflow-hidden bg-[#525659]", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-full bg-[#2a2b2e] text-white px-3 py-2 border-b border-neutral-700/90 flex items-center justify-between z-20 shrink-0 select-none shadow-md", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                "button",
-                {
-                  type: "button",
-                  onClick: () => setViewMode("web"),
-                  className: "flex items-center gap-1.5 text-xs font-semibold text-purple-200 hover:text-white bg-purple-900/60 hover:bg-purple-800/80 px-2.5 py-1.5 rounded-lg border border-purple-500/50 transition cursor-pointer active:scale-95",
-                  title: "Switch back to Web Receipt view",
-                  children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "w-3.5 h-3.5" }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Web Receipt" })
-                  ]
-                }
-              ),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "hidden sm:flex items-center gap-1.5 text-xs text-neutral-300 font-mono bg-neutral-850 px-2.5 py-1 rounded border border-neutral-700/80", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(FileText, { className: "w-3.5 h-3.5 text-red-400 shrink-0" }),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "truncate max-w-[190px]", children: [
-                  "CBE_Customer_Receipt_",
-                  receiptData.refId,
-                  ".pdf"
-                ] }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[10px] text-neutral-400 font-sans ml-1", children: "2 pages" })
-              ] })
-            ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5 sm:gap-2", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center bg-neutral-800/90 rounded-lg p-0.5 border border-neutral-700", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  "button",
-                  {
-                    type: "button",
-                    onClick: () => {
-                      setIsAutoFit(false);
-                      setPdfZoom((prev) => Math.max(0.4, Number((prev - 0.15).toFixed(2))));
-                    },
-                    className: "p-1 text-neutral-300 hover:text-white hover:bg-neutral-700 rounded transition cursor-pointer",
-                    title: "Zoom Out",
-                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(Minus, { className: "w-3 h-3" })
-                  }
-                ),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  "button",
-                  {
-                    type: "button",
-                    onClick: () => {
-                      setIsAutoFit((prev) => !prev);
-                      if (!isAutoFit) setPdfZoom(1);
-                    },
-                    className: `px-1.5 py-0.5 text-[10.5px] font-bold rounded transition cursor-pointer ${isAutoFit ? "text-purple-300 bg-purple-950/60" : "text-neutral-300 hover:text-white"}`,
-                    title: isAutoFit ? "Auto-Fit to Screen Width" : "Reset to 100%",
-                    children: isAutoFit ? "Fit" : `${Math.round(pdfZoom * 100)}%`
-                  }
-                ),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  "button",
-                  {
-                    type: "button",
-                    onClick: () => {
-                      setIsAutoFit(false);
-                      setPdfZoom((prev) => Math.min(1.8, Number((prev + 0.15).toFixed(2))));
-                    },
-                    className: "p-1 text-neutral-300 hover:text-white hover:bg-neutral-700 rounded transition cursor-pointer",
-                    title: "Zoom In",
-                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { className: "w-3 h-3" })
-                  }
-                )
-              ] }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
-                "button",
-                {
-                  type: "button",
-                  onClick: handlePrintPdf,
-                  className: "hidden sm:flex p-1.5 text-neutral-300 hover:text-white hover:bg-neutral-800 rounded-lg transition cursor-pointer",
-                  title: "Print Receipt",
-                  children: /* @__PURE__ */ jsxRuntimeExports.jsx(Printer, { className: "w-4 h-4" })
-                }
-              ),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                "button",
-                {
-                  type: "button",
-                  onClick: () => handleDownloadPdf(),
-                  disabled: isDownloading,
-                  className: "flex items-center gap-1.5 text-xs font-bold text-white bg-[#781d77] hover:bg-[#70189F] active:bg-[#580f68] px-3 py-1.5 rounded-lg shadow-md transition cursor-pointer disabled:opacity-75 active:scale-95",
-                  title: "Save PDF file to device storage",
-                  children: [
-                    isDownloading ? /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" }) : /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "w-3.5 h-3.5" }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Save PDF" })
-                  ]
-                }
-              ),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
-                "button",
-                {
-                  type: "button",
-                  onClick: () => setIsPdfMenuOpen((prev) => !prev),
-                  "aria-label": "PDF Receipt Form Options",
-                  className: `p-1.5 rounded-lg transition cursor-pointer flex items-center justify-center ${isPdfMenuOpen ? "bg-purple-700 text-white shadow-sm ring-1 ring-white/50" : "text-neutral-300 hover:text-white hover:bg-neutral-800"}`,
-                  title: "PDF Receipt Settings (Stamp Size, Weight, Position & Logo)",
-                  children: /* @__PURE__ */ jsxRuntimeExports.jsx(EllipsisVertical, { className: "w-4 h-4" })
-                }
-              )
-            ] })
-          ] }),
-          isPdfMenuOpen && /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
-              "div",
-              {
-                className: "fixed inset-0 z-40 bg-black/40 backdrop-blur-2xs animate-fade-in",
-                onClick: () => setIsPdfMenuOpen(false)
-              }
-            ),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs(
-              "div",
-              {
-                className: "fixed top-12 sm:top-14 right-2 sm:right-4 z-50 w-84 max-w-[calc(100vw-16px)] max-h-[calc(100vh-64px)] overflow-y-auto bg-[#1c1f26] text-white rounded-2xl shadow-2xl border border-neutral-700/90 p-4 animate-in fade-in zoom-in-95 duration-150 select-none",
-                style: { fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
-                children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between pb-3 border-b border-neutral-700/80 mb-3", children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(FileText, { className: "w-4.5 h-4.5 text-red-400" }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsxs("h3", { className: "text-[14px] font-bold tracking-tight flex items-center gap-1.5", children: [
-                          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "PDF Receipt Settings" }),
-                          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[9.5px] bg-red-950/80 border border-red-500/50 text-red-300 px-1.5 py-0.2 rounded font-bold", children: "PDF View" })
-                        ] }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-[10px] text-neutral-400", children: "PDF receipt stamp & logo options" })
-                      ] })
-                    ] }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsx(
-                      "button",
-                      {
-                        onClick: () => setIsPdfMenuOpen(false),
-                        className: "p-1 rounded-full hover:bg-neutral-800 text-neutral-400 hover:text-white transition cursor-pointer",
-                        children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "w-4 h-4" })
-                      }
-                    )
-                  ] }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-3 mb-4", children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-[11px] font-semibold text-neutral-300 uppercase tracking-wider flex items-center gap-1.5", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(Stamp, { className: "w-3.5 h-3.5 text-purple-400" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "PDF Stamp Width & Weight" })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-[10px] text-purple-300 font-mono font-bold bg-purple-900/60 border border-purple-500/40 px-2 py-0.5 rounded-full", children: [
-                        pdfStampSize,
-                        "px • ",
-                        pdfStampWeight.toUpperCase()
-                      ] })
-                    ] }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-neutral-850/80 border border-neutral-700/70 rounded-xl p-2.5 space-y-2", children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between text-xs", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "font-semibold text-neutral-200 flex items-center gap-1.5", children: [
-                          /* @__PURE__ */ jsxRuntimeExports.jsx(SlidersVertical, { className: "w-3.5 h-3.5 text-purple-400" }),
-                          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "PDF Stamp Width (ስፋት)" })
-                        ] }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1", children: [
-                          /* @__PURE__ */ jsxRuntimeExports.jsx(
-                            "button",
-                            {
-                              type: "button",
-                              onClick: () => handleUpdatePdfStampWidth(pdfStampSize - 10),
-                              className: "w-5 h-5 rounded bg-neutral-700 hover:bg-neutral-600 text-neutral-200 flex items-center justify-center font-bold text-xs transition cursor-pointer",
-                              title: "Decrease PDF stamp width by 10px",
-                              children: /* @__PURE__ */ jsxRuntimeExports.jsx(Minus, { className: "w-3 h-3" })
-                            }
-                          ),
-                          /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-xs text-purple-300 font-mono font-bold px-1 min-w-[46px] text-center", children: [
-                            pdfStampSize,
-                            "px"
-                          ] }),
-                          /* @__PURE__ */ jsxRuntimeExports.jsx(
-                            "button",
-                            {
-                              type: "button",
-                              onClick: () => handleUpdatePdfStampWidth(pdfStampSize + 10),
-                              className: "w-5 h-5 rounded bg-neutral-700 hover:bg-neutral-600 text-neutral-200 flex items-center justify-center font-bold text-xs transition cursor-pointer",
-                              title: "Increase PDF stamp width by 10px",
-                              children: /* @__PURE__ */ jsxRuntimeExports.jsx(Plus, { className: "w-3 h-3" })
-                            }
-                          )
-                        ] })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(
-                        "input",
-                        {
-                          type: "range",
-                          min: "160",
-                          max: "480",
-                          step: "5",
-                          value: pdfStampSize,
-                          onChange: (e) => handleUpdatePdfStampWidth(Number(e.target.value)),
-                          className: "w-full accent-purple-500 h-1.5 bg-neutral-700 rounded-lg cursor-pointer"
-                        }
-                      ),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-5 gap-1 pt-0.5", children: [
-                        { label: "220px", size: 220, name: "Small" },
-                        { label: "260px", size: 260, name: "Normal" },
-                        { label: "330px", size: 330, name: "Med" },
-                        { label: "380px", size: 380, name: "Large" },
-                        { label: "440px", size: 440, name: "Jumbo" }
-                      ].map((preset) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-                        "button",
-                        {
-                          type: "button",
-                          onClick: () => handleUpdatePdfStampWidth(preset.size),
-                          className: `py-1 px-0.5 rounded-lg text-[10px] font-semibold transition text-center cursor-pointer ${pdfStampSize === preset.size ? "bg-purple-600 text-white font-bold shadow-xs" : "bg-neutral-800 hover:bg-neutral-700 text-neutral-300"}`,
-                          children: preset.name
-                        },
-                        preset.size
-                      )) })
-                    ] }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-neutral-850/80 border border-neutral-700/70 rounded-xl p-2.5 space-y-2", children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between text-xs", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "font-semibold text-neutral-200 flex items-center gap-1.5", children: [
-                          /* @__PURE__ */ jsxRuntimeExports.jsx(Feather, { className: "w-3.5 h-3.5 text-purple-400" }),
-                          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "PDF Stamp Weight / Ink (ክብደት)" })
-                        ] }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-purple-300 font-medium text-[10.5px]", children: pdfStampWeight === "light" ? "Light (ቀላል)" : pdfStampWeight === "normal" ? "Normal (መደበኛ)" : pdfStampWeight === "medium" ? "Medium (መካከለኛ)" : pdfStampWeight === "bold" ? "Bold (ደማቅ)" : "Heavy (እጅግ ደማቅ)" })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "grid grid-cols-5 gap-1", children: ["light", "normal", "medium", "bold", "heavy"].map((w) => /* @__PURE__ */ jsxRuntimeExports.jsx(
-                        "button",
-                        {
-                          type: "button",
-                          onClick: () => handleUpdatePdfStampWeight(w),
-                          className: `py-1.5 px-0.5 rounded-lg text-[10px] font-semibold transition text-center capitalize cursor-pointer ${pdfStampWeight === w ? "bg-purple-600 text-white font-bold shadow-xs" : "bg-neutral-800 hover:bg-neutral-700 text-neutral-300"}`,
-                          children: w
-                        },
-                        w
-                      )) })
-                    ] }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-neutral-850/80 border border-neutral-700/70 rounded-xl p-2.5 space-y-2", children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between text-xs", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "font-semibold text-neutral-200 flex items-center gap-1.5", children: [
-                          /* @__PURE__ */ jsxRuntimeExports.jsx(Move, { className: "w-3.5 h-3.5 text-purple-400" }),
-                          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "PDF Stamp Position (ቦታ)" })
-                        ] }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-[10px] text-purple-300 font-mono font-bold bg-purple-900/40 px-1.5 py-0.5 rounded border border-purple-500/30", children: [
-                          "X: ",
-                          pdfStampPosition.xPercent,
-                          "% • Y: ",
-                          pdfStampPosition.yPercent,
-                          "%"
-                        ] })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                          "button",
-                          {
-                            type: "button",
-                            onClick: () => {
-                              setIsEditingStampPosition(true);
-                              setIsPdfMenuOpen(false);
-                              showBarsToast("Click & drag stamp anywhere on PDF receipt, then click Save");
-                            },
-                            className: "flex-1 py-1.5 px-2 rounded-lg bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer active:scale-95 shadow-md shadow-purple-600/30",
-                            children: [
-                              /* @__PURE__ */ jsxRuntimeExports.jsx(Move, { className: "w-3.5 h-3.5" }),
-                              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Rearrange Position" })
-                            ]
-                          }
-                        ),
-                        /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                          "button",
-                          {
-                            type: "button",
-                            onClick: handleResetStampPosition,
-                            className: "py-1.5 px-2.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white text-xs font-semibold flex items-center justify-center gap-1 transition cursor-pointer border border-neutral-700 active:scale-95",
-                            title: "Reset PDF stamp to default center",
-                            children: [
-                              /* @__PURE__ */ jsxRuntimeExports.jsx(RotateCcw, { className: "w-3 h-3" }),
-                              /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Center" })
-                            ]
-                          }
-                        )
-                      ] })
-                    ] })
-                  ] }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "pt-3 border-t border-neutral-700/80 space-y-2 mb-3", children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between", children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-[11px] font-semibold text-neutral-300 uppercase tracking-wider flex items-center gap-1.5", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx(FileText, { className: "w-3.5 h-3.5 text-purple-400" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "PDF Official Header Logo" })
-                      ] }),
-                      customPdfLogo && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[9.5px] bg-purple-900/60 border border-purple-500/40 text-purple-300 px-1.5 py-0.2 rounded font-bold", children: "Custom" })
-                    ] }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1.5", children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(
-                        "input",
-                        {
-                          type: "url",
-                          value: pdfLogoUrlInput,
-                          onChange: (e) => setPdfLogoUrlInput(e.target.value),
-                          onKeyDown: (e) => {
-                            if (e.key === "Enter") {
-                              e.preventDefault();
-                              handleApplyPdfLogoUrl();
-                            }
-                          },
-                          placeholder: "https://... image URL",
-                          className: "flex-1 bg-neutral-900 border border-neutral-700 focus:border-purple-500 rounded-lg px-2.5 py-1.5 text-xs text-neutral-100 placeholder-neutral-500 outline-none transition"
-                        }
-                      ),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(
-                        "button",
-                        {
-                          type: "button",
-                          onClick: () => handleApplyPdfLogoUrl(),
-                          className: "bg-purple-700 hover:bg-purple-600 active:bg-purple-800 text-white font-semibold text-xs px-3 py-1.5 rounded-lg transition shrink-0 cursor-pointer shadow-sm",
-                          children: "Apply"
-                        }
-                      )
-                    ] }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between pt-1 border-t border-neutral-700/50 text-[11px]", children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                        "button",
-                        {
-                          type: "button",
-                          onClick: () => {
-                            var _a;
-                            return (_a = pdfLogoFileInputRef.current) == null ? void 0 : _a.click();
-                          },
-                          className: "text-neutral-400 hover:text-neutral-200 flex items-center gap-1 transition cursor-pointer",
-                          children: [
-                            /* @__PURE__ */ jsxRuntimeExports.jsx(Upload, { className: "w-3 h-3" }),
-                            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Or upload file" })
-                          ]
-                        }
-                      ),
-                      customPdfLogo && /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                        "button",
-                        {
-                          type: "button",
-                          onClick: handleResetPdfLogo,
-                          className: "text-red-400 hover:text-red-300 flex items-center gap-1 transition cursor-pointer",
-                          children: [
-                            /* @__PURE__ */ jsxRuntimeExports.jsx(Trash2, { className: "w-3 h-3" }),
-                            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Reset to default" })
-                          ]
-                        }
-                      )
-                    ] })
-                  ] }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    "button",
-                    {
-                      type: "button",
-                      onClick: () => setIsPdfMenuOpen(false),
-                      className: "w-full px-3 py-2 rounded-xl bg-neutral-800/90 hover:bg-neutral-700 text-neutral-300 hover:text-white text-xs font-medium flex items-center justify-center gap-2 transition cursor-pointer border border-neutral-700",
-                      children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Done" })
-                    }
-                  )
-                ]
-              }
-            )
-          ] }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(
-            "div",
-            {
-              ref: pdfContainerRef,
-              className: "flex-1 overflow-auto p-3 sm:p-6 flex flex-col items-center justify-start relative select-none",
-              children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-                "div",
-                {
-                  className: "transition-transform duration-200 ease-out origin-top flex flex-col items-center",
-                  style: {
-                    width: effectiveScale < 1 ? `${640 * effectiveScale}px` : "640px",
-                    height: effectiveScale < 1 ? `calc(1860px * ${effectiveScale})` : "auto",
-                    marginBottom: effectiveScale < 1 ? "36px" : "64px"
-                  },
-                  children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    "div",
-                    {
-                      style: {
-                        width: "640px",
-                        transform: effectiveScale !== 1 ? `scale(${effectiveScale})` : void 0,
-                        transformOrigin: "top center"
-                      },
-                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-                        CbeOfficialPdfReceipt,
-                        {
-                          receiptData,
-                          qrCodeDataUrl,
-                          activeStamp: rasterizedPdfStampPng || pdfActiveStamp,
-                          stampWeight: pdfStampWeight,
-                          stampSize: pdfStampSize,
-                          stampPosition: pdfStampPosition,
-                          customPdfLogo,
-                          isPreview: true,
-                          tableRef: pdfTableRef,
-                          isEditingStampPosition: isEditingStampPosition && viewMode === "pdf",
-                          isDraggingStamp,
-                          onStampPointerDown: handleStampPointerDown,
-                          onStampClick: handleStampClick,
-                          onStampDoubleClick: handleStampDoubleClick,
-                          onStampTouchEnd: handleStampTouchEnd
-                        }
-                      )
-                    }
-                  )
-                }
-              )
-            }
-          ),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "fixed bottom-[max(env(safe-area-inset-bottom,0px),16px)] inset-x-0 flex items-center justify-center gap-2 z-30 pointer-events-auto px-4", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsxs(
-              "button",
-              {
-                type: "button",
-                onClick: () => setViewMode("web"),
-                className: "bg-neutral-900/95 hover:bg-neutral-800 text-white font-semibold text-xs py-2 px-4 rounded-full shadow-2xl border border-white/20 flex items-center gap-1.5 transition active:scale-95 cursor-pointer backdrop-blur-md",
-                children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "w-3.5 h-3.5 text-purple-400" }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Back to Web Receipt" })
-                ]
-              }
-            ),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs(
-              "button",
-              {
-                type: "button",
-                onClick: () => handleDownloadPdf(),
-                disabled: isDownloading,
-                className: "bg-[#781d77] hover:bg-[#70189F] text-white font-bold text-xs py-2 px-4 rounded-full shadow-2xl flex items-center gap-1.5 transition active:scale-95 cursor-pointer disabled:opacity-75",
-                children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(Download, { className: "w-3.5 h-3.5" }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: isDownloading ? "Saving..." : "Save PDF" })
-                ]
-              }
-            )
-          ] })
-        ] }) : (
-          /* Web Receipt Mode */
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx("main", { className: "w-full flex-1 overflow-y-auto px-2 pt-2.5 pb-[max(env(safe-area-inset-bottom,0px),96px)] bg-[#f0f2f5] flex justify-center", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
-              "div",
-              {
-                ref: receiptCardRef,
-                className: `bg-white w-full max-w-[460px] shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-gray-200/90 rounded-2xl overflow-hidden text-gray-900 self-start transition-opacity ${isRefreshing ? "opacity-40 scale-[0.99]" : "opacity-100"}`,
-                style: { fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' },
-                children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-[#781d77] relative px-3 py-3.5 sm:px-4 sm:py-4 rounded-t-2xl flex items-center justify-center min-h-[76px] overflow-hidden", children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-12 sm:h-12 shrink-0 flex items-center justify-center select-none", children: /* @__PURE__ */ jsxRuntimeExports.jsx(CbeLogo, { className: "w-11 h-11 sm:w-12 sm:h-12 object-contain", src: adminLogo }) }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-center px-12 sm:px-14 select-none", children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("h1", { className: "text-white font-bold text-[17.5px] sm:text-[19px] leading-tight tracking-tight whitespace-nowrap", children: "Commercial Bank of Ethiopia" }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-white text-[13.5px] sm:text-[14px] font-normal leading-tight mt-1 whitespace-nowrap", children: "Customer Receipt" }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[#86efac] font-bold text-[10.5px] sm:text-[11px] tracking-[0.16em] uppercase mt-1 whitespace-nowrap", children: "Status: COMPLETED" })
-                    ] })
-                  ] }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "p-3 sm:p-4", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-2 gap-3 sm:gap-4 text-[11px] leading-[1.38]", children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-0.5 text-[#111827]", children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("h2", { className: "font-bold text-black text-[12px] leading-tight pb-1 mb-1 border-b border-gray-200", children: [
-                        "Company Address & Other",
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("br", {}),
-                        "Information"
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "Country:" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "Ethiopia" })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "City:" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "Addis Ababa" })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex flex-col", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "Address: Ras Desta Damtew" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "St, 01, Kirkos" })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "Postal code:" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "255" })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "SWIFT Code:" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "CBETETAA" })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "Email:" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black truncate", children: "info@cbe.com.et" })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "Tel:" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "+251-551-50-04" })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "Fax:" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "+251-551-45-22" })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "Tin:" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "0000006966" })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-baseline", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "VAT Receipt" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: receiptData.refId })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-gray-700 font-normal -mt-0.5", children: "No:" }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "VAT Registration No:" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "011140" })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-baseline", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "VAT Registration" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "01/01/2003" })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-gray-700 font-normal -mt-0.5", children: "Date:" })
-                    ] }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-0.5 text-black", children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "font-bold text-black text-[12px] leading-tight pb-1 mb-1 border-b border-gray-200", children: "Customer Information" }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-start", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal shrink-0", children: "Customer" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black leading-tight max-w-[130px]", children: receiptData.customerName })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-gray-700 font-normal -mt-0.5", children: "Name:" }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "Region:" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "-" })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "City:" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "-" })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "Sub City:" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "-" })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "Wereda/Kebele:" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "-" })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "VAT Registration No:" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "-" })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "VAT Registration Date:" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "-" })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "TIN (TAX ID):" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "-" })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-700 font-normal", children: "Branch:" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-normal text-right text-black", children: "-" })
-                      ] })
-                    ] })
-                  ] }) }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "p-3 sm:p-4 relative", children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "border border-[#d1d5db] rounded-t-md bg-white py-1.5 px-3", children: /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { className: "text-center font-bold text-black text-[13px] sm:text-[13.5px]", children: "Payment / Transaction Informations" }) }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { ref: transactionTableRef, className: "border-x border-b border-[#d1d5db] rounded-b-md overflow-hidden text-[11.5px] leading-tight relative", children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center px-3 py-2 border-b border-gray-200", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-800 font-normal", children: "Payer:" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-black font-normal text-right", children: receiptData.payerName })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center px-3 py-2 border-b border-gray-200", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-800 font-normal", children: "Account:" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-black font-normal text-right", children: receiptData.payerAccount })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center px-3 py-2 border-b border-gray-200", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-800 font-normal", children: "Receiver:" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-black font-normal text-right", children: receiptData.receiverName })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center px-3 py-2 border-b border-gray-200", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-800 font-normal", children: "Account:" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-black font-normal text-right", children: receiptData.receiverAccount })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center px-3 py-2 border-b border-gray-200", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-800 font-normal", children: "Payment Type:" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-black font-normal text-right", children: receiptData.paymentType })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center px-3 py-2 border-b border-gray-200", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-800 font-normal", children: "Payment Date & Time:" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-black font-normal text-right", children: receiptData.paymentDate })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center px-3 py-2 border-b border-gray-200", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-gray-800 font-normal leading-tight", children: [
-                          "Reference No. (VAT Invoice",
-                          /* @__PURE__ */ jsxRuntimeExports.jsx("br", {}),
-                          "No):"
-                        ] }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-black font-normal text-right self-center", children: receiptData.refId })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center px-3 py-2 border-b border-gray-200", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-800 font-normal", children: "Reason / Type of service:" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-black font-normal text-right", children: receiptData.reason })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center px-3 py-2 border-b border-gray-200", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-800 font-normal", children: "Transferred Amount:" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-black font-normal text-right", children: [
-                          (Number(receiptData.amount) || 0).toFixed(2),
-                          " ETB"
-                        ] })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center px-3 py-2 border-b border-gray-200", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-800 font-normal", children: "Service Charge:" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-black font-normal text-right", children: [
-                          (Number(receiptData.serviceCharge) || 0).toFixed(2),
-                          " ETB"
-                        ] })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center px-3 py-2 border-b border-gray-200", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-gray-800 font-normal", children: "VAT (15% of service charge):" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-black font-normal text-right", children: [
-                          (Number(receiptData.vat) || 0).toFixed(2),
-                          " ETB"
-                        ] })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center px-3 py-2 border-b border-gray-200", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-gray-800 font-normal leading-tight", children: [
-                          "Disaster Risk Response Fund",
-                          /* @__PURE__ */ jsxRuntimeExports.jsx("br", {}),
-                          "(5% of service charge):"
-                        ] }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "text-black font-normal text-right self-center", children: [
-                          (Number(receiptData.disasterRecovery) || 0).toFixed(2),
-                          " ETB"
-                        ] })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex justify-between items-center px-3 py-2.5 bg-white", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-bold text-black text-[12px] sm:text-[12.5px] max-w-[200px] leading-snug", children: "Total amount debited from customer's account:" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { className: "font-bold text-black text-right text-[12.5px] sm:text-[13px] self-center", children: [
-                          (Number(receiptData.totalDebited) || 0).toFixed(2),
-                          " ETB"
-                        ] })
-                      ] }),
-                      webActiveStamp && /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                        "div",
-                        {
-                          id: "cbe-stamp-container",
-                          onPointerDown: isEditingStampPosition && viewMode === "web" ? handleStampPointerDown : void 0,
-                          onClick: handleStampClick,
-                          onDoubleClick: handleStampDoubleClick,
-                          onTouchEnd: handleStampTouchEnd,
-                          className: `absolute select-none z-20 shrink-0 touch-none transition-all ${isEditingStampPosition && viewMode === "web" ? "cursor-grab active:cursor-grabbing ring-2 ring-purple-600 ring-offset-2 ring-offset-white rounded-full" : "cursor-pointer hover:ring-2 hover:ring-purple-400/60 hover:ring-offset-1 rounded-full"}`,
-                          style: {
-                            top: `${webStampPosition.yPercent}%`,
-                            left: `${webStampPosition.xPercent}%`,
-                            transform: "translate(-50%, -50%)",
-                            width: `${webStampSize}px`,
-                            height: `${webStampSize}px`,
-                            maxWidth: "min(98vw, 490px)",
-                            maxHeight: "min(98vw, 490px)",
-                            aspectRatio: "1 / 1"
-                          },
-                          title: isEditingStampPosition && viewMode === "web" ? "Drag stamp to position anywhere" : "Double-tap stamp to rearrange position",
-                          children: [
-                            /* @__PURE__ */ jsxRuntimeExports.jsx(
-                              "img",
-                              {
-                                src: webActiveStamp,
-                                alt: "Official Bank Stamp",
-                                draggable: false,
-                                className: "w-full h-full object-contain pointer-events-none select-none transition-all duration-150",
-                                style: {
-                                  transform: "rotate(-13deg)",
-                                  opacity: webStampWeight === "light" ? 0.88 : webStampWeight === "normal" ? 0.96 : 1
-                                }
-                              }
-                            ),
-                            isEditingStampPosition && viewMode === "web" && /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                              "div",
-                              {
-                                "data-html2canvas-ignore": "true",
-                                className: "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-purple-700/90 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-xl flex items-center gap-1.5 pointer-events-none border border-white/40 backdrop-blur-xs whitespace-nowrap animate-in fade-in zoom-in-90 duration-150",
-                                children: [
-                                  /* @__PURE__ */ jsxRuntimeExports.jsx(Move, { className: "w-3.5 h-3.5 text-amber-300" }),
-                                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: isDraggingStamp ? "Moving..." : "Drag to Move" })
-                                ]
-                              }
-                            )
-                          ]
-                        }
-                      )
-                    ] }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-3.5 bg-white border border-[#d1d5db] rounded-xl overflow-hidden shadow-xs", children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-[#f8f9fa] pt-3 pb-3.5 px-3.5 text-center border-b border-gray-200/70", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "font-bold text-black text-[12px] sm:text-[12.5px]", children: "Amount in Word:" }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "text-[#1f2937] text-[11.5px] sm:text-[12px] font-normal mt-1 leading-relaxed max-w-[340px] mx-auto", children: receiptData.words })
-                      ] }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "py-4 px-3 flex flex-col items-center justify-center bg-white", children: qrCodeDataUrl ? /* @__PURE__ */ jsxRuntimeExports.jsx(
-                        "img",
-                        {
-                          src: qrCodeDataUrl,
-                          alt: "Official CBE Receipt QR",
-                          className: "w-24 h-24 sm:w-26 sm:h-26 object-contain block"
-                        }
-                      ) : /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-24 h-24 sm:w-26 sm:h-26 bg-gray-100 animate-pulse" }) })
-                    ] }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-full border-t border-gray-200 mt-4 mb-3" }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-center pb-2", children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-[#781d77] font-bold text-[12px]", children: "The Bank you can always rely on." }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-gray-500 text-[10px] mt-0.5", children: "© 2026 Commercial Bank of Ethiopia. All rights reserved." })
-                    ] })
-                  ] })
-                ]
-              }
-            ) }),
-            /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "fixed bottom-[max(env(safe-area-inset-bottom,0px),16px)] inset-x-0 flex flex-col items-center gap-1.5 z-20 pointer-events-auto px-4", children: [
-              downloadError && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bg-red-900/90 border border-red-500 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg max-w-sm text-center", children: downloadError }),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
-                "button",
-                {
-                  type: "button",
-                  onClick: handleOpenPdfView,
-                  className: "bg-[#781d77] hover:bg-[#70189F] active:bg-[#580f68] text-white font-semibold text-[13px] sm:text-[13.5px] py-2 px-7 rounded-xl shadow-lg shadow-purple-950/25 flex items-center justify-center transition active:scale-95 cursor-pointer",
-                  children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Download PDF" })
-                }
-              )
-            ] }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(
-              "div",
-              {
-                "data-html2canvas-ignore": "true",
-                className: "fixed bottom-0 inset-x-0 h-[max(env(safe-area-inset-bottom,0px),0px)] bg-white pointer-events-none z-30"
-              }
-            )
-          ] })
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "div",
-          {
-            id: "cbe-official-pdf-render-canvas",
-            style: {
-              position: "fixed",
-              top: 0,
-              left: 0,
-              width: "640px",
-              zIndex: -100,
-              pointerEvents: "none",
-              opacity: 1,
-              backgroundColor: "#ffffff",
-              overflow: "hidden"
-            },
-            "aria-hidden": "true",
-            children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-              CbeOfficialPdfReceipt,
-              {
-                ref: pdfTemplateRef,
-                receiptData,
-                qrCodeDataUrl,
-                activeStamp: rasterizedPdfStampPng || pdfActiveStamp,
-                stampWeight: pdfStampWeight,
-                stampSize: pdfStampSize,
-                stampPosition: pdfStampPosition,
-                customPdfLogo
-              }
-            )
-          }
-        ),
-        isEditingStampPosition && /* @__PURE__ */ jsxRuntimeExports.jsxs(
-          "div",
-          {
-            id: "stamp-position-toolbar",
-            "data-html2canvas-ignore": "true",
-            onClick: (e) => e.stopPropagation(),
-            className: "fixed bottom-[max(env(safe-area-inset-bottom,0px),16px)] inset-x-3 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-50 bg-[#171922]/95 backdrop-blur-md border border-purple-500/60 text-white rounded-2xl p-3 sm:p-3.5 shadow-2xl flex flex-col gap-2.5 max-w-sm sm:max-w-md w-full animate-in fade-in slide-in-from-bottom-3 duration-200 select-none",
-            children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between pb-2 border-b border-neutral-700/80", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-6 h-6 rounded-full bg-purple-600/30 border border-purple-400 flex items-center justify-center text-purple-300", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Move, { className: "w-3.5 h-3.5" }) }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-xs font-bold text-white flex items-center gap-1.5", children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
-                        "Rearrange ",
-                        viewMode === "pdf" ? "PDF" : "Web",
-                        " Stamp Position"
-                      ] }),
-                      hasUnsavedStampPos && /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[9px] bg-amber-500/20 text-amber-300 px-1.5 py-0.2 rounded font-semibold border border-amber-500/30", children: "Unsaved" })
-                    ] }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "text-[10px] text-neutral-300", children: [
-                      "Drag ",
-                      viewMode === "pdf" ? "PDF" : "web",
-                      " stamp anywhere (saved for all receipts)"
-                    ] })
-                  ] })
-                ] }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx(
-                  "button",
-                  {
-                    type: "button",
-                    onClick: () => setIsEditingStampPosition(false),
-                    className: "p-1 rounded-full text-neutral-400 hover:text-white hover:bg-neutral-800 transition cursor-pointer",
-                    title: "Close editor",
-                    children: /* @__PURE__ */ jsxRuntimeExports.jsx(X, { className: "w-4 h-4" })
-                  }
-                )
-              ] }),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center justify-between bg-neutral-800/80 rounded-xl px-3 py-2 border border-neutral-700/60 text-xs", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1 font-mono text-[11px] text-purple-300", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
-                    "X: ",
-                    (viewMode === "pdf" ? pdfStampPosition : webStampPosition).xPercent,
-                    "%"
-                  ] }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-neutral-500", children: "•" }),
-                  /* @__PURE__ */ jsxRuntimeExports.jsxs("span", { children: [
-                    "Y: ",
-                    (viewMode === "pdf" ? pdfStampPosition : webStampPosition).yPercent,
-                    "%"
-                  ] })
-                ] }),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-1", children: [
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    "button",
-                    {
-                      type: "button",
-                      onClick: () => handleNudgeStamp(-2, 0),
-                      className: "w-7 h-7 bg-neutral-700 hover:bg-neutral-600 active:bg-neutral-500 rounded flex items-center justify-center text-neutral-200 transition active:scale-95 cursor-pointer",
-                      title: "Nudge Left",
-                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowLeft, { className: "w-3.5 h-3.5" })
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    "button",
-                    {
-                      type: "button",
-                      onClick: () => handleNudgeStamp(0, -2),
-                      className: "w-7 h-7 bg-neutral-700 hover:bg-neutral-600 active:bg-neutral-500 rounded flex items-center justify-center text-neutral-200 transition active:scale-95 cursor-pointer",
-                      title: "Nudge Up",
-                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowUp, { className: "w-3.5 h-3.5" })
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    "button",
-                    {
-                      type: "button",
-                      onClick: () => handleNudgeStamp(0, 2),
-                      className: "w-7 h-7 bg-neutral-700 hover:bg-neutral-600 active:bg-neutral-500 rounded flex items-center justify-center text-neutral-200 transition active:scale-95 cursor-pointer",
-                      title: "Nudge Down",
-                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowDown, { className: "w-3.5 h-3.5" })
-                    }
-                  ),
-                  /* @__PURE__ */ jsxRuntimeExports.jsx(
-                    "button",
-                    {
-                      type: "button",
-                      onClick: () => handleNudgeStamp(2, 0),
-                      className: "w-7 h-7 bg-neutral-700 hover:bg-neutral-600 active:bg-neutral-500 rounded flex items-center justify-center text-neutral-200 transition active:scale-95 cursor-pointer",
-                      title: "Nudge Right",
-                      children: /* @__PURE__ */ jsxRuntimeExports.jsx(ArrowRight, { className: "w-3.5 h-3.5" })
-                    }
-                  )
-                ] })
-              ] }),
-              /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "grid grid-cols-3 gap-2 pt-0.5", children: [
-                /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                  "button",
-                  {
-                    type: "button",
-                    onClick: handleSaveStampPosition,
-                    className: "col-span-1 py-1.5 px-2 rounded-xl bg-purple-600 hover:bg-purple-500 active:bg-purple-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-purple-600/30 transition active:scale-95 cursor-pointer",
-                    children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(Save, { className: "w-3.5 h-3.5" }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Save" })
-                    ]
-                  }
-                ),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                  "button",
-                  {
-                    type: "button",
-                    onClick: handleResetStampPosition,
-                    className: "col-span-1 py-1.5 px-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white text-xs font-semibold flex items-center justify-center gap-1.5 border border-neutral-700 transition active:scale-95 cursor-pointer",
-                    children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(RotateCcw, { className: "w-3 h-3 text-neutral-400" }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Center" })
-                    ]
-                  }
-                ),
-                /* @__PURE__ */ jsxRuntimeExports.jsxs(
-                  "button",
-                  {
-                    type: "button",
-                    onClick: () => {
-                      if (hasUnsavedStampPos) handleSaveStampPosition();
-                      setIsEditingStampPosition(false);
-                    },
-                    className: "col-span-1 py-1.5 px-2 rounded-xl bg-neutral-750 hover:bg-neutral-700 text-white text-xs font-semibold flex items-center justify-center gap-1.5 border border-neutral-700 transition active:scale-95 cursor-pointer",
-                    children: [
-                      /* @__PURE__ */ jsxRuntimeExports.jsx(Check, { className: "w-3.5 h-3.5 text-emerald-400" }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Done" })
-                    ]
-                  }
-                )
-              ] })
-            ]
-          }
-        ),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(
-          "div",
-          {
-            "data-html2canvas-ignore": "true",
-            className: "fixed bottom-0 inset-x-0 h-[max(env(safe-area-inset-bottom,0px),0px)] bg-white pointer-events-none z-30"
-          }
-        )
-      ]
-    }
-  );
-};
 function loadImage(src) {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -62636,14 +63296,14 @@ async function renderAuthenticReceiptToCanvas(options) {
   ]);
   ctx.fillStyle = "#ffffff";
   ctx.fillRect(0, 0, width, height);
-  const topPurplePadding = 52 * scale;
+  const topPurplePadding = 70 * scale;
   const shieldSize = 34 * scale;
   const shieldX = 20 * scale;
-  const shieldY = topPurplePadding;
-  const headerBottomPadding = 48 * scale;
-  const sheetTop = shieldY + shieldSize + headerBottomPadding;
+  const shieldY = topPurplePadding + 2 * scale;
+  const headerBottomPadding = 41 * scale;
+  const sheetTop = topPurplePadding + 40 * scale + headerBottomPadding;
   const cornerRadius = 38 * scale;
-  ctx.fillStyle = "#70189F";
+  ctx.fillStyle = "#7A1FA2";
   ctx.fillRect(0, 0, width, sheetTop + cornerRadius);
   ctx.save();
   ctx.translate(shieldX, shieldY);
@@ -62652,22 +63312,22 @@ async function renderAuthenticReceiptToCanvas(options) {
   ctx.fillStyle = "#ffffff";
   ctx.fill(shieldPath);
   const shieldCheckmarkPath = new Path2D("M8.0 12.2L11.0 15.2L17.2 9.0");
-  ctx.strokeStyle = "#70189F";
+  ctx.strokeStyle = "#7A1FA2";
   ctx.lineWidth = 1.9;
   ctx.lineCap = "butt";
   ctx.lineJoin = "miter";
   ctx.miterLimit = 4;
   ctx.stroke(shieldCheckmarkPath);
   ctx.restore();
-  const fontSans = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+  const fontSans = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif';
   ctx.fillStyle = "#ffffff";
-  ctx.font = `bold ${17 * scale}px ${fontSans}`;
+  ctx.font = `bold ${18 * scale}px ${fontSans}`;
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
-  ctx.fillText("Thank you", shieldX + shieldSize + 10 * scale, shieldY + 17 * scale);
-  ctx.fillStyle = "rgba(255, 255, 255, 0.88)";
-  ctx.font = `normal ${12.5 * scale}px ${fontSans}`;
-  ctx.fillText("Success", shieldX + shieldSize + 10 * scale, shieldY + 32 * scale);
+  ctx.fillText("Thank you", shieldX + shieldSize + 10 * scale, shieldY + 18 * scale);
+  ctx.fillStyle = "#FFD9FF";
+  ctx.font = `normal ${13 * scale}px ${fontSans}`;
+  ctx.fillText("Success", shieldX + shieldSize + 10 * scale, shieldY + 36 * scale);
   ctx.fillStyle = "#ffffff";
   roundRect(ctx, 0, sheetTop, width, height - sheetTop + 20 * scale, [cornerRadius, cornerRadius, 0, 0]);
   ctx.fill();
@@ -62677,7 +63337,7 @@ async function renderAuthenticReceiptToCanvas(options) {
   ctx.save();
   ctx.beginPath();
   ctx.arc(badgeCenterX, badgeCenterY, badgeRadius, 0, Math.PI * 2);
-  ctx.fillStyle = "#70189F";
+  ctx.fillStyle = "#7A1FA2";
   ctx.fill();
   ctx.lineWidth = 6 * scale;
   ctx.strokeStyle = "#ffffff";
@@ -62692,14 +63352,16 @@ async function renderAuthenticReceiptToCanvas(options) {
   ctx.miterLimit = 4;
   ctx.stroke(badgeCheckmark);
   ctx.restore();
-  const headlineY = sheetTop + 54 * scale;
-  ctx.fillStyle = "#111827";
-  ctx.font = `500 ${16 * scale}px ${fontSans}`;
+  const badgeBottom = badgeCenterY + badgeRadius + 3 * scale;
+  const headlineTop = badgeBottom + 12 * scale;
+  const headlineBaseline = headlineTop + 11 * scale;
+  ctx.fillStyle = "#111113";
+  ctx.font = `500 ${13.5 * scale}px ${fontSans}`;
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
-  ctx.fillText("Transaction Completed Successfully!", width / 2, headlineY);
-  const cardMarginX = 16 * scale;
-  const cardTop = headlineY + 16 * scale;
+  ctx.fillText("Transaction Completed Successfully!", width / 2, headlineBaseline);
+  const cardMarginX = 20 * scale;
+  const cardTop = badgeBottom + 40 * scale;
   const cardWidth = width - cardMarginX * 2;
   const cardPadX = 18 * scale;
   const cardPadY = 18 * scale;
@@ -62735,11 +63397,11 @@ async function renderAuthenticReceiptToCanvas(options) {
       { text: ` Reason: ${reason} Total Amount Debited: ETB${totalDebitedFormatted} with Service Charge of ETB${serviceChargeFormatted}, VAT (15%) of ETB${vatFormatted} and Disaster Recovery (5%) of ETB${disasterRecoveryFormatted}.`, bold: false }
     );
   }
-  const regularFont = `400 ${14.5 * scale}px ${fontSans}`;
-  const boldFont = `bold ${14.5 * scale}px ${fontSans}`;
-  const lineHeight = 24 * scale;
+  const regularFont = `400 ${14 * scale}px ${fontSans}`;
+  const boldFont = `bold ${14 * scale}px ${fontSans}`;
+  const lineHeight = 22.4 * scale;
   if ("letterSpacing" in ctx) {
-    ctx.letterSpacing = `${0.15 * scale}px`;
+    ctx.letterSpacing = `${0.12 * scale}px`;
   }
   const words = [];
   for (const token of tokens) {
@@ -62779,33 +63441,36 @@ async function renderAuthenticReceiptToCanvas(options) {
     lines.push(currentLine);
   }
   const paragraphHeight = lines.length * lineHeight;
-  const summaryTitleY = cardTop + cardPadY + 12 * scale;
-  const paragraphStartY = summaryTitleY + 14 * scale;
-  const qrBoxTop = paragraphStartY + paragraphHeight + 3 * scale;
+  const summaryTitleY = cardTop + cardPadY + 11 * scale;
+  const paragraphGap = 16 * scale;
+  const paragraphStartY = summaryTitleY + paragraphGap;
+  const qrBoxGap = 10 * scale;
+  const qrBoxTop = paragraphStartY + paragraphHeight + qrBoxGap;
   const qrBoxSize = 130 * scale;
   const qrBoxX = (width - qrBoxSize) / 2;
   const qrImgSize = 114 * scale;
   const qrImgOffset = (qrBoxSize - qrImgSize) / 2;
-  const footerY = qrBoxTop + qrBoxSize + 5 * scale;
-  const footerLogoSize = 42 * scale;
-  const cardBottomPadding = 18 * scale;
+  const footerGap = 12 * scale;
+  const footerY = qrBoxTop + qrBoxSize + footerGap;
+  const footerLogoSize = 40 * scale;
+  const cardBottomPadding = 20 * scale;
   const cardHeight = footerY + footerLogoSize + cardBottomPadding - cardTop;
   ctx.save();
-  ctx.shadowColor = "rgba(0, 0, 0, 0.08)";
-  ctx.shadowBlur = 24 * scale;
+  ctx.shadowColor = "rgba(0, 0, 0, 0.09)";
+  ctx.shadowBlur = 20 * scale;
   ctx.shadowOffsetY = 6 * scale;
-  ctx.fillStyle = "#f2f3f5";
-  roundRect(ctx, cardMarginX, cardTop, cardWidth, cardHeight, 26 * scale);
+  ctx.fillStyle = "#f2f2f2";
+  roundRect(ctx, cardMarginX, cardTop, cardWidth, cardHeight, 24 * scale);
   ctx.fill();
   ctx.restore();
   ctx.save();
   ctx.strokeStyle = "rgba(0, 0, 0, 0.04)";
   ctx.lineWidth = 1 * scale;
-  roundRect(ctx, cardMarginX, cardTop, cardWidth, cardHeight, 26 * scale);
+  roundRect(ctx, cardMarginX, cardTop, cardWidth, cardHeight, 24 * scale);
   ctx.stroke();
   ctx.restore();
-  ctx.fillStyle = "#8e8e93";
-  ctx.font = `normal ${13.5 * scale}px ${fontSans}`;
+  ctx.fillStyle = "#929292";
+  ctx.font = `normal ${12.5 * scale}px ${fontSans}`;
   ctx.textAlign = "left";
   ctx.fillText("Transaction Summary", textStartX, summaryTitleY);
   let lineY = paragraphStartY + 12 * scale;
@@ -62813,7 +63478,7 @@ async function renderAuthenticReceiptToCanvas(options) {
     let lineX = textStartX;
     for (const item of line.tokens) {
       ctx.font = item.bold ? boldFont : regularFont;
-      ctx.fillStyle = item.bold ? "#000000" : "#1f2937";
+      ctx.fillStyle = item.bold ? "#000000" : "#111111";
       ctx.fillText(item.word, lineX, lineY);
       lineX += item.width;
     }
@@ -62824,35 +63489,35 @@ async function renderAuthenticReceiptToCanvas(options) {
   roundRect(ctx, qrBoxX, qrBoxTop, qrBoxSize, qrBoxSize, 18 * scale);
   ctx.fill();
   ctx.lineWidth = 2 * scale;
-  ctx.strokeStyle = "#737373";
+  ctx.strokeStyle = "#7d7d7d";
   ctx.stroke();
   if (qrImg.complete && qrImg.naturalWidth > 0) {
     ctx.drawImage(qrImg, qrBoxX + qrImgOffset, qrBoxTop + qrImgOffset, qrImgSize, qrImgSize);
   }
   ctx.restore();
-  const footerTitleFont = `bold ${15 * scale}px ${fontSans}`;
-  const footerSloganFont = `normal ${12.5 * scale}px ${fontSans}`;
-  const footerGap = 12 * scale;
+  const footerTitleFont = `bold ${14 * scale}px ${fontSans}`;
+  const footerSloganFont = `normal ${12 * scale}px ${fontSans}`;
+  const footerHorizontalGap = 12 * scale;
   const footerX = textStartX;
   if (logoImg.complete && logoImg.naturalWidth > 0) {
     ctx.drawImage(logoImg, footerX, footerY, footerLogoSize, footerLogoSize);
   }
-  const footerTextX = footerX + footerLogoSize + footerGap;
-  ctx.fillStyle = "#1f2937";
+  const footerTextX = footerX + footerLogoSize + footerHorizontalGap;
+  ctx.fillStyle = "#353535";
   ctx.font = footerTitleFont;
   ctx.textAlign = "left";
   if ("letterSpacing" in ctx) {
     ctx.letterSpacing = "0px";
   }
-  ctx.fillText("Commercial Bank of Ethiopia", footerTextX, footerY + 18 * scale);
-  ctx.fillStyle = "#6b7280";
+  ctx.fillText("Commercial Bank of Ethiopia", footerTextX, footerY + 17 * scale);
+  ctx.fillStyle = "#575757";
   ctx.font = footerSloganFont;
-  ctx.fillText("The bank you can always rely on!", footerTextX, footerY + 34 * scale);
-  if (options.isIPhone) {
-    const bottomBarHeight = 64 * scale;
-    ctx.fillStyle = "#f4f5f7";
+  ctx.fillText("The bank you can always rely on!", footerTextX, footerY + 32 * scale);
+  if (options.addGrayBottomStrip ?? true) {
+    const bottomBarHeight = 58 * scale;
+    ctx.fillStyle = "#f0f1f4";
     ctx.fillRect(0, height - bottomBarHeight, width, bottomBarHeight);
-    ctx.fillStyle = "#edf0f3";
+    ctx.fillStyle = "#e2e4e8";
     ctx.fillRect(0, height - bottomBarHeight, width, 1 * scale);
   }
   return canvas2.toDataURL("image/png", 1);
@@ -62898,6 +63563,7 @@ function Receipt({ transaction, onBack }) {
   const [isCapturing, setIsCapturing] = reactExports.useState(false);
   const [flashAnimation, setFlashAnimation] = reactExports.useState(false);
   const [isIPhone, setIsIPhone] = reactExports.useState(() => PhoneSettingsService.isIPhoneMode() || PhoneSettingsService.isIPhoneDevice() || checkIsIOS());
+  const [showIosPhotoPreview, setShowIosPhotoPreview] = reactExports.useState(false);
   reactExports.useEffect(() => {
     return PhoneSettingsService.subscribe(() => {
       setIsIPhone(PhoneSettingsService.isIPhoneMode() || PhoneSettingsService.isIPhoneDevice() || checkIsIOS());
@@ -63142,6 +63808,9 @@ function Receipt({ transaction, onBack }) {
   reactExports.useEffect(() => {
     getAuthenticCbeQrPngDataUrl(txId, 450).then((url) => setQrDataUrl(url)).catch((err) => console.error("QR code generation failed:", err));
   }, [txId]);
+  reactExports.useEffect(() => {
+    setCapturedScreenshotUrl(null);
+  }, [txId, customQrCode, qrDataUrl, customBankLogo]);
   const triggerDirectDownload = (dataUrl, targetTxId) => {
     if (checkIsIOS() || isIPhone || PhoneSettingsService.isIPhoneDevice()) return;
     try {
@@ -63174,8 +63843,17 @@ function Receipt({ transaction, onBack }) {
       setFlashAnimation(true);
       setTimeout(() => setFlashAnimation(false), 250);
       const qrUrl = customQrCode || qrDataUrl || txQrSvgDataUri;
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
       let dataUrl = null;
-      if (isIos) {
+      const liveElement = receiptRef.current || screenshotExportRef.current;
+      if (liveElement) {
+        try {
+          dataUrl = await captureReceiptElement(liveElement, { addGrayBottomStrip: true });
+        } catch (captureErr) {
+          console.warn("[Screenshot] Live DOM capture fallback to canvas:", captureErr);
+        }
+      }
+      if (!dataUrl) {
         dataUrl = await renderAuthenticReceiptToCanvas({
           transaction,
           amountFormatted,
@@ -63195,60 +63873,54 @@ function Receipt({ transaction, onBack }) {
           customBankLogo,
           targetWidth: screenshotDimensions.width,
           targetHeight: screenshotDimensions.height,
-          isIPhone: true
+          isIPhone: isIos,
+          addGrayBottomStrip: true
         });
-      } else {
-        await new Promise((r) => setTimeout(r, 60));
-        const element = screenshotExportRef.current || receiptRef.current;
-        if (element) {
-          try {
-            dataUrl = await captureReceiptElement(element);
-          } catch (captureErr) {
-            console.warn("[Screenshot] DOM capture fallback to canvas:", captureErr);
-          }
-        }
-        if (!dataUrl) {
-          dataUrl = await renderAuthenticReceiptToCanvas({
-            transaction,
-            amountFormatted,
-            senderName,
-            senderSuffix,
-            recipientName,
-            recipientSuffix,
-            formattedDate,
-            txId,
-            reason,
-            totalDebitedFormatted,
-            serviceChargeFormatted,
-            vatFormatted,
-            disasterRecoveryFormatted,
-            isCredit,
-            qrDataUrl: qrUrl,
-            customBankLogo,
-            targetWidth: screenshotDimensions.width,
-            targetHeight: screenshotDimensions.height,
-            isIPhone: false
-          });
-        }
       }
       if (dataUrl) {
         setCapturedScreenshotUrl(dataUrl);
         if (isIos) {
-          const blob = dataUrlToBlob(dataUrl);
+          const blob = dataUrlToBlob$1(dataUrl);
+          const filename = getSafeReceiptFilename(txId);
+          const file = new File([blob], filename, { type: "image/png" });
+          if (Capacitor.isNativePlatform()) {
+            try {
+              await saveAndShareReceiptImage(dataUrl, txId, false);
+              setCopiedToast("Screenshot saved to Photos");
+              setTimeout(() => setCopiedToast(null), 3e3);
+              return;
+            } catch (nativeSaveErr) {
+              console.warn("Native iOS photo save note:", nativeSaveErr);
+            }
+          }
+          let sharedSuccessfully = false;
+          if (typeof navigator !== "undefined" && navigator.canShare && navigator.canShare({ files: [file] })) {
+            setCopiedToast('Tap "Save Image" to save to Apple Photos 👇');
+            try {
+              await navigator.share({
+                files: [file],
+                title: "CBE Receipt"
+              });
+              sharedSuccessfully = true;
+              setCopiedToast("Screenshot saved to Apple Photos!");
+            } catch (shareErr) {
+              if ((shareErr == null ? void 0 : shareErr.name) === "AbortError") {
+                sharedSuccessfully = true;
+              } else {
+                console.warn("iOS share notice:", shareErr);
+              }
+            }
+          }
           if (typeof navigator !== "undefined" && navigator.clipboard && window.ClipboardItem) {
             try {
               await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
             } catch {
             }
           }
-          if (Capacitor.isNativePlatform()) {
-            try {
-              await saveAndShareReceiptImage(dataUrl, txId, false);
-            } catch (nativeSaveErr) {
-              console.warn("Native iOS photo save note:", nativeSaveErr);
-            }
+          if (!sharedSuccessfully) {
+            setShowIosPhotoPreview(true);
+            setCopiedToast("Touch & hold image to Save to Photos");
           }
-          setCopiedToast("Screenshot saved to gallery");
         } else {
           try {
             const result = await saveAndShareReceiptImage(dataUrl, txId, false);
@@ -63275,28 +63947,42 @@ function Receipt({ transaction, onBack }) {
     const summaryText = `ETB ${amount} has been debited from ${senderName} ${senderSuffix} for ${recipientName} ${recipientSuffix} on ${formattedDate} with transaction ID: ${txId}. Reason: ${reason}. Total Amount Debited: ${totalDebitedStr} ETB.`;
     try {
       const qrUrl = customQrCode || qrDataUrl || txQrSvgDataUri;
-      const dataUrl = capturedScreenshotUrl || await renderAuthenticReceiptToCanvas({
-        transaction,
-        amountFormatted,
-        senderName,
-        senderSuffix,
-        recipientName,
-        recipientSuffix,
-        formattedDate,
-        txId,
-        reason,
-        totalDebitedFormatted,
-        serviceChargeFormatted,
-        vatFormatted,
-        disasterRecoveryFormatted,
-        isCredit,
-        qrDataUrl: qrUrl,
-        customBankLogo,
-        targetWidth: screenshotDimensions.width,
-        targetHeight: screenshotDimensions.height,
-        isIPhone
-      });
-      const blob = dataUrlToBlob(dataUrl);
+      const isIosShare = checkIsIOS() || isIPhone || PhoneSettingsService.isIPhoneDevice();
+      let dataUrl = capturedScreenshotUrl;
+      if (!dataUrl) {
+        const liveElement = receiptRef.current || screenshotExportRef.current;
+        if (liveElement) {
+          try {
+            dataUrl = await captureReceiptElement(liveElement, { addGrayBottomStrip: true });
+          } catch {
+          }
+        }
+      }
+      if (!dataUrl) {
+        dataUrl = await renderAuthenticReceiptToCanvas({
+          transaction,
+          amountFormatted,
+          senderName,
+          senderSuffix,
+          recipientName,
+          recipientSuffix,
+          formattedDate,
+          txId,
+          reason,
+          totalDebitedFormatted,
+          serviceChargeFormatted,
+          vatFormatted,
+          disasterRecoveryFormatted,
+          isCredit,
+          qrDataUrl: qrUrl,
+          customBankLogo,
+          targetWidth: screenshotDimensions.width,
+          targetHeight: screenshotDimensions.height,
+          isIPhone,
+          addGrayBottomStrip: true
+        });
+      }
+      const blob = dataUrlToBlob$1(dataUrl);
       const filename = getSafeReceiptFilename(txId);
       const file = new File([blob], filename, { type: "image/png" });
       if (typeof navigator !== "undefined" && navigator.canShare && navigator.canShare({ files: [file] })) {
@@ -63393,7 +64079,7 @@ function Receipt({ transaction, onBack }) {
                   id: "cbe-existing-receipt",
                   className: "w-full flex-1 flex flex-col bg-white relative select-none h-full overflow-hidden min-h-0",
                   children: [
-                    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bg-[#70189F] pb-10 -mb-10 flex-shrink-0 relative z-10", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "pt-[max(calc(env(safe-area-inset-top,0px)+10px),16px)] pb-14 sm:pb-16 px-5 flex items-center justify-between text-white flex-shrink-0", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bg-[#7A1FA2] pb-10 -mb-10 flex-shrink-0 relative z-10", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "pt-[max(env(safe-area-inset-top,0px),70px)] pb-[41px] px-5 flex items-center justify-between text-white flex-shrink-0", children: [
                       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "flex items-center gap-2.5", children: [
                         /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-8.5 h-8.5 flex-shrink-0 flex items-center justify-center", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("svg", { className: "w-8.5 h-8.5 drop-shadow-xs", viewBox: "0 0 24 24", fill: "none", children: [
                           /* @__PURE__ */ jsxRuntimeExports.jsx(
@@ -63407,7 +64093,7 @@ function Receipt({ transaction, onBack }) {
                             "path",
                             {
                               d: "M8.0 12.2L11.0 15.2L17.2 9.0",
-                              stroke: "#70189F",
+                              stroke: "#7A1FA2",
                               strokeWidth: "1.9",
                               strokeLinecap: "butt",
                               strokeLinejoin: "miter",
@@ -63428,7 +64114,7 @@ function Receipt({ transaction, onBack }) {
                           /* @__PURE__ */ jsxRuntimeExports.jsx(
                             "p",
                             {
-                              className: "text-[13px] sm:text-[13.5px] text-purple-100/90 font-normal leading-snug mt-0.5 tracking-normal",
+                              className: "text-[13px] sm:text-[13.5px] text-[#FFD9FF] font-normal leading-snug mt-0.5 tracking-normal",
                               style: { fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' },
                               children: "Success"
                             }
@@ -63463,7 +64149,7 @@ function Receipt({ transaction, onBack }) {
                               fill: "none",
                               xmlns: "http://www.w3.org/2000/svg",
                               children: [
-                                /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "45", cy: "45", r: "41.5", stroke: "#ffffff", strokeWidth: "6", fill: "#70189F" }),
+                                /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "45", cy: "45", r: "41.5", stroke: "#ffffff", strokeWidth: "6", fill: "#7A1FA2" }),
                                 /* @__PURE__ */ jsxRuntimeExports.jsx(
                                   "path",
                                   {
@@ -63482,24 +64168,24 @@ function Receipt({ transaction, onBack }) {
                           )
                         }
                       ) }) }),
-                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-12 flex-shrink-0" })
+                      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "h-[45px] flex-shrink-0" })
                     ] }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: `bg-white -mt-px px-4 sm:px-5 ${hideUiElements ? "pb-12" : "pb-4"} flex-1 overflow-y-auto overscroll-contain scrollbar-none min-h-0`, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "space-y-4 pb-2", children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: `bg-white -mt-px px-5 ${hideUiElements ? "pb-12" : "pb-4"} flex-1 overflow-y-auto overscroll-contain scrollbar-none min-h-0`, children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "pb-2", children: [
                       /* @__PURE__ */ jsxRuntimeExports.jsx(
                         "h1",
                         {
-                          className: "text-center text-[16px] sm:text-[16.5px] font-medium text-[#111827] tracking-normal mt-1 mb-4.5",
+                          className: "text-center text-[13.5px] sm:text-[14px] font-medium text-[#111113] mt-3 mb-4 tracking-normal",
                           style: { fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif' },
                           children: "Transaction Completed Successfully!"
                         }
                       ),
-                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-[#f2f3f5] rounded-[26px] p-4.5 sm:p-5 border border-black/[0.04] shadow-[0_8px_24px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04)]", children: [
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-[#8e8e93] font-normal text-[13.5px] sm:text-[14px] mb-2", children: "Transaction Summary" }),
+                      /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "bg-[#f2f2f2] rounded-[24px] px-[18px] pt-[18px] pb-[20px] border border-[rgba(0,0,0,0.04)] shadow-[0_6px_20px_rgba(0,0,0,0.09),0_2px_6px_rgba(0,0,0,0.05)]", children: [
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-[#929292] font-normal text-[12.5px] sm:text-[13px] mb-3", children: "Transaction Summary" }),
                         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative mb-0 pb-0", children: [
                           isCredit ? /* @__PURE__ */ jsxRuntimeExports.jsxs(
                             "p",
                             {
-                              className: "text-[14.5px] sm:text-[15px] leading-[1.65] text-[#1f2937] font-normal select-text tracking-[0.012em] m-0 p-0",
+                              className: "text-[14px] sm:text-[14.5px] leading-[1.6] text-[#111111] font-normal select-text tracking-[0.01em] m-0 p-0",
                               style: {
                                 margin: 0,
                                 padding: 0,
@@ -63530,7 +64216,7 @@ function Receipt({ transaction, onBack }) {
                           ) : /* @__PURE__ */ jsxRuntimeExports.jsxs(
                             "p",
                             {
-                              className: "text-[14.5px] sm:text-[15px] leading-[1.65] text-[#1f2937] font-normal select-text tracking-[0.012em] m-0 p-0",
+                              className: "text-[14px] sm:text-[14.5px] leading-[1.6] text-[#111111] font-normal select-text tracking-[0.01em] m-0 p-0",
                               style: {
                                 margin: 0,
                                 padding: 0,
@@ -63573,17 +64259,16 @@ function Receipt({ transaction, onBack }) {
                             {
                               "data-screenshot-exclude": "true",
                               className: `absolute left-[52%] top-[55%] z-30 select-none pointer-events-none transition-opacity duration-400 ease-out animate-paid-stamp ${isFadingPaidBadge ? "opacity-0" : "opacity-100"}`,
-                              children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bg-[#70189F] text-white px-6 py-2 sm:px-7 sm:py-2.5 rounded-2xl shadow-xl shadow-purple-950/40 flex items-center justify-center border border-purple-400/25", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-black text-[22px] sm:text-[25px] tracking-wider text-white drop-shadow-sm select-none", children: "PAID" }) })
+                              children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "bg-[#7A1FA2] text-white px-6 py-2 sm:px-7 sm:py-2.5 rounded-2xl shadow-xl shadow-purple-950/40 flex items-center justify-center border border-purple-400/25", children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-black text-[22px] sm:text-[25px] tracking-wider text-white drop-shadow-sm select-none", children: "PAID" }) })
                             },
                             stampKey
                           )
                         ] }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex justify-center mb-0", style: { marginTop: "3px" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex justify-center mt-2.5 mb-0", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
                           "div",
                           {
                             id: "receipt-qr-container",
-                            className: "bg-white p-2 rounded-[18px] border-[2px] border-[#737373] shadow-xs inline-flex items-center justify-center select-none",
-                            style: { marginTop: "0px" },
+                            className: "bg-white p-2 rounded-[16px] border-[2px] border-[#7d7d7d] shadow-xs inline-flex items-center justify-center select-none",
                             children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-[114px] h-[114px] sm:w-[118px] sm:h-[118px] flex items-center justify-center", children: customQrCode ? /* @__PURE__ */ jsxRuntimeExports.jsx(
                               "img",
                               {
@@ -63626,7 +64311,7 @@ function Receipt({ transaction, onBack }) {
                             ) })
                           }
                         ) }),
-                        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex items-center w-full !mt-[5px] pt-0 pb-1 px-1", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                        /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "flex items-center w-full mt-3 pt-0 pb-0.5 px-0.5", children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
                           "div",
                           {
                             id: "cbe-receipt-bottom-bar",
@@ -63636,7 +64321,7 @@ function Receipt({ transaction, onBack }) {
                                 "div",
                                 {
                                   id: "cbe-receipt-logo-container",
-                                  className: "w-[42px] h-[42px] sm:w-[44px] sm:h-[44px] flex-shrink-0 flex items-center justify-center",
+                                  className: "w-[40px] h-[40px] sm:w-[42px] sm:h-[42px] flex-shrink-0 flex items-center justify-center",
                                   children: /* @__PURE__ */ jsxRuntimeExports.jsx(CbeLogo, { className: "w-full h-full object-contain", src: customBankLogo })
                                 }
                               ),
@@ -63644,7 +64329,7 @@ function Receipt({ transaction, onBack }) {
                                 /* @__PURE__ */ jsxRuntimeExports.jsx(
                                   "h4",
                                   {
-                                    className: "font-bold text-[#1f2937] text-[15px] sm:text-[15.5px] leading-tight whitespace-nowrap",
+                                    className: "font-bold text-[#353535] text-[14px] sm:text-[14.5px] leading-tight whitespace-nowrap",
                                     style: {
                                       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif'
                                     },
@@ -63654,7 +64339,7 @@ function Receipt({ transaction, onBack }) {
                                 /* @__PURE__ */ jsxRuntimeExports.jsx(
                                   "p",
                                   {
-                                    className: "text-[#6b7280] text-[12.5px] sm:text-[13px] font-normal leading-tight mt-0.5 whitespace-nowrap",
+                                    className: "text-[#575757] text-[12px] sm:text-[12.5px] font-normal leading-tight mt-0.5 whitespace-nowrap",
                                     style: {
                                       fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif'
                                     },
@@ -63738,7 +64423,14 @@ function Receipt({ transaction, onBack }) {
                   ]
                 }
               ),
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
+              hideUiElements && /* @__PURE__ */ jsxRuntimeExports.jsx(
+                "div",
+                {
+                  id: "cbe-live-gray-bottom-strip",
+                  className: "w-full h-[58px] min-h-[58px] bg-[#f0f1f4] border-t border-[#e2e4e8] flex-shrink-0"
+                }
+              ),
+              !hideUiElements && /* @__PURE__ */ jsxRuntimeExports.jsx(
                 "div",
                 {
                   "data-html2canvas-ignore": "true",
@@ -63748,12 +64440,12 @@ function Receipt({ transaction, onBack }) {
             ]
           }
         ),
-        hideUiElements && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { "data-html2canvas-ignore": "true", "data-screenshot-exclude": "true", className: "pt-4 pb-2 flex flex-col items-center justify-center shrink-0 bg-white", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+        hideUiElements && /* @__PURE__ */ jsxRuntimeExports.jsx("div", { "data-html2canvas-ignore": "true", "data-screenshot-exclude": "true", className: "fixed bottom-[68px] left-1/2 -translate-x-1/2 z-40 flex flex-col items-center justify-center shrink-0", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
           "button",
           {
             type: "button",
             onClick: toggleUiElements,
-            className: "text-xs text-neutral-500 hover:text-neutral-800 transition flex items-center gap-1.5 py-1.5 px-4 rounded-full bg-neutral-100 hover:bg-neutral-200 cursor-pointer shadow-2xs active:scale-95 font-medium",
+            className: "text-xs text-neutral-500 hover:text-neutral-800 transition flex items-center gap-1.5 py-1.5 px-4 rounded-full bg-neutral-100/95 hover:bg-neutral-200 cursor-pointer shadow-xs active:scale-95 font-medium whitespace-nowrap",
             children: /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Tap to show Close & Action controls" })
           }
         ) }),
@@ -63767,6 +64459,75 @@ function Receipt({ transaction, onBack }) {
             },
             initialQrCode: customQrCode || txQrSvgDataUri || qrDataUrl,
             onClose: () => setShowDetailedModal(false)
+          }
+        ),
+        showIosPhotoPreview && capturedScreenshotUrl && /* @__PURE__ */ jsxRuntimeExports.jsx(
+          "div",
+          {
+            "data-html2canvas-ignore": "true",
+            "data-screenshot-exclude": "true",
+            className: "fixed inset-0 z-[120] bg-black/60 backdrop-blur-md flex flex-col justify-end sm:justify-center items-center p-4 animate-in fade-in duration-200",
+            onClick: () => setShowIosPhotoPreview(false),
+            children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
+              "div",
+              {
+                className: "w-full max-w-sm bg-white rounded-3xl p-5 shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95 duration-200",
+                onClick: (e) => e.stopPropagation(),
+                children: [
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-12 h-1 bg-neutral-300 rounded-full mb-3 sm:hidden" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-11 h-11 rounded-full bg-purple-50 text-[#70189F] flex items-center justify-center mb-2.5", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Camera, { className: "w-6 h-6 stroke-[2.2]" }) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("h3", { className: "text-base font-bold text-gray-900 mb-1", children: "Save to Apple Photos" }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-xs text-gray-500 mb-3 px-2 leading-relaxed", children: [
+                    "Touch and hold the receipt image below, then tap ",
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("strong", { className: "text-gray-800", children: '"Save to Photos"' }),
+                    "."
+                  ] }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-full max-h-[300px] overflow-hidden rounded-2xl border border-gray-200 shadow-inner bg-gray-50 mb-4 flex items-center justify-center p-2", children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    "img",
+                    {
+                      src: capturedScreenshotUrl,
+                      alt: "Receipt Screenshot",
+                      className: "max-h-[280px] w-auto object-contain rounded-lg select-auto pointer-events-auto shadow-md"
+                    }
+                  ) }),
+                  /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-full flex flex-col gap-2", children: [
+                    typeof navigator !== "undefined" && "share" in navigator && /* @__PURE__ */ jsxRuntimeExports.jsxs(
+                      "button",
+                      {
+                        type: "button",
+                        onClick: async () => {
+                          try {
+                            const blob = dataUrlToBlob$1(capturedScreenshotUrl);
+                            const filename = getSafeReceiptFilename(txId);
+                            const file = new File([blob], filename, { type: "image/png" });
+                            await navigator.share({
+                              files: [file],
+                              title: "CBE Receipt"
+                            });
+                            setShowIosPhotoPreview(false);
+                          } catch {
+                          }
+                        },
+                        className: "w-full py-2.5 rounded-full bg-[#70189F] hover:bg-[#5b1482] text-white font-semibold text-xs transition active:scale-95 shadow-md flex items-center justify-center gap-2 cursor-pointer",
+                        children: [
+                          /* @__PURE__ */ jsxRuntimeExports.jsx(Share2, { className: "w-4 h-4" }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { children: "Open iOS Save Menu" })
+                        ]
+                      }
+                    ),
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
+                      "button",
+                      {
+                        type: "button",
+                        onClick: () => setShowIosPhotoPreview(false),
+                        className: "w-full py-2.5 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold text-xs transition active:scale-95 cursor-pointer",
+                        children: "Close"
+                      }
+                    )
+                  ] })
+                ]
+              }
+            )
           }
         ),
         /* @__PURE__ */ jsxRuntimeExports.jsxs(
@@ -63798,7 +64559,7 @@ function Receipt({ transaction, onBack }) {
                 {
                   style: {
                     width: "100%",
-                    backgroundColor: "#70189F",
+                    backgroundColor: "#7A1FA2",
                     color: "#ffffff",
                     display: "flex",
                     flexDirection: "column",
@@ -63814,11 +64575,11 @@ function Receipt({ transaction, onBack }) {
                     "div",
                     {
                       style: {
-                        paddingTop: "54px",
-                        paddingBottom: "38px",
+                        paddingTop: "70px",
+                        paddingBottom: "41px",
                         paddingLeft: "20px",
                         paddingRight: "20px",
-                        backgroundColor: "#70189F",
+                        backgroundColor: "#7A1FA2",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "space-between",
@@ -63838,7 +64599,7 @@ function Receipt({ transaction, onBack }) {
                             "path",
                             {
                               d: "M8.0 12.2L11.0 15.2L17.2 9.0",
-                              stroke: "#70189F",
+                              stroke: "#7A1FA2",
                               strokeWidth: "1.9",
                               strokeLinecap: "butt",
                               strokeLinejoin: "miter",
@@ -63848,8 +64609,8 @@ function Receipt({ transaction, onBack }) {
                           )
                         ] }) }),
                         /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
-                          /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { style: { margin: 0, fontWeight: 700, fontSize: "17px", lineHeight: 1.2, color: "#ffffff", letterSpacing: "-0.3px" }, children: "Thank you" }),
-                          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { margin: 0, fontSize: "12.5px", color: "#e9d5ff", fontWeight: 400, lineHeight: 1.2, marginTop: "2px" }, children: "Success" })
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("h2", { style: { margin: 0, fontWeight: 700, fontSize: "18px", lineHeight: 1.2, color: "#ffffff", letterSpacing: "-0.2px" }, children: "Thank you" }),
+                          /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { margin: 0, fontSize: "13px", color: "#FFD9FF", fontWeight: 400, lineHeight: 1.2, marginTop: "2px" }, children: "Success" })
                         ] })
                       ] })
                     }
@@ -63867,8 +64628,8 @@ function Receipt({ transaction, onBack }) {
                     borderTopRightRadius: "38px",
                     border: "none",
                     outline: "none",
-                    paddingLeft: "16px",
-                    paddingRight: "16px",
+                    paddingLeft: "20px",
+                    paddingRight: "20px",
                     paddingTop: "0px",
                     paddingBottom: "0px",
                     display: "flex",
@@ -63903,7 +64664,7 @@ function Receipt({ transaction, onBack }) {
                             fill: "none",
                             xmlns: "http://www.w3.org/2000/svg",
                             children: [
-                              /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "45", cy: "45", r: "41.5", stroke: "#ffffff", strokeWidth: "6", fill: "#70189F" }),
+                              /* @__PURE__ */ jsxRuntimeExports.jsx("circle", { cx: "45", cy: "45", r: "41.5", stroke: "#ffffff", strokeWidth: "6", fill: "#7A1FA2" }),
                               /* @__PURE__ */ jsxRuntimeExports.jsx(
                                 "path",
                                 {
@@ -63922,17 +64683,17 @@ function Receipt({ transaction, onBack }) {
                         )
                       }
                     ) }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { height: "48px", flexShrink: 0 } }),
-                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", justifyContent: "flex-start", flex: 1, paddingTop: "0px", minHeight: 0, gap: "14px" }, children: [
+                    /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { height: "45px", flexShrink: 0 } }),
+                    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { display: "flex", flexDirection: "column", justifyContent: "flex-start", flex: 1, paddingTop: "0px", minHeight: 0 }, children: [
                       /* @__PURE__ */ jsxRuntimeExports.jsx(
                         "h1",
                         {
                           style: {
-                            margin: "4px 0 8px 0",
+                            margin: "12px 0 16px 0",
                             textAlign: "center",
-                            fontSize: "16px",
+                            fontSize: "13.5px",
                             fontWeight: 500,
-                            color: "#111827",
+                            color: "#111113",
                             letterSpacing: "0px",
                             fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif',
                             flexShrink: 0
@@ -63944,19 +64705,19 @@ function Receipt({ transaction, onBack }) {
                         "div",
                         {
                           style: {
-                            backgroundColor: "#f2f3f5",
-                            borderRadius: "26px",
-                            padding: "18px",
+                            backgroundColor: "#f2f2f2",
+                            borderRadius: "24px",
+                            padding: "18px 18px 20px 18px",
                             border: "1px solid rgba(0, 0, 0, 0.04)",
-                            boxShadow: "0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04)",
+                            boxShadow: "0 6px 20px rgba(0, 0, 0, 0.09), 0 2px 6px rgba(0, 0, 0, 0.05)",
                             display: "flex",
                             flexDirection: "column",
                             gap: "0px",
                             boxSizing: "border-box"
                           },
                           children: [
-                            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { margin: "0 0 8px 0", color: "#8e8e93", fontWeight: 400, fontSize: "13.5px", fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }, children: "Transaction Summary" }),
-                            isCredit ? /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { style: { margin: "0 0 0px 0", padding: 0, fontSize: "14.5px", lineHeight: 1.65, color: "#1f2937", fontWeight: 400, letterSpacing: "0.15px", fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }, children: [
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { margin: "0 0 12px 0", color: "#929292", fontWeight: 400, fontSize: "12.5px", fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }, children: "Transaction Summary" }),
+                            isCredit ? /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { style: { margin: "0 0 0px 0", padding: 0, fontSize: "14px", lineHeight: 1.6, color: "#111111", fontWeight: 400, letterSpacing: "0.12px", fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }, children: [
                               "ETB ",
                               /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontWeight: 700, color: "#000000" }, children: amountFormatted }),
                               " has been credited to ",
@@ -63976,7 +64737,7 @@ function Receipt({ transaction, onBack }) {
                               ] }),
                               " Reason: ",
                               reason
-                            ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { style: { margin: "0 0 0px 0", padding: 0, fontSize: "14.5px", lineHeight: 1.65, color: "#1f2937", fontWeight: 400, letterSpacing: "0.15px", fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }, children: [
+                            ] }) : /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { style: { margin: "0 0 0px 0", padding: 0, fontSize: "14px", lineHeight: 1.6, color: "#111111", fontWeight: 400, letterSpacing: "0.12px", fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }, children: [
                               "ETB ",
                               /* @__PURE__ */ jsxRuntimeExports.jsx("span", { style: { fontWeight: 700, color: "#000000" }, children: amountFormatted }),
                               " has been debited from ",
@@ -64006,14 +64767,14 @@ function Receipt({ transaction, onBack }) {
                               disasterRecoveryFormatted,
                               "."
                             ] }),
-                            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", justifyContent: "center", marginTop: "3px", marginBottom: "0px" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+                            /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { display: "flex", justifyContent: "center", marginTop: "10px", marginBottom: "0px" }, children: /* @__PURE__ */ jsxRuntimeExports.jsx(
                               "div",
                               {
                                 style: {
                                   backgroundColor: "#ffffff",
                                   padding: "8px",
-                                  borderRadius: "18px",
-                                  border: "2px solid #737373",
+                                  borderRadius: "16px",
+                                  border: "2px solid #7d7d7d",
                                   display: "inline-flex",
                                   alignItems: "center",
                                   justifyContent: "center",
@@ -64068,10 +64829,10 @@ function Receipt({ transaction, onBack }) {
                                   display: "flex",
                                   alignItems: "center",
                                   width: "100%",
-                                  marginTop: "5px",
+                                  marginTop: "12px",
                                   paddingTop: "0px",
                                   paddingBottom: "2px",
-                                  paddingLeft: "4px",
+                                  paddingLeft: "2px",
                                   boxSizing: "border-box"
                                 },
                                 children: /* @__PURE__ */ jsxRuntimeExports.jsxs(
@@ -64087,13 +64848,13 @@ function Receipt({ transaction, onBack }) {
                                       /* @__PURE__ */ jsxRuntimeExports.jsx(
                                         "div",
                                         {
-                                          style: { width: "42px", height: "42px", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" },
-                                          children: /* @__PURE__ */ jsxRuntimeExports.jsx(CbeLogo, { className: "w-10.5 h-10.5 object-contain", style: { width: "42px", height: "42px", maxWidth: "42px", maxHeight: "42px" }, src: customBankLogo })
+                                          style: { width: "40px", height: "40px", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden" },
+                                          children: /* @__PURE__ */ jsxRuntimeExports.jsx(CbeLogo, { className: "w-10 h-10 object-contain", style: { width: "40px", height: "40px", maxWidth: "40px", maxHeight: "40px" }, src: customBankLogo })
                                         }
                                       ),
                                       /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { style: { textAlign: "left", display: "flex", flexDirection: "column", justifyContent: "center" }, children: [
-                                        /* @__PURE__ */ jsxRuntimeExports.jsx("h4", { style: { margin: 0, fontWeight: 700, color: "#1f2937", fontSize: "15px", lineHeight: 1.2, letterSpacing: "0px", whiteSpace: "nowrap", fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif' }, children: "Commercial Bank of Ethiopia" }),
-                                        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { margin: "2px 0 0 0", color: "#6b7280", fontSize: "12.5px", fontWeight: 400, lineHeight: 1.2, letterSpacing: "0px", whiteSpace: "nowrap", fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }, children: "The bank you can always rely on!" })
+                                        /* @__PURE__ */ jsxRuntimeExports.jsx("h4", { style: { margin: 0, fontWeight: 700, color: "#353535", fontSize: "14px", lineHeight: 1.2, letterSpacing: "0px", whiteSpace: "nowrap", fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif' }, children: "Commercial Bank of Ethiopia" }),
+                                        /* @__PURE__ */ jsxRuntimeExports.jsx("p", { style: { margin: "2px 0 0 0", color: "#575757", fontSize: "12px", fontWeight: 400, lineHeight: 1.2, letterSpacing: "0px", whiteSpace: "nowrap", fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }, children: "The bank you can always rely on!" })
                                       ] })
                                     ]
                                   }
@@ -64105,16 +64866,16 @@ function Receipt({ transaction, onBack }) {
                       ),
                       /* @__PURE__ */ jsxRuntimeExports.jsx("div", { style: { flex: 1, backgroundColor: "#ffffff", minHeight: "36px" } })
                     ] }),
-                    isIPhone && /* @__PURE__ */ jsxRuntimeExports.jsx(
+                    /* @__PURE__ */ jsxRuntimeExports.jsx(
                       "div",
                       {
                         style: {
-                          width: "calc(100% + 32px)",
-                          marginLeft: "-16px",
-                          marginRight: "-16px",
-                          height: "64px",
-                          backgroundColor: "#f4f5f7",
-                          borderTop: "1px solid #edf0f3",
+                          width: "calc(100% + 40px)",
+                          marginLeft: "-20px",
+                          marginRight: "-20px",
+                          height: "58px",
+                          backgroundColor: "#f0f1f4",
+                          borderTop: "1px solid #e2e4e8",
                           flexShrink: 0
                         }
                       }
@@ -87991,7 +88752,7 @@ function App() {
       case "receipt":
         return {
           rootBg: "bg-white",
-          statusBarBg: "bg-[#70189F] text-white",
+          statusBarBg: "bg-[#7A1FA2] text-white",
           statusTheme: "cbe",
           navBarBg: "bg-white border-neutral-200 text-neutral-800",
           navTheme: "light"
@@ -88626,7 +89387,7 @@ if (typeof window !== "undefined") {
     }
     if ("serviceWorker" in navigator) {
       __vitePreload(async () => {
-        const { registerSW } = await import("./virtual_pwa-register-Dcg30mLj.js");
+        const { registerSW } = await import("./virtual_pwa-register-DnhoMeqi.js");
         return { registerSW };
       }, true ? __vite__mapDeps([6,1]) : void 0).then(({ registerSW }) => {
         registerSW({
