@@ -33,6 +33,34 @@ interface StoredWebAuthnCredential {
 
 const CRED_STORAGE_PREFIX = 'cbe_device_biometric_cred_v1_';
 const DEVICE_CRED_KEY = 'cbe_device_biometric_cred_v1_device';
+const APP_SECURITY_PREFIX = 'cbe_app_security_vault_v1_';
+
+export interface AppSecurityVaultRecord {
+  pinHash?: string;
+  passwordHash?: string;
+  biometricEnrolled?: boolean;
+  biometricMethod?: BiometricMethod;
+  updatedAt: string;
+}
+
+async function sha256Hex(input: string): Promise<string> {
+  if (typeof crypto !== 'undefined' && crypto.subtle) {
+    const encoded = new TextEncoder().encode(input);
+    const digest = await crypto.subtle.digest('SHA-256', encoded);
+    return Array.from(new Uint8Array(digest))
+      .map((b) => b.toString(16).padStart(2, '0'))
+      .join('');
+  }
+  // Fallback deterministic FNV-1a mix for non-subtle contexts
+  let h1 = 0x811c9dc5;
+  let h2 = 0x01000193;
+  for (let i = 0; i < input.length; i++) {
+    const ch = input.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 0x01000193);
+    h2 = Math.imul(h2 ^ (ch + i), 0x85ebca6b);
+  }
+  return `${(h1 >>> 0).toString(16).padStart(8, '0')}${(h2 >>> 0).toString(16).padStart(8, '0')}`;
+}
 
 function bytesToBase64Url(bytes: Uint8Array): string {
   let binary = '';
@@ -130,9 +158,97 @@ export class BiometricAuthService {
     try {
       localStorage.removeItem(`${CRED_STORAGE_PREFIX}${userId}`);
       localStorage.removeItem(DEVICE_CRED_KEY);
+      const vault = this.getSecurityVault(userId);
+      vault.biometricEnrolled = false;
+      this.saveSecurityVault(userId, vault);
     } catch {
       // Non-blocking
     }
+  }
+
+  private static getSecurityVault(userId: string): AppSecurityVaultRecord {
+    if (typeof window === 'undefined') {
+      return { updatedAt: new Date().toISOString() };
+    }
+    try {
+      const raw = localStorage.getItem(`${APP_SECURITY_PREFIX}${userId}`);
+      if (raw) {
+        const parsed = JSON.parse(raw) as AppSecurityVaultRecord;
+        if (parsed && typeof parsed === 'object') return parsed;
+      }
+    } catch {
+      // Non-blocking
+    }
+    return { updatedAt: new Date().toISOString() };
+  }
+
+  private static saveSecurityVault(userId: string, vault: AppSecurityVaultRecord): void {
+    if (typeof window === 'undefined') return;
+    try {
+      vault.updatedAt = new Date().toISOString();
+      localStorage.setItem(`${APP_SECURITY_PREFIX}${userId}`, JSON.stringify(vault));
+    } catch {
+      // Non-blocking
+    }
+  }
+
+  public static hasAppPin(userId: string): boolean {
+    return Boolean(this.getSecurityVault(userId).pinHash);
+  }
+
+  public static async saveAppPin(userId: string, pin: string): Promise<void> {
+    const cleanPin = pin.trim();
+    const pinHash = await sha256Hex(`cbe_pin_v1:${userId}:${cleanPin}`);
+    const vault = this.getSecurityVault(userId);
+    vault.pinHash = pinHash;
+    this.saveSecurityVault(userId, vault);
+  }
+
+  public static async verifyAppPin(userId: string, pin: string): Promise<boolean> {
+    const vault = this.getSecurityVault(userId);
+    if (!vault.pinHash) return false;
+    const candidate = await sha256Hex(`cbe_pin_v1:${userId}:${pin.trim()}`);
+    return candidate === vault.pinHash;
+  }
+
+  public static hasAppPassword(userId: string): boolean {
+    return Boolean(this.getSecurityVault(userId).passwordHash);
+  }
+
+  public static async saveAppPassword(userId: string, password: string): Promise<void> {
+    const passwordHash = await sha256Hex(`cbe_pwd_v1:${userId}:${password}`);
+    const vault = this.getSecurityVault(userId);
+    vault.passwordHash = passwordHash;
+    this.saveSecurityVault(userId, vault);
+  }
+
+  public static async verifyAppPassword(userId: string, password: string): Promise<boolean> {
+    const vault = this.getSecurityVault(userId);
+    if (!vault.passwordHash) return false;
+    const candidate = await sha256Hex(`cbe_pwd_v1:${userId}:${password}`);
+    return candidate === vault.passwordHash;
+  }
+
+  public static markBiometricEnrolled(userId: string, method: BiometricMethod): void {
+    const vault = this.getSecurityVault(userId);
+    vault.biometricEnrolled = true;
+    vault.biometricMethod = method;
+    this.saveSecurityVault(userId, vault);
+  }
+
+  public static getSecuritySummary(userId: string): {
+    hasPin: boolean;
+    hasPassword: boolean;
+    biometricEnrolled: boolean;
+    deviceMethod: BiometricMethod;
+  } {
+    const vault = this.getSecurityVault(userId);
+    return {
+      hasPin: Boolean(vault.pinHash),
+      hasPassword: Boolean(vault.passwordHash),
+      biometricEnrolled: Boolean(vault.biometricEnrolled || this.getStoredCredential(userId)),
+      deviceMethod: this.getBiometricMethod(),
+    };
   }
 
   public static async isPlatformAuthenticatorAvailable(): Promise<boolean> {
@@ -160,7 +276,9 @@ export class BiometricAuthService {
     const userIdBytes = utf8ToBytes(user.id || 'cbe_user');
     const challenge = generateChallenge(32);
 
-    const publicKeyOptions: PublicKeyCredentialCreationOptions & { hints?: string[] } = {
+    // Request a non-resident local device credential (discouraged) so browsers keep
+    // verification hardware-local instead of syncing/saving to Google or Safari Password Manager.
+    const publicKeyOptions: PublicKeyCredentialCreationOptions = {
       challenge: challenge.buffer as ArrayBuffer,
       rp: {
         name: 'CBE Mobile Banking',
@@ -168,7 +286,7 @@ export class BiometricAuthService {
       },
       user: {
         id: userIdBytes.buffer as ArrayBuffer,
-        name: user.accountNumber || user.email || user.id,
+        name: `cbe-device-${user.id || 'user'}`,
         displayName: user.name || 'CBE Customer',
       },
       pubKeyCredParams: [
@@ -178,29 +296,16 @@ export class BiometricAuthService {
       authenticatorSelection: {
         authenticatorAttachment: 'platform',
         userVerification: 'required',
-        residentKey: 'preferred',
+        residentKey: 'discouraged',
         requireResidentKey: false,
       },
-      hints: ['client-device'],
       timeout: 60000,
       attestation: 'none',
     };
 
-    let credential: PublicKeyCredential | null;
-    try {
-      credential = (await navigator.credentials.create({
-        publicKey: publicKeyOptions,
-      })) as PublicKeyCredential | null;
-    } catch (createErr) {
-      if (createErr instanceof TypeError) {
-        const { hints: _ignoredHints, ...legacyOptions } = publicKeyOptions;
-        credential = (await navigator.credentials.create({
-          publicKey: legacyOptions,
-        })) as PublicKeyCredential | null;
-      } else {
-        throw createErr;
-      }
-    }
+    const credential = (await navigator.credentials.create({
+      publicKey: publicKeyOptions,
+    })) as PublicKeyCredential | null;
 
     if (!credential || !credential.rawId) {
       throw new Error('Device biometric registration returned empty credential.');
@@ -213,13 +318,14 @@ export class BiometricAuthService {
       method,
       createdAt: new Date().toISOString(),
     });
+    this.markBiometricEnrolled(user.id, method);
   }
 
   private static async verifyPlatformCredential(credId: string, rpId: string): Promise<void> {
     const challenge = generateChallenge(32);
     const idBytes = base64UrlToBytes(credId);
 
-    const publicKeyOptions: PublicKeyCredentialRequestOptions & { hints?: string[] } = {
+    const publicKeyOptions: PublicKeyCredentialRequestOptions = {
       challenge: challenge.buffer as ArrayBuffer,
       rpId,
       allowCredentials: [
@@ -229,26 +335,13 @@ export class BiometricAuthService {
           transports: ['internal'],
         },
       ],
-      hints: ['client-device'],
       userVerification: 'required',
       timeout: 60000,
     };
 
-    let assertion: PublicKeyCredential | null;
-    try {
-      assertion = (await navigator.credentials.get({
-        publicKey: publicKeyOptions,
-      })) as PublicKeyCredential | null;
-    } catch (getErr) {
-      if (getErr instanceof TypeError) {
-        const { hints: _ignoredHints, ...legacyOptions } = publicKeyOptions;
-        assertion = (await navigator.credentials.get({
-          publicKey: legacyOptions,
-        })) as PublicKeyCredential | null;
-      } else {
-        throw getErr;
-      }
-    }
+    const assertion = (await navigator.credentials.get({
+      publicKey: publicKeyOptions,
+    })) as PublicKeyCredential | null;
 
     if (!assertion || !assertion.rawId) {
       throw new Error('Biometric verification did not return an assertion.');
@@ -278,6 +371,7 @@ export class BiometricAuthService {
           res?.method === 'faceid' ? 'faceid' : res?.method === 'fingerprint' ? 'fingerprint' : method;
 
         if (res?.verified) {
+          this.markBiometricEnrolled(user.id, resolvedMethod);
           return { status: 'success', method: resolvedMethod };
         }
 
@@ -352,6 +446,7 @@ export class BiometricAuthService {
       if (stored && stored.rpId === currentHost) {
         try {
           await this.verifyPlatformCredential(stored.credId, currentHost);
+          this.markBiometricEnrolled(user.id, method);
           return { status: 'success', method };
         } catch (verifyErr: unknown) {
           const errName = verifyErr instanceof DOMException ? verifyErr.name : '';

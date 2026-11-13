@@ -344,15 +344,19 @@ export default function Profile({
     } catch {}
   };
 
-  const handleToggleBiometrics = () => {
+  const handleToggleBiometrics = async () => {
     const nextVal = !biometrics;
+    const methodLabel = BiometricAuthService.getDeviceBiometricName();
+
+    if (nextVal) {
+      BiometricAuthService.markBiometricEnrolled(currentUser.id, BiometricAuthService.getBiometricMethod());
+    } else {
+      BiometricAuthService.clearStoredCredential(currentUser.id);
+    }
+
     setBiometrics(nextVal);
     const updated = { ...currentUser, biometricEnabled: nextVal };
     onUpdateUser(updated);
-
-    if (!nextVal) {
-      BiometricAuthService.clearStoredCredential(currentUser.id);
-    }
 
     // Update in users DB array
     const users = LocalDb.getUsers();
@@ -362,42 +366,70 @@ export default function Profile({
       LocalDb.setUsers(users);
     }
 
-    LocalDb.addNotification(currentUser.id, 'Biometric Settings Updated', `Touch/Face ID has been successfully ${nextVal ? 'enabled' : 'disabled'}.`, 'info');
+    LocalDb.addNotification(
+      currentUser.id,
+      'Biometric Settings Updated',
+      `${methodLabel} verification has been ${nextVal ? 'saved in the app' : 'disabled'}.`,
+      'info'
+    );
   };
 
-  const handlePinChange = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handlePinChange = async () => {
     setErrorMsg('');
     setSuccessMsg('');
 
-    if (newPin.length !== 4) {
-      setErrorMsg('New security PIN must be exactly 4 digits.');
+    if (BiometricAuthService.hasAppPin(currentUser.id)) {
+      if (!oldPin) {
+        setErrorMsg('Please enter your current in-app PIN.');
+        return;
+      }
+      const oldMatches = await BiometricAuthService.verifyAppPin(currentUser.id, oldPin);
+      if (!oldMatches) {
+        setErrorMsg('Current PIN does not match our in-app security record.');
+        return;
+      }
+    }
+
+    if (newPin.length < 4 || newPin.length > 6) {
+      setErrorMsg('New security PIN must be 4 to 6 digits.');
       return;
     }
 
-    // Save
-    LocalDb.addAuditLog(currentUser.id, currentUser.email, 'USER_PIN_CHANGE', 'User updated their 4-digit secure transaction authorization PIN.');
-    setSuccessMsg('Your security PIN code was updated successfully!');
+    await BiometricAuthService.saveAppPin(currentUser.id, newPin);
+    LocalDb.addAuditLog(currentUser.id, currentUser.email, 'USER_PIN_CHANGE', 'User updated their in-app secure authorization PIN.');
+    setSuccessMsg('Your security PIN was saved in the app!');
     setOldPin('');
     setNewPin('');
-    setTimeout(() => setShowPinForm(false), 2000);
+    setTimeout(() => setShowPinForm(false), 1800);
   };
 
-  const handlePasswordChange = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handlePasswordChange = async () => {
     setErrorMsg('');
     setSuccessMsg('');
+
+    if (BiometricAuthService.hasAppPassword(currentUser.id)) {
+      if (!oldPass) {
+        setErrorMsg('Please enter your current in-app password.');
+        return;
+      }
+      const oldMatches = await BiometricAuthService.verifyAppPassword(currentUser.id, oldPass);
+      if (!oldMatches) {
+        setErrorMsg('Current password does not match our in-app security record.');
+        return;
+      }
+    }
 
     if (newPass.length < 6) {
       setErrorMsg('New password must be at least 6 characters.');
       return;
     }
 
-    LocalDb.addAuditLog(currentUser.id, currentUser.email, 'USER_PASS_CHANGE', 'User updated their security access password.');
-    setSuccessMsg('Security password successfully updated!');
+    await BiometricAuthService.saveAppPassword(currentUser.id, newPass);
+    LocalDb.addAuditLog(currentUser.id, currentUser.email, 'USER_PASS_CHANGE', 'User updated their in-app security access password.');
+    setSuccessMsg('Security password saved in the app!');
     setOldPass('');
     setNewPass('');
-    setTimeout(() => setShowPassForm(false), 2000);
+    setTimeout(() => setShowPassForm(false), 1800);
   };
 
   const handleLangChange = (code: string) => {
@@ -628,7 +660,7 @@ export default function Profile({
         <div className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 space-y-4">
           <h3 className="text-xs font-extrabold text-emerald-950 uppercase tracking-wider">Security &amp; Device Access</h3>
           
-          {/* Simulated Biometrics */}
+          {/* Device Biometrics (Saved in-app, verified by device Face ID / Fingerprint) */}
           <div className="flex justify-between items-center py-1">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-emerald-50 text-emerald-800 rounded-xl">
@@ -636,11 +668,14 @@ export default function Profile({
               </div>
               <div>
                 <p className="text-sm font-bold text-gray-800">Biometric Verification</p>
-                <p className="text-[10px] text-gray-400">Unlock app via Fingerprint / Face ID</p>
+                <p className="text-[10px] text-gray-400">
+                  Unlock app via {BiometricAuthService.getDeviceBiometricName()} (saved in app only)
+                </p>
               </div>
             </div>
             <button
               id="btn-toggle-biometrics"
+              type="button"
               onClick={handleToggleBiometrics}
               className={`w-12 h-6.5 rounded-full p-1 transition duration-300 cursor-pointer ${
                 biometrics ? 'bg-emerald-800' : 'bg-gray-200'
@@ -656,6 +691,7 @@ export default function Profile({
           <div className="border-t border-gray-50 pt-3">
             <button
               id="btn-toggle-pin-form"
+              type="button"
               onClick={() => setShowPinForm(!showPinForm)}
               className="w-full flex justify-between items-center text-sm font-semibold text-gray-700 hover:text-emerald-800 transition cursor-pointer"
             >
@@ -669,38 +705,52 @@ export default function Profile({
             </button>
 
             {showPinForm && (
-              <form onSubmit={handlePinChange} className="mt-3.5 space-y-3 p-3 bg-gray-50 rounded-2xl border border-gray-100 animate-in slide-in-from-top-2 duration-150">
+              <div className="mt-3.5 space-y-3 p-3 bg-gray-50 rounded-2xl border border-gray-100 animate-in slide-in-from-top-2 duration-150">
+                {BiometricAuthService.hasAppPin(currentUser.id) && (
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                    data-form-type="other"
+                    maxLength={6}
+                    placeholder="Current In-App PIN"
+                    value={oldPin}
+                    onChange={(e) => setOldPin(e.target.value.replace(/\D/g, ''))}
+                    className="w-full bg-white border border-gray-100 rounded-xl px-3 py-2 text-xs font-mono [-webkit-text-security:disc]"
+                  />
+                )}
                 <input
-                  type="password"
-                  maxLength={4}
-                  placeholder="Old 4-Digit PIN"
-                  value={oldPin}
-                  onChange={(e) => setOldPin(e.target.value.replace(/\D/g, ''))}
-                  className="w-full bg-white border border-gray-100 rounded-xl px-3 py-2 text-xs font-mono"
-                  required
-                />
-                <input
-                  type="password"
-                  maxLength={4}
-                  placeholder="New 4-Digit PIN"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                  data-form-type="other"
+                  maxLength={6}
+                  placeholder="New 4–6 Digit PIN (saved in app)"
                   value={newPin}
                   onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))}
-                  className="w-full bg-white border border-gray-100 rounded-xl px-3 py-2 text-xs font-mono"
-                  required
+                  className="w-full bg-white border border-gray-100 rounded-xl px-3 py-2 text-xs font-mono [-webkit-text-security:disc]"
                 />
                 <button
-                  type="submit"
-                  className="w-full bg-emerald-800 text-white font-bold py-2 rounded-xl text-xs transition"
+                  type="button"
+                  onClick={handlePinChange}
+                  className="w-full bg-emerald-800 text-white font-bold py-2 rounded-xl text-xs transition cursor-pointer"
                 >
-                  Save PIN Change
+                  Save PIN in App
                 </button>
-              </form>
+              </div>
             )}
           </div>
 
           {/* Change Password Accordion */}
           <div className="border-t border-gray-50 pt-3">
             <button
+              type="button"
               onClick={() => setShowPassForm(!showPassForm)}
               className="w-full flex justify-between items-center text-sm font-semibold text-gray-700 hover:text-emerald-800 transition cursor-pointer"
             >
@@ -714,30 +764,41 @@ export default function Profile({
             </button>
 
             {showPassForm && (
-              <form onSubmit={handlePasswordChange} className="mt-3.5 space-y-3 p-3 bg-gray-50 rounded-2xl border border-gray-100 animate-in slide-in-from-top-2 duration-150">
+              <div className="mt-3.5 space-y-3 p-3 bg-gray-50 rounded-2xl border border-gray-100 animate-in slide-in-from-top-2 duration-150">
+                {BiometricAuthService.hasAppPassword(currentUser.id) && (
+                  <input
+                    type="text"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                    data-form-type="other"
+                    placeholder="Current In-App Password"
+                    value={oldPass}
+                    onChange={(e) => setOldPass(e.target.value)}
+                    className="w-full bg-white border border-gray-100 rounded-xl px-3 py-2 text-xs [-webkit-text-security:disc]"
+                  />
+                )}
                 <input
-                  type="password"
-                  placeholder="Old Password"
-                  value={oldPass}
-                  onChange={(e) => setOldPass(e.target.value)}
-                  className="w-full bg-white border border-gray-100 rounded-xl px-3 py-2 text-xs"
-                  required
-                />
-                <input
-                  type="password"
-                  placeholder="New Password (min 6 chars)"
+                  type="text"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                  data-form-type="other"
+                  placeholder="New Password (min 6 chars, saved in app)"
                   value={newPass}
                   onChange={(e) => setNewPass(e.target.value)}
-                  className="w-full bg-white border border-gray-100 rounded-xl px-3 py-2 text-xs"
-                  required
+                  className="w-full bg-white border border-gray-100 rounded-xl px-3 py-2 text-xs [-webkit-text-security:disc]"
                 />
                 <button
-                  type="submit"
-                  className="w-full bg-emerald-800 text-white font-bold py-2 rounded-xl text-xs transition"
+                  type="button"
+                  onClick={handlePasswordChange}
+                  className="w-full bg-emerald-800 text-white font-bold py-2 rounded-xl text-xs transition cursor-pointer"
                 >
-                  Save Password
+                  Save Password in App
                 </button>
-              </form>
+              </div>
             )}
           </div>
         </div>

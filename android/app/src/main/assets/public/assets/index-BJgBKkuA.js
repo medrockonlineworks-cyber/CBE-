@@ -1,4 +1,4 @@
-const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/web-CON5pxuX.js","assets/vendor-canvas--47Moheq.js","assets/vendor-icons-Cfc7v2mT.js","assets/vendor-firebase-CsBT4PN2.js","assets/web-Di8TABU6.js","assets/web-BOLL-Khj.js","assets/virtual_pwa-register-DnhoMeqi.js"])))=>i.map(i=>d[i]);
+const __vite__mapDeps=(i,m=__vite__mapDeps,d=(m.f||(m.f=["assets/web-B8ZJre-W.js","assets/vendor-canvas--47Moheq.js","assets/vendor-icons-Cfc7v2mT.js","assets/vendor-firebase-CsBT4PN2.js","assets/web-C-1o0Jrx.js","assets/web-Gri2337f.js","assets/virtual_pwa-register-DnhoMeqi.js"])))=>i.map(i=>d[i]);
 import { _ as __vitePreload, h as html2canvas, E, a as html2canvas$1 } from "./vendor-canvas--47Moheq.js";
 import { r as requireReact, g as getDefaultExportFromCjs, a as reactExports, B as Bell, X, U as Users, C as Check, P as Plus, b as ChevronDown, R as React, c as Phone, d as Building2, S as ShieldCheck, e as Store, f as Plane, h as ShoppingBag, F as Film, i as FileSpreadsheet, j as Sparkles, A as ArrowLeft, L as Lock, k as RotateCw, l as Share2, H as House, m as Star, E as EllipsisVertical, n as SlidersHorizontal, o as Shield, G as Globe, p as CircleCheck, q as Stamp, s as SlidersVertical, M as Minus, t as Feather, u as Move, v as RotateCcw, w as FileText, D as Download, x as Copy, y as RefreshCw, z as Upload, T as Trash2, I as Link, J as Printer, K as ArrowUp, N as ArrowDown, O as ArrowRight, Q as Save, V as Building, W as UserPlus, Y as Search, Z as Scan, _ as QrCode, $ as ChevronRight, a0 as Receipt$1, a1 as MessageSquare, a2 as Smartphone, a3 as PhoneCall, a4 as ArrowUpRight, a5 as ArrowDownLeft, a6 as ChevronLeft, a7 as CircleAlert, a8 as EyeOff, a9 as Eye, aa as Wallet, ab as Calculator, ac as CirclePlus, ad as Delete, ae as LoaderCircle, af as Tv, ag as Wifi, ah as Droplet, ai as Zap, aj as Image$1, ak as Maximize2, al as Info, am as ExternalLink, an as CircleQuestionMark, ao as User, ap as ShieldAlert, aq as Flame, ar as UserCheck, as as Layers, at as TextAlignStart, au as Compass, av as Shuffle, aw as PenLine, ax as CreditCard, ay as Fingerprint, az as KeyRound, aA as Languages, aB as LogOut, aC as Camera, aD as Database, aE as CircleCheckBig, aF as Pen, aG as CircleX, aH as TrendingUp, aI as Activity, aJ as OctagonAlert, aK as ArrowLeftRight, aL as Ban, aM as VolumeX, aN as BatteryCharging, aO as Battery, aP as Bluetooth, aQ as Clock, aR as Vibrate, aS as Volume2, aT as Sun, aU as Moon, aV as CheckCheck, aW as Send, aX as Paperclip, aY as Smile, aZ as Mic, a_ as Landmark, a$ as SquarePen, b0 as Settings, b1 as Palette, b2 as Type, b3 as Music, b4 as Heart, b5 as MessageCircle, b6 as Bookmark, b7 as Video, b8 as Play, b9 as ThumbsUp, ba as ThumbsDown, bb as Voicemail, bc as Grid3x3, bd as MicOff, be as Hexagon, bf as PhoneIncoming, bg as Calendar, bh as Paintbrush, bi as LayoutGrid, bj as Trophy, bk as Award, bl as Gift, bm as BookUser, bn as Droplets, bo as Car, bp as GraduationCap, bq as Gamepad2, br as HeartHandshake, bs as Flashlight, bt as AtSign, bu as Signal, bv as ZoomIn, bw as TriangleAlert, bx as FileJson, by as FileImage, bz as WifiOff } from "./vendor-icons-Cfc7v2mT.js";
 import { g as getApps, i as initializeApp, a as getApp, b as initializeFirestore, c as getFirestore, d as getAuth, e as doc, s as setDoc, f as serverTimestamp, h as collection, j as getDocs } from "./vendor-firebase-CsBT4PN2.js";
@@ -28051,6 +28051,22 @@ let SystemBarsService = _SystemBarsService;
 const DeviceBiometricsNative = registerPlugin("DeviceBiometrics");
 const CRED_STORAGE_PREFIX = "cbe_device_biometric_cred_v1_";
 const DEVICE_CRED_KEY = "cbe_device_biometric_cred_v1_device";
+const APP_SECURITY_PREFIX = "cbe_app_security_vault_v1_";
+async function sha256Hex(input) {
+  if (typeof crypto !== "undefined" && crypto.subtle) {
+    const encoded = new TextEncoder().encode(input);
+    const digest = await crypto.subtle.digest("SHA-256", encoded);
+    return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  }
+  let h1 = 2166136261;
+  let h2 = 16777619;
+  for (let i = 0; i < input.length; i++) {
+    const ch = input.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 16777619);
+    h2 = Math.imul(h2 ^ ch + i, 2246822507);
+  }
+  return `${(h1 >>> 0).toString(16).padStart(8, "0")}${(h2 >>> 0).toString(16).padStart(8, "0")}`;
+}
 function bytesToBase64Url(bytes) {
   let binary = "";
   for (let i = 0; i < bytes.length; i++) {
@@ -28138,8 +28154,79 @@ class BiometricAuthService {
     try {
       localStorage.removeItem(`${CRED_STORAGE_PREFIX}${userId}`);
       localStorage.removeItem(DEVICE_CRED_KEY);
+      const vault = this.getSecurityVault(userId);
+      vault.biometricEnrolled = false;
+      this.saveSecurityVault(userId, vault);
     } catch {
     }
+  }
+  static getSecurityVault(userId) {
+    if (typeof window === "undefined") {
+      return { updatedAt: (/* @__PURE__ */ new Date()).toISOString() };
+    }
+    try {
+      const raw = localStorage.getItem(`${APP_SECURITY_PREFIX}${userId}`);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object") return parsed;
+      }
+    } catch {
+    }
+    return { updatedAt: (/* @__PURE__ */ new Date()).toISOString() };
+  }
+  static saveSecurityVault(userId, vault) {
+    if (typeof window === "undefined") return;
+    try {
+      vault.updatedAt = (/* @__PURE__ */ new Date()).toISOString();
+      localStorage.setItem(`${APP_SECURITY_PREFIX}${userId}`, JSON.stringify(vault));
+    } catch {
+    }
+  }
+  static hasAppPin(userId) {
+    return Boolean(this.getSecurityVault(userId).pinHash);
+  }
+  static async saveAppPin(userId, pin) {
+    const cleanPin = pin.trim();
+    const pinHash = await sha256Hex(`cbe_pin_v1:${userId}:${cleanPin}`);
+    const vault = this.getSecurityVault(userId);
+    vault.pinHash = pinHash;
+    this.saveSecurityVault(userId, vault);
+  }
+  static async verifyAppPin(userId, pin) {
+    const vault = this.getSecurityVault(userId);
+    if (!vault.pinHash) return false;
+    const candidate = await sha256Hex(`cbe_pin_v1:${userId}:${pin.trim()}`);
+    return candidate === vault.pinHash;
+  }
+  static hasAppPassword(userId) {
+    return Boolean(this.getSecurityVault(userId).passwordHash);
+  }
+  static async saveAppPassword(userId, password) {
+    const passwordHash = await sha256Hex(`cbe_pwd_v1:${userId}:${password}`);
+    const vault = this.getSecurityVault(userId);
+    vault.passwordHash = passwordHash;
+    this.saveSecurityVault(userId, vault);
+  }
+  static async verifyAppPassword(userId, password) {
+    const vault = this.getSecurityVault(userId);
+    if (!vault.passwordHash) return false;
+    const candidate = await sha256Hex(`cbe_pwd_v1:${userId}:${password}`);
+    return candidate === vault.passwordHash;
+  }
+  static markBiometricEnrolled(userId, method) {
+    const vault = this.getSecurityVault(userId);
+    vault.biometricEnrolled = true;
+    vault.biometricMethod = method;
+    this.saveSecurityVault(userId, vault);
+  }
+  static getSecuritySummary(userId) {
+    const vault = this.getSecurityVault(userId);
+    return {
+      hasPin: Boolean(vault.pinHash),
+      hasPassword: Boolean(vault.passwordHash),
+      biometricEnrolled: Boolean(vault.biometricEnrolled || this.getStoredCredential(userId)),
+      deviceMethod: this.getBiometricMethod()
+    };
   }
   static async isPlatformAuthenticatorAvailable() {
     if (typeof window === "undefined" || typeof window.PublicKeyCredential === "undefined" || !navigator.credentials) {
@@ -28166,7 +28253,7 @@ class BiometricAuthService {
       },
       user: {
         id: userIdBytes.buffer,
-        name: user.accountNumber || user.email || user.id,
+        name: `cbe-device-${user.id || "user"}`,
         displayName: user.name || "CBE Customer"
       },
       pubKeyCredParams: [
@@ -28178,28 +28265,15 @@ class BiometricAuthService {
       authenticatorSelection: {
         authenticatorAttachment: "platform",
         userVerification: "required",
-        residentKey: "preferred",
+        residentKey: "discouraged",
         requireResidentKey: false
       },
-      hints: ["client-device"],
       timeout: 6e4,
       attestation: "none"
     };
-    let credential;
-    try {
-      credential = await navigator.credentials.create({
-        publicKey: publicKeyOptions
-      });
-    } catch (createErr) {
-      if (createErr instanceof TypeError) {
-        const { hints: _ignoredHints, ...legacyOptions } = publicKeyOptions;
-        credential = await navigator.credentials.create({
-          publicKey: legacyOptions
-        });
-      } else {
-        throw createErr;
-      }
-    }
+    const credential = await navigator.credentials.create({
+      publicKey: publicKeyOptions
+    });
     if (!credential || !credential.rawId) {
       throw new Error("Device biometric registration returned empty credential.");
     }
@@ -28210,6 +28284,7 @@ class BiometricAuthService {
       method,
       createdAt: (/* @__PURE__ */ new Date()).toISOString()
     });
+    this.markBiometricEnrolled(user.id, method);
   }
   static async verifyPlatformCredential(credId, rpId) {
     const challenge = generateChallenge(32);
@@ -28224,25 +28299,12 @@ class BiometricAuthService {
           transports: ["internal"]
         }
       ],
-      hints: ["client-device"],
       userVerification: "required",
       timeout: 6e4
     };
-    let assertion;
-    try {
-      assertion = await navigator.credentials.get({
-        publicKey: publicKeyOptions
-      });
-    } catch (getErr) {
-      if (getErr instanceof TypeError) {
-        const { hints: _ignoredHints, ...legacyOptions } = publicKeyOptions;
-        assertion = await navigator.credentials.get({
-          publicKey: legacyOptions
-        });
-      } else {
-        throw getErr;
-      }
-    }
+    const assertion = await navigator.credentials.get({
+      publicKey: publicKeyOptions
+    });
     if (!assertion || !assertion.rawId) {
       throw new Error("Biometric verification did not return an assertion.");
     }
@@ -28262,6 +28324,7 @@ class BiometricAuthService {
         });
         const resolvedMethod = (res == null ? void 0 : res.method) === "faceid" ? "faceid" : (res == null ? void 0 : res.method) === "fingerprint" ? "fingerprint" : method;
         if (res == null ? void 0 : res.verified) {
+          this.markBiometricEnrolled(user.id, resolvedMethod);
           return { status: "success", method: resolvedMethod };
         }
         if (res == null ? void 0 : res.unavailable) {
@@ -28325,6 +28388,7 @@ class BiometricAuthService {
       if (stored && stored.rpId === currentHost) {
         try {
           await this.verifyPlatformCredential(stored.credId, currentHost);
+          this.markBiometricEnrolled(user.id, method);
           return { status: "success", method };
         } catch (verifyErr) {
           const errName = verifyErr instanceof DOMException ? verifyErr.name : "";
@@ -28672,7 +28736,7 @@ function Auth({ onLoginSuccess }) {
       return nextVal;
     });
   };
-  const handleLoginAttempt = () => {
+  const handleLoginAttempt = async () => {
     if (!pin || pin.trim().length === 0) {
       setShowError(true);
       setErrorMessage("This field is required");
@@ -28683,7 +28747,18 @@ function Auth({ onLoginSuccess }) {
       setErrorMessage("PIN must be at least 4 digits");
       return;
     }
-    LocalDb.addAuditLog(selectedUser.id, selectedUser.email, "USER_LOGIN", `User ${selectedUser.name} logged in via PIN authentication.`);
+    if (BiometricAuthService.hasAppPin(selectedUser.id)) {
+      const isValidPin = await BiometricAuthService.verifyAppPin(selectedUser.id, pin);
+      if (!isValidPin) {
+        setShowError(true);
+        setErrorMessage("Incorrect PIN. Please try again.");
+        setPin("");
+        return;
+      }
+    } else {
+      await BiometricAuthService.saveAppPin(selectedUser.id, pin);
+    }
+    LocalDb.addAuditLog(selectedUser.id, selectedUser.email, "USER_LOGIN", `User ${selectedUser.name} logged in via in-app PIN authentication.`);
     localStorage.setItem("tana_active_user_id", selectedUser.id);
     onLoginSuccess(selectedUser);
   };
@@ -31432,14 +31507,14 @@ var Encoding;
   Encoding2["UTF16"] = "utf16";
 })(Encoding || (Encoding = {}));
 const Filesystem = registerPlugin("Filesystem", {
-  web: () => __vitePreload(() => import("./web-CON5pxuX.js"), true ? __vite__mapDeps([0,1,2,3]) : void 0).then((m) => new m.FilesystemWeb())
+  web: () => __vitePreload(() => import("./web-B8ZJre-W.js"), true ? __vite__mapDeps([0,1,2,3]) : void 0).then((m) => new m.FilesystemWeb())
 });
 f();
 const Share = registerPlugin("Share", {
-  web: () => __vitePreload(() => import("./web-Di8TABU6.js"), true ? __vite__mapDeps([4,1,2,3]) : void 0).then((m) => new m.ShareWeb())
+  web: () => __vitePreload(() => import("./web-C-1o0Jrx.js"), true ? __vite__mapDeps([4,1,2,3]) : void 0).then((m) => new m.ShareWeb())
 });
 const Media = registerPlugin("Media", {
-  web: () => __vitePreload(() => import("./web-BOLL-Khj.js"), true ? __vite__mapDeps([5,1,2,3]) : void 0).then((m) => new m.MediaWeb())
+  web: () => __vitePreload(() => import("./web-Gri2337f.js"), true ? __vite__mapDeps([5,1,2,3]) : void 0).then((m) => new m.MediaWeb())
 });
 function getSafeReceiptFilename(txId) {
   const d = /* @__PURE__ */ new Date();
@@ -62128,49 +62203,79 @@ function Profile({
     } catch {
     }
   };
-  const handleToggleBiometrics = () => {
+  const handleToggleBiometrics = async () => {
     const nextVal = !biometrics;
+    const methodLabel = BiometricAuthService.getDeviceBiometricName();
+    if (nextVal) {
+      BiometricAuthService.markBiometricEnrolled(currentUser.id, BiometricAuthService.getBiometricMethod());
+    } else {
+      BiometricAuthService.clearStoredCredential(currentUser.id);
+    }
     setBiometrics(nextVal);
     const updated = { ...currentUser, biometricEnabled: nextVal };
     onUpdateUser(updated);
-    if (!nextVal) {
-      BiometricAuthService.clearStoredCredential(currentUser.id);
-    }
     const users = LocalDb.getUsers();
     const idx = users.findIndex((u2) => u2.id === currentUser.id);
     if (idx !== -1) {
       users[idx].biometricEnabled = nextVal;
       LocalDb.setUsers(users);
     }
-    LocalDb.addNotification(currentUser.id, "Biometric Settings Updated", `Touch/Face ID has been successfully ${nextVal ? "enabled" : "disabled"}.`, "info");
+    LocalDb.addNotification(
+      currentUser.id,
+      "Biometric Settings Updated",
+      `${methodLabel} verification has been ${nextVal ? "saved in the app" : "disabled"}.`,
+      "info"
+    );
   };
-  const handlePinChange = (e) => {
-    e.preventDefault();
+  const handlePinChange = async () => {
     setErrorMsg("");
     setSuccessMsg("");
-    if (newPin.length !== 4) {
-      setErrorMsg("New security PIN must be exactly 4 digits.");
+    if (BiometricAuthService.hasAppPin(currentUser.id)) {
+      if (!oldPin) {
+        setErrorMsg("Please enter your current in-app PIN.");
+        return;
+      }
+      const oldMatches = await BiometricAuthService.verifyAppPin(currentUser.id, oldPin);
+      if (!oldMatches) {
+        setErrorMsg("Current PIN does not match our in-app security record.");
+        return;
+      }
+    }
+    if (newPin.length < 4 || newPin.length > 6) {
+      setErrorMsg("New security PIN must be 4 to 6 digits.");
       return;
     }
-    LocalDb.addAuditLog(currentUser.id, currentUser.email, "USER_PIN_CHANGE", "User updated their 4-digit secure transaction authorization PIN.");
-    setSuccessMsg("Your security PIN code was updated successfully!");
+    await BiometricAuthService.saveAppPin(currentUser.id, newPin);
+    LocalDb.addAuditLog(currentUser.id, currentUser.email, "USER_PIN_CHANGE", "User updated their in-app secure authorization PIN.");
+    setSuccessMsg("Your security PIN was saved in the app!");
     setOldPin("");
     setNewPin("");
-    setTimeout(() => setShowPinForm(false), 2e3);
+    setTimeout(() => setShowPinForm(false), 1800);
   };
-  const handlePasswordChange = (e) => {
-    e.preventDefault();
+  const handlePasswordChange = async () => {
     setErrorMsg("");
     setSuccessMsg("");
+    if (BiometricAuthService.hasAppPassword(currentUser.id)) {
+      if (!oldPass) {
+        setErrorMsg("Please enter your current in-app password.");
+        return;
+      }
+      const oldMatches = await BiometricAuthService.verifyAppPassword(currentUser.id, oldPass);
+      if (!oldMatches) {
+        setErrorMsg("Current password does not match our in-app security record.");
+        return;
+      }
+    }
     if (newPass.length < 6) {
       setErrorMsg("New password must be at least 6 characters.");
       return;
     }
-    LocalDb.addAuditLog(currentUser.id, currentUser.email, "USER_PASS_CHANGE", "User updated their security access password.");
-    setSuccessMsg("Security password successfully updated!");
+    await BiometricAuthService.saveAppPassword(currentUser.id, newPass);
+    LocalDb.addAuditLog(currentUser.id, currentUser.email, "USER_PASS_CHANGE", "User updated their in-app security access password.");
+    setSuccessMsg("Security password saved in the app!");
     setOldPass("");
     setNewPass("");
-    setTimeout(() => setShowPassForm(false), 2e3);
+    setTimeout(() => setShowPassForm(false), 1800);
   };
   const handleLangChange = (code) => {
     setActiveLang(code);
@@ -62404,13 +62509,18 @@ function Profile({
               /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "p-2 bg-emerald-50 text-emerald-800 rounded-xl", children: /* @__PURE__ */ jsxRuntimeExports.jsx(Fingerprint, { className: "w-5 h-5" }) }),
               /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { children: [
                 /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-sm font-bold text-gray-800", children: "Biometric Verification" }),
-                /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-[10px] text-gray-400", children: "Unlock app via Fingerprint / Face ID" })
+                /* @__PURE__ */ jsxRuntimeExports.jsxs("p", { className: "text-[10px] text-gray-400", children: [
+                  "Unlock app via ",
+                  BiometricAuthService.getDeviceBiometricName(),
+                  " (saved in app only)"
+                ] })
               ] })
             ] }),
             /* @__PURE__ */ jsxRuntimeExports.jsx(
               "button",
               {
                 id: "btn-toggle-biometrics",
+                type: "button",
                 onClick: handleToggleBiometrics,
                 className: `w-12 h-6.5 rounded-full p-1 transition duration-300 cursor-pointer ${biometrics ? "bg-emerald-800" : "bg-gray-200"}`,
                 children: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: `w-4.5 h-4.5 bg-white rounded-full shadow-md transition-transform duration-300 transform ${biometrics ? "translate-x-5.5" : "translate-x-0"}` })
@@ -62422,6 +62532,7 @@ function Profile({
               "button",
               {
                 id: "btn-toggle-pin-form",
+                type: "button",
                 onClick: () => setShowPinForm(!showPinForm),
                 className: "w-full flex justify-between items-center text-sm font-semibold text-gray-700 hover:text-emerald-800 transition cursor-pointer",
                 children: [
@@ -62433,37 +62544,48 @@ function Profile({
                 ]
               }
             ),
-            showPinForm && /* @__PURE__ */ jsxRuntimeExports.jsxs("form", { onSubmit: handlePinChange, className: "mt-3.5 space-y-3 p-3 bg-gray-50 rounded-2xl border border-gray-100 animate-in slide-in-from-top-2 duration-150", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
+            showPinForm && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-3.5 space-y-3 p-3 bg-gray-50 rounded-2xl border border-gray-100 animate-in slide-in-from-top-2 duration-150", children: [
+              BiometricAuthService.hasAppPin(currentUser.id) && /* @__PURE__ */ jsxRuntimeExports.jsx(
                 "input",
                 {
-                  type: "password",
-                  maxLength: 4,
-                  placeholder: "Old 4-Digit PIN",
+                  type: "text",
+                  inputMode: "numeric",
+                  autoComplete: "off",
+                  autoCorrect: "off",
+                  autoCapitalize: "off",
+                  spellCheck: false,
+                  "data-form-type": "other",
+                  maxLength: 6,
+                  placeholder: "Current In-App PIN",
                   value: oldPin,
                   onChange: (e) => setOldPin(e.target.value.replace(/\D/g, "")),
-                  className: "w-full bg-white border border-gray-100 rounded-xl px-3 py-2 text-xs font-mono",
-                  required: true
+                  className: "w-full bg-white border border-gray-100 rounded-xl px-3 py-2 text-xs font-mono [-webkit-text-security:disc]"
                 }
               ),
               /* @__PURE__ */ jsxRuntimeExports.jsx(
                 "input",
                 {
-                  type: "password",
-                  maxLength: 4,
-                  placeholder: "New 4-Digit PIN",
+                  type: "text",
+                  inputMode: "numeric",
+                  autoComplete: "off",
+                  autoCorrect: "off",
+                  autoCapitalize: "off",
+                  spellCheck: false,
+                  "data-form-type": "other",
+                  maxLength: 6,
+                  placeholder: "New 4–6 Digit PIN (saved in app)",
                   value: newPin,
                   onChange: (e) => setNewPin(e.target.value.replace(/\D/g, "")),
-                  className: "w-full bg-white border border-gray-100 rounded-xl px-3 py-2 text-xs font-mono",
-                  required: true
+                  className: "w-full bg-white border border-gray-100 rounded-xl px-3 py-2 text-xs font-mono [-webkit-text-security:disc]"
                 }
               ),
               /* @__PURE__ */ jsxRuntimeExports.jsx(
                 "button",
                 {
-                  type: "submit",
-                  className: "w-full bg-emerald-800 text-white font-bold py-2 rounded-xl text-xs transition",
-                  children: "Save PIN Change"
+                  type: "button",
+                  onClick: handlePinChange,
+                  className: "w-full bg-emerald-800 text-white font-bold py-2 rounded-xl text-xs transition cursor-pointer",
+                  children: "Save PIN in App"
                 }
               )
             ] })
@@ -62472,6 +62594,7 @@ function Profile({
             /* @__PURE__ */ jsxRuntimeExports.jsxs(
               "button",
               {
+                type: "button",
                 onClick: () => setShowPassForm(!showPassForm),
                 className: "w-full flex justify-between items-center text-sm font-semibold text-gray-700 hover:text-emerald-800 transition cursor-pointer",
                 children: [
@@ -62483,35 +62606,44 @@ function Profile({
                 ]
               }
             ),
-            showPassForm && /* @__PURE__ */ jsxRuntimeExports.jsxs("form", { onSubmit: handlePasswordChange, className: "mt-3.5 space-y-3 p-3 bg-gray-50 rounded-2xl border border-gray-100 animate-in slide-in-from-top-2 duration-150", children: [
-              /* @__PURE__ */ jsxRuntimeExports.jsx(
+            showPassForm && /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "mt-3.5 space-y-3 p-3 bg-gray-50 rounded-2xl border border-gray-100 animate-in slide-in-from-top-2 duration-150", children: [
+              BiometricAuthService.hasAppPassword(currentUser.id) && /* @__PURE__ */ jsxRuntimeExports.jsx(
                 "input",
                 {
-                  type: "password",
-                  placeholder: "Old Password",
+                  type: "text",
+                  autoComplete: "off",
+                  autoCorrect: "off",
+                  autoCapitalize: "off",
+                  spellCheck: false,
+                  "data-form-type": "other",
+                  placeholder: "Current In-App Password",
                   value: oldPass,
                   onChange: (e) => setOldPass(e.target.value),
-                  className: "w-full bg-white border border-gray-100 rounded-xl px-3 py-2 text-xs",
-                  required: true
+                  className: "w-full bg-white border border-gray-100 rounded-xl px-3 py-2 text-xs [-webkit-text-security:disc]"
                 }
               ),
               /* @__PURE__ */ jsxRuntimeExports.jsx(
                 "input",
                 {
-                  type: "password",
-                  placeholder: "New Password (min 6 chars)",
+                  type: "text",
+                  autoComplete: "off",
+                  autoCorrect: "off",
+                  autoCapitalize: "off",
+                  spellCheck: false,
+                  "data-form-type": "other",
+                  placeholder: "New Password (min 6 chars, saved in app)",
                   value: newPass,
                   onChange: (e) => setNewPass(e.target.value),
-                  className: "w-full bg-white border border-gray-100 rounded-xl px-3 py-2 text-xs",
-                  required: true
+                  className: "w-full bg-white border border-gray-100 rounded-xl px-3 py-2 text-xs [-webkit-text-security:disc]"
                 }
               ),
               /* @__PURE__ */ jsxRuntimeExports.jsx(
                 "button",
                 {
-                  type: "submit",
-                  className: "w-full bg-emerald-800 text-white font-bold py-2 rounded-xl text-xs transition",
-                  children: "Save Password"
+                  type: "button",
+                  onClick: handlePasswordChange,
+                  className: "w-full bg-emerald-800 text-white font-bold py-2 rounded-xl text-xs transition cursor-pointer",
+                  children: "Save Password in App"
                 }
               )
             ] })

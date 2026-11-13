@@ -12314,6 +12314,10 @@
     user-select: text;
   }
 
+  .\[-webkit-text-security\:disc\] {
+    -webkit-text-security: disc;
+  }
+
   .\[animation-delay\:180ms\] {
     animation-delay: .18s;
   }

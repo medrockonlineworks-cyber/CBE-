@@ -246,7 +246,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
     });
   };
 
-  const handleLoginAttempt = () => {
+  const handleLoginAttempt = async () => {
     if (!pin || pin.trim().length === 0) {
       setShowError(true);
       setErrorMessage('This field is required');
@@ -259,7 +259,19 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
       return;
     }
 
-    LocalDb.addAuditLog(selectedUser.id, selectedUser.email, 'USER_LOGIN', `User ${selectedUser.name} logged in via PIN authentication.`);
+    if (BiometricAuthService.hasAppPin(selectedUser.id)) {
+      const isValidPin = await BiometricAuthService.verifyAppPin(selectedUser.id, pin);
+      if (!isValidPin) {
+        setShowError(true);
+        setErrorMessage('Incorrect PIN. Please try again.');
+        setPin('');
+        return;
+      }
+    } else {
+      await BiometricAuthService.saveAppPin(selectedUser.id, pin);
+    }
+
+    LocalDb.addAuditLog(selectedUser.id, selectedUser.email, 'USER_LOGIN', `User ${selectedUser.name} logged in via in-app PIN authentication.`);
     localStorage.setItem('tana_active_user_id', selectedUser.id);
     onLoginSuccess(selectedUser);
   };
