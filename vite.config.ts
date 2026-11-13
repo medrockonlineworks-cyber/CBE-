@@ -212,8 +212,8 @@ export default defineConfig(() => {
         ],
         manifest: {
           id: '/',
-          name: 'CBE Mobile',
-          short_name: 'CBE Mobile',
+          name: 'CBE Mobile Banking',
+          short_name: 'CBE Mobile Banking',
           description: 'Official Commercial Bank of Ethiopia (CBE) Mobile Banking application with instant transfers, bill payments, and secure account management.',
           start_url: '/',
           scope: '/',

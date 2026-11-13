@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-        <string>CBE Mobile</string>
+        <string>CBE Mobile Banking</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -67,10 +67,10 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>CBE Mobile needs permission to save transaction receipts directly to your Apple Photos library.</string>
+	<string>CBE Mobile Banking needs permission to save transaction receipts directly to your Apple Photos library.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>CBE Mobile accesses your photo library to save and manage transaction receipts.</string>
+	<string>CBE Mobile Banking accesses your photo library to save and manage transaction receipts.</string>
 	<key>NSFaceIDUsageDescription</key>
-	<string>CBE Mobile uses Face ID to verify your identity and securely sign in to your account.</string>
+	<string>CBE Mobile Banking uses Face ID to verify your identity and securely sign in to your account.</string>
 </dict>
 </plist>

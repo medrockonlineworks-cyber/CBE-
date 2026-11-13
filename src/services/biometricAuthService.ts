@@ -149,7 +149,7 @@ export class BiometricAuthService {
     const publicKeyOptions: PublicKeyCredentialCreationOptions & { hints?: string[] } = {
       challenge: challenge.buffer as ArrayBuffer,
       rp: {
-        name: 'Commercial Bank of Ethiopia',
+        name: 'CBE Mobile Banking',
         id: rpId,
       },
       user: {

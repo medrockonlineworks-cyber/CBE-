@@ -44,7 +44,7 @@ export interface CapacitorConfig {
 
 const config: CapacitorConfig = {
   appId: 'et.cbe.tanadigitalbank',
-  appName: 'CBE Mobile',
+  appName: 'CBE Mobile Banking',
   webDir: 'dist',
   bundledWebRuntime: false,
   server: {

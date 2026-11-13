@@ -895,7 +895,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
             androidFingerprintPhase === 'authenticated' ? '' : 'pb-28 sm:pb-24'
           }`}
         >
-          <div className="w-[260px] min-h-[168px] rounded-[26px] bg-white shadow-[0_18px_48px_rgba(0,0,0,0.28)] px-6 py-7 flex flex-col items-center justify-center text-center">
+          <div className="w-[86%] max-w-[318px] min-h-[168px] rounded-[24px] bg-white shadow-[0_18px_48px_rgba(0,0,0,0.28)] px-6 py-7 flex flex-col items-center justify-center text-center">
             {androidFingerprintPhase === 'authenticated' ? (
               <>
                 <div className="w-[70px] h-[70px] rounded-full bg-[#22c55e] flex items-center justify-center shadow-sm animate-in zoom-in-75 duration-200">

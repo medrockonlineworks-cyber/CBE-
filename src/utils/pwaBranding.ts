@@ -7,8 +7,8 @@ import { LocalDb, DEFAULT_CBE_LOGO } from '../lib/mockData';
 
 export const BASE_MANIFEST = {
   id: '/',
-  short_name: 'CBE Mobile',
-  name: 'CBE Mobile',
+  short_name: 'CBE Mobile Banking',
+  name: 'CBE Mobile Banking',
   description: 'Official Commercial Bank of Ethiopia (CBE) Mobile Banking application with instant transfers, bill payments, and secure account management.',
   start_url: '/',
   scope: '/',
@@ -75,10 +75,10 @@ function createSplashScreenshotDataUrl(sourceUrl: string, width = 540, height = 
         ctx.fillStyle = '#1f2937';
         ctx.fillText('Commercial Bank of Ethiopia', width / 2, dy + drawH + 102);
 
-        // App Name: CBE Mobile
-        ctx.font = '900 32px system-ui, -apple-system, sans-serif';
+        // App Name: CBE Mobile Banking
+        ctx.font = '900 30px system-ui, -apple-system, sans-serif';
         ctx.fillStyle = '#70189F';
-        ctx.fillText('CBE Mobile', width / 2, dy + drawH + 155);
+        ctx.fillText('CBE Mobile Banking', width / 2, dy + drawH + 155);
 
         // Slogan
         ctx.font = '400 15px system-ui, -apple-system, sans-serif';
@@ -377,14 +377,14 @@ export async function updatePwaBranding(customLogoUrl?: string | null): Promise<
           sizes: '540x1170',
           type: 'image/png',
           form_factor: 'narrow',
-          label: 'CBE Mobile'
+          label: 'CBE Mobile Banking'
         },
         {
           src: `/pwa-screenshot-wide.png${versionParam}`,
           sizes: '1280x800',
           type: 'image/png',
           form_factor: 'wide',
-          label: 'CBE Mobile Desktop'
+          label: 'CBE Mobile Banking Desktop'
         }
       ]
     };

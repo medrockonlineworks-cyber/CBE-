@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "short_name": "CBE Mobile",
-  "name": "CBE Mobile",
-  "description": "Official Commercial Bank of Ethiopia (CBE) CBE Mobile application with instant transfers, bill payments, and secure account management.",
+  "short_name": "CBE Mobile Banking",
+  "name": "CBE Mobile Banking",
+  "description": "Official Commercial Bank of Ethiopia (CBE) Mobile Banking application with instant transfers, bill payments, and secure account management.",
   "icons": [
     {
       "src": "/icons/icon-192.png",

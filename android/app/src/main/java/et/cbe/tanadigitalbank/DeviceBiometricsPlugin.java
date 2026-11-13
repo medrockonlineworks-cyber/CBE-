@@ -19,7 +19,7 @@ public class DeviceBiometricsPlugin extends Plugin {
 
     @PluginMethod
     public void authenticate(PluginCall call) {
-        final String reason = call.getString("reason", "Use your fingerprint to sign in to CBE Mobile");
+        final String reason = call.getString("reason", "Authenticate to continue.");
         final FragmentActivity activity = getActivity();
 
         if (activity == null) {
