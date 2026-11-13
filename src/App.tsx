@@ -21,6 +21,8 @@ import { PhoneCallService } from './services/phoneCallService';
 import { SmsService } from './services/smsService';
 import { PhoneSettingsService } from './services/phoneSettingsService';
 import { SystemBarsService } from './services/systemBarsService';
+import { AuthSessionService } from './services/authSessionService';
+import { BiometricAuthService } from './services/biometricAuthService';
 import Navigation, { TabType } from './components/Navigation';
 import OfflineBanner from './components/OfflineBanner';
 import PhoneRecentAppsModal, { AppViewId } from './components/PhoneRecentAppsModal';
@@ -150,6 +152,7 @@ export default function App() {
   const [smsActiveAccountId, setSmsActiveAccountId] = useState<string | undefined>(undefined);
   const [isIPhone, setIsIPhone] = useState<boolean>(() => PhoneSettingsService.isIPhoneMode());
   const [showPhoneSettingsModal, setShowPhoneSettingsModal] = useState<boolean>(false);
+  const [showBiometricEnrollPrompt, setShowBiometricEnrollPrompt] = useState<boolean>(false);
 
   useEffect(() => {
     return PhoneSettingsService.subscribe(() => {
@@ -551,15 +554,37 @@ export default function App() {
     }
   }, []);
 
-  const handleLoginSuccess = (user: UserProfile) => {
+  const handleLoginSuccess = (
+    user: UserProfile,
+    method: 'biometric' | 'credentials' = 'credentials'
+  ) => {
     setCurrentUser(user);
     localStorage.setItem('tana_active_user_id', user.id);
+    const alreadyEnrolled = BiometricAuthService.isBiometricEnrolledForUser(user.id);
+    setShowBiometricEnrollPrompt(method === 'credentials' && !alreadyEnrolled);
     navigateTo('main', 'home');
   };
 
-  const handleLogout = () => {
-    if (currentUser) {
-      LocalDb.addAuditLog(currentUser.id, currentUser.email, 'USER_LOGOUT', 'User logged out and destroyed local authentication session.');
+  const handleLogout = async () => {
+    const loggingOutUser = currentUser;
+    if (loggingOutUser) {
+      LocalDb.addAuditLog(
+        loggingOutUser.id,
+        loggingOutUser.email,
+        'USER_LOGOUT',
+        'User logged out, revoked server session, and cleared local biometric credentials.'
+      );
+    }
+    setShowBiometricEnrollPrompt(false);
+    await AuthSessionService.logoutFromBackend(loggingOutUser?.id);
+    if (loggingOutUser?.id) {
+      await BiometricAuthService.clearStoredCredential(loggingOutUser.id);
+      const users = LocalDb.getUsers();
+      const idx = users.findIndex((u) => u.id === loggingOutUser.id);
+      if (idx !== -1) {
+        users[idx].biometricEnabled = false;
+        LocalDb.setUsers(users);
+      }
     }
     setCurrentUser(null);
     localStorage.removeItem('tana_active_user_id');
@@ -631,6 +656,8 @@ export default function App() {
           <Home 
             currentUser={activeUser}
             onUpdateCurrentUser={handleUpdateUserProfile}
+            promptBiometricEnroll={showBiometricEnrollPrompt}
+            onDismissBiometricPrompt={() => setShowBiometricEnrollPrompt(false)}
             onNavigateToTab={(tab, subTab) => {
               setActiveTab(tab);
               if (tab === 'transfer' && subTab) {

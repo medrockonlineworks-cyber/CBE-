@@ -1,24 +1,76 @@
 import { Capacitor, registerPlugin } from '@capacitor/core';
 import { UserProfile } from '../types';
 import { PhoneSettingsService } from './phoneSettingsService';
+import { AuthSessionService } from './authSessionService';
 
 export type BiometricMethod = 'faceid' | 'fingerprint';
 
+export type BiometricHardwareStatus =
+  | 'available'
+  | 'not_enrolled'
+  | 'no_hardware'
+  | 'lockout'
+  | 'unavailable'
+  | 'iframe_blocked';
+
+export interface BiometricAvailability {
+  available: boolean;
+  enrolled: boolean;
+  method: BiometricMethod;
+  hardwareStatus: BiometricHardwareStatus;
+  reason?: string;
+}
+
 export interface BiometricAttemptResult {
-  status: 'success' | 'cancelled' | 'iframe_blocked' | 'unsupported' | 'error';
+  status:
+    | 'success'
+    | 'cancelled'
+    | 'iframe_blocked'
+    | 'unsupported'
+    | 'not_enrolled'
+    | 'not_enabled'
+    | 'lockout'
+    | 'biometric_changed'
+    | 'session_expired'
+    | 'network_error'
+    | 'error';
   method: BiometricMethod;
   message?: string;
 }
 
 interface NativeBiometricResponse {
   verified: boolean;
+  enrolled?: boolean;
+  token?: string;
   cancelled?: boolean;
   unavailable?: boolean;
+  biometricChanged?: boolean;
+  errorCode?: string;
   method?: string;
   error?: string;
 }
 
+interface NativeAvailabilityResponse {
+  available: boolean;
+  enrolled: boolean;
+  hardwareStatus?: BiometricHardwareStatus;
+  method?: string;
+  reason?: string;
+}
+
 interface DeviceBiometricsPluginInterface {
+  checkAvailability(): Promise<NativeAvailabilityResponse>;
+  enrollAndStoreToken(options: {
+    userId: string;
+    token: string;
+    reason: string;
+  }): Promise<NativeBiometricResponse>;
+  authenticateAndRetrieveToken(options: {
+    userId: string;
+    reason: string;
+    allowDeviceCredential?: boolean;
+  }): Promise<NativeBiometricResponse>;
+  clearToken(options: { userId: string }): Promise<{ cleared: boolean }>;
   authenticate(options: { reason: string }): Promise<NativeBiometricResponse>;
 }
 
@@ -32,7 +84,6 @@ interface StoredWebAuthnCredential {
 }
 
 const CRED_STORAGE_PREFIX = 'cbe_device_biometric_cred_v1_';
-const DEVICE_CRED_KEY = 'cbe_device_biometric_cred_v1_device';
 const APP_SECURITY_PREFIX = 'cbe_app_security_vault_v1_';
 
 export interface AppSecurityVaultRecord {
@@ -51,7 +102,6 @@ async function sha256Hex(input: string): Promise<string> {
       .map((b) => b.toString(16).padStart(2, '0'))
       .join('');
   }
-  // Fallback deterministic FNV-1a mix for non-subtle contexts
   let h1 = 0x811c9dc5;
   let h2 = 0x01000193;
   for (let i = 0; i < input.length; i++) {
@@ -71,7 +121,8 @@ function bytesToBase64Url(bytes: Uint8Array): string {
 }
 
 function base64UrlToBytes(base64url: string): Uint8Array {
-  const padded = base64url.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((base64url.length + 3) % 4);
+  const padded =
+    base64url.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((base64url.length + 3) % 4);
   const binary = atob(padded);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {
@@ -100,7 +151,6 @@ export class BiometricAuthService {
   /**
    * Returns 'faceid' on iPhone/iPad (native iOS, physical iOS device, or iPhone simulator preset),
    * and 'fingerprint' on Android devices/presets.
-   * Hardware OS always takes priority on real mobile devices.
    */
   public static getBiometricMethod(): BiometricMethod {
     if (typeof window !== 'undefined') {
@@ -131,11 +181,6 @@ export class BiometricAuthService {
         const parsed = JSON.parse(userRaw) as StoredWebAuthnCredential;
         if (parsed?.credId && parsed?.rpId) return parsed;
       }
-      const deviceRaw = localStorage.getItem(DEVICE_CRED_KEY);
-      if (deviceRaw) {
-        const parsed = JSON.parse(deviceRaw) as StoredWebAuthnCredential;
-        if (parsed?.credId && parsed?.rpId) return parsed;
-      }
       return null;
     } catch {
       return null;
@@ -145,24 +190,32 @@ export class BiometricAuthService {
   public static saveStoredCredential(userId: string, cred: StoredWebAuthnCredential): void {
     if (typeof window === 'undefined') return;
     try {
-      const serialized = JSON.stringify(cred);
-      localStorage.setItem(`${CRED_STORAGE_PREFIX}${userId}`, serialized);
-      localStorage.setItem(DEVICE_CRED_KEY, serialized);
+      localStorage.setItem(`${CRED_STORAGE_PREFIX}${userId}`, JSON.stringify(cred));
     } catch {
       // Non-blocking
     }
   }
 
-  public static clearStoredCredential(userId: string): void {
-    if (typeof window === 'undefined') return;
-    try {
-      localStorage.removeItem(`${CRED_STORAGE_PREFIX}${userId}`);
-      localStorage.removeItem(DEVICE_CRED_KEY);
-      const vault = this.getSecurityVault(userId);
-      vault.biometricEnrolled = false;
-      this.saveSecurityVault(userId, vault);
-    } catch {
-      // Non-blocking
+  public static async clearStoredCredential(userId: string): Promise<void> {
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.removeItem(`${CRED_STORAGE_PREFIX}${userId}`);
+        const vault = this.getSecurityVault(userId);
+        vault.biometricEnrolled = false;
+        this.saveSecurityVault(userId, vault);
+      } catch {
+        // Non-blocking
+      }
+    }
+
+    await AuthSessionService.clearSealedTokens(userId);
+
+    if (typeof window !== 'undefined' && Capacitor.isNativePlatform()) {
+      try {
+        await DeviceBiometricsNative.clearToken({ userId });
+      } catch {
+        // Ignore if native binary doesn't implement clearToken
+      }
     }
   }
 
@@ -236,6 +289,11 @@ export class BiometricAuthService {
     this.saveSecurityVault(userId, vault);
   }
 
+  public static isBiometricEnrolledForUser(userId: string): boolean {
+    const vault = this.getSecurityVault(userId);
+    return Boolean(vault.biometricEnrolled);
+  }
+
   public static getSecuritySummary(userId: string): {
     hasPin: boolean;
     hasPassword: boolean;
@@ -246,7 +304,7 @@ export class BiometricAuthService {
     return {
       hasPin: Boolean(vault.pinHash),
       hasPassword: Boolean(vault.passwordHash),
-      biometricEnrolled: Boolean(vault.biometricEnrolled || this.getStoredCredential(userId)),
+      biometricEnrolled: Boolean(vault.biometricEnrolled),
       deviceMethod: this.getBiometricMethod(),
     };
   }
@@ -271,13 +329,85 @@ export class BiometricAuthService {
     }
   }
 
+  /**
+   * Step-by-step hardware & enrollment check for both native Capacitor and Web/PWA.
+   */
+  public static async checkAvailability(): Promise<BiometricAvailability> {
+    const defaultMethod = this.getBiometricMethod();
+    if (typeof window === 'undefined') {
+      return {
+        available: false,
+        enrolled: false,
+        method: defaultMethod,
+        hardwareStatus: 'unavailable',
+        reason: 'Browser window unavailable.',
+      };
+    }
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const res = await DeviceBiometricsNative.checkAvailability();
+        const resolvedMethod: BiometricMethod =
+          res.method === 'faceid' ? 'faceid' : res.method === 'touchid' ? 'faceid' : defaultMethod;
+        return {
+          available: Boolean(res.available),
+          enrolled: Boolean(res.enrolled),
+          method: resolvedMethod,
+          hardwareStatus: res.hardwareStatus || (res.available ? 'available' : 'unavailable'),
+          reason: res.reason,
+        };
+      } catch {
+        // Fall through if native plugin isn't compiled
+      }
+    }
+
+    if (!window.isSecureContext || !navigator.credentials || !window.PublicKeyCredential) {
+      return {
+        available: false,
+        enrolled: false,
+        method: defaultMethod,
+        hardwareStatus: 'no_hardware',
+        reason: 'Device biometrics require HTTPS or a native mobile build.',
+      };
+    }
+
+    const inIframe = window.self !== window.top;
+    const supported = await this.isPlatformAuthenticatorAvailable();
+    if (!supported) {
+      const isRealMobile =
+        PhoneSettingsService.isIPhoneDevice() ||
+        /Android/i.test(navigator.userAgent || '');
+      if (inIframe && isRealMobile) {
+        return {
+          available: false,
+          enrolled: false,
+          method: defaultMethod,
+          hardwareStatus: 'iframe_blocked',
+          reason: `Open this app directly in ${defaultMethod === 'faceid' ? 'Safari' : 'Chrome'} to use device ${this.getDeviceBiometricName(defaultMethod)}.`,
+        };
+      }
+      return {
+        available: false,
+        enrolled: false,
+        method: defaultMethod,
+        hardwareStatus: 'not_enrolled',
+        reason: `${this.getDeviceBiometricName(defaultMethod)} is not configured on this device/browser.`,
+      };
+    }
+
+    return {
+      available: true,
+      enrolled: true,
+      method: defaultMethod,
+      hardwareStatus: 'available',
+    };
+  }
+
   private static async enrollPlatformCredential(user: UserProfile, method: BiometricMethod): Promise<void> {
     const rpId = window.location.hostname;
     const userIdBytes = utf8ToBytes(user.id || 'cbe_user');
     const challenge = generateChallenge(32);
 
-    // Request a non-resident local device credential (discouraged) so browsers keep
-    // verification hardware-local instead of syncing/saving to Google or Safari Password Manager.
     const publicKeyOptions: PublicKeyCredentialCreationOptions = {
       challenge: challenge.buffer as ArrayBuffer,
       rp: {
@@ -290,8 +420,8 @@ export class BiometricAuthService {
         displayName: user.name || 'CBE Customer',
       },
       pubKeyCredParams: [
-        { type: 'public-key', alg: -7 },   // ES256 (iOS Secure Enclave / Android Keystore)
-        { type: 'public-key', alg: -257 }, // RS256 fallback
+        { type: 'public-key', alg: -7 },
+        { type: 'public-key', alg: -257 },
       ],
       authenticatorSelection: {
         authenticatorAttachment: 'platform',
@@ -318,7 +448,6 @@ export class BiometricAuthService {
       method,
       createdAt: new Date().toISOString(),
     });
-    this.markBiometricEnrolled(user.id, method);
   }
 
   private static async verifyPlatformCredential(credId: string, rpId: string): Promise<void> {
@@ -349,56 +478,204 @@ export class BiometricAuthService {
   }
 
   /**
-   * Activates the real OS device security login system:
-   * 1. Native Capacitor (iOS LAContext Face ID / Android BiometricPrompt Fingerprint) when running in native app
-   * 2. WebAuthn Platform Authenticator (Face ID in iOS Safari/PWA / Fingerprint in Android Chrome)
+   * Enrollment workflow (Section 4):
+   * 1. Check biometric hardware availability and enrolled biometrics.
+   * 2. Request a backend biometric-bound rotating refresh token (requires valid login session).
+   * 3. Authenticate with native Face ID / Fingerprint & seal hardware DEK + encrypted refresh token.
+   * 4. Save biometric-enabled preference only after hardware + backend succeed.
    */
-  public static async authenticateWithDevice(user: UserProfile): Promise<BiometricAttemptResult> {
+  public static async enableBiometricLogin(user: UserProfile): Promise<BiometricAttemptResult> {
+    const availability = await this.checkAvailability();
+    const method = availability.method;
+    const methodName = this.getDeviceBiometricName(method);
+
+    if (!availability.available) {
+      if (availability.hardwareStatus === 'iframe_blocked') {
+        return {
+          status: 'iframe_blocked',
+          method,
+          message: availability.reason,
+        };
+      }
+      return {
+        status: availability.hardwareStatus === 'not_enrolled' ? 'not_enrolled' : 'unsupported',
+        method,
+        message: availability.reason || `${methodName} is unavailable on this device.`,
+      };
+    }
+
+    const backendEnroll = await AuthSessionService.requestBiometricEnrollmentToken(method);
+    if (!backendEnroll.ok || !backendEnroll.refreshToken) {
+      return {
+        status: backendEnroll.errorCode === 'NETWORK_ERROR' ? 'network_error' : 'error',
+        method,
+        message: backendEnroll.message || 'Could not enable biometric session on server.',
+      };
+    }
+
+    const reason =
+      method === 'faceid'
+        ? 'Sign in to CBE Mobile Banking'
+        : 'Authenticate to continue.';
+
+    // Native Capacitor iOS Keychain (.biometryCurrentSet) / Android Keystore (CryptoObject)
+    if (typeof window !== 'undefined' && Capacitor.isNativePlatform()) {
+      try {
+        const hardwareDek = AuthSessionService.generateHardwareDekBase64();
+        const nativeRes = await DeviceBiometricsNative.enrollAndStoreToken({
+          userId: user.id,
+          token: hardwareDek,
+          reason,
+        });
+
+        const resolvedMethod: BiometricMethod =
+          nativeRes.method === 'faceid' || nativeRes.method === 'touchid'
+            ? 'faceid'
+            : nativeRes.method === 'fingerprint'
+              ? 'fingerprint'
+              : method;
+
+        if (!nativeRes.verified) {
+          await AuthSessionService.disableBiometricsOnBackend();
+          return this.mapNativeFailure(nativeRes, resolvedMethod);
+        }
+
+        await AuthSessionService.sealRefreshTokenWithKey(
+          user.id,
+          backendEnroll.refreshToken,
+          hardwareDek
+        );
+        this.markBiometricEnrolled(user.id, resolvedMethod);
+        return { status: 'success', method: resolvedMethod };
+      } catch (err) {
+        await AuthSessionService.disableBiometricsOnBackend();
+        return {
+          status: 'error',
+          method,
+          message: err instanceof Error ? err.message : `Failed to store ${methodName} credential.`,
+        };
+      }
+    }
+
+    // Web / PWA: Non-discoverable WebAuthn credential + IndexedDB non-extractable WebCrypto encryption
+    try {
+      await this.enrollPlatformCredential(user, method);
+      await AuthSessionService.sealRefreshTokenWithKey(user.id, backendEnroll.refreshToken);
+      this.markBiometricEnrolled(user.id, method);
+      return { status: 'success', method };
+    } catch (err) {
+      await AuthSessionService.disableBiometricsOnBackend();
+      return this.mapWebAuthnError(err, method, Date.now());
+    }
+  }
+
+  /**
+   * Disables biometric login on backend, wipes Keychain/Keystore & sealed refresh tokens.
+   */
+  public static async disableBiometricLogin(userId: string): Promise<void> {
+    await AuthSessionService.disableBiometricsOnBackend();
+    await this.clearStoredCredential(userId);
+  }
+
+  /**
+   * Login workflow (Section 3):
+   * 1. Prompts native OS Face ID / Fingerprint or WebAuthn verification.
+   * 2. Unseals hardware-protected refresh token ONLY upon OS biometric success.
+   * 3. Validates & rotates the refresh token with the backend (/api/auth/refresh) before unlocking.
+   */
+  public static async authenticateWithDevice(
+    user: UserProfile,
+    options?: { allowDeviceCredential?: boolean }
+  ): Promise<BiometricAttemptResult> {
     const method = this.getBiometricMethod();
     const methodName = this.getDeviceBiometricName(method);
 
-    // 1. Native Capacitor Bridge (exact iOS LAContext Face ID / Android BiometricPrompt)
+    // 1. Native Capacitor Path (iOS Keychain .biometryCurrentSet / Android Keystore CryptoObject)
     if (typeof window !== 'undefined' && Capacitor.isNativePlatform()) {
       try {
-        const res = await DeviceBiometricsNative.authenticate({
+        const res = await DeviceBiometricsNative.authenticateAndRetrieveToken({
+          userId: user.id,
           reason:
             method === 'faceid'
               ? 'Sign in to Commercial Bank of Ethiopia'
               : 'Authenticate to continue.',
+          allowDeviceCredential: options?.allowDeviceCredential ?? false,
         });
 
         const resolvedMethod: BiometricMethod =
-          res?.method === 'faceid' ? 'faceid' : res?.method === 'fingerprint' ? 'fingerprint' : method;
+          res?.method === 'faceid' || res?.method === 'touchid'
+            ? 'faceid'
+            : res?.method === 'fingerprint'
+              ? 'fingerprint'
+              : method;
 
-        if (res?.verified) {
-          this.markBiometricEnrolled(user.id, resolvedMethod);
-          return { status: 'success', method: resolvedMethod };
+        if (!res?.verified) {
+          if (res?.biometricChanged || res?.errorCode === 'BIOMETRIC_CHANGED') {
+            await this.clearStoredCredential(user.id);
+            return {
+              status: 'biometric_changed',
+              method: resolvedMethod,
+              message:
+                res.error ||
+                'Your device biometrics changed. Please sign in with your PIN or password to re-enable biometric login.',
+            };
+          }
+          if (res?.errorCode === 'NO_STORED_TOKEN') {
+            return {
+              status: 'not_enabled',
+              method: resolvedMethod,
+              message: `Biometric login is not yet activated on this device. Please sign in with your PIN or password to enable ${methodName}.`,
+            };
+          }
+          return this.mapNativeFailure(res, resolvedMethod);
         }
 
-        if (res?.unavailable) {
+        const hardwareDek = res.token;
+        const sealedRefreshToken = hardwareDek
+          ? await AuthSessionService.unsealRefreshTokenWithKey(user.id, hardwareDek)
+          : null;
+
+        if (!sealedRefreshToken) {
+          await this.clearStoredCredential(user.id);
           return {
-            status: 'unsupported',
+            status: 'session_expired',
             method: resolvedMethod,
-            message: res.error || `${methodName} is not configured on this device.`,
+            message: 'Saved biometric session could not be unlocked. Please sign in with your PIN or password.',
           };
         }
 
-        if (res?.cancelled) {
+        // Validate & rotate refresh token with backend (never trust client biometric flag alone)
+        const refreshResult = await AuthSessionService.refreshAndVerifyBiometricSession(sealedRefreshToken);
+        if (!refreshResult.ok || !refreshResult.refreshToken) {
+          if (
+            refreshResult.errorCode === 'SESSION_REVOKED' ||
+            refreshResult.errorCode === 'TOKEN_EXPIRED' ||
+            refreshResult.errorCode === 'REUSE_DETECTED'
+          ) {
+            await this.clearStoredCredential(user.id);
+            return {
+              status: 'session_expired',
+              method: resolvedMethod,
+              message: refreshResult.message,
+            };
+          }
           return {
-            status: 'cancelled',
+            status: refreshResult.errorCode === 'NETWORK_ERROR' ? 'network_error' : 'error',
             method: resolvedMethod,
-            message: `${methodName} verification was cancelled.`,
+            message: refreshResult.message || 'Unable to verify session with server.',
           };
         }
 
-        return {
-          status: 'error',
-          method: resolvedMethod,
-          message: res?.error || `${methodName} verification failed.`,
-        };
+        // Re-seal rotated refresh token immediately using the unlocked hardware DEK
+        await AuthSessionService.sealRefreshTokenWithKey(
+          user.id,
+          refreshResult.refreshToken,
+          hardwareDek
+        );
+        this.markBiometricEnrolled(user.id, resolvedMethod);
+        return { status: 'success', method: resolvedMethod };
       } catch (nativeErr: unknown) {
         const errMsg = nativeErr instanceof Error ? nativeErr.message : String(nativeErr);
-        // If native plugin isn't compiled into an older binary, fall through to WebAuthn if available
         if (!/not implemented|UNIMPLEMENTED/i.test(errMsg)) {
           return {
             status: 'error',
@@ -409,90 +686,169 @@ export class BiometricAuthService {
       }
     }
 
-    // 2. Web / PWA: Real OS WebAuthn Platform Authenticator (Face ID on iPhone / Fingerprint on Android)
-    if (typeof window === 'undefined' || !window.isSecureContext || !navigator.credentials || !window.PublicKeyCredential) {
-      return {
-        status: 'unsupported',
-        method,
-        message: `${methodName} requires a secure HTTPS browser with device biometrics enabled.`,
-      };
-    }
-
-    const inIframe = window.self !== window.top;
-    const platformSupported = await this.isPlatformAuthenticatorAvailable();
-    if (!platformSupported) {
-      const isRealMobile =
-        PhoneSettingsService.isIPhoneDevice() ||
-        (typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent || ''));
-      if (inIframe && isRealMobile) {
+    // 2. Web / PWA Path: OS WebAuthn + Non-Extractable WebCrypto Refresh Token + Backend Rotation
+    const availability = await this.checkAvailability();
+    if (!availability.available) {
+      if (availability.hardwareStatus === 'iframe_blocked') {
         return {
           status: 'iframe_blocked',
           method,
-          message: `Open this app directly in ${method === 'faceid' ? 'Safari' : 'your browser'} to authenticate with device ${methodName}.`,
+          message: availability.reason,
         };
       }
       return {
-        status: 'unsupported',
+        status: availability.hardwareStatus === 'not_enrolled' ? 'not_enrolled' : 'unsupported',
         method,
-        message: `${methodName} is not configured on this device/browser. Please enter your PIN.`,
+        message: availability.reason || `${methodName} is unavailable on this browser/device.`,
       };
     }
 
     const currentHost = window.location.hostname;
-    const stored = this.getStoredCredential(user.id);
-    const startedAt = Date.now();
+    const storedCred = this.getStoredCredential(user.id);
+    const hasSealedToken = await AuthSessionService.hasSealedRefreshToken(user.id);
 
-    try {
-      if (stored && stored.rpId === currentHost) {
-        try {
-          await this.verifyPlatformCredential(stored.credId, currentHost);
-          this.markBiometricEnrolled(user.id, method);
-          return { status: 'success', method };
-        } catch (verifyErr: unknown) {
-          const errName = verifyErr instanceof DOMException ? verifyErr.name : '';
-          if (errName === 'InvalidStateError' || errName === 'NotFoundError') {
-            this.clearStoredCredential(user.id);
-            await this.enrollPlatformCredential(user, method);
-            return { status: 'success', method };
-          }
-          throw verifyErr;
-        }
-      } else {
-        await this.enrollPlatformCredential(user, method);
-        return { status: 'success', method };
-      }
-    } catch (err: unknown) {
-      const elapsedMs = Date.now() - startedAt;
-      const errName = err instanceof DOMException ? err.name : '';
-      const errMsg = err instanceof Error ? err.message : String(err);
-      const inIframe = window.self !== window.top;
-
-      if (
-        inIframe &&
-        (errName === 'SecurityError' ||
-          /feature is not enabled|permissions policy|not allowed in this document|publickey-credentials/i.test(errMsg) ||
-          (errName === 'NotAllowedError' && elapsedMs < 250))
-      ) {
-        return {
-          status: 'iframe_blocked',
-          method,
-          message: `Open this app directly in ${method === 'faceid' ? 'Safari' : 'your browser'} to authenticate with device ${methodName}.`,
-        };
-      }
-
-      if (errName === 'NotAllowedError' || errName === 'AbortError') {
-        return {
-          status: 'cancelled',
-          method,
-          message: `${methodName} verification was cancelled or not recognized.`,
-        };
-      }
-
+    if (!storedCred || storedCred.rpId !== currentHost || !hasSealedToken) {
       return {
-        status: 'error',
+        status: 'not_enabled',
         method,
-        message: errMsg || `${methodName} verification failed. Please use your PIN.`,
+        message: `Please sign in with your PIN or password first, then enable ${methodName} login.`,
       };
     }
+
+    const startedAt = Date.now();
+    try {
+      await this.verifyPlatformCredential(storedCred.credId, currentHost);
+    } catch (err) {
+      const errName = err instanceof DOMException ? err.name : '';
+      if (errName === 'InvalidStateError' || errName === 'NotFoundError') {
+        await this.clearStoredCredential(user.id);
+        return {
+          status: 'biometric_changed',
+          method,
+          message: `Your device biometric credential is no longer valid. Please sign in with your PIN or password to re-enable ${methodName}.`,
+        };
+      }
+      return this.mapWebAuthnError(err, method, startedAt);
+    }
+
+    const sealedRefreshToken = await AuthSessionService.unsealRefreshTokenWithKey(user.id);
+    if (!sealedRefreshToken) {
+      await this.clearStoredCredential(user.id);
+      return {
+        status: 'session_expired',
+        method,
+        message: 'Saved biometric session expired. Please sign in with your PIN or password.',
+      };
+    }
+
+    const refreshResult = await AuthSessionService.refreshAndVerifyBiometricSession(sealedRefreshToken);
+    if (!refreshResult.ok || !refreshResult.refreshToken) {
+      if (
+        refreshResult.errorCode === 'SESSION_REVOKED' ||
+        refreshResult.errorCode === 'TOKEN_EXPIRED' ||
+        refreshResult.errorCode === 'REUSE_DETECTED'
+      ) {
+        await this.clearStoredCredential(user.id);
+        return {
+          status: 'session_expired',
+          method,
+          message: refreshResult.message,
+        };
+      }
+      return {
+        status: refreshResult.errorCode === 'NETWORK_ERROR' ? 'network_error' : 'error',
+        method,
+        message: refreshResult.message || 'Unable to validate session with server.',
+      };
+    }
+
+    await AuthSessionService.sealRefreshTokenWithKey(user.id, refreshResult.refreshToken);
+    this.markBiometricEnrolled(user.id, method);
+    return { status: 'success', method };
+  }
+
+  private static mapNativeFailure(
+    res: NativeBiometricResponse,
+    method: BiometricMethod
+  ): BiometricAttemptResult {
+    const code = res.errorCode || '';
+    const methodName = this.getDeviceBiometricName(method);
+
+    if (res.cancelled || code === 'CANCELLED') {
+      return {
+        status: 'cancelled',
+        method,
+        message: res.error || `${methodName} verification was cancelled.`,
+      };
+    }
+    if (code === 'LOCKOUT') {
+      return {
+        status: 'lockout',
+        method,
+        message:
+          res.error ||
+          `Too many failed attempts. ${methodName} is locked—please use your PIN or password.`,
+      };
+    }
+    if (code === 'NOT_ENROLLED') {
+      return {
+        status: 'not_enrolled',
+        method,
+        message: res.error || `No ${methodName} is enrolled on this device.`,
+      };
+    }
+    if (res.unavailable || code === 'NO_HARDWARE') {
+      return {
+        status: 'unsupported',
+        method,
+        message: res.error || `${methodName} hardware is not available on this device.`,
+      };
+    }
+    return {
+      status: 'error',
+      method,
+      message: res.error || `${methodName} verification failed. Please retry or use your PIN.`,
+    };
+  }
+
+  private static mapWebAuthnError(
+    err: unknown,
+    method: BiometricMethod,
+    startedAt: number
+  ): BiometricAttemptResult {
+    const elapsedMs = Date.now() - startedAt;
+    const errName = err instanceof DOMException ? err.name : '';
+    const errMsg = err instanceof Error ? err.message : String(err);
+    const methodName = this.getDeviceBiometricName(method);
+    const inIframe = typeof window !== 'undefined' && window.self !== window.top;
+
+    if (
+      inIframe &&
+      (errName === 'SecurityError' ||
+        /feature is not enabled|permissions policy|not allowed in this document|publickey-credentials/i.test(
+          errMsg
+        ) ||
+        (errName === 'NotAllowedError' && elapsedMs < 250))
+    ) {
+      return {
+        status: 'iframe_blocked',
+        method,
+        message: `Open this app directly in ${method === 'faceid' ? 'Safari' : 'Chrome'} to authenticate with device ${methodName}.`,
+      };
+    }
+
+    if (errName === 'NotAllowedError' || errName === 'AbortError') {
+      return {
+        status: 'cancelled',
+        method,
+        message: `${methodName} verification was cancelled or not recognized.`,
+      };
+    }
+
+    return {
+      status: 'error',
+      method,
+      message: errMsg || `${methodName} verification failed. Please use your PIN or password.`,
+    };
   }
 }

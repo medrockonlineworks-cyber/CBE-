@@ -1,20 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { LocalDb } from '../lib/mockData';
 import { UserProfile } from '../types';
 import { SystemBarsService } from '../services/systemBarsService';
 import { PhoneSettingsService } from '../services/phoneSettingsService';
 import { BiometricAuthService, BiometricMethod } from '../services/biometricAuthService';
+import { AuthSessionService } from '../services/authSessionService';
 import { CbeLogo } from './CbeLogo';
 import { 
   Bell, 
   Check, 
   X, 
   Users, 
-  Plus
+  Plus,
+  Loader2,
+  Lock
 } from 'lucide-react';
 
 interface AuthProps {
-  onLoginSuccess: (user: UserProfile) => void;
+  onLoginSuccess: (user: UserProfile, method?: 'biometric' | 'credentials') => void;
 }
 
 /**
@@ -110,6 +114,8 @@ export function CbeFaceIdIcon({
 
 export default function Auth({ onLoginSuccess }: AuthProps) {
   const [pin, setPin] = useState<string>('');
+  const [accountPassword, setAccountPassword] = useState<string>('');
+  const [credentialType, setCredentialType] = useState<'pin' | 'password'>('pin');
   const [loginMode, setLoginMode] = useState<'biometric' | 'pin'>('biometric');
   const [showError, setShowError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('This field is required');
@@ -120,10 +126,12 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
   const [showAccountSwitcher, setShowAccountSwitcher] = useState<boolean>(false);
   const [showNotificationToast, setShowNotificationToast] = useState<boolean>(false);
   const [isBiometricScanning, setIsBiometricScanning] = useState<boolean>(false);
+  const [isAuthLoading, setIsAuthLoading] = useState<boolean>(false);
   const [androidFingerprintPhase, setAndroidFingerprintPhase] = useState<
     null | 'scanning' | 'authenticating' | 'authenticated'
   >(null);
   const [iframeBlockedNotice, setIframeBlockedNotice] = useState<BiometricMethod | null>(null);
+  const autoPromptedRef = useRef<boolean>(false);
 
   // Detect iOS / iPhone device (physical iPhone/iPad OR iPhone phone model preset)
   // On iPhone -> Face ID + notch safe area; on Android -> Fingerprint
@@ -203,7 +211,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
   // Handle typing from physical keyboard when in PIN mode
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (showAccountSwitcher || loginMode !== 'pin') return;
+      if (showAccountSwitcher || loginMode !== 'pin' || credentialType !== 'pin') return;
       if (e.key >= '0' && e.key <= '9') {
         e.preventDefault();
         setShowError(false);
@@ -220,13 +228,29 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
         });
       } else if (e.key === 'Enter') {
         e.preventDefault();
-        handleLoginAttempt();
+        void handleLoginAttempt();
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [pin, selectedUser, showAccountSwitcher, loginMode]);
+  }, [pin, selectedUser, showAccountSwitcher, loginMode, credentialType]);
+
+  // STEP 2 & 3: On native mobile app launch, auto-trigger OS biometric prompt if previously enabled for this account
+  useEffect(() => {
+    if (autoPromptedRef.current) return;
+    if (
+      typeof window !== 'undefined' &&
+      Capacitor.isNativePlatform() &&
+      BiometricAuthService.isBiometricEnrolledForUser(selectedUser.id)
+    ) {
+      autoPromptedRef.current = true;
+      const timer = setTimeout(() => {
+        void handleBiometricsLogin();
+      }, 280);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedUser.id]);
 
   const handleKeypadPress = (digit: string) => {
     setShowError(false);
@@ -247,42 +271,76 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
   };
 
   const handleLoginAttempt = async () => {
-    if (!pin || pin.trim().length === 0) {
-      setShowError(true);
-      setErrorMessage('This field is required');
-      return;
-    }
+    if (isAuthLoading) return;
 
-    if (pin.length < 4) {
-      setShowError(true);
-      setErrorMessage('PIN must be at least 4 digits');
-      return;
-    }
-
-    if (BiometricAuthService.hasAppPin(selectedUser.id)) {
-      const isValidPin = await BiometricAuthService.verifyAppPin(selectedUser.id, pin);
-      if (!isValidPin) {
+    if (credentialType === 'password') {
+      if (!accountPassword || accountPassword.trim().length < 6) {
         setShowError(true);
-        setErrorMessage('Incorrect PIN. Please try again.');
-        setPin('');
+        setErrorMessage('Password must be at least 6 characters');
         return;
       }
     } else {
-      await BiometricAuthService.saveAppPin(selectedUser.id, pin);
+      if (!pin || pin.trim().length === 0) {
+        setShowError(true);
+        setErrorMessage('This field is required');
+        return;
+      }
+      if (pin.length < 4) {
+        setShowError(true);
+        setErrorMessage('PIN must be at least 4 digits');
+        return;
+      }
     }
 
-    LocalDb.addAuditLog(selectedUser.id, selectedUser.email, 'USER_LOGIN', `User ${selectedUser.name} logged in via in-app PIN authentication.`);
+    setIsAuthLoading(true);
+    setShowError(false);
+
+    const secret = credentialType === 'password' ? accountPassword : pin;
+    const authRes = await AuthSessionService.loginWithCredentials({
+      userId: selectedUser.id,
+      email: selectedUser.email,
+      authType: credentialType,
+      secret,
+    });
+
+    setIsAuthLoading(false);
+
+    if (!authRes.ok) {
+      setShowError(true);
+      setErrorMessage(authRes.message || 'Authentication failed. Please try again.');
+      if (credentialType === 'pin') setPin('');
+      else setAccountPassword('');
+      return;
+    }
+
+    if (credentialType === 'pin') {
+      await BiometricAuthService.saveAppPin(selectedUser.id, pin);
+    } else {
+      await BiometricAuthService.saveAppPassword(selectedUser.id, accountPassword);
+    }
+
+    LocalDb.addAuditLog(
+      selectedUser.id,
+      selectedUser.email,
+      'USER_LOGIN',
+      `User ${selectedUser.name} signed in via verified ${credentialType} session.`
+    );
     localStorage.setItem('tana_active_user_id', selectedUser.id);
-    onLoginSuccess(selectedUser);
+    onLoginSuccess(selectedUser, 'credentials');
   };
 
   const handleBiometricsLogin = async () => {
-    if (isBiometricScanning || androidFingerprintPhase) return;
+    if (isBiometricScanning || androidFingerprintPhase || isAuthLoading) return;
     setIsBiometricScanning(true);
     setShowError(false);
 
+    const isNativePlatform = Capacitor.isNativePlatform();
     let authTimer: ReturnType<typeof setTimeout> | null = null;
-    if (biometricMethod === 'fingerprint') {
+    if (
+      !isNativePlatform &&
+      biometricMethod === 'fingerprint' &&
+      BiometricAuthService.isBiometricEnrolledForUser(selectedUser.id)
+    ) {
       setAndroidFingerprintPhase('scanning');
       authTimer = setTimeout(() => {
         setAndroidFingerprintPhase((prev) => (prev === 'scanning' ? 'authenticating' : prev));
@@ -298,11 +356,11 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
         selectedUser.id,
         selectedUser.email,
         'BIOMETRIC_LOGIN',
-        `User ${selectedUser.name} logged in via device ${methodLabel} authentication.`
+        `User ${selectedUser.name} unlocked session via device ${methodLabel} & backend token rotation.`
       );
       localStorage.setItem('tana_active_user_id', selectedUser.id);
 
-      if (result.method === 'fingerprint') {
+      if (!isNativePlatform && result.method === 'fingerprint') {
         setAndroidFingerprintPhase('authenticating');
         await new Promise((resolve) => setTimeout(resolve, 260));
         setAndroidFingerprintPhase('authenticated');
@@ -311,7 +369,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
       }
 
       setIsBiometricScanning(false);
-      onLoginSuccess(selectedUser);
+      onLoginSuccess(selectedUser, 'biometric');
       return;
     }
 
@@ -323,7 +381,20 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
       return;
     }
 
-    // User cancelled, device unsupported, or OS biometric check failed
+    if (
+      result.status === 'biometric_changed' ||
+      result.status === 'session_expired' ||
+      result.status === 'not_enabled'
+    ) {
+      const users = LocalDb.getUsers();
+      const idx = users.findIndex((u) => u.id === selectedUser.id);
+      if (idx !== -1) {
+        users[idx].biometricEnabled = false;
+        LocalDb.setUsers(users);
+      }
+    }
+
+    // Keep account locked and allow retry or PIN/password login
     setShowError(true);
     setErrorMessage(
       result.message ||
@@ -338,11 +409,13 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
     setShowError(false);
     setErrorMessage('This field is required');
     setPin('');
+    setAccountPassword('');
   };
 
   const handleOpenPinMode = () => {
     setShowError(false);
     setErrorMessage('This field is required');
+    setCredentialType('pin');
     setLoginMode('pin');
     setShowKeypad(true);
   };
@@ -587,81 +660,139 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
           <p className="text-[#6b7280] font-normal text-[16px] font-sans">
             Welcome back
           </p>
+          <p className="text-[#9ca3af] font-normal text-[12px] font-sans mt-0.5">
+            Authenticate to continue.
+          </p>
         </div>
 
-        {/* PIN INPUT FIELD: Shown ONLY after clicking "Use PIN" */}
+        {/* PIN OR PASSWORD RECOVERY INPUT FIELD: Shown ONLY after clicking "Use PIN" */}
         {loginMode === 'pin' && (
           <div className="mt-5 mb-1 animate-in fade-in duration-150">
-            <div
-              id="cbe-pin-input-box"
-              onClick={() => setShowKeypad(true)}
-              className={`w-full rounded-[18px] bg-white border py-3.5 px-4 flex items-center gap-3 transition-all cursor-pointer shadow-xs ${
-                showError 
-                  ? 'border-[#e05347] border-[1.5px] bg-[#fffcfc]' 
-                  : showKeypad 
-                    ? 'border-[#c58c2b] ring-2 ring-[#c58c2b]/20' 
-                    : 'border-neutral-300 hover:border-neutral-400'
-              }`}
-            >
-              {/* Golden Padlock Icon with Arched Shackle */}
-              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" className="shrink-0">
-                <path 
-                  d="M7 10V7a5 5 0 0 1 10 0v3" 
-                  stroke="#d49a37" 
-                  strokeWidth="2.2" 
-                  strokeLinecap="round" 
-                />
-                <rect 
-                  x="4.5" 
-                  y="10" 
-                  width="15" 
-                  height="11" 
-                  rx="2.5" 
-                  fill="#d49a37" 
-                />
-                <circle cx="12" cy="14.5" r="1.2" fill="#ffffff" />
-                <path d="M12 15.5v2" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" />
-              </svg>
+            {credentialType === 'pin' ? (
+              <div
+                id="cbe-pin-input-box"
+                onClick={() => setShowKeypad(true)}
+                className={`w-full rounded-[18px] bg-white border py-3.5 px-4 flex items-center gap-3 transition-all cursor-pointer shadow-xs ${
+                  showError 
+                    ? 'border-[#e05347] border-[1.5px] bg-[#fffcfc]' 
+                    : showKeypad 
+                      ? 'border-[#c58c2b] ring-2 ring-[#c58c2b]/20' 
+                      : 'border-neutral-300 hover:border-neutral-400'
+                }`}
+              >
+                {/* Golden Padlock Icon with Arched Shackle */}
+                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" className="shrink-0">
+                  <path 
+                    d="M7 10V7a5 5 0 0 1 10 0v3" 
+                    stroke="#d49a37" 
+                    strokeWidth="2.2" 
+                    strokeLinecap="round" 
+                  />
+                  <rect 
+                    x="4.5" 
+                    y="10" 
+                    width="15" 
+                    height="11" 
+                    rx="2.5" 
+                    fill="#d49a37" 
+                  />
+                  <circle cx="12" cy="14.5" r="1.2" fill="#ffffff" />
+                  <path d="M12 15.5v2" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
 
-              {/* PIN characters or placeholder with Red Cursor |PIN */}
-              <div className="flex-1 flex items-center text-neutral-800 text-[15px] font-normal min-h-[24px]">
-                {pin.length === 0 ? (
-                  <div className="flex items-center text-[#9ca3af] tracking-normal font-normal">
-                    <span className="w-[1.5px] h-5 bg-[#e05347] animate-pulse mr-1.5" />
-                    <span className="tracking-wide">PIN</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    {Array.from({ length: pin.length }).map((_, i) => (
-                      <span 
-                        key={i} 
-                        className="w-2.5 h-2.5 rounded-full bg-neutral-800 inline-block" 
-                      />
-                    ))}
-                    <span className="w-[1.5px] h-5 bg-[#e05347] animate-pulse ml-0.5" />
-                  </div>
+                {/* PIN characters or placeholder with Red Cursor |PIN */}
+                <div className="flex-1 flex items-center text-neutral-800 text-[15px] font-normal min-h-[24px]">
+                  {pin.length === 0 ? (
+                    <div className="flex items-center text-[#9ca3af] tracking-normal font-normal">
+                      <span className="w-[1.5px] h-5 bg-[#e05347] animate-pulse mr-1.5" />
+                      <span className="tracking-wide">PIN</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      {Array.from({ length: pin.length }).map((_, i) => (
+                        <span 
+                          key={i} 
+                          className="w-2.5 h-2.5 rounded-full bg-neutral-800 inline-block" 
+                        />
+                      ))}
+                      <span className="w-[1.5px] h-5 bg-[#e05347] animate-pulse ml-0.5" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Clear button when digits are typed */}
+                {pin.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPin('');
+                      setShowError(true);
+                      setErrorMessage('This field is required');
+                    }}
+                    className="text-neutral-400 hover:text-neutral-600 p-1 cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 )}
               </div>
-
-              {/* Clear button when digits are typed */}
-              {pin.length > 0 && (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setPin('');
-                    setShowError(true);
-                    setErrorMessage('This field is required');
+            ) : (
+              <div className="w-full rounded-[18px] bg-white border border-neutral-300 focus-within:border-[#c58c2b] focus-within:ring-2 focus-within:ring-[#c58c2b]/20 py-3 px-4 flex items-center gap-3 shadow-xs">
+                <Lock className="w-4.5 h-4.5 text-[#d49a37] shrink-0" />
+                <input
+                  type="text"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                  data-form-type="other"
+                  placeholder="Account Password (min 6 chars)"
+                  value={accountPassword}
+                  onChange={(e) => {
+                    setShowError(false);
+                    setAccountPassword(e.target.value);
                   }}
-                  className="text-neutral-400 hover:text-neutral-600 p-1 cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      void handleLoginAttempt();
+                    }
+                  }}
+                  className="flex-1 text-[14px] text-neutral-800 bg-transparent focus:outline-none [-webkit-text-security:disc]"
+                />
+                {accountPassword.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setAccountPassword('')}
+                    className="text-neutral-400 hover:text-neutral-600 p-1 cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            )}
+
+            <div className="flex justify-end mt-2 px-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowError(false);
+                  if (credentialType === 'pin') {
+                    setCredentialType('password');
+                    setShowKeypad(false);
+                  } else {
+                    setCredentialType('pin');
+                    setShowKeypad(true);
+                  }
+                }}
+                className="text-[11.5px] font-medium text-[#70189F] hover:underline cursor-pointer"
+              >
+                {credentialType === 'pin' ? 'Use Password Login' : 'Use PIN Keypad'}
+              </button>
             </div>
 
             {showError && (
-              <p className="text-[#e05347] text-[12px] font-normal mt-2 text-center animate-in fade-in">
+              <p className="text-[#e05347] text-[12px] font-normal mt-1.5 text-center animate-in fade-in">
                 {errorMessage}
               </p>
             )}
@@ -784,14 +915,24 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
             <button
               id="btn-cbe-login"
               type="button"
+              disabled={isAuthLoading}
               onClick={handleLoginAttempt}
-              className="w-full py-3.5 rounded-[18px] bg-[#c58c2b] hover:bg-[#b87f22] active:bg-[#a9731b] text-white font-semibold text-[16px] shadow-sm transition flex items-center justify-center gap-2.5 cursor-pointer active:scale-[0.99] font-sans"
+              className="w-full py-3.5 rounded-[18px] bg-[#c58c2b] hover:bg-[#b87f22] active:bg-[#a9731b] text-white font-semibold text-[16px] shadow-sm transition flex items-center justify-center gap-2.5 cursor-pointer active:scale-[0.99] font-sans disabled:opacity-70"
             >
-              <span className="text-[16px] font-semibold">Login</span>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12" />
-                <polyline points="12 5 19 12 12 19" />
-              </svg>
+              {isAuthLoading ? (
+                <>
+                  <Loader2 className="w-4.5 h-4.5 animate-spin" />
+                  <span className="text-[16px] font-semibold">Verifying...</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-[16px] font-semibold">Login</span>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="12 5 19 12 12 19" />
+                  </svg>
+                </>
+              )}
             </button>
 
             {/* FOOTER: © Commercial Bank of Ethiopia (Exact replica of Image 1 & 2) */}

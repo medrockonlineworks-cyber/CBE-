@@ -30,17 +30,23 @@ import {
   MessageSquare,
   Smartphone,
   PhoneCall,
-  Users
+  Users,
+  Fingerprint,
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 import { UserProfile, Transaction, RegisteredAccountInfo } from '../types';
 import { LocalDb } from '../lib/mockData';
 import { RegisteredAccountsModal } from '../components/RegisteredAccountsModal';
 import { SmsService } from '../services/smsService';
 import { TruecallerService } from '../services/truecallerService';
+import { BiometricAuthService, BiometricAvailability } from '../services/biometricAuthService';
 
 interface HomeProps {
   currentUser?: UserProfile | null;
   onUpdateCurrentUser?: (user: UserProfile) => void;
+  promptBiometricEnroll?: boolean;
+  onDismissBiometricPrompt?: () => void;
   initialNavTab?: 'home' | 'history';
   onNavigateToTab?: (tab: 'home' | 'transfer' | 'payments' | 'history' | 'profile', subTab?: string) => void;
   onSelectTransaction?: (tx: Transaction) => void;
@@ -56,6 +62,8 @@ interface HomeProps {
 export const Home: React.FC<HomeProps> = ({
   currentUser: propUser,
   onUpdateCurrentUser,
+  promptBiometricEnroll = false,
+  onDismissBiometricPrompt,
   initialNavTab = 'home',
   onNavigateToTab,
   onSelectTransaction,
@@ -128,9 +136,77 @@ export const Home: React.FC<HomeProps> = ({
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [showRegisteredAccountsModal, setShowRegisteredAccountsModal] = useState(false);
 
+  // Opt-in Biometric Enrollment Prompt after normal PIN/password login
+  const [biometricAvailability, setBiometricAvailability] = useState<BiometricAvailability | null>(null);
+  const [isBiometricEnrollOpen, setIsBiometricEnrollOpen] = useState(false);
+  const [isBiometricEnrolling, setIsBiometricEnrolling] = useState(false);
+  const [biometricEnrollError, setBiometricEnrollError] = useState<string | null>(null);
+  const [biometricEnrollSuccess, setBiometricEnrollSuccess] = useState(false);
+
   useEffect(() => {
     setActiveNavTab(initialNavTab);
   }, [initialNavTab]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!promptBiometricEnroll || BiometricAuthService.isBiometricEnrolledForUser(activeUser.id)) {
+      setIsBiometricEnrollOpen(false);
+      return;
+    }
+
+    BiometricAuthService.checkAvailability().then((availability) => {
+      if (cancelled) return;
+      setBiometricAvailability(availability);
+      if (availability.available && availability.enrolled) {
+        setBiometricEnrollError(null);
+        setBiometricEnrollSuccess(false);
+        setIsBiometricEnrollOpen(true);
+      } else {
+        onDismissBiometricPrompt?.();
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [promptBiometricEnroll, activeUser.id, onDismissBiometricPrompt]);
+
+  const handleConfirmBiometricEnroll = async () => {
+    if (isBiometricEnrolling) return;
+    setIsBiometricEnrolling(true);
+    setBiometricEnrollError(null);
+
+    const res = await BiometricAuthService.enableBiometricLogin(activeUser);
+    setIsBiometricEnrolling(false);
+
+    if (res.status === 'success') {
+      const updatedUser: UserProfile = { ...activeUser, biometricEnabled: true };
+      const users = LocalDb.getUsers();
+      const idx = users.findIndex((u) => u.id === activeUser.id);
+      if (idx !== -1) {
+        users[idx].biometricEnabled = true;
+        LocalDb.setUsers(users);
+      }
+      setActiveUser(updatedUser);
+      onUpdateCurrentUser?.(updatedUser);
+      LocalDb.addNotification(
+        activeUser.id,
+        'Biometric Login Activated',
+        `${BiometricAuthService.getDeviceBiometricName(res.method)} login has been enabled for your account.`,
+        'success'
+      );
+      setBiometricEnrollSuccess(true);
+      setTimeout(() => {
+        setIsBiometricEnrollOpen(false);
+        onDismissBiometricPrompt?.();
+      }, 1400);
+      return;
+    }
+
+    setBiometricEnrollError(
+      res.message || 'Unable to enable biometric login on this device.'
+    );
+  };
 
   const updateTime = useCallback(() => {
     const now = new Date();
@@ -1654,6 +1730,95 @@ export const Home: React.FC<HomeProps> = ({
         currentSelectedAccount={activeUser.accountNumber}
         title="Switch Registered Account"
       />
+
+      {/* OPT-IN POST-LOGIN BIOMETRIC ENROLLMENT MODAL */}
+      {isBiometricEnrollOpen && (
+        <div className="fixed inset-0 z-50 bg-black/55 backdrop-blur-xs flex items-center justify-center p-5 animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-gray-100 text-center relative">
+            <button
+              type="button"
+              onClick={() => {
+                setIsBiometricEnrollOpen(false);
+                onDismissBiometricPrompt?.();
+              }}
+              aria-label="Close"
+              className="absolute top-4 right-4 p-1.5 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className={`w-14 h-14 rounded-2xl mx-auto flex items-center justify-center mb-3.5 ${
+              biometricEnrollSuccess ? 'bg-emerald-50 text-emerald-600' : 'bg-purple-50 text-[#70189F]'
+            }`}>
+              {biometricEnrollSuccess ? (
+                <Check className="w-7 h-7 stroke-[2.8]" />
+              ) : (
+                <Fingerprint className="w-7 h-7" />
+              )}
+            </div>
+
+            {biometricEnrollSuccess ? (
+              <>
+                <h3 className="text-base font-bold text-gray-900">
+                  {BiometricAuthService.getDeviceBiometricName(biometricAvailability?.method)} Login Enabled
+                </h3>
+                <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">
+                  You can now unlock CBE Mobile Banking securely with your device {BiometricAuthService.getDeviceBiometricName(biometricAvailability?.method)}.
+                </p>
+              </>
+            ) : (
+              <>
+                <h3 className="text-base font-bold text-gray-900">
+                  Enable Fingerprint / Face ID Login
+                </h3>
+                <p className="text-xs text-gray-500 mt-1.5 leading-relaxed">
+                  Use your device&apos;s {BiometricAuthService.getDeviceBiometricName(biometricAvailability?.method)} to securely unlock your account without typing your PIN every time.
+                </p>
+
+                {biometricEnrollError && (
+                  <div className="mt-3 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-[11.5px] flex items-start gap-2 text-left">
+                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <span>{biometricEnrollError}</span>
+                  </div>
+                )}
+
+                <div className="mt-5 flex flex-col gap-2">
+                  <button
+                    id="btn-enable-biometric-prompt"
+                    type="button"
+                    disabled={isBiometricEnrolling}
+                    onClick={handleConfirmBiometricEnroll}
+                    className="w-full py-3 rounded-2xl bg-[#70189F] hover:bg-[#5e1385] text-white font-semibold text-xs transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70"
+                  >
+                    {isBiometricEnrolling ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Activating {BiometricAuthService.getDeviceBiometricName(biometricAvailability?.method)}...</span>
+                      </>
+                    ) : (
+                      <span>
+                        Enable {BiometricAuthService.getDeviceBiometricName(biometricAvailability?.method)} Login
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    id="btn-dismiss-biometric-prompt"
+                    type="button"
+                    disabled={isBiometricEnrolling}
+                    onClick={() => {
+                      setIsBiometricEnrollOpen(false);
+                      onDismissBiometricPrompt?.();
+                    }}
+                    className="w-full py-2.5 rounded-2xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold text-xs transition cursor-pointer"
+                  >
+                    Not Now
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
     </div>
   );

@@ -45,7 +45,7 @@ const INITIAL_USERS: UserProfile[] = [
     accountNumber: '1000419524747',
     balance: 18450.50,
     availableBalance: 18450.50,
-    biometricEnabled: true
+    biometricEnabled: false
   },
   {
     id: 'user_admin',
@@ -84,7 +84,7 @@ const INITIAL_USERS: UserProfile[] = [
     accountNumber: '1000684396671',
     balance: 2500000.00,
     availableBalance: 2500000.00,
-    biometricEnabled: true
+    biometricEnabled: false
   },
   {
     id: 'user_leul_degsew',
@@ -97,7 +97,7 @@ const INITIAL_USERS: UserProfile[] = [
     accountNumber: '1000638276450',
     balance: 145280.50,
     availableBalance: 145280.50,
-    biometricEnabled: true
+    biometricEnabled: false
   },
   {
     id: 'user_elisabeth_hune',
@@ -110,7 +110,7 @@ const INITIAL_USERS: UserProfile[] = [
     accountNumber: '1000714565770',
     balance: 382500.00,
     availableBalance: 382500.00,
-    biometricEnabled: true
+    biometricEnabled: false
   },
   {
     id: 'user_daniel_natnael',
@@ -123,7 +123,7 @@ const INITIAL_USERS: UserProfile[] = [
     accountNumber: '1000842195466',
     balance: 219750.75,
     availableBalance: 219750.75,
-    biometricEnabled: true
+    biometricEnabled: false
   },
   {
     id: 'user_bilen_solomon',
@@ -136,7 +136,7 @@ const INITIAL_USERS: UserProfile[] = [
     accountNumber: '1000526382575',
     balance: 560400.00,
     availableBalance: 560400.00,
-    biometricEnabled: true
+    biometricEnabled: false
   },
   {
     id: 'user_hunndeessaa_dajenee',
@@ -149,7 +149,7 @@ const INITIAL_USERS: UserProfile[] = [
     accountNumber: '1000963142586',
     balance: 84320.00,
     availableBalance: 84320.00,
-    biometricEnabled: true
+    biometricEnabled: false
   },
   {
     id: 'user_hlina_getaye',
@@ -162,7 +162,7 @@ const INITIAL_USERS: UserProfile[] = [
     accountNumber: '1000437281195',
     balance: 473150.25,
     availableBalance: 473150.25,
-    biometricEnabled: true
+    biometricEnabled: false
   },
   {
     id: 'user_amir_mohammed',
@@ -175,7 +175,7 @@ const INITIAL_USERS: UserProfile[] = [
     accountNumber: '1000756218334',
     balance: 628900.00,
     availableBalance: 628900.00,
-    biometricEnabled: true
+    biometricEnabled: false
   }
 ];
 

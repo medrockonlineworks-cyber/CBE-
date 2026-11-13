@@ -3,7 +3,8 @@ import { UserProfile } from '../types';
 import { LocalDb, DEFAULT_CBE_LOGO } from '../lib/mockData';
 import { SmsService } from '../services/smsService';
 import { TruecallerService } from '../services/truecallerService';
-import { BiometricAuthService } from '../services/biometricAuthService';
+import { BiometricAuthService, BiometricAvailability } from '../services/biometricAuthService';
+import { AuthSessionService, ActiveDeviceSession } from '../services/authSessionService';
 import { CbeLogo } from './CbeLogo';
 import { 
   User, 
@@ -33,7 +34,11 @@ import {
   X,
   MessageSquare,
   Smartphone,
-  PhoneCall
+  PhoneCall,
+  Loader2,
+  RefreshCw,
+  ShieldCheck,
+  MonitorSmartphone
 } from 'lucide-react';
 import BankLogoModal from './BankLogoModal';
 import AppInstallPrompt from './AppInstallPrompt';
@@ -93,9 +98,28 @@ export default function Profile({
   const isAdmin = currentUser.role === 'admin' || currentUser.email === 'leykunjemaneh3@gmail.com';
   
   // Settings toggles
-  const [biometrics, setBiometrics] = useState(currentUser.biometricEnabled || false);
+  const [biometrics, setBiometrics] = useState(() =>
+    BiometricAuthService.isBiometricEnrolledForUser(currentUser.id)
+  );
+  const [biometricBusy, setBiometricBusy] = useState(false);
+  const [availabilityInfo, setAvailabilityInfo] = useState<BiometricAvailability | null>(null);
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
   const [smsAlerts, setSmsAlerts] = useState(true);
   const [emailStatements, setEmailStatements] = useState(false);
+
+  // Active backend device sessions
+  const [activeSessions, setActiveSessions] = useState<ActiveDeviceSession[]>([]);
+  const [showSessionsPanel, setShowSessionsPanel] = useState(false);
+  const [loadingSessions, setLoadingSessions] = useState(false);
+
+  // Security Settings Re-Authentication Gate
+  const [securityUnlockedUntil, setSecurityUnlockedUntil] = useState<number>(0);
+  const [showSecurityAuthGate, setShowSecurityAuthGate] = useState(false);
+  const [securityAuthMode, setSecurityAuthMode] = useState<'pin' | 'password'>('pin');
+  const [securityAuthSecret, setSecurityAuthSecret] = useState('');
+  const [securityAuthError, setSecurityAuthError] = useState('');
+  const [securityAuthLoading, setSecurityAuthLoading] = useState(false);
+  const [pendingSecurityAction, setPendingSecurityAction] = useState<(() => Promise<void> | void) | null>(null);
 
   // Edit Profile / Account Form States
   const [showEditProfileModal, setShowEditProfileModal] = useState(false);
@@ -113,7 +137,7 @@ export default function Profile({
     setEditPhone(currentUser.phone);
     setEditEmail(currentUser.email);
     setEditAccountType(currentUser.accountType || 'savings');
-    setBiometrics(currentUser.biometricEnabled || false);
+    setBiometrics(BiometricAuthService.isBiometricEnrolledForUser(currentUser.id));
   }, [currentUser]);
 
   // Account Switcher / Multi-Account Registration Modal
@@ -344,34 +368,209 @@ export default function Profile({
     } catch {}
   };
 
-  const handleToggleBiometrics = async () => {
-    const nextVal = !biometrics;
-    const methodLabel = BiometricAuthService.getDeviceBiometricName();
-
-    if (nextVal) {
-      BiometricAuthService.markBiometricEnrolled(currentUser.id, BiometricAuthService.getBiometricMethod());
-    } else {
-      BiometricAuthService.clearStoredCredential(currentUser.id);
-    }
-
-    setBiometrics(nextVal);
-    const updated = { ...currentUser, biometricEnabled: nextVal };
+  const syncUserBiometricFlag = (enabled: boolean) => {
+    setBiometrics(enabled);
+    const updated = { ...currentUser, biometricEnabled: enabled };
     onUpdateUser(updated);
 
-    // Update in users DB array
     const users = LocalDb.getUsers();
-    const idx = users.findIndex(u => u.id === currentUser.id);
+    const idx = users.findIndex((u) => u.id === currentUser.id);
     if (idx !== -1) {
-      users[idx].biometricEnabled = nextVal;
+      users[idx].biometricEnabled = enabled;
       LocalDb.setUsers(users);
     }
+  };
+
+  const requireSecurityAuth = async (action: () => Promise<void> | void) => {
+    const hasToken = Boolean(await AuthSessionService.ensureValidAccessToken());
+    if (Date.now() < securityUnlockedUntil && hasToken) {
+      await action();
+      return;
+    }
+    setPendingSecurityAction(() => action);
+    setSecurityAuthSecret('');
+    setSecurityAuthError('');
+    setSecurityAuthMode('pin');
+    setShowSecurityAuthGate(true);
+  };
+
+  const handleVerifySecurityGateWithCredentials = async () => {
+    if (securityAuthLoading) return;
+    if (!securityAuthSecret.trim()) {
+      setSecurityAuthError(
+        securityAuthMode === 'pin' ? 'Please enter your current PIN.' : 'Please enter your account password.'
+      );
+      return;
+    }
+
+    setSecurityAuthLoading(true);
+    setSecurityAuthError('');
+
+    const res = await AuthSessionService.loginWithCredentials({
+      userId: currentUser.id,
+      email: currentUser.email,
+      authType: securityAuthMode,
+      secret: securityAuthSecret.trim(),
+    });
+
+    setSecurityAuthLoading(false);
+
+    if (!res.ok) {
+      setSecurityAuthError(res.message || 'Verification failed.');
+      return;
+    }
+
+    setSecurityUnlockedUntil(Date.now() + 2 * 60 * 1000);
+    setShowSecurityAuthGate(false);
+    setSecurityAuthSecret('');
+    const actionToRun = pendingSecurityAction;
+    setPendingSecurityAction(null);
+    if (actionToRun) {
+      await actionToRun();
+    }
+  };
+
+  const handleVerifySecurityGateWithBiometrics = async () => {
+    if (securityAuthLoading) return;
+    setSecurityAuthLoading(true);
+    setSecurityAuthError('');
+
+    const res = await BiometricAuthService.authenticateWithDevice(currentUser);
+    setSecurityAuthLoading(false);
+
+    if (res.status !== 'success') {
+      setSecurityAuthError(res.message || 'Biometric verification failed. Please use your PIN or password.');
+      return;
+    }
+
+    setSecurityUnlockedUntil(Date.now() + 2 * 60 * 1000);
+    setShowSecurityAuthGate(false);
+    const actionToRun = pendingSecurityAction;
+    setPendingSecurityAction(null);
+    if (actionToRun) {
+      await actionToRun();
+    }
+  };
+
+  const performEnableBiometrics = async () => {
+    setErrorMsg('');
+    setSuccessMsg('');
+    setBiometricBusy(true);
+    const methodLabel = BiometricAuthService.getDeviceBiometricName();
+
+    const res = await BiometricAuthService.enableBiometricLogin(currentUser);
+    setBiometricBusy(false);
+
+    if (res.status === 'success') {
+      syncUserBiometricFlag(true);
+      const label = BiometricAuthService.getDeviceBiometricName(res.method);
+      LocalDb.addNotification(
+        currentUser.id,
+        'Biometric Login Enabled',
+        `${label} login has been activated for your account.`,
+        'success'
+      );
+      LocalDb.addAuditLog(
+        currentUser.id,
+        currentUser.email,
+        'BIOMETRIC_ENABLED',
+        `User enabled ${label} authentication with hardware-backed session token.`
+      );
+      setSuccessMsg(`${label} login activated successfully!`);
+      setTimeout(() => setSuccessMsg(''), 4000);
+      return;
+    }
+
+    syncUserBiometricFlag(BiometricAuthService.isBiometricEnrolledForUser(currentUser.id));
+    setErrorMsg(res.message || `Unable to enable ${methodLabel} login on this device.`);
+  };
+
+  const performDisableBiometrics = async () => {
+    setErrorMsg('');
+    setSuccessMsg('');
+    setBiometricBusy(true);
+    const methodLabel = BiometricAuthService.getDeviceBiometricName();
+
+    await BiometricAuthService.disableBiometricLogin(currentUser.id);
+    setBiometricBusy(false);
+    syncUserBiometricFlag(false);
 
     LocalDb.addNotification(
       currentUser.id,
       'Biometric Settings Updated',
-      `${methodLabel} verification has been ${nextVal ? 'saved in the app' : 'disabled'}.`,
+      `${methodLabel} verification has been disabled and cleared from secure storage.`,
       'info'
     );
+    LocalDb.addAuditLog(
+      currentUser.id,
+      currentUser.email,
+      'BIOMETRIC_DISABLED',
+      `User disabled ${methodLabel} authentication and cleared sealed refresh credentials.`
+    );
+    setSuccessMsg(`${methodLabel} login disabled and secure credentials cleared.`);
+    setTimeout(() => setSuccessMsg(''), 4000);
+  };
+
+  const handleToggleBiometrics = async () => {
+    if (biometricBusy) return;
+    const nextVal = !biometrics;
+    await requireSecurityAuth(async () => {
+      if (nextVal) {
+        await performEnableBiometrics();
+      } else {
+        await performDisableBiometrics();
+      }
+    });
+  };
+
+  const handleCheckBiometricAvailability = async () => {
+    setCheckingAvailability(true);
+    setErrorMsg('');
+    const info = await BiometricAuthService.checkAvailability();
+    setAvailabilityInfo(info);
+    setCheckingAvailability(false);
+  };
+
+  const handleLoadActiveSessions = async () => {
+    setLoadingSessions(true);
+    setErrorMsg('');
+    const res = await AuthSessionService.listActiveSessions();
+    setLoadingSessions(false);
+    if (!res.ok) {
+      setErrorMsg(res.message || 'Please re-authenticate to inspect active device sessions.');
+      return;
+    }
+    setActiveSessions(res.sessions);
+    setShowSessionsPanel(true);
+  };
+
+  const handleRevokeSession = async (targetSessionId?: string, revokeOthers = false) => {
+    await requireSecurityAuth(async () => {
+      setLoadingSessions(true);
+      const res = await AuthSessionService.revokeSession({
+        targetSessionId,
+        revokeOthers,
+      });
+      setLoadingSessions(false);
+
+      if (!res.ok) {
+        setErrorMsg('Unable to revoke session. Please verify your session.');
+        return;
+      }
+
+      if (targetSessionId && targetSessionId === AuthSessionService.getActiveSessionId()) {
+        onLogout();
+        return;
+      }
+
+      setSuccessMsg(
+        revokeOthers
+          ? `Revoked ${res.revokedCount ?? 0} other active session(s).`
+          : 'Device session revoked.'
+      );
+      setTimeout(() => setSuccessMsg(''), 3500);
+      await handleLoadActiveSessions();
+    });
   };
 
   const handlePinChange = async () => {
@@ -395,9 +594,19 @@ export default function Profile({
       return;
     }
 
+    const backendRes = await AuthSessionService.updateSecurityCredentialOnBackend({
+      type: 'pin',
+      newSecret: newPin,
+      currentSecret: oldPin || undefined,
+    });
+    if (!backendRes.ok) {
+      setErrorMsg(backendRes.message || 'Unable to update PIN on authentication server.');
+      return;
+    }
+
     await BiometricAuthService.saveAppPin(currentUser.id, newPin);
-    LocalDb.addAuditLog(currentUser.id, currentUser.email, 'USER_PIN_CHANGE', 'User updated their in-app secure authorization PIN.');
-    setSuccessMsg('Your security PIN was saved in the app!');
+    LocalDb.addAuditLog(currentUser.id, currentUser.email, 'USER_PIN_CHANGE', 'User updated their in-app & server authorization PIN.');
+    setSuccessMsg('Your security PIN was updated securely!');
     setOldPin('');
     setNewPin('');
     setTimeout(() => setShowPinForm(false), 1800);
@@ -424,9 +633,19 @@ export default function Profile({
       return;
     }
 
+    const backendRes = await AuthSessionService.updateSecurityCredentialOnBackend({
+      type: 'password',
+      newSecret: newPass,
+      currentSecret: oldPass || undefined,
+    });
+    if (!backendRes.ok) {
+      setErrorMsg(backendRes.message || 'Unable to update password on authentication server.');
+      return;
+    }
+
     await BiometricAuthService.saveAppPassword(currentUser.id, newPass);
-    LocalDb.addAuditLog(currentUser.id, currentUser.email, 'USER_PASS_CHANGE', 'User updated their in-app security access password.');
-    setSuccessMsg('Security password saved in the app!');
+    LocalDb.addAuditLog(currentUser.id, currentUser.email, 'USER_PASS_CHANGE', 'User updated their in-app & server access password.');
+    setSuccessMsg('Security password updated securely!');
     setOldPass('');
     setNewPass('');
     setTimeout(() => setShowPassForm(false), 1800);
@@ -658,26 +877,34 @@ export default function Profile({
 
         {/* Security & Access Section */}
         <div className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 space-y-4">
-          <h3 className="text-xs font-extrabold text-emerald-950 uppercase tracking-wider">Security &amp; Device Access</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-xs font-extrabold text-emerald-950 uppercase tracking-wider">Security &amp; Device Access</h3>
+            <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full">
+              {biometrics ? 'Biometrics Active' : 'PIN / Password'}
+            </span>
+          </div>
           
-          {/* Device Biometrics (Saved in-app, verified by device Face ID / Fingerprint) */}
-          <div className="flex justify-between items-center py-1">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-emerald-50 text-emerald-800 rounded-xl">
+          {/* Device Biometrics Toggle */}
+          <div className="flex justify-between items-center py-1 gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="p-2 bg-emerald-50 text-emerald-800 rounded-xl shrink-0">
                 <Fingerprint className="w-5 h-5" />
               </div>
-              <div>
-                <p className="text-sm font-bold text-gray-800">Biometric Verification</p>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-gray-800">
+                  {BiometricAuthService.getDeviceBiometricName()} Login
+                </p>
                 <p className="text-[10px] text-gray-400">
-                  Unlock app via {BiometricAuthService.getDeviceBiometricName()} (saved in app only)
+                  Hardware-backed unlock (no browser password manager)
                 </p>
               </div>
             </div>
             <button
               id="btn-toggle-biometrics"
               type="button"
+              disabled={biometricBusy}
               onClick={handleToggleBiometrics}
-              className={`w-12 h-6.5 rounded-full p-1 transition duration-300 cursor-pointer ${
+              className={`w-12 h-6.5 rounded-full p-1 transition duration-300 cursor-pointer shrink-0 disabled:opacity-60 ${
                 biometrics ? 'bg-emerald-800' : 'bg-gray-200'
               }`}
             >
@@ -687,12 +914,79 @@ export default function Profile({
             </button>
           </div>
 
+          {/* Availability Check & Re-enable Device Controls */}
+          <div className="flex flex-wrap gap-2">
+            <button
+              id="btn-check-biometric-availability"
+              type="button"
+              disabled={checkingAvailability}
+              onClick={handleCheckBiometricAvailability}
+              className="flex-1 min-w-[140px] py-2 px-3 rounded-xl bg-gray-50 hover:bg-gray-100 border border-gray-200 text-gray-700 text-[11px] font-bold flex items-center justify-center gap-1.5 cursor-pointer transition"
+            >
+              {checkingAvailability ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+              )}
+              <span>Check Availability</span>
+            </button>
+
+            <button
+              id="btn-reenable-biometrics"
+              type="button"
+              disabled={biometricBusy}
+              onClick={() => requireSecurityAuth(performEnableBiometrics)}
+              className="flex-1 min-w-[140px] py-2 px-3 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-[#70189F] text-[11px] font-bold flex items-center justify-center gap-1.5 cursor-pointer transition"
+            >
+              {biometricBusy ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <RefreshCw className="w-3.5 h-3.5" />
+              )}
+              <span>Re-enable on Device</span>
+            </button>
+          </div>
+
+          {availabilityInfo && (
+            <div className={`rounded-2xl p-3 border text-[11px] space-y-1 ${
+              availabilityInfo.available && availabilityInfo.enrolled
+                ? 'bg-emerald-50/70 border-emerald-200 text-emerald-900'
+                : 'bg-amber-50 border-amber-200 text-amber-900'
+            }`}>
+              <div className="flex justify-between">
+                <span className="font-semibold">Device Method:</span>
+                <span className="font-bold">{BiometricAuthService.getDeviceBiometricName(availabilityInfo.method)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-semibold">Hardware Status:</span>
+                <span className="font-mono font-bold uppercase">{availabilityInfo.hardwareStatus}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-semibold">Biometric Enrolled:</span>
+                <span className="font-bold">{availabilityInfo.enrolled ? 'Yes' : 'No'}</span>
+              </div>
+              {availabilityInfo.reason && (
+                <p className="text-[10.5px] opacity-90 pt-1 border-t border-current/10">
+                  {availabilityInfo.reason}
+                </p>
+              )}
+            </div>
+          )}
+
           {/* Change PIN Accordion */}
           <div className="border-t border-gray-50 pt-3">
             <button
               id="btn-toggle-pin-form"
               type="button"
-              onClick={() => setShowPinForm(!showPinForm)}
+              onClick={() => {
+                if (showPinForm) {
+                  setShowPinForm(false);
+                } else {
+                  requireSecurityAuth(() => {
+                    setShowPinForm(true);
+                  });
+                }
+              }}
               className="w-full flex justify-between items-center text-sm font-semibold text-gray-700 hover:text-emerald-800 transition cursor-pointer"
             >
               <div className="flex items-center gap-3">
@@ -751,7 +1045,15 @@ export default function Profile({
           <div className="border-t border-gray-50 pt-3">
             <button
               type="button"
-              onClick={() => setShowPassForm(!showPassForm)}
+              onClick={() => {
+                if (showPassForm) {
+                  setShowPassForm(false);
+                } else {
+                  requireSecurityAuth(() => {
+                    setShowPassForm(true);
+                  });
+                }
+              }}
               className="w-full flex justify-between items-center text-sm font-semibold text-gray-700 hover:text-emerald-800 transition cursor-pointer"
             >
               <div className="flex items-center gap-3">
@@ -798,6 +1100,86 @@ export default function Profile({
                 >
                   Save Password in App
                 </button>
+              </div>
+            )}
+          </div>
+
+          {/* Active Sessions & Device Management */}
+          <div className="border-t border-gray-50 pt-3">
+            <button
+              id="btn-manage-active-sessions"
+              type="button"
+              onClick={() => {
+                if (showSessionsPanel) {
+                  setShowSessionsPanel(false);
+                } else {
+                  void handleLoadActiveSessions();
+                }
+              }}
+              className="w-full flex justify-between items-center text-sm font-semibold text-gray-700 hover:text-emerald-800 transition cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-purple-50 text-[#70189F] rounded-xl">
+                  <MonitorSmartphone className="w-5 h-5" />
+                </div>
+                <span>Active Devices &amp; Sessions</span>
+              </div>
+              <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${showSessionsPanel ? 'rotate-90' : ''}`} />
+            </button>
+
+            {showSessionsPanel && (
+              <div className="mt-3 space-y-2.5 p-3 bg-gray-50 rounded-2xl border border-gray-100 animate-in slide-in-from-top-2 duration-150">
+                {loadingSessions ? (
+                  <div className="py-4 flex items-center justify-center gap-2 text-xs text-gray-500">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Loading device sessions...</span>
+                  </div>
+                ) : activeSessions.length === 0 ? (
+                  <p className="text-xs text-gray-500 text-center py-2">No active server sessions found.</p>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      {activeSessions.map((sess) => (
+                        <div
+                          key={sess.sessionId}
+                          className="bg-white rounded-xl p-2.5 border border-gray-200 flex items-center justify-between gap-2"
+                        >
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-xs font-bold text-gray-800 truncate">{sess.deviceLabel}</p>
+                              {sess.isCurrent && (
+                                <span className="text-[9px] font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">
+                                  This Device
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-gray-400 mt-0.5">
+                              {sess.biometricEnabled ? `Biometric (${sess.biometricMethod})` : 'PIN / Password'} • Last active{' '}
+                              {new Date(sess.lastUsedAt).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => void handleRevokeSession(sess.sessionId, false)}
+                            className="text-[11px] font-bold text-rose-600 hover:bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-200 cursor-pointer shrink-0"
+                          >
+                            Revoke
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {activeSessions.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => void handleRevokeSession(undefined, true)}
+                        className="w-full py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-[11px] border border-rose-200 transition cursor-pointer"
+                      >
+                        Log Out All Other Devices
+                      </button>
+                    )}
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -1551,6 +1933,122 @@ export default function Profile({
         currentUser={currentUser}
         onLogoUpdated={(logo) => setCustomBankLogo(logo)}
       />
+
+      {/* Security Settings Re-Authentication Modal */}
+      {showSecurityAuthGate && (
+        <div className="fixed inset-0 bg-black/65 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-150">
+          <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-gray-100 relative space-y-4">
+            <button
+              type="button"
+              onClick={() => {
+                setShowSecurityAuthGate(false);
+                setPendingSecurityAction(null);
+              }}
+              aria-label="Close"
+              className="absolute top-4 right-4 p-1.5 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-purple-50 text-[#70189F] flex items-center justify-center shrink-0">
+                <Lock className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-extrabold text-gray-900">Verify Your Identity</h3>
+                <p className="text-[11px] text-gray-500">Authentication is required before changing security settings.</p>
+              </div>
+            </div>
+
+            <div className="flex gap-1.5 bg-gray-100 p-1 rounded-xl">
+              <button
+                type="button"
+                onClick={() => {
+                  setSecurityAuthMode('pin');
+                  setSecurityAuthSecret('');
+                  setSecurityAuthError('');
+                }}
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                  securityAuthMode === 'pin' ? 'bg-white text-gray-900 shadow-2xs' : 'text-gray-500'
+                }`}
+              >
+                Use PIN
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSecurityAuthMode('password');
+                  setSecurityAuthSecret('');
+                  setSecurityAuthError('');
+                }}
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                  securityAuthMode === 'password' ? 'bg-white text-gray-900 shadow-2xs' : 'text-gray-500'
+                }`}
+              >
+                Use Password
+              </button>
+            </div>
+
+            <input
+              type="text"
+              inputMode={securityAuthMode === 'pin' ? 'numeric' : 'text'}
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              data-form-type="other"
+              maxLength={securityAuthMode === 'pin' ? 6 : 64}
+              placeholder={securityAuthMode === 'pin' ? 'Enter current 4–6 digit PIN' : 'Enter account password'}
+              value={securityAuthSecret}
+              onChange={(e) => {
+                setSecurityAuthError('');
+                setSecurityAuthSecret(
+                  securityAuthMode === 'pin' ? e.target.value.replace(/\D/g, '') : e.target.value
+                );
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  void handleVerifySecurityGateWithCredentials();
+                }
+              }}
+              className="w-full bg-gray-50 border border-gray-200 focus:border-[#70189F] focus:bg-white rounded-xl px-3.5 py-2.5 text-xs font-mono [-webkit-text-security:disc] focus:outline-none"
+            />
+
+            {securityAuthError && (
+              <p className="text-xs text-rose-600 font-medium">{securityAuthError}</p>
+            )}
+
+            <div className="space-y-2">
+              <button
+                id="btn-confirm-security-auth"
+                type="button"
+                disabled={securityAuthLoading}
+                onClick={handleVerifySecurityGateWithCredentials}
+                className="w-full py-2.5 rounded-xl bg-[#70189F] hover:bg-[#5e1385] text-white font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-70"
+              >
+                {securityAuthLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <span>Verify &amp; Continue</span>
+                )}
+              </button>
+
+              {biometrics && (
+                <button
+                  type="button"
+                  disabled={securityAuthLoading}
+                  onClick={handleVerifySecurityGateWithBiometrics}
+                  className="w-full py-2.5 rounded-xl bg-purple-50 hover:bg-purple-100 text-[#70189F] font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer disabled:opacity-70"
+                >
+                  <Fingerprint className="w-4 h-4" />
+                  <span>Verify with {BiometricAuthService.getDeviceBiometricName()}</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
