@@ -71,6 +71,7 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        registerPlugin(DeviceBiometricsPlugin.class);
         super.onCreate(savedInstanceState);
         applyEdgeToEdge();
     }

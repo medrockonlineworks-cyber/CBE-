@@ -70,5 +70,7 @@
 	<string>CBE Mobile needs permission to save transaction receipts directly to your Apple Photos library.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>CBE Mobile accesses your photo library to save and manage transaction receipts.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>CBE Mobile uses Face ID to verify your identity and securely sign in to your account.</string>
 </dict>
 </plist>

@@ -1,3 +1,4 @@
+import { Capacitor, registerPlugin } from '@capacitor/core';
 import { UserProfile } from '../types';
 import { PhoneSettingsService } from './phoneSettingsService';
 
@@ -9,6 +10,20 @@ export interface BiometricAttemptResult {
   message?: string;
 }
 
+interface NativeBiometricResponse {
+  verified: boolean;
+  cancelled?: boolean;
+  unavailable?: boolean;
+  method?: string;
+  error?: string;
+}
+
+interface DeviceBiometricsPluginInterface {
+  authenticate(options: { reason: string }): Promise<NativeBiometricResponse>;
+}
+
+const DeviceBiometricsNative = registerPlugin<DeviceBiometricsPluginInterface>('DeviceBiometrics');
+
 interface StoredWebAuthnCredential {
   credId: string;
   rpId: string;
@@ -17,6 +32,7 @@ interface StoredWebAuthnCredential {
 }
 
 const CRED_STORAGE_PREFIX = 'cbe_device_biometric_cred_v1_';
+const DEVICE_CRED_KEY = 'cbe_device_biometric_cred_v1_device';
 
 function bytesToBase64Url(bytes: Uint8Array): string {
   let binary = '';
@@ -68,11 +84,17 @@ export class BiometricAuthService {
   public static getStoredCredential(userId: string): StoredWebAuthnCredential | null {
     if (typeof window === 'undefined') return null;
     try {
-      const raw = localStorage.getItem(`${CRED_STORAGE_PREFIX}${userId}`);
-      if (!raw) return null;
-      const parsed = JSON.parse(raw) as StoredWebAuthnCredential;
-      if (!parsed?.credId || !parsed?.rpId) return null;
-      return parsed;
+      const userRaw = localStorage.getItem(`${CRED_STORAGE_PREFIX}${userId}`);
+      if (userRaw) {
+        const parsed = JSON.parse(userRaw) as StoredWebAuthnCredential;
+        if (parsed?.credId && parsed?.rpId) return parsed;
+      }
+      const deviceRaw = localStorage.getItem(DEVICE_CRED_KEY);
+      if (deviceRaw) {
+        const parsed = JSON.parse(deviceRaw) as StoredWebAuthnCredential;
+        if (parsed?.credId && parsed?.rpId) return parsed;
+      }
+      return null;
     } catch {
       return null;
     }
@@ -81,7 +103,9 @@ export class BiometricAuthService {
   public static saveStoredCredential(userId: string, cred: StoredWebAuthnCredential): void {
     if (typeof window === 'undefined') return;
     try {
-      localStorage.setItem(`${CRED_STORAGE_PREFIX}${userId}`, JSON.stringify(cred));
+      const serialized = JSON.stringify(cred);
+      localStorage.setItem(`${CRED_STORAGE_PREFIX}${userId}`, serialized);
+      localStorage.setItem(DEVICE_CRED_KEY, serialized);
     } catch {
       // Non-blocking
     }
@@ -91,6 +115,7 @@ export class BiometricAuthService {
     if (typeof window === 'undefined') return;
     try {
       localStorage.removeItem(`${CRED_STORAGE_PREFIX}${userId}`);
+      localStorage.removeItem(DEVICE_CRED_KEY);
     } catch {
       // Non-blocking
     }
@@ -193,14 +218,66 @@ export class BiometricAuthService {
   }
 
   /**
-   * Activates the real OS device security login system (Face ID on iPhone / Fingerprint on Android)
-   * using WebAuthn Platform Authenticator (`navigator.credentials`).
-   * Never fakes or bypasses verification.
+   * Activates the real OS device security login system:
+   * 1. Native Capacitor (iOS LAContext Face ID / Android BiometricPrompt Fingerprint) when running in native app
+   * 2. WebAuthn Platform Authenticator (Face ID in iOS Safari/PWA / Fingerprint in Android Chrome)
    */
   public static async authenticateWithDevice(user: UserProfile): Promise<BiometricAttemptResult> {
     const method = this.getBiometricMethod();
     const methodName = this.getDeviceBiometricName(method);
 
+    // 1. Native Capacitor Bridge (exact iOS LAContext Face ID / Android BiometricPrompt)
+    if (typeof window !== 'undefined' && Capacitor.isNativePlatform()) {
+      try {
+        const res = await DeviceBiometricsNative.authenticate({
+          reason:
+            method === 'faceid'
+              ? 'Sign in to Commercial Bank of Ethiopia'
+              : 'Use your fingerprint to sign in to CBE Mobile',
+        });
+
+        const resolvedMethod: BiometricMethod =
+          res?.method === 'faceid' ? 'faceid' : res?.method === 'fingerprint' ? 'fingerprint' : method;
+
+        if (res?.verified) {
+          return { status: 'success', method: resolvedMethod };
+        }
+
+        if (res?.unavailable) {
+          return {
+            status: 'unsupported',
+            method: resolvedMethod,
+            message: res.error || `${methodName} is not configured on this device.`,
+          };
+        }
+
+        if (res?.cancelled) {
+          return {
+            status: 'cancelled',
+            method: resolvedMethod,
+            message: `${methodName} verification was cancelled.`,
+          };
+        }
+
+        return {
+          status: 'error',
+          method: resolvedMethod,
+          message: res?.error || `${methodName} verification failed.`,
+        };
+      } catch (nativeErr: unknown) {
+        const errMsg = nativeErr instanceof Error ? nativeErr.message : String(nativeErr);
+        // If native plugin isn't compiled into an older binary, fall through to WebAuthn if available
+        if (!/not implemented|UNIMPLEMENTED/i.test(errMsg)) {
+          return {
+            status: 'error',
+            method,
+            message: errMsg || `${methodName} verification failed.`,
+          };
+        }
+      }
+    }
+
+    // 2. Web / PWA: Real OS WebAuthn Platform Authenticator (Face ID on iPhone / Fingerprint on Android)
     if (typeof window === 'undefined' || !window.isSecureContext || !navigator.credentials || !window.PublicKeyCredential) {
       return {
         status: 'unsupported',
@@ -229,7 +306,6 @@ export class BiometricAuthService {
           return { status: 'success', method };
         } catch (verifyErr: unknown) {
           const errName = verifyErr instanceof DOMException ? verifyErr.name : '';
-          // If the device key was removed from iCloud Keychain / Android biometrics, re-enroll via real OS prompt
           if (errName === 'InvalidStateError' || errName === 'NotFoundError') {
             this.clearStoredCredential(user.id);
             await this.enrollPlatformCredential(user, method);
@@ -238,7 +314,6 @@ export class BiometricAuthService {
           throw verifyErr;
         }
       } else {
-        // Enroll on this device & verify immediately using real OS Face ID / Fingerprint dialog
         await this.enrollPlatformCredential(user, method);
         return { status: 'success', method };
       }
@@ -248,7 +323,6 @@ export class BiometricAuthService {
       const errMsg = err instanceof Error ? err.message : String(err);
       const inIframe = window.self !== window.top;
 
-      // Detect when an embedded iframe Permissions Policy blocks WebAuthn before showing the OS dialog
       if (
         inIframe &&
         (errName === 'SecurityError' ||
@@ -266,7 +340,7 @@ export class BiometricAuthService {
         return {
           status: 'cancelled',
           method,
-          message: `${methodName} verification was cancelled or failed.`,
+          message: `${methodName} verification was cancelled or not recognized.`,
         };
       }
 
