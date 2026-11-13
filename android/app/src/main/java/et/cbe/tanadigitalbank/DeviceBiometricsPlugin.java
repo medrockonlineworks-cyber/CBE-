@@ -85,7 +85,7 @@ public class DeviceBiometricsPlugin extends Plugin {
             );
 
             BiometricPrompt.PromptInfo promptInfo = new BiometricPrompt.PromptInfo.Builder()
-                .setTitle("Commercial Bank of Ethiopia")
+                .setTitle("Unlock to use Mobile Banking")
                 .setSubtitle(reason)
                 .setNegativeButtonText("Cancel")
                 .setAllowedAuthenticators(authenticators)

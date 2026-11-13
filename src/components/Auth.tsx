@@ -120,6 +120,9 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
   const [showAccountSwitcher, setShowAccountSwitcher] = useState<boolean>(false);
   const [showNotificationToast, setShowNotificationToast] = useState<boolean>(false);
   const [isBiometricScanning, setIsBiometricScanning] = useState<boolean>(false);
+  const [androidFingerprintPhase, setAndroidFingerprintPhase] = useState<
+    null | 'scanning' | 'authenticating' | 'authenticated'
+  >(null);
   const [iframeBlockedNotice, setIframeBlockedNotice] = useState<BiometricMethod | null>(null);
 
   // Detect iOS / iPhone device (physical iPhone/iPad OR iPhone phone model preset)
@@ -258,12 +261,20 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
   };
 
   const handleBiometricsLogin = async () => {
-    if (isBiometricScanning) return;
+    if (isBiometricScanning || androidFingerprintPhase) return;
     setIsBiometricScanning(true);
     setShowError(false);
 
+    let authTimer: ReturnType<typeof setTimeout> | null = null;
+    if (biometricMethod === 'fingerprint') {
+      setAndroidFingerprintPhase('scanning');
+      authTimer = setTimeout(() => {
+        setAndroidFingerprintPhase((prev) => (prev === 'scanning' ? 'authenticating' : prev));
+      }, 1100);
+    }
+
     const result = await BiometricAuthService.authenticateWithDevice(selectedUser);
-    setIsBiometricScanning(false);
+    if (authTimer) clearTimeout(authTimer);
 
     if (result.status === 'success') {
       const methodLabel = result.method === 'faceid' ? 'Face ID' : 'Fingerprint';
@@ -274,9 +285,22 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
         `User ${selectedUser.name} logged in via device ${methodLabel} authentication.`
       );
       localStorage.setItem('tana_active_user_id', selectedUser.id);
+
+      if (result.method === 'fingerprint') {
+        setAndroidFingerprintPhase('authenticating');
+        await new Promise((resolve) => setTimeout(resolve, 260));
+        setAndroidFingerprintPhase('authenticated');
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        setAndroidFingerprintPhase(null);
+      }
+
+      setIsBiometricScanning(false);
       onLoginSuccess(selectedUser);
       return;
     }
+
+    setAndroidFingerprintPhase(null);
+    setIsBiometricScanning(false);
 
     if (result.status === 'iframe_blocked') {
       setIframeBlockedNotice(result.method);
@@ -861,6 +885,55 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
             </button>
           </div>
 
+        </div>
+      )}
+
+      {/* Android Centered Fingerprint Verification Card (mirrors 6935559364592253295_62743a59.mp4) */}
+      {androidFingerprintPhase && (
+        <div
+          className={`fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-6 pointer-events-none animate-in fade-in duration-150 ${
+            androidFingerprintPhase === 'authenticated' ? '' : 'pb-28 sm:pb-24'
+          }`}
+        >
+          <div className="w-[260px] min-h-[168px] rounded-[26px] bg-white shadow-[0_18px_48px_rgba(0,0,0,0.28)] px-6 py-7 flex flex-col items-center justify-center text-center">
+            {androidFingerprintPhase === 'authenticated' ? (
+              <>
+                <div className="w-[70px] h-[70px] rounded-full bg-[#22c55e] flex items-center justify-center shadow-sm animate-in zoom-in-75 duration-200">
+                  <Check className="w-10 h-10 text-white stroke-[3]" />
+                </div>
+                <p className="text-[#22c55e] text-[15.5px] font-medium mt-4 tracking-normal">
+                  Authenticated!
+                </p>
+              </>
+            ) : (
+              <>
+                <div className="relative w-[82px] h-[82px] flex items-center justify-center">
+                  <svg
+                    className="absolute inset-0 w-full h-full animate-spin"
+                    style={{ animationDuration: '1.1s' }}
+                    viewBox="0 0 84 84"
+                    fill="none"
+                  >
+                    <circle
+                      cx="42"
+                      cy="42"
+                      r="38"
+                      stroke="#dc2626"
+                      strokeWidth="2.6"
+                      strokeLinecap="round"
+                      strokeDasharray="112 130"
+                    />
+                  </svg>
+                  <CbeFingerprintIcon size={46} strokeColor="#7c22a8" strokeWidth={2.0} />
+                </div>
+                {androidFingerprintPhase === 'authenticating' && (
+                  <p className="text-[#6b7280] text-[14.5px] font-medium mt-3.5 animate-in fade-in duration-150">
+                    Authenticating...
+                  </p>
+                )}
+              </>
+            )}
+          </div>
         </div>
       )}
 

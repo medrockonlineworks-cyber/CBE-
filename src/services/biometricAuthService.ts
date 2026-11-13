@@ -233,7 +233,7 @@ export class BiometricAuthService {
           reason:
             method === 'faceid'
               ? 'Sign in to Commercial Bank of Ethiopia'
-              : 'Use your fingerprint to sign in to CBE Mobile',
+              : 'Authenticate to continue.',
         });
 
         const resolvedMethod: BiometricMethod =
