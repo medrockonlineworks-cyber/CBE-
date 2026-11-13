@@ -21,6 +21,7 @@ export interface ReceiptDrawOptions {
   targetWidth?: number;
   targetHeight?: number;
   isIPhone?: boolean;
+  addGrayBottomStrip?: boolean;
 }
 
 interface TextToken {
@@ -139,14 +140,14 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, width, height);
 
-  // 2. Top Purple Header: #70189F matching original authentic CBE top design & Image 2
-  const topPurplePadding = 52 * scale; // Exact vertical space above Thank you
+  // 2. Top Purple Header: #70189F matching IMG_1200_618cfdf3.jpeg
+  const topPurplePadding = 52 * scale;
   const shieldSize = 34 * scale;
   const shieldX = 20 * scale;
-  const shieldY = topPurplePadding;
-  const headerBottomPadding = 48 * scale;
-  const sheetTop = shieldY + shieldSize + headerBottomPadding;
-  const cornerRadius = 38 * scale; // Authentic large rounded-t curve matching Image 2
+  const shieldY = topPurplePadding + (2 * scale);
+  const headerBottomPadding = 40 * scale;
+  const sheetTop = topPurplePadding + 40 * scale + headerBottomPadding;
+  const cornerRadius = 38 * scale;
 
   // Fill purple background extending down only to sheetTop + cornerRadius to fill behind curved corners
   ctx.fillStyle = '#70189F';
@@ -172,18 +173,18 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   ctx.stroke(shieldCheckmarkPath);
   ctx.restore();
 
-  // 4. Header Titles: "Thank you" and "Success" (matching exact original typography)
-  const fontSans = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+  // 4. Header Titles: "Thank you" and "Success" (matching live on-screen typography)
+  const fontSans = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif';
   
   ctx.fillStyle = '#ffffff';
-  ctx.font = `bold ${17 * scale}px ${fontSans}`;
+  ctx.font = `bold ${18 * scale}px ${fontSans}`;
   ctx.textAlign = 'left';
   ctx.textBaseline = 'alphabetic';
-  ctx.fillText('Thank you', shieldX + shieldSize + (10 * scale), shieldY + (17 * scale));
+  ctx.fillText('Thank you', shieldX + shieldSize + (10 * scale), shieldY + (18 * scale));
 
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.88)';
-  ctx.font = `normal ${12.5 * scale}px ${fontSans}`;
-  ctx.fillText('Success', shieldX + shieldSize + (10 * scale), shieldY + (32 * scale));
+  ctx.fillStyle = 'rgba(243, 232, 255, 0.9)';
+  ctx.font = `normal ${13 * scale}px ${fontSans}`;
+  ctx.fillText('Success', shieldX + shieldSize + (10 * scale), shieldY + (36 * scale));
 
   // 5. Main White Sheet Container:
   // Starts at sheetTop with rounded top corners (38px) against purple background, extending flat to canvas bottom!
@@ -218,28 +219,23 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   ctx.stroke(badgeCheckmark);
   ctx.restore();
 
-  // 7. Headline: "Transaction Completed Successfully!" (matching Image 2)
-  // Perfectly balanced vertical space from top element (checkmark badge) and bottom element (gray card)
-  const isIos = !!options.isIPhone;
-  const badgeBottom = badgeCenterY + badgeRadius + (3 * scale); // Exact bottom of 6*scale white outer stroke
-  const balancedGap = isIos ? (20 * scale) : (16 * scale);
-  const headlineTop = badgeBottom + balancedGap;
-  const headlineBaseline = headlineTop + (12 * scale);
-  const headlineBottom = headlineTop + (15 * scale);
+  // 7. Headline: "Transaction Completed Successfully!"
+  const badgeBottom = badgeCenterY + badgeRadius + (3 * scale);
+  const headlineTop = badgeBottom + (12 * scale);
+  const headlineBaseline = headlineTop + (11 * scale);
 
   ctx.fillStyle = '#111827';
-  ctx.font = `500 ${16 * scale}px ${fontSans}`;
+  ctx.font = `500 ${13.5 * scale}px ${fontSans}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
   ctx.fillText('Transaction Completed Successfully!', width / 2, headlineBaseline);
 
   // 8. Main Transaction Summary Gray Card: #f2f3f5
-  // Placed exactly balancedGap below the headline to ensure equal space above and below
-  const cardMarginX = 16 * scale;
-  const cardTop = headlineBottom + balancedGap;
+  const cardMarginX = 20 * scale;
+  const cardTop = badgeBottom + (40 * scale);
   const cardWidth = width - (cardMarginX * 2);
-  const cardPadX = (isIos ? 20 : 18) * scale;
-  const cardPadY = (isIos ? 22 : 18) * scale;
+  const cardPadX = 18 * scale;
+  const cardPadY = 18 * scale;
   const textStartX = cardMarginX + cardPadX;
   const textMaxW = cardWidth - (cardPadX * 2);
 
@@ -275,13 +271,13 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
     );
   }
 
-  // Pre-calculate wrapped paragraph text lines (exact 10 lines matching reference)
-  const regularFont = `400 ${14.5 * scale}px ${fontSans}`;
-  const boldFont = `bold ${14.5 * scale}px ${fontSans}`;
-  const lineHeight = 24 * scale;
+  // Pre-calculate wrapped paragraph text lines
+  const regularFont = `400 ${14 * scale}px ${fontSans}`;
+  const boldFont = `bold ${14 * scale}px ${fontSans}`;
+  const lineHeight = 22.4 * scale;
 
   if ('letterSpacing' in ctx) {
-    (ctx as any).letterSpacing = `${0.15 * scale}px`;
+    (ctx as any).letterSpacing = `${0.12 * scale}px`;
   }
 
   interface WordToken {
@@ -341,49 +337,47 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   const paragraphHeight = lines.length * lineHeight;
 
   // 10. Position inside Card:
-  // Summary title -> paragraph -> QR box -> CBE logo footer matching reference (Screenshot_20261112-104837)
-  const summaryTitleY = cardTop + cardPadY + (12 * scale);
-  const paragraphGap = isIos ? (16 * scale) : (14 * scale);
+  // Summary title -> paragraph -> QR box -> CBE logo footer
+  const summaryTitleY = cardTop + cardPadY + (11 * scale);
+  const paragraphGap = 16 * scale;
   const paragraphStartY = summaryTitleY + paragraphGap;
 
-  // Space between paragraph text and QR code:
-  // For iPhone users: increased vertical space (13 * scale = 26px at 2x) matching reference screenshot
-  const qrBoxGap = isIos ? (13 * scale) : (3 * scale);
+  // Space between paragraph text and QR code
+  const qrBoxGap = 10 * scale;
   const qrBoxTop = paragraphStartY + paragraphHeight + qrBoxGap;
   const qrBoxSize = 130 * scale;
   const qrBoxX = (width - qrBoxSize) / 2;
   const qrImgSize = 114 * scale;
   const qrImgOffset = (qrBoxSize - qrImgSize) / 2;
 
-  // Space between QR code and CBE Logo footer:
-  // For iPhone users: increased vertical space (15 * scale = 30px at 2x) matching reference screenshot
-  const footerGap = isIos ? (15 * scale) : (5 * scale);
+  // Space between QR code and CBE Logo footer
+  const footerGap = 12 * scale;
   const footerY = qrBoxTop + qrBoxSize + footerGap;
-  const footerLogoSize = 42 * scale;
-  const cardBottomPadding = (isIos ? 26 : 18) * scale;
+  const footerLogoSize = 40 * scale;
+  const cardBottomPadding = 20 * scale;
   const cardHeight = (footerY + footerLogoSize + cardBottomPadding) - cardTop;
 
-  // Draw Card Background: #f2f3f5 with radius 26px and border shadow matching Image One
+  // Draw Card Background: #f2f3f5 with radius 24px and border shadow
   ctx.save();
   ctx.shadowColor = 'rgba(0, 0, 0, 0.08)';
-  ctx.shadowBlur = 24 * scale;
+  ctx.shadowBlur = 20 * scale;
   ctx.shadowOffsetY = 6 * scale;
   ctx.fillStyle = '#f2f3f5';
-  roundRect(ctx, cardMarginX, cardTop, cardWidth, cardHeight, 26 * scale);
+  roundRect(ctx, cardMarginX, cardTop, cardWidth, cardHeight, 24 * scale);
   ctx.fill();
   ctx.restore();
 
-  // Subtle border matching Image One
+  // Subtle border
   ctx.save();
   ctx.strokeStyle = 'rgba(0, 0, 0, 0.04)';
   ctx.lineWidth = 1 * scale;
-  roundRect(ctx, cardMarginX, cardTop, cardWidth, cardHeight, 26 * scale);
+  roundRect(ctx, cardMarginX, cardTop, cardWidth, cardHeight, 24 * scale);
   ctx.stroke();
   ctx.restore();
 
   // Draw "Transaction Summary"
   ctx.fillStyle = '#8e8e93';
-  ctx.font = `normal ${13.5 * scale}px ${fontSans}`;
+  ctx.font = `normal ${12.5 * scale}px ${fontSans}`;
   ctx.textAlign = 'left';
   ctx.fillText('Transaction Summary', textStartX, summaryTitleY);
 
@@ -416,9 +410,9 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   }
   ctx.restore();
 
-  // Draw Commercial Bank of Ethiopia Footer: Logo on left, aligned with text margin, matching reference image two
-  const footerTitleFont = `bold ${15 * scale}px ${fontSans}`;
-  const footerSloganFont = `normal ${12.5 * scale}px ${fontSans}`;
+  // Draw Commercial Bank of Ethiopia Footer
+  const footerTitleFont = `bold ${14 * scale}px ${fontSans}`;
+  const footerSloganFont = `normal ${12 * scale}px ${fontSans}`;
   const footerHorizontalGap = 12 * scale;
   const footerX = textStartX; // Aligned with the text margin!
 
@@ -434,15 +428,15 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   if ('letterSpacing' in ctx) {
     (ctx as any).letterSpacing = '0px';
   }
-  ctx.fillText('Commercial Bank of Ethiopia', footerTextX, footerY + (18 * scale));
+  ctx.fillText('Commercial Bank of Ethiopia', footerTextX, footerY + (17 * scale));
 
   ctx.fillStyle = '#6b7280';
   ctx.font = footerSloganFont;
-  ctx.fillText('The bank you can always rely on!', footerTextX, footerY + (34 * scale));
+  ctx.fillText('The bank you can always rely on!', footerTextX, footerY + (32 * scale));
 
-  // Bottom edge color change matching Image One (for iPhone users only; Android users keep pure white bottom)
-  if (options.isIPhone) {
-    const bottomBarHeight = 64 * scale;
+  // Gray bottom strip when taking screenshots
+  if (options.addGrayBottomStrip ?? true) {
+    const bottomBarHeight = 58 * scale;
     ctx.fillStyle = '#f4f5f7';
     ctx.fillRect(0, height - bottomBarHeight, width, bottomBarHeight);
     ctx.fillStyle = '#edf0f3';

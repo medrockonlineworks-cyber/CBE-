@@ -1187,7 +1187,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
 
   return (
     <div 
-      className="fixed inset-0 z-50 bg-[#f0f2f5] flex flex-col items-stretch justify-start overflow-hidden w-full h-full min-h-[100dvh] select-none"
+      className="fixed inset-0 z-[80] bg-[#f0f2f5] flex flex-col items-stretch justify-start overflow-hidden w-full h-full min-h-[100dvh] select-none"
     >
       
       {/* Double Tap Floating Notification Toast */}

@@ -200,14 +200,26 @@ async function inlineImageElement(img: HTMLImageElement): Promise<void> {
  * - Inlines all assets and rasterizes SVGs
  * - Uses memory-safe scale for high-DPI Android/Retina screens
  */
-export async function captureReceiptElement(element: HTMLElement): Promise<string> {
+export interface CaptureReceiptOptions {
+  addGrayBottomStrip?: boolean;
+}
+
+export async function captureReceiptElement(
+  element: HTMLElement,
+  options?: CaptureReceiptOptions
+): Promise<string> {
   // 1. Capture initial scroll position of scroll wrapper so we can restore it afterwards
+  const innerScrollable = element.querySelector('.overflow-y-auto') as HTMLElement | null;
+  const initialInnerScrollTop = innerScrollable ? innerScrollable.scrollTop : 0;
   const scrollWrapper = document.getElementById('receipt-screen-wrapper') || 
                         element.closest('.overflow-y-auto') || 
                         element.parentElement;
   const initialScrollTop = scrollWrapper ? scrollWrapper.scrollTop : window.scrollY;
 
   // Temporarily reset scroll to 0 for flawless viewport bounding calculation
+  if (innerScrollable) {
+    innerScrollable.scrollTop = 0;
+  }
   if (scrollWrapper) {
     scrollWrapper.scrollTop = 0;
   }
@@ -245,25 +257,35 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
     }
   }
 
-  // 5. Measure full content bounds
+  // 5. Measure full content bounds matching exact on-screen dimensions
   const rect = element.getBoundingClientRect();
   const isExactTarget = element.id === 'cbe-screenshot-exact-target';
   const fullWidth = isExactTarget 
     ? (parseInt(element.style.width, 10) || element.offsetWidth || 412)
-    : Math.max(element.scrollWidth, element.offsetWidth, Math.ceil(rect.width), 360);
-  const fullHeight = isExactTarget
-    ? (parseInt(element.style.height, 10) || element.offsetHeight || 915)
-    : Math.max(element.scrollHeight, element.offsetHeight, Math.ceil(rect.height), 700);
+    : Math.max(Math.ceil(rect.width), element.offsetWidth, 360);
+
+  let fullHeight: number;
+  if (isExactTarget) {
+    fullHeight = parseInt(element.style.height, 10) || element.offsetHeight || 915;
+  } else {
+    const viewportH = Math.max(Math.ceil(rect.height), element.offsetHeight, 700);
+    const extraScroll = innerScrollable ? Math.max(0, innerScrollable.scrollHeight - innerScrollable.clientHeight) : 0;
+    const bottomActions = element.querySelector('#cbe-receipt-bottom-actions-container') as HTMLElement | null;
+    const bottomActionsH = bottomActions ? bottomActions.offsetHeight : 0;
+    const bottomReserve = options?.addGrayBottomStrip ? 84 : 36;
+    const neededContentHeight = viewportH - bottomActionsH + extraScroll + bottomReserve;
+    fullHeight = Math.max(viewportH, neededContentHeight, 700);
+  }
 
   // Safe pixel ratio for mobile devices (2.0x is razor-sharp without exceeding Android canvas memory limits)
   const rawDpr = typeof window !== 'undefined' ? window.devicePixelRatio || 2 : 2;
   const pixelRatio = Math.min(2.5, Math.max(2, rawDpr));
 
+  // Ignore overlays/toasts/flash but handle #btn-top-screenshot and bottom bar cleanly in onclone
   const isExcluded = (node: Element): boolean => {
     return (
-      node.getAttribute('data-screenshot-exclude') === 'true' ||
       node.getAttribute('data-screenshot-temporary') === 'true' ||
-      node.id === 'btn-top-screenshot'
+      (node.getAttribute('data-screenshot-exclude') === 'true' && node.id !== 'btn-top-screenshot')
     );
   };
 
@@ -303,16 +325,18 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
           clonedWrapper.scrollTop = 0;
           clonedWrapper.scrollLeft = 0;
           clonedWrapper.style.overflow = 'visible';
-          clonedWrapper.style.height = 'auto';
+          clonedWrapper.style.height = `${fullHeight}px`;
           clonedWrapper.style.maxHeight = 'none';
         }
 
-        // Expand clonedElement to full content height with zero clipping
-        clonedElement.style.overflow = 'visible';
-        clonedElement.style.height = 'auto';
-        clonedElement.style.minHeight = '100%';
+        // Expand clonedElement to exact width & fullHeight without shifting any internal spacing
+        clonedElement.style.overflow = 'hidden';
+        clonedElement.style.width = `${fullWidth}px`;
+        clonedElement.style.height = `${fullHeight}px`;
+        clonedElement.style.minHeight = `${fullHeight}px`;
         clonedElement.style.maxHeight = 'none';
         clonedElement.style.transform = 'none';
+        clonedElement.style.backgroundColor = '#ffffff';
 
         // Copy all style and link tags from main document to cloned document
         try {
@@ -361,29 +385,50 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
             clonedDoc.documentElement.style.padding = '0';
             clonedDoc.documentElement.style.overflow = 'hidden';
           }
-        }
+        } else {
+          // Capturing the exact live on-screen receipt (#cbe-full-receipt-capture-target)
+          const existingReceipt = clonedDoc.getElementById('cbe-existing-receipt');
+          if (existingReceipt) {
+            existingReceipt.style.height = `${fullHeight}px`;
+            existingReceipt.style.minHeight = `${fullHeight}px`;
+            existingReceipt.style.overflow = 'visible';
+            existingReceipt.style.backgroundColor = '#ffffff';
+          }
 
-        // Ensure white sheet container does not clip or shrink and has clean white bottom
-        const whiteSheet = clonedElement.querySelector('.bg-white');
-        if (whiteSheet) {
-          (whiteSheet as HTMLElement).style.overflow = 'visible';
-          (whiteSheet as HTMLElement).style.height = 'auto';
-          (whiteSheet as HTMLElement).style.backgroundColor = '#ffffff';
-        }
+          // Expand scrollable body so full card is rendered without clipping, keeping exact spacing
+          const clonedScrollable = clonedElement.querySelector('.overflow-y-auto') as HTMLElement | null;
+          if (clonedScrollable) {
+            clonedScrollable.scrollTop = 0;
+            clonedScrollable.style.overflow = 'visible';
+            clonedScrollable.style.height = 'auto';
+            clonedScrollable.style.maxHeight = 'none';
+            clonedScrollable.style.flex = '1 1 auto';
+            clonedScrollable.style.backgroundColor = '#ffffff';
+          }
 
-        // Only restore action buttons if capturing live on-screen view
-        if (clonedElement.id !== 'cbe-screenshot-exact-target') {
+          // Hide bottom action controls (Receipt, Screenshot, Share, Close) cleanly so pure white extends to bottom
           const bottomBar = clonedDoc.getElementById('cbe-receipt-bottom-actions-container');
           if (bottomBar) {
-            bottomBar.style.display = 'block';
-            bottomBar.style.visibility = 'visible';
-            bottomBar.style.opacity = '1';
+            bottomBar.style.display = 'none';
           }
+
+          // Hide top-right screenshot button without altering header height/alignment
+          const topScreenshotBtn = clonedDoc.getElementById('btn-top-screenshot');
+          if (topScreenshotBtn) {
+            topScreenshotBtn.style.visibility = 'hidden';
+          }
+
+          // Freeze checkmark pulse animation at exact scale(1)
+          const animatedBadges = clonedElement.querySelectorAll('.animate-cbe-pulse');
+          animatedBadges.forEach((badge) => {
+            (badge as HTMLElement).style.animation = 'none';
+            (badge as HTMLElement).style.transform = 'scale(1)';
+          });
         }
 
-        // Only hide temporary trigger buttons or overlays
+        // Hide any remaining temporary overlays/stamps
         const temporaryNodes = clonedDoc.querySelectorAll(
-          '[data-screenshot-exclude="true"], [data-screenshot-temporary="true"], #btn-top-screenshot'
+          '[data-screenshot-exclude="true"]:not(#btn-top-screenshot), [data-screenshot-temporary="true"]'
         );
         temporaryNodes.forEach((node) => {
           (node as HTMLElement).style.display = 'none';
@@ -427,6 +472,16 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
       }
     }
 
+    // Draw 58px gray bottom strip at the bottom edge of screenshot when requested
+    if (options?.addGrayBottomStrip && ctx) {
+      const bottomStripH = Math.round(58 * pixelRatio);
+      const stripTopY = canvas.height - bottomStripH;
+      ctx.fillStyle = '#f4f5f7';
+      ctx.fillRect(0, stripTopY, canvas.width, bottomStripH);
+      ctx.fillStyle = '#edf0f3';
+      ctx.fillRect(0, stripTopY, canvas.width, Math.max(1, Math.round(1 * pixelRatio)));
+    }
+
     const dataUrl = canvas.toDataURL('image/png');
     if (dataUrl && dataUrl.length > 1000) {
       return dataUrl;
@@ -447,6 +502,17 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
         scrollY: 0,
         ignoreElements: isExcluded,
       });
+      if (options?.addGrayBottomStrip) {
+        const fbCtx = fallbackCanvas.getContext('2d');
+        if (fbCtx) {
+          const bottomStripH = Math.round(58 * 2);
+          const stripTopY = fallbackCanvas.height - bottomStripH;
+          fbCtx.fillStyle = '#f4f5f7';
+          fbCtx.fillRect(0, stripTopY, fallbackCanvas.width, bottomStripH);
+          fbCtx.fillStyle = '#edf0f3';
+          fbCtx.fillRect(0, stripTopY, fallbackCanvas.width, 2);
+        }
+      }
       return fallbackCanvas.toDataURL('image/png');
     } catch (fallbackErr) {
       console.error('[ScreenshotService] All capture methods failed:', fallbackErr);
@@ -454,6 +520,9 @@ export async function captureReceiptElement(element: HTMLElement): Promise<strin
     }
   } finally {
     // Restore user scroll position so viewport does not jump
+    if (innerScrollable) {
+      innerScrollable.scrollTop = initialInnerScrollTop;
+    }
     if (scrollWrapper) {
       scrollWrapper.scrollTop = initialScrollTop;
     }

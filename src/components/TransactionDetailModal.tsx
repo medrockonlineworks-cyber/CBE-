@@ -5,11 +5,12 @@ import { X, Check } from 'lucide-react';
 import { PhoneSettingsService } from '../services/phoneSettingsService';
 import { SystemBarsService } from '../services/systemBarsService';
 import BottomNavigation from './BottomNavigation';
+import { CbeWebReceiptModal } from './CbeWebReceiptModal';
 
 interface TransactionDetailModalProps {
   transaction: Transaction;
   onClose: () => void;
-  onViewReceipt: (tx: Transaction) => void;
+  onViewReceipt?: (tx: Transaction) => void;
   currentUserId?: string;
   currentUserAccount?: string;
   onNavigateTab?: (tab: 'home' | 'history' | 'profile') => void;
@@ -66,6 +67,7 @@ export default function TransactionDetailModal({
   onNavigateTab
 }: TransactionDetailModalProps) {
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [showWebReceipt, setShowWebReceipt] = useState<boolean>(false);
   const [isIPhone, setIsIPhone] = useState<boolean>(() => PhoneSettingsService.isIPhoneMode());
 
   useEffect(() => {
@@ -81,6 +83,28 @@ export default function TransactionDetailModal({
       SystemBarsService.restoreFromModal();
     };
   }, []);
+
+  // Re-apply detail modal system bars when returning from the Web Receipt overlay
+  useEffect(() => {
+    if (!showWebReceipt) {
+      SystemBarsService.applyModalOpenBars();
+    }
+  }, [showWebReceipt]);
+
+  // Handle hardware/gesture back while Web Receipt is open before closing detail modal
+  useEffect(() => {
+    if (!showWebReceipt) return;
+    const handlePhoneBack = (e: any) => {
+      setShowWebReceipt(false);
+      e?.detail?.setHandled?.();
+      e?.stopImmediatePropagation?.();
+      e?.preventDefault?.();
+    };
+    window.addEventListener('cbe_phone_back', handlePhoneBack, true);
+    return () => {
+      window.removeEventListener('cbe_phone_back', handlePhoneBack, true);
+    };
+  }, [showWebReceipt]);
 
   // Check if credit or debit
   const txType = (transaction.type as string);
@@ -139,6 +163,7 @@ export default function TransactionDetailModal({
   };
 
   return (
+    <>
     <div 
       id="transaction-detail-modal-overlay"
       className="fixed inset-0 z-40 bg-black/60 backdrop-blur-[0.5px] flex flex-col justify-end items-center p-0 animate-in fade-in duration-200 select-none pointer-events-auto"
@@ -286,12 +311,7 @@ export default function TransactionDetailModal({
               id="btn-view-full-receipt"
               type="button"
               onClick={() => {
-                const normalizedTx = {
-                  ...transaction,
-                  id: txId,
-                  reference: txId
-                };
-                onViewReceipt(normalizedTx);
+                setShowWebReceipt(true);
               }}
               className="w-auto min-w-[172px] max-w-[196px] h-[44px] sm:h-[46px] px-6 py-2.5 text-xs bg-[#70189F] hover:bg-[#5e1286] active:scale-[0.98] text-white rounded-full font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_4px_14px_rgba(112,24,159,0.35)] transition-all cursor-pointer"
             >
@@ -331,5 +351,18 @@ export default function TransactionDetailModal({
         </div>
       </div>
     </div>
+
+    {showWebReceipt && (
+      <CbeWebReceiptModal
+        transaction={{
+          ...transaction,
+          id: txId,
+          reference: txId,
+          description: remark,
+        }}
+        onClose={() => setShowWebReceipt(false)}
+      />
+    )}
+    </>
   );
 }

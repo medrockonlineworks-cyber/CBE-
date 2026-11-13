@@ -596,11 +596,22 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
       const qrUrl = customQrCode || qrDataUrl || txQrSvgDataUri;
 
+      // Wait briefly so React updates isCapturing=true (freezes badge scale & hides PAID stamp cleanly)
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+
       let dataUrl: string | null = null;
 
-      if (isIos) {
-        // Fast path for iOS (<15ms) to preserve Safari's user-activation gesture token:
-        // Drawing directly on 2D canvas guarantees navigator.share succeeds without NotAllowedError
+      // Capture the EXACT live on-screen receipt detail (receiptRef.current) without altering any layout, spacing, or colors
+      const liveElement = receiptRef.current || screenshotExportRef.current;
+      if (liveElement) {
+        try {
+          dataUrl = await captureReceiptElement(liveElement, { addGrayBottomStrip: true });
+        } catch (captureErr) {
+          console.warn('[Screenshot] Live DOM capture fallback to canvas:', captureErr);
+        }
+      }
+
+      if (!dataUrl) {
         dataUrl = await renderAuthenticReceiptToCanvas({
           transaction,
           amountFormatted,
@@ -620,42 +631,9 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           customBankLogo,
           targetWidth: screenshotDimensions.width,
           targetHeight: screenshotDimensions.height,
-          isIPhone: true,
+          isIPhone: isIos,
+          addGrayBottomStrip: true,
         });
-      } else {
-        // Android flow: brief tick then capture DOM or high-fidelity canvas
-        await new Promise(r => setTimeout(r, 60));
-        const element = screenshotExportRef.current || receiptRef.current;
-        if (element) {
-          try {
-            dataUrl = await captureReceiptElement(element);
-          } catch (captureErr) {
-            console.warn('[Screenshot] DOM capture fallback to canvas:', captureErr);
-          }
-        }
-        if (!dataUrl) {
-          dataUrl = await renderAuthenticReceiptToCanvas({
-            transaction,
-            amountFormatted,
-            senderName,
-            senderSuffix,
-            recipientName,
-            recipientSuffix,
-            formattedDate,
-            txId,
-            reason,
-            totalDebitedFormatted,
-            serviceChargeFormatted,
-            vatFormatted,
-            disasterRecoveryFormatted,
-            isCredit,
-            qrDataUrl: qrUrl,
-            customBankLogo,
-            targetWidth: screenshotDimensions.width,
-            targetHeight: screenshotDimensions.height,
-            isIPhone: false,
-          });
-        }
       }
 
       if (dataUrl) {
@@ -666,14 +644,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           const filename = getSafeReceiptFilename(txId);
           const file = new File([blob], filename, { type: 'image/png' });
 
-          // 1. Silently copy high-resolution image to iOS clipboard
-          if (typeof navigator !== 'undefined' && navigator.clipboard && window.ClipboardItem) {
-            try {
-              await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-            } catch {}
-          }
-
-          // 2. If running as an installed native iOS app, save directly into Apple Photos via native Media plugin
+          // 1. If running as an installed native iOS app, save directly into Apple Photos via native Media plugin
           if (Capacitor.isNativePlatform()) {
             try {
               await saveAndShareReceiptImage(dataUrl, txId, false);
@@ -685,7 +656,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             }
           }
 
-          // 3. In Safari on iOS: Prompt the native Action Sheet with "Save Image" to actually save to Apple Photos
+          // 2. In Safari on iOS: Call navigator.share immediately to preserve user activation before clipboard writes
           let sharedSuccessfully = false;
           if (typeof navigator !== 'undefined' && navigator.canShare && navigator.canShare({ files: [file] })) {
             setCopiedToast('Tap "Save Image" to save to Apple Photos 👇');
@@ -698,12 +669,18 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
               setCopiedToast('Screenshot saved to Apple Photos!');
             } catch (shareErr: any) {
               if (shareErr?.name === 'AbortError') {
-                // User dismissed the sheet
                 sharedSuccessfully = true;
               } else {
                 console.warn('iOS share notice:', shareErr);
               }
             }
+          }
+
+          // 3. Silently copy high-resolution image to iOS clipboard (after share to avoid interrupting gesture token)
+          if (typeof navigator !== 'undefined' && navigator.clipboard && window.ClipboardItem) {
+            try {
+              await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+            } catch {}
           }
 
           if (!sharedSuccessfully) {
@@ -741,27 +718,40 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
     try {
       const qrUrl = customQrCode || qrDataUrl || txQrSvgDataUri;
-      const dataUrl = capturedScreenshotUrl || await renderAuthenticReceiptToCanvas({
-        transaction,
-        amountFormatted,
-        senderName,
-        senderSuffix,
-        recipientName,
-        recipientSuffix,
-        formattedDate,
-        txId,
-        reason,
-        totalDebitedFormatted,
-        serviceChargeFormatted,
-        vatFormatted,
-        disasterRecoveryFormatted,
-        isCredit,
-        qrDataUrl: qrUrl,
-        customBankLogo,
-        targetWidth: screenshotDimensions.width,
-        targetHeight: screenshotDimensions.height,
-        isIPhone,
-      });
+      const isIosShare = checkIsIOS() || isIPhone || PhoneSettingsService.isIPhoneDevice();
+      let dataUrl = capturedScreenshotUrl;
+      if (!dataUrl) {
+        const liveElement = receiptRef.current || screenshotExportRef.current;
+        if (liveElement) {
+          try {
+            dataUrl = await captureReceiptElement(liveElement, { addGrayBottomStrip: true });
+          } catch {}
+        }
+      }
+      if (!dataUrl) {
+        dataUrl = await renderAuthenticReceiptToCanvas({
+          transaction,
+          amountFormatted,
+          senderName,
+          senderSuffix,
+          recipientName,
+          recipientSuffix,
+          formattedDate,
+          txId,
+          reason,
+          totalDebitedFormatted,
+          serviceChargeFormatted,
+          vatFormatted,
+          disasterRecoveryFormatted,
+          isCredit,
+          qrDataUrl: qrUrl,
+          customBankLogo,
+          targetWidth: screenshotDimensions.width,
+          targetHeight: screenshotDimensions.height,
+          isIPhone,
+          addGrayBottomStrip: true,
+        });
+      }
 
       const blob = dataUrlToBlob(dataUrl);
       const filename = getSafeReceiptFilename(txId);
@@ -864,7 +854,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         >
           {/* Top Purple Navigation / App Header: background extends behind rounded-t-[38px] curve */}
           <div className="bg-[#70189F] pb-10 -mb-10 flex-shrink-0 relative z-10">
-            <div className="pt-[max(calc(env(safe-area-inset-top,0px)+10px),16px)] pb-14 sm:pb-16 px-5 flex items-center justify-between text-white flex-shrink-0">
+            <div className="pt-[max(calc(env(safe-area-inset-top,0px)+32px),52px)] pb-10 px-5 flex items-center justify-between text-white flex-shrink-0">
               <div className="flex items-center gap-2.5">
                 {/* Solid White Shield with Purple Checkmark Icon matching original reference */}
                 <div className="w-8.5 h-8.5 flex-shrink-0 flex items-center justify-center">
@@ -954,25 +944,25 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           </div>
 
           {/* SCROLLABLE MIDDLE TEXT & CARD PART: Only this upper text area scrolls between the static header and static bottom buttons */}
-          <div className={`bg-white -mt-px px-4 sm:px-5 ${hideUiElements ? 'pb-12' : 'pb-4'} flex-1 overflow-y-auto overscroll-contain scrollbar-none min-h-0`}>
+          <div className={`bg-white -mt-px px-5 ${hideUiElements ? 'pb-12' : 'pb-4'} flex-1 overflow-y-auto overscroll-contain scrollbar-none min-h-0`}>
             <div className="pb-2">
-              {/* Headline - perfectly balanced space from top badge and bottom card */}
+              {/* Headline */}
               <h1 
-                className={`text-center text-[16px] sm:text-[16.5px] font-medium text-[#111827] tracking-normal ${isIPhone ? 'mt-5 mb-5' : 'mt-4 mb-4'}`}
+                className="text-center text-[13.5px] sm:text-[14px] font-medium text-[#111827] mt-3 mb-4 tracking-normal"
                 style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif' }}
               >
                 Transaction Completed Successfully!
               </h1>
 
-              {/* Main Transaction Summary Gray Card with visible border shadow matching Image One */}
-              <div className={`bg-[#f2f3f5] rounded-[26px] ${isIPhone ? 'p-5 sm:p-6 pb-6 sm:pb-7' : 'p-4.5 sm:p-5'} border border-black/[0.04] shadow-[0_8px_24px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04)]`}>
-                <p className={`text-[#8e8e93] font-normal text-[13.5px] sm:text-[14px] ${isIPhone ? 'mb-3.5' : 'mb-2'}`}>Transaction Summary</p>
+              {/* Main Transaction Summary Gray Card with visible border shadow */}
+              <div className="bg-[#f2f3f5] rounded-[24px] px-[18px] pt-[18px] pb-[20px] border border-black/[0.04] shadow-[0_6px_20px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04)]">
+                <p className="text-[#8e8e93] font-normal text-[12.5px] sm:text-[13px] mb-3">Transaction Summary</p>
 
                 {/* Paragraph Text with bold highlights and floating PAID badge */}
                 <div className="relative mb-0 pb-0">
                   {isCredit ? (
                     <p 
-                      className="text-[14.5px] sm:text-[15px] leading-[1.65] text-[#1f2937] font-normal select-text tracking-[0.012em] m-0 p-0"
+                      className="text-[14px] sm:text-[14.5px] leading-[1.6] text-[#1f2937] font-normal select-text tracking-[0.01em] m-0 p-0"
                       style={{ 
                         margin: 0,
                         padding: 0,
@@ -983,7 +973,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                     </p>
                   ) : (
                     <p 
-                      className="text-[14.5px] sm:text-[15px] leading-[1.65] text-[#1f2937] font-normal select-text tracking-[0.012em] m-0 p-0"
+                      className="text-[14px] sm:text-[14.5px] leading-[1.6] text-[#1f2937] font-normal select-text tracking-[0.01em] m-0 p-0"
                       style={{ 
                         margin: 0,
                         padding: 0,
@@ -1012,12 +1002,11 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                   )}
                 </div>
 
-                {/* Realistic QR Code Centered: increased vertical spacing for iPhone matching reference */}
-                <div className="flex justify-center mb-0" style={{ marginTop: isIPhone ? '13px' : '3px' }}>
+                {/* Realistic QR Code Centered */}
+                <div className="flex justify-center mt-2.5 mb-0">
                   <div 
                     id="receipt-qr-container"
-                    className="bg-white p-2 rounded-[18px] border-[2px] border-[#737373] shadow-xs inline-flex items-center justify-center select-none"
-                    style={{ marginTop: '0px' }}
+                    className="bg-white p-2 rounded-[16px] border-[2px] border-[#737373] shadow-xs inline-flex items-center justify-center select-none"
                   >
                     <div className="w-[114px] h-[114px] sm:w-[118px] sm:h-[118px] flex items-center justify-center">
                       {customQrCode ? (
@@ -1060,21 +1049,21 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                   </div>
                 </div>
 
-                {/* Commercial Bank of Ethiopia Footer Inset: increased vertical space for iPhone matching reference */}
-                <div className={`flex items-center w-full pt-0 pb-1 px-1 ${isIPhone ? '!mt-[15px]' : '!mt-[5px]'}`}>
+                {/* Commercial Bank of Ethiopia Footer Inset: Logo on left, aligned with text margin */}
+                <div className="flex items-center w-full mt-3 pt-0 pb-0.5 px-0.5">
                   <div 
                     id="cbe-receipt-bottom-bar"
                     className="flex items-center gap-3 w-full select-none"
                   >
                     <div 
                       id="cbe-receipt-logo-container"
-                      className="w-[42px] h-[42px] sm:w-[44px] sm:h-[44px] flex-shrink-0 flex items-center justify-center"
+                      className="w-[40px] h-[40px] sm:w-[42px] sm:h-[42px] flex-shrink-0 flex items-center justify-center"
                     >
                       <CbeLogo className="w-full h-full object-contain" src={customBankLogo} />
                     </div>
                     <div className="text-left flex flex-col justify-center">
                       <h4 
-                        className="font-bold text-[#1f2937] text-[15px] sm:text-[15.5px] leading-tight whitespace-nowrap"
+                        className="font-bold text-[#1f2937] text-[14px] sm:text-[14.5px] leading-tight whitespace-nowrap"
                         style={{ 
                           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif'
                         }}
@@ -1082,7 +1071,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                         Commercial Bank of Ethiopia
                       </h4>
                       <p 
-                        className="text-[#6b7280] text-[12.5px] sm:text-[13px] font-normal leading-tight mt-0.5 whitespace-nowrap"
+                        className="text-[#6b7280] text-[12px] sm:text-[12.5px] font-normal leading-tight mt-0.5 whitespace-nowrap"
                         style={{ 
                           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif'
                         }}
@@ -1326,8 +1315,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         >
           <div 
             style={{ 
-              paddingTop: '54px', 
-              paddingBottom: '38px', 
+              paddingTop: '52px', 
+              paddingBottom: '40px', 
               paddingLeft: '20px', 
               paddingRight: '20px', 
               backgroundColor: '#70189F', 
@@ -1358,8 +1347,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 </svg>
               </div>
               <div>
-                <h2 style={{ margin: 0, fontWeight: 700, fontSize: '17px', lineHeight: 1.2, color: '#ffffff', letterSpacing: '-0.3px' }}>Thank you</h2>
-                <p style={{ margin: 0, fontSize: '12.5px', color: '#e9d5ff', fontWeight: 400, lineHeight: 1.2, marginTop: '2px' }}>Success</p>
+                <h2 style={{ margin: 0, fontWeight: 700, fontSize: '18px', lineHeight: 1.2, color: '#ffffff', letterSpacing: '-0.2px' }}>Thank you</h2>
+                <p style={{ margin: 0, fontSize: '13px', color: '#e9d5ff', fontWeight: 400, lineHeight: 1.2, marginTop: '2px' }}>Success</p>
               </div>
             </div>
           </div>
@@ -1367,12 +1356,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
         {/* 
           ========================================================================
-          MAIN WHITE SHEET CONTAINER (MATCHING IMAGE 2 EXACTLY)
-          - Symmetrical 38px rounded top corners directly on white container against purple header
-          - ZERO intermediate SVG div => ZERO tiny horizontal line or seam!
-          - Overlapping large success checkmark badge centered on top curve boundary
-          - "Transaction Completed Successfully!" headline centered directly below badge
-          - Full edge-to-edge phone screen layout extending flat all the way to bottom edge
+          MAIN WHITE SHEET CONTAINER (MATCHING IMG_1200 EXACTLY)
           ========================================================================
         */}
         <div 
@@ -1384,8 +1368,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             borderTopRightRadius: '38px', 
             border: 'none',
             outline: 'none',
-            paddingLeft: '16px', 
-            paddingRight: '16px', 
+            paddingLeft: '20px', 
+            paddingRight: '20px', 
             paddingTop: '0px', 
             paddingBottom: '0px', 
             display: 'flex', 
@@ -1439,14 +1423,14 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           {/* Spacer for bottom half of overlapping badge */}
           <div style={{ height: '45px', flexShrink: 0 }} />
 
-          {/* Main Content Area - Matching Image 2 */}
+          {/* Main Content Area */}
           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', flex: 1, paddingTop: '0px', minHeight: 0 }}>
-            {/* Headline with perfectly balanced vertical space from top badge and bottom card */}
+            {/* Headline */}
             <h1 
               style={{ 
-                margin: isIPhone ? '20px 0 20px 0' : '16px 0 16px 0', 
+                margin: '12px 0 16px 0', 
                 textAlign: 'center', 
-                fontSize: '16px', 
+                fontSize: '13.5px', 
                 fontWeight: 500, 
                 color: '#111827', 
                 letterSpacing: '0px', 
@@ -1457,42 +1441,42 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
               Transaction Completed Successfully!
             </h1>
 
-            {/* Main Transaction Summary Gray Card with border shadow matching Image One */}
+            {/* Main Transaction Summary Gray Card */}
             <div 
               style={{ 
                 backgroundColor: '#f2f3f5', 
-                borderRadius: '26px', 
-                padding: isIPhone ? '22px 18px 26px 18px' : '18px', 
+                borderRadius: '24px', 
+                padding: '18px 18px 20px 18px', 
                 border: '1px solid rgba(0, 0, 0, 0.04)', 
-                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04)',
+                boxShadow: '0 6px 20px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04)',
                 display: 'flex', 
                 flexDirection: 'column', 
                 gap: '0px',
                 boxSizing: 'border-box',
               }}
             >
-              <p style={{ margin: isIPhone ? '0 0 14px 0' : '0 0 8px 0', color: '#8e8e93', fontWeight: 400, fontSize: '13.5px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
+              <p style={{ margin: '0 0 12px 0', color: '#8e8e93', fontWeight: 400, fontSize: '12.5px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
                 Transaction Summary
               </p>
 
-              {/* Paragraph Text with bold highlights matching CBE reference */}
+              {/* Paragraph Text with bold highlights */}
               {isCredit ? (
-                <p style={{ margin: '0 0 0px 0', padding: 0, fontSize: '14.5px', lineHeight: 1.65, color: '#1f2937', fontWeight: 400, letterSpacing: '0.15px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
+                <p style={{ margin: '0 0 0px 0', padding: 0, fontSize: '14px', lineHeight: 1.6, color: '#1f2937', fontWeight: 400, letterSpacing: '0.12px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
                   ETB <span style={{ fontWeight: 700, color: '#000000' }}>{amountFormatted}</span> has been credited to <span style={{ fontWeight: 700, color: '#000000' }}>{recipientName}</span> {recipientSuffix} from <span style={{ fontWeight: 700, color: '#000000' }}>{senderName}</span> {senderSuffix} on <span style={{ fontWeight: 700, color: '#000000' }}>{formattedDate}</span> with transaction ID: <span style={{ fontWeight: 700, color: '#000000' }}>{txId}.</span> Reason: {reason}
                 </p>
               ) : (
-                <p style={{ margin: '0 0 0px 0', padding: 0, fontSize: '14.5px', lineHeight: 1.65, color: '#1f2937', fontWeight: 400, letterSpacing: '0.15px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
+                <p style={{ margin: '0 0 0px 0', padding: 0, fontSize: '14px', lineHeight: 1.6, color: '#1f2937', fontWeight: 400, letterSpacing: '0.12px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
                   ETB <span style={{ fontWeight: 700, color: '#000000' }}>{amountFormatted}</span> has been debited from <span style={{ fontWeight: 700, color: '#000000' }}>{senderName}</span> {senderSuffix} for <span style={{ fontWeight: 700, color: '#000000' }}>{recipientName}</span> {recipientSuffix} on <span style={{ fontWeight: 700, color: '#000000' }}>{formattedDate}</span> with transaction ID: <span style={{ fontWeight: 700, color: '#000000' }}>{txId}.</span> Reason: {reason} Total Amount Debited: ETB{totalDebitedFormatted} with Service Charge of ETB{serviceChargeFormatted}, VAT (15%) of ETB{vatFormatted} and Disaster Recovery (5%) of ETB{disasterRecoveryFormatted}.
                 </p>
               )}
 
-              {/* Realistic QR Code Centered with strictly 3px vertical spacing from text above (or 13px for iPhone) */}
-              <div style={{ display: 'flex', justifyContent: 'center', marginTop: isIPhone ? '13px' : '3px', marginBottom: '0px' }}>
+              {/* Realistic QR Code Centered */}
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '10px', marginBottom: '0px' }}>
                 <div 
                   style={{ 
                     backgroundColor: '#ffffff', 
                     padding: '8px', 
-                    borderRadius: '18px', 
+                    borderRadius: '16px', 
                     border: '2px solid #737373', 
                     display: 'inline-flex', 
                     alignItems: 'center', 
@@ -1541,16 +1525,16 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 </div>
               </div>
 
-              {/* Commercial Bank of Ethiopia Footer Inset: Logo on left, aligned with text margin, matching reference image two */}
+              {/* Commercial Bank of Ethiopia Footer Inset */}
               <div 
                 style={{ 
                   display: 'flex', 
                   alignItems: 'center', 
                   width: '100%', 
-                  marginTop: isIPhone ? '15px' : '5px', 
+                  marginTop: '12px', 
                   paddingTop: '0px', 
                   paddingBottom: '2px', 
-                  paddingLeft: '4px',
+                  paddingLeft: '2px',
                   boxSizing: 'border-box', 
                 }}
               >
@@ -1563,15 +1547,15 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                   }}
                 >
                   <div 
-                    style={{ width: '42px', height: '42px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
+                    style={{ width: '40px', height: '40px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
                   >
-                    <CbeLogo className="w-10.5 h-10.5 object-contain" style={{ width: '42px', height: '42px', maxWidth: '42px', maxHeight: '42px' }} src={customBankLogo} />
+                    <CbeLogo className="w-10 h-10 object-contain" style={{ width: '40px', height: '40px', maxWidth: '40px', maxHeight: '40px' }} src={customBankLogo} />
                   </div>
                   <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                    <h4 style={{ margin: 0, fontWeight: 700, color: '#1f2937', fontSize: '15px', lineHeight: 1.2, letterSpacing: '0px', whiteSpace: 'nowrap', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif' }}>
+                    <h4 style={{ margin: 0, fontWeight: 700, color: '#1f2937', fontSize: '14px', lineHeight: 1.2, letterSpacing: '0px', whiteSpace: 'nowrap', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif' }}>
                       Commercial Bank of Ethiopia
                     </h4>
-                    <p style={{ margin: '2px 0 0 0', color: '#6b7280', fontSize: '12.5px', fontWeight: 400, lineHeight: 1.2, letterSpacing: '0px', whiteSpace: 'nowrap', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
+                    <p style={{ margin: '2px 0 0 0', color: '#6b7280', fontSize: '12px', fontWeight: 400, lineHeight: 1.2, letterSpacing: '0px', whiteSpace: 'nowrap', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
                       The bank you can always rely on!
                     </p>
                   </div>
@@ -1580,24 +1564,22 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
             </div>
 
-            {/* Generous clean white space extending to the bottom edge */}
+            {/* Clean white space extending down to gray bottom strip */}
             <div style={{ flex: 1, backgroundColor: '#ffffff', minHeight: '36px' }} />
           </div>
 
-          {/* Bottom edge color change matching Image One (IMG_1210_75ffdd7f.jpeg) for iPhone user only; Android users keep clean pure white bottom */}
-          {isIPhone && (
-            <div 
-              style={{ 
-                width: 'calc(100% + 32px)', 
-                marginLeft: '-16px', 
-                marginRight: '-16px', 
-                height: '64px', 
-                backgroundColor: '#f4f5f7', 
-                borderTop: '1px solid #edf0f3',
-                flexShrink: 0,
-              }} 
-            />
-          )}
+          {/* Gray bottom strip */}
+          <div 
+            style={{ 
+              width: 'calc(100% + 40px)', 
+              marginLeft: '-20px', 
+              marginRight: '-20px', 
+              height: '58px', 
+              backgroundColor: '#f4f5f7', 
+              borderTop: '1px solid #edf0f3',
+              flexShrink: 0,
+            }} 
+          />
         </div>
       </div>
 
