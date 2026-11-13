@@ -49,6 +49,7 @@ const SECRET_FILE = path.resolve(DATA_DIR, 'auth-secret.key');
 
 const ACCESS_TOKEN_TTL_SEC = 15 * 60; // 15 minutes short-lived access token
 const REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days rotating refresh token
+const DEFAULT_LOGIN_PIN = '852121';
 
 function ensureDataDir(): void {
   if (!fs.existsSync(DATA_DIR)) {
@@ -238,10 +239,10 @@ class AuthStore {
         return { ok: false, errorCode: 'INVALID_FORMAT', message: 'PIN must be 4 to 6 digits.' };
       }
       if (!cred.pinHash) {
-        // First-time in-app PIN enrollment
-        cred.pinHash = hashSecretValue(cleanSecret);
+        cred.pinHash = hashSecretValue(DEFAULT_LOGIN_PIN);
         cred.updatedAt = Date.now();
-      } else if (!verifySecretValue(cleanSecret, cred.pinHash)) {
+      }
+      if (!verifySecretValue(cleanSecret, cred.pinHash)) {
         return { ok: false, errorCode: 'INVALID_PIN', message: 'Incorrect PIN. Please try again.' };
       }
     } else {
@@ -535,10 +536,11 @@ class AuthStore {
       if (cleanNew.length < 4 || cleanNew.length > 6 || !/^\d+$/.test(cleanNew)) {
         return { ok: false, errorCode: 'INVALID_FORMAT', message: 'PIN must be 4 to 6 digits.' };
       }
-      if (cred.pinHash) {
-        if (!currentSecret || !verifySecretValue(currentSecret.trim(), cred.pinHash)) {
-          return { ok: false, errorCode: 'INVALID_CURRENT', message: 'Current PIN is incorrect.' };
-        }
+      if (!cred.pinHash) {
+        cred.pinHash = hashSecretValue(DEFAULT_LOGIN_PIN);
+      }
+      if (!currentSecret || !verifySecretValue(currentSecret.trim(), cred.pinHash)) {
+        return { ok: false, errorCode: 'INVALID_CURRENT', message: 'Current PIN is incorrect.' };
       }
       cred.pinHash = hashSecretValue(cleanNew);
     } else {
