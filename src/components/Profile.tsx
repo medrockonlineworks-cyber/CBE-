@@ -600,12 +600,12 @@ export default function Profile({
       currentSecret: oldPin || undefined,
     });
     if (!backendRes.ok) {
-      setErrorMsg(backendRes.message || 'Unable to update PIN on authentication server.');
+      setErrorMsg(backendRes.message || 'Unable to update PIN in device security vault.');
       return;
     }
 
     await BiometricAuthService.saveAppPin(currentUser.id, newPin);
-    LocalDb.addAuditLog(currentUser.id, currentUser.email, 'USER_PIN_CHANGE', 'User updated their in-app & server authorization PIN.');
+    LocalDb.addAuditLog(currentUser.id, currentUser.email, 'USER_PIN_CHANGE', 'User updated their in-app device authorization PIN.');
     setSuccessMsg('Your security PIN was updated securely!');
     setOldPin('');
     setNewPin('');
@@ -639,12 +639,12 @@ export default function Profile({
       currentSecret: oldPass || undefined,
     });
     if (!backendRes.ok) {
-      setErrorMsg(backendRes.message || 'Unable to update password on authentication server.');
+      setErrorMsg(backendRes.message || 'Unable to update password in device security vault.');
       return;
     }
 
     await BiometricAuthService.saveAppPassword(currentUser.id, newPass);
-    LocalDb.addAuditLog(currentUser.id, currentUser.email, 'USER_PASS_CHANGE', 'User updated their in-app & server access password.');
+    LocalDb.addAuditLog(currentUser.id, currentUser.email, 'USER_PASS_CHANGE', 'User updated their in-app device access password.');
     setSuccessMsg('Security password updated securely!');
     setOldPass('');
     setNewPass('');
@@ -1135,7 +1135,7 @@ export default function Profile({
                     <span>Loading device sessions...</span>
                   </div>
                 ) : activeSessions.length === 0 ? (
-                  <p className="text-xs text-gray-500 text-center py-2">No active server sessions found.</p>
+                  <p className="text-xs text-gray-500 text-center py-2">No active device sessions found.</p>
                 ) : (
                   <>
                     <div className="space-y-2">

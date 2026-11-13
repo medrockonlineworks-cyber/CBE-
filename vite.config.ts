@@ -346,7 +346,7 @@ export default defineConfig(() => {
         'react/jsx-runtime': path.resolve(__dirname, 'node_modules/react/jsx-runtime'),
         'react/jsx-dev-runtime': path.resolve(__dirname, 'node_modules/react/jsx-dev-runtime'),
       },
-      dedupe: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime', 'firebase', '@firebase/app', '@firebase/firestore', '@firebase/auth', '@firebase/component'],
+      dedupe: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'],
     },
     optimizeDeps: {
       include: [
@@ -357,7 +357,6 @@ export default defineConfig(() => {
         'react/jsx-dev-runtime',
         'lucide-react',
       ],
-      exclude: ['firebase', '@firebase/app', '@firebase/firestore', '@firebase/auth', '@firebase/component'],
     },
     build: {
       chunkSizeWarningLimit: 1500,
@@ -367,9 +366,6 @@ export default defineConfig(() => {
             if (id.includes('node_modules')) {
               if (id.includes('jspdf') || id.includes('html2canvas') || id.includes('html-to-image')) {
                 return 'vendor-canvas';
-              }
-              if (id.includes('firebase')) {
-                return 'vendor-firebase';
               }
               if (id.includes('lucide-react')) {
                 return 'vendor-icons';

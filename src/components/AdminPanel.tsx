@@ -738,9 +738,9 @@ export default function AdminPanel({ currentUser, onBack }: AdminPanelProps) {
           <div className="bg-amber-500/10 border border-amber-500/20 p-5 rounded-2xl flex gap-3.5">
             <AlertOctagon className="w-6 h-6 text-amber-500 flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="text-sm font-bold text-amber-400">Production Reminder</h4>
+              <h4 className="text-sm font-bold text-amber-400">On-Device Storage Notice</h4>
               <p className="text-xs text-slate-300 mt-1 leading-relaxed">
-                This administration dashboard manages standard simulation fields stored locally. If real Firebase products are active, modify permissions in <code className="bg-slate-900 text-amber-300 px-1 py-0.5 rounded font-mono">firestore.rules</code> and deploy them to secure the database.
+                This administration dashboard manages banking simulation data stored 100% locally on the device using LocalStorage and IndexedDB security vaults.
               </p>
             </div>
           </div>

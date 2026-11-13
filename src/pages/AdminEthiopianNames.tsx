@@ -6,7 +6,6 @@ import {
   EthiopianNameType, 
   EthiopianNameImportResult 
 } from '../types/ethiopianName';
-import { isSupabaseConfigured } from '../lib/supabase';
 import { isValidEthiopianNameString } from '../utils/normalizeName';
 import EthiopianNameAutocomplete from '../components/EthiopianNameAutocomplete/EthiopianNameAutocomplete';
 import EthiopianThreePartNameInput from '../components/EthiopianNameAutocomplete/EthiopianThreePartNameInput';
@@ -264,15 +263,9 @@ export default function AdminEthiopianNames({ onBack }: AdminEthiopianNamesProps
           <div className="flex items-center gap-1.5 text-amber-400 font-mono text-[11px] uppercase font-bold tracking-wider flex-wrap">
             <Database className="w-3.5 h-3.5 text-amber-400 shrink-0" />
             <span className="truncate">Ethiopian Naming Registry</span>
-            {isSupabaseConfigured() ? (
-              <span className="bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded text-[9px] border border-emerald-500/30 font-sans font-bold">
-                Supabase
-              </span>
-            ) : (
-              <span className="bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded text-[9px] border border-purple-500/30 font-sans font-bold">
-                LocalDB
-              </span>
-            )}
+            <span className="bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded text-[9px] border border-purple-500/30 font-sans font-bold">
+              LocalDB
+            </span>
           </div>
           <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-white mt-1 tracking-tight">
             Ethiopian Name Suggestion Database

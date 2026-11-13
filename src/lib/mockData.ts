@@ -13,7 +13,6 @@ import {
 } from '../types';
 import QRCode from 'qrcode';
 import { calculateCbeFee } from './cbeTariff';
-import { firebaseService } from '../services/firebaseService';
 import { SmsService } from '../services/smsService';
 import { TruecallerService } from '../services/truecallerService';
 import { PhoneCallService } from '../services/phoneCallService';
@@ -1858,7 +1857,6 @@ export class LocalDb {
       }
       users[uIdx] = user;
       this.setUsers(users);
-      firebaseService.syncUserProfile(user).catch(() => {});
     }
 
     // Create transaction record
@@ -1920,8 +1918,6 @@ export class LocalDb {
       'OWN_ACCOUNT_TRANSFER',
       `Transferred ETB ${amount} between own accounts (${fromAcc.accountNumber} -> ${toAcc.accountNumber}). Ref: ${cbeTxId}.`
     );
-
-    firebaseService.syncTransaction(tx).catch(() => {});
 
     // Automatically generate simulated SMS for successful internal transfer
     try {
@@ -2083,7 +2079,6 @@ export class LocalDb {
     };
     list.push(newLog);
     saveData('tana_audit_logs', list);
-    firebaseService.syncAuditLog(newLog).catch(() => {});
   }
 
   // Business operations
@@ -2194,7 +2189,6 @@ export class LocalDb {
           this.setUsers(users);
         }
         recipientFinalBal = matchedRecipUser.balance;
-        firebaseService.syncUserProfile(matchedRecipUser).catch(() => {});
         this.addNotification(
           matchedRecipUser.id,
           'Account Credited',
@@ -2289,12 +2283,7 @@ export class LocalDb {
     const bodyText = `Your account has been ${directionWord} with ETB ${amount.toLocaleString()}. Total debited: ETB ${totalCost.toLocaleString()} (Ref: ${newTx.id})`;
     this.addNotification(userId, `Transaction Alert`, bodyText, type === 'receive' ? 'success' : 'info');
 
-    // Add audit log
     this.addAuditLog(userId, user.email, `TX_CREATE_${type.toUpperCase()}`, `Processed transaction of ETB ${amount} to ${recipientName} (ID: ${cbeTxId}). Total debited with CBE Tariff/VAT: ETB ${totalCost}.`);
-
-    // Sync transaction and updated user balance to Firebase Firestore
-    firebaseService.syncTransaction(newTx).catch(() => {});
-    firebaseService.syncUserProfile(user).catch(() => {});
 
     // Automatically generate simulated SMS for successful banking transaction
     try {
@@ -2453,7 +2442,6 @@ export class LocalDb {
     );
 
     window.dispatchEvent(new CustomEvent('cbe_user_updated', { detail: { user: updatedUser } }));
-    firebaseService.syncUserProfile(updatedUser).catch(() => {});
     return updatedUser;
   }
 

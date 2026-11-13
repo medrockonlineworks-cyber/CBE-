@@ -12,8 +12,6 @@ import {
   findHighlightRanges,
   calculateLevenshteinDistance 
 } from '../utils/normalizeName';
-import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
-import { firebaseService } from './firebaseService';
 
 const LOCAL_STORAGE_KEY = 'tana_ethiopian_names_db_v2';
 const RECENT_SEARCHES_KEY = 'tana_eth_recent_searches_cache';
@@ -106,46 +104,7 @@ class EthiopianNameService {
       return cached.results;
     }
 
-    const supabase = getSupabase();
-
-    // 1. Try Supabase RPC if configured
-    if (supabase && isSupabaseConfigured()) {
-      try {
-        const { data, error } = await supabase.rpc('search_ethiopian_names', {
-          search_query: normalizedQuery,
-          max_results: maxResults
-        });
-
-        if (!error && Array.isArray(data) && data.length > 0) {
-          const results: EthiopianNameSearchResult[] = data.map((row: any) => {
-            const item: EthiopianName = {
-              id: row.id,
-              name: row.name,
-              normalized_name: row.normalized_name,
-              gender: row.gender,
-              name_type: row.name_type || 'first_name',
-              usage_count: row.usage_count || 0,
-              is_active: row.is_active,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            };
-            return {
-              item,
-              matchScore: 100 - (row.match_rank || 1) * 10,
-              matchType: row.match_type || 'prefix',
-              highlightRanges: findHighlightRanges(item.name, cleanQuery)
-            };
-          });
-
-          this.recentQueryCache.set(cacheKey, { timestamp: Date.now(), results });
-          return results;
-        }
-      } catch (rpcErr) {
-        console.warn('Supabase search RPC failed, falling back to client engine:', rpcErr);
-      }
-    }
-
-    // 2. High performance local ranked search engine
+    // Local ranked search engine
     const allNames = this.getLocalNames();
     const activeNames = allNames.filter(n => {
       if (!n.is_active) return false;
@@ -331,29 +290,6 @@ class EthiopianNameService {
     limit: number = 8, 
     genderFilter?: 'male' | 'female' | 'unisex'
   ): Promise<EthiopianName[]> {
-    const supabase = getSupabase();
-    if (supabase && isSupabaseConfigured()) {
-      try {
-        let query = supabase
-          .from('ethiopian_names')
-          .select('*')
-          .eq('is_active', true)
-          .order('usage_count', { ascending: false })
-          .limit(limit);
-
-        if (genderFilter) {
-          query = query.or(`gender.eq.${genderFilter},gender.eq.unisex,gender.is.null`);
-        }
-
-        const { data, error } = await query;
-        if (!error && Array.isArray(data) && data.length > 0) {
-          return data as EthiopianName[];
-        }
-      } catch (err) {
-        console.warn('Could not fetch popular names from Supabase, using local:', err);
-      }
-    }
-
     const all = this.getLocalNames();
     return all
       .filter(n => {
@@ -380,16 +316,6 @@ class EthiopianNameService {
       all[index].usage_count = (all[index].usage_count || 0) + 1;
       all[index].updated_at = new Date().toISOString();
       this.saveLocalNames([...all]);
-    }
-
-    // 2. Sync with Supabase if online
-    const supabase = getSupabase();
-    if (supabase && isSupabaseConfigured()) {
-      try {
-        await supabase.rpc('increment_name_usage', { name_id: nameId });
-      } catch (err) {
-        console.warn('Failed to increment usage in Supabase:', err);
-      }
     }
   }
 
@@ -435,27 +361,6 @@ class EthiopianNameService {
     all.unshift(newRecord);
     this.saveLocalNames(all);
 
-    // Sync to Supabase if configured
-    const supabase = getSupabase();
-    if (supabase && isSupabaseConfigured()) {
-      try {
-        await supabase.from('ethiopian_names').insert({
-          name: newRecord.name,
-          normalized_name: newRecord.normalized_name,
-          gender: newRecord.gender,
-          name_type: newRecord.name_type,
-          usage_count: newRecord.usage_count,
-          is_active: newRecord.is_active,
-          category: newRecord.category
-        });
-      } catch (err) {
-        console.warn('Could not sync created name to Supabase:', err);
-      }
-    }
-
-    // Sync to Firebase Firestore
-    firebaseService.syncEthiopianName(newRecord).catch(() => {});
-
     return newRecord;
   }
 
@@ -496,27 +401,6 @@ class EthiopianNameService {
     all[index] = updatedItem;
     this.saveLocalNames([...all]);
 
-    // Sync to Firebase Firestore
-    firebaseService.syncEthiopianName(updatedItem).catch(() => {});
-
-    const supabase = getSupabase();
-    if (supabase && isSupabaseConfigured()) {
-      try {
-        await supabase.from('ethiopian_names').update({
-          name: updatedItem.name,
-          normalized_name: updatedItem.normalized_name,
-          gender: updatedItem.gender,
-          name_type: updatedItem.name_type,
-          usage_count: updatedItem.usage_count,
-          is_active: updatedItem.is_active,
-          category: updatedItem.category,
-          updated_at: updatedItem.updated_at
-        }).eq('id', id);
-      } catch (err) {
-        console.warn('Could not update in Supabase:', err);
-      }
-    }
-
     return updatedItem;
   }
 
@@ -529,15 +413,6 @@ class EthiopianNameService {
     if (filtered.length === all.length) return false;
 
     this.saveLocalNames(filtered);
-
-    const supabase = getSupabase();
-    if (supabase && isSupabaseConfigured()) {
-      try {
-        await supabase.from('ethiopian_names').delete().eq('id', id);
-      } catch (err) {
-        console.warn('Could not delete in Supabase:', err);
-      }
-    }
 
     return true;
   }
@@ -688,25 +563,6 @@ class EthiopianNameService {
     if (newItems.length > 0) {
       const combined = [...newItems, ...currentNames];
       this.saveLocalNames(combined);
-
-      // Attempt batch insert to Supabase if configured
-      const supabase = getSupabase();
-      if (supabase && isSupabaseConfigured()) {
-        try {
-          const insertPayload = newItems.map(item => ({
-            name: item.name,
-            normalized_name: item.normalized_name,
-            gender: item.gender,
-            name_type: item.name_type,
-            usage_count: item.usage_count,
-            is_active: item.is_active,
-            category: item.category
-          }));
-          await supabase.from('ethiopian_names').insert(insertPayload);
-        } catch (supabaseErr) {
-          console.warn('Batch import sync to Supabase encountered issue:', supabaseErr);
-        }
-      }
     }
 
     return result;
