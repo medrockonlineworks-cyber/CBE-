@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { LocalDb } from '../lib/mockData';
 import { UserProfile } from '../types';
 import { SystemBarsService } from '../services/systemBarsService';
+import { PhoneSettingsService } from '../services/phoneSettingsService';
+import { BiometricAuthService, BiometricMethod } from '../services/biometricAuthService';
 import { CbeLogo } from './CbeLogo';
 import { 
   Bell, 
-  ChevronDown, 
   Check, 
   X, 
   Users, 
@@ -65,6 +66,48 @@ export function CbeFingerprintIcon({
   );
 }
 
+/**
+ * Authentic Apple Face ID Vector Icon (used on iPhone / iOS devices)
+ */
+export function CbeFaceIdIcon({
+  size = 28,
+  strokeColor = '#ffffff',
+  strokeWidth = 1.9,
+  className = '',
+}: {
+  size?: number;
+  strokeColor?: string;
+  strokeWidth?: number;
+  className?: string;
+}) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={strokeColor}
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      {/* Rounded corner frame brackets */}
+      <path d="M4 8.2V6.2A2.2 2.2 0 0 1 6.2 4h2" />
+      <path d="M15.8 4h2A2.2 2.2 0 0 1 20 6.2v2" />
+      <path d="M4 15.8v2A2.2 2.2 0 0 0 6.2 20h2" />
+      <path d="M15.8 20h2A2.2 2.2 0 0 0 20 17.8v-2" />
+      {/* Eyes */}
+      <path d="M9 9.2v1.6" />
+      <path d="M15 9.2v1.6" />
+      {/* Nose */}
+      <path d="M12 9.2v3.3a1 1 0 0 1-1 1h-.5" />
+      {/* Smile */}
+      <path d="M8.8 15.8a4.3 4.3 0 0 0 6.4 0" />
+    </svg>
+  );
+}
+
 export default function Auth({ onLoginSuccess }: AuthProps) {
   const [pin, setPin] = useState<string>('');
   // Show error by default or on submit (matching reference photo which has 'This field is required' shown)
@@ -77,17 +120,20 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
   const [showAccountSwitcher, setShowAccountSwitcher] = useState<boolean>(false);
   const [showNotificationToast, setShowNotificationToast] = useState<boolean>(false);
   const [isBiometricScanning, setIsBiometricScanning] = useState<boolean>(false);
+  const [systemSheetState, setSystemSheetState] = useState<null | {
+    method: BiometricMethod;
+    phase: 'prompt' | 'scanning' | 'verified';
+  }>(null);
 
-  // Detect iOS / iPhone device (physical device, Safari, or iPhone preset)
-  // Ensures top bar icons (Bell, English, Grid) are never covered by iPhone notch/status bar
+  // Detect iOS / iPhone device (physical iPhone/iPad OR iPhone phone model preset)
+  // On iPhone -> Face ID + notch safe area; on Android -> Fingerprint
   const [isIOSDevice, setIsIOSDevice] = useState<boolean>(() => {
     if (typeof window === 'undefined') return false;
-    const ua = window.navigator.userAgent || '';
-    const isApple = /iPhone|iPad|iPod/.test(ua) || (window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1);
-    const savedSettings = localStorage.getItem('tana_phone_settings_v1');
-    const isIPhonePreset = savedSettings ? savedSettings.includes('"iphone"') : false;
-    return isApple || isIPhonePreset;
+    return PhoneSettingsService.isIPhoneMode();
   });
+
+  const biometricMethod: BiometricMethod = isIOSDevice ? 'faceid' : 'fingerprint';
+  const bioLabels = BiometricAuthService.getLabels(biometricMethod);
 
   // Active account selection
   const [usersList, setUsersList] = useState<UserProfile[]>(() => LocalDb.getUsers());
@@ -118,12 +164,12 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
       setUsersList(LocalDb.getUsers());
     };
     const handleSettingsChange = () => {
-      const ua = window.navigator.userAgent || '';
-      const isApple = /iPhone|iPad|iPod/.test(ua) || (window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1);
-      const savedSettings = localStorage.getItem('tana_phone_settings_v1');
-      const isIPhonePreset = savedSettings ? savedSettings.includes('"iphone"') : false;
-      setIsIOSDevice(isApple || isIPhonePreset);
+      setIsIOSDevice(PhoneSettingsService.isIPhoneMode());
     };
+
+    const unsubPhoneSettings = PhoneSettingsService.subscribe(() => {
+      setIsIOSDevice(PhoneSettingsService.isIPhoneMode());
+    });
 
     window.addEventListener('storage', handleUpdate);
     window.addEventListener('cbe_account_switched', handleUpdate);
@@ -143,6 +189,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
       clearTimeout(t1);
       clearTimeout(t2);
       clearTimeout(t3);
+      unsubPhoneSettings();
       window.removeEventListener('storage', handleUpdate);
       window.removeEventListener('cbe_account_switched', handleUpdate);
       window.removeEventListener('tana_phone_settings_changed', handleSettingsChange);
@@ -214,16 +261,79 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
     onLoginSuccess(selectedUser);
   };
 
-  const handleBiometricsLogin = () => {
+  const completeBiometricLogin = (method: BiometricMethod, source: 'webauthn' | 'system_sheet') => {
+    const methodLabel = method === 'faceid' ? 'Face ID' : 'Fingerprint';
+    const sourceLabel = source === 'webauthn' ? 'Device Biometrics' : 'Device Prompt';
+    LocalDb.addAuditLog(
+      selectedUser.id,
+      selectedUser.email,
+      'BIOMETRIC_LOGIN',
+      `User ${selectedUser.name} logged in via ${methodLabel} (${sourceLabel}).`
+    );
+    localStorage.setItem('tana_active_user_id', selectedUser.id);
+    onLoginSuccess(selectedUser);
+  };
+
+  // Auto-advance Face ID fallback sheet when OS WebAuthn is blocked by preview iframe policy
+  useEffect(() => {
+    if (!systemSheetState || systemSheetState.method !== 'faceid') return;
+    if (systemSheetState.phase === 'scanning') {
+      const t = setTimeout(() => {
+        setSystemSheetState({ method: 'faceid', phase: 'verified' });
+      }, 850);
+      return () => clearTimeout(t);
+    }
+    if (systemSheetState.phase === 'verified') {
+      const t = setTimeout(() => {
+        setSystemSheetState(null);
+        completeBiometricLogin('faceid', 'system_sheet');
+      }, 450);
+      return () => clearTimeout(t);
+    }
+  }, [systemSheetState, selectedUser]);
+
+  // Auto-complete Android Fingerprint sensor tap in fallback sheet
+  useEffect(() => {
+    if (!systemSheetState || systemSheetState.method !== 'fingerprint') return;
+    if (systemSheetState.phase === 'scanning') {
+      const t = setTimeout(() => {
+        setSystemSheetState({ method: 'fingerprint', phase: 'verified' });
+      }, 500);
+      return () => clearTimeout(t);
+    }
+    if (systemSheetState.phase === 'verified') {
+      const t = setTimeout(() => {
+        setSystemSheetState(null);
+        completeBiometricLogin('fingerprint', 'system_sheet');
+      }, 400);
+      return () => clearTimeout(t);
+    }
+  }, [systemSheetState, selectedUser]);
+
+  const handleBiometricsLogin = async () => {
+    if (isBiometricScanning) return;
     setIsBiometricScanning(true);
     setShowError(false);
 
-    setTimeout(() => {
-      setIsBiometricScanning(false);
-      LocalDb.addAuditLog(selectedUser.id, selectedUser.email, 'BIOMETRIC_LOGIN', `User ${selectedUser.name} logged in via CBE Biometrics (Fingerprint).`);
-      localStorage.setItem('tana_active_user_id', selectedUser.id);
-      onLoginSuccess(selectedUser);
-    }, 600);
+    const result = await BiometricAuthService.authenticateWithDevice(selectedUser);
+    setIsBiometricScanning(false);
+
+    if (result.status === 'success') {
+      completeBiometricLogin(result.method, 'webauthn');
+      return;
+    }
+
+    if (result.status === 'needs_system_sheet') {
+      setSystemSheetState({
+        method: result.method,
+        phase: result.method === 'faceid' ? 'scanning' : 'prompt',
+      });
+      return;
+    }
+
+    // Real user cancellation or OS biometric rejection
+    setShowError(true);
+    setErrorMessage(result.message || bioLabels.cancelledMessage);
   };
 
   const handleSelectAccount = (user: UserProfile) => {
@@ -556,28 +666,32 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
           
           {/* Center Biometrics Container */}
           <div className="flex flex-col items-center mt-6">
-            {/* Circular Purple Biometrics Button */}
+            {/* Circular Purple Biometrics Button: Face ID on iPhone, Fingerprint on Android */}
             <button
               id="btn-use-biometrics"
               type="button"
-              aria-label="Use Biometrics"
+              aria-label={bioLabels.idleButtonText}
               onClick={handleBiometricsLogin}
               disabled={isBiometricScanning}
               className={`w-14 h-14 rounded-full bg-[#70189F] hover:bg-[#5e1385] active:scale-95 text-white flex items-center justify-center shadow-md transition-all cursor-pointer relative ${
                 isBiometricScanning ? 'animate-pulse ring-4 ring-purple-300' : ''
               }`}
             >
-              {/* White Authentic CBE Biometric Fingerprint Icon matching reference photo */}
-              <CbeFingerprintIcon size={32} strokeColor="#ffffff" strokeWidth={1.9} />
+              {biometricMethod === 'faceid' ? (
+                <CbeFaceIdIcon size={30} strokeColor="#ffffff" strokeWidth={1.9} />
+              ) : (
+                <CbeFingerprintIcon size={32} strokeColor="#ffffff" strokeWidth={1.9} />
+              )}
             </button>
 
-            {/* "USE BIOMETRICS" text */}
+            {/* Biometric action label */}
             <button
               type="button"
               onClick={handleBiometricsLogin}
-              className="text-[#1f2937] text-[11px] font-bold tracking-[0.16em] uppercase mt-3 cursor-pointer hover:text-[#70189F] transition font-sans"
+              disabled={isBiometricScanning}
+              className="text-[#1f2937] text-[11px] font-bold tracking-[0.16em] uppercase mt-3 cursor-pointer hover:text-[#70189F] transition font-sans disabled:opacity-70"
             >
-              {isBiometricScanning ? 'Scanning Fingerprint...' : 'USE BIOMETRICS'}
+              {isBiometricScanning ? bioLabels.scanningButtonText : bioLabels.idleButtonText}
             </button>
           </div>
 
@@ -676,10 +790,15 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
             <button
               type="button"
               onClick={handleBiometricsLogin}
-              className="flex items-center gap-1.5 text-xs font-bold text-[#70189F] hover:underline cursor-pointer"
+              disabled={isBiometricScanning}
+              className="flex items-center gap-1.5 text-xs font-bold text-[#70189F] hover:underline cursor-pointer disabled:opacity-70"
             >
-              <CbeFingerprintIcon size={18} strokeColor="#70189F" strokeWidth={2.0} />
-              <span>Use Biometrics</span>
+              {biometricMethod === 'faceid' ? (
+                <CbeFaceIdIcon size={18} strokeColor="#70189F" strokeWidth={2.0} />
+              ) : (
+                <CbeFingerprintIcon size={18} strokeColor="#70189F" strokeWidth={2.0} />
+              )}
+              <span>{bioLabels.keypadButtonText}</span>
             </button>
 
             <button
@@ -691,6 +810,134 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
             </button>
           </div>
 
+        </div>
+      )}
+
+      {/* Fallback Device Biometric System Sheet (only shown when preview iframe policy blocks native OS WebAuthn) */}
+      {systemSheetState && (
+        <div
+          onClick={() => {
+            setSystemSheetState(null);
+            setShowError(true);
+            setErrorMessage(bioLabels.cancelledMessage);
+          }}
+          className="fixed inset-0 z-50 bg-black/45 backdrop-blur-[2px] flex items-end sm:items-center justify-center animate-in fade-in duration-150"
+        >
+          {systemSheetState.method === 'faceid' ? (
+            /* iPhone Face ID System Prompt Sheet */
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="mb-auto mt-auto mx-4 w-[270px] rounded-[24px] bg-[#1c1c1e]/95 text-white shadow-2xl border border-white/10 p-6 flex flex-col items-center text-center backdrop-blur-xl animate-in zoom-in-95 duration-150"
+            >
+              <div
+                className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-3 transition-colors duration-300 ${
+                  systemSheetState.phase === 'verified'
+                    ? 'bg-emerald-500/20 text-emerald-400'
+                    : 'bg-white/10 text-[#0A84FF]'
+                }`}
+              >
+                {systemSheetState.phase === 'verified' ? (
+                  <Check className="w-9 h-9 stroke-[2.8]" />
+                ) : (
+                  <CbeFaceIdIcon
+                    size={42}
+                    strokeColor="#0A84FF"
+                    strokeWidth={1.8}
+                    className={systemSheetState.phase === 'scanning' ? 'animate-pulse' : ''}
+                  />
+                )}
+              </div>
+              <h3 className="text-[16px] font-semibold tracking-tight">Face ID</h3>
+              <p className="text-[12px] text-white/70 mt-1 leading-snug">
+                {systemSheetState.phase === 'verified'
+                  ? 'Authenticated'
+                  : `Sign in to Commercial Bank of Ethiopia as ${selectedUser.name}`}
+              </p>
+              <div className="w-full h-[1px] bg-white/10 mt-5 mb-3" />
+              <button
+                type="button"
+                onClick={() => {
+                  setSystemSheetState(null);
+                  setShowError(true);
+                  setErrorMessage(bioLabels.cancelledMessage);
+                }}
+                className="w-full py-1.5 text-[15px] font-medium text-[#0A84FF] hover:text-[#409CFF] cursor-pointer"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            /* Android Material BiometricPrompt Fingerprint Bottom Sheet */
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md bg-white rounded-t-[28px] sm:rounded-[28px] sm:mb-6 shadow-2xl border border-neutral-200 px-6 pt-6 pb-7 flex flex-col items-center text-center animate-in slide-in-from-bottom-6 duration-200"
+            >
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400">
+                Commercial Bank of Ethiopia
+              </p>
+              <h3 className="text-[18px] font-semibold text-neutral-900 mt-1">
+                Verify it&apos;s you
+              </h3>
+              <p className="text-[13px] text-neutral-600 mt-1">
+                Touch the fingerprint sensor to sign in as {selectedUser.name}
+              </p>
+
+              <button
+                type="button"
+                aria-label="Touch fingerprint sensor"
+                onClick={() => {
+                  if (systemSheetState.phase === 'prompt') {
+                    setSystemSheetState({ method: 'fingerprint', phase: 'scanning' });
+                  }
+                }}
+                className={`mt-6 w-20 h-20 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+                  systemSheetState.phase === 'verified'
+                    ? 'bg-emerald-100 text-emerald-600 scale-105'
+                    : systemSheetState.phase === 'scanning'
+                      ? 'bg-purple-100 text-[#70189F] ring-4 ring-purple-200 animate-pulse'
+                      : 'bg-purple-50 hover:bg-purple-100 active:scale-95 text-[#70189F] ring-2 ring-[#70189F]/20'
+                }`}
+              >
+                {systemSheetState.phase === 'verified' ? (
+                  <Check className="w-9 h-9 stroke-[2.8]" />
+                ) : (
+                  <CbeFingerprintIcon size={44} strokeColor="#70189F" strokeWidth={1.9} />
+                )}
+              </button>
+
+              <p className="text-[12px] font-medium text-neutral-500 mt-3">
+                {systemSheetState.phase === 'verified'
+                  ? 'Fingerprint verified'
+                  : systemSheetState.phase === 'scanning'
+                    ? 'Verifying fingerprint...'
+                    : 'Tap fingerprint sensor'}
+              </p>
+
+              <div className="w-full flex items-center justify-between mt-6 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSystemSheetState(null);
+                    setShowKeypad(true);
+                  }}
+                  className="px-4 py-2 text-[13px] font-semibold text-[#70189F] hover:bg-purple-50 rounded-full cursor-pointer"
+                >
+                  Use PIN
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSystemSheetState(null);
+                    setShowError(true);
+                    setErrorMessage(bioLabels.cancelledMessage);
+                  }}
+                  className="px-4 py-2 text-[13px] font-semibold text-neutral-600 hover:bg-neutral-100 rounded-full cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
