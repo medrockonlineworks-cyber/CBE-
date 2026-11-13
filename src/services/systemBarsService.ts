@@ -146,7 +146,7 @@ export class SystemBarsService {
         break;
 
       case 'receipt':
-        statusBarColor = '#70189F';
+        statusBarColor = '#7A1FA2';
         navBarColor = '#ffffff';
         isDarkStyle = true;
         break;

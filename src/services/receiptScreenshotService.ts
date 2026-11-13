@@ -351,10 +351,10 @@ export async function captureReceiptElement(
       clonedElement.style.margin = '0';
       clonedElement.style.padding = '0';
       clonedElement.style.boxSizing = 'border-box';
-      clonedElement.style.backgroundColor = '#70189F';
+      clonedElement.style.backgroundColor = '#7A1FA2';
       clonedDoc.body.style.width = `${fullWidth}px`;
       clonedDoc.body.style.height = `${fullHeight}px`;
-      clonedDoc.body.style.backgroundColor = '#70189F';
+      clonedDoc.body.style.backgroundColor = '#7A1FA2';
       clonedDoc.body.style.margin = '0';
       clonedDoc.body.style.padding = '0';
       clonedDoc.body.style.overflow = 'hidden';
@@ -467,14 +467,14 @@ export async function captureReceiptElement(
       onclone: prepareClonedReceiptDom,
     });
 
-    // Sanity check: Ensure top header has authentic CBE purple color (#70189F)
+    // Sanity check: Ensure top header has authentic CBE purple color (#7A1FA2 / #70189F)
     // AND ensure the middle is NOT purple (which would mean a blank solid purple capture like IMG_0748.png)
     const ctx = canvas.getContext('2d');
     if (ctx) {
       try {
         const sampleTop = ctx.getImageData(Math.round(canvas.width / 2), Math.round(25 * pixelRatio), 1, 1).data;
-        // CBE purple: r: 112, g: 24, b: 159
-        const isTopPurple = sampleTop[0] > 60 && sampleTop[0] < 160 && sampleTop[1] < 60 && sampleTop[2] > 110 && sampleTop[3] > 200;
+        // CBE purple: r: 122, g: 31, b: 162 (#7A1FA2)
+        const isTopPurple = sampleTop[0] > 60 && sampleTop[0] < 165 && sampleTop[1] < 65 && sampleTop[2] > 110 && sampleTop[3] > 200;
         if (!isTopPurple) {
           console.warn('[ScreenshotService] Detected unstyled capture (missing CBE purple header), rejecting for canvas fallback');
           throw new Error('Unstyled capture detected: missing purple header');
@@ -483,7 +483,7 @@ export async function captureReceiptElement(
         // Sanity check 2: Middle of receipt must be white or light gray, NOT solid purple!
         const midY = Math.round(canvas.height / 2);
         const sampleMid = ctx.getImageData(Math.round(canvas.width / 2), midY, 1, 1).data;
-        const isMidPurple = sampleMid[0] > 60 && sampleMid[0] < 160 && sampleMid[1] < 60 && sampleMid[2] > 110;
+        const isMidPurple = sampleMid[0] > 60 && sampleMid[0] < 165 && sampleMid[1] < 65 && sampleMid[2] > 110;
         if (isMidPurple) {
           console.warn('[ScreenshotService] Detected blank solid purple capture, rejecting for canvas fallback');
           throw new Error('Blank solid purple capture detected');

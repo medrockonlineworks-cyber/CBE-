@@ -248,7 +248,7 @@ export default function App() {
       case 'receipt':
         return {
           rootBg: 'bg-white',
-          statusBarBg: 'bg-[#70189F] text-white',
+          statusBarBg: 'bg-[#7A1FA2] text-white',
           statusTheme: 'cbe' as const,
           navBarBg: 'bg-white border-neutral-200 text-neutral-800',
           navTheme: 'light' as const,

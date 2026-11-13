@@ -858,7 +858,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           className="w-full flex-1 flex flex-col bg-white relative select-none h-full overflow-hidden min-h-0"
         >
           {/* Top Purple Navigation / App Header: background extends behind rounded-t-[38px] curve */}
-          <div className="bg-[#70189F] pb-10 -mb-10 flex-shrink-0 relative z-10">
+          <div className="bg-[#7A1FA2] pb-10 -mb-10 flex-shrink-0 relative z-10">
             <div className="pt-[max(env(safe-area-inset-top,0px),70px)] pb-[41px] px-5 flex items-center justify-between text-white flex-shrink-0">
               <div className="flex items-center gap-2.5">
                 {/* Solid White Shield with Purple Checkmark Icon matching original reference */}
@@ -870,7 +870,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                     />
                     <path 
                       d="M8.0 12.2L11.0 15.2L17.2 9.0" 
-                      stroke="#70189F" 
+                      stroke="#7A1FA2" 
                       strokeWidth="1.9" 
                       strokeLinecap="butt" 
                       strokeLinejoin="miter" 
@@ -887,7 +887,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                     Thank you
                   </h2>
                   <p 
-                    className="text-[13px] sm:text-[13.5px] text-purple-100/90 font-normal leading-snug mt-0.5 tracking-normal"
+                    className="text-[13px] sm:text-[13.5px] text-[#FFD9FF] font-normal leading-snug mt-0.5 tracking-normal"
                     style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}
                   >
                     Success
@@ -927,7 +927,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                     xmlns="http://www.w3.org/2000/svg"
                   >
                     {/* Purple Circle with crisp White Outer Ring */}
-                    <circle cx="45" cy="45" r="41.5" stroke="#ffffff" strokeWidth="6" fill="#70189F" />
+                    <circle cx="45" cy="45" r="41.5" stroke="#ffffff" strokeWidth="6" fill="#7A1FA2" />
                     {/* Bold Crisp White Checkmark ("right icon") */}
                     <path
                       d="M 25.5 45.5 L 39.0 59.0 L 68.0 30.0"
@@ -953,21 +953,21 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             <div className="pb-2">
               {/* Headline */}
               <h1 
-                className="text-center text-[13.5px] sm:text-[14px] font-medium text-[#111827] mt-3 mb-4 tracking-normal"
+                className="text-center text-[13.5px] sm:text-[14px] font-medium text-[#111113] mt-3 mb-4 tracking-normal"
                 style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif' }}
               >
                 Transaction Completed Successfully!
               </h1>
 
               {/* Main Transaction Summary Gray Card with visible border shadow */}
-              <div className="bg-[#f2f3f5] rounded-[24px] px-[18px] pt-[18px] pb-[20px] border border-black/[0.04] shadow-[0_6px_20px_rgba(0,0,0,0.08),0_2px_6px_rgba(0,0,0,0.04)]">
-                <p className="text-[#8e8e93] font-normal text-[12.5px] sm:text-[13px] mb-3">Transaction Summary</p>
+              <div className="bg-[#f2f2f2] rounded-[24px] px-[18px] pt-[18px] pb-[20px] border border-[rgba(0,0,0,0.04)] shadow-[0_6px_20px_rgba(0,0,0,0.09),0_2px_6px_rgba(0,0,0,0.05)]">
+                <p className="text-[#929292] font-normal text-[12.5px] sm:text-[13px] mb-3">Transaction Summary</p>
 
                 {/* Paragraph Text with bold highlights and floating PAID badge */}
                 <div className="relative mb-0 pb-0">
                   {isCredit ? (
                     <p 
-                      className="text-[14px] sm:text-[14.5px] leading-[1.6] text-[#1f2937] font-normal select-text tracking-[0.01em] m-0 p-0"
+                      className="text-[14px] sm:text-[14.5px] leading-[1.6] text-[#111111] font-normal select-text tracking-[0.01em] m-0 p-0"
                       style={{ 
                         margin: 0,
                         padding: 0,
@@ -978,7 +978,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                     </p>
                   ) : (
                     <p 
-                      className="text-[14px] sm:text-[14.5px] leading-[1.6] text-[#1f2937] font-normal select-text tracking-[0.01em] m-0 p-0"
+                      className="text-[14px] sm:text-[14.5px] leading-[1.6] text-[#111111] font-normal select-text tracking-[0.01em] m-0 p-0"
                       style={{ 
                         margin: 0,
                         padding: 0,
@@ -998,7 +998,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                         isFadingPaidBadge ? 'opacity-0' : 'opacity-100'
                       }`}
                     >
-                      <div className="bg-[#70189F] text-white px-6 py-2 sm:px-7 sm:py-2.5 rounded-2xl shadow-xl shadow-purple-950/40 flex items-center justify-center border border-purple-400/25">
+                      <div className="bg-[#7A1FA2] text-white px-6 py-2 sm:px-7 sm:py-2.5 rounded-2xl shadow-xl shadow-purple-950/40 flex items-center justify-center border border-purple-400/25">
                         <span className="font-black text-[22px] sm:text-[25px] tracking-wider text-white drop-shadow-sm select-none">
                           PAID
                         </span>
@@ -1011,7 +1011,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 <div className="flex justify-center mt-2.5 mb-0">
                   <div 
                     id="receipt-qr-container"
-                    className="bg-white p-2 rounded-[16px] border-[2px] border-[#737373] shadow-xs inline-flex items-center justify-center select-none"
+                    className="bg-white p-2 rounded-[16px] border-[2px] border-[#7d7d7d] shadow-xs inline-flex items-center justify-center select-none"
                   >
                     <div className="w-[114px] h-[114px] sm:w-[118px] sm:h-[118px] flex items-center justify-center">
                       {customQrCode ? (
@@ -1068,7 +1068,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                     </div>
                     <div className="text-left flex flex-col justify-center">
                       <h4 
-                        className="font-bold text-[#1f2937] text-[14px] sm:text-[14.5px] leading-tight whitespace-nowrap"
+                        className="font-bold text-[#353535] text-[14px] sm:text-[14.5px] leading-tight whitespace-nowrap"
                         style={{ 
                           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif'
                         }}
@@ -1076,7 +1076,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                         Commercial Bank of Ethiopia
                       </h4>
                       <p 
-                        className="text-[#6b7280] text-[12px] sm:text-[12.5px] font-normal leading-tight mt-0.5 whitespace-nowrap"
+                        className="text-[#575757] text-[12px] sm:text-[12.5px] font-normal leading-tight mt-0.5 whitespace-nowrap"
                         style={{ 
                           fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif'
                         }}
@@ -1315,7 +1315,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         <div 
           style={{ 
             width: '100%', 
-            backgroundColor: '#70189F', 
+            backgroundColor: '#7A1FA2', 
             color: '#ffffff', 
             display: 'flex', 
             flexDirection: 'column', 
@@ -1334,7 +1334,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
               paddingBottom: '41px', 
               paddingLeft: '20px', 
               paddingRight: '20px', 
-              backgroundColor: '#70189F', 
+              backgroundColor: '#7A1FA2', 
               display: 'flex', 
               alignItems: 'center', 
               justifyContent: 'space-between', 
@@ -1352,7 +1352,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                   />
                   <path 
                     d="M8.0 12.2L11.0 15.2L17.2 9.0" 
-                    stroke="#70189F" 
+                    stroke="#7A1FA2" 
                     strokeWidth="1.9" 
                     strokeLinecap="butt" 
                     strokeLinejoin="miter" 
@@ -1363,7 +1363,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
               </div>
               <div>
                 <h2 style={{ margin: 0, fontWeight: 700, fontSize: '18px', lineHeight: 1.2, color: '#ffffff', letterSpacing: '-0.2px' }}>Thank you</h2>
-                <p style={{ margin: 0, fontSize: '13px', color: '#e9d5ff', fontWeight: 400, lineHeight: 1.2, marginTop: '2px' }}>Success</p>
+                <p style={{ margin: 0, fontSize: '13px', color: '#FFD9FF', fontWeight: 400, lineHeight: 1.2, marginTop: '2px' }}>Success</p>
               </div>
             </div>
           </div>
@@ -1419,7 +1419,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 xmlns="http://www.w3.org/2000/svg"
               >
                 {/* Purple Circle with crisp White Outer Ring */}
-                <circle cx="45" cy="45" r="41.5" stroke="#ffffff" strokeWidth="6" fill="#70189F" />
+                <circle cx="45" cy="45" r="41.5" stroke="#ffffff" strokeWidth="6" fill="#7A1FA2" />
                 {/* Bold Crisp White Checkmark */}
                 <path
                   d="M 25.5 45.5 L 39.0 59.0 L 68.0 30.0"
@@ -1447,7 +1447,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 textAlign: 'center', 
                 fontSize: '13.5px', 
                 fontWeight: 500, 
-                color: '#111827', 
+                color: '#111113', 
                 letterSpacing: '0px', 
                 fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif',
                 flexShrink: 0,
@@ -1459,28 +1459,28 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             {/* Main Transaction Summary Gray Card */}
             <div 
               style={{ 
-                backgroundColor: '#f2f3f5', 
+                backgroundColor: '#f2f2f2', 
                 borderRadius: '24px', 
                 padding: '18px 18px 20px 18px', 
                 border: '1px solid rgba(0, 0, 0, 0.04)', 
-                boxShadow: '0 6px 20px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04)',
+                boxShadow: '0 6px 20px rgba(0, 0, 0, 0.09), 0 2px 6px rgba(0, 0, 0, 0.05)',
                 display: 'flex', 
                 flexDirection: 'column', 
                 gap: '0px',
                 boxSizing: 'border-box',
               }}
             >
-              <p style={{ margin: '0 0 12px 0', color: '#8e8e93', fontWeight: 400, fontSize: '12.5px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
+              <p style={{ margin: '0 0 12px 0', color: '#929292', fontWeight: 400, fontSize: '12.5px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
                 Transaction Summary
               </p>
 
               {/* Paragraph Text with bold highlights */}
               {isCredit ? (
-                <p style={{ margin: '0 0 0px 0', padding: 0, fontSize: '14px', lineHeight: 1.6, color: '#1f2937', fontWeight: 400, letterSpacing: '0.12px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
+                <p style={{ margin: '0 0 0px 0', padding: 0, fontSize: '14px', lineHeight: 1.6, color: '#111111', fontWeight: 400, letterSpacing: '0.12px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
                   ETB <span style={{ fontWeight: 700, color: '#000000' }}>{amountFormatted}</span> has been credited to <span style={{ fontWeight: 700, color: '#000000' }}>{recipientName}</span> {recipientSuffix} from <span style={{ fontWeight: 700, color: '#000000' }}>{senderName}</span> {senderSuffix} on <span style={{ fontWeight: 700, color: '#000000' }}>{formattedDate}</span> with transaction ID: <span style={{ fontWeight: 700, color: '#000000' }}>{txId}.</span> Reason: {reason}
                 </p>
               ) : (
-                <p style={{ margin: '0 0 0px 0', padding: 0, fontSize: '14px', lineHeight: 1.6, color: '#1f2937', fontWeight: 400, letterSpacing: '0.12px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
+                <p style={{ margin: '0 0 0px 0', padding: 0, fontSize: '14px', lineHeight: 1.6, color: '#111111', fontWeight: 400, letterSpacing: '0.12px', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
                   ETB <span style={{ fontWeight: 700, color: '#000000' }}>{amountFormatted}</span> has been debited from <span style={{ fontWeight: 700, color: '#000000' }}>{senderName}</span> {senderSuffix} for <span style={{ fontWeight: 700, color: '#000000' }}>{recipientName}</span> {recipientSuffix} on <span style={{ fontWeight: 700, color: '#000000' }}>{formattedDate}</span> with transaction ID: <span style={{ fontWeight: 700, color: '#000000' }}>{txId}.</span> Reason: {reason} Total Amount Debited: ETB{totalDebitedFormatted} with Service Charge of ETB{serviceChargeFormatted}, VAT (15%) of ETB{vatFormatted} and Disaster Recovery (5%) of ETB{disasterRecoveryFormatted}.
                 </p>
               )}
@@ -1492,7 +1492,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                     backgroundColor: '#ffffff', 
                     padding: '8px', 
                     borderRadius: '16px', 
-                    border: '2px solid #737373', 
+                    border: '2px solid #7d7d7d', 
                     display: 'inline-flex', 
                     alignItems: 'center', 
                     justifyContent: 'center', 
@@ -1567,10 +1567,10 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                     <CbeLogo className="w-10 h-10 object-contain" style={{ width: '40px', height: '40px', maxWidth: '40px', maxHeight: '40px' }} src={customBankLogo} />
                   </div>
                   <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                    <h4 style={{ margin: 0, fontWeight: 700, color: '#1f2937', fontSize: '14px', lineHeight: 1.2, letterSpacing: '0px', whiteSpace: 'nowrap', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif' }}>
+                    <h4 style={{ margin: 0, fontWeight: 700, color: '#353535', fontSize: '14px', lineHeight: 1.2, letterSpacing: '0px', whiteSpace: 'nowrap', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif' }}>
                       Commercial Bank of Ethiopia
                     </h4>
-                    <p style={{ margin: '2px 0 0 0', color: '#6b7280', fontSize: '12px', fontWeight: 400, lineHeight: 1.2, letterSpacing: '0px', whiteSpace: 'nowrap', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
+                    <p style={{ margin: '2px 0 0 0', color: '#575757', fontSize: '12px', fontWeight: 400, lineHeight: 1.2, letterSpacing: '0px', whiteSpace: 'nowrap', fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif' }}>
                       The bank you can always rely on!
                     </p>
                   </div>

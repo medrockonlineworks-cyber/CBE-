@@ -150,7 +150,7 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   const cornerRadius = 38 * scale;
 
   // Fill purple background extending down only to sheetTop + cornerRadius to fill behind curved corners
-  ctx.fillStyle = '#70189F';
+  ctx.fillStyle = '#7A1FA2';
   ctx.fillRect(0, 0, width, sheetTop + cornerRadius);
 
   // 3. Exact Solid White Shield with Purple Checkmark (matching exact SVG in Image 2)
@@ -165,7 +165,7 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
 
   // Purple checkmark inside shield
   const shieldCheckmarkPath = new Path2D('M8.0 12.2L11.0 15.2L17.2 9.0');
-  ctx.strokeStyle = '#70189F';
+  ctx.strokeStyle = '#7A1FA2';
   ctx.lineWidth = 1.9;
   ctx.lineCap = 'butt';
   ctx.lineJoin = 'miter';
@@ -182,7 +182,7 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   ctx.textBaseline = 'alphabetic';
   ctx.fillText('Thank you', shieldX + shieldSize + (10 * scale), shieldY + (18 * scale));
 
-  ctx.fillStyle = 'rgba(243, 232, 255, 0.9)';
+  ctx.fillStyle = '#FFD9FF';
   ctx.font = `normal ${13 * scale}px ${fontSans}`;
   ctx.fillText('Success', shieldX + shieldSize + (10 * scale), shieldY + (36 * scale));
 
@@ -201,7 +201,7 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   // Purple circle with thick white outer ring
   ctx.beginPath();
   ctx.arc(badgeCenterX, badgeCenterY, badgeRadius, 0, Math.PI * 2);
-  ctx.fillStyle = '#70189F';
+  ctx.fillStyle = '#7A1FA2';
   ctx.fill();
   ctx.lineWidth = 6 * scale;
   ctx.strokeStyle = '#ffffff';
@@ -224,13 +224,13 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   const headlineTop = badgeBottom + (12 * scale);
   const headlineBaseline = headlineTop + (11 * scale);
 
-  ctx.fillStyle = '#111827';
+  ctx.fillStyle = '#111113';
   ctx.font = `500 ${13.5 * scale}px ${fontSans}`;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'alphabetic';
   ctx.fillText('Transaction Completed Successfully!', width / 2, headlineBaseline);
 
-  // 8. Main Transaction Summary Gray Card: #f2f3f5
+  // 8. Main Transaction Summary Gray Card: #f2f2f2
   const cardMarginX = 20 * scale;
   const cardTop = badgeBottom + (40 * scale);
   const cardWidth = width - (cardMarginX * 2);
@@ -357,12 +357,12 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   const cardBottomPadding = 20 * scale;
   const cardHeight = (footerY + footerLogoSize + cardBottomPadding) - cardTop;
 
-  // Draw Card Background: #f2f3f5 with radius 24px and border shadow
+  // Draw Card Background: #f2f2f2 with radius 24px and border shadow
   ctx.save();
-  ctx.shadowColor = 'rgba(0, 0, 0, 0.08)';
+  ctx.shadowColor = 'rgba(0, 0, 0, 0.09)';
   ctx.shadowBlur = 20 * scale;
   ctx.shadowOffsetY = 6 * scale;
-  ctx.fillStyle = '#f2f3f5';
+  ctx.fillStyle = '#f2f2f2';
   roundRect(ctx, cardMarginX, cardTop, cardWidth, cardHeight, 24 * scale);
   ctx.fill();
   ctx.restore();
@@ -376,7 +376,7 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   ctx.restore();
 
   // Draw "Transaction Summary"
-  ctx.fillStyle = '#8e8e93';
+  ctx.fillStyle = '#929292';
   ctx.font = `normal ${12.5 * scale}px ${fontSans}`;
   ctx.textAlign = 'left';
   ctx.fillText('Transaction Summary', textStartX, summaryTitleY);
@@ -387,7 +387,7 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
     let lineX = textStartX;
     for (const item of line.tokens) {
       ctx.font = item.bold ? boldFont : regularFont;
-      ctx.fillStyle = item.bold ? '#000000' : '#1f2937';
+      ctx.fillStyle = item.bold ? '#000000' : '#111111';
       ctx.fillText(item.word, lineX, lineY);
       lineX += item.width;
     }
@@ -395,13 +395,13 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   }
 
   // Draw QR Code Container Box:
-  // White background, rounded corners (18px), border: 2px solid #737373
+  // White background, rounded corners (18px), border: 2px solid #7d7d7d
   ctx.save();
   ctx.fillStyle = '#ffffff';
   roundRect(ctx, qrBoxX, qrBoxTop, qrBoxSize, qrBoxSize, 18 * scale);
   ctx.fill();
   ctx.lineWidth = 2 * scale;
-  ctx.strokeStyle = '#737373';
+  ctx.strokeStyle = '#7d7d7d';
   ctx.stroke();
 
   // Draw QR Image inside
@@ -422,7 +422,7 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   }
 
   const footerTextX = footerX + footerLogoSize + footerHorizontalGap;
-  ctx.fillStyle = '#1f2937';
+  ctx.fillStyle = '#353535';
   ctx.font = footerTitleFont;
   ctx.textAlign = 'left';
   if ('letterSpacing' in ctx) {
@@ -430,7 +430,7 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   }
   ctx.fillText('Commercial Bank of Ethiopia', footerTextX, footerY + (17 * scale));
 
-  ctx.fillStyle = '#6b7280';
+  ctx.fillStyle = '#575757';
   ctx.font = footerSloganFont;
   ctx.fillText('The bank you can always rely on!', footerTextX, footerY + (32 * scale));
 
