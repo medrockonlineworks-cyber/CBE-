@@ -140,12 +140,12 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0, 0, width, height);
 
-  // 2. Top Purple Header: #70189F matching IMG_1200_618cfdf3.jpeg
-  const topPurplePadding = 52 * scale;
+  // 2. Top Purple Header: #70189F (70px top padding, 41px bottom padding before curved white sheet)
+  const topPurplePadding = 70 * scale;
   const shieldSize = 34 * scale;
   const shieldX = 20 * scale;
   const shieldY = topPurplePadding + (2 * scale);
-  const headerBottomPadding = 40 * scale;
+  const headerBottomPadding = 41 * scale;
   const sheetTop = topPurplePadding + 40 * scale + headerBottomPadding;
   const cornerRadius = 38 * scale;
 
@@ -434,12 +434,12 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   ctx.font = footerSloganFont;
   ctx.fillText('The bank you can always rely on!', footerTextX, footerY + (32 * scale));
 
-  // Gray bottom strip when taking screenshots
+  // Gray bottom strip when taking screenshots (both Android and iPhone)
   if (options.addGrayBottomStrip ?? true) {
     const bottomBarHeight = 58 * scale;
-    ctx.fillStyle = '#f2f3f5';
+    ctx.fillStyle = '#f0f1f4';
     ctx.fillRect(0, height - bottomBarHeight, width, bottomBarHeight);
-    ctx.fillStyle = '#e5e7eb';
+    ctx.fillStyle = '#e2e4e8';
     ctx.fillRect(0, height - bottomBarHeight, width, 1 * scale);
   }
 

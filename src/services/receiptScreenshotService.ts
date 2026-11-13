@@ -260,6 +260,7 @@ export async function captureReceiptElement(
   // 5. Measure full content bounds matching exact on-screen dimensions
   const rect = element.getBoundingClientRect();
   const isExactTarget = element.id === 'cbe-screenshot-exact-target';
+  const shouldAddGrayStrip = options?.addGrayBottomStrip ?? true;
   const fullWidth = isExactTarget 
     ? (parseInt(element.style.width, 10) || element.offsetWidth || 412)
     : Math.max(Math.ceil(rect.width), element.offsetWidth, 360);
@@ -272,7 +273,7 @@ export async function captureReceiptElement(
     const extraScroll = innerScrollable ? Math.max(0, innerScrollable.scrollHeight - innerScrollable.clientHeight) : 0;
     const bottomActions = element.querySelector('#cbe-receipt-bottom-actions-container') as HTMLElement | null;
     const bottomActionsH = bottomActions ? bottomActions.offsetHeight : 0;
-    const bottomReserve = options?.addGrayBottomStrip ? 84 : 36;
+    const bottomReserve = shouldAddGrayStrip ? 92 : 36;
     const neededContentHeight = viewportH - bottomActionsH + extraScroll + bottomReserve;
     fullHeight = Math.max(viewportH, neededContentHeight, 700);
   }
@@ -287,6 +288,165 @@ export async function captureReceiptElement(
       node.getAttribute('data-screenshot-temporary') === 'true' ||
       (node.getAttribute('data-screenshot-exclude') === 'true' && node.id !== 'btn-top-screenshot')
     );
+  };
+
+  const prepareClonedReceiptDom = (clonedDoc: Document, clonedElement: HTMLElement) => {
+    clonedDoc.defaultView?.scrollTo(0, 0);
+
+    if (clonedDoc.documentElement) {
+      clonedDoc.documentElement.style.overflow = 'visible';
+      clonedDoc.documentElement.style.height = 'auto';
+      clonedDoc.documentElement.style.backgroundColor = '#ffffff';
+    }
+    if (clonedDoc.body) {
+      clonedDoc.body.style.overflow = 'visible';
+      clonedDoc.body.style.height = 'auto';
+      clonedDoc.body.style.backgroundColor = '#ffffff';
+    }
+
+    const clonedWrapper = clonedDoc.getElementById('receipt-screen-wrapper');
+    if (clonedWrapper) {
+      clonedWrapper.scrollTop = 0;
+      clonedWrapper.scrollLeft = 0;
+      clonedWrapper.style.overflow = 'visible';
+      clonedWrapper.style.height = `${fullHeight}px`;
+      clonedWrapper.style.maxHeight = 'none';
+    }
+
+    clonedElement.style.overflow = 'hidden';
+    clonedElement.style.width = `${fullWidth}px`;
+    clonedElement.style.height = `${fullHeight}px`;
+    clonedElement.style.minHeight = `${fullHeight}px`;
+    clonedElement.style.maxHeight = 'none';
+    clonedElement.style.transform = 'none';
+    clonedElement.style.backgroundColor = '#ffffff';
+
+    try {
+      const mainStyles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'));
+      mainStyles.forEach((styleTag) => {
+        clonedDoc.head.appendChild(styleTag.cloneNode(true));
+      });
+    } catch {}
+
+    if (clonedElement.id === 'cbe-screenshot-exact-target') {
+      clonedDoc.body.appendChild(clonedElement);
+
+      const rootElement = clonedDoc.getElementById('root');
+      if (rootElement && rootElement !== clonedElement) {
+        rootElement.style.display = 'none';
+      }
+
+      clonedElement.style.position = 'relative';
+      clonedElement.style.top = '0';
+      clonedElement.style.left = '0';
+      clonedElement.style.zIndex = '9999';
+      clonedElement.style.opacity = '1';
+      clonedElement.style.visibility = 'visible';
+      clonedElement.style.display = 'flex';
+      clonedElement.style.flexDirection = 'column';
+      clonedElement.style.width = `${fullWidth}px`;
+      clonedElement.style.height = `${fullHeight}px`;
+      clonedElement.style.minHeight = `${fullHeight}px`;
+      clonedElement.style.maxHeight = `${fullHeight}px`;
+      clonedElement.style.margin = '0';
+      clonedElement.style.padding = '0';
+      clonedElement.style.boxSizing = 'border-box';
+      clonedElement.style.backgroundColor = '#70189F';
+      clonedDoc.body.style.width = `${fullWidth}px`;
+      clonedDoc.body.style.height = `${fullHeight}px`;
+      clonedDoc.body.style.backgroundColor = '#70189F';
+      clonedDoc.body.style.margin = '0';
+      clonedDoc.body.style.padding = '0';
+      clonedDoc.body.style.overflow = 'hidden';
+      if (clonedDoc.documentElement) {
+        clonedDoc.documentElement.style.width = `${fullWidth}px`;
+        clonedDoc.documentElement.style.height = `${fullHeight}px`;
+        clonedDoc.documentElement.style.margin = '0';
+        clonedDoc.documentElement.style.padding = '0';
+        clonedDoc.documentElement.style.overflow = 'hidden';
+      }
+    } else {
+      const stripHeight = 58;
+      const receiptContentHeight = shouldAddGrayStrip ? Math.max(600, fullHeight - stripHeight) : fullHeight;
+      const existingReceipt = clonedDoc.getElementById('cbe-existing-receipt');
+      if (existingReceipt) {
+        existingReceipt.style.height = `${receiptContentHeight}px`;
+        existingReceipt.style.minHeight = `${receiptContentHeight}px`;
+        existingReceipt.style.flex = '1 1 auto';
+        existingReceipt.style.overflow = 'visible';
+        existingReceipt.style.backgroundColor = '#ffffff';
+      }
+
+      const clonedScrollable = clonedElement.querySelector('.overflow-y-auto') as HTMLElement | null;
+      if (clonedScrollable) {
+        clonedScrollable.scrollTop = 0;
+        clonedScrollable.style.overflow = 'visible';
+        clonedScrollable.style.height = 'auto';
+        clonedScrollable.style.maxHeight = 'none';
+        clonedScrollable.style.flex = '1 1 auto';
+        clonedScrollable.style.backgroundColor = '#ffffff';
+      }
+
+      const bottomBar = clonedDoc.getElementById('cbe-receipt-bottom-actions-container');
+      if (bottomBar) {
+        bottomBar.style.display = 'none';
+      }
+
+      if (shouldAddGrayStrip && !clonedDoc.getElementById('cbe-live-gray-bottom-strip')) {
+        const stripEl = clonedDoc.createElement('div');
+        stripEl.id = 'cbe-live-gray-bottom-strip';
+        stripEl.style.width = '100%';
+        stripEl.style.height = `${stripHeight}px`;
+        stripEl.style.minHeight = `${stripHeight}px`;
+        stripEl.style.flexShrink = '0';
+        stripEl.style.backgroundColor = '#f0f1f4';
+        stripEl.style.borderTop = '1px solid #e2e4e8';
+        stripEl.style.boxSizing = 'border-box';
+        clonedElement.appendChild(stripEl);
+      }
+
+      const topScreenshotBtn = clonedDoc.getElementById('btn-top-screenshot');
+      if (topScreenshotBtn) {
+        topScreenshotBtn.style.visibility = 'hidden';
+      }
+
+      const animatedBadges = clonedElement.querySelectorAll('.animate-cbe-pulse');
+      animatedBadges.forEach((badge) => {
+        (badge as HTMLElement).style.animation = 'none';
+        (badge as HTMLElement).style.transform = 'scale(1)';
+      });
+    }
+
+    const temporaryNodes = clonedDoc.querySelectorAll(
+      '[data-screenshot-exclude="true"]:not(#btn-top-screenshot), [data-screenshot-temporary="true"]'
+    );
+    temporaryNodes.forEach((node) => {
+      (node as HTMLElement).style.display = 'none';
+    });
+
+    const clonedImgs = clonedDoc.querySelectorAll('img');
+    clonedImgs.forEach((clonedImg) => {
+      if (!clonedImg.src || clonedImg.src.includes('custom-bank-logo') || clonedImg.src.includes('cbe-gold-logo')) {
+        clonedImg.src = CBE_DEFAULT_LOGO_BASE64;
+      }
+    });
+  };
+
+  const paintGrayBottomStripOnCanvas = (targetCanvas: HTMLCanvasElement, scaleFactor: number) => {
+    if (!shouldAddGrayStrip) return;
+    const targetCtx = targetCanvas.getContext('2d');
+    if (!targetCtx) return;
+    targetCtx.save();
+    targetCtx.setTransform(1, 0, 0, 1, 0, 0);
+    targetCtx.globalAlpha = 1;
+    targetCtx.globalCompositeOperation = 'source-over';
+    const bottomStripH = Math.round(58 * scaleFactor);
+    const stripTopY = Math.max(0, targetCanvas.height - bottomStripH);
+    targetCtx.fillStyle = '#f0f1f4';
+    targetCtx.fillRect(0, stripTopY, targetCanvas.width, bottomStripH);
+    targetCtx.fillStyle = '#e2e4e8';
+    targetCtx.fillRect(0, stripTopY, targetCanvas.width, Math.max(1, Math.round(1 * scaleFactor)));
+    targetCtx.restore();
   };
 
   try {
@@ -304,144 +464,7 @@ export async function captureReceiptElement(
       windowWidth: fullWidth,
       windowHeight: fullHeight,
       ignoreElements: isExcluded,
-      onclone: (clonedDoc: Document, clonedElement: HTMLElement) => {
-        // Reset scroll position on clone
-        clonedDoc.defaultView?.scrollTo(0, 0);
-        
-        // Ensure root and body do not constrain layout in clone and use white background
-        if (clonedDoc.documentElement) {
-          clonedDoc.documentElement.style.overflow = 'visible';
-          clonedDoc.documentElement.style.height = 'auto';
-          clonedDoc.documentElement.style.backgroundColor = '#ffffff';
-        }
-        if (clonedDoc.body) {
-          clonedDoc.body.style.overflow = 'visible';
-          clonedDoc.body.style.height = 'auto';
-          clonedDoc.body.style.backgroundColor = '#ffffff';
-        }
-
-        const clonedWrapper = clonedDoc.getElementById('receipt-screen-wrapper');
-        if (clonedWrapper) {
-          clonedWrapper.scrollTop = 0;
-          clonedWrapper.scrollLeft = 0;
-          clonedWrapper.style.overflow = 'visible';
-          clonedWrapper.style.height = `${fullHeight}px`;
-          clonedWrapper.style.maxHeight = 'none';
-        }
-
-        // Expand clonedElement to exact width & fullHeight without shifting any internal spacing
-        clonedElement.style.overflow = 'hidden';
-        clonedElement.style.width = `${fullWidth}px`;
-        clonedElement.style.height = `${fullHeight}px`;
-        clonedElement.style.minHeight = `${fullHeight}px`;
-        clonedElement.style.maxHeight = 'none';
-        clonedElement.style.transform = 'none';
-        clonedElement.style.backgroundColor = '#ffffff';
-
-        // Copy all style and link tags from main document to cloned document
-        try {
-          const mainStyles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'));
-          mainStyles.forEach((styleTag) => {
-            clonedDoc.head.appendChild(styleTag.cloneNode(true));
-          });
-        } catch {}
-
-        if (clonedElement.id === 'cbe-screenshot-exact-target') {
-          // Move clonedElement out of #root into clonedDoc.body so it is NEVER hidden!
-          clonedDoc.body.appendChild(clonedElement);
-
-          // Safely hide the rest of the application now that clonedElement is a top-level child of body
-          const rootElement = clonedDoc.getElementById('root');
-          if (rootElement && rootElement !== clonedElement) {
-            rootElement.style.display = 'none';
-          }
-
-          clonedElement.style.position = 'relative';
-          clonedElement.style.top = '0';
-          clonedElement.style.left = '0';
-          clonedElement.style.zIndex = '9999';
-          clonedElement.style.opacity = '1';
-          clonedElement.style.visibility = 'visible';
-          clonedElement.style.display = 'flex';
-          clonedElement.style.flexDirection = 'column';
-          clonedElement.style.width = `${fullWidth}px`;
-          clonedElement.style.height = `${fullHeight}px`;
-          clonedElement.style.minHeight = `${fullHeight}px`;
-          clonedElement.style.maxHeight = `${fullHeight}px`;
-          clonedElement.style.margin = '0';
-          clonedElement.style.padding = '0';
-          clonedElement.style.boxSizing = 'border-box';
-          clonedElement.style.backgroundColor = '#70189F';
-          clonedDoc.body.style.width = `${fullWidth}px`;
-          clonedDoc.body.style.height = `${fullHeight}px`;
-          clonedDoc.body.style.backgroundColor = '#70189F';
-          clonedDoc.body.style.margin = '0';
-          clonedDoc.body.style.padding = '0';
-          clonedDoc.body.style.overflow = 'hidden';
-          if (clonedDoc.documentElement) {
-            clonedDoc.documentElement.style.width = `${fullWidth}px`;
-            clonedDoc.documentElement.style.height = `${fullHeight}px`;
-            clonedDoc.documentElement.style.margin = '0';
-            clonedDoc.documentElement.style.padding = '0';
-            clonedDoc.documentElement.style.overflow = 'hidden';
-          }
-        } else {
-          // Capturing the exact live on-screen receipt (#cbe-full-receipt-capture-target)
-          const existingReceipt = clonedDoc.getElementById('cbe-existing-receipt');
-          if (existingReceipt) {
-            existingReceipt.style.height = `${fullHeight}px`;
-            existingReceipt.style.minHeight = `${fullHeight}px`;
-            existingReceipt.style.overflow = 'visible';
-            existingReceipt.style.backgroundColor = '#ffffff';
-          }
-
-          // Expand scrollable body so full card is rendered without clipping, keeping exact spacing
-          const clonedScrollable = clonedElement.querySelector('.overflow-y-auto') as HTMLElement | null;
-          if (clonedScrollable) {
-            clonedScrollable.scrollTop = 0;
-            clonedScrollable.style.overflow = 'visible';
-            clonedScrollable.style.height = 'auto';
-            clonedScrollable.style.maxHeight = 'none';
-            clonedScrollable.style.flex = '1 1 auto';
-            clonedScrollable.style.backgroundColor = '#ffffff';
-          }
-
-          // Hide bottom action controls (Receipt, Screenshot, Share, Close) cleanly so pure white extends to bottom
-          const bottomBar = clonedDoc.getElementById('cbe-receipt-bottom-actions-container');
-          if (bottomBar) {
-            bottomBar.style.display = 'none';
-          }
-
-          // Hide top-right screenshot button without altering header height/alignment
-          const topScreenshotBtn = clonedDoc.getElementById('btn-top-screenshot');
-          if (topScreenshotBtn) {
-            topScreenshotBtn.style.visibility = 'hidden';
-          }
-
-          // Freeze checkmark pulse animation at exact scale(1)
-          const animatedBadges = clonedElement.querySelectorAll('.animate-cbe-pulse');
-          animatedBadges.forEach((badge) => {
-            (badge as HTMLElement).style.animation = 'none';
-            (badge as HTMLElement).style.transform = 'scale(1)';
-          });
-        }
-
-        // Hide any remaining temporary overlays/stamps
-        const temporaryNodes = clonedDoc.querySelectorAll(
-          '[data-screenshot-exclude="true"]:not(#btn-top-screenshot), [data-screenshot-temporary="true"]'
-        );
-        temporaryNodes.forEach((node) => {
-          (node as HTMLElement).style.display = 'none';
-        });
-
-        // Ensure all images in clone use their assigned inlined src
-        const clonedImgs = clonedDoc.querySelectorAll('img');
-        clonedImgs.forEach((clonedImg) => {
-          if (!clonedImg.src || clonedImg.src.includes('custom-bank-logo') || clonedImg.src.includes('cbe-gold-logo')) {
-            clonedImg.src = CBE_DEFAULT_LOGO_BASE64;
-          }
-        });
-      },
+      onclone: prepareClonedReceiptDom,
     });
 
     // Sanity check: Ensure top header has authentic CBE purple color (#70189F)
@@ -472,20 +495,8 @@ export async function captureReceiptElement(
       }
     }
 
-    // Draw 58px gray bottom strip at the bottom edge of screenshot when requested
-    if (options?.addGrayBottomStrip && ctx) {
-      ctx.save();
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
-      ctx.globalAlpha = 1;
-      ctx.globalCompositeOperation = 'source-over';
-      const bottomStripH = Math.round(58 * pixelRatio);
-      const stripTopY = canvas.height - bottomStripH;
-      ctx.fillStyle = '#f2f3f5';
-      ctx.fillRect(0, stripTopY, canvas.width, bottomStripH);
-      ctx.fillStyle = '#e5e7eb';
-      ctx.fillRect(0, stripTopY, canvas.width, Math.max(1, Math.round(1 * pixelRatio)));
-      ctx.restore();
-    }
+    // Draw crisp 58px gray bottom strip at the bottom edge of screenshot
+    paintGrayBottomStripOnCanvas(canvas, pixelRatio);
 
     const dataUrl = canvas.toDataURL('image/png');
     if (dataUrl && dataUrl.length > 1000) {
@@ -495,7 +506,7 @@ export async function captureReceiptElement(
   } catch (primaryErr) {
     console.warn('[ScreenshotService] html2canvas-pro capture retry with standard options:', primaryErr);
     
-    // Fallback: html2canvas with standard options and white background
+    // Fallback: html2canvas with standard options, cloned cleanup, and gray bottom strip
     try {
       const fallbackCanvas = await html2canvas(element, {
         scale: 2,
@@ -505,24 +516,14 @@ export async function captureReceiptElement(
         logging: false,
         scrollX: 0,
         scrollY: 0,
+        width: fullWidth,
+        height: fullHeight,
+        windowWidth: fullWidth,
+        windowHeight: fullHeight,
         ignoreElements: isExcluded,
+        onclone: prepareClonedReceiptDom,
       });
-      if (options?.addGrayBottomStrip) {
-        const fbCtx = fallbackCanvas.getContext('2d');
-        if (fbCtx) {
-          fbCtx.save();
-          fbCtx.setTransform(1, 0, 0, 1, 0, 0);
-          fbCtx.globalAlpha = 1;
-          fbCtx.globalCompositeOperation = 'source-over';
-          const bottomStripH = Math.round(58 * 2);
-          const stripTopY = fallbackCanvas.height - bottomStripH;
-          fbCtx.fillStyle = '#f2f3f5';
-          fbCtx.fillRect(0, stripTopY, fallbackCanvas.width, bottomStripH);
-          fbCtx.fillStyle = '#e5e7eb';
-          fbCtx.fillRect(0, stripTopY, fallbackCanvas.width, 2);
-          fbCtx.restore();
-        }
-      }
+      paintGrayBottomStripOnCanvas(fallbackCanvas, 2);
       return fallbackCanvas.toDataURL('image/png');
     } catch (fallbackErr) {
       console.error('[ScreenshotService] All capture methods failed:', fallbackErr);

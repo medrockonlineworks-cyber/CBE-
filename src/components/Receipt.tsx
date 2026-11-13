@@ -548,6 +548,11 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       .catch(err => console.error('QR code generation failed:', err));
   }, [txId]);
 
+  // Clear cached screenshot when receipt content or assets change
+  useEffect(() => {
+    setCapturedScreenshotUrl(null);
+  }, [txId, customQrCode, qrDataUrl, customBankLogo]);
+
   // Print handle
   const handlePrint = () => {
     window.print();
@@ -854,7 +859,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         >
           {/* Top Purple Navigation / App Header: background extends behind rounded-t-[38px] curve */}
           <div className="bg-[#70189F] pb-10 -mb-10 flex-shrink-0 relative z-10">
-            <div className="pt-[max(calc(env(safe-area-inset-top,0px)+32px),52px)] pb-10 px-5 flex items-center justify-between text-white flex-shrink-0">
+            <div className="pt-[max(env(safe-area-inset-top,0px),70px)] pb-[41px] px-5 flex items-center justify-between text-white flex-shrink-0">
               <div className="flex items-center gap-2.5">
                 {/* Solid White Shield with Purple Checkmark Icon matching original reference */}
                 <div className="w-8.5 h-8.5 flex-shrink-0 flex items-center justify-center">
@@ -1157,20 +1162,30 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           </div>
         )}
 
+        {/* Gray bottom strip shown in clean view mode (Android & iPhone) */}
+        {hideUiElements && (
+          <div
+            id="cbe-live-gray-bottom-strip"
+            className="w-full h-[58px] min-h-[58px] bg-[#f0f1f4] border-t border-[#e2e4e8] flex-shrink-0"
+          />
+        )}
+
         {/* Solid White Device Navigation Bar Safe-Area Strip extending to the bottom edge */}
-        <div 
-          data-html2canvas-ignore="true" 
-          className="fixed bottom-0 inset-x-0 h-[max(env(safe-area-inset-bottom,0px),0px)] bg-white pointer-events-none z-30" 
-        />
+        {!hideUiElements && (
+          <div 
+            data-html2canvas-ignore="true" 
+            className="fixed bottom-0 inset-x-0 h-[max(env(safe-area-inset-bottom,0px),0px)] bg-white pointer-events-none z-30" 
+          />
+        )}
       </div>
 
-      {/* When in Clean Screenshot Mode (matching Image 1) */}
+      {/* When in Clean Screenshot Mode */}
       {hideUiElements && (
-        <div data-html2canvas-ignore="true" data-screenshot-exclude="true" className="pt-4 pb-2 flex flex-col items-center justify-center shrink-0 bg-white">
+        <div data-html2canvas-ignore="true" data-screenshot-exclude="true" className="fixed bottom-[68px] left-1/2 -translate-x-1/2 z-40 flex flex-col items-center justify-center shrink-0">
           <button
             type="button"
             onClick={toggleUiElements}
-            className="text-xs text-neutral-500 hover:text-neutral-800 transition flex items-center gap-1.5 py-1.5 px-4 rounded-full bg-neutral-100 hover:bg-neutral-200 cursor-pointer shadow-2xs active:scale-95 font-medium"
+            className="text-xs text-neutral-500 hover:text-neutral-800 transition flex items-center gap-1.5 py-1.5 px-4 rounded-full bg-neutral-100/95 hover:bg-neutral-200 cursor-pointer shadow-xs active:scale-95 font-medium whitespace-nowrap"
           >
             <span>Tap to show Close &amp; Action controls</span>
           </button>
@@ -1315,8 +1330,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         >
           <div 
             style={{ 
-              paddingTop: '52px', 
-              paddingBottom: '40px', 
+              paddingTop: '70px', 
+              paddingBottom: '41px', 
               paddingLeft: '20px', 
               paddingRight: '20px', 
               backgroundColor: '#70189F', 
@@ -1568,15 +1583,15 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             <div style={{ flex: 1, backgroundColor: '#ffffff', minHeight: '36px' }} />
           </div>
 
-          {/* Gray bottom strip */}
+          {/* Gray bottom strip (Android & iPhone) */}
           <div 
             style={{ 
               width: 'calc(100% + 40px)', 
               marginLeft: '-20px', 
               marginRight: '-20px', 
               height: '58px', 
-              backgroundColor: '#f2f3f5', 
-              borderTop: '1px solid #e5e7eb',
+              backgroundColor: '#f0f1f4', 
+              borderTop: '1px solid #e2e4e8',
               flexShrink: 0,
             }} 
           />
