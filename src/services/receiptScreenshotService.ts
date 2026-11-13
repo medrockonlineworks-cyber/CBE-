@@ -474,12 +474,17 @@ export async function captureReceiptElement(
 
     // Draw 58px gray bottom strip at the bottom edge of screenshot when requested
     if (options?.addGrayBottomStrip && ctx) {
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
       const bottomStripH = Math.round(58 * pixelRatio);
       const stripTopY = canvas.height - bottomStripH;
-      ctx.fillStyle = '#f4f5f7';
+      ctx.fillStyle = '#f2f3f5';
       ctx.fillRect(0, stripTopY, canvas.width, bottomStripH);
-      ctx.fillStyle = '#edf0f3';
+      ctx.fillStyle = '#e5e7eb';
       ctx.fillRect(0, stripTopY, canvas.width, Math.max(1, Math.round(1 * pixelRatio)));
+      ctx.restore();
     }
 
     const dataUrl = canvas.toDataURL('image/png');
@@ -505,12 +510,17 @@ export async function captureReceiptElement(
       if (options?.addGrayBottomStrip) {
         const fbCtx = fallbackCanvas.getContext('2d');
         if (fbCtx) {
+          fbCtx.save();
+          fbCtx.setTransform(1, 0, 0, 1, 0, 0);
+          fbCtx.globalAlpha = 1;
+          fbCtx.globalCompositeOperation = 'source-over';
           const bottomStripH = Math.round(58 * 2);
           const stripTopY = fallbackCanvas.height - bottomStripH;
-          fbCtx.fillStyle = '#f4f5f7';
+          fbCtx.fillStyle = '#f2f3f5';
           fbCtx.fillRect(0, stripTopY, fallbackCanvas.width, bottomStripH);
-          fbCtx.fillStyle = '#edf0f3';
+          fbCtx.fillStyle = '#e5e7eb';
           fbCtx.fillRect(0, stripTopY, fallbackCanvas.width, 2);
+          fbCtx.restore();
         }
       }
       return fallbackCanvas.toDataURL('image/png');

@@ -437,9 +437,9 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   // Gray bottom strip when taking screenshots
   if (options.addGrayBottomStrip ?? true) {
     const bottomBarHeight = 58 * scale;
-    ctx.fillStyle = '#f4f5f7';
+    ctx.fillStyle = '#f2f3f5';
     ctx.fillRect(0, height - bottomBarHeight, width, bottomBarHeight);
-    ctx.fillStyle = '#edf0f3';
+    ctx.fillStyle = '#e5e7eb';
     ctx.fillRect(0, height - bottomBarHeight, width, 1 * scale);
   }
 

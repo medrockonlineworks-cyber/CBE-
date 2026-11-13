@@ -1575,8 +1575,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
               marginLeft: '-20px', 
               marginRight: '-20px', 
               height: '58px', 
-              backgroundColor: '#f4f5f7', 
-              borderTop: '1px solid #edf0f3',
+              backgroundColor: '#f2f3f5', 
+              borderTop: '1px solid #e5e7eb',
               flexShrink: 0,
             }} 
           />
