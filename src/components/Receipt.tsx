@@ -607,11 +607,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
       let dataUrl: string | null = null;
 
-      // On mobile screens capture the exact live receipt edge-to-edge; on wide desktop screens use the mobile exact target
-      const isWideDesktop = typeof window !== 'undefined' && window.innerWidth > 500;
-      const captureTarget = isWideDesktop
-        ? (screenshotExportRef.current || receiptRef.current)
-        : (receiptRef.current || screenshotExportRef.current);
+      // Always capture the 100% inline-styled exact mobile target (immune to Android WebView Tailwind stylesheet cloning bugs)
+      const captureTarget = screenshotExportRef.current || receiptRef.current;
       if (captureTarget) {
         try {
           dataUrl = await captureReceiptElement(captureTarget, {
@@ -734,10 +731,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       const isIosShare = checkIsIOS() || isIPhone || PhoneSettingsService.isIPhoneDevice();
       let dataUrl = capturedScreenshotUrl;
       if (!dataUrl) {
-        const isWideDesktop = typeof window !== 'undefined' && window.innerWidth > 500;
-        const captureTarget = isWideDesktop
-          ? (screenshotExportRef.current || receiptRef.current)
-          : (receiptRef.current || screenshotExportRef.current);
+        const captureTarget = screenshotExportRef.current || receiptRef.current;
         if (captureTarget) {
           try {
             dataUrl = await captureReceiptElement(captureTarget, {
@@ -1184,7 +1178,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         {hideUiElements && (
           <div
             id="cbe-live-gray-bottom-strip"
-            className="w-full min-h-[max(26px,env(safe-area-inset-bottom,0px))] pb-[env(safe-area-inset-bottom,0px)] bg-[#f0f1f4] border-t border-[#e2e4e8] flex-shrink-0"
+            className="w-full min-h-[max(30px,env(safe-area-inset-bottom,0px))] pb-[env(safe-area-inset-bottom,0px)] bg-[#f0f1f4] border-t border-[#e2e4e8] flex-shrink-0"
           />
         )}
 
@@ -1199,7 +1193,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
       {/* When in Clean Screenshot Mode */}
       {hideUiElements && (
-        <div data-html2canvas-ignore="true" data-screenshot-exclude="true" className="fixed bottom-[38px] left-1/2 -translate-x-1/2 z-40 flex flex-col items-center justify-center shrink-0">
+        <div data-html2canvas-ignore="true" data-screenshot-exclude="true" className="fixed bottom-[42px] left-1/2 -translate-x-1/2 z-40 flex flex-col items-center justify-center shrink-0">
           <button
             type="button"
             onClick={toggleUiElements}
@@ -1605,7 +1599,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
               width: 'calc(100% + 40px)', 
               marginLeft: '-20px', 
               marginRight: '-20px', 
-              height: '26px', 
+              height: '30px', 
               backgroundColor: '#f0f1f4', 
               borderTop: '1px solid #e2e4e8',
               flexShrink: 0,

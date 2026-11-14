@@ -283,7 +283,7 @@ export async function captureReceiptElement(
     const extraScroll = innerScrollable ? Math.max(0, innerScrollable.scrollHeight - innerScrollable.clientHeight) : 0;
     const bottomActions = element.querySelector('#cbe-receipt-bottom-actions-container') as HTMLElement | null;
     const bottomActionsH = bottomActions ? bottomActions.offsetHeight : 0;
-    const bottomReserve = shouldAddGrayStrip ? 114 : 48;
+    const bottomReserve = shouldAddGrayStrip ? 118 : 48;
     const neededContentHeight = Math.ceil(rect.height || element.offsetHeight) - bottomActionsH + extraScroll + bottomReserve;
     fullHeight = Math.max(viewportH, neededContentHeight, options?.targetHeight || 800);
   }
@@ -389,7 +389,7 @@ export async function captureReceiptElement(
     clonedElement.style.backgroundColor = '#7A1FA2';
 
     if (clonedElement.id !== 'cbe-screenshot-exact-target') {
-      const stripHeight = 26;
+      const stripHeight = 30;
       const receiptContentHeight = shouldAddGrayStrip ? Math.max(600, fullHeight - stripHeight) : fullHeight;
       const existingReceipt = clonedDoc.getElementById('cbe-existing-receipt');
       if (existingReceipt) {
@@ -475,13 +475,50 @@ export async function captureReceiptElement(
     targetCtx.setTransform(1, 0, 0, 1, 0, 0);
     targetCtx.globalAlpha = 1;
     targetCtx.globalCompositeOperation = 'source-over';
-    const bottomStripH = Math.round(26 * scaleFactor);
+    const bottomStripH = Math.round(30 * scaleFactor);
     const stripTopY = Math.max(0, targetCanvas.height - bottomStripH);
     targetCtx.fillStyle = '#f0f1f4';
     targetCtx.fillRect(0, stripTopY, targetCanvas.width, bottomStripH);
     targetCtx.fillStyle = '#e2e4e8';
     targetCtx.fillRect(0, stripTopY, targetCanvas.width, Math.max(1, Math.round(1 * scaleFactor)));
     targetCtx.restore();
+  };
+
+  const validateCapturedCanvas = (targetCanvas: HTMLCanvasElement, scaleFactor: number) => {
+    const tCtx = targetCanvas.getContext('2d');
+    if (!tCtx) return;
+
+    // 1. Top header must have authentic CBE purple (#7A1FA2 / #70189F)
+    const sampleTop = tCtx.getImageData(Math.round(targetCanvas.width / 2), Math.round(25 * scaleFactor), 1, 1).data;
+    const isTopPurple = sampleTop[0] > 60 && sampleTop[0] < 165 && sampleTop[1] < 65 && sampleTop[2] > 110 && sampleTop[3] > 200;
+    if (!isTopPurple) {
+      throw new Error('Unstyled capture detected: missing purple header');
+    }
+
+    // 2. Middle of receipt must NOT be solid purple
+    const midY = Math.round(targetCanvas.height / 2);
+    const sampleMid = tCtx.getImageData(Math.round(targetCanvas.width / 2), midY, 1, 1).data;
+    const isMidPurple = sampleMid[0] > 60 && sampleMid[0] < 165 && sampleMid[1] < 65 && sampleMid[2] > 110;
+    if (isMidPurple) {
+      throw new Error('Blank solid purple capture detected');
+    }
+
+    // 3. Detail card left padding strip (x=26px, inside 20px margin and left of 38px text) must show #f3f3f5 gray fill
+    const probeX = Math.min(targetCanvas.width - 2, Math.round(26 * scaleFactor));
+    const startY = Math.round(220 * scaleFactor);
+    const endY = Math.min(targetCanvas.height - 2, Math.round(440 * scaleFactor));
+    const stepY = Math.max(4, Math.round(8 * scaleFactor));
+    let foundCardGrayFill = false;
+    for (let y = startY; y <= endY; y += stepY) {
+      const p = tCtx.getImageData(probeX, y, 1, 1).data;
+      if (p[0] >= 232 && p[0] <= 248 && p[1] >= 232 && p[1] <= 248 && p[2] >= 234 && p[2] <= 250 && p[3] > 240) {
+        foundCardGrayFill = true;
+        break;
+      }
+    }
+    if (!foundCardGrayFill) {
+      throw new Error('Unstyled capture detected: missing styled detail card fill');
+    }
   };
 
   try {
@@ -504,35 +541,14 @@ export async function captureReceiptElement(
       onclone: prepareClonedReceiptDom,
     });
 
-    // Sanity check: Ensure top header has authentic CBE purple color (#7A1FA2 / #70189F)
-    // AND ensure the middle is NOT purple (which would mean a blank solid purple capture like IMG_0748.png)
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      try {
-        const sampleTop = ctx.getImageData(Math.round(canvas.width / 2), Math.round(25 * pixelRatio), 1, 1).data;
-        // CBE purple: r: 122, g: 31, b: 162 (#7A1FA2)
-        const isTopPurple = sampleTop[0] > 60 && sampleTop[0] < 165 && sampleTop[1] < 65 && sampleTop[2] > 110 && sampleTop[3] > 200;
-        if (!isTopPurple) {
-          console.warn('[ScreenshotService] Detected unstyled capture (missing CBE purple header), rejecting for canvas fallback');
-          throw new Error('Unstyled capture detected: missing purple header');
-        }
-
-        // Sanity check 2: Middle of receipt must be white or light gray, NOT solid purple!
-        const midY = Math.round(canvas.height / 2);
-        const sampleMid = ctx.getImageData(Math.round(canvas.width / 2), midY, 1, 1).data;
-        const isMidPurple = sampleMid[0] > 60 && sampleMid[0] < 165 && sampleMid[1] < 65 && sampleMid[2] > 110;
-        if (isMidPurple) {
-          console.warn('[ScreenshotService] Detected blank solid purple capture, rejecting for canvas fallback');
-          throw new Error('Blank solid purple capture detected');
-        }
-      } catch (checkErr) {
-        if (checkErr instanceof Error && (checkErr.message.includes('Unstyled capture') || checkErr.message.includes('Blank solid purple'))) {
-          throw checkErr;
-        }
-      }
+    try {
+      validateCapturedCanvas(canvas, pixelRatio);
+    } catch (checkErr) {
+      console.warn('[ScreenshotService] Rejecting defective primary DOM capture:', checkErr);
+      throw checkErr;
     }
 
-    // Draw crisp 26px gray bottom strip at the bottom edge of screenshot
+    // Draw crisp 30px gray bottom strip at the bottom edge of screenshot
     paintGrayBottomStripOnCanvas(canvas, pixelRatio);
 
     const dataUrl = canvas.toDataURL('image/png');
@@ -543,7 +559,7 @@ export async function captureReceiptElement(
   } catch (primaryErr) {
     console.warn('[ScreenshotService] html2canvas-pro capture retry with standard options:', primaryErr);
     
-    // Fallback: html2canvas with standard options, cloned cleanup, and gray bottom strip
+    // Fallback: html2canvas with standard options, cloned cleanup, and strict validation
     try {
       const fallbackCanvas = await html2canvas(element, {
         scale: 2,
@@ -562,10 +578,11 @@ export async function captureReceiptElement(
         ignoreElements: isExcluded,
         onclone: prepareClonedReceiptDom,
       });
+      validateCapturedCanvas(fallbackCanvas, 2);
       paintGrayBottomStripOnCanvas(fallbackCanvas, 2);
       return fallbackCanvas.toDataURL('image/png');
     } catch (fallbackErr) {
-      console.error('[ScreenshotService] All capture methods failed:', fallbackErr);
+      console.error('[ScreenshotService] DOM capture rejected/failed, using Canvas 2D fallback:', fallbackErr);
       throw fallbackErr;
     }
   } finally {
