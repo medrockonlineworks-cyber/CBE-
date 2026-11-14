@@ -967,7 +967,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           </div>
 
           {/* SCROLLABLE MIDDLE TEXT & CARD PART: Only this upper text area scrolls between the static header and static bottom buttons */}
-          <div className={`bg-white -mt-px px-5 ${hideUiElements ? 'pb-12' : 'pb-4'} flex-1 overflow-y-auto overscroll-contain scrollbar-none min-h-0`}>
+          <div className={`bg-white -mt-px px-5 ${hideUiElements ? 'pb-24' : 'pb-4'} flex-1 overflow-y-auto overscroll-contain scrollbar-none min-h-0`}>
             <div className="pb-2">
               {/* Headline */}
               <h1 
@@ -977,8 +977,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 Transaction Completed Successfully!
               </h1>
 
-              {/* Main Transaction Summary Gray Card with visible border shadow */}
-              <div className="bg-[#f2f2f2] rounded-[24px] px-[18px] pt-[18px] pb-[20px] border border-[rgba(0,0,0,0.04)] shadow-[0_6px_20px_rgba(0,0,0,0.09),0_2px_6px_rgba(0,0,0,0.05)]">
+              {/* Main Transaction Summary Gray Card with crisp hairline border and subtle bottom edge (no blurry shadow) */}
+              <div className="bg-[#f3f3f5] rounded-[24px] px-[18px] pt-[18px] pb-[20px] border border-[#e3e4e8] shadow-[0_2px_1px_0_rgba(0,0,0,0.07)]">
                 <p className="text-[#929292] font-normal text-[12.5px] sm:text-[13px] mb-3">Transaction Summary</p>
 
                 {/* Paragraph Text with bold highlights and floating PAID badge */}
@@ -1184,7 +1184,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         {hideUiElements && (
           <div
             id="cbe-live-gray-bottom-strip"
-            className="w-full min-h-[max(58px,calc(58px+env(safe-area-inset-bottom,0px)))] pb-[env(safe-area-inset-bottom,0px)] bg-[#f0f1f4] border-t border-[#e2e4e8] flex-shrink-0"
+            className="w-full min-h-[max(26px,env(safe-area-inset-bottom,0px))] pb-[env(safe-area-inset-bottom,0px)] bg-[#f0f1f4] border-t border-[#e2e4e8] flex-shrink-0"
           />
         )}
 
@@ -1199,7 +1199,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
       {/* When in Clean Screenshot Mode */}
       {hideUiElements && (
-        <div data-html2canvas-ignore="true" data-screenshot-exclude="true" className="fixed bottom-[68px] left-1/2 -translate-x-1/2 z-40 flex flex-col items-center justify-center shrink-0">
+        <div data-html2canvas-ignore="true" data-screenshot-exclude="true" className="fixed bottom-[38px] left-1/2 -translate-x-1/2 z-40 flex flex-col items-center justify-center shrink-0">
           <button
             type="button"
             onClick={toggleUiElements}
@@ -1475,11 +1475,11 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             {/* Main Transaction Summary Gray Card */}
             <div 
               style={{ 
-                backgroundColor: '#f2f2f2', 
+                backgroundColor: '#f3f3f5', 
                 borderRadius: '24px', 
                 padding: '18px 18px 20px 18px', 
-                border: '1px solid rgba(0, 0, 0, 0.04)', 
-                boxShadow: '0 6px 20px rgba(0, 0, 0, 0.09), 0 2px 6px rgba(0, 0, 0, 0.05)',
+                border: '1px solid #e3e4e8', 
+                boxShadow: '0 2px 1px 0 rgba(0, 0, 0, 0.07)',
                 display: 'flex', 
                 flexDirection: 'column', 
                 gap: '0px',
@@ -1596,7 +1596,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             </div>
 
             {/* Clean white space extending down to gray bottom strip */}
-            <div style={{ flex: 1, backgroundColor: '#ffffff', minHeight: '36px' }} />
+            <div style={{ flex: 1, backgroundColor: '#ffffff', minHeight: '88px' }} />
           </div>
 
           {/* Gray bottom strip (Android & iPhone) */}
@@ -1605,7 +1605,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
               width: 'calc(100% + 40px)', 
               marginLeft: '-20px', 
               marginRight: '-20px', 
-              height: '58px', 
+              height: '26px', 
               backgroundColor: '#f0f1f4', 
               borderTop: '1px solid #e2e4e8',
               flexShrink: 0,

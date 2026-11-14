@@ -283,7 +283,7 @@ export async function captureReceiptElement(
     const extraScroll = innerScrollable ? Math.max(0, innerScrollable.scrollHeight - innerScrollable.clientHeight) : 0;
     const bottomActions = element.querySelector('#cbe-receipt-bottom-actions-container') as HTMLElement | null;
     const bottomActionsH = bottomActions ? bottomActions.offsetHeight : 0;
-    const bottomReserve = shouldAddGrayStrip ? 92 : 36;
+    const bottomReserve = shouldAddGrayStrip ? 114 : 48;
     const neededContentHeight = Math.ceil(rect.height || element.offsetHeight) - bottomActionsH + extraScroll + bottomReserve;
     fullHeight = Math.max(viewportH, neededContentHeight, options?.targetHeight || 800);
   }
@@ -389,7 +389,7 @@ export async function captureReceiptElement(
     clonedElement.style.backgroundColor = '#7A1FA2';
 
     if (clonedElement.id !== 'cbe-screenshot-exact-target') {
-      const stripHeight = 58;
+      const stripHeight = 26;
       const receiptContentHeight = shouldAddGrayStrip ? Math.max(600, fullHeight - stripHeight) : fullHeight;
       const existingReceipt = clonedDoc.getElementById('cbe-existing-receipt');
       if (existingReceipt) {
@@ -417,6 +417,9 @@ export async function captureReceiptElement(
         clonedScrollable.style.maxHeight = 'none';
         clonedScrollable.style.flex = '1 1 auto';
         clonedScrollable.style.backgroundColor = '#ffffff';
+        if (shouldAddGrayStrip) {
+          clonedScrollable.style.paddingBottom = '88px';
+        }
       }
 
       const bottomBar = clonedDoc.getElementById('cbe-receipt-bottom-actions-container');
@@ -472,7 +475,7 @@ export async function captureReceiptElement(
     targetCtx.setTransform(1, 0, 0, 1, 0, 0);
     targetCtx.globalAlpha = 1;
     targetCtx.globalCompositeOperation = 'source-over';
-    const bottomStripH = Math.round(58 * scaleFactor);
+    const bottomStripH = Math.round(26 * scaleFactor);
     const stripTopY = Math.max(0, targetCanvas.height - bottomStripH);
     targetCtx.fillStyle = '#f0f1f4';
     targetCtx.fillRect(0, stripTopY, targetCanvas.width, bottomStripH);
@@ -529,7 +532,7 @@ export async function captureReceiptElement(
       }
     }
 
-    // Draw crisp 58px gray bottom strip at the bottom edge of screenshot
+    // Draw crisp 26px gray bottom strip at the bottom edge of screenshot
     paintGrayBottomStripOnCanvas(canvas, pixelRatio);
 
     const dataUrl = canvas.toDataURL('image/png');
