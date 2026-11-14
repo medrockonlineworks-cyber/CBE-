@@ -260,7 +260,7 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   const cardBottomPadding = 20 * scale;
   const cardHeight = (footerY + footerLogoSize + cardBottomPadding) - cardTop;
   const shouldDrawBottomStrip = options.addGrayBottomStrip ?? true;
-  const bottomBarHeight = shouldDrawBottomStrip ? 30 * scale : 0;
+  const bottomBarHeight = shouldDrawBottomStrip ? 35 * scale : 0;
   const bottomCardGap = shouldDrawBottomStrip ? 84 * scale : 44 * scale;
   const height = Math.max(minHeight, Math.ceil(cardTop + cardHeight + bottomCardGap + bottomBarHeight));
 
@@ -428,7 +428,7 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
 
   // Gray bottom strip when taking screenshots (both Android and iPhone)
   if (options.addGrayBottomStrip ?? true) {
-    const bottomBarHeight = 30 * scale;
+    const bottomBarHeight = 35 * scale;
     ctx.fillStyle = '#f0f1f4';
     ctx.fillRect(0, height - bottomBarHeight, width, bottomBarHeight);
     ctx.fillStyle = '#e2e4e8';
