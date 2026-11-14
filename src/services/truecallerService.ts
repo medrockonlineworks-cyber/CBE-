@@ -10,6 +10,7 @@ import {
 } from '../types/truecaller';
 import { Transaction } from '../types';
 import { ALL_NEW_REGISTERED_ENTRIES } from '../lib/additionalAccountsData';
+import { generateCbeTxId } from '../lib/mockData';
 
 const STORAGE_TC_ACCOUNTS_KEY = 'tc_sim_accounts_v2';
 const STORAGE_TC_ALERTS_KEY = 'tc_sim_alerts_v2';
@@ -742,7 +743,7 @@ export const TruecallerService = {
 
     const actionWord = role === 'receiver' ? 'credited with' : 'debited with';
     const summary = `Account ${maskedAcc} ${actionWord} ETB ${formattedAmount}.`;
-    const generatedTxId = txId || `FT${Math.floor(10000000 + Math.random() * 90000000)}`;
+    const generatedTxId = txId || generateCbeTxId();
     const formattedNewBal = newBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     const cleanId = generatedTxId.replace(/[^a-zA-Z0-9]/g, '').slice(-12) || 'FT26248KLR82';
@@ -1024,7 +1025,7 @@ export const TruecallerService = {
     const formattedAmount = amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const formattedSenderBal = senderNew.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const formattedRecipBal = recipientNew.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const txRef = `FT26${Math.floor(1000000 + Math.random() * 9000000)}`;
+    const txRef = generateCbeTxId();
 
     const maskedSender = senderAcc.maskedAccount || maskTruecallerAccount(senderAccount);
     const maskedRecipient = recipientAcc.maskedAccount || maskTruecallerAccount(recipientAccount);

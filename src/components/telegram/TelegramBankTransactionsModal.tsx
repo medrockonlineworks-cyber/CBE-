@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Transaction } from '../../types';
 import { TelegramSimulatorService } from '../../services/telegramSimulatorService';
+import { generateCbeTxId } from '../../lib/mockData';
 
 interface TelegramBankTransactionsModalProps {
   isOpen: boolean;
@@ -43,7 +44,7 @@ export default function TelegramBankTransactionsModal({
     if (!customRecipient.trim() || !customAmount) return;
 
     const amountNum = parseFloat(customAmount);
-    const refStr = customRef.trim() || `FT26${Math.floor(100000 + Math.random() * 900000)}AI79`;
+    const refStr = customRef.trim() || generateCbeTxId();
 
     const newTx: Partial<Transaction> = {
       id: `tx-${Date.now()}`,

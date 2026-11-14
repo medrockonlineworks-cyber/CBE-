@@ -680,14 +680,17 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
     if (smsMessage) {
       const msg = smsMessage.message || '';
       
-      // Extract FT transaction id if available in message (e.g. FT26233ZJ908)
-      const ftMatch = msg.match(/FT\d{5,8}[A-Z0-9]{3,6}/i);
+      // Extract 12-char transaction id if available in receipt link or FT message (supports custom starting prefixes)
+      const urlMatch = msg.match(/mbreceipt\.cbe\.com\.et\/v2-(?:hfHCxG)?([A-Z0-9]{12})/i);
+      const ftMatch = msg.match(/\bFT[A-Z0-9]{10}\b/i);
       let refId = smsMessage.transactionId;
-      if (!refId && ftMatch) {
-        refId = ftMatch[0];
+      if (!refId && urlMatch?.[1]) {
+        refId = urlMatch[1].toUpperCase();
+      } else if (!refId && ftMatch?.[0]) {
+        refId = ftMatch[0].toUpperCase();
       }
       if (!refId) {
-        refId = 'FT26233ZJ908';
+        refId = formatTo12CharTxId();
       }
 
       // Check if it was a received credit (like Kasahun transfer in screenshot)

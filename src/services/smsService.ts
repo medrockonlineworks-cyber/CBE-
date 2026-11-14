@@ -2,6 +2,7 @@ import { SmsMessage, SmsType, SmsAccount } from '../types/sms';
 import { Transaction } from '../types';
 import { calculateCbeFee } from '../lib/cbeTariff';
 import { ALL_NEW_REGISTERED_ENTRIES } from '../lib/additionalAccountsData';
+import { generateCbeTxId } from '../lib/mockData';
 
 const STORAGE_MESSAGES_KEY = 'bank_sms_messages_v6';
 const STORAGE_ACCOUNTS_KEY = 'bank_sms_accounts_v6';
@@ -1077,7 +1078,7 @@ export class SmsService {
     let currentBalance = senderAccObj?.balance ?? 18450.50;
     currentBalance = Math.max(0, currentBalance - totalDebited);
 
-    const txId = 'FT' + Math.floor(260000000000 + Math.random() * 90000000000).toString();
+    const txId = generateCbeTxId();
 
     const mockTx: Transaction = {
       id: txId,

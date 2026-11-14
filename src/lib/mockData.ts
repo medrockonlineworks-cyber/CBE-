@@ -615,40 +615,158 @@ const now = Date.now();
 const hour = 3600 * 1000;
 const day = 24 * hour;
 
-export function generateCbeTxId(): string {
-  const yearShort = new Date().getFullYear().toString().slice(-2); // e.g. "26"
-  // 4 random digits (0000 - 9999)
-  const rand4 = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-  // 2 random uppercase letters (A-Z)
+const TX_PREFIX_STORAGE_KEY = 'tana_starting_tx_prefix';
+const GENERATED_TX_IDS_STORAGE_KEY = 'tana_generated_tx_ids';
+
+export function sanitizeStartingTxPrefix(raw?: string | null): string {
+  if (!raw) return '';
+  return raw
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '')
+    .slice(0, 10);
+}
+
+export function getSavedStartingTxPrefix(): string {
+  try {
+    if (typeof localStorage === 'undefined') return '';
+    return sanitizeStartingTxPrefix(localStorage.getItem(TX_PREFIX_STORAGE_KEY));
+  } catch {
+    return '';
+  }
+}
+
+export function getDefaultStartingTxPrefix(): string {
+  const yearShort = new Date().getFullYear().toString().slice(-2);
+  return `FT${yearShort}`;
+}
+
+export function getEffectiveStartingTxPrefix(): string {
+  return getSavedStartingTxPrefix() || getDefaultStartingTxPrefix();
+}
+
+function getCryptoRandomInt(maxExclusive: number): number {
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+    const arr = new Uint32Array(1);
+    crypto.getRandomValues(arr);
+    return arr[0] % maxExclusive;
+  }
+  return Math.floor(Math.random() * maxExclusive);
+}
+
+function buildTxCodeWithPrefix(prefix: string, forceAlnumTail = false): string {
+  const cleanPrefix = sanitizeStartingTxPrefix(prefix) || getDefaultStartingTxPrefix();
   const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  const char1 = letters[Math.floor(Math.random() * letters.length)];
-  const char2 = letters[Math.floor(Math.random() * letters.length)];
-  // 2 random digits (00 - 99)
-  const rand2 = Math.floor(Math.random() * 100).toString().padStart(2, '0');
-  
-  return `FT${yearShort}${rand4}${char1}${char2}${rand2}`;
+  const digits = '0123456789';
+  const alnum = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+  let result = cleanPrefix;
+  for (let i = cleanPrefix.length; i < 12; i++) {
+    if (forceAlnumTail) {
+      result += alnum[getCryptoRandomInt(alnum.length)];
+    } else if (i === 8 || i === 9) {
+      result += letters[getCryptoRandomInt(letters.length)];
+    } else {
+      result += digits[getCryptoRandomInt(digits.length)];
+    }
+  }
+  return result.slice(0, 12);
+}
+
+function collectUsedTxIds(): Set<string> {
+  const used = new Set<string>(INITIAL_TRANSACTIONS.map((t) => t.id.toUpperCase()));
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const storedTxs = localStorage.getItem('tana_transactions');
+      if (storedTxs) {
+        const parsed = JSON.parse(storedTxs);
+        if (Array.isArray(parsed)) {
+          for (const item of parsed) {
+            if (item?.id) used.add(String(item.id).toUpperCase());
+            if (item?.reference) used.add(String(item.reference).toUpperCase());
+          }
+        }
+      }
+      const storedHistory = localStorage.getItem(GENERATED_TX_IDS_STORAGE_KEY);
+      if (storedHistory) {
+        const parsedHist = JSON.parse(storedHistory);
+        if (Array.isArray(parsedHist)) {
+          for (const id of parsedHist) {
+            if (id) used.add(String(id).toUpperCase());
+          }
+        }
+      }
+    }
+  } catch {
+    // ignore storage read issues
+  }
+  return used;
+}
+
+function recordGeneratedTxId(id: string): void {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    const raw = localStorage.getItem(GENERATED_TX_IDS_STORAGE_KEY);
+    const list: string[] = raw ? JSON.parse(raw) : [];
+    const next = [id, ...list.filter((x) => x !== id)].slice(0, 2000);
+    localStorage.setItem(GENERATED_TX_IDS_STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    // ignore quota issues
+  }
+}
+
+export function previewCbeTxId(customPrefix?: string): string {
+  const prefix = customPrefix !== undefined
+    ? (sanitizeStartingTxPrefix(customPrefix) || getDefaultStartingTxPrefix())
+    : getEffectiveStartingTxPrefix();
+  return buildTxCodeWithPrefix(prefix, false);
+}
+
+export function generateCbeTxId(customPrefix?: string): string {
+  const prefix = customPrefix !== undefined
+    ? (sanitizeStartingTxPrefix(customPrefix) || getDefaultStartingTxPrefix())
+    : getEffectiveStartingTxPrefix();
+  const used = collectUsedTxIds();
+
+  for (let attempt = 0; attempt < 200; attempt++) {
+    const candidate = buildTxCodeWithPrefix(prefix, attempt >= 120);
+    if (!used.has(candidate)) {
+      recordGeneratedTxId(candidate);
+      return candidate;
+    }
+  }
+
+  // Deterministic fallback guaranteed unique if random space were ever saturated
+  const fallbackSuffix = Date.now().toString(36).toUpperCase().slice(-(12 - prefix.length)).padStart(12 - prefix.length, '0');
+  const fallback = (prefix + fallbackSuffix).slice(0, 12);
+  recordGeneratedTxId(fallback);
+  return fallback;
 }
 
 export function formatTo12CharTxId(rawId?: string): string {
   if (!rawId) return generateCbeTxId();
   const cleaned = rawId.trim().toUpperCase();
-  if (/^FT\d{6}[A-Z]{2}\d{2}$/.test(cleaned) || (cleaned.startsWith('FT') && cleaned.length === 12)) {
+  if (/^FT\d{6}[A-Z]{2}\d{2}$/.test(cleaned) || /^[A-Z0-9]{12}$/.test(cleaned)) {
     return cleaned;
   }
-  // Generate deterministic 12-char ID from raw string hash
+  // Generate deterministic 12-char ID from raw string hash preserving configured prefix
   let hash = 0;
   for (let i = 0; i < cleaned.length; i++) {
     hash = (hash << 5) - hash + cleaned.charCodeAt(i);
     hash |= 0;
   }
   const absHash = Math.abs(hash);
-  const yearShort = new Date().getFullYear().toString().slice(-2);
-  const digits4 = (absHash % 10000).toString().padStart(4, '0');
+  const prefix = getEffectiveStartingTxPrefix();
   const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  const l1 = letters[Math.floor((absHash / 13) % 26)];
-  const l2 = letters[Math.floor((absHash / 37) % 26)];
-  const d2 = (Math.floor(absHash / 7) % 100).toString().padStart(2, '0');
-  return `FT${yearShort}${digits4}${l1}${l2}${d2}`;
+  let result = prefix;
+  for (let i = prefix.length; i < 12; i++) {
+    if (i === 8 || i === 9) {
+      result += letters[Math.floor((absHash / (i === 8 ? 13 : 37)) % 26)];
+    } else {
+      result += String(Math.floor((absHash / (i + 3)) % 10));
+    }
+  }
+  return result.slice(0, 12);
 }
 
 const INITIAL_TRANSACTIONS: Transaction[] = [
@@ -2737,5 +2855,35 @@ export class LocalDb {
 
   static setBankStampPosition(pos: StampPosition | null): void {
     this.setWebStampPosition(pos);
+  }
+
+  static getStartingTxPrefix(): string {
+    return getSavedStartingTxPrefix();
+  }
+
+  static getEffectiveStartingTxPrefix(): string {
+    return getEffectiveStartingTxPrefix();
+  }
+
+  static setStartingTxPrefix(prefix: string | null): string {
+    const normalized = sanitizeStartingTxPrefix(prefix);
+    try {
+      if (!normalized) {
+        localStorage.removeItem(TX_PREFIX_STORAGE_KEY);
+      } else {
+        localStorage.setItem(TX_PREFIX_STORAGE_KEY, normalized);
+      }
+    } catch (err) {
+      console.warn('[LocalDb] Failed writing starting transaction prefix to localStorage:', err);
+    }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cbe_tx_prefix_updated', {
+        detail: {
+          prefix: normalized,
+          effectivePrefix: normalized || getDefaultStartingTxPrefix(),
+        }
+      }));
+    }
+    return normalized;
   }
 }

@@ -7,7 +7,7 @@ import {
   TransactionMockData 
 } from '../utils/telegramReceiptGenerator';
 import { buildSeptember15DemoMessages } from '../utils/telegramDemoChatData';
-import { LocalDb } from '../lib/mockData';
+import { LocalDb, generateCbeTxId } from '../lib/mockData';
 import { Transaction } from '../types';
 
 const STORAGE_KEY = 'telegram_simulator_chats_v5';
@@ -523,7 +523,7 @@ export class TelegramSimulatorService {
     const displayContactName = nameParts.length >= 2 ? `${nameParts[0]} ${nameParts[1]}` : receiverFullName;
 
     const amount = Number(tx.amount || 200000);
-    const ref = tx.reference || `FT26${Math.floor(100000 + Math.random() * 900000)}AI79`;
+    const ref = tx.reference || generateCbeTxId();
     const payerName = tx.senderName || 'Global Online Market';
     const payerAccount = tx.senderAccount ? `*******${tx.senderAccount.slice(-4)}` : '*******6671';
     const receiverAccount = tx.recipientAccount ? `1********${tx.recipientAccount.slice(-4)}` : '1********6450';
@@ -708,7 +708,7 @@ export class TelegramSimulatorService {
     const displayContactName = config.receiverName;
 
     const amount = Number(config.amount || 200000);
-    const ref = config.referenceNo || `FT26${Math.floor(100000 + Math.random() * 900000)}AI79`;
+    const ref = config.referenceNo || generateCbeTxId();
     const payerName = 'Global Online Market';
     const payerAccount = '*******6671';
     const receiverAccount = config.receiverAccount ? `1********${config.receiverAccount.slice(-4)}` : '1********6450';

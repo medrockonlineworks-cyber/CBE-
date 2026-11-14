@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { UserProfile } from '../types';
-import { LocalDb, DEFAULT_CBE_LOGO } from '../lib/mockData';
+import { LocalDb, DEFAULT_CBE_LOGO, previewCbeTxId, sanitizeStartingTxPrefix, getDefaultStartingTxPrefix } from '../lib/mockData';
 import { SmsService } from '../services/smsService';
 import { TruecallerService } from '../services/truecallerService';
 import { BiometricAuthService, BiometricAvailability } from '../services/biometricAuthService';
@@ -38,7 +38,8 @@ import {
   Loader2,
   RefreshCw,
   ShieldCheck,
-  MonitorSmartphone
+  MonitorSmartphone,
+  Hash
 } from 'lucide-react';
 import BankLogoModal from './BankLogoModal';
 import AppInstallPrompt from './AppInstallPrompt';
@@ -111,6 +112,32 @@ export default function Profile({
   const [activeSessions, setActiveSessions] = useState<ActiveDeviceSession[]>([]);
   const [showSessionsPanel, setShowSessionsPanel] = useState(false);
   const [loadingSessions, setLoadingSessions] = useState(false);
+
+  // Starting Transaction ID Code customization
+  const [savedTxPrefix, setSavedTxPrefix] = useState<string>(() => LocalDb.getStartingTxPrefix());
+  const [txPrefixInput, setTxPrefixInput] = useState<string>(() => LocalDb.getStartingTxPrefix());
+  const buildDistinctTxSamples = (prefixVal: string): [string, string] => {
+    const first = previewCbeTxId(prefixVal);
+    let second = previewCbeTxId(prefixVal);
+    for (let i = 0; i < 8 && second === first; i++) {
+      second = previewCbeTxId(prefixVal);
+    }
+    return [first, second];
+  };
+  const [txPreviewSamples, setTxPreviewSamples] = useState<[string, string]>(() =>
+    buildDistinctTxSamples(LocalDb.getStartingTxPrefix())
+  );
+
+  useEffect(() => {
+    const handlePrefixUpdated = () => {
+      const currentSaved = LocalDb.getStartingTxPrefix();
+      setSavedTxPrefix(currentSaved);
+      setTxPrefixInput(currentSaved);
+      setTxPreviewSamples(buildDistinctTxSamples(currentSaved));
+    };
+    window.addEventListener('cbe_tx_prefix_updated', handlePrefixUpdated);
+    return () => window.removeEventListener('cbe_tx_prefix_updated', handlePrefixUpdated);
+  }, []);
 
   // Security Settings Re-Authentication Gate
   const [securityUnlockedUntil, setSecurityUnlockedUntil] = useState<number>(0);
@@ -1182,6 +1209,185 @@ export default function Profile({
                 )}
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Starting Transaction ID Code Settings */}
+        <div className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 space-y-4">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 bg-emerald-50 text-emerald-800 rounded-xl">
+                <Hash className="w-4.5 h-4.5" />
+              </div>
+              <div>
+                <h3 className="text-xs font-extrabold text-emerald-950 uppercase tracking-wider">Starting Transaction ID Code</h3>
+                <p className="text-[10px] text-gray-400">System fills remaining chars cleanly & uniquely</p>
+              </div>
+            </div>
+            <span className="text-[10px] font-mono font-bold px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200">
+              {savedTxPrefix ? `Active: ${savedTxPrefix}` : `Auto: ${getDefaultStartingTxPrefix()}`}
+            </span>
+          </div>
+
+          <div className="space-y-2.5">
+            <label htmlFor="input-tx-prefix" className="block text-[11px] font-bold text-gray-600">
+              Custom Starting Code (2–10 letters/numbers)
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                id="input-tx-prefix"
+                type="text"
+                maxLength={10}
+                value={txPrefixInput}
+                onChange={(e) => {
+                  const cleaned = sanitizeStartingTxPrefix(e.target.value);
+                  setTxPrefixInput(cleaned);
+                  setTxPreviewSamples(buildDistinctTxSamples(cleaned));
+                  setErrorMsg('');
+                }}
+                placeholder={`e.g. FT2631 or FT2345 (Auto: ${getDefaultStartingTxPrefix()})`}
+                className="flex-1 px-3.5 py-2.5 rounded-xl border border-gray-200 bg-gray-50 text-xs font-mono font-extrabold tracking-wider text-gray-900 uppercase focus:outline-none focus:ring-2 focus:ring-emerald-700/30 focus:border-emerald-700 focus:bg-white transition"
+              />
+              <button
+                id="btn-refresh-tx-preview"
+                type="button"
+                onClick={() => setTxPreviewSamples(buildDistinctTxSamples(txPrefixInput))}
+                title="Generate new unique preview codes"
+                className="p-2.5 rounded-xl border border-gray-200 bg-gray-50 hover:bg-emerald-50 text-gray-600 hover:text-emerald-800 transition cursor-pointer"
+              >
+                <Shuffle className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Quick Presets */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="text-[10px] font-bold text-gray-400 mr-1">Presets:</span>
+              {['FT2631', 'FT2345', 'FT26'].map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  onClick={() => {
+                    setTxPrefixInput(preset);
+                    setTxPreviewSamples(buildDistinctTxSamples(preset));
+                    setErrorMsg('');
+                  }}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold border transition cursor-pointer ${
+                    txPrefixInput === preset
+                      ? 'bg-emerald-800 text-white border-emerald-800 shadow-xs'
+                      : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-emerald-50 hover:text-emerald-800'
+                  }`}
+                >
+                  {preset}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  setTxPrefixInput('');
+                  setTxPreviewSamples(buildDistinctTxSamples(''));
+                  setErrorMsg('');
+                }}
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition cursor-pointer ${
+                  txPrefixInput === ''
+                    ? 'bg-emerald-800 text-white border-emerald-800 shadow-xs'
+                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-emerald-50 hover:text-emerald-800'
+                }`}
+              >
+                Auto ({getDefaultStartingTxPrefix()})
+              </button>
+            </div>
+
+            {/* Live Unique Code Preview */}
+            <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  Live 12-Char Unique ID Preview
+                </span>
+                <span className="text-[10px] font-semibold text-emerald-700">
+                  {(sanitizeStartingTxPrefix(txPrefixInput) || getDefaultStartingTxPrefix()).length} prefix + {12 - (sanitizeStartingTxPrefix(txPrefixInput) || getDefaultStartingTxPrefix()).length} unique
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {txPreviewSamples.map((sample, idx) => {
+                  const activeLen = (sanitizeStartingTxPrefix(txPrefixInput) || getDefaultStartingTxPrefix()).length;
+                  const head = sample.slice(0, activeLen);
+                  const tail = sample.slice(activeLen);
+                  return (
+                    <div
+                      key={`${sample}-${idx}`}
+                      className="flex items-center justify-between bg-white px-3 py-2 rounded-xl border border-slate-200 font-mono text-xs tracking-wider"
+                    >
+                      <span>
+                        <span className="font-black text-emerald-800">{head}</span>
+                        <span className="font-bold text-slate-500">{tail}</span>
+                      </span>
+                      <span className="text-[9px] font-sans font-bold text-slate-400">#{idx + 1}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 pt-1">
+              <button
+                id="btn-save-tx-prefix"
+                type="button"
+                onClick={() => {
+                  setErrorMsg('');
+                  setSuccessMsg('');
+                  const cleaned = sanitizeStartingTxPrefix(txPrefixInput);
+                  if (cleaned.length > 0 && cleaned.length < 2) {
+                    setErrorMsg('Starting transaction ID code must be at least 2 characters (e.g. FT2631), or use Reset to Auto.');
+                    return;
+                  }
+                  const saved = LocalDb.setStartingTxPrefix(cleaned || null);
+                  setSavedTxPrefix(saved);
+                  setTxPrefixInput(saved);
+                  setTxPreviewSamples(buildDistinctTxSamples(saved));
+                  LocalDb.addAuditLog(
+                    currentUser.id,
+                    currentUser.email,
+                    'TX_PREFIX_UPDATE',
+                    saved
+                      ? `Updated starting transaction ID code to "${saved}".`
+                      : `Reset starting transaction ID code to Auto (${getDefaultStartingTxPrefix()}).`
+                  );
+                  setSuccessMsg(
+                    saved
+                      ? `Starting transaction ID code saved as "${saved}". Every new transaction will get a unique 12-char ID starting with ${saved}.`
+                      : `Transaction ID prefix reset to Auto (${getDefaultStartingTxPrefix()}).`
+                  );
+                  setTimeout(() => setSuccessMsg(''), 4000);
+                }}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-xs shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <Save className="w-3.5 h-3.5" />
+                Save Starting Code
+              </button>
+              <button
+                id="btn-reset-tx-prefix"
+                type="button"
+                onClick={() => {
+                  setErrorMsg('');
+                  setSuccessMsg('');
+                  LocalDb.setStartingTxPrefix(null);
+                  setSavedTxPrefix('');
+                  setTxPrefixInput('');
+                  setTxPreviewSamples(buildDistinctTxSamples(''));
+                  LocalDb.addAuditLog(
+                    currentUser.id,
+                    currentUser.email,
+                    'TX_PREFIX_RESET',
+                    `Reset starting transaction ID code to Auto (${getDefaultStartingTxPrefix()}).`
+                  );
+                  setSuccessMsg(`Starting transaction ID code reset to Auto (${getDefaultStartingTxPrefix()}).`);
+                  setTimeout(() => setSuccessMsg(''), 4000);
+                }}
+                className="py-2.5 px-3.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs transition cursor-pointer"
+              >
+                Reset
+              </button>
+            </div>
           </div>
         </div>
 
