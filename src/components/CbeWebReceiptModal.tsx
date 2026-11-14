@@ -676,7 +676,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
     };
   }, [standalone, receiptData.refId]);
 
-  const webReceiptUrl = `https://apps.cbe.com.et:100/?id=${receiptData.refId}`;
+  const webReceiptUrl = `https://mbreceipt.cbe.com.et/v2-hfHCxG${receiptData.refId}`;
 
   // Helper to convert SVG data URIs into high-resolution PNG data URLs for canvas & PDF export
   const convertSvgDataUriToPng = (svgDataUri: string, size = 450): Promise<string> => {
@@ -1219,16 +1219,11 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
               <path d="M12 7.5h.01M12 11v5" strokeWidth="2.2" strokeLinecap="round" />
             </svg>
 
-            <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis text-[14px] text-[#e5e5e5] font-normal tracking-tight font-sans">
-              {viewMode === 'pdf' ? (
-                <span className="flex items-center gap-1.5">
-                  <span className="bg-red-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-2xs leading-none">PDF</span>
-                  <span className="truncate">apps.cbe.com.et:100/pdf/?id={receiptData.refId}</span>
-                </span>
-              ) : copiedUrl ? (
+            <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis text-[13.5px] text-[#e5e5e5] font-normal tracking-tight font-sans">
+              {copiedUrl ? (
                 <span className="text-emerald-400 font-bold text-xs">Copied URL to clipboard!</span>
               ) : (
-                <span>apps.cbe.com.et:100/?id={receiptData.refId}</span>
+                <span className="truncate block">{webReceiptUrl}</span>
               )}
             </div>
           </div>
@@ -1300,18 +1295,12 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
             </svg>
 
             <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis flex items-center">
-              {viewMode === 'pdf' ? (
-                <div className="flex items-center gap-1.5 text-[13px] text-[#e3e3e8] font-normal tracking-tight font-sans">
-                  <span className="bg-red-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-2xs leading-none">PDF</span>
-                  <span className="truncate">apps.cbe.com.et:100/pdf/?id={receiptData.refId}</span>
-                </div>
-              ) : copiedUrl ? (
+              {copiedUrl ? (
                 <span className="text-emerald-400 font-bold text-xs">Copied URL to clipboard!</span>
               ) : (
-                <div className="text-[14px] text-[#e3e3e8] font-normal tracking-tight font-sans flex items-center">
-                  <span className="inline-block opacity-65">s</span>
-                  <span>.cbe.com.et:100</span>
-                </div>
+                <span className="text-[13.5px] text-[#e3e3e8] font-normal tracking-tight font-sans truncate">
+                  {webReceiptUrl}
+                </span>
               )}
             </div>
           </div>
@@ -1388,8 +1377,8 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
 
             <div className="flex items-center gap-1.5 overflow-hidden mx-2">
               <Lock className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
-              <span className="text-[13.5px] text-[#f2f2f7] font-sans font-medium tracking-tight truncate">
-                {viewMode === 'pdf' ? `apps.cbe.com.et:100/pdf/?id=${receiptData.refId}` : 'apps.cbe.com.et:100'}
+              <span className="text-[13px] text-[#f2f2f7] font-sans font-medium tracking-tight truncate">
+                {copiedUrl ? 'Copied!' : webReceiptUrl}
               </span>
             </div>
 
@@ -1449,8 +1438,8 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
           >
             <div className="flex items-center gap-1.5 overflow-hidden">
               <Lock className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
-              <span className="text-[13.5px] text-white font-sans tracking-tight truncate">
-                {viewMode === 'pdf' ? `apps.cbe.com.et:100/pdf/?id=${receiptData.refId}` : 'apps.cbe.com.et:100'}
+              <span className="text-[13px] text-white font-sans tracking-tight truncate">
+                {copiedUrl ? 'Copied!' : webReceiptUrl}
               </span>
             </div>
             <button
@@ -1523,7 +1512,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
             <div className="flex items-center gap-1.5 overflow-hidden">
               <SlidersHorizontal className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
               <span className="text-[13px] text-white font-sans tracking-tight truncate">
-                apps.cbe.com.et:100
+                {copiedUrl ? 'Copied!' : webReceiptUrl}
               </span>
             </div>
           </div>
@@ -1570,7 +1559,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
               <Shield className="w-3.5 h-3.5 text-purple-400 shrink-0" />
               <Lock className="w-3 h-3 text-neutral-400 shrink-0" />
               <span className="text-[13px] text-neutral-100 font-sans tracking-tight truncate">
-                apps.cbe.com.et:100
+                {copiedUrl ? 'Copied!' : webReceiptUrl}
               </span>
             </div>
             <button
@@ -2077,7 +2066,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                 className="w-full px-3 py-2 rounded-xl bg-neutral-800/60 hover:bg-neutral-800 text-neutral-200 hover:text-white text-xs font-medium flex items-center gap-2 transition cursor-pointer"
               >
                 <Copy className="w-3.5 h-3.5 text-neutral-400" />
-                <span>Copy Receipt URL (apps.cbe.com.et:100)</span>
+                <span>Copy Receipt URL (mbreceipt.cbe.com.et)</span>
               </button>
 
               <button

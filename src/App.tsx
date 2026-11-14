@@ -31,6 +31,9 @@ import { CbeWebReceiptModal } from './components/CbeWebReceiptModal';
 import {
   cacheCurrentPublicOriginIfReachable,
   decodeWebReceiptPayload,
+  extractWebReceiptIdFromPath,
+  loadWebReceiptPayload,
+  saveWebReceiptPayload,
   WebReceiptUrlPayload,
 } from './services/webReceiptBrowserService';
 import { ChevronLeft, ArrowLeft, RefreshCw, AlertCircle } from 'lucide-react';
@@ -138,7 +141,9 @@ export default function App() {
       const appParam = (search.get('app') || search.get('view') || '').toLowerCase();
       const hash = (window.location.hash || '').toLowerCase();
 
-      if (path === '/webreceipt' || appParam === 'webreceipt' || hash === '#webreceipt' || hash === '#/webreceipt') return 'webreceipt';
+      const pathId = extractWebReceiptIdFromPath(window.location.pathname);
+
+      if (pathId || path === '/webreceipt' || appParam === 'webreceipt' || hash === '#webreceipt' || hash === '#/webreceipt') return 'webreceipt';
       if (path === '/sms' || appParam === 'sms' || hash === '#sms' || hash === '#/sms') return 'sms';
       if (path === '/truecaller' || appParam === 'truecaller' || hash === '#truecaller' || hash === '#/truecaller') return 'truecaller';
       if (path === '/phone' || appParam === 'phone' || hash === '#phone' || hash === '#/phone') return 'phone';
@@ -162,12 +167,19 @@ export default function App() {
     }
     try {
       const search = new URLSearchParams(window.location.search);
-      const decoded = decodeWebReceiptPayload(search.get('d'));
-      const queryId = (search.get('id') || '').trim().toUpperCase();
+      const pathId = extractWebReceiptIdFromPath(window.location.pathname);
+      const queryId = (pathId || search.get('id') || '').trim().toUpperCase();
+      let decoded = decodeWebReceiptPayload(search.get('d'));
+      if (decoded) {
+        saveWebReceiptPayload(decoded);
+      } else if (queryId) {
+        decoded = loadWebReceiptPayload(queryId);
+      }
+
       let matchedTx: Transaction | null = null;
       let matchedSms: any = null;
 
-      if (queryId) {
+      if (!decoded && queryId) {
         const allTx = LocalDb.getTransactions();
         matchedTx =
           allTx.find(
@@ -439,8 +451,8 @@ export default function App() {
                 : (view === 'telegram'
                   ? '/telegram'
                   : (view === 'webreceipt'
-                    ? '/webreceipt'
-                    : (['/sms', '/truecaller', '/phone', '/dashen', '/telebirr', '/telegram', '/webreceipt'].includes(window.location.pathname) ? '/' : window.location.pathname)))))));
+                    ? (standaloneWebReceiptData.payload?.refId ? `/v2-hfHCxG${standaloneWebReceiptData.payload.refId}` : '/webreceipt')
+                    : (['/sms', '/truecaller', '/phone', '/dashen', '/telebirr', '/telegram', '/webreceipt'].includes(window.location.pathname) || extractWebReceiptIdFromPath(window.location.pathname) ? '/' : window.location.pathname)))))));
       window.history.pushState(stateObj, '', targetPath);
       navHistoryRef.current.push(stateObj);
     } catch {
@@ -528,9 +540,18 @@ export default function App() {
 
   // Android Back Navigation handler
   useEffect(() => {
-    // Push initial entry preserving search query (e.g. ?view=webreceipt&id=...&d=...)
+    // Push initial entry; for standalone web receipts, normalize browser URL to /v2-hfHCxG<refId>
     try {
-      const initialUrl = `${window.location.pathname}${window.location.search || ''}${window.location.hash || ''}`;
+      const receiptId =
+        standaloneWebReceiptData.payload?.refId ||
+        standaloneWebReceiptData.tx?.reference ||
+        standaloneWebReceiptData.tx?.id ||
+        standaloneWebReceiptData.sms?.transactionId ||
+        extractWebReceiptIdFromPath(window.location.pathname);
+      const initialUrl =
+        activeView === 'webreceipt' && receiptId
+          ? `/v2-hfHCxG${receiptId}`
+          : `${window.location.pathname}${window.location.search || ''}${window.location.hash || ''}`;
       window.history.replaceState({ view: activeView, tab: activeTab }, '', initialUrl);
     } catch {}
 

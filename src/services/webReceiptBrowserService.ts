@@ -26,6 +26,7 @@ export interface WebReceiptUrlPayload {
 const STORAGE_PUBLIC_ORIGIN_KEY = 'cbe_webreceipt_public_origin';
 const STORAGE_CUSTOM_HOST_KEY = 'cbe_webreceipt_custom_host';
 const STORAGE_AUTO_OPEN_REAL_BROWSER_KEY = 'cbe_webreceipt_open_in_real_browser';
+const STORAGE_PAYLOAD_PREFIX = 'cbe_webreceipt_payload_';
 
 export function numberToCbeWords(amount: number): string {
   const ones = [
@@ -443,6 +444,37 @@ export function resolveWebReceiptPublicOrigin(): string | null {
   return null;
 }
 
+export function saveWebReceiptPayload(payload: WebReceiptUrlPayload): void {
+  if (typeof window === 'undefined' || !payload?.refId) return;
+  try {
+    const key = `${STORAGE_PAYLOAD_PREFIX}${payload.refId.toUpperCase()}`;
+    localStorage.setItem(key, JSON.stringify(payload));
+  } catch {}
+}
+
+export function loadWebReceiptPayload(refId: string | null | undefined): WebReceiptUrlPayload | null {
+  if (typeof window === 'undefined' || !refId) return null;
+  try {
+    const key = `${STORAGE_PAYLOAD_PREFIX}${refId.trim().toUpperCase()}`;
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || !parsed.refId) return null;
+    return parsed as WebReceiptUrlPayload;
+  } catch {
+    return null;
+  }
+}
+
+export function extractWebReceiptIdFromPath(pathname: string | null | undefined): string | null {
+  if (!pathname) return null;
+  const match = pathname.match(/^\/v2-(?:hfHCxG)?([A-Z0-9]{8,16})\/?$/i);
+  if (match && match[1]) {
+    return match[1].toUpperCase();
+  }
+  return null;
+}
+
 export function buildStandaloneWebReceiptUrl(params: {
   origin: string;
   transaction?: Transaction | null;
@@ -458,11 +490,19 @@ export function buildStandaloneWebReceiptUrl(params: {
       smsMessage,
       initialViewMode,
     });
-  const encoded = encodeWebReceiptPayload(finalPayload);
-  const url = new URL('/', origin);
-  url.searchParams.set('view', 'webreceipt');
-  url.searchParams.set('id', finalPayload.refId);
-  url.searchParams.set('d', encoded);
+
+  // Store locally so same-origin browser tabs load cleanly from /v2-hfHCxG<refId> without query noise
+  saveWebReceiptPayload(finalPayload);
+
+  const cleanPath = `/v2-hfHCxG${finalPayload.refId}`;
+  const url = new URL(cleanPath, origin);
+
+  // Only include encoded payload query parameter when crossing origins (e.g. native Capacitor localhost -> external host)
+  const isSameOrigin = typeof window !== 'undefined' && window.location.origin === origin;
+  if (!isSameOrigin) {
+    url.searchParams.set('d', encodeWebReceiptPayload(finalPayload));
+  }
+
   return url.toString();
 }
 
