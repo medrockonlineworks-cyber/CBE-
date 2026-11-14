@@ -18,6 +18,7 @@ import { MessageThread } from '../types/messages';
 import { GoogleMessagesService } from '../services/googleMessagesData';
 import { CbeHolidayCardModal } from './CbeHolidayCardModal';
 import { CbeWebReceiptModal } from './CbeWebReceiptModal';
+import { openWebReceiptInRealBrowser, openExternalUrlInBrowser } from '../services/webReceiptBrowserService';
 
 interface GoogleMessagesThreadProps {
   thread: MessageThread;
@@ -164,20 +165,26 @@ export default function GoogleMessagesThread({
                                     if (isHoliday) {
                                       setShowHolidayCardModal(true);
                                     } else if (isReceipt) {
-                                      setReceiptModalMsg({
-                                        reference: 'FT26248KLR82',
+                                      const smsPayload = {
+                                        id: 'FT26248KLR82',
                                         transactionId: 'FT26248KLR82',
-                                        amount: 50.00,
+                                        bankName: 'Commercial Bank of Ethiopia',
+                                        type: 'CREDIT' as const,
                                         sender: 'Dejene Buta',
                                         recipient: 'Leykun',
                                         accountNumber: '1000419524747',
+                                        amount: 50.00,
                                         balance: 348.54,
                                         timestamp: '2026-09-05T16:41:01Z',
-                                        role: 'receiver',
-                                        message: msg.text
-                                      });
+                                        role: 'receiver' as const,
+                                        message: msg.text,
+                                        read: true,
+                                      };
+                                      if (!openWebReceiptInRealBrowser({ smsMessage: smsPayload })) {
+                                        setReceiptModalMsg(smsPayload);
+                                      }
                                     } else {
-                                      window.open(part, '_blank');
+                                      openExternalUrlInBrowser(part);
                                     }
                                   }}
                                   className={`${isDarkMode ? 'text-sky-400 hover:text-sky-300' : 'text-sky-600 hover:text-sky-700'} underline cursor-pointer font-medium break-all inline`}

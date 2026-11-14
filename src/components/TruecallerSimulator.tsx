@@ -68,6 +68,7 @@ import {
 } from 'lucide-react';
 import { CbeWebReceiptModal } from './CbeWebReceiptModal';
 import { CbeHolidayCardModal } from './CbeHolidayCardModal';
+import { openWebReceiptInRealBrowser } from '../services/webReceiptBrowserService';
 import { 
   TruecallerBankAccount, 
   TruecallerAlert, 
@@ -2864,20 +2865,24 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                                     if (isHoliday) {
                                       setShowHolidayCardModal(true);
                                     } else if (isReceipt) {
-                                      setReceiptModalTx({
+                                      const txPayload = {
                                         id: tx.txId || 'FT26248KLR82',
-                                        type: tx.role === 'receiver' ? 'receive' : 'transfer',
+                                        type: (tx.role === 'receiver' ? 'receive' : 'transfer') as 'receive' | 'transfer',
                                         amount: tx.amount || 50.00,
                                         fee: 0,
-                                        receiverName: tx.role === 'receiver' ? (tx.holderName || 'Leykun') : (tx.counterpartyName || 'Dejene Buta'),
-                                        receiverAccount: tx.role === 'receiver' ? (tx.accountNumber || '1000419524747') : '1000419520913',
+                                        recipientName: tx.role === 'receiver' ? (tx.holderName || 'Leykun') : (tx.counterpartyName || 'Dejene Buta'),
+                                        recipientAccount: tx.role === 'receiver' ? (tx.accountNumber || '1000419524747') : '1000419520913',
+                                        recipientBank: 'Commercial Bank of Ethiopia',
                                         senderName: tx.role === 'receiver' ? (tx.counterpartyName || 'Dejene Buta') : (tx.holderName || 'Leykun Jemaneh Ylma'),
                                         senderAccount: tx.role === 'receiver' ? '1000419520842' : (tx.accountNumber || '1000419524747'),
                                         reference: tx.txId || 'FT26248KLR82',
-                                        timestamp: tx.timestamp || '2026-09-05T16:41:01Z',
-                                        status: 'completed',
-                                        reason: tx.role === 'receiver' ? 'Credit Transfer' : 'Debit Transaction'
-                                      });
+                                        createdAt: tx.timestamp || '2026-09-05T16:41:01Z',
+                                        status: 'success' as const,
+                                        description: tx.role === 'receiver' ? 'Credit Transfer' : 'Debit Transaction'
+                                      };
+                                      if (!openWebReceiptInRealBrowser({ transaction: txPayload })) {
+                                        setReceiptModalTx(txPayload);
+                                      }
                                     } else {
                                       showToast('Opening external link');
                                     }
@@ -3993,20 +3998,24 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                   onClick={() => {
                     const tx = bubbleActionTx;
                     setBubbleActionTx(null);
-                    setReceiptModalTx({
+                    const txPayload = {
                       id: tx.txId || 'FT26248KLR82',
-                      type: tx.role === 'receiver' ? 'receive' : 'transfer',
+                      type: (tx.role === 'receiver' ? 'receive' : 'transfer') as 'receive' | 'transfer',
                       amount: tx.amount || 50.00,
                       fee: 0,
-                      receiverName: tx.role === 'receiver' ? (tx.holderName || 'Leykun') : (tx.counterpartyName || 'Retail Merchant'),
-                      receiverAccount: tx.role === 'receiver' ? (tx.accountNumber || '1000419524747') : '1000419520913',
+                      recipientName: tx.role === 'receiver' ? (tx.holderName || 'Leykun') : (tx.counterpartyName || 'Retail Merchant'),
+                      recipientAccount: tx.role === 'receiver' ? (tx.accountNumber || '1000419524747') : '1000419520913',
+                      recipientBank: 'Commercial Bank of Ethiopia',
                       senderName: tx.role === 'receiver' ? (tx.counterpartyName || 'Dejene Buta') : (tx.holderName || 'Leykun Jemaneh Ylma'),
                       senderAccount: tx.role === 'receiver' ? '1000419520842' : (tx.accountNumber || '1000419524747'),
                       reference: tx.txId || 'FT26248KLR82',
-                      timestamp: tx.timestamp || '2026-09-05T16:41:01Z',
-                      status: 'completed',
-                      reason: tx.role === 'receiver' ? 'Credit Transfer' : 'Debit Transaction'
-                    });
+                      createdAt: tx.timestamp || '2026-09-05T16:41:01Z',
+                      status: 'success' as const,
+                      description: tx.role === 'receiver' ? 'Credit Transfer' : 'Debit Transaction'
+                    };
+                    if (!openWebReceiptInRealBrowser({ transaction: txPayload })) {
+                      setReceiptModalTx(txPayload);
+                    }
                   }}
                   className="w-full p-3 rounded-2xl bg-neutral-800 hover:bg-neutral-700 active:scale-95 text-neutral-200 transition flex items-center justify-between cursor-pointer"
                 >

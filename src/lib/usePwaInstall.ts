@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { openExternalUrlInBrowser } from '../services/webReceiptBrowserService';
 
 export interface BeforeInstallPromptEvent extends Event {
   readonly platforms: string[];
@@ -178,7 +179,7 @@ export function usePwaInstall() {
 
   const openInBrowserTab = () => {
     if (typeof window !== 'undefined') {
-      window.open(window.location.href, '_blank', 'noopener,noreferrer');
+      openExternalUrlInBrowser(window.location.href);
     }
   };
 

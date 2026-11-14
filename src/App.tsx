@@ -27,6 +27,12 @@ import Navigation, { TabType } from './components/Navigation';
 import OfflineBanner from './components/OfflineBanner';
 import PhoneRecentAppsModal, { AppViewId } from './components/PhoneRecentAppsModal';
 import PhoneSettingsModal from './components/PhoneSettingsModal';
+import { CbeWebReceiptModal } from './components/CbeWebReceiptModal';
+import {
+  cacheCurrentPublicOriginIfReachable,
+  decodeWebReceiptPayload,
+  WebReceiptUrlPayload,
+} from './services/webReceiptBrowserService';
 import { ChevronLeft, ArrowLeft, RefreshCw, AlertCircle } from 'lucide-react';
 
 interface ViewErrorBoundaryProps {
@@ -125,13 +131,14 @@ export default function App() {
       return null;
     }
   });
-  const [activeView, setActiveView] = useState<'auth' | 'main' | 'receipt' | 'admin' | 'sms' | 'truecaller' | 'phone' | 'dashen' | 'telebirr' | 'telegram'>(() => {
+  const [activeView, setActiveView] = useState<'auth' | 'main' | 'receipt' | 'webreceipt' | 'admin' | 'sms' | 'truecaller' | 'phone' | 'dashen' | 'telebirr' | 'telegram'>(() => {
     if (typeof window !== 'undefined') {
       const path = (window.location.pathname || '').toLowerCase();
       const search = new URLSearchParams(window.location.search);
       const appParam = (search.get('app') || search.get('view') || '').toLowerCase();
       const hash = (window.location.hash || '').toLowerCase();
 
+      if (path === '/webreceipt' || appParam === 'webreceipt' || hash === '#webreceipt' || hash === '#/webreceipt') return 'webreceipt';
       if (path === '/sms' || appParam === 'sms' || hash === '#sms' || hash === '#/sms') return 'sms';
       if (path === '/truecaller' || appParam === 'truecaller' || hash === '#truecaller' || hash === '#/truecaller') return 'truecaller';
       if (path === '/phone' || appParam === 'phone' || hash === '#phone' || hash === '#/phone') return 'phone';
@@ -144,6 +151,74 @@ export default function App() {
     // Default: Open directly to the authentic white CBE login page
     return 'auth';
   });
+
+  const standaloneWebReceiptData = useMemo<{
+    payload: WebReceiptUrlPayload | null;
+    tx: Transaction | null;
+    sms: any;
+  }>(() => {
+    if (typeof window === 'undefined') {
+      return { payload: null, tx: null, sms: null };
+    }
+    try {
+      const search = new URLSearchParams(window.location.search);
+      const decoded = decodeWebReceiptPayload(search.get('d'));
+      const queryId = (search.get('id') || '').trim().toUpperCase();
+      let matchedTx: Transaction | null = null;
+      let matchedSms: any = null;
+
+      if (queryId) {
+        const allTx = LocalDb.getTransactions();
+        matchedTx =
+          allTx.find(
+            (t) =>
+              (t.id && t.id.toUpperCase() === queryId) ||
+              (t.reference && t.reference.toUpperCase() === queryId)
+          ) || null;
+
+        if (!matchedTx) {
+          const accounts = SmsService.getAccounts();
+          for (const acc of accounts) {
+            const msgs = SmsService.getSmsMessages(acc.accountNumber);
+            const found = msgs.find(
+              (m) =>
+                (m.transactionId && m.transactionId.toUpperCase() === queryId) ||
+                (m.id && m.id.toUpperCase() === queryId) ||
+                (m.message && m.message.toUpperCase().includes(queryId))
+            );
+            if (found) {
+              matchedSms = found;
+              break;
+            }
+          }
+        }
+      }
+
+      if (!decoded && !matchedTx && !matchedSms && queryId) {
+        matchedTx = {
+          id: queryId,
+          type: 'transfer',
+          recipientName: 'Leykun Jemaneh Ylma',
+          recipientAccount: '1000419524747',
+          recipientBank: 'Commercial Bank of Ethiopia',
+          amount: 50,
+          fee: 0.5,
+          description: 'MB Transfer',
+          reference: queryId,
+          status: 'success',
+          createdAt: new Date().toISOString(),
+        };
+      }
+
+      return { payload: decoded, tx: matchedTx, sms: matchedSms };
+    } catch {
+      return { payload: null, tx: null, sms: null };
+    }
+  }, []);
+
+  useEffect(() => {
+    cacheCurrentPublicOriginIfReachable();
+  }, []);
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [returnTab, setReturnTab] = useState<TabType>('home');
   const [isRecentAppsOpen, setIsRecentAppsOpen] = useState<boolean>(false);
@@ -256,6 +331,14 @@ export default function App() {
           navBarBg: 'bg-white border-neutral-200 text-neutral-800',
           navTheme: 'light' as const,
         };
+      case 'webreceipt':
+        return {
+          rootBg: 'bg-[#f0f2f5]',
+          statusBarBg: 'bg-[#f0f2f5] text-neutral-900',
+          statusTheme: 'light' as const,
+          navBarBg: 'bg-white border-neutral-200 text-neutral-800',
+          navTheme: 'light' as const,
+        };
       case 'auth':
         return {
           rootBg: 'bg-white',
@@ -332,7 +415,7 @@ export default function App() {
   const navHistoryRef = useRef<{ view: string; tab: string }[]>([]);
 
   // Navigation pusher that keeps browser history in sync with Android back-button
-  const navigateTo = useCallback((view: 'auth' | 'main' | 'receipt' | 'admin' | 'sms' | 'truecaller' | 'phone' | 'dashen' | 'telebirr' | 'telegram', tab: TabType = activeTab) => {
+  const navigateTo = useCallback((view: 'auth' | 'main' | 'receipt' | 'webreceipt' | 'admin' | 'sms' | 'truecaller' | 'phone' | 'dashen' | 'telebirr' | 'telegram', tab: TabType = activeTab) => {
     if (activeView === 'main') {
       setReturnTab(activeTab);
     }
@@ -355,7 +438,9 @@ export default function App() {
                 ? '/telebirr'
                 : (view === 'telegram'
                   ? '/telegram'
-                  : (['/sms', '/truecaller', '/phone', '/dashen', '/telebirr', '/telegram'].includes(window.location.pathname) ? '/' : window.location.pathname))))));
+                  : (view === 'webreceipt'
+                    ? '/webreceipt'
+                    : (['/sms', '/truecaller', '/phone', '/dashen', '/telebirr', '/telegram', '/webreceipt'].includes(window.location.pathname) ? '/' : window.location.pathname)))))));
       window.history.pushState(stateObj, '', targetPath);
       navHistoryRef.current.push(stateObj);
     } catch {
@@ -443,10 +528,10 @@ export default function App() {
 
   // Android Back Navigation handler
   useEffect(() => {
-    // Push initial entry
+    // Push initial entry preserving search query (e.g. ?view=webreceipt&id=...&d=...)
     try {
-      const initialPath = window.location.pathname;
-      window.history.replaceState({ view: activeView, tab: activeTab }, '', initialPath);
+      const initialUrl = `${window.location.pathname}${window.location.search || ''}${window.location.hash || ''}`;
+      window.history.replaceState({ view: activeView, tab: activeTab }, '', initialUrl);
     } catch {}
 
     const handlePopState = (e: PopStateEvent) => {
@@ -800,11 +885,29 @@ export default function App() {
                       ? 'h-full overflow-hidden bg-slate-900'
                       : activeView === 'receipt'
                         ? 'h-full overflow-hidden bg-white'
-                        : 'h-full overflow-hidden'
+                        : activeView === 'webreceipt'
+                          ? 'h-full overflow-hidden bg-[#f0f2f5]'
+                          : 'h-full overflow-hidden'
         }`}>
           
           {activeView === 'auth' && (
             <Auth onLoginSuccess={handleLoginSuccess} />
+          )}
+
+          {activeView === 'webreceipt' && (
+            <CbeWebReceiptModal
+              standalone={true}
+              initialPayload={standaloneWebReceiptData.payload}
+              transaction={standaloneWebReceiptData.tx}
+              smsMessage={standaloneWebReceiptData.sms}
+              initialViewMode={standaloneWebReceiptData.payload?.viewMode || 'web'}
+              onClose={() => {
+                try {
+                  window.close();
+                } catch {}
+                navigateTo('auth', 'home');
+              }}
+            />
           )}
 
           {activeView === 'main' && (

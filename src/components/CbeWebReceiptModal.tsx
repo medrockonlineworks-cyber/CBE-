@@ -59,6 +59,16 @@ import {
 import { PhoneSettingsService, BrowserHeaderType } from '../services/phoneSettingsService';
 import { SystemBarsService } from '../services/systemBarsService';
 import { checkIsIOS, dataUrlToBlob } from '../services/receiptScreenshotService';
+import {
+  WebReceiptUrlPayload,
+  buildWebReceiptPayload,
+  openWebReceiptInRealBrowser,
+  isOpenInRealBrowserEnabled,
+  setOpenInRealBrowserEnabled,
+  getCustomWebReceiptHost,
+  setCustomWebReceiptHost,
+  resolveWebReceiptPublicOrigin,
+} from '../services/webReceiptBrowserService';
 
 export type { BrowserHeaderType };
 
@@ -68,6 +78,8 @@ interface CbeWebReceiptModalProps {
   onClose: () => void;
   initialViewMode?: 'web' | 'pdf';
   initialQrCode?: string;
+  standalone?: boolean;
+  initialPayload?: WebReceiptUrlPayload | null;
 }
 
 /**
@@ -179,7 +191,9 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
   smsMessage,
   onClose,
   initialViewMode = 'web',
-  initialQrCode
+  initialQrCode,
+  standalone = false,
+  initialPayload = null,
 }) => {
   const receiptCardRef = useRef<HTMLDivElement>(null);
   const pdfTemplateRef = useRef<HTMLDivElement>(null);
@@ -193,6 +207,8 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
   const [downloadSuccess, setDownloadSuccess] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [copiedUrl, setCopiedUrl] = useState(false);
+  const [autoOpenRealBrowser, setAutoOpenRealBrowser] = useState<boolean>(() => isOpenInRealBrowserEnabled());
+  const [customWebHostInput, setCustomWebHostInput] = useState<string>(() => getCustomWebReceiptHost());
 
   // Browser bar customization state (synced with settings and localStorage)
   const [browserType, setBrowserType] = useState<BrowserHeaderType>(() => {
@@ -231,6 +247,15 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
 
   // Sync native physical device status bar / browser theme color with active subapp
   useEffect(() => {
+    if (standalone) {
+      SystemBarsService.applyBars({
+        statusBarColor: '#f0f2f5',
+        navBarColor: '#ffffff',
+        isDarkStyle: false,
+      });
+      return;
+    }
+
     const browserThemeColors: Record<BrowserHeaderType, string> = {
       chrome: '#121214',
       opera: '#0e0e10',
@@ -250,13 +275,13 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
     return () => {
       SystemBarsService.restoreFromModal();
     };
-  }, [browserType]);
+  }, [browserType, standalone]);
 
   const stampFileInputRef = useRef<HTMLInputElement>(null);
   const pdfLogoFileInputRef = useRef<HTMLInputElement>(null);
 
   // View Mode: 'web' for mobile web receipt, 'pdf' for official CBE PDF document opened in browser
-  const [viewMode, setViewMode] = useState<'web' | 'pdf'>('web');
+  const [viewMode, setViewMode] = useState<'web' | 'pdf'>(() => initialPayload?.viewMode || initialViewMode || 'web');
   const [pdfZoom, setPdfZoom] = useState<number>(1);
   const [isAutoFit, setIsAutoFit] = useState<boolean>(true);
   const [viewportWidth, setViewportWidth] = useState<number>(typeof window !== 'undefined' ? window.innerWidth : 640);
@@ -631,155 +656,25 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
     }
   };
 
-  // Derive all receipt fields accurately from either Transaction or SmsMessage
+  // Derive all receipt fields accurately from URL payload, Transaction, or SmsMessage
   const receiptData = useMemo(() => {
-    if (transaction) {
-      const refId = formatTo12CharTxId(transaction.id || transaction.reference || 'FT26233ZJ908');
-      const amount = Number(transaction.amount) || 0;
-      const serviceCharge = transaction.serviceCharge !== undefined 
-        ? Number(transaction.serviceCharge) 
-        : (amount >= 10000 ? 3.00 : amount >= 500 ? 10.00 : 0.50);
-      const vat = transaction.vat !== undefined 
-        ? Number(transaction.vat) 
-        : Math.round(serviceCharge * 0.15 * 100) / 100;
-      const disasterRecovery = transaction.disasterRecovery !== undefined 
-        ? Number(transaction.disasterRecovery) 
-        : Math.round(serviceCharge * 0.05 * 100) / 100;
-      const totalDebited = transaction.totalDebited !== undefined 
-        ? Number(transaction.totalDebited) 
-        : Math.round((amount + serviceCharge + vat + disasterRecovery) * 100) / 100;
-
-      const payerName = transaction.senderName || 'Kasahun Yematawork Lema';
-      const payerAccount = formatCbeMask(transaction.senderAccount || '1000482918925');
-      const receiverName = transaction.recipientName || 'Leykun Jemaneh Ylma';
-      const receiverAccount = formatCbeMask(transaction.recipientAccount || '1000419524747');
-      const paymentDate = formatCbeReceiptDate(transaction.createdAt);
-      const reason = transaction.description && transaction.description.trim().length > 0 
-        ? transaction.description 
-        : String(Math.round(amount));
-
-      return {
-        refId,
-        payerName,
-        payerAccount,
-        receiverName,
-        receiverAccount,
-        paymentType: 'A2A',
-        paymentDate,
-        reason,
-        amount,
-        serviceCharge,
-        vat,
-        disasterRecovery,
-        totalDebited,
-        words: numberToCbeWords(totalDebited),
-        customerName: payerName
-      };
+    if (initialPayload) {
+      return initialPayload;
     }
+    return buildWebReceiptPayload({
+      transaction,
+      smsMessage,
+    });
+  }, [initialPayload, transaction, smsMessage]);
 
-    if (smsMessage) {
-      const msg = smsMessage.message || '';
-      
-      // Extract 12-char transaction id if available in receipt link or FT message (supports custom starting prefixes)
-      const urlMatch = msg.match(/mbreceipt\.cbe\.com\.et\/v2-(?:hfHCxG)?([A-Z0-9]{12})/i);
-      const ftMatch = msg.match(/\bFT[A-Z0-9]{10}\b/i);
-      let refId = smsMessage.transactionId;
-      if (!refId && urlMatch?.[1]) {
-        refId = urlMatch[1].toUpperCase();
-      } else if (!refId && ftMatch?.[0]) {
-        refId = ftMatch[0].toUpperCase();
-      }
-      if (!refId) {
-        refId = formatTo12CharTxId();
-      }
-
-      // Check if it was a received credit (like Kasahun transfer in screenshot)
-      const isCredit = smsMessage.type === 'CREDIT' || msg.toLowerCase().includes('you have received');
-
-      let payerName = 'Kasahun Yematawork Lema';
-      let payerAccount = '1****8925';
-      let receiverName = 'Leykun Jemaneh Ylma';
-      let receiverAccount = '1****4747';
-
-      if (isCredit) {
-        // e.g. "You have received ETB 50.00 from account 1*********8925 (Kasahun Yematawork Lema) to your account 1*********4747"
-        const fromMatch = msg.match(/from account\s+([\d*]+)\s*\(([^)]+)\)/i);
-        if (fromMatch) {
-          payerAccount = formatCbeMask(fromMatch[1]);
-          payerName = fromMatch[2].trim();
-        } else if (smsMessage.sender) {
-          payerName = smsMessage.sender;
-        }
-
-        const toMatch = msg.match(/to your account\s+([\d*]+)/i);
-        if (toMatch) {
-          receiverAccount = formatCbeMask(toMatch[1]);
-        } else if (smsMessage.accountNumber) {
-          receiverAccount = formatCbeMask(smsMessage.accountNumber);
-        }
-        receiverName = smsMessage.accountName || 'Leykun Jemaneh Ylma';
-      } else {
-        // Debit
-        payerName = smsMessage.accountName || 'Leykun Jemaneh Yilma';
-        payerAccount = formatCbeMask(smsMessage.accountNumber || '1000419524747');
-        receiverName = smsMessage.recipient || 'Kasahun Yematawork Desta';
-        receiverAccount = '1****9999';
-      }
-
-      const amount = smsMessage.amount !== undefined ? Number(smsMessage.amount) : 50.00;
-      const serviceCharge = smsMessage.serviceCharge !== undefined 
-        ? Number(smsMessage.serviceCharge) 
-        : (amount >= 30000 ? 3.00 : amount >= 500 ? 10.00 : 0.50);
-      const vat = smsMessage.vat !== undefined 
-        ? Number(smsMessage.vat) 
-        : Math.round(serviceCharge * 0.15 * 100) / 100;
-      const disasterRecovery = smsMessage.disasterRecovery !== undefined 
-        ? Number(smsMessage.disasterRecovery) 
-        : Math.round(serviceCharge * 0.05 * 100) / 100;
-      const totalDebited = smsMessage.totalDebited !== undefined 
-        ? Number(smsMessage.totalDebited) 
-        : Math.round((amount + serviceCharge + vat + disasterRecovery) * 100) / 100;
-
-      const reason = isCredit ? String(Math.round(amount)) : 'MB transfer';
-
-      return {
-        refId,
-        payerName,
-        payerAccount,
-        receiverName,
-        receiverAccount,
-        paymentType: 'A2A',
-        paymentDate: formatCbeReceiptDate(smsMessage.timestamp),
-        reason,
-        amount,
-        serviceCharge,
-        vat,
-        disasterRecovery,
-        totalDebited,
-        words: numberToCbeWords(totalDebited),
-        customerName: isCredit ? payerName : (smsMessage.accountName || payerName)
-      };
-    }
-
-    // Default Fallback matching Screenshot_20260904-124119.png exactly
-    return {
-      refId: 'FT26233ZJ908',
-      payerName: 'Kasahun Yematawork Lema',
-      payerAccount: '1****8925',
-      receiverName: 'Leykun Jemaneh Ylma',
-      receiverAccount: '1****4747',
-      paymentType: 'A2A',
-      paymentDate: 'Aug 21, 2026, 6:51 PM',
-      reason: '50',
-      amount: 50.00,
-      serviceCharge: 0.50,
-      vat: 0.08,
-      disasterRecovery: 0.03,
-      totalDebited: 50.61,
-      words: 'Fifty ETB and Sixty One cents',
-      customerName: 'Kasahun Yematawork Lema'
+  useEffect(() => {
+    if (!standalone || typeof document === 'undefined') return;
+    const prevTitle = document.title;
+    document.title = `Commercial Bank of Ethiopia - Receipt ${receiptData.refId}`;
+    return () => {
+      document.title = prevTitle;
     };
-  }, [transaction, smsMessage]);
+  }, [standalone, receiptData.refId]);
 
   const webReceiptUrl = `https://apps.cbe.com.et:100/?id=${receiptData.refId}`;
 
@@ -1198,9 +1093,59 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
     showBarsToast('PDF logo reset to official CBE emblem');
   };
 
+  const handleOpenInRealBrowserNow = () => {
+    const opened = openWebReceiptInRealBrowser({
+      transaction: transaction || {
+        id: receiptData.refId,
+        type: 'transfer',
+        amount: receiptData.amount,
+        fee: receiptData.serviceCharge,
+        serviceCharge: receiptData.serviceCharge,
+        vat: receiptData.vat,
+        disasterRecovery: receiptData.disasterRecovery,
+        totalDebited: receiptData.totalDebited,
+        description: receiptData.reason,
+        senderName: receiptData.payerName,
+        senderAccount: receiptData.payerAccount,
+        recipientName: receiptData.receiverName,
+        recipientAccount: receiptData.receiverAccount,
+        recipientBank: 'Commercial Bank of Ethiopia',
+        reference: receiptData.refId,
+        status: 'success',
+        createdAt: transaction?.createdAt || smsMessage?.timestamp || new Date().toISOString(),
+      },
+      smsMessage,
+      initialViewMode: viewMode,
+      forceOpen: true,
+    });
+    if (opened) {
+      showBarsToast('Opening receipt in real web browser...');
+      setIsMenuOpen(false);
+    } else {
+      showBarsToast('Enter a public Web App URL below to launch external Chrome/Safari from native APK');
+    }
+  };
+
+  const handleToggleAutoOpenRealBrowser = () => {
+    const next = !autoOpenRealBrowser;
+    setAutoOpenRealBrowser(next);
+    setOpenInRealBrowserEnabled(next);
+    showBarsToast(next ? 'Web Receipts will open in real browser' : 'Web Receipts will open inside app');
+  };
+
+  const handleSaveCustomWebHost = () => {
+    setCustomWebReceiptHost(customWebHostInput);
+    const resolved = resolveWebReceiptPublicOrigin();
+    showBarsToast(
+      customWebHostInput.trim()
+        ? `Public browser host saved: ${resolved || customWebHostInput.trim()}`
+        : 'Cleared custom public browser host'
+    );
+  };
+
   return (
     <div 
-      className="fixed inset-0 z-[80] bg-[#f0f2f5] flex flex-col items-stretch justify-start overflow-hidden w-full h-full min-h-[100dvh] select-none"
+      className={`${standalone ? 'relative flex-1' : 'fixed inset-0 z-[80]'} bg-[#f0f2f5] flex flex-col items-stretch justify-start overflow-hidden w-full h-full min-h-[100dvh] select-none`}
     >
       
       {/* Double Tap Floating Notification Toast */}
@@ -1232,8 +1177,22 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
         onChange={handleUploadPdfLogoFile}
       />
 
-      {/* Mobile Browser Headers (Edge-to-Edge with Physical Device Safe-Area Top) */}
-      {browserType === 'opera' ? (
+      {/* Floating utility trigger in Standalone Real Browser mode (no fake browser chrome) */}
+      {standalone && viewMode === 'web' && (
+        <button
+          type="button"
+          onClick={() => setIsMenuOpen(prev => !prev)}
+          data-html2canvas-ignore="true"
+          className="fixed top-3 right-3 z-40 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-gray-700 hover:text-gray-950 border border-gray-200/90 shadow-md flex items-center justify-center transition active:scale-95 cursor-pointer backdrop-blur-xs"
+          title="Receipt Options & Stamp Settings"
+          aria-label="Receipt Options & Stamp Settings"
+        >
+          <MoreVertical className="w-4.5 h-4.5" />
+        </button>
+      )}
+
+      {/* Mobile Browser Headers (Hidden when already opened inside a real web browser) */}
+      {!standalone && (browserType === 'opera' ? (
         /* ================= 1. OPERA HEADER ================= */
         <header 
           id="cbe-opera-browser-header"
@@ -1644,7 +1603,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
             </button>
           </div>
         </header>
-      )}
+      ))}
 
       {/* 3-Dot Options & Browser Style Switcher Menu Popup */}
       {isMenuOpen && (
@@ -1669,10 +1628,12 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                   <h3 className="text-[14px] font-bold tracking-tight flex items-center gap-1.5">
                     <span>Web Receipt Settings</span>
                     <span className="text-[9.5px] bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 px-1.5 py-0.2 rounded font-bold">
-                      Web View
+                      {standalone ? 'Real Browser' : 'Web View'}
                     </span>
                   </h3>
-                  <p className="text-[10px] text-neutral-400">Header style &amp; web receipt stamp options</p>
+                  <p className="text-[10px] text-neutral-400">
+                    {standalone ? 'Receipt tools, stamp & PDF options' : 'Real browser launch & header style'}
+                  </p>
                 </div>
               </div>
               <button 
@@ -1683,7 +1644,64 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
               </button>
             </div>
 
-            {/* Browser Type Selector (All 6 Browsers) */}
+            {/* Real Web Browser Launch & Preference Section */}
+            {!standalone && (
+              <div className="mb-4 pb-3 border-b border-neutral-700/80 space-y-2.5">
+                <button
+                  type="button"
+                  onClick={handleOpenInRealBrowserNow}
+                  className="w-full px-3 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold flex items-center justify-between transition cursor-pointer shadow-md shadow-emerald-900/30"
+                >
+                  <span className="flex items-center gap-2">
+                    <ExternalLink className="w-4 h-4" />
+                    <span>Open in Real Web Browser</span>
+                  </span>
+                  <span className="text-[10px] bg-black/25 px-1.5 py-0.5 rounded font-semibold">New Tab</span>
+                </button>
+
+                <div className="flex items-center justify-between bg-neutral-800/70 border border-neutral-700/60 rounded-xl px-3 py-2">
+                  <div>
+                    <div className="text-[11.5px] font-semibold text-neutral-100">Auto-open in Real Browser</div>
+                    <div className="text-[10px] text-neutral-400">Launch external browser on receipt tap</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleToggleAutoOpenRealBrowser}
+                    className={`w-10 h-5.5 rounded-full transition-colors p-0.5 cursor-pointer flex items-center ${
+                      autoOpenRealBrowser ? 'bg-emerald-500 justify-end' : 'bg-neutral-600 justify-start'
+                    }`}
+                    aria-label="Toggle auto-open in real browser"
+                  >
+                    <span className="w-4.5 h-4.5 rounded-full bg-white shadow-xs" />
+                  </button>
+                </div>
+
+                <div className="bg-neutral-850/80 border border-neutral-700/70 rounded-xl p-2.5 space-y-1.5">
+                  <div className="text-[10.5px] font-semibold text-neutral-300 flex items-center justify-between">
+                    <span>Public Web Host URL (Optional for APK)</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <input
+                      type="url"
+                      value={customWebHostInput}
+                      onChange={(e) => setCustomWebHostInput(e.target.value)}
+                      placeholder="https://your-app-domain.com"
+                      className="flex-1 bg-neutral-900 border border-neutral-700 focus:border-emerald-500 rounded-lg px-2.5 py-1.5 text-[11px] text-neutral-100 placeholder-neutral-500 outline-none transition"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSaveCustomWebHost}
+                      className="bg-emerald-700 hover:bg-emerald-600 text-white font-semibold text-[11px] px-2.5 py-1.5 rounded-lg transition shrink-0 cursor-pointer"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Browser Type Selector (All 6 Browsers - hidden in standalone real browser) */}
+            {!standalone && (
             <div className="space-y-1.5 mb-4">
               <p className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider mb-2">
                 Choose Browser Header Style
@@ -1835,8 +1853,10 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                 {browserType === 'firefox' && <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />}
               </button>
             </div>
+            )}
 
-            {/* Tab Counter Selector */}
+            {/* Tab Counter Selector (hidden in standalone real browser) */}
+            {!standalone && (
             <div className="mb-4 pt-3 border-t border-neutral-700/80">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">
@@ -1861,6 +1881,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                 ))}
               </div>
             </div>
+            )}
 
             {/* Web Stamp Width & Weight Customizer */}
             <div className="mb-4 pt-3 border-t border-neutral-700/80 space-y-3">

@@ -238,6 +238,12 @@ export class SystemBarsService {
         isDarkStyle = true;
         break;
 
+      case 'webreceipt':
+        statusBarColor = '#f0f2f5';
+        navBarColor = '#ffffff';
+        isDarkStyle = false;
+        break;
+
       case 'main':
       default:
         statusBarColor = '#70189F';

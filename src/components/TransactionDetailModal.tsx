@@ -6,6 +6,7 @@ import { PhoneSettingsService } from '../services/phoneSettingsService';
 import { SystemBarsService } from '../services/systemBarsService';
 import BottomNavigation from './BottomNavigation';
 import { CbeWebReceiptModal } from './CbeWebReceiptModal';
+import { openWebReceiptInRealBrowser } from '../services/webReceiptBrowserService';
 
 interface TransactionDetailModalProps {
   transaction: Transaction;
@@ -311,7 +312,15 @@ export default function TransactionDetailModal({
               id="btn-view-full-receipt"
               type="button"
               onClick={() => {
-                setShowWebReceipt(true);
+                const txPayload = {
+                  ...transaction,
+                  id: txId,
+                  reference: txId,
+                  description: remark,
+                };
+                if (!openWebReceiptInRealBrowser({ transaction: txPayload })) {
+                  setShowWebReceipt(true);
+                }
               }}
               className="w-auto min-w-[172px] max-w-[196px] h-[44px] sm:h-[46px] px-6 py-2.5 text-xs bg-[#70189F] hover:bg-[#5e1286] active:scale-[0.98] text-white rounded-full font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_4px_14px_rgba(112,24,159,0.35)] transition-all cursor-pointer"
             >

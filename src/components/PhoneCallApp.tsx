@@ -44,6 +44,7 @@ import { SmsService } from '../services/smsService';
 import { TruecallerService } from '../services/truecallerService';
 import ApplePhoneApp from './ApplePhoneApp';
 import { PhoneSettingsService } from '../services/phoneSettingsService';
+import { openExternalUrlInBrowser } from '../services/webReceiptBrowserService';
 
 interface PhoneCallAppProps {
   currentUser?: UserProfile | null;
@@ -1601,7 +1602,7 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
               type="button"
               onClick={() => {
                 const num = dialedNumber || '+251978730420';
-                window.open(`https://wa.me/${num.replace(/[^0-9]/g, '')}`, '_blank');
+                openExternalUrlInBrowser(`https://wa.me/${num.replace(/[^0-9]/g, '')}`);
               }}
               className="w-12 h-12 rounded-full bg-[#25d366] hover:bg-[#20ba59] flex items-center justify-center text-white shadow-lg active:scale-95 transition"
               title="Chat on WhatsApp"
@@ -1946,7 +1947,7 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
 
               <button 
                 onClick={() => {
-                  window.open(`https://wa.me/${selectedCallDetail.phoneNumber.replace(/[^0-9]/g, '')}`, '_blank');
+                  openExternalUrlInBrowser(`https://wa.me/${selectedCallDetail.phoneNumber.replace(/[^0-9]/g, '')}`);
                 }}
                 className="p-2.5 rounded-xl bg-neutral-800/80 hover:bg-neutral-800 flex flex-col items-center gap-1 text-xs text-neutral-200 transition"
               >

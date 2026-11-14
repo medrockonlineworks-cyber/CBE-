@@ -43,6 +43,7 @@ import { GoogleMessagesService } from '../services/googleMessagesData';
 import { CbeWebReceiptModal } from '../components/CbeWebReceiptModal';
 import { CbeHolidayCardModal } from '../components/CbeHolidayCardModal';
 import { SystemBarsService } from '../services/systemBarsService';
+import { openWebReceiptInRealBrowser } from '../services/webReceiptBrowserService';
 
 interface SmsPageProps {
   onBack: () => void;
@@ -344,7 +345,9 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
                     setShowHolidayCardModal(true);
                   } else if (isReceipt) {
                     e.preventDefault();
-                    setShowReceiptModal(msg);
+                    if (!openWebReceiptInRealBrowser({ smsMessage: msg })) {
+                      setShowReceiptModal(msg);
+                    }
                   }
                 }}
                 className={`${isDarkMode ? 'text-sky-400 hover:text-sky-300' : 'text-sky-600 hover:text-sky-700 font-medium'} underline font-normal break-all inline`}
@@ -417,7 +420,11 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
               SmsService.clearAccountMessages(activeAccountNum);
               setMessages([]);
             }}
-            onOpenWebReceipt={(msg) => setShowReceiptModal(msg)}
+            onOpenWebReceipt={(msg) => {
+              if (!openWebReceiptInRealBrowser({ smsMessage: msg })) {
+                setShowReceiptModal(msg);
+              }
+            }}
             onOpenHolidayCard={() => setShowHolidayCardModal(true)}
             isDarkMode={isDarkMode}
           />
@@ -447,7 +454,11 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
               setPageView('inbox');
             }}
             onBackToApp={onBack}
-            onOpenWebReceipt={(msg) => setShowReceiptModal(msg)}
+            onOpenWebReceipt={(msg) => {
+              if (!openWebReceiptInRealBrowser({ smsMessage: msg })) {
+                setShowReceiptModal(msg);
+              }
+            }}
             onOpenHolidayCard={() => setShowHolidayCardModal(true)}
             onSendMessage={(txt) => {
               GoogleMessagesService.sendMessage(selectedGenericThread.id, txt);

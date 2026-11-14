@@ -13,6 +13,7 @@ import { MessageThread } from '../types/messages';
 import AppleProfileSettingsModal from './AppleProfileSettingsModal';
 import { PhoneSettingsService } from '../services/phoneSettingsService';
 import { SystemBarsService } from '../services/systemBarsService';
+import { openExternalUrlInBrowser } from '../services/webReceiptBrowserService';
 
 interface AppleMessagesThreadProps {
   messages: SmsMessage[];
@@ -140,9 +141,7 @@ export const AppleMessagesThread: React.FC<AppleMessagesThreadProps> = ({
                   } else if (isReceipt && onOpenWebReceipt && rawMsg) {
                     onOpenWebReceipt(rawMsg);
                   } else {
-                    try {
-                      window.open(part, '_blank', 'noopener,noreferrer');
-                    } catch {}
+                    openExternalUrlInBrowser(part);
                   }
                 }}
                 className="text-[#0a84ff] underline cursor-pointer hover:opacity-80 active:opacity-60 inline break-all [overflow-wrap:anywhere]"

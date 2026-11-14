@@ -13,6 +13,7 @@ import {
 import { calculateCbeFee } from '../lib/cbeTariff';
 import { CbeLogo } from './CbeLogo';
 import { CbeWebReceiptModal } from './CbeWebReceiptModal';
+import { openWebReceiptInRealBrowser } from '../services/webReceiptBrowserService';
 import { 
   Check, 
   Share2, 
@@ -1116,7 +1117,16 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
               <button 
                 type="button"
                 id="btn-action-receipt"
-                onClick={() => setShowDetailedModal(true)}
+                onClick={() => {
+                  const txPayload = {
+                    ...transaction,
+                    id: txId,
+                    reference: txId,
+                  };
+                  if (!openWebReceiptInRealBrowser({ transaction: txPayload })) {
+                    setShowDetailedModal(true);
+                  }
+                }}
                 className="flex items-center gap-2 text-[13.5px] font-medium text-black hover:text-purple-900 transition active:scale-95 cursor-pointer py-1 px-2 rounded-xl"
               >
                 {/* Document with 2 top-left horizontal lines, folded top-right corner, and $ sign icon */}
