@@ -57,12 +57,22 @@ export default function TelegramExportModal({
         return;
       }
 
+      const targetWidth = targetElement.scrollWidth || targetElement.offsetWidth;
+      const targetHeight = targetElement.scrollHeight || targetElement.offsetHeight;
       const canvas = await html2canvas(targetElement, {
         backgroundColor: '#0e1621',
         scale: 2,
         useCORS: true,
         allowTaint: true,
         logging: false,
+        x: 0,
+        y: 0,
+        scrollX: 0,
+        scrollY: 0,
+        width: targetWidth,
+        height: targetHeight,
+        windowWidth: targetWidth,
+        windowHeight: targetHeight,
       });
 
       // Draw watermark on canvas

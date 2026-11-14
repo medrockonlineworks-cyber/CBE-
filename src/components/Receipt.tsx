@@ -222,12 +222,13 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   const getDeviceDimensions = () => {
     if (typeof window === 'undefined') return { width: 360, height: 800 };
     const isMobile = window.innerWidth <= 500;
-    // On physical mobile phone, CSS width is typically 360px (720px at 2.0 DPR)
-    const w = isMobile ? (window.screen?.width || window.innerWidth || 360) : 360;
+    // On physical mobile phone, use exact CSS viewport width so capture fills left-to-right edge-to-edge
+    const w = isMobile ? (window.innerWidth || window.screen?.width || 360) : 360;
     // Full physical screen height in CSS pixels (e.g. 800 on 720x1600 phones, ratio 20:9)
     const screenH = typeof window.screen !== 'undefined' && window.screen.height ? window.screen.height : 0;
+    const viewportH = window.innerHeight || 0;
     const computedRatioH = Math.round(w * (20 / 9)); // 360 * 20 / 9 = 800
-    const h = isMobile ? Math.max(screenH, computedRatioH, 800) : 800;
+    const h = isMobile ? Math.max(screenH, viewportH, computedRatioH, 800) : 800;
     return { width: w, height: h };
   };
 
@@ -606,11 +607,18 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
       let dataUrl: string | null = null;
 
-      // Capture the EXACT live on-screen receipt detail (receiptRef.current) without altering any layout, spacing, or colors
-      const liveElement = receiptRef.current || screenshotExportRef.current;
-      if (liveElement) {
+      // On mobile screens capture the exact live receipt edge-to-edge; on wide desktop screens use the mobile exact target
+      const isWideDesktop = typeof window !== 'undefined' && window.innerWidth > 500;
+      const captureTarget = isWideDesktop
+        ? (screenshotExportRef.current || receiptRef.current)
+        : (receiptRef.current || screenshotExportRef.current);
+      if (captureTarget) {
         try {
-          dataUrl = await captureReceiptElement(liveElement, { addGrayBottomStrip: true });
+          dataUrl = await captureReceiptElement(captureTarget, {
+            addGrayBottomStrip: true,
+            targetWidth: screenshotDimensions.width,
+            targetHeight: screenshotDimensions.height,
+          });
         } catch (captureErr) {
           console.warn('[Screenshot] Live DOM capture fallback to canvas:', captureErr);
         }
@@ -726,10 +734,17 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       const isIosShare = checkIsIOS() || isIPhone || PhoneSettingsService.isIPhoneDevice();
       let dataUrl = capturedScreenshotUrl;
       if (!dataUrl) {
-        const liveElement = receiptRef.current || screenshotExportRef.current;
-        if (liveElement) {
+        const isWideDesktop = typeof window !== 'undefined' && window.innerWidth > 500;
+        const captureTarget = isWideDesktop
+          ? (screenshotExportRef.current || receiptRef.current)
+          : (receiptRef.current || screenshotExportRef.current);
+        if (captureTarget) {
           try {
-            dataUrl = await captureReceiptElement(liveElement, { addGrayBottomStrip: true });
+            dataUrl = await captureReceiptElement(captureTarget, {
+              addGrayBottomStrip: true,
+              targetWidth: screenshotDimensions.width,
+              targetHeight: screenshotDimensions.height,
+            });
           } catch {}
         }
       }
@@ -859,7 +874,10 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         >
           {/* Top Purple Navigation / App Header: background extends behind rounded-t-[38px] curve */}
           <div className="bg-[#7A1FA2] pb-10 -mb-10 flex-shrink-0 relative z-10">
-            <div className="pt-[max(env(safe-area-inset-top,0px),70px)] pb-[41px] px-5 flex items-center justify-between text-white flex-shrink-0">
+            <div
+              id="cbe-receipt-purple-header-inner"
+              className="pt-[max(env(safe-area-inset-top,0px),70px)] pb-[41px] px-5 flex items-center justify-between text-white flex-shrink-0"
+            >
               <div className="flex items-center gap-2.5">
                 {/* Solid White Shield with Purple Checkmark Icon matching original reference */}
                 <div className="w-8.5 h-8.5 flex-shrink-0 flex items-center justify-center">
@@ -1162,11 +1180,11 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           </div>
         )}
 
-        {/* Gray bottom strip shown in clean view mode (Android & iPhone) */}
+        {/* Gray bottom strip shown in clean view mode (Android & iPhone edge-to-edge) */}
         {hideUiElements && (
           <div
             id="cbe-live-gray-bottom-strip"
-            className="w-full h-[58px] min-h-[58px] bg-[#f0f1f4] border-t border-[#e2e4e8] flex-shrink-0"
+            className="w-full min-h-[max(58px,calc(58px+env(safe-area-inset-bottom,0px)))] pb-[env(safe-area-inset-bottom,0px)] bg-[#f0f1f4] border-t border-[#e2e4e8] flex-shrink-0"
           />
         )}
 
@@ -1230,12 +1248,12 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
               Touch and hold the receipt image below, then tap <strong className="text-gray-800">"Save to Photos"</strong>.
             </p>
 
-            {/* Receipt Preview Thumbnail with Touch & Hold capability */}
-            <div className="w-full max-h-[300px] overflow-hidden rounded-2xl border border-gray-200 shadow-inner bg-gray-50 mb-4 flex items-center justify-center p-2">
+            {/* Receipt Preview Thumbnail with Touch & Hold capability (edge-to-edge) */}
+            <div className="w-full max-h-[300px] overflow-hidden rounded-2xl border border-gray-200 shadow-inner bg-gray-50 mb-4 flex items-center justify-center p-0">
               <img 
                 src={capturedScreenshotUrl} 
                 alt="Receipt Screenshot" 
-                className="max-h-[280px] w-auto object-contain rounded-lg select-auto pointer-events-auto shadow-md"
+                className="max-h-[300px] w-full object-contain select-auto pointer-events-auto"
               />
             </div>
 
@@ -1297,13 +1315,11 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           top: 0,
           left: 0,
           width: `${screenshotDimensions.width}px`,
-          height: `${screenshotDimensions.height}px`,
           minHeight: `${screenshotDimensions.height}px`,
-          maxHeight: `${screenshotDimensions.height}px`,
           zIndex: -100,
           pointerEvents: 'none',
           opacity: 1,
-          backgroundColor: '#ffffff',
+          backgroundColor: '#7A1FA2',
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',

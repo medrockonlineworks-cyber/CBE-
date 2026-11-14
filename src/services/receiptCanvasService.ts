@@ -116,18 +116,7 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   const scale = 2;
   const baseWidth = options.targetWidth || 360;
   const width = baseWidth * scale;
-  
-  // Authentic smartphone screen height matching edge-to-edge Image 2 (720x1600 at 2x)
-  const baseHeight = options.targetHeight || 800;
-  const height = baseHeight * scale;
-
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d', { alpha: false });
-  if (!ctx) {
-    throw new Error('Canvas 2D context not available');
-  }
+  const minHeight = (options.targetHeight || 800) * scale;
 
   // Pre-load images concurrently
   const logoSrc = customBankLogo || CBE_DEFAULT_LOGO_BASE64;
@@ -136,11 +125,9 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
     loadImage(logoSrc)
   ]);
 
-  // 1. Entire Canvas Background: Pure White (#ffffff) extending edge-to-edge
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, width, height);
+  const fontSans = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif';
 
-  // 2. Top Purple Header: #70189F (70px top padding, 41px bottom padding before curved white sheet)
+  // Top & Card layout metrics
   const topPurplePadding = 70 * scale;
   const shieldSize = 34 * scale;
   const shieldX = 20 * scale;
@@ -148,89 +135,13 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   const headerBottomPadding = 41 * scale;
   const sheetTop = topPurplePadding + 40 * scale + headerBottomPadding;
   const cornerRadius = 38 * scale;
-
-  // Fill purple background extending down only to sheetTop + cornerRadius to fill behind curved corners
-  ctx.fillStyle = '#7A1FA2';
-  ctx.fillRect(0, 0, width, sheetTop + cornerRadius);
-
-  // 3. Exact Solid White Shield with Purple Checkmark (matching exact SVG in Image 2)
-  ctx.save();
-  ctx.translate(shieldX, shieldY);
-  ctx.scale(shieldSize / 24, shieldSize / 24);
-
-  // White shield body
-  const shieldPath = new Path2D('M12 2.2c0.3 0 0.6 0.1 0.9 0.2l6.5 2.6c0.5 0.2 0.8 0.7 0.8 1.2v5.6c0 4.8-3.0 9.2-7.5 10.7-.5 0.2-1.0 0.2-1.4 0-4.5-1.5-7.5-5.9-7.5-10.7V6.2c0-.5.3-1 .8-1.2l6.5-2.6c.3-.1.6-.2.9-.2z');
-  ctx.fillStyle = '#ffffff';
-  ctx.fill(shieldPath);
-
-  // Purple checkmark inside shield
-  const shieldCheckmarkPath = new Path2D('M8.0 12.2L11.0 15.2L17.2 9.0');
-  ctx.strokeStyle = '#7A1FA2';
-  ctx.lineWidth = 1.9;
-  ctx.lineCap = 'butt';
-  ctx.lineJoin = 'miter';
-  ctx.miterLimit = 4;
-  ctx.stroke(shieldCheckmarkPath);
-  ctx.restore();
-
-  // 4. Header Titles: "Thank you" and "Success" (matching live on-screen typography)
-  const fontSans = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif';
-  
-  ctx.fillStyle = '#ffffff';
-  ctx.font = `bold ${18 * scale}px ${fontSans}`;
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'alphabetic';
-  ctx.fillText('Thank you', shieldX + shieldSize + (10 * scale), shieldY + (18 * scale));
-
-  ctx.fillStyle = '#FFD9FF';
-  ctx.font = `normal ${13 * scale}px ${fontSans}`;
-  ctx.fillText('Success', shieldX + shieldSize + (10 * scale), shieldY + (36 * scale));
-
-  // 5. Main White Sheet Container:
-  // Starts at sheetTop with rounded top corners (38px) against purple background, extending flat to canvas bottom!
-  ctx.fillStyle = '#ffffff';
-  roundRect(ctx, 0, sheetTop, width, height - sheetTop + (20 * scale), [cornerRadius, cornerRadius, 0, 0]);
-  ctx.fill();
-
-  // 6. Overlapping Success Checkmark Badge (matching exact SVG in Image 2)
   const badgeCenterX = width / 2;
   const badgeCenterY = sheetTop;
   const badgeRadius = 41.5 * scale;
-
-  ctx.save();
-  // Purple circle with thick white outer ring
-  ctx.beginPath();
-  ctx.arc(badgeCenterX, badgeCenterY, badgeRadius, 0, Math.PI * 2);
-  ctx.fillStyle = '#7A1FA2';
-  ctx.fill();
-  ctx.lineWidth = 6 * scale;
-  ctx.strokeStyle = '#ffffff';
-  ctx.stroke();
-
-  // Exact Crisp White Checkmark inside badge (matching SVG viewBox 0 0 90 90)
-  ctx.translate(badgeCenterX - (45 * scale), badgeCenterY - (45 * scale));
-  ctx.scale(scale, scale);
-  const badgeCheckmark = new Path2D('M 25.5 45.5 L 39.0 59.0 L 68.0 30.0');
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 7.2;
-  ctx.lineCap = 'butt';
-  ctx.lineJoin = 'miter';
-  ctx.miterLimit = 4;
-  ctx.stroke(badgeCheckmark);
-  ctx.restore();
-
-  // 7. Headline: "Transaction Completed Successfully!"
   const badgeBottom = badgeCenterY + badgeRadius + (3 * scale);
   const headlineTop = badgeBottom + (12 * scale);
   const headlineBaseline = headlineTop + (11 * scale);
 
-  ctx.fillStyle = '#111113';
-  ctx.font = `500 ${13.5 * scale}px ${fontSans}`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'alphabetic';
-  ctx.fillText('Transaction Completed Successfully!', width / 2, headlineBaseline);
-
-  // 8. Main Transaction Summary Gray Card: #f2f2f2
   const cardMarginX = 20 * scale;
   const cardTop = badgeBottom + (40 * scale);
   const cardWidth = width - (cardMarginX * 2);
@@ -239,7 +150,9 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   const textStartX = cardMarginX + cardPadX;
   const textMaxW = cardWidth - (cardPadX * 2);
 
-  // 9. Prepare Debited/Credited Paragraph Tokens (bold highlights matching CBE)
+  // Measure paragraph lines first so canvas height expands cleanly if text is extra long
+  const measureCanvas = document.createElement('canvas');
+  const measureCtx = measureCanvas.getContext('2d');
   const tokens: TextToken[] = [];
   if (isCredit) {
     tokens.push(
@@ -271,13 +184,12 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
     );
   }
 
-  // Pre-calculate wrapped paragraph text lines
   const regularFont = `400 ${14 * scale}px ${fontSans}`;
   const boldFont = `bold ${14 * scale}px ${fontSans}`;
   const lineHeight = 22.4 * scale;
 
-  if ('letterSpacing' in ctx) {
-    (ctx as any).letterSpacing = `${0.12 * scale}px`;
+  if (measureCtx && 'letterSpacing' in measureCtx) {
+    (measureCtx as any).letterSpacing = `${0.12 * scale}px`;
   }
 
   interface WordToken {
@@ -287,14 +199,13 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
     wordWidth: number;
   }
 
-  // Break text tokens into words with premeasured dimensions
   const words: WordToken[] = [];
   for (const token of tokens) {
-    ctx.font = token.bold ? boldFont : regularFont;
+    if (measureCtx) measureCtx.font = token.bold ? boldFont : regularFont;
     const splitWords = token.text.split(/(?<=\s)|(?=\s)/);
     for (const w of splitWords) {
       if (!w) continue;
-      const metrics = ctx.measureText(w);
+      const metrics = measureCtx ? measureCtx.measureText(w) : { width: w.length * 7 * scale };
       words.push({
         word: w,
         bold: token.bold,
@@ -323,7 +234,6 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
       lines.push(currentLine);
       currentLine = { tokens: [] };
       currentLineWidth = 0;
-      // Skip leading space on new line
       if (w.word.trim() === '') continue;
     }
 
@@ -335,29 +245,107 @@ export async function renderAuthenticReceiptToCanvas(options: ReceiptDrawOptions
   }
 
   const paragraphHeight = lines.length * lineHeight;
-
-  // 10. Position inside Card:
-  // Summary title -> paragraph -> QR box -> CBE logo footer
   const summaryTitleY = cardTop + cardPadY + (11 * scale);
   const paragraphGap = 16 * scale;
   const paragraphStartY = summaryTitleY + paragraphGap;
-
-  // Space between paragraph text and QR code
   const qrBoxGap = 10 * scale;
   const qrBoxTop = paragraphStartY + paragraphHeight + qrBoxGap;
   const qrBoxSize = 130 * scale;
   const qrBoxX = (width - qrBoxSize) / 2;
   const qrImgSize = 114 * scale;
   const qrImgOffset = (qrBoxSize - qrImgSize) / 2;
-
-  // Space between QR code and CBE Logo footer
   const footerGap = 12 * scale;
   const footerY = qrBoxTop + qrBoxSize + footerGap;
   const footerLogoSize = 40 * scale;
   const cardBottomPadding = 20 * scale;
   const cardHeight = (footerY + footerLogoSize + cardBottomPadding) - cardTop;
+  const shouldDrawBottomStrip = options.addGrayBottomStrip ?? true;
+  const bottomBarHeight = shouldDrawBottomStrip ? 58 * scale : 0;
+  const height = Math.max(minHeight, Math.ceil(cardTop + cardHeight + (36 * scale) + bottomBarHeight));
 
-  // Draw Card Background: #f2f2f2 with radius 24px and border shadow
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d', { alpha: false });
+  if (!ctx) {
+    throw new Error('Canvas 2D context not available');
+  }
+
+  if ('letterSpacing' in ctx) {
+    (ctx as any).letterSpacing = `${0.12 * scale}px`;
+  }
+
+  // 1. Entire Canvas Background: Pure White (#ffffff) extending edge-to-edge
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, width, height);
+
+  // 2. Top Purple Header: #7A1FA2 filling top edge seamlessly behind curved corners
+  ctx.fillStyle = '#7A1FA2';
+  ctx.fillRect(0, 0, width, sheetTop + cornerRadius);
+
+  // 3. Exact Solid White Shield with Purple Checkmark
+  ctx.save();
+  ctx.translate(shieldX, shieldY);
+  ctx.scale(shieldSize / 24, shieldSize / 24);
+
+  const shieldPath = new Path2D('M12 2.2c0.3 0 0.6 0.1 0.9 0.2l6.5 2.6c0.5 0.2 0.8 0.7 0.8 1.2v5.6c0 4.8-3.0 9.2-7.5 10.7-.5 0.2-1.0 0.2-1.4 0-4.5-1.5-7.5-5.9-7.5-10.7V6.2c0-.5.3-1 .8-1.2l6.5-2.6c.3-.1.6-.2.9-.2z');
+  ctx.fillStyle = '#ffffff';
+  ctx.fill(shieldPath);
+
+  const shieldCheckmarkPath = new Path2D('M8.0 12.2L11.0 15.2L17.2 9.0');
+  ctx.strokeStyle = '#7A1FA2';
+  ctx.lineWidth = 1.9;
+  ctx.lineCap = 'butt';
+  ctx.lineJoin = 'miter';
+  ctx.miterLimit = 4;
+  ctx.stroke(shieldCheckmarkPath);
+  ctx.restore();
+
+  // 4. Header Titles: "Thank you" and "Success"
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `bold ${18 * scale}px ${fontSans}`;
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText('Thank you', shieldX + shieldSize + (10 * scale), shieldY + (18 * scale));
+
+  ctx.fillStyle = '#FFD9FF';
+  ctx.font = `normal ${13 * scale}px ${fontSans}`;
+  ctx.fillText('Success', shieldX + shieldSize + (10 * scale), shieldY + (36 * scale));
+
+  // 5. Main White Sheet Container extending flat edge-to-edge to canvas bottom
+  ctx.fillStyle = '#ffffff';
+  roundRect(ctx, 0, sheetTop, width, height - sheetTop + (20 * scale), [cornerRadius, cornerRadius, 0, 0]);
+  ctx.fill();
+
+  // 6. Overlapping Success Checkmark Badge
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(badgeCenterX, badgeCenterY, badgeRadius, 0, Math.PI * 2);
+  ctx.fillStyle = '#7A1FA2';
+  ctx.fill();
+  ctx.lineWidth = 6 * scale;
+  ctx.strokeStyle = '#ffffff';
+  ctx.stroke();
+
+  ctx.translate(badgeCenterX - (45 * scale), badgeCenterY - (45 * scale));
+  ctx.scale(scale, scale);
+  const badgeCheckmark = new Path2D('M 25.5 45.5 L 39.0 59.0 L 68.0 30.0');
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 7.2;
+  ctx.lineCap = 'butt';
+  ctx.lineJoin = 'miter';
+  ctx.miterLimit = 4;
+  ctx.stroke(badgeCheckmark);
+  ctx.restore();
+
+  // 7. Headline: "Transaction Completed Successfully!"
+  ctx.fillStyle = '#111113';
+  ctx.font = `500 ${13.5 * scale}px ${fontSans}`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+  ctx.fillText('Transaction Completed Successfully!', width / 2, headlineBaseline);
+
+  // 8. Card Background: #f2f2f2 with radius 24px and border shadow
   ctx.save();
   ctx.shadowColor = 'rgba(0, 0, 0, 0.09)';
   ctx.shadowBlur = 20 * scale;

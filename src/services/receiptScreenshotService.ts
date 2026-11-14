@@ -202,6 +202,8 @@ async function inlineImageElement(img: HTMLImageElement): Promise<void> {
  */
 export interface CaptureReceiptOptions {
   addGrayBottomStrip?: boolean;
+  targetWidth?: number;
+  targetHeight?: number;
 }
 
 export async function captureReceiptElement(
@@ -257,25 +259,33 @@ export async function captureReceiptElement(
     }
   }
 
-  // 5. Measure full content bounds matching exact on-screen dimensions
+  // 5. Measure full content bounds matching exact edge-to-edge screen dimensions
   const rect = element.getBoundingClientRect();
   const isExactTarget = element.id === 'cbe-screenshot-exact-target';
   const shouldAddGrayStrip = options?.addGrayBottomStrip ?? true;
-  const fullWidth = isExactTarget 
-    ? (parseInt(element.style.width, 10) || element.offsetWidth || 412)
-    : Math.max(Math.ceil(rect.width), element.offsetWidth, 360);
+  const isWideViewport = typeof window !== 'undefined' && window.innerWidth > 500;
+  const fullWidth = isExactTarget
+    ? (parseInt(element.style.width, 10) || element.offsetWidth || options?.targetWidth || 360)
+    : (isWideViewport && options?.targetWidth
+        ? options.targetWidth
+        : Math.max(Math.ceil(rect.width), element.offsetWidth, options?.targetWidth || 360));
 
   let fullHeight: number;
   if (isExactTarget) {
-    fullHeight = parseInt(element.style.height, 10) || element.offsetHeight || 915;
+    fullHeight = Math.max(
+      parseInt(element.style.height, 10) || 0,
+      element.scrollHeight,
+      element.offsetHeight,
+      options?.targetHeight || 800
+    );
   } else {
-    const viewportH = Math.max(Math.ceil(rect.height), element.offsetHeight, 700);
+    const viewportH = Math.max(Math.ceil(rect.height), element.offsetHeight, options?.targetHeight || 800);
     const extraScroll = innerScrollable ? Math.max(0, innerScrollable.scrollHeight - innerScrollable.clientHeight) : 0;
     const bottomActions = element.querySelector('#cbe-receipt-bottom-actions-container') as HTMLElement | null;
     const bottomActionsH = bottomActions ? bottomActions.offsetHeight : 0;
     const bottomReserve = shouldAddGrayStrip ? 92 : 36;
-    const neededContentHeight = viewportH - bottomActionsH + extraScroll + bottomReserve;
-    fullHeight = Math.max(viewportH, neededContentHeight, 700);
+    const neededContentHeight = Math.ceil(rect.height || element.offsetHeight) - bottomActionsH + extraScroll + bottomReserve;
+    fullHeight = Math.max(viewportH, neededContentHeight, options?.targetHeight || 800);
   }
 
   // Safe pixel ratio for mobile devices (2.0x is razor-sharp without exceeding Android canvas memory limits)
@@ -293,88 +303,110 @@ export async function captureReceiptElement(
   const prepareClonedReceiptDom = (clonedDoc: Document, clonedElement: HTMLElement) => {
     clonedDoc.defaultView?.scrollTo(0, 0);
 
-    if (clonedDoc.documentElement) {
-      clonedDoc.documentElement.style.overflow = 'visible';
-      clonedDoc.documentElement.style.height = 'auto';
-      clonedDoc.documentElement.style.backgroundColor = '#ffffff';
-    }
-    if (clonedDoc.body) {
-      clonedDoc.body.style.overflow = 'visible';
-      clonedDoc.body.style.height = 'auto';
-      clonedDoc.body.style.backgroundColor = '#ffffff';
-    }
-
-    const clonedWrapper = clonedDoc.getElementById('receipt-screen-wrapper');
-    if (clonedWrapper) {
-      clonedWrapper.scrollTop = 0;
-      clonedWrapper.scrollLeft = 0;
-      clonedWrapper.style.overflow = 'visible';
-      clonedWrapper.style.height = `${fullHeight}px`;
-      clonedWrapper.style.maxHeight = 'none';
-    }
-
-    clonedElement.style.overflow = 'hidden';
-    clonedElement.style.width = `${fullWidth}px`;
-    clonedElement.style.height = `${fullHeight}px`;
-    clonedElement.style.minHeight = `${fullHeight}px`;
-    clonedElement.style.maxHeight = 'none';
-    clonedElement.style.transform = 'none';
-    clonedElement.style.backgroundColor = '#ffffff';
-
     try {
+      const existingStyleTexts = new Set(
+        Array.from(clonedDoc.querySelectorAll('style')).map((s) => s.textContent || '')
+      );
+      const existingHrefs = new Set(
+        Array.from(clonedDoc.querySelectorAll('link[rel="stylesheet"]')).map((l) => l.getAttribute('href') || '')
+      );
       const mainStyles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'));
       mainStyles.forEach((styleTag) => {
-        clonedDoc.head.appendChild(styleTag.cloneNode(true));
+        if (styleTag.tagName === 'STYLE') {
+          if (!existingStyleTexts.has(styleTag.textContent || '')) {
+            clonedDoc.head.appendChild(styleTag.cloneNode(true));
+          }
+        } else {
+          const href = styleTag.getAttribute('href') || '';
+          if (href && !existingHrefs.has(href)) {
+            clonedDoc.head.appendChild(styleTag.cloneNode(true));
+          }
+        }
       });
     } catch {}
 
-    if (clonedElement.id === 'cbe-screenshot-exact-target') {
-      clonedDoc.body.appendChild(clonedElement);
+    // Detach cloned receipt directly onto clonedDoc.body and hide #root so ancestor margins,
+    // safe-area offsets, OfflineBanner, or 100dvh viewport constraints can never clip or inset the capture.
+    clonedDoc.body.appendChild(clonedElement);
 
-      const rootElement = clonedDoc.getElementById('root');
-      if (rootElement && rootElement !== clonedElement) {
-        rootElement.style.display = 'none';
-      }
+    const rootElement = clonedDoc.getElementById('root');
+    if (rootElement && rootElement !== clonedElement) {
+      rootElement.style.display = 'none';
+    }
 
-      clonedElement.style.position = 'relative';
-      clonedElement.style.top = '0';
-      clonedElement.style.left = '0';
-      clonedElement.style.zIndex = '9999';
-      clonedElement.style.opacity = '1';
-      clonedElement.style.visibility = 'visible';
-      clonedElement.style.display = 'flex';
-      clonedElement.style.flexDirection = 'column';
-      clonedElement.style.width = `${fullWidth}px`;
-      clonedElement.style.height = `${fullHeight}px`;
-      clonedElement.style.minHeight = `${fullHeight}px`;
-      clonedElement.style.maxHeight = `${fullHeight}px`;
-      clonedElement.style.margin = '0';
-      clonedElement.style.padding = '0';
-      clonedElement.style.boxSizing = 'border-box';
-      clonedElement.style.backgroundColor = '#7A1FA2';
+    if (clonedDoc.documentElement) {
+      clonedDoc.documentElement.style.width = `${fullWidth}px`;
+      clonedDoc.documentElement.style.height = `${fullHeight}px`;
+      clonedDoc.documentElement.style.minWidth = `${fullWidth}px`;
+      clonedDoc.documentElement.style.maxWidth = `${fullWidth}px`;
+      clonedDoc.documentElement.style.minHeight = `${fullHeight}px`;
+      clonedDoc.documentElement.style.maxHeight = `${fullHeight}px`;
+      clonedDoc.documentElement.style.margin = '0';
+      clonedDoc.documentElement.style.padding = '0';
+      clonedDoc.documentElement.style.border = 'none';
+      clonedDoc.documentElement.style.overflow = 'hidden';
+      clonedDoc.documentElement.style.backgroundColor = '#7A1FA2';
+    }
+    if (clonedDoc.body) {
       clonedDoc.body.style.width = `${fullWidth}px`;
       clonedDoc.body.style.height = `${fullHeight}px`;
-      clonedDoc.body.style.backgroundColor = '#7A1FA2';
+      clonedDoc.body.style.minWidth = `${fullWidth}px`;
+      clonedDoc.body.style.maxWidth = `${fullWidth}px`;
+      clonedDoc.body.style.minHeight = `${fullHeight}px`;
+      clonedDoc.body.style.maxHeight = `${fullHeight}px`;
       clonedDoc.body.style.margin = '0';
       clonedDoc.body.style.padding = '0';
+      clonedDoc.body.style.border = 'none';
       clonedDoc.body.style.overflow = 'hidden';
-      if (clonedDoc.documentElement) {
-        clonedDoc.documentElement.style.width = `${fullWidth}px`;
-        clonedDoc.documentElement.style.height = `${fullHeight}px`;
-        clonedDoc.documentElement.style.margin = '0';
-        clonedDoc.documentElement.style.padding = '0';
-        clonedDoc.documentElement.style.overflow = 'hidden';
-      }
-    } else {
+      clonedDoc.body.style.backgroundColor = '#7A1FA2';
+    }
+
+    clonedElement.style.position = 'relative';
+    clonedElement.style.top = '0';
+    clonedElement.style.left = '0';
+    clonedElement.style.right = '0';
+    clonedElement.style.bottom = '0';
+    clonedElement.style.zIndex = '9999';
+    clonedElement.style.opacity = '1';
+    clonedElement.style.visibility = 'visible';
+    clonedElement.style.display = 'flex';
+    clonedElement.style.flexDirection = 'column';
+    clonedElement.style.justifyContent = 'space-between';
+    clonedElement.style.width = `${fullWidth}px`;
+    clonedElement.style.minWidth = `${fullWidth}px`;
+    clonedElement.style.maxWidth = `${fullWidth}px`;
+    clonedElement.style.height = `${fullHeight}px`;
+    clonedElement.style.minHeight = `${fullHeight}px`;
+    clonedElement.style.maxHeight = `${fullHeight}px`;
+    clonedElement.style.margin = '0';
+    clonedElement.style.padding = '0';
+    clonedElement.style.border = 'none';
+    clonedElement.style.borderRadius = '0';
+    clonedElement.style.boxShadow = 'none';
+    clonedElement.style.transform = 'none';
+    clonedElement.style.overflow = 'hidden';
+    clonedElement.style.boxSizing = 'border-box';
+    clonedElement.style.backgroundColor = '#7A1FA2';
+
+    if (clonedElement.id !== 'cbe-screenshot-exact-target') {
       const stripHeight = 58;
       const receiptContentHeight = shouldAddGrayStrip ? Math.max(600, fullHeight - stripHeight) : fullHeight;
       const existingReceipt = clonedDoc.getElementById('cbe-existing-receipt');
       if (existingReceipt) {
+        existingReceipt.style.width = '100%';
         existingReceipt.style.height = `${receiptContentHeight}px`;
         existingReceipt.style.minHeight = `${receiptContentHeight}px`;
         existingReceipt.style.flex = '1 1 auto';
-        existingReceipt.style.overflow = 'visible';
-        existingReceipt.style.backgroundColor = '#ffffff';
+        existingReceipt.style.display = 'flex';
+        existingReceipt.style.flexDirection = 'column';
+        existingReceipt.style.overflow = 'hidden';
+        existingReceipt.style.backgroundColor = '#7A1FA2';
+      }
+
+      const purpleHeaderInner = clonedDoc.getElementById('cbe-receipt-purple-header-inner');
+      if (purpleHeaderInner) {
+        const computedTop = parseFloat(clonedDoc.defaultView?.getComputedStyle(purpleHeaderInner).paddingTop || '70') || 70;
+        purpleHeaderInner.style.paddingTop = `${Math.max(70, computedTop)}px`;
       }
 
       const clonedScrollable = clonedElement.querySelector('.overflow-y-auto') as HTMLElement | null;
@@ -454,9 +486,11 @@ export async function captureReceiptElement(
       scale: pixelRatio,
       useCORS: true,
       allowTaint: true,
-      backgroundColor: '#ffffff',
+      backgroundColor: '#7A1FA2',
       logging: false,
       imageTimeout: 15000,
+      x: 0,
+      y: 0,
       scrollX: 0,
       scrollY: 0,
       width: fullWidth,
@@ -512,8 +546,10 @@ export async function captureReceiptElement(
         scale: 2,
         useCORS: true,
         allowTaint: true,
-        backgroundColor: '#ffffff',
+        backgroundColor: '#7A1FA2',
         logging: false,
+        x: 0,
+        y: 0,
         scrollX: 0,
         scrollY: 0,
         width: fullWidth,

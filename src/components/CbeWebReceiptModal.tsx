@@ -1052,6 +1052,8 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
     try {
       setIsDownloading(true);
       setDownloadError(null);
+      const targetWidth = targetElement.scrollWidth || targetElement.offsetWidth || 640;
+      const targetHeight = targetElement.scrollHeight || targetElement.offsetHeight;
       const canvas = await html2canvas(targetElement, {
         scale: 3.0,
         useCORS: true,
@@ -1059,6 +1061,14 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
         backgroundColor: '#ffffff',
         logging: false,
         imageTimeout: 15000,
+        x: 0,
+        y: 0,
+        scrollX: 0,
+        scrollY: 0,
+        width: targetWidth,
+        height: targetHeight,
+        windowWidth: targetWidth,
+        windowHeight: targetHeight,
       });
       const imgData = canvas.toDataURL('image/png');
       const isIos = checkIsIOS();
