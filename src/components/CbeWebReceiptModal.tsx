@@ -342,6 +342,81 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
   const pdfTableRef = useRef<HTMLDivElement>(null);
   const dragStartRef = useRef<{ clientX: number; clientY: number; startXPercent: number; startYPercent: number } | null>(null);
   const stampLastTapRef = useRef<{ time: number; x: number; y: number }>({ time: 0, x: 0, y: 0 });
+  const [showStandaloneMenuButton, setShowStandaloneMenuButton] = useState<boolean>(false);
+  const screenLastTapRef = useRef<{ time: number; x: number; y: number }>({ time: 0, x: 0, y: 0 });
+  const screenTouchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const screenLastTouchEndTimeRef = useRef<number>(0);
+
+  const isIgnoredScreenTapTarget = (target: EventTarget | null): boolean => {
+    const el = target as HTMLElement | null;
+    if (!el || typeof el.closest !== 'function') return false;
+    return Boolean(
+      el.closest('button, a, input, select, textarea, #cbe-stamp-container, #browser-settings-modal, #stamp-position-toolbar')
+    );
+  };
+
+  const toggleStandaloneMenuTrigger = () => {
+    setShowStandaloneMenuButton((prev) => {
+      const next = !prev;
+      if (!next) {
+        setIsMenuOpen(false);
+      }
+      return next;
+    });
+  };
+
+  const handleScreenTouchStart = (e: React.TouchEvent) => {
+    if (!standalone || viewMode !== 'web') return;
+    const touch = e.touches[0];
+    if (touch) {
+      screenTouchStartRef.current = { x: touch.clientX, y: touch.clientY };
+    }
+  };
+
+  const handleScreenTouchEnd = (e: React.TouchEvent) => {
+    if (!standalone || viewMode !== 'web') return;
+    if (isIgnoredScreenTapTarget(e.target)) return;
+    const touch = e.changedTouches[0];
+    if (!touch) return;
+
+    // Ignore scroll swipes
+    if (screenTouchStartRef.current) {
+      const moveDist = Math.hypot(touch.clientX - screenTouchStartRef.current.x, touch.clientY - screenTouchStartRef.current.y);
+      screenTouchStartRef.current = null;
+      if (moveDist > 16) return;
+    }
+
+    const now = Date.now();
+    screenLastTouchEndTimeRef.current = now;
+    const timeDiff = now - screenLastTapRef.current.time;
+    const dist = Math.hypot(touch.clientX - screenLastTapRef.current.x, touch.clientY - screenLastTapRef.current.y);
+
+    if (timeDiff > 40 && timeDiff < 450 && dist < 60) {
+      toggleStandaloneMenuTrigger();
+      screenLastTapRef.current = { time: 0, x: 0, y: 0 };
+    } else {
+      screenLastTapRef.current = { time: now, x: touch.clientX, y: touch.clientY };
+    }
+  };
+
+  const handleScreenClick = (e: React.MouseEvent) => {
+    if (!standalone || viewMode !== 'web') return;
+    if (isIgnoredScreenTapTarget(e.target)) return;
+
+    const now = Date.now();
+    // Skip synthetic click fired right after touchEnd on mobile
+    if (now - screenLastTouchEndTimeRef.current < 650) return;
+
+    const timeDiff = now - screenLastTapRef.current.time;
+    const dist = Math.hypot(e.clientX - screenLastTapRef.current.x, e.clientY - screenLastTapRef.current.y);
+
+    if (timeDiff > 40 && timeDiff < 450 && dist < 60) {
+      toggleStandaloneMenuTrigger();
+      screenLastTapRef.current = { time: 0, x: 0, y: 0 };
+    } else {
+      screenLastTapRef.current = { time: now, x: e.clientX, y: e.clientY };
+    }
+  };
 
   const wakeUpStampRearrange = () => {
     setIsEditingStampPosition(true);
@@ -1145,6 +1220,9 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
 
   return (
     <div 
+      onTouchStart={standalone && viewMode === 'web' ? handleScreenTouchStart : undefined}
+      onTouchEnd={standalone && viewMode === 'web' ? handleScreenTouchEnd : undefined}
+      onClick={standalone && viewMode === 'web' ? handleScreenClick : undefined}
       className={`${standalone ? 'relative flex-1' : 'fixed inset-0 z-[80]'} bg-[#f0f2f5] flex flex-col items-stretch justify-start overflow-hidden w-full h-full min-h-[100dvh] select-none`}
     >
       
@@ -1177,14 +1255,14 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
         onChange={handleUploadPdfLogoFile}
       />
 
-      {/* Floating utility trigger in Standalone Real Browser mode (no fake browser chrome) */}
-      {standalone && viewMode === 'web' && (
+      {/* Floating utility trigger in Standalone Real Browser mode (activated on double-tap) */}
+      {standalone && viewMode === 'web' && (showStandaloneMenuButton || isMenuOpen) && (
         <button
           type="button"
           onClick={() => setIsMenuOpen(prev => !prev)}
           data-html2canvas-ignore="true"
-          className="fixed top-3 right-3 z-40 w-9 h-9 rounded-full bg-white/90 hover:bg-white text-gray-700 hover:text-gray-950 border border-gray-200/90 shadow-md flex items-center justify-center transition active:scale-95 cursor-pointer backdrop-blur-xs"
-          title="Receipt Options & Stamp Settings"
+          className="fixed top-3 right-3 z-40 w-9 h-9 rounded-full bg-white/95 hover:bg-white text-gray-700 hover:text-gray-950 border border-gray-200/90 shadow-md flex items-center justify-center transition active:scale-95 cursor-pointer backdrop-blur-xs animate-in fade-in zoom-in-90 duration-150"
+          title="Receipt Options & Stamp Settings (double-tap screen to hide)"
           aria-label="Receipt Options & Stamp Settings"
         >
           <MoreVertical className="w-4.5 h-4.5" />
