@@ -240,31 +240,37 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
             <div className="absolute -right-12 -bottom-12 w-44 h-44 bg-[#deb356]/10 rounded-full blur-2xl pointer-events-none" />
 
             {/* Card Header: Emblem + Commercial Bank of Ethiopia (in ONE single line) */}
-            <div className="flex items-center gap-2.5 relative z-10 min-w-0">
-              <CbeGoldenLogo className="w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0" src={customBankLogo} />
+            <div className="flex items-center gap-3 relative z-10 min-w-0">
+              <CbeGoldenLogo className="w-9 h-9 sm:w-10 sm:h-10 flex-shrink-0" src={customBankLogo} />
               <div className="min-w-0 flex-1">
-                <h3 className="text-[#deb356] font-extrabold text-xs sm:text-[13px] tracking-wide leading-none whitespace-nowrap overflow-hidden text-ellipsis">
+                <h3 className="font-sans text-[#F5C249] font-bold text-[15.5px] sm:text-[17px] tracking-[-0.01em] leading-tight whitespace-nowrap overflow-hidden text-ellipsis drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]">
                   Commercial Bank of Ethiopia
                 </h3>
-                <p className="text-[#deb356]/80 text-[9px] sm:text-[10px] font-medium tracking-tight mt-1 whitespace-nowrap overflow-hidden text-ellipsis">
+                <p className="font-mono text-[#EDE49E] text-[11px] sm:text-[11.5px] font-medium tracking-[0.015em] leading-snug mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
                   The bank you can always rely on!
                 </p>
               </div>
             </div>
 
             {/* Card Center: Balance & Eye Toggle */}
-            <div className="my-5 flex justify-between items-center relative z-10">
+            <div className="my-5 sm:my-6 flex justify-between items-center relative z-10">
               <div className="flex items-baseline gap-2">
-                <span className="text-xl sm:text-2xl font-extrabold tracking-wider font-mono text-white">
-                  {showBalance ? currentUser.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '******'}
-                </span>
-                <span className="text-sm font-bold text-gray-300 font-mono">ETB</span>
+                {showBalance ? (
+                  <span className="font-sans text-[23px] sm:text-[25px] font-extrabold tracking-tight text-white leading-none">
+                    {currentUser.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                ) : (
+                  <span className="font-mono text-[24px] sm:text-[26px] font-extrabold tracking-[0.11em] text-white leading-none">
+                    ******
+                  </span>
+                )}
+                <span className="font-sans text-[15px] sm:text-[16px] font-bold text-white tracking-normal leading-none">ETB</span>
               </div>
 
               <button 
                 id="btn-toggle-balance"
                 onClick={toggleBalance}
-                className="p-1.5 text-gray-400 hover:text-white transition cursor-pointer"
+                className="p-1.5 text-[#B8BAC0] hover:text-white transition cursor-pointer"
                 title={showBalance ? "Hide Balance & Account" : "Show Balance & Account"}
               >
                 {showBalance ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
@@ -272,21 +278,21 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
             </div>
 
             {/* Card Bottom: Account Type & Masked/Unmasked Number with Copy Button */}
-            <div className="flex justify-between items-center text-xs text-[#EDE49E] relative z-10 font-mono">
-              <span className="font-semibold tracking-wide text-[#EDE49E]">
+            <div className="flex justify-between items-center text-[13.5px] sm:text-[14.5px] text-[#EDE49E] relative z-10 font-mono">
+              <span className="font-medium tracking-[0.03em] text-[#EDE49E]">
                 {formatCardAccount()}
               </span>
               <button 
                 onClick={copyAccountNum}
-                className="hover:text-amber-400 text-gray-400 p-1 transition cursor-pointer flex items-center gap-1"
+                className="hover:text-white text-[#C8CACF] p-1 transition cursor-pointer flex items-center gap-1"
                 title="Copy Account Number"
               >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <CopyIcon size={15} />}
+                {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <CopyIcon size={17} />}
               </button>
             </div>
 
             {/* Card Timestamp: True live current date & time */}
-            <div className="mt-3 text-center text-[10px] text-gray-400/90 font-mono tracking-wide">
+            <div className="mt-3.5 text-center font-sans text-[11.5px] sm:text-[12px] font-medium text-[#9CA3AF] tracking-[0.01em]">
               {formatCardDateTime(currentDateTime)}
             </div>
 
