@@ -133,13 +133,6 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
   const [iframeBlockedNotice, setIframeBlockedNotice] = useState<BiometricMethod | null>(null);
   const autoPromptedRef = useRef<boolean>(false);
 
-  // Detect iOS / iPhone device (physical iPhone/iPad OR iPhone phone model preset)
-  // On iPhone -> Face ID + notch safe area; on Android -> Fingerprint
-  const [isIOSDevice, setIsIOSDevice] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
-    return PhoneSettingsService.isIPhoneDevice() || PhoneSettingsService.isIPhoneMode();
-  });
-
   const [biometricMethod, setBiometricMethod] = useState<BiometricMethod>(() =>
     BiometricAuthService.getBiometricMethod()
   );
@@ -204,12 +197,10 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
       setCustomBiometricIcon(LocalDb.getCustomBiometricIcon());
     };
     const handleSettingsChange = () => {
-      setIsIOSDevice(PhoneSettingsService.isIPhoneDevice() || PhoneSettingsService.isIPhoneMode());
       setBiometricMethod(BiometricAuthService.getBiometricMethod());
     };
 
     const unsubPhoneSettings = PhoneSettingsService.subscribe(() => {
-      setIsIOSDevice(PhoneSettingsService.isIPhoneDevice() || PhoneSettingsService.isIPhoneMode());
       setBiometricMethod(BiometricAuthService.getBiometricMethod());
     });
 
@@ -570,12 +561,10 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
 
       {/* TOP BAR: Exact matching Image 1 & 2 */}
       {/* Left: Outline Bell | Center: English ⌵ | Right: 4-square Solid Grid Button */}
-      {/* Safe-area padding ensures top icons are never hidden beneath iPhone notch, status bar clock, or Dynamic Island */}
+      {/* Safe-area padding positions top icons just below the iPhone notch / Dynamic Island */}
       <div 
         style={{
-          paddingTop: isIOSDevice 
-            ? 'max(calc(env(safe-area-inset-top, 0px) + 14px), 54px)' 
-            : 'max(calc(env(safe-area-inset-top, 0px) + 14px), 24px)'
+          paddingTop: 'max(calc(env(safe-area-inset-top, 0px) + 4px), 10px)'
         }}
         className="px-6 max-w-md mx-auto w-full flex items-center justify-between relative z-30 shrink-0"
       >
