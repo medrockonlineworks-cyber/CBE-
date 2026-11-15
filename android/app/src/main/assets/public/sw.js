@@ -96,7 +96,7 @@ define(['./workbox-afac4cd2'], (function (workbox) { 'use strict';
     "revision": "1342bcb96eed0c937f3d575bde546d7b"
   }, {
     "url": "index.html",
-    "revision": "e9008dd60e8027aa4bddcd173b4f6201"
+    "revision": "4c337fc368351a4a3beeb1a08925eae3"
   }, {
     "url": "favicon.svg",
     "revision": "6fff91da078ff4540ee449170c156fbd"
@@ -128,22 +128,22 @@ define(['./workbox-afac4cd2'], (function (workbox) { 'use strict';
     "url": "icons/icon-192.png",
     "revision": "1342bcb96eed0c937f3d575bde546d7b"
   }, {
-    "url": "assets/web-ChmRldbF.js",
+    "url": "assets/web-UdJZltNM.js",
     "revision": null
   }, {
-    "url": "assets/web-BYydpGHA.js",
+    "url": "assets/web-D2ijI3RZ.js",
     "revision": null
   }, {
-    "url": "assets/web-2cBEWy2_.js",
+    "url": "assets/web-CyFSW0t-.js",
     "revision": null
   }, {
-    "url": "assets/vendor-icons-tAmpIcPP.js",
+    "url": "assets/web-C8F97YnJ.js",
     "revision": null
   }, {
-    "url": "assets/vendor-firebase-BnHNys5b.js",
+    "url": "assets/vendor-icons-NJWDDvJu.js",
     "revision": null
   }, {
-    "url": "assets/vendor-canvas-CfBi7dkN.js",
+    "url": "assets/vendor-canvas-mBl2Q45M.js",
     "revision": null
   }, {
     "url": "assets/right_side_sm.png",
@@ -152,13 +152,13 @@ define(['./workbox-afac4cd2'], (function (workbox) { 'use strict';
     "url": "assets/purify.es-DedTAGkB.js",
     "revision": null
   }, {
-    "url": "assets/index.es-CdJgNGyp.js",
+    "url": "assets/index.es-C4CeG0HU.js",
     "revision": null
   }, {
-    "url": "assets/index-CUXOjlwn.js",
+    "url": "assets/index-hnQM2Zxr.js",
     "revision": null
   }, {
-    "url": "assets/index-BJLsBQFn.css",
+    "url": "assets/index-BRQTVS0f.css",
     "revision": null
   }, {
     "url": "assets/comp_top_sm.png",
@@ -180,6 +180,9 @@ define(['./workbox-afac4cd2'], (function (workbox) { 'use strict';
     "revision": null
   }, {
     "url": "assets/aistudio/screenshot_1792332138603_2af199ff.png",
+    "revision": null
+  }, {
+    "url": "assets/aistudio/Screenshot_20261115-115316_efbf5425.png",
     "revision": null
   }, {
     "url": "assets/aistudio/Screenshot_20261112-104837_CBE_FT260636VV89_6a4e303f.png",

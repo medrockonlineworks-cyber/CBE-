@@ -77,7 +77,7 @@ export default function TransactionDetailModal({
     });
   }, []);
 
-  // Sync native status bar and background dimming to match dimmed CBE purple #380c50
+  // Sync native status bar and background dimming to match dimmed CBE purple #2d0a40
   useEffect(() => {
     SystemBarsService.applyModalOpenBars();
     return () => {

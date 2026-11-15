@@ -38,6 +38,7 @@
 	},
 	"packageClassList": [
 		"MediaPlugin",
+		"CAPBrowserPlugin",
 		"FilesystemPlugin",
 		"SharePlugin",
 		"StatusBarPlugin"

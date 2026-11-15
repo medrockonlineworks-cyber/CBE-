@@ -117,7 +117,7 @@ export class SystemBarsService {
 
   public static applyModalOpenBars(): void {
     this.applyBars({
-      statusBarColor: '#270838', // Exact matching dark filtered CBE purple (rgb(39, 8, 56)) for zero color difference on status bar
+      statusBarColor: '#2d0a40', // Exact #70189F blended with bg-black/60 (rgb(45, 10, 64)) so status bar matches the dimmed app header seamlessly
       navBarColor: '#ffffff',
       isDarkStyle: true,
     });
