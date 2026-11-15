@@ -61,10 +61,14 @@ import { SystemBarsService } from '../services/systemBarsService';
 import { checkIsIOS, dataUrlToBlob } from '../services/receiptScreenshotService';
 import {
   WebReceiptUrlPayload,
+  RealBrowserTargetMode,
   buildWebReceiptPayload,
+  buildOfficialCbeWebReceiptUrl,
   openWebReceiptInRealBrowser,
   isOpenInRealBrowserEnabled,
   setOpenInRealBrowserEnabled,
+  getRealBrowserTargetMode,
+  setRealBrowserTargetMode,
   getCustomWebReceiptHost,
   setCustomWebReceiptHost,
   resolveWebReceiptPublicOrigin,
@@ -208,6 +212,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [autoOpenRealBrowser, setAutoOpenRealBrowser] = useState<boolean>(() => isOpenInRealBrowserEnabled());
+  const [realBrowserTarget, setRealBrowserTarget] = useState<RealBrowserTargetMode>(() => getRealBrowserTargetMode());
   const [customWebHostInput, setCustomWebHostInput] = useState<string>(() => getCustomWebReceiptHost());
 
   // Browser bar customization state (synced with settings and localStorage)
@@ -1168,7 +1173,8 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
     showBarsToast('PDF logo reset to official CBE emblem');
   };
 
-  const handleOpenInRealBrowserNow = () => {
+  const handleOpenInRealBrowserNow = (targetModeOverride?: RealBrowserTargetMode) => {
+    const activeTarget = targetModeOverride || realBrowserTarget;
     const opened = openWebReceiptInRealBrowser({
       transaction: transaction || {
         id: receiptData.refId,
@@ -1192,9 +1198,14 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
       smsMessage,
       initialViewMode: viewMode,
       forceOpen: true,
+      targetModeOverride: activeTarget,
     });
     if (opened) {
-      showBarsToast('Opening receipt in real web browser...');
+      showBarsToast(
+        activeTarget === 'official_url'
+          ? `Opening ${buildOfficialCbeWebReceiptUrl(receiptData.refId)}`
+          : 'Opening receipt in real web browser...'
+      );
       setIsMenuOpen(false);
     } else {
       showBarsToast('Enter a public Web App URL below to launch external Chrome/Safari from native APK');
@@ -1206,6 +1217,16 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
     setAutoOpenRealBrowser(next);
     setOpenInRealBrowserEnabled(next);
     showBarsToast(next ? 'Web Receipts will open in real browser' : 'Web Receipts will open inside app');
+  };
+
+  const handleSelectRealBrowserTarget = (mode: RealBrowserTargetMode) => {
+    setRealBrowserTarget(mode);
+    setRealBrowserTargetMode(mode);
+    showBarsToast(
+      mode === 'official_url'
+        ? 'Real browser set to official mbreceipt.cbe.com.et URL'
+        : 'Real browser set to App Hosted (/v2-hfHCxG...)'
+    );
   };
 
   const handleSaveCustomWebHost = () => {
@@ -1286,7 +1307,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
             <ArrowLeft className="w-5 h-5" />
           </button>
 
-          {/* Left / Center: (i) Info icon + Exact URL: apps.cbe.com.et:100/?id=FT2... */}
+          {/* Left / Center: (i) Info icon + Exact URL: https://mbreceipt.cbe.com.et/v2-hfHCxG... */}
           <div 
             onClick={handleCopyLink}
             className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer select-none pr-2 py-0.5"
@@ -1297,11 +1318,11 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
               <path d="M12 7.5h.01M12 11v5" strokeWidth="2.2" strokeLinecap="round" />
             </svg>
 
-            <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis text-[13.5px] text-[#e5e5e5] font-normal tracking-tight font-sans">
+            <div className="flex-1 overflow-x-auto scrollbar-none whitespace-nowrap text-[12.5px] sm:text-[13.5px] text-[#e5e5e5] font-normal tracking-tight font-sans">
               {copiedUrl ? (
                 <span className="text-emerald-400 font-bold text-xs">Copied URL to clipboard!</span>
               ) : (
-                <span className="truncate block">{webReceiptUrl}</span>
+                <span className="block whitespace-nowrap">{webReceiptUrl}</span>
               )}
             </div>
           </div>
@@ -1372,11 +1393,11 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
               <path d="M12 11.2v5.3" strokeWidth="2" strokeLinecap="round" />
             </svg>
 
-            <div className="flex-1 overflow-hidden whitespace-nowrap text-ellipsis flex items-center">
+            <div className="flex-1 min-w-0 overflow-x-auto scrollbar-none whitespace-nowrap flex items-center">
               {copiedUrl ? (
                 <span className="text-emerald-400 font-bold text-xs">Copied URL to clipboard!</span>
               ) : (
-                <span className="text-[13.5px] text-[#e3e3e8] font-normal tracking-tight font-sans truncate">
+                <span className="text-[12.5px] sm:text-[13.5px] text-[#e3e3e8] font-normal tracking-tight font-sans whitespace-nowrap">
                   {webReceiptUrl}
                 </span>
               )}
@@ -1453,9 +1474,9 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
               <span className="text-sm">a</span>A
             </span>
 
-            <div className="flex items-center gap-1.5 overflow-hidden mx-2">
+            <div className="flex-1 min-w-0 flex items-center gap-1.5 overflow-x-auto scrollbar-none mx-2">
               <Lock className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
-              <span className="text-[13px] text-[#f2f2f7] font-sans font-medium tracking-tight truncate">
+              <span className="text-[12px] sm:text-[13px] text-[#f2f2f7] font-sans font-medium tracking-tight whitespace-nowrap">
                 {copiedUrl ? 'Copied!' : webReceiptUrl}
               </span>
             </div>
@@ -1514,9 +1535,9 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
             className="flex-1 bg-[#262730] hover:bg-[#30323c] h-9 rounded-full px-3.5 flex items-center justify-between cursor-pointer transition select-none mx-2 border border-neutral-700/60"
             title="Click to copy receipt URL"
           >
-            <div className="flex items-center gap-1.5 overflow-hidden">
+            <div className="flex-1 min-w-0 flex items-center gap-1.5 overflow-x-auto scrollbar-none pr-1.5">
               <Lock className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
-              <span className="text-[13px] text-white font-sans tracking-tight truncate">
+              <span className="text-[12px] sm:text-[13px] text-white font-sans tracking-tight whitespace-nowrap">
                 {copiedUrl ? 'Copied!' : webReceiptUrl}
               </span>
             </div>
@@ -1587,9 +1608,9 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
             className="flex-1 bg-[#1e2433] hover:bg-[#283044] h-9 rounded-full px-3 flex items-center justify-between cursor-pointer transition select-none mx-2 border border-[#2b354a]"
             title="Click to copy receipt URL"
           >
-            <div className="flex items-center gap-1.5 overflow-hidden">
+            <div className="flex-1 min-w-0 flex items-center gap-1.5 overflow-x-auto scrollbar-none">
               <SlidersHorizontal className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-              <span className="text-[13px] text-white font-sans tracking-tight truncate">
+              <span className="text-[12px] sm:text-[13px] text-white font-sans tracking-tight whitespace-nowrap">
                 {copiedUrl ? 'Copied!' : webReceiptUrl}
               </span>
             </div>
@@ -1633,10 +1654,10 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
             className="flex-1 bg-[#2b2a33] hover:bg-[#383742] h-9 rounded-xl px-3 flex items-center justify-between cursor-pointer transition select-none mx-2 border border-neutral-700/60"
             title="Click to copy receipt URL"
           >
-            <div className="flex items-center gap-1.5 overflow-hidden">
+            <div className="flex-1 min-w-0 flex items-center gap-1.5 overflow-x-auto scrollbar-none pr-1.5">
               <Shield className="w-3.5 h-3.5 text-purple-400 shrink-0" />
               <Lock className="w-3 h-3 text-neutral-400 shrink-0" />
-              <span className="text-[13px] text-neutral-100 font-sans tracking-tight truncate">
+              <span className="text-[12px] sm:text-[13px] text-neutral-100 font-sans tracking-tight whitespace-nowrap">
                 {copiedUrl ? 'Copied!' : webReceiptUrl}
               </span>
             </div>
@@ -1716,7 +1737,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
               <div className="mb-4 pb-3 border-b border-neutral-700/80 space-y-2.5">
                 <button
                   type="button"
-                  onClick={handleOpenInRealBrowserNow}
+                  onClick={() => handleOpenInRealBrowserNow()}
                   className="w-full px-3 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold flex items-center justify-between transition cursor-pointer shadow-md shadow-emerald-900/30"
                 >
                   <span className="flex items-center gap-2">
@@ -1741,6 +1762,41 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                   >
                     <span className="w-4.5 h-4.5 rounded-full bg-white shadow-xs" />
                   </button>
+                </div>
+
+                <div className="bg-neutral-850/80 border border-neutral-700/70 rounded-xl p-2.5 space-y-2">
+                  <div className="text-[10.5px] font-semibold text-neutral-300 flex items-center justify-between">
+                    <span>Real Browser Address Mode</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleSelectRealBrowserTarget('hosted')}
+                      className={`py-1.5 px-2 rounded-lg text-[10.5px] font-semibold transition text-center cursor-pointer border ${
+                        realBrowserTarget === 'hosted'
+                          ? 'bg-emerald-600/25 border-emerald-500 text-emerald-300'
+                          : 'bg-neutral-900 border-neutral-700 text-neutral-400 hover:text-neutral-200'
+                      }`}
+                    >
+                      App Hosted (/v2-hfHCxG...)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleSelectRealBrowserTarget('official_url')}
+                      className={`py-1.5 px-2 rounded-lg text-[10.5px] font-semibold transition text-center cursor-pointer border ${
+                        realBrowserTarget === 'official_url'
+                          ? 'bg-emerald-600/25 border-emerald-500 text-emerald-300'
+                          : 'bg-neutral-900 border-neutral-700 text-neutral-400 hover:text-neutral-200'
+                      }`}
+                    >
+                      CBE URL (mbreceipt...)
+                    </button>
+                  </div>
+                  <div className="text-[9.5px] text-neutral-400 leading-relaxed font-mono break-all bg-neutral-900/70 px-2 py-1 rounded border border-neutral-800">
+                    {realBrowserTarget === 'official_url'
+                      ? webReceiptUrl
+                      : `${resolveWebReceiptPublicOrigin() || ''}/v2-hfHCxG${receiptData.refId}`}
+                  </div>
                 </div>
 
                 <div className="bg-neutral-850/80 border border-neutral-700/70 rounded-xl p-2.5 space-y-1.5">

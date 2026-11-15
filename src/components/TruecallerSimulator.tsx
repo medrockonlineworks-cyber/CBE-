@@ -3800,8 +3800,8 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                       </div>
                       <div className="flex justify-between py-1 border-b border-neutral-800/60">
                         <span className="text-neutral-400">Official Portal</span>
-                        <a href="https://apps.cbe.com.et" target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">
-                          apps.cbe.com.et
+                        <a href="https://mbreceipt.cbe.com.et" target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">
+                          mbreceipt.cbe.com.et
                         </a>
                       </div>
                       <div className="flex justify-between py-1">

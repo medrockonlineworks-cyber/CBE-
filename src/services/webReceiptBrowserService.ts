@@ -23,9 +23,12 @@ export interface WebReceiptUrlPayload {
   viewMode?: 'web' | 'pdf';
 }
 
+export type RealBrowserTargetMode = 'hosted' | 'official_url';
+
 const STORAGE_PUBLIC_ORIGIN_KEY = 'cbe_webreceipt_public_origin';
 const STORAGE_CUSTOM_HOST_KEY = 'cbe_webreceipt_custom_host';
 const STORAGE_AUTO_OPEN_REAL_BROWSER_KEY = 'cbe_webreceipt_open_in_real_browser';
+const STORAGE_REAL_BROWSER_TARGET_MODE_KEY = 'cbe_webreceipt_real_browser_target';
 const STORAGE_PAYLOAD_PREFIX = 'cbe_webreceipt_payload_';
 
 export function numberToCbeWords(amount: number): string {
@@ -405,6 +408,26 @@ export function setOpenInRealBrowserEnabled(enabled: boolean): void {
   } catch {}
 }
 
+export function getRealBrowserTargetMode(): RealBrowserTargetMode {
+  try {
+    const raw = localStorage.getItem(STORAGE_REAL_BROWSER_TARGET_MODE_KEY);
+    return raw === 'official_url' ? 'official_url' : 'hosted';
+  } catch {
+    return 'hosted';
+  }
+}
+
+export function setRealBrowserTargetMode(mode: RealBrowserTargetMode): void {
+  try {
+    localStorage.setItem(STORAGE_REAL_BROWSER_TARGET_MODE_KEY, mode);
+  } catch {}
+}
+
+export function buildOfficialCbeWebReceiptUrl(refId?: string | null): string {
+  const cleanId = formatTo12CharTxId(refId || 'FT263198WG29');
+  return `https://mbreceipt.cbe.com.et/v2-hfHCxG${cleanId}`;
+}
+
 export function resolveWebReceiptPublicOrigin(): string | null {
   if (typeof window === 'undefined') return null;
 
@@ -553,11 +576,23 @@ export function openWebReceiptInRealBrowser(params: {
   smsMessage?: SmsMessage | null;
   initialViewMode?: 'web' | 'pdf';
   forceOpen?: boolean;
+  targetModeOverride?: RealBrowserTargetMode;
 }): boolean {
-  const { transaction, smsMessage, initialViewMode, forceOpen = false } = params;
+  const { transaction, smsMessage, initialViewMode, forceOpen = false, targetModeOverride } = params;
 
   if (!forceOpen && !isOpenInRealBrowserEnabled()) {
     return false;
+  }
+
+  const targetMode = targetModeOverride || getRealBrowserTargetMode();
+  if (targetMode === 'official_url') {
+    const payload = buildWebReceiptPayload({
+      transaction,
+      smsMessage,
+      initialViewMode,
+    });
+    saveWebReceiptPayload(payload);
+    return openExternalUrlInBrowser(buildOfficialCbeWebReceiptUrl(payload.refId));
   }
 
   const origin = resolveWebReceiptPublicOrigin();

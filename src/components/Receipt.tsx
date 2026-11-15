@@ -506,7 +506,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   // Dynamic realistic CBE Transaction ID: 12 characters exactly (e.g. FT263211VK07)
   const txId = formatTo12CharTxId(transaction.id || transaction.reference);
 
-  const receiptUrl = `https://mbreceipt.cbe.com.et/v2-${txId}`;
+  const receiptUrl = `https://mbreceipt.cbe.com.et/v2-hfHCxG${txId}`;
   const feedbackUrl = 'https://forms.gle/kGNGQpG3mQCCk3iD6';
 
   const cleanSenderDisplayName = cbeSenderFullName.replace(/\s*\(Admin\)/i, '').replace(/\s*\(\d{4}\)/, '').trim() || 'Leykun Jemaneh Ylma';

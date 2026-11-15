@@ -7,7 +7,7 @@
  *    - Feedback link and mreceipt URL
  *    - Bottom Android soft navigation bar
  * 2. Mobile Browser CBE Web Receipt Screenshot:
- *    - Top Chrome/Phoenix browser URL bar: "apps.cbe.com.et:100/?id=[Ref]" with lock icon and refresh
+ *    - Top Chrome/Phoenix browser URL bar: "https://mbreceipt.cbe.com.et/v2-hfHCxG[Ref]" with lock icon and refresh
  *    - Commercial Bank of Ethiopia header & customer info
  *    - Payment / Transaction Informations table (Payer, Account, Receiver, Account, Date, Ref, Amount)
  *    - Official CBE Purple Circular Rubber Stamp with Ethiopian & English text and CBE crest!
@@ -110,8 +110,8 @@ export function generateSmsScreenshotDataUrl(data: TransactionMockData): string 
 
       <!-- Links section -->
       <text x="16" y="200" font-size="13" font-family="sans-serif">
-        <tspan x="16" dy="0" fill="%230284c7" text-decoration="underline">https://mreceipt.cbe.com.et/v2-hfHCx</tspan>
-        <tspan x="16" dy="20" fill="%230284c7" text-decoration="underline">/${ref}</tspan>
+        <tspan x="16" dy="0" fill="%230284c7" text-decoration="underline">https://mbreceipt.cbe.com.et/v2-hfHCxG</tspan>
+        <tspan x="16" dy="20" fill="%230284c7" text-decoration="underline">${ref}</tspan>
         <tspan x="16" dy="24" fill="%23475569">for feedback:</tspan>
         <tspan x="16" dy="22" fill="%230284c7" text-decoration="underline">https://forms.gle/kGNGQpG3mQCCk3iD</tspan>
       </text>
@@ -169,7 +169,7 @@ export function generateCbeWebReceiptScreenshotDataUrl(data: TransactionMockData
       <rect width="336" height="32" rx="16" fill="%230f172a"/>
       <!-- Lock Icon -->
       <path d="M12 18 v-3 a3 3 0 0 1 6 0 v3 m-7 0 h8 a2 2 0 0 1 2 2 v6 a2 2 0 0 1 -2 2 h-8 a2 2 0 0 1 -2 -2 v-6 a2 2 0 0 1 2 -2" stroke="%2394a3b8" stroke-width="1.6" fill="none"/>
-      <text x="28" y="21" fill="%23e2e8f0" font-size="12" font-family="sans-serif">apps.cbe.com.et:100/?id=${ref.substring(0, 7)}...</text>
+      <text x="28" y="21" fill="%23e2e8f0" font-size="11" font-family="sans-serif">https://mbreceipt.cbe.com.et/v2-hfHCxG${ref}</text>
       <!-- Refresh Icon -->
       <g transform="translate(310, 8)">
         <circle cx="8" cy="8" r="6" fill="none" stroke="%2394a3b8" stroke-width="1.8" stroke-dasharray="28, 6"/>
