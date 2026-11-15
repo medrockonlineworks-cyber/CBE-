@@ -76,11 +76,14 @@ export const AccountCard: React.FC<AccountCardProps> = ({
       {/* Compact Dark CBE Account Card */}
       <div 
         id="cbe-account-card"
-        className="account-card w-full bg-[#18191c] rounded-3xl p-5 shadow-2xl text-white relative overflow-hidden border border-white/10"
+        style={{
+          background:
+            'linear-gradient(160deg, rgba(44, 42, 49, 0.92) 0%, rgba(36, 36, 40, 0.96) 52%, rgba(28, 28, 32, 0.98) 100%)',
+        }}
+        className="account-card w-full rounded-[22px] sm:rounded-3xl p-5 shadow-[0_14px_34px_rgba(0,0,0,0.28)] text-white relative overflow-hidden border border-white/12 backdrop-blur-[2px]"
       >
-        {/* Subtle Halftone Dotted Texture */}
+        {/* Subtle Halftone Dotted World Map Texture */}
         <DottedWorldMap />
-        <div className="absolute -right-10 -bottom-10 w-36 h-36 bg-[#deb356]/10 rounded-full blur-2xl pointer-events-none" />
 
         {/* TOP SECTION: Bank Emblem & Bank Titles */}
         <div className="relative z-10 flex items-center justify-between gap-2 min-w-0">
@@ -100,10 +103,10 @@ export const AccountCard: React.FC<AccountCardProps> = ({
             </div>
 
             <div className="min-w-0 flex-1">
-              <h3 className="font-sans text-[#F5C249] font-bold text-[15.5px] sm:text-[17px] tracking-[-0.01em] leading-tight whitespace-nowrap overflow-hidden text-ellipsis drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]">
+              <h3 className="font-sans text-[#F6C84C] font-bold text-[15.5px] sm:text-[17px] tracking-[-0.01em] leading-tight whitespace-nowrap overflow-hidden text-ellipsis drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]">
                 {bankName}
               </h3>
-              <p className="font-mono text-[#EDE49E] text-[11px] sm:text-[11.5px] font-medium tracking-[0.015em] leading-snug mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
+              <p className="font-mono text-[#E8CF84] text-[11px] sm:text-[11.5px] font-medium tracking-[0.015em] leading-snug mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
                 {slogan}
               </p>
             </div>
@@ -134,20 +137,20 @@ export const AccountCard: React.FC<AccountCardProps> = ({
             type="button"
             aria-label={showBalance ? "Hide Account Balance" : "Show Account Balance"}
             onClick={handleToggle}
-            className="absolute right-0 p-1.5 rounded-full text-[#B8BAC0] hover:text-white transition-colors cursor-pointer active:scale-95"
+            className="absolute right-0 p-1.5 rounded-full text-[#A4A6AC] hover:text-white transition-colors cursor-pointer active:scale-95"
             title={showBalance ? "Hide Balance & Account" : "Show Balance & Account"}
           >
             {showBalance ? (
               <EyeOpenIcon size={22} className="text-[#D1D5DB]" strokeWidth={1.9} />
             ) : (
-              <EyeOffIcon size={22} className="text-[#B8BAC0]" strokeWidth={1.9} />
+              <EyeOffIcon size={22} className="text-[#A4A6AC]" strokeWidth={1.9} />
             )}
           </button>
         </div>
 
         {/* BOTTOM SECTION: Account Type/Number & Copy Icon (Centered together) */}
-        <div className="flex items-center justify-center text-[13.5px] sm:text-[14.5px] text-[#EDE49E] relative z-10 font-mono">
-          <span className="font-medium tracking-[0.03em] text-[#EDE49E] select-text">
+        <div className="flex items-center justify-center text-[13.5px] sm:text-[14.5px] text-[#EAE292] relative z-10 font-mono">
+          <span className="font-medium tracking-[0.03em] text-[#EAE292] select-text">
             {formattedAccountDisplay}
           </span>
           <button
@@ -155,19 +158,19 @@ export const AccountCard: React.FC<AccountCardProps> = ({
             type="button"
             aria-label="Copy Account Number"
             onClick={handleCopy}
-            className="ml-2 hover:text-white text-[#C8CACF] p-0.5 transition cursor-pointer flex items-center active:scale-95"
+            className="ml-2 hover:text-white text-[#C9CBD1] p-0.5 transition cursor-pointer flex items-center active:scale-95"
             title="Copy Account Number"
           >
             {copied ? (
               <Check className="w-4 h-4 text-emerald-400 stroke-[2.5]" />
             ) : (
-              <CopyIcon size={17} className="text-[#C8CACF] hover:text-white" strokeWidth={1.6} />
+              <CopyIcon size={17} className="text-[#C9CBD1] hover:text-white" strokeWidth={1.6} />
             )}
           </button>
         </div>
 
         {/* Date & Time display */}
-        <div className="mt-3.5 text-center font-sans text-[11.5px] sm:text-[12px] font-medium text-[#9CA3AF] tracking-[0.01em]">
+        <div className="mt-3.5 text-center font-sans text-[11.5px] sm:text-[12px] font-medium text-[#92949A] tracking-[0.01em] relative z-10">
           {dateTimeString}
         </div>
       </div>
