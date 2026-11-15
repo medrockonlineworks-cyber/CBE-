@@ -6,6 +6,8 @@ import { TruecallerService } from '../services/truecallerService';
 import { BiometricAuthService, BiometricAvailability } from '../services/biometricAuthService';
 import { AuthSessionService, ActiveDeviceSession } from '../services/authSessionService';
 import { CbeLogo } from './CbeLogo';
+import { compressImageFile } from '../lib/imageUtils';
+import { CbeFingerprintIcon, CbeFaceIdIcon } from './Auth';
 import { 
   User, 
   Lock, 
@@ -37,6 +39,7 @@ import {
   PhoneCall,
   Loader2,
   RefreshCw,
+  RotateCcw,
   ShieldCheck,
   MonitorSmartphone,
   Hash
@@ -103,10 +106,26 @@ export default function Profile({
     BiometricAuthService.isBiometricEnrolledForUser(currentUser.id)
   );
   const [biometricBusy, setBiometricBusy] = useState(false);
+  const [customBiometricIcon, setCustomBiometricIcon] = useState<string | null>(() =>
+    LocalDb.getCustomBiometricIcon()
+  );
+  const [isUploadingBiometricIcon, setIsUploadingBiometricIcon] = useState(false);
   const [availabilityInfo, setAvailabilityInfo] = useState<BiometricAvailability | null>(null);
   const [checkingAvailability, setCheckingAvailability] = useState(false);
   const [smsAlerts, setSmsAlerts] = useState(true);
   const [emailStatements, setEmailStatements] = useState(false);
+
+  useEffect(() => {
+    const syncBiometricIcon = () => {
+      setCustomBiometricIcon(LocalDb.getCustomBiometricIcon());
+    };
+    window.addEventListener('cbe_biometric_icon_updated', syncBiometricIcon);
+    window.addEventListener('storage', syncBiometricIcon);
+    return () => {
+      window.removeEventListener('cbe_biometric_icon_updated', syncBiometricIcon);
+      window.removeEventListener('storage', syncBiometricIcon);
+    };
+  }, []);
 
   // Active backend device sessions
   const [activeSessions, setActiveSessions] = useState<ActiveDeviceSession[]>([]);
@@ -558,6 +577,58 @@ export default function Profile({
     setCheckingAvailability(false);
   };
 
+  const handleBiometricIconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setErrorMsg('');
+    setSuccessMsg('');
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setErrorMsg('Please select a valid image file (PNG, JPG, SVG, or WebP).');
+      return;
+    }
+
+    try {
+      setIsUploadingBiometricIcon(true);
+      const optimized = await compressImageFile(file, 320, 0.92);
+      const saved = LocalDb.setCustomBiometricIcon(optimized);
+      if (!saved) {
+        setErrorMsg('Image is too large for browser storage. Please choose a smaller image.');
+        return;
+      }
+      setCustomBiometricIcon(optimized);
+      LocalDb.addAuditLog(
+        currentUser.id,
+        currentUser.email,
+        'UPDATE_BIOMETRIC_ICON',
+        'User uploaded a custom biometric icon image in Settings.'
+      );
+      setSuccessMsg('Biometric icon updated! It is now active on the login screen.');
+      setTimeout(() => setSuccessMsg(''), 4000);
+    } catch (err) {
+      console.error('Biometric icon upload failed:', err);
+      setErrorMsg('Failed to process biometric icon image. Please try another file.');
+    } finally {
+      setIsUploadingBiometricIcon(false);
+    }
+  };
+
+  const handleResetBiometricIcon = () => {
+    setErrorMsg('');
+    setSuccessMsg('');
+    LocalDb.setCustomBiometricIcon(null);
+    setCustomBiometricIcon(null);
+    LocalDb.addAuditLog(
+      currentUser.id,
+      currentUser.email,
+      'RESET_BIOMETRIC_ICON',
+      'User reset biometric icon back to the default icon.'
+    );
+    setSuccessMsg('Biometric icon reset to default.');
+    setTimeout(() => setSuccessMsg(''), 3500);
+  };
+
   const handleLoadActiveSessions = async () => {
     setLoadingSessions(true);
     setErrorMsg('');
@@ -999,6 +1070,113 @@ export default function Profile({
               )}
             </div>
           )}
+
+          {/* Custom Biometric Icon Upload */}
+          <div className="border-t border-gray-100 pt-3.5 space-y-3">
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-gray-800">Biometric Icon Image</p>
+                <p className="text-[10px] text-gray-400">
+                  Customize the icon on &quot;USE BIOMETRICS&quot; &amp; &quot;Authenticating...&quot;
+                </p>
+              </div>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                customBiometricIcon ? 'bg-purple-100 text-[#70189F]' : 'bg-gray-100 text-gray-500'
+              }`}>
+                {customBiometricIcon ? 'Custom Image' : 'Default'}
+              </span>
+            </div>
+
+            {/* Dual Live Preview + Upload/Reset Controls */}
+            <div className="bg-gray-50/90 border border-gray-100 rounded-2xl p-3 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2.5 shrink-0">
+                {/* Preview 1: Purple USE BIOMETRICS button */}
+                <div
+                  className="w-12 h-12 rounded-full bg-[#841ca6]/18 p-[3px] flex items-center justify-center"
+                  title="Login Button Preview"
+                >
+                  <span className="w-full h-full rounded-full bg-[#841ca6] border border-white flex items-center justify-center overflow-hidden shadow-xs">
+                    {customBiometricIcon ? (
+                      <img
+                        src={customBiometricIcon}
+                        alt="Custom biometric button preview"
+                        className="w-6 h-6 object-contain pointer-events-none select-none"
+                      />
+                    ) : BiometricAuthService.getBiometricMethod() === 'faceid' ? (
+                      <CbeFaceIdIcon size={21} strokeColor="#ffffff" strokeWidth={1.9} />
+                    ) : (
+                      <CbeFingerprintIcon size={22} strokeColor="#ffffff" strokeWidth={1.9} />
+                    )}
+                  </span>
+                </div>
+
+                {/* Preview 2: Authenticating... popup ring */}
+                <div
+                  className="relative w-12 h-12 rounded-2xl bg-white border border-gray-200 flex items-center justify-center shadow-2xs"
+                  title="Authenticating Dialog Preview"
+                >
+                  <svg className="absolute inset-1 w-10 h-10" viewBox="0 0 84 84" fill="none">
+                    <circle
+                      cx="42"
+                      cy="42"
+                      r="36"
+                      stroke="#dc2626"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeDasharray="155 240"
+                    />
+                  </svg>
+                  {customBiometricIcon ? (
+                    <img
+                      src={customBiometricIcon}
+                      alt="Custom biometric dialog preview"
+                      className="w-5.5 h-5.5 object-contain pointer-events-none select-none"
+                    />
+                  ) : BiometricAuthService.getBiometricMethod() === 'faceid' ? (
+                    <CbeFaceIdIcon size={20} strokeColor="#70189F" strokeWidth={2.0} />
+                  ) : (
+                    <CbeFingerprintIcon size={21} strokeColor="#70189F" strokeWidth={2.0} />
+                  )}
+                </div>
+              </div>
+
+              <div className="flex flex-1 flex-wrap items-center justify-end gap-2">
+                <label
+                  htmlFor="input-biometric-icon-upload"
+                  className={`px-3 py-2 rounded-xl bg-[#70189F] hover:bg-[#5e1385] text-white text-[11px] font-bold flex items-center gap-1.5 transition shadow-xs cursor-pointer ${
+                    isUploadingBiometricIcon ? 'opacity-60 pointer-events-none' : ''
+                  }`}
+                >
+                  {isUploadingBiometricIcon ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <Upload className="w-3.5 h-3.5" />
+                  )}
+                  <span>{customBiometricIcon ? 'Change Image' : 'Upload Image'}</span>
+                  <input
+                    id="input-biometric-icon-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleBiometricIconUpload}
+                    disabled={isUploadingBiometricIcon}
+                    className="hidden"
+                  />
+                </label>
+
+                {customBiometricIcon && (
+                  <button
+                    id="btn-reset-biometric-icon"
+                    type="button"
+                    onClick={handleResetBiometricIcon}
+                    className="px-2.5 py-2 rounded-xl bg-white hover:bg-rose-50 border border-gray-200 hover:border-rose-200 text-rose-600 text-[11px] font-bold flex items-center gap-1 transition cursor-pointer"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Reset</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
 
           {/* Change PIN Accordion */}
           <div className="border-t border-gray-50 pt-3">

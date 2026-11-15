@@ -2639,6 +2639,33 @@ export class LocalDb {
     window.dispatchEvent(new CustomEvent('cbe_stamp_updated', { detail: { stamp } }));
   }
 
+  static getCustomBiometricIcon(): string | null {
+    try {
+      const val = localStorage.getItem('tana_custom_biometric_icon');
+      return val && val.trim().length > 0 ? val : null;
+    } catch {
+      return null;
+    }
+  }
+
+  static setCustomBiometricIcon(icon: string | null): boolean {
+    try {
+      if (!icon || icon.trim().length === 0) {
+        localStorage.removeItem('tana_custom_biometric_icon');
+      } else {
+        localStorage.setItem('tana_custom_biometric_icon', icon);
+      }
+    } catch (err) {
+      console.warn('[LocalDb] Failed writing custom biometric icon to localStorage:', err);
+      return false;
+    }
+
+    window.dispatchEvent(
+      new CustomEvent('cbe_biometric_icon_updated', { detail: { icon: icon || null } })
+    );
+    return true;
+  }
+
   static getWebStampSize(): number {
     try {
       const val = localStorage.getItem('tana_web_bank_stamp_size') || localStorage.getItem('tana_bank_stamp_size');

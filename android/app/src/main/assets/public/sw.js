@@ -96,7 +96,7 @@ define(['./workbox-afac4cd2'], (function (workbox) { 'use strict';
     "revision": "1342bcb96eed0c937f3d575bde546d7b"
   }, {
     "url": "index.html",
-    "revision": "4c337fc368351a4a3beeb1a08925eae3"
+    "revision": "7763427bce63cf231ed2cbf8bc6fca89"
   }, {
     "url": "favicon.svg",
     "revision": "6fff91da078ff4540ee449170c156fbd"
@@ -128,16 +128,16 @@ define(['./workbox-afac4cd2'], (function (workbox) { 'use strict';
     "url": "icons/icon-192.png",
     "revision": "1342bcb96eed0c937f3d575bde546d7b"
   }, {
-    "url": "assets/web-UdJZltNM.js",
+    "url": "assets/web-DRmvWDLf.js",
     "revision": null
   }, {
-    "url": "assets/web-D2ijI3RZ.js",
+    "url": "assets/web-CRuOXE6G.js",
     "revision": null
   }, {
-    "url": "assets/web-CyFSW0t-.js",
+    "url": "assets/web-Bt55Xlqi.js",
     "revision": null
   }, {
-    "url": "assets/web-C8F97YnJ.js",
+    "url": "assets/web-BF24vw51.js",
     "revision": null
   }, {
     "url": "assets/vendor-icons-NJWDDvJu.js",
@@ -155,10 +155,10 @@ define(['./workbox-afac4cd2'], (function (workbox) { 'use strict';
     "url": "assets/index.es-C4CeG0HU.js",
     "revision": null
   }, {
-    "url": "assets/index-hnQM2Zxr.js",
+    "url": "assets/index-CEmqGW1z.js",
     "revision": null
   }, {
-    "url": "assets/index-BRQTVS0f.css",
+    "url": "assets/index--kMJBPD4.css",
     "revision": null
   }, {
     "url": "assets/comp_top_sm.png",
@@ -183,6 +183,9 @@ define(['./workbox-afac4cd2'], (function (workbox) { 'use strict';
     "revision": null
   }, {
     "url": "assets/aistudio/Screenshot_20261115-115316_efbf5425.png",
+    "revision": null
+  }, {
+    "url": "assets/aistudio/Screenshot_20261115-115141_7cce7bd4.png",
     "revision": null
   }, {
     "url": "assets/aistudio/Screenshot_20261112-104837_CBE_FT260636VV89_6a4e303f.png",

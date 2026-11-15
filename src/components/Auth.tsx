@@ -143,6 +143,33 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
   const [biometricMethod, setBiometricMethod] = useState<BiometricMethod>(() =>
     BiometricAuthService.getBiometricMethod()
   );
+  const [customBiometricIcon, setCustomBiometricIcon] = useState<string | null>(() =>
+    LocalDb.getCustomBiometricIcon()
+  );
+
+  const renderBiometricGlyph = (
+    size: number,
+    strokeColor: string,
+    strokeWidth = 1.9,
+    imgSize?: number
+  ) => {
+    if (customBiometricIcon) {
+      const boxSize = imgSize ?? size;
+      return (
+        <img
+          src={customBiometricIcon}
+          alt="Biometric"
+          style={{ width: boxSize, height: boxSize }}
+          className="object-contain pointer-events-none select-none"
+        />
+      );
+    }
+    return biometricMethod === 'faceid' ? (
+      <CbeFaceIdIcon size={size} strokeColor={strokeColor} strokeWidth={strokeWidth} />
+    ) : (
+      <CbeFingerprintIcon size={size} strokeColor={strokeColor} strokeWidth={strokeWidth} />
+    );
+  };
 
   // Active account selection
   const [usersList, setUsersList] = useState<UserProfile[]>(() => LocalDb.getUsers());
@@ -171,6 +198,10 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
   useEffect(() => {
     const handleUpdate = () => {
       setUsersList(LocalDb.getUsers());
+      setCustomBiometricIcon(LocalDb.getCustomBiometricIcon());
+    };
+    const handleBiometricIconUpdate = () => {
+      setCustomBiometricIcon(LocalDb.getCustomBiometricIcon());
     };
     const handleSettingsChange = () => {
       setIsIOSDevice(PhoneSettingsService.isIPhoneDevice() || PhoneSettingsService.isIPhoneMode());
@@ -184,6 +215,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
 
     window.addEventListener('storage', handleUpdate);
     window.addEventListener('cbe_account_switched', handleUpdate);
+    window.addEventListener('cbe_biometric_icon_updated', handleBiometricIconUpdate);
     window.addEventListener('tana_phone_settings_changed', handleSettingsChange);
 
     // For Login page: status bar and navigation bar must both be pure white (#ffffff)
@@ -203,6 +235,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
       unsubPhoneSettings();
       window.removeEventListener('storage', handleUpdate);
       window.removeEventListener('cbe_account_switched', handleUpdate);
+      window.removeEventListener('cbe_biometric_icon_updated', handleBiometricIconUpdate);
       window.removeEventListener('tana_phone_settings_changed', handleSettingsChange);
       SystemBarsService.applyDualSystemBars();
     };
@@ -809,12 +842,8 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
                 isBiometricScanning ? 'animate-pulse ring-4 ring-purple-300/60' : 'hover:bg-[#841ca6]/24'
               }`}
             >
-              <span className="w-full h-full rounded-full bg-[#841ca6] hover:bg-[#731693] border-[2px] border-white flex items-center justify-center text-white shadow-sm transition-colors">
-                {biometricMethod === 'faceid' ? (
-                  <CbeFaceIdIcon size={35} strokeColor="#ffffff" strokeWidth={1.9} />
-                ) : (
-                  <CbeFingerprintIcon size={37} strokeColor="#ffffff" strokeWidth={1.9} />
-                )}
+              <span className="w-full h-full rounded-full bg-[#841ca6] hover:bg-[#731693] border-[2px] border-white flex items-center justify-center text-white shadow-sm transition-colors overflow-hidden">
+                {renderBiometricGlyph(biometricMethod === 'faceid' ? 35 : 37, '#ffffff', 1.9, 42)}
               </span>
             </button>
 
@@ -867,15 +896,11 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
               aria-label="Use Biometrics"
               onClick={handleBiometricsLogin}
               disabled={isBiometricScanning}
-              className={`w-14 h-14 rounded-full bg-[#70189F] hover:bg-[#5e1385] active:scale-95 text-white flex items-center justify-center shadow-md transition-all cursor-pointer relative ${
+              className={`w-14 h-14 rounded-full bg-[#70189F] hover:bg-[#5e1385] active:scale-95 text-white flex items-center justify-center shadow-md transition-all cursor-pointer relative overflow-hidden ${
                 isBiometricScanning ? 'animate-pulse ring-4 ring-purple-300' : ''
               }`}
             >
-              {biometricMethod === 'faceid' ? (
-                <CbeFaceIdIcon size={30} strokeColor="#ffffff" strokeWidth={1.9} />
-              ) : (
-                <CbeFingerprintIcon size={32} strokeColor="#ffffff" strokeWidth={1.9} />
-              )}
+              {renderBiometricGlyph(biometricMethod === 'faceid' ? 30 : 32, '#ffffff', 1.9, 34)}
             </button>
 
             <button
@@ -1008,11 +1033,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
               disabled={isBiometricScanning}
               className="flex items-center gap-1.5 text-xs font-bold text-[#70189F] hover:underline cursor-pointer disabled:opacity-70"
             >
-              {biometricMethod === 'faceid' ? (
-                <CbeFaceIdIcon size={18} strokeColor="#70189F" strokeWidth={2.0} />
-              ) : (
-                <CbeFingerprintIcon size={18} strokeColor="#70189F" strokeWidth={2.0} />
-              )}
+              {renderBiometricGlyph(18, '#70189F', 2.0, 18)}
               <span>Use Biometrics</span>
             </button>
 
@@ -1068,11 +1089,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
                       strokeDasharray="166 240"
                     />
                   </svg>
-                  {biometricMethod === 'faceid' ? (
-                    <CbeFaceIdIcon size={42} strokeColor="#70189F" strokeWidth={2.0} />
-                  ) : (
-                    <CbeFingerprintIcon size={44} strokeColor="#70189F" strokeWidth={2.0} />
-                  )}
+                  {renderBiometricGlyph(biometricMethod === 'faceid' ? 42 : 44, '#70189F', 2.0, 46)}
                 </div>
                 <p className="text-[#4b5563] text-[15px] font-medium mt-4 tracking-normal">
                   Authenticating...
@@ -1093,12 +1110,8 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
             onClick={(e) => e.stopPropagation()}
             className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl border border-neutral-100 text-center"
           >
-            <div className="w-14 h-14 rounded-full bg-purple-100 text-[#70189F] flex items-center justify-center mx-auto mb-3">
-              {iframeBlockedNotice === 'faceid' ? (
-                <CbeFaceIdIcon size={28} strokeColor="#70189F" strokeWidth={2} />
-              ) : (
-                <CbeFingerprintIcon size={30} strokeColor="#70189F" strokeWidth={2} />
-              )}
+            <div className="w-14 h-14 rounded-full bg-purple-100 text-[#70189F] flex items-center justify-center mx-auto mb-3 overflow-hidden">
+              {renderBiometricGlyph(iframeBlockedNotice === 'faceid' ? 28 : 30, '#70189F', 2, 32)}
             </div>
             <h3 className="text-base font-bold text-neutral-900">
               Open Directly for Device {iframeBlockedNotice === 'faceid' ? 'Face ID' : 'Fingerprint'}
