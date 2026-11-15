@@ -113,12 +113,12 @@ export const AccountCard: React.FC<AccountCardProps> = ({
           </div>
         </div>
 
-        {/* MIDDLE SECTION: Horizontally Centered Balance & Right Eye Toggle */}
-        <div className="my-5 sm:my-6 relative flex items-center justify-center z-10">
+        {/* MIDDLE SECTION: Horizontally Centered Balance & Right Eye Toggle (Fixed height to prevent card resize) */}
+        <div className="my-5 sm:my-6 h-[32px] sm:h-[34px] relative flex items-center justify-center z-10">
           {/* Centered Balance text */}
-          <div className="flex items-baseline justify-center gap-2 text-center">
+          <div className="flex items-baseline justify-center gap-2 text-center whitespace-nowrap px-9 max-w-full overflow-hidden">
             {showBalance ? (
-              <span className="font-sans text-[23px] sm:text-[25px] font-extrabold tracking-tight text-white leading-none">
+              <span className="font-sans text-[23px] sm:text-[25px] font-extrabold tracking-tight text-white leading-none truncate">
                 {formattedBalanceAmount}
               </span>
             ) : (
@@ -126,7 +126,7 @@ export const AccountCard: React.FC<AccountCardProps> = ({
                 ******
               </span>
             )}
-            <span className="font-sans text-[15px] sm:text-[16px] font-bold text-white tracking-normal leading-none">
+            <span className="font-sans text-[15px] sm:text-[16px] font-bold text-white tracking-normal leading-none shrink-0">
               {currency}
             </span>
           </div>
@@ -137,7 +137,7 @@ export const AccountCard: React.FC<AccountCardProps> = ({
             type="button"
             aria-label={showBalance ? "Hide Account Balance" : "Show Account Balance"}
             onClick={handleToggle}
-            className="absolute right-0 p-1.5 rounded-full text-[#A4A6AC] hover:text-white transition-colors cursor-pointer active:scale-95"
+            className="absolute right-0 top-1/2 -translate-y-1/2 p-1.5 rounded-full text-[#A4A6AC] hover:text-white transition-colors cursor-pointer active:scale-95"
             title={showBalance ? "Hide Balance & Account" : "Show Balance & Account"}
           >
             {showBalance ? (
@@ -148,9 +148,9 @@ export const AccountCard: React.FC<AccountCardProps> = ({
           </button>
         </div>
 
-        {/* BOTTOM SECTION: Account Type/Number & Copy Icon (Centered together) */}
-        <div className="flex items-center justify-center text-[13.5px] sm:text-[14.5px] text-[#EAE292] relative z-10 font-mono">
-          <span className="font-medium tracking-[0.03em] text-[#EAE292] select-text">
+        {/* BOTTOM SECTION: Account Type/Number & Copy Icon (Single-line fixed height) */}
+        <div className="h-[22px] sm:h-[24px] flex items-center justify-center text-[13px] sm:text-[14.5px] text-[#EAE292] relative z-10 font-mono whitespace-nowrap">
+          <span className="font-medium tracking-[0.025em] text-[#EAE292] select-text truncate leading-none">
             {formattedAccountDisplay}
           </span>
           <button
@@ -158,7 +158,7 @@ export const AccountCard: React.FC<AccountCardProps> = ({
             type="button"
             aria-label="Copy Account Number"
             onClick={handleCopy}
-            className="ml-2 hover:text-white text-[#C9CBD1] p-0.5 transition cursor-pointer flex items-center active:scale-95"
+            className="ml-2 hover:text-white text-[#C9CBD1] p-0.5 transition cursor-pointer flex items-center shrink-0 active:scale-95"
             title="Copy Account Number"
           >
             {copied ? (
@@ -170,7 +170,7 @@ export const AccountCard: React.FC<AccountCardProps> = ({
         </div>
 
         {/* Date & Time display */}
-        <div className="mt-3.5 text-center font-sans text-[11.5px] sm:text-[12px] font-medium text-[#92949A] tracking-[0.01em] relative z-10">
+        <div className="mt-3.5 h-[16px] flex items-center justify-center text-center font-sans text-[11.5px] sm:text-[12px] font-medium text-[#92949A] tracking-[0.01em] relative z-10 whitespace-nowrap leading-none">
           {dateTimeString}
         </div>
       </div>

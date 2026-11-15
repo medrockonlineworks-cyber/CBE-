@@ -259,10 +259,10 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
             </div>
 
             {/* Card Center: Balance & Eye Toggle */}
-            <div className="my-5 sm:my-6 flex justify-between items-center relative z-10">
-              <div className="flex items-baseline gap-2">
+            <div className="my-5 sm:my-6 h-[32px] sm:h-[34px] flex justify-between items-center relative z-10">
+              <div className="flex items-baseline gap-2 whitespace-nowrap min-w-0 pr-3">
                 {showBalance ? (
-                  <span className="font-sans text-[23px] sm:text-[25px] font-extrabold tracking-tight text-white leading-none">
+                  <span className="font-sans text-[23px] sm:text-[25px] font-extrabold tracking-tight text-white leading-none truncate">
                     {currentUser.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 ) : (
@@ -270,13 +270,13 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
                     ******
                   </span>
                 )}
-                <span className="font-sans text-[15px] sm:text-[16px] font-bold text-white tracking-normal leading-none">ETB</span>
+                <span className="font-sans text-[15px] sm:text-[16px] font-bold text-white tracking-normal leading-none shrink-0">ETB</span>
               </div>
 
               <button 
                 id="btn-toggle-balance"
                 onClick={toggleBalance}
-                className="p-1.5 text-[#A4A6AC] hover:text-white transition cursor-pointer"
+                className="p-1.5 text-[#A4A6AC] hover:text-white transition cursor-pointer shrink-0"
                 title={showBalance ? "Hide Balance & Account" : "Show Balance & Account"}
               >
                 {showBalance ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
@@ -284,13 +284,13 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
             </div>
 
             {/* Card Bottom: Account Type & Masked/Unmasked Number with Copy Button */}
-            <div className="flex justify-between items-center text-[13.5px] sm:text-[14.5px] text-[#EAE292] relative z-10 font-mono">
-              <span className="font-medium tracking-[0.03em] text-[#EAE292]">
+            <div className="h-[22px] sm:h-[24px] flex justify-between items-center text-[13px] sm:text-[14.5px] text-[#EAE292] relative z-10 font-mono whitespace-nowrap">
+              <span className="font-medium tracking-[0.025em] text-[#EAE292] truncate leading-none">
                 {formatCardAccount()}
               </span>
               <button 
                 onClick={copyAccountNum}
-                className="hover:text-white text-[#C9CBD1] p-1 transition cursor-pointer flex items-center gap-1"
+                className="hover:text-white text-[#C9CBD1] p-1 transition cursor-pointer flex items-center gap-1 shrink-0"
                 title="Copy Account Number"
               >
                 {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <CopyIcon size={17} />}
@@ -298,7 +298,7 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
             </div>
 
             {/* Card Timestamp: True live current date & time */}
-            <div className="mt-3.5 text-center font-sans text-[11.5px] sm:text-[12px] font-medium text-[#92949A] tracking-[0.01em] relative z-10">
+            <div className="mt-3.5 h-[16px] flex items-center justify-center text-center font-sans text-[11.5px] sm:text-[12px] font-medium text-[#92949A] tracking-[0.01em] relative z-10 whitespace-nowrap leading-none">
               {formatCardDateTime(currentDateTime)}
             </div>
 
