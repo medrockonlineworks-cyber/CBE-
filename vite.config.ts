@@ -289,6 +289,7 @@ export default defineConfig(() => {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
           cleanupOutdatedCaches: true,
           navigateFallback: 'index.html',
+          navigateFallbackDenylist: [/^\/api\//, /^\/downloads\//, /\.apk$/i],
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

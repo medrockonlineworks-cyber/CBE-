@@ -4,6 +4,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import { initVapidAndSecrets } from './server/vapidConfig.ts';
 import { createNotificationRouter } from './server/notificationRoutes.ts';
+import { createApkRouter } from './server/apkRoutes.ts';
 
 async function startServer() {
   initVapidAndSecrets();
@@ -29,9 +30,10 @@ async function startServer() {
     next();
   });
 
-  // Scope JSON body parsing strictly to /api/auth and /api/notifications so /api/pwa/* raw streams stay intact
+  // Scope JSON body parsing strictly to /api/auth and /api/notifications so /api/pwa/* & /api/app/upload-apk raw streams stay intact
   app.use(['/api/auth', '/api/notifications'], express.json({ limit: '128kb' }));
   app.use(createNotificationRouter());
+  app.use(createApkRouter());
 
   if (!isProd) {
     const { createServer: createViteServer } = await import('vite');

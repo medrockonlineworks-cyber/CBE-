@@ -975,7 +975,7 @@ export default function Profile({
         )}
 
         {/* Android PWA Installation & App Details */}
-        <AppInstallPrompt mode="settings" />
+        <AppInstallPrompt mode="settings" currentUser={currentUser} />
 
         {/* Web Push Notifications & Lock Screen Privacy Settings */}
         <NotificationSettingsCard
