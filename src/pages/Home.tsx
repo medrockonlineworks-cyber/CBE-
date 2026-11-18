@@ -48,6 +48,8 @@ interface HomeProps {
   promptBiometricEnroll?: boolean;
   onDismissBiometricPrompt?: () => void;
   initialNavTab?: 'home' | 'history';
+  initialDetailTxId?: string | null;
+  onClearInitialDetailTx?: () => void;
   onNavigateToTab?: (tab: 'home' | 'transfer' | 'payments' | 'history' | 'profile', subTab?: string) => void;
   onSelectTransaction?: (tx: Transaction) => void;
   onOpenAdmin?: () => void;
@@ -65,6 +67,8 @@ export const Home: React.FC<HomeProps> = ({
   promptBiometricEnroll = false,
   onDismissBiometricPrompt,
   initialNavTab = 'home',
+  initialDetailTxId = null,
+  onClearInitialDetailTx,
   onNavigateToTab,
   onSelectTransaction,
   onOpenAdmin,
@@ -146,6 +150,21 @@ export const Home: React.FC<HomeProps> = ({
   useEffect(() => {
     setActiveNavTab(initialNavTab);
   }, [initialNavTab]);
+
+  useEffect(() => {
+    if (!initialDetailTxId) return;
+    const txs = LocalDb.getTransactions();
+    const norm = initialDetailTxId.trim().toUpperCase();
+    const found = txs.find(
+      (t) =>
+        (t.id && t.id.toUpperCase() === norm) ||
+        (t.reference && t.reference.toUpperCase() === norm)
+    );
+    if (found) {
+      setSelectedDetailTx(found);
+    }
+    onClearInitialDetailTx?.();
+  }, [initialDetailTxId, onClearInitialDetailTx]);
 
   useEffect(() => {
     let cancelled = false;

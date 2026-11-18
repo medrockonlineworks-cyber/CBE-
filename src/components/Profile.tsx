@@ -46,6 +46,8 @@ import {
 } from 'lucide-react';
 import BankLogoModal from './BankLogoModal';
 import AppInstallPrompt from './AppInstallPrompt';
+import NotificationSettingsCard from './NotificationSettingsCard';
+import { PushNotificationService } from '../services/pushNotificationService';
 import EthiopianNameAutocomplete, { EthiopianThreePartNameInput } from './EthiopianNameAutocomplete';
 
 interface ProfileProps {
@@ -704,6 +706,7 @@ export default function Profile({
 
     await BiometricAuthService.saveAppPin(currentUser.id, newPin);
     LocalDb.addAuditLog(currentUser.id, currentUser.email, 'USER_PIN_CHANGE', 'User updated their in-app device authorization PIN.');
+    void PushNotificationService.notifySecurityEvent(currentUser, 'security_update');
     setSuccessMsg('Your security PIN was updated securely!');
     setOldPin('');
     setNewPin('');
@@ -743,6 +746,7 @@ export default function Profile({
 
     await BiometricAuthService.saveAppPassword(currentUser.id, newPass);
     LocalDb.addAuditLog(currentUser.id, currentUser.email, 'USER_PASS_CHANGE', 'User updated their in-app device access password.');
+    void PushNotificationService.notifySecurityEvent(currentUser, 'security_update');
     setSuccessMsg('Security password updated securely!');
     setOldPass('');
     setNewPass('');
@@ -972,6 +976,19 @@ export default function Profile({
 
         {/* Android PWA Installation & App Details */}
         <AppInstallPrompt mode="settings" />
+
+        {/* Web Push Notifications & Lock Screen Privacy Settings */}
+        <NotificationSettingsCard
+          currentUser={currentUser}
+          onSuccess={(msg) => {
+            setErrorMsg('');
+            setSuccessMsg(msg);
+          }}
+          onError={(msg) => {
+            setSuccessMsg('');
+            setErrorMsg(msg);
+          }}
+        />
 
         {/* Security & Access Section */}
         <div className="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 space-y-4">

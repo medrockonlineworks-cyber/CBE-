@@ -6,6 +6,7 @@ import { SystemBarsService } from '../services/systemBarsService';
 import { PhoneSettingsService } from '../services/phoneSettingsService';
 import { BiometricAuthService, BiometricMethod } from '../services/biometricAuthService';
 import { AuthSessionService } from '../services/authSessionService';
+import { PushNotificationService } from '../services/pushNotificationService';
 import { CbeLogo } from './CbeLogo';
 import { 
   Bell, 
@@ -350,6 +351,9 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
       `User ${selectedUser.name} signed in via verified ${credentialType} session.`
     );
     localStorage.setItem('tana_active_user_id', selectedUser.id);
+    void PushNotificationService.establishBackendSession(selectedUser, { notifyNewDevice: true }).then(() =>
+      PushNotificationService.syncExistingSubscription(selectedUser)
+    );
     onLoginSuccess(selectedUser, 'credentials');
   };
 
@@ -384,6 +388,9 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
       await new Promise((resolve) => setTimeout(resolve, 450));
       setBiometricPopupPhase(null);
       setIsBiometricScanning(false);
+      void PushNotificationService.establishBackendSession(selectedUser, { notifyNewDevice: true }).then(() =>
+        PushNotificationService.syncExistingSubscription(selectedUser)
+      );
       onLoginSuccess(selectedUser, 'biometric');
       return;
     }

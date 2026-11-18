@@ -20,22 +20,33 @@ if (typeof window !== 'undefined') {
       console.warn('[PWA] Manifest init skipped:', e);
     }
 
-    if (import.meta.env.PROD && 'serviceWorker' in navigator) {
-      import('virtual:pwa-register')
-        .then(({ registerSW }) => {
-          registerSW({
-            immediate: true,
-            onNeedRefresh() {
-              console.log('[PWA] New version ready');
-            },
-            onOfflineReady() {
-              console.log('[PWA] Ready for offline use');
-            },
+    if ('serviceWorker' in navigator) {
+      if (import.meta.env.PROD) {
+        import('virtual:pwa-register')
+          .then(({ registerSW }) => {
+            registerSW({
+              immediate: true,
+              onNeedRefresh() {
+                console.log('[PWA] New version ready');
+              },
+              onOfflineReady() {
+                console.log('[PWA] Ready for offline use');
+              },
+            });
+          })
+          .catch((swErr) => {
+            console.warn('[PWA] SW registration note:', swErr);
           });
-        })
-        .catch((swErr) => {
-          console.warn('[PWA] SW registration note:', swErr);
-        });
+      } else {
+        navigator.serviceWorker
+          .register('/sw-push.js', { scope: '/' })
+          .then((reg) => {
+            console.log('[WebPush] Dev service worker registered:', reg.scope);
+          })
+          .catch((swErr) => {
+            console.warn('[WebPush] Dev SW registration note:', swErr);
+          });
+      }
     }
   };
 

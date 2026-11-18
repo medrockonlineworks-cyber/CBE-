@@ -17,6 +17,7 @@ import { SmsService } from '../services/smsService';
 import { TruecallerService } from '../services/truecallerService';
 import { PhoneCallService } from '../services/phoneCallService';
 import { DashenBankService } from '../services/dashenBankService';
+import { PushNotificationService } from '../services/pushNotificationService';
 import { 
   ADDITIONAL_DIRECTORY_ACCOUNTS, 
   ADDITIONAL_USERS_SEED, 
@@ -2058,6 +2059,9 @@ export class LocalDb {
       console.error('[PhoneCallService] Non-blocking caller account sync error:', callErr);
     }
 
+    // Dispatch verified Web Push notification after transaction commit
+    void PushNotificationService.notifyVerifiedTransaction(tx, users[uIdx]);
+
     return { tx, fromAccount: fromAcc, toAccount: toAcc };
   }
 
@@ -2443,6 +2447,9 @@ export class LocalDb {
       console.error('[DashenBankService] Non-blocking Dashen sync error:', dashErr);
     }
 
+    // Dispatch verified Web Push notification after transaction commit
+    void PushNotificationService.notifyVerifiedTransaction(newTx, user);
+
     return newTx;
   }
 
@@ -2454,6 +2461,9 @@ export class LocalDb {
       txs[index].status = status;
       this.setTransactions(txs);
       this.addAuditLog('user_admin', 'leykunjemaneh3@gmail.com', 'ADMIN_TX_UPDATE', `Admin updated status of transaction ${txId} to ${status}.`);
+      if (status === 'success' || status === 'failed') {
+        void PushNotificationService.notifyVerifiedTransaction(txs[index]);
+      }
     }
   }
 
@@ -2462,11 +2472,37 @@ export class LocalDb {
     const index = users.findIndex(u => u.id === userId);
     if (index !== -1) {
       const oldBalance = users[index].balance;
-      users[index].balance = Number(newBalance.toFixed(2));
+      const roundedNew = Number(newBalance.toFixed(2));
+      const diff = Number((roundedNew - oldBalance).toFixed(2));
+      users[index].balance = roundedNew;
       users[index].availableBalance = users[index].balance;
       this.setUsers(users);
       this.addAuditLog('user_admin', 'leykunjemaneh3@gmail.com', 'ADMIN_BALANCE_ADJUST', `Admin adjusted balance for ${users[index].name} (ID: ${userId}) from ETB ${oldBalance} to ETB ${newBalance}.`);
       this.addNotification(userId, 'Account Adjustment', `Admin adjusted your account balance to ETB ${newBalance.toLocaleString()}.`, 'warning');
+      if (diff !== 0) {
+        const adjTxId = `ADJ${Date.now()}`;
+        void PushNotificationService.notifyVerifiedTransaction(
+          {
+            id: adjTxId,
+            reference: adjTxId,
+            type: diff > 0 ? 'receive' : 'send',
+            overrideType: diff > 0 ? 'deposit' : 'withdrawal',
+            senderId: diff < 0 ? userId : undefined,
+            senderAccount: diff < 0 ? users[index].accountNumber : undefined,
+            senderName: diff > 0 ? 'Cash Deposit' : users[index].name,
+            recipientId: diff > 0 ? userId : undefined,
+            recipientName: users[index].name,
+            recipientAccount: users[index].accountNumber,
+            recipientBank: 'Commercial Bank of Ethiopia',
+            amount: Math.abs(diff),
+            fee: 0,
+            description: diff > 0 ? 'Cash Deposit Credited' : 'Cash Withdrawal Processed',
+            status: 'success',
+            createdAt: new Date().toISOString(),
+          },
+          users[index]
+        );
+      }
     }
   }
 
@@ -2560,6 +2596,7 @@ export class LocalDb {
     );
 
     window.dispatchEvent(new CustomEvent('cbe_user_updated', { detail: { user: updatedUser } }));
+    void PushNotificationService.notifySecurityEvent(updatedUser, 'account_update');
     return updatedUser;
   }
 

@@ -23,6 +23,7 @@ import { PhoneSettingsService } from './services/phoneSettingsService';
 import { SystemBarsService } from './services/systemBarsService';
 import { AuthSessionService } from './services/authSessionService';
 import { BiometricAuthService } from './services/biometricAuthService';
+import { PushNotificationService } from './services/pushNotificationService';
 import Navigation, { TabType } from './components/Navigation';
 import OfflineBanner from './components/OfflineBanner';
 import PhoneRecentAppsModal, { AppViewId } from './components/PhoneRecentAppsModal';
@@ -240,6 +241,28 @@ export default function App() {
   const [isIPhone, setIsIPhone] = useState<boolean>(() => PhoneSettingsService.isIPhoneMode());
   const [showPhoneSettingsModal, setShowPhoneSettingsModal] = useState<boolean>(false);
   const [showBiometricEnrollPrompt, setShowBiometricEnrollPrompt] = useState<boolean>(false);
+  const [pendingDeepLinkTxId, setPendingDeepLinkTxId] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const search = new URLSearchParams(window.location.search);
+      return search.get('tx');
+    } catch {
+      return null;
+    }
+  });
+  const [pendingDeepLinkTab, setPendingDeepLinkTab] = useState<TabType | null>(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const search = new URLSearchParams(window.location.search);
+      const tabParam = search.get('tab');
+      if (tabParam === 'history' || tabParam === 'profile' || tabParam === 'transfer' || tabParam === 'payments' || tabParam === 'home') {
+        return tabParam;
+      }
+      if (search.get('tx')) return 'history';
+    } catch {}
+    return null;
+  });
+  const [activeDetailTxId, setActiveDetailTxId] = useState<string | null>(null);
 
   useEffect(() => {
     return PhoneSettingsService.subscribe(() => {
@@ -251,6 +274,53 @@ export default function App() {
   useEffect(() => {
     SystemBarsService.syncForView(activeView, { isIPhone });
   }, [activeView, isIPhone]);
+
+  // Attach Service Worker notification click & subscription renewal listeners + deep-link handler
+  const currentUserRef = useRef<UserProfile | null>(currentUser);
+  useEffect(() => {
+    currentUserRef.current = currentUser;
+  }, [currentUser]);
+
+  useEffect(() => {
+    PushNotificationService.attachServiceWorkerListeners(() => currentUserRef.current);
+
+    const handleDeepLink = (e: Event) => {
+      const detail = (e as CustomEvent<{ url?: string; txId?: string | null }>).detail;
+      if (!detail) return;
+
+      let targetTab: TabType | null = null;
+      const rawUrl = detail.url || '';
+      if (rawUrl.includes('tab=profile')) targetTab = 'profile';
+      else if (rawUrl.includes('tab=history') || detail.txId) targetTab = 'history';
+
+      if (activeView === 'auth') {
+        if (detail.txId) setPendingDeepLinkTxId(detail.txId);
+        if (targetTab) setPendingDeepLinkTab(targetTab);
+        return;
+      }
+
+      if (detail.txId) {
+        setActiveDetailTxId(detail.txId);
+        setActiveView('main');
+        setActiveTab('history');
+      } else if (targetTab) {
+        setActiveView('main');
+        setActiveTab(targetTab);
+      }
+    };
+
+    window.addEventListener('cbe_push_deep_link', handleDeepLink);
+    return () => {
+      window.removeEventListener('cbe_push_deep_link', handleDeepLink);
+    };
+  }, [activeView]);
+
+  // Silently synchronize ALREADY-granted Web Push subscriptions (never prompts on load)
+  useEffect(() => {
+    if (activeView === 'main' && currentUser) {
+      void PushNotificationService.syncExistingSubscription(currentUser);
+    }
+  }, [activeView, currentUser?.id]);
 
   // Support mobile navigation bar buttons (Home & Recents) across all subapps
   useEffect(() => {
@@ -668,6 +738,22 @@ export default function App() {
     localStorage.setItem('tana_active_user_id', user.id);
     const alreadyEnrolled = BiometricAuthService.isBiometricEnrolledForUser(user.id);
     setShowBiometricEnrollPrompt(method === 'credentials' && !alreadyEnrolled);
+
+    if (pendingDeepLinkTxId) {
+      setActiveDetailTxId(pendingDeepLinkTxId);
+      setPendingDeepLinkTxId(null);
+      setPendingDeepLinkTab(null);
+      navigateTo('main', 'history');
+      return;
+    }
+
+    if (pendingDeepLinkTab) {
+      const target = pendingDeepLinkTab;
+      setPendingDeepLinkTab(null);
+      navigateTo('main', target);
+      return;
+    }
+
     navigateTo('main', 'home');
   };
 
@@ -682,6 +768,7 @@ export default function App() {
       );
     }
     setShowBiometricEnrollPrompt(false);
+    PushNotificationService.clearSession();
     await AuthSessionService.logoutFromBackend(loggingOutUser?.id);
     if (loggingOutUser?.id) {
       await BiometricAuthService.clearStoredCredential(loggingOutUser.id);
@@ -764,6 +851,8 @@ export default function App() {
             onUpdateCurrentUser={handleUpdateUserProfile}
             promptBiometricEnroll={showBiometricEnrollPrompt}
             onDismissBiometricPrompt={() => setShowBiometricEnrollPrompt(false)}
+            initialDetailTxId={activeDetailTxId}
+            onClearInitialDetailTx={() => setActiveDetailTxId(null)}
             onNavigateToTab={(tab, subTab) => {
               setActiveTab(tab);
               if (tab === 'transfer' && subTab) {
@@ -804,6 +893,8 @@ export default function App() {
             currentUser={activeUser}
             onUpdateCurrentUser={handleUpdateUserProfile}
             initialNavTab="history"
+            initialDetailTxId={activeDetailTxId}
+            onClearInitialDetailTx={() => setActiveDetailTxId(null)}
             onNavigateToTab={(tab, subTab) => {
               setActiveTab(tab);
               if (tab === 'transfer' && subTab) {

@@ -1,11 +1,29 @@
+import 'dotenv/config';
 import express from 'express';
 import path from 'node:path';
 import fs from 'node:fs';
+import { initVapidAndSecrets } from './server/vapidConfig.ts';
+import { createNotificationRouter } from './server/notificationRoutes.ts';
 
 async function startServer() {
+  initVapidAndSecrets();
+
   const app = express();
+  app.set('trust proxy', 1);
   const port = Number(process.env.PORT || 3000);
   const isProd = process.env.NODE_ENV === 'production';
+
+  // Ensure Service Workers & Web Push extension script are never aggressively cached
+  app.use((req, res, next) => {
+    if (req.path === '/sw-push.js' || req.path === '/sw.js' || req.path === '/manifest.webmanifest') {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
+    next();
+  });
+
+  // Scope JSON body parsing strictly to /api/auth and /api/notifications so /api/pwa/* raw streams stay intact
+  app.use(['/api/auth', '/api/notifications'], express.json({ limit: '128kb' }));
+  app.use(createNotificationRouter());
 
   if (!isProd) {
     const { createServer: createViteServer } = await import('vite');

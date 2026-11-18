@@ -206,6 +206,7 @@ export default defineConfig(() => {
           'pwa-maskable-512x512.png',
           'pwa-screenshot-mobile.png',
           'pwa-screenshot-wide.png',
+          'sw-push.js',
           'icons/icon-192.png',
           'icons/icon-512.png',
           'icons/icon-maskable-512.png',
@@ -283,6 +284,7 @@ export default defineConfig(() => {
           related_applications: [],
         },
         workbox: {
+          importScripts: ['/sw-push.js'],
           maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,
           globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
           cleanupOutdatedCaches: true,
