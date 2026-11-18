@@ -31,6 +31,8 @@ function displayBankingNotification(data) {
     badge: payload.badge || '/pwa-192x192.png',
     tag: payload.tag || ('cbe-notif-' + Date.now()),
     renotify: true,
+    silent: false,
+    vibrate: [200, 100, 200],
     requireInteraction: false,
     timestamp: typeof payload.timestamp === 'number' ? payload.timestamp : Date.now(),
     data: {

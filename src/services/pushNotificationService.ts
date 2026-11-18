@@ -530,17 +530,26 @@ export class PushNotificationService {
         return false;
       }
 
-      const options: NotificationOptions = {
+      const options = {
         body: payload.body,
         icon: payload.icon,
         badge: payload.badge,
         tag: payload.tag,
+        renotify: true,
+        silent: false,
+        vibrate: [200, 100, 200],
+        requireInteraction: false,
+        timestamp: payload.timestamp,
         data: {
           url: payload.url,
           txId: payload.txId || null,
           reference: payload.reference || null,
           category: payload.category,
         },
+      } as NotificationOptions & {
+        renotify?: boolean;
+        vibrate?: number[];
+        timestamp?: number;
       };
 
       if ('serviceWorker' in navigator) {
