@@ -4,7 +4,6 @@ import {
   EthiopianNameFilter, 
   EthiopianNameImportResult 
 } from '../types/ethiopianName';
-import { getInitialEthiopianNames } from '../data/ethiopianFallbackNames';
 import { 
   normalizeEthiopianName, 
   isValidEthiopianNameString, 
@@ -12,6 +11,8 @@ import {
   findHighlightRanges,
   calculateLevenshteinDistance 
 } from '../utils/normalizeName';
+
+const getInitialEthiopianNames = (): EthiopianName[] => [];
 
 const LOCAL_STORAGE_KEY = 'tana_ethiopian_names_db_v2';
 const RECENT_SEARCHES_KEY = 'tana_eth_recent_searches_cache';
