@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { App as CapacitorApp } from '@capacitor/app';
 import { UserProfile, Transaction } from './types';
 import { LocalDb } from './lib/mockData';
 import Auth from './components/Auth';
@@ -606,6 +608,85 @@ export default function App() {
 
   const handlePhoneRecents = useCallback(() => {
     setIsRecentAppsOpen(true);
+  }, []);
+
+  const nativeBackStateRef = useRef({
+    activeView,
+    activeTab,
+    isRecentAppsOpen,
+    showPhoneSettingsModal,
+    handlePhoneBack,
+  });
+
+  useEffect(() => {
+    nativeBackStateRef.current = {
+      activeView,
+      activeTab,
+      isRecentAppsOpen,
+      showPhoneSettingsModal,
+      handlePhoneBack,
+    };
+  }, [activeView, activeTab, isRecentAppsOpen, showPhoneSettingsModal, handlePhoneBack]);
+
+  // Native Capacitor Android hardware Back button integration
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    let mounted = true;
+    let removeListener: (() => Promise<void>) | null = null;
+
+    CapacitorApp.addListener('backButton', () => {
+      const state = nativeBackStateRef.current;
+
+      if (state.isRecentAppsOpen) {
+        setIsRecentAppsOpen(false);
+        return;
+      }
+
+      if (state.showPhoneSettingsModal) {
+        setShowPhoneSettingsModal(false);
+        return;
+      }
+
+      let handledBySubView = false;
+      const customBackEvent = new CustomEvent('cbe_phone_back', {
+        cancelable: true,
+        detail: {
+          setHandled: () => {
+            handledBySubView = true;
+          },
+        },
+      });
+      window.dispatchEvent(customBackEvent);
+      if (customBackEvent.defaultPrevented || handledBySubView) {
+        return;
+      }
+
+      if (state.activeView === 'receipt') {
+        return;
+      }
+
+      if (state.activeView === 'auth' || (state.activeView === 'main' && state.activeTab === 'home')) {
+        CapacitorApp.minimizeApp().catch(() => {});
+        return;
+      }
+
+      state.handlePhoneBack();
+    })
+      .then((handle) => {
+        if (mounted) {
+          removeListener = () => handle.remove();
+        } else {
+          handle.remove().catch(() => {});
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      mounted = false;
+      if (removeListener) {
+        void removeListener();
+      }
+    };
   }, []);
 
   // Android Back Navigation handler

@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { openExternalUrlInBrowser } from '../services/webReceiptBrowserService';
 
 export interface BeforeInstallPromptEvent extends Event {
@@ -29,7 +30,8 @@ export function usePwaInstall() {
 
   // Check if currently running in standalone / fullscreen / native PWA mode
   const checkDisplayMode = useCallback(() => {
-    const isStandaloneMode = 
+    const isStandaloneMode =
+      Capacitor.isNativePlatform() ||
       window.matchMedia('(display-mode: standalone)').matches ||
       window.matchMedia('(display-mode: fullscreen)').matches ||
       window.matchMedia('(display-mode: minimal-ui)').matches ||

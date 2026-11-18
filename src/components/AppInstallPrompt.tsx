@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Capacitor } from '@capacitor/core';
 import { usePwaInstall } from '../lib/usePwaInstall';
 import { LocalDb } from '../lib/mockData';
 import type { UserProfile } from '../types';
@@ -165,7 +166,7 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
   };
 
   useEffect(() => {
-    if (mode === 'settings') {
+    if (mode === 'settings' && !Capacitor.isNativePlatform()) {
       void loadApkStatus();
     }
   }, [mode]);

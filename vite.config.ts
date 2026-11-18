@@ -287,6 +287,7 @@ export default defineConfig(() => {
           importScripts: ['/sw-push.js'],
           maximumFileSizeToCacheInBytes: 15 * 1024 * 1024,
           globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
+          globIgnores: ['**/assets/aistudio/**'],
           cleanupOutdatedCaches: true,
           navigateFallback: 'index.html',
           navigateFallbackDenylist: [/^\/api\//, /^\/downloads\//, /\.apk$/i],

@@ -1,5 +1,7 @@
 import React, { StrictMode, ReactNode, ErrorInfo } from 'react';
 import { createRoot } from 'react-dom/client';
+import { Capacitor } from '@capacitor/core';
+import { SplashScreen } from '@capacitor/splash-screen';
 import App from './App';
 import './index.css';
 import { initPwaDynamicManifest } from './utils/pwaBranding';
@@ -12,6 +14,22 @@ if (typeof window !== 'undefined') {
       SystemBarsService.initAutoSync();
     } catch (e) {
       console.warn('[SystemBars] AutoSync note:', e);
+    }
+
+    if (Capacitor.isNativePlatform()) {
+      SplashScreen.hide({ fadeOutDuration: 200 }).catch(() => {});
+
+      // Native Capacitor APKs serve all assets offline from bundled local files;
+      // ensure no stale Service Worker intercepts updates inside the WebView.
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker
+          .getRegistrations()
+          .then((regs) => {
+            regs.forEach((r) => r.unregister().catch(() => {}));
+          })
+          .catch(() => {});
+      }
+      return;
     }
 
     try {

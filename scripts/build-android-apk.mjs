@@ -30,6 +30,16 @@ if (!findJava()) {
 
 console.log(`[APK Build] Building web assets and syncing Capacitor Android (${isRelease ? 'release' : 'debug'})...`);
 run('npm run build');
+
+const aistudioDistDir = path.join(rootDir, 'dist', 'assets', 'aistudio');
+if (fs.existsSync(aistudioDistDir)) {
+  fs.rmSync(aistudioDistDir, { recursive: true, force: true });
+}
+const staleDistApk = path.join(distDownloadsDir, 'cbe-mobil.apk');
+if (fs.existsSync(staleDistApk)) {
+  fs.unlinkSync(staleDistApk);
+}
+
 run('npx cap sync android');
 
 const gradlew = process.platform === 'win32' ? 'gradlew.bat' : './gradlew';

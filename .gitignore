@@ -8,3 +8,17 @@ coverage/
 !.env.example
 .data/
 data/
+.aistudio/
+*.apk
+*.aab
+public/downloads/
+public/assets/aistudio/
+android/.gradle/
+android/app/build/
+android/app/src/main/assets/public/
+android/capacitor-cordova-android-plugins/
+ios/App/App/public/
+ios/App/Pods/
+ios/App/build/
+ios/DerivedData/
+
