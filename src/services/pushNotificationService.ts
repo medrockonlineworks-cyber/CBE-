@@ -66,15 +66,60 @@ const DEFAULT_PREFERENCES: NotificationPreferences = {
   privacyMode: 'detailed',
 };
 
+function cleanVapidKeyString(raw: string): string {
+  let cleaned = (raw || '').trim();
+  if (
+    (cleaned.startsWith('"') && cleaned.endsWith('"')) ||
+    (cleaned.startsWith("'") && cleaned.endsWith("'"))
+  ) {
+    cleaned = cleaned.slice(1, -1).trim();
+  }
+  return cleaned.replace(/\s+/g, '');
+}
+
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const rawData = window.atob(base64);
+  const normalized = cleanVapidKeyString(base64String);
+  if (!/^[A-Za-z0-9_-]+={0,2}$/.test(normalized)) {
+    throw new Error('Server returned a malformed VAPID public key (check VAPID_PUBLIC_KEY has no quotes or extra characters).');
+  }
+  const padding = '='.repeat((4 - (normalized.length % 4)) % 4);
+  const base64 = (normalized + padding).replace(/-/g, '+').replace(/_/g, '/');
+  let rawData: string;
+  try {
+    rawData = window.atob(base64);
+  } catch {
+    throw new Error('Unable to decode server VAPID public key. Check VAPID_PUBLIC_KEY configuration.');
+  }
   const outputArray = new Uint8Array(rawData.length);
   for (let i = 0; i < rawData.length; ++i) {
     outputArray[i] = rawData.charCodeAt(i);
   }
+  if (outputArray.length !== 65 || outputArray[0] !== 0x04) {
+    throw new Error('Server VAPID_PUBLIC_KEY is not a valid 65-byte P-256 uncompressed public key.');
+  }
   return outputArray;
+}
+
+async function safeParseJson<T = Record<string, unknown>>(res: Response, endpointLabel: string): Promise<T> {
+  const text = await res.text();
+  const trimmed = text.trim();
+  if (!trimmed) {
+    return {} as T;
+  }
+  const contentType = (res.headers.get('content-type') || '').toLowerCase();
+  if (
+    trimmed.startsWith('<') ||
+    contentType.includes('text/html')
+  ) {
+    throw new Error(
+      `Notification API (${endpointLabel}) returned an HTML page instead of JSON (HTTP ${res.status}). On iPhone Home Screen mode, open the Shared App URL in Safari and re-add to Home Screen so API calls do not hit an authentication redirect.`
+    );
+  }
+  try {
+    return JSON.parse(trimmed) as T;
+  } catch {
+    throw new Error(`Invalid JSON response from notification API (${endpointLabel}, HTTP ${res.status}).`);
+  }
 }
 
 export class PushNotificationService {
@@ -166,7 +211,10 @@ export class PushNotificationService {
         return { token: null };
       }
 
-      const data = await res.json();
+      const data = await safeParseJson<{ ok?: boolean; token?: string; expiresAt?: number; isNewDevice?: boolean }>(
+        res,
+        '/api/auth/session'
+      );
       if (data?.ok && typeof data.token === 'string') {
         this.backendToken = data.token;
         this.backendTokenExpiresAt = Number(data.expiresAt || Date.now() + 3600_000);
@@ -300,7 +348,12 @@ export class PushNotificationService {
       }),
     });
 
-    const data = await res.json();
+    const data = await safeParseJson<{
+      ok?: boolean;
+      error?: string;
+      deviceCount?: number;
+      preferences?: NotificationPreferences;
+    }>(res, '/api/notifications/subscribe');
     if (!res.ok || !data?.ok) {
       return { ok: false, error: data?.error || 'Subscription failed.' };
     }
@@ -359,10 +412,13 @@ export class PushNotificationService {
 
     try {
       const reg = await this.getActiveServiceWorkerRegistration();
-      const keyRes = await fetch('/api/notifications/vapid-public-key');
-      const keyData = await keyRes.json();
+      const keyRes = await fetch('/api/notifications/vapid-public-key', { cache: 'no-store' });
+      const keyData = await safeParseJson<{ ok?: boolean; publicKey?: string; error?: string }>(
+        keyRes,
+        '/api/notifications/vapid-public-key'
+      );
       if (!keyRes.ok || !keyData?.publicKey) {
-        return { ok: false, message: 'Server VAPID public key is unavailable.' };
+        return { ok: false, message: keyData?.error || 'Server VAPID public key is unavailable.' };
       }
 
       let sub = await reg.pushManager.getSubscription();
@@ -387,12 +443,14 @@ export class PushNotificationService {
       };
     } catch (err) {
       console.error('[PushNotificationService] enableNotifications error:', err);
+      const rawMsg = err instanceof Error ? err.message : String(err || '');
+      const friendlyMsg =
+        /string did not match the expected pattern/i.test(rawMsg)
+          ? 'Browser rejected the VAPID key or server response format ("The string did not match the expected pattern"). Make sure you are using the Shared App URL (not a login-protected preview URL) and that VAPID_PUBLIC_KEY has no quotes.'
+          : rawMsg || 'Unable to subscribe this device for push notifications.';
       return {
         ok: false,
-        message:
-          err instanceof Error
-            ? err.message
-            : 'Unable to subscribe this device for push notifications.',
+        message: friendlyMsg,
       };
     }
   }
@@ -417,7 +475,10 @@ export class PushNotificationService {
         method: 'POST',
         body: JSON.stringify({ endpoint }),
       });
-      const data = await res.json();
+      const data = await safeParseJson<{ ok?: boolean; deviceCount?: number }>(
+        res,
+        '/api/notifications/unsubscribe'
+      );
       return {
         ok: Boolean(res.ok && data?.ok),
         deviceCount: data?.deviceCount ?? 0,
@@ -465,7 +526,7 @@ export class PushNotificationService {
       : '/api/notifications/status';
 
     const res = await this.authedFetch(user, url, { method: 'GET' });
-    const data = await res.json();
+    const data = await safeParseJson<NotificationStatusResponse>(res, '/api/notifications/status');
     if (!res.ok || !data?.ok) {
       return {
         ok: false,
@@ -488,7 +549,10 @@ export class PushNotificationService {
         method: 'PUT',
         body: JSON.stringify(patch),
       });
-      const data = await res.json();
+      const data = await safeParseJson<{ ok?: boolean; preferences?: NotificationPreferences; error?: string }>(
+        res,
+        '/api/notifications/preferences'
+      );
       return {
         ok: Boolean(res.ok && data?.ok),
         preferences: data?.preferences,
@@ -512,7 +576,10 @@ export class PushNotificationService {
         method: 'POST',
         body: JSON.stringify({ sampleCategory, amount }),
       });
-      const data = await res.json();
+      const data = await safeParseJson<{ ok?: boolean; message?: string; error?: string }>(
+        res,
+        '/api/notifications/test'
+      );
       return {
         ok: Boolean(res.ok && data?.ok),
         message: data?.message,

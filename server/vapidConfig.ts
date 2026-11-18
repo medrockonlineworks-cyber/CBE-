@@ -40,10 +40,59 @@ function writeJsonSecure(filePath: string, data: unknown): void {
   fs.renameSync(tmpPath, filePath);
 }
 
+function cleanEnvVal(val?: string): string {
+  if (!val) return '';
+  let trimmed = val.trim();
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    trimmed = trimmed.slice(1, -1).trim();
+  }
+  return trimmed;
+}
+
 function isPlaceholder(val?: string): boolean {
-  if (!val) return true;
-  const trimmed = val.trim();
+  const trimmed = cleanEnvVal(val);
   return !trimmed || trimmed.startsWith('MY_') || trimmed.startsWith('YOUR_') || trimmed.startsWith('REPLACE_');
+}
+
+function isValidVapidPublicKey(key: string): boolean {
+  if (!/^[A-Za-z0-9_-]+={0,2}$/.test(key)) return false;
+  try {
+    const buf = Buffer.from(key, 'base64url');
+    return buf.length === 65 && buf[0] === 0x04;
+  } catch {
+    return false;
+  }
+}
+
+function isValidVapidPrivateKey(key: string): boolean {
+  if (!/^[A-Za-z0-9_-]+={0,2}$/.test(key)) return false;
+  try {
+    const buf = Buffer.from(key, 'base64url');
+    return buf.length === 32;
+  } catch {
+    return false;
+  }
+}
+
+function normalizeVapidSubject(raw?: string): string {
+  const cleaned = cleanEnvVal(raw);
+  if (!cleaned || isPlaceholder(cleaned)) return 'mailto:notifications@cbemobile.app';
+  if (cleaned.startsWith('mailto:') && cleaned.includes('@')) return cleaned;
+  if (cleaned.startsWith('https://')) {
+    try {
+      const parsed = new URL(cleaned);
+      if (parsed.protocol === 'https:' && parsed.hostname && parsed.hostname !== 'localhost') {
+        return cleaned;
+      }
+    } catch {
+      // Fallback below
+    }
+  }
+  console.warn('[WebPush] Invalid VAPID_SUBJECT format; falling back to mailto:notifications@cbemobile.app');
+  return 'mailto:notifications@cbemobile.app';
 }
 
 export function initVapidAndSecrets(): void {
@@ -51,29 +100,39 @@ export function initVapidAndSecrets(): void {
   ensureDataDir();
 
   // 1. Load or generate VAPID keys
-  const envPublic = process.env.VAPID_PUBLIC_KEY;
-  const envPrivate = process.env.VAPID_PRIVATE_KEY;
+  const envPublic = cleanEnvVal(process.env.VAPID_PUBLIC_KEY);
+  const envPrivate = cleanEnvVal(process.env.VAPID_PRIVATE_KEY);
   const envSubject = process.env.VAPID_SUBJECT;
 
-  if (!isPlaceholder(envSubject)) {
-    cachedVapidSubject = envSubject!.trim();
-  }
+  cachedVapidSubject = normalizeVapidSubject(envSubject);
 
-  if (!isPlaceholder(envPublic) && !isPlaceholder(envPrivate)) {
-    cachedVapidPublic = envPublic!.trim();
-    cachedVapidPrivate = envPrivate!.trim();
-  } else if (fs.existsSync(VAPID_FILE)) {
-    try {
-      const raw = JSON.parse(fs.readFileSync(VAPID_FILE, 'utf8')) as PersistedVapidKeys;
-      if (raw.publicKey && raw.privateKey) {
-        cachedVapidPublic = raw.publicKey;
-        cachedVapidPrivate = raw.privateKey;
-        if (raw.subject && isPlaceholder(envSubject)) {
-          cachedVapidSubject = raw.subject;
+  if (
+    !isPlaceholder(envPublic) &&
+    !isPlaceholder(envPrivate) &&
+    isValidVapidPublicKey(envPublic) &&
+    isValidVapidPrivateKey(envPrivate)
+  ) {
+    cachedVapidPublic = envPublic;
+    cachedVapidPrivate = envPrivate;
+  } else {
+    if (!isPlaceholder(envPublic) || !isPlaceholder(envPrivate)) {
+      console.warn('[WebPush] Environment VAPID keys are invalid/malformed; falling back to stored/generated VAPID keys.');
+    }
+    if (fs.existsSync(VAPID_FILE)) {
+      try {
+        const raw = JSON.parse(fs.readFileSync(VAPID_FILE, 'utf8')) as PersistedVapidKeys;
+        const pub = cleanEnvVal(raw.publicKey);
+        const priv = cleanEnvVal(raw.privateKey);
+        if (isValidVapidPublicKey(pub) && isValidVapidPrivateKey(priv)) {
+          cachedVapidPublic = pub;
+          cachedVapidPrivate = priv;
+          if (raw.subject && isPlaceholder(envSubject)) {
+            cachedVapidSubject = normalizeVapidSubject(raw.subject);
+          }
         }
+      } catch {
+        // Regenerate below if corrupted
       }
-    } catch {
-      // Regenerate below if corrupted
     }
   }
 
@@ -91,7 +150,22 @@ export function initVapidAndSecrets(): void {
     console.log('[WebPush] Generated and persisted new VAPID keypair in data/vapid-keys.json');
   }
 
-  setVapidDetails(cachedVapidSubject, cachedVapidPublic, cachedVapidPrivate);
+  try {
+    setVapidDetails(cachedVapidSubject, cachedVapidPublic, cachedVapidPrivate);
+  } catch (err) {
+    console.warn('[WebPush] Failed to apply VAPID details, regenerating keypair:', err);
+    const generated = generateVAPIDKeys();
+    cachedVapidPublic = generated.publicKey;
+    cachedVapidPrivate = generated.privateKey;
+    cachedVapidSubject = 'mailto:notifications@cbemobile.app';
+    writeJsonSecure(VAPID_FILE, {
+      publicKey: cachedVapidPublic,
+      privateKey: cachedVapidPrivate,
+      subject: cachedVapidSubject,
+      createdAt: new Date().toISOString(),
+    });
+    setVapidDetails(cachedVapidSubject, cachedVapidPublic, cachedVapidPrivate);
+  }
 
   // 2. Load or generate server-side HMAC & admin secrets
   const envAuthSecret = process.env.AUTH_TOKEN_SECRET;
