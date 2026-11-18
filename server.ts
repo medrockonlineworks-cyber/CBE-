@@ -11,7 +11,15 @@ async function startServer() {
   const app = express();
   app.set('trust proxy', 1);
   const port = Number(process.env.PORT || 3000);
-  const isProd = process.env.NODE_ENV === 'production';
+  const distDir = path.resolve(process.cwd(), 'dist');
+  const isDevLifecycle =
+    process.env.npm_lifecycle_event === 'dev' ||
+    process.argv.some((arg) => arg.includes('tsx')) ||
+    Boolean(process.execArgv.some((arg) => arg.includes('tsx')));
+  const isProd =
+    process.env.NODE_ENV === 'production' ||
+    process.env.npm_lifecycle_event === 'start' ||
+    (!isDevLifecycle && process.env.NODE_ENV !== 'development' && fs.existsSync(distDir));
 
   // Ensure Service Workers & Web Push extension script are never aggressively cached
   app.use((req, res, next) => {

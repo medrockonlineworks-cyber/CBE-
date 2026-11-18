@@ -103,16 +103,24 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 async function safeParseJson<T = Record<string, unknown>>(res: Response, endpointLabel: string): Promise<T> {
   const text = await res.text();
   const trimmed = text.trim();
+  const contentType = (res.headers.get('content-type') || '').toLowerCase();
+
+  if (res.status === 404 && !contentType.includes('application/json')) {
+    throw new Error(
+      `Notification backend (${endpointLabel}) returned HTTP 404. The current URL is serving static files without the Express push server (server.ts). Open the live full-stack server URL or deploy with Node.js (npm start) to enable push notifications.`
+    );
+  }
+
   if (!trimmed) {
     return {} as T;
   }
-  const contentType = (res.headers.get('content-type') || '').toLowerCase();
+
   if (
     trimmed.startsWith('<') ||
     contentType.includes('text/html')
   ) {
     throw new Error(
-      `Notification API (${endpointLabel}) returned an HTML page instead of JSON (HTTP ${res.status}). On iPhone Home Screen mode, open the Shared App URL in Safari and re-add to Home Screen so API calls do not hit an authentication redirect.`
+      `Notification API (${endpointLabel}) returned an HTML page instead of JSON (HTTP ${res.status}). On iPhone Home Screen mode, use a public full-stack server URL (not a login-protected dev proxy) so API calls do not hit an auth redirect.`
     );
   }
   try {
