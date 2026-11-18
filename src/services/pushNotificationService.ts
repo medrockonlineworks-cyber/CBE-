@@ -1,3 +1,5 @@
+import { Capacitor } from '@capacitor/core';
+import { LocalNotifications } from '@capacitor/local-notifications';
 import type { Transaction, UserProfile } from '../types';
 import { AuthSessionService } from './authSessionService';
 
@@ -289,6 +291,52 @@ export class PushNotificationService {
   private static backendTokenUserId: string | null = null;
   private static sessionPromise: Promise<string | null> | null = null;
   private static swListenerAttached = false;
+  private static nativeListenerAttached = false;
+  private static nativeChannelCreated = false;
+  private static nativePermissionCache: NotificationPermission | null = null;
+
+  private static mapNativeDisplayPermission(display?: string): NotificationPermission {
+    if (display === 'granted') return 'granted';
+    if (display === 'denied') return 'denied';
+    return 'default';
+  }
+
+  public static async syncNativePermissionStatus(): Promise<NotificationPermission> {
+    if (!Capacitor.isNativePlatform()) {
+      return typeof window !== 'undefined' && 'Notification' in window
+        ? Notification.permission
+        : 'default';
+    }
+    try {
+      const status = await LocalNotifications.checkPermissions();
+      const mapped = this.mapNativeDisplayPermission(status?.display);
+      this.nativePermissionCache = mapped;
+      return mapped;
+    } catch {
+      return this.nativePermissionCache ?? 'default';
+    }
+  }
+
+  private static async ensureNativeChannel(): Promise<void> {
+    if (!Capacitor.isNativePlatform() || this.nativeChannelCreated) return;
+    try {
+      if (Capacitor.getPlatform() === 'android') {
+        await LocalNotifications.createChannel({
+          id: 'cbe-banking-alerts',
+          name: 'CBE Banking Alerts',
+          description: 'Lock screen and notification center banking alerts',
+          importance: 5,
+          visibility: 1,
+          vibration: true,
+          lights: true,
+          lightColor: '#70189F',
+        });
+      }
+      this.nativeChannelCreated = true;
+    } catch (err) {
+      console.warn('[PushNotificationService] Failed to create notification channel:', err);
+    }
+  }
 
   private static getLocalPreferences(userId: string): NotificationPreferences {
     const fallback: NotificationPreferences = {
@@ -364,39 +412,47 @@ export class PushNotificationService {
     }
 
     const ua = navigator.userAgent || '';
+    const isNative = Capacitor.isNativePlatform();
+    const nativePlatform = isNative ? Capacitor.getPlatform() : '';
     const isIOS =
+      nativePlatform === 'ios' ||
       /iPhone|iPad|iPod/i.test(ua) ||
       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    const isAndroid = /Android/i.test(ua);
+    const isAndroid = nativePlatform === 'android' || /Android/i.test(ua);
     const isStandalone =
+      isNative ||
       window.matchMedia('(display-mode: standalone)').matches ||
       (navigator as unknown as { standalone?: boolean }).standalone === true;
-    const isInIframe = (() => {
-      try {
-        return window.self !== window.top;
-      } catch {
-        return true;
-      }
-    })();
+    const isInIframe = isNative
+      ? false
+      : (() => {
+          try {
+            return window.self !== window.top;
+          } catch {
+            return true;
+          }
+        })();
 
     const hasSW = 'serviceWorker' in navigator;
     const hasNotification = 'Notification' in window;
     const hasPushManager = 'PushManager' in window;
-    const isLocalSwSupported = hasSW && hasNotification;
-    const isPushSupported = hasSW && hasNotification && hasPushManager;
-    const permission: NotificationPermission | 'unsupported' = hasNotification
-      ? Notification.permission
-      : 'unsupported';
+    const isLocalSwSupported = isNative || (hasSW && hasNotification);
+    const isPushSupported = !isNative && hasSW && hasNotification && hasPushManager;
+    const permission: NotificationPermission | 'unsupported' = isNative
+      ? (this.nativePermissionCache ?? 'default')
+      : hasNotification
+        ? Notification.permission
+        : 'unsupported';
 
     return {
       isIOS,
       isAndroid,
       isStandalone,
       isInIframe,
-      isSecureContext: Boolean(window.isSecureContext),
+      isSecureContext: isNative ? true : Boolean(window.isSecureContext),
       isPushSupported,
       isLocalSwSupported,
-      requiresIosHomeScreenInstall: isIOS && !isStandalone,
+      requiresIosHomeScreenInstall: !isNative && isIOS && !isStandalone,
       permission,
     };
   }
@@ -526,6 +582,36 @@ export class PushNotificationService {
     payload: ReturnType<typeof buildLocalNotificationPayload>
   ): Promise<boolean> {
     try {
+      if (Capacitor.isNativePlatform()) {
+        const perm =
+          this.nativePermissionCache ?? (await this.syncNativePermissionStatus());
+        if (perm !== 'granted') {
+          return false;
+        }
+        await this.ensureNativeChannel();
+        const notifId =
+          ((Date.now() % 1_000_000_000) + Math.floor(Math.random() * 1000)) | 0;
+        await LocalNotifications.schedule({
+          notifications: [
+            {
+              id: Math.max(1, notifId),
+              title: payload.title,
+              body: payload.body,
+              channelId: 'cbe-banking-alerts',
+              smallIcon: 'ic_stat_cbe',
+              iconColor: '#70189F',
+              extra: {
+                url: payload.url,
+                txId: payload.txId || null,
+                reference: payload.reference || null,
+                category: payload.category,
+              },
+            },
+          ],
+        });
+        return true;
+      }
+
       if (typeof window === 'undefined' || !('Notification' in window) || Notification.permission !== 'granted') {
         return false;
       }
@@ -567,6 +653,27 @@ export class PushNotificationService {
   }
 
   public static attachServiceWorkerListeners(getActiveUser: () => UserProfile | null): void {
+    if (Capacitor.isNativePlatform()) {
+      if (!this.nativeListenerAttached) {
+        this.nativeListenerAttached = true;
+        void LocalNotifications.addListener('localNotificationActionPerformed', (event) => {
+          const extra = event?.notification?.extra as Record<string, unknown> | undefined;
+          if (!extra) return;
+          window.dispatchEvent(
+            new CustomEvent('cbe_push_deep_link', {
+              detail: {
+                url: (typeof extra.url === 'string' && extra.url) || '/',
+                txId: extra.txId || null,
+                reference: extra.reference || null,
+                category: extra.category || null,
+              },
+            })
+          );
+        }).catch(() => {});
+      }
+      return;
+    }
+
     if (this.swListenerAttached || typeof navigator === 'undefined' || !('serviceWorker' in navigator)) {
       return;
     }
@@ -646,6 +753,39 @@ export class PushNotificationService {
     preferences?: NotificationPreferences;
   }> {
     const caps = this.getPlatformCapabilities();
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const req = await LocalNotifications.requestPermissions();
+        const permission = this.mapNativeDisplayPermission(req?.display);
+        this.nativePermissionCache = permission;
+        if (permission !== 'granted') {
+          return {
+            ok: false,
+            message:
+              permission === 'denied'
+                ? 'Notification permission was blocked. Please allow notifications for CBE Mobile Banking in Android App Settings.'
+                : 'Notification permission was dismissed.',
+          };
+        }
+        await this.ensureNativeChannel();
+        this.setLocalEnabled(user.id, true);
+        const localPrefs = this.saveLocalPreferences(user.id, { enabled: true });
+        return {
+          ok: true,
+          mode: 'local',
+          message:
+            'Native Android notifications enabled! Lock Screen & Notification Center alerts are active.',
+          deviceCount: 1,
+          preferences: localPrefs,
+        };
+      } catch (err) {
+        return {
+          ok: false,
+          message: err instanceof Error ? err.message : 'Unable to enable native notifications.',
+        };
+      }
+    }
 
     if (caps.requiresIosHomeScreenInstall) {
       return {
@@ -756,6 +896,14 @@ export class PushNotificationService {
     this.setLocalEnabled(user.id, false);
     this.saveLocalPreferences(user.id, { enabled: false });
 
+    if (Capacitor.isNativePlatform()) {
+      return {
+        ok: true,
+        deviceCount: 0,
+        message: 'Notifications disabled for this device.',
+      };
+    }
+
     try {
       let endpoint: string | undefined;
       if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
@@ -817,6 +965,9 @@ export class PushNotificationService {
   }
 
   public static async getStatus(user: UserProfile): Promise<NotificationStatusResponse> {
+    if (Capacitor.isNativePlatform()) {
+      await this.syncNativePermissionStatus();
+    }
     const caps = this.getPlatformCapabilities();
     const localPrefs = this.getLocalPreferences(user.id);
     const localActive = caps.permission === 'granted' && this.isLocalEnabled(user.id);
@@ -825,6 +976,28 @@ export class PushNotificationService {
       : caps.isAndroid
         ? 'android'
         : 'desktop';
+
+    if (Capacitor.isNativePlatform()) {
+      return {
+        ok: true,
+        mode: 'local',
+        subscribed: localActive,
+        hasAnySubscription: localActive,
+        deviceCount: localActive ? 1 : 0,
+        devices: localActive
+          ? [
+              {
+                id: 'native_android_device',
+                deviceLabel: `${AuthSessionService.getDeviceLabel()} (Android App)`,
+                platform,
+                isCurrentDevice: true,
+                updatedAt: localPrefs.updatedAt || new Date().toISOString(),
+              },
+            ]
+          : [],
+        preferences: localPrefs,
+      };
+    }
 
     try {
       let currentEndpoint = '';
@@ -877,6 +1050,10 @@ export class PushNotificationService {
   ): Promise<{ ok: boolean; preferences?: NotificationPreferences; error?: string }> {
     const updatedLocal = this.saveLocalPreferences(user.id, patch);
 
+    if (Capacitor.isNativePlatform()) {
+      return { ok: true, preferences: updatedLocal };
+    }
+
     try {
       const res = await this.authedFetch(user, '/api/notifications/preferences', {
         method: 'PUT',
@@ -902,20 +1079,24 @@ export class PushNotificationService {
     sampleCategory?: NotificationCategory | 'test',
     amount?: number
   ): Promise<{ ok: boolean; message?: string; error?: string }> {
-    try {
-      const res = await this.authedFetch(user, '/api/notifications/test', {
-        method: 'POST',
-        body: JSON.stringify({ sampleCategory, amount }),
-      });
-      const data = await safeParseJson<{ ok?: boolean; sent?: number; message?: string; error?: string }>(
-        res,
-        '/api/notifications/test'
-      );
-      if (res.ok && data?.ok && (data.sent ?? 0) > 0) {
-        return { ok: true, message: data.message };
+    if (!Capacitor.isNativePlatform()) {
+      try {
+        const res = await this.authedFetch(user, '/api/notifications/test', {
+          method: 'POST',
+          body: JSON.stringify({ sampleCategory, amount }),
+        });
+        const data = await safeParseJson<{ ok?: boolean; sent?: number; message?: string; error?: string }>(
+          res,
+          '/api/notifications/test'
+        );
+        if (res.ok && data?.ok && (data.sent ?? 0) > 0) {
+          return { ok: true, message: data.message };
+        }
+      } catch {
+        // Fall back cleanly to local Service Worker notification
       }
-    } catch {
-      // Fall back cleanly to local Service Worker notification
+    } else {
+      await this.syncNativePermissionStatus();
     }
 
     const caps = this.getPlatformCapabilities();
@@ -978,44 +1159,50 @@ export class PushNotificationService {
         }
       }
 
-      try {
-        const res = await this.authedFetch(resolvedUser, '/api/notifications/send-transaction', {
-          method: 'POST',
-          body: JSON.stringify({
-            id: tx.id,
-            reference: tx.reference || tx.id,
-            type: mappedType,
-            status: tx.status === 'failed' ? 'failed' : 'success',
-            amount: tx.amount,
-            fee: tx.fee,
-            currency: 'ETB',
-            senderId: tx.senderId,
-            senderAccount: tx.senderAccount,
-            senderName: tx.senderName,
-            recipientId: tx.recipientId,
-            recipientAccount: tx.recipientAccount,
-            recipientName: tx.recipientName,
-            description: tx.description,
-            createdAt: tx.createdAt,
-          }),
-        });
-        const json = await safeParseJson<{
-          ok?: boolean;
-          dispatches?: Array<{ sent?: number }>;
-        }>(res, '/api/notifications/send-transaction');
-        if (res.ok && json?.ok && Array.isArray(json.dispatches)) {
-          backendDelivered = json.dispatches.some((d) => (d.sent || 0) > 0);
+      if (!Capacitor.isNativePlatform()) {
+        try {
+          const res = await this.authedFetch(resolvedUser, '/api/notifications/send-transaction', {
+            method: 'POST',
+            body: JSON.stringify({
+              id: tx.id,
+              reference: tx.reference || tx.id,
+              type: mappedType,
+              status: tx.status === 'failed' ? 'failed' : 'success',
+              amount: tx.amount,
+              fee: tx.fee,
+              currency: 'ETB',
+              senderId: tx.senderId,
+              senderAccount: tx.senderAccount,
+              senderName: tx.senderName,
+              recipientId: tx.recipientId,
+              recipientAccount: tx.recipientAccount,
+              recipientName: tx.recipientName,
+              description: tx.description,
+              createdAt: tx.createdAt,
+            }),
+          });
+          const json = await safeParseJson<{
+            ok?: boolean;
+            dispatches?: Array<{ sent?: number }>;
+          }>(res, '/api/notifications/send-transaction');
+          if (res.ok && json?.ok && Array.isArray(json.dispatches)) {
+            backendDelivered = json.dispatches.some((d) => (d.sent || 0) > 0);
+          }
+        } catch {
+          backendDelivered = false;
         }
-      } catch {
-        backendDelivered = false;
       }
 
-      // If backend push didn't deliver (e.g., static preview / local PWA mode), trigger local Service Worker alert
+      const permissionGranted = Capacitor.isNativePlatform()
+        ? (await this.syncNativePermissionStatus()) === 'granted'
+        : typeof window !== 'undefined' &&
+          'Notification' in window &&
+          Notification.permission === 'granted';
+
+      // If backend push didn't deliver (or running in native Capacitor APK), trigger device notification
       if (
         !backendDelivered &&
-        typeof window !== 'undefined' &&
-        'Notification' in window &&
-        Notification.permission === 'granted' &&
+        permissionGranted &&
         this.isLocalEnabled(resolvedUser.id)
       ) {
         const prefs = this.getLocalPreferences(resolvedUser.id);
@@ -1054,27 +1241,33 @@ export class PushNotificationService {
     category: 'security_alert' | 'security_update' | 'account_update'
   ): Promise<void> {
     let backendDelivered = false;
-    try {
-      const res = await this.authedFetch(user, '/api/notifications/security-event', {
-        method: 'POST',
-        body: JSON.stringify({ category }),
-      });
-      const json = await safeParseJson<{ ok?: boolean; sent?: number }>(
-        res,
-        '/api/notifications/security-event'
-      );
-      if (res.ok && json?.ok && (json.sent || 0) > 0) {
-        backendDelivered = true;
+    if (!Capacitor.isNativePlatform()) {
+      try {
+        const res = await this.authedFetch(user, '/api/notifications/security-event', {
+          method: 'POST',
+          body: JSON.stringify({ category }),
+        });
+        const json = await safeParseJson<{ ok?: boolean; sent?: number }>(
+          res,
+          '/api/notifications/security-event'
+        );
+        if (res.ok && json?.ok && (json.sent || 0) > 0) {
+          backendDelivered = true;
+        }
+      } catch {
+        backendDelivered = false;
       }
-    } catch {
-      backendDelivered = false;
     }
+
+    const permissionGranted = Capacitor.isNativePlatform()
+      ? (await this.syncNativePermissionStatus()) === 'granted'
+      : typeof window !== 'undefined' &&
+        'Notification' in window &&
+        Notification.permission === 'granted';
 
     if (
       !backendDelivered &&
-      typeof window !== 'undefined' &&
-      'Notification' in window &&
-      Notification.permission === 'granted' &&
+      permissionGranted &&
       this.isLocalEnabled(user.id)
     ) {
       const prefs = this.getLocalPreferences(user.id);

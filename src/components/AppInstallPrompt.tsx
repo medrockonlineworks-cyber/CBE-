@@ -677,7 +677,17 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
             </div>
           )}
 
-          {apkInfo.available && apkInfo.downloadUrl ? (
+          {Capacitor.isNativePlatform() ? (
+            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 text-[11px] text-emerald-900 leading-relaxed flex items-center gap-2.5">
+              <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
+              <div>
+                <p className="font-bold text-emerald-950">Native Android APK Active</p>
+                <p className="text-emerald-800/90">
+                  You are running the installed Android application (v1.0) directly on this device.
+                </p>
+              </div>
+            </div>
+          ) : apkInfo.available && apkInfo.downloadUrl ? (
             <div className="space-y-2">
               <a
                 id="btn-download-android-apk"

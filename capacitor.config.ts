@@ -39,6 +39,10 @@ export interface CapacitorConfig {
       style?: 'DARK' | 'LIGHT' | 'DEFAULT';
       resizeOnFullScreen?: boolean;
     };
+    LocalNotifications?: {
+      smallIcon?: string;
+      iconColor?: string;
+    };
   };
 }
 
@@ -78,6 +82,10 @@ const config: CapacitorConfig = {
       resize: 'body',
       style: 'DARK',
       resizeOnFullScreen: true
+    },
+    LocalNotifications: {
+      smallIcon: 'ic_stat_cbe',
+      iconColor: '#70189F'
     }
   }
 };

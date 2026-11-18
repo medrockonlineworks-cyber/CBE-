@@ -34,6 +34,10 @@
 			"resize": "body",
 			"style": "DARK",
 			"resizeOnFullScreen": true
+		},
+		"LocalNotifications": {
+			"smallIcon": "ic_stat_cbe",
+			"iconColor": "#70189F"
 		}
 	}
 }

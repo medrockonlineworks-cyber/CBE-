@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { Capacitor } from '@capacitor/core';
 import {
   Bell,
   BellOff,
@@ -58,6 +59,7 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
     setCaps(PushNotificationService.getPlatformCapabilities());
     try {
       const status = await PushNotificationService.getStatus(currentUser);
+      setCaps(PushNotificationService.getPlatformCapabilities());
       setSubscribed(status.subscribed);
       setDeliveryMode(status.mode || null);
       setDeviceCount(status.deviceCount);
@@ -298,7 +300,13 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
             ) : subscribed ? (
               <>
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>{deliveryMode === 'local' ? 'Subscribed (Local PWA)' : 'Subscribed (Web Push)'}</span>
+                <span>
+                  {Capacitor.isNativePlatform()
+                    ? 'Subscribed (Android Native)'
+                    : deliveryMode === 'local'
+                      ? 'Subscribed (Local PWA)'
+                      : 'Subscribed (Web Push)'}
+                </span>
               </>
             ) : (
               <span>Not Subscribed</span>
