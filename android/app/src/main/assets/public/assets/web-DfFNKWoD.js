@@ -1,0 +1,28 @@
+import { W as WebPlugin } from "./index-BjSkOb3O.js";
+import "./vendor-canvas-Pes3i3zI.js";
+import "./vendor-icons-iNh46v9b.js";
+class BrowserWeb extends WebPlugin {
+  constructor() {
+    super();
+    this._lastWindow = null;
+  }
+  async open(options) {
+    this._lastWindow = window.open(options.url, options.windowName || "_blank");
+  }
+  async close() {
+    return new Promise((resolve, reject) => {
+      if (this._lastWindow != null) {
+        this._lastWindow.close();
+        this._lastWindow = null;
+        resolve();
+      } else {
+        reject("No active window to close!");
+      }
+    });
+  }
+}
+const Browser = new BrowserWeb();
+export {
+  Browser,
+  BrowserWeb
+};

@@ -8,15 +8,9 @@ const publicDownloadsDir = path.join(rootDir, 'public', 'downloads');
 const distDownloadsDir = path.join(rootDir, 'dist', 'downloads');
 const isRelease = process.argv.includes('--release');
 
-const defaultSdkDir = '/opt/android-sdk';
-if (!process.env.ANDROID_HOME && fs.existsSync(defaultSdkDir)) {
-  process.env.ANDROID_HOME = defaultSdkDir;
-  process.env.ANDROID_SDK_ROOT = defaultSdkDir;
-}
-
 function run(cmd, cwd = rootDir) {
   console.log(`\n> ${cmd}`);
-  execSync(cmd, { cwd, stdio: 'inherit', env: process.env });
+  execSync(cmd, { cwd, stdio: 'inherit' });
 }
 
 function findJava() {
@@ -36,28 +30,11 @@ if (!findJava()) {
 
 console.log(`[APK Build] Building web assets and syncing Capacitor Android (${isRelease ? 'release' : 'debug'})...`);
 run('npm run build');
-// Do not bundle downloadable APK binaries inside the APK's own Capacitor assets
-fs.rmSync(distDownloadsDir, { recursive: true, force: true });
 run('npx cap sync android');
 
-const defaultJdk21Dir = '/usr/lib/jvm/java-21-openjdk-amd64';
-if (fs.existsSync(defaultJdk21Dir)) {
-  process.env.JAVA_HOME = defaultJdk21Dir;
-  process.env.PATH = `${path.join(defaultJdk21Dir, 'bin')}:${process.env.PATH || ''}`;
-}
-
 const gradlew = process.platform === 'win32' ? 'gradlew.bat' : './gradlew';
-if (process.platform !== 'win32') {
-  const gradlewPath = path.join(androidDir, 'gradlew');
-  if (fs.existsSync(gradlewPath)) {
-    fs.chmodSync(gradlewPath, 0o755);
-  }
-}
 const gradleTask = isRelease ? 'assembleRelease' : 'assembleDebug';
-if (!process.env.GRADLE_OPTS) {
-  process.env.GRADLE_OPTS = '-Xmx192m -XX:+UseSerialGC';
-}
-run(`${gradlew} ${gradleTask} --no-daemon --max-workers=1 --console=plain -Dorg.gradle.vfs.watch=false -Dorg.gradle.jvmargs="-Xmx896m -XX:MaxMetaspaceSize=320m -XX:+UseSerialGC -Dfile.encoding=UTF-8"`, androidDir);
+run(`${gradlew} ${gradleTask}`, androidDir);
 
 const candidateApks = isRelease
   ? [

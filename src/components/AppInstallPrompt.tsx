@@ -307,7 +307,6 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
     setApkFeedback(null);
 
     try {
-      let normalizedUrl = '';
       if (!cleaned) {
         localStorage.removeItem(CUSTOM_APK_URL_KEY);
       } else {
@@ -316,9 +315,8 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
         if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
           throw new Error('URL must start with https:// or http://');
         }
-        normalizedUrl = parsed.href;
-        setApkUrlInput(normalizedUrl);
-        localStorage.setItem(CUSTOM_APK_URL_KEY, normalizedUrl);
+        setApkUrlInput(parsed.href);
+        localStorage.setItem(CUSTOM_APK_URL_KEY, parsed.href);
       }
 
       // Sync to backend if available
@@ -330,7 +328,7 @@ export const AppInstallPrompt: React.FC<AppInstallPromptProps> = ({
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ externalUrl: normalizedUrl }),
+          body: JSON.stringify({ externalUrl: cleaned }),
         }).catch(() => null);
       }
 
