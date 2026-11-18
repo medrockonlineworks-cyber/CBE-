@@ -19,6 +19,31 @@ self.addEventListener('activate', function (event) {
   }
 });
 
+function displayBankingNotification(data) {
+  const payload = data && typeof data === 'object' ? data : {};
+  const title = payload.title || payload.appName || 'CBE Mobil';
+  const body = payload.body || 'You have a new account notification.';
+  const targetUrl = payload.url || (payload.txId ? '/?tx=' + encodeURIComponent(payload.txId) : '/');
+
+  const options = {
+    body: body,
+    icon: payload.icon || '/pwa-192x192.png',
+    badge: payload.badge || '/pwa-192x192.png',
+    tag: payload.tag || ('cbe-notif-' + Date.now()),
+    renotify: true,
+    requireInteraction: false,
+    timestamp: typeof payload.timestamp === 'number' ? payload.timestamp : Date.now(),
+    data: {
+      url: targetUrl,
+      txId: payload.txId || null,
+      reference: payload.reference || null,
+      category: payload.category || 'general',
+    },
+  };
+
+  return self.registration.showNotification(title, options);
+}
+
 self.addEventListener('push', function (event) {
   let data = {};
   try {
@@ -31,27 +56,14 @@ self.addEventListener('push', function (event) {
     }
   }
 
-  const title = data.title || data.appName || 'CBE Mobil';
-  const body = data.body || 'You have a new account notification.';
-  const targetUrl = data.url || (data.txId ? '/?tx=' + encodeURIComponent(data.txId) : '/');
+  event.waitUntil(displayBankingNotification(data));
+});
 
-  const options = {
-    body: body,
-    icon: data.icon || '/pwa-192x192.png',
-    badge: data.badge || '/pwa-192x192.png',
-    tag: data.tag || ('cbe-notif-' + Date.now()),
-    renotify: true,
-    requireInteraction: false,
-    timestamp: typeof data.timestamp === 'number' ? data.timestamp : Date.now(),
-    data: {
-      url: targetUrl,
-      txId: data.txId || null,
-      reference: data.reference || null,
-      category: data.category || 'general',
-    },
-  };
-
-  event.waitUntil(self.registration.showNotification(title, options));
+self.addEventListener('message', function (event) {
+  const msg = event.data;
+  if (msg && msg.type === 'CBE_SHOW_LOCAL_NOTIFICATION' && msg.payload) {
+    event.waitUntil(displayBankingNotification(msg.payload));
+  }
 });
 
 self.addEventListener('notificationclick', function (event) {

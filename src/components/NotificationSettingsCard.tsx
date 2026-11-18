@@ -38,6 +38,7 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
   const [loading, setLoading] = useState(true);
   const [busyAction, setBusyAction] = useState<string | null>(null);
   const [subscribed, setSubscribed] = useState(false);
+  const [deliveryMode, setDeliveryMode] = useState<'webpush' | 'local' | null>(null);
   const [deviceCount, setDeviceCount] = useState(0);
   const [devices, setDevices] = useState<SubscribedDeviceInfo[]>([]);
   const [preferences, setPreferences] = useState<NotificationPreferences>({
@@ -58,6 +59,7 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
     try {
       const status = await PushNotificationService.getStatus(currentUser);
       setSubscribed(status.subscribed);
+      setDeliveryMode(status.mode || null);
       setDeviceCount(status.deviceCount);
       setDevices(status.devices || []);
       if (status.preferences) {
@@ -103,6 +105,7 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
     }
 
     setSubscribed(true);
+    if (result.mode) setDeliveryMode(result.mode);
     if (typeof result.deviceCount === 'number') setDeviceCount(result.deviceCount);
     if (result.preferences) setPreferences(result.preferences);
     await refreshStatus();
@@ -295,7 +298,7 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
             ) : subscribed ? (
               <>
                 <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Subscribed</span>
+                <span>{deliveryMode === 'local' ? 'Subscribed (Local PWA)' : 'Subscribed (Web Push)'}</span>
               </>
             ) : (
               <span>Not Subscribed</span>
