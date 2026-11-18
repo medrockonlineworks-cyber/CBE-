@@ -96,7 +96,7 @@ define(['./workbox-afac4cd2'], (function (workbox) { 'use strict';
     "revision": "1342bcb96eed0c937f3d575bde546d7b"
   }, {
     "url": "index.html",
-    "revision": "9b6b559c2dbaf8adb63827652ef5a733"
+    "revision": "fe6fd348767ca94d3ff0ec59da9f4169"
   }, {
     "url": "favicon.svg",
     "revision": "6fff91da078ff4540ee449170c156fbd"
@@ -128,46 +128,22 @@ define(['./workbox-afac4cd2'], (function (workbox) { 'use strict';
     "url": "icons/icon-192.png",
     "revision": "1342bcb96eed0c937f3d575bde546d7b"
   }, {
-    "url": "assets/workbox-window.prod.es5-BAA1jQbh.js",
+    "url": "assets/web-v911TX3s.js",
     "revision": null
   }, {
-    "url": "assets/web-xAOpF1Mq.js",
+    "url": "assets/web-pXE0yXJc.js",
     "revision": null
   }, {
-    "url": "assets/web-wH-C0Byr.js",
+    "url": "assets/web-C4yEZBch.js",
     "revision": null
   }, {
-    "url": "assets/web-Di85Mv7U.js",
+    "url": "assets/web-BaXou9cj.js",
     "revision": null
   }, {
-    "url": "assets/web-DfFNKWoD.js",
+    "url": "assets/vendor-icons-D5DVznM5.js",
     "revision": null
   }, {
-    "url": "assets/web-DE6DDPmX.js",
-    "revision": null
-  }, {
-    "url": "assets/web-BgrDDgQT.js",
-    "revision": null
-  }, {
-    "url": "assets/web-B6tDxpNo.js",
-    "revision": null
-  }, {
-    "url": "assets/web-2G9xv2E-.js",
-    "revision": null
-  }, {
-    "url": "assets/virtual_pwa-register-eTth_15s.js",
-    "revision": null
-  }, {
-    "url": "assets/vendor-icons-iNh46v9b.js",
-    "revision": null
-  }, {
-    "url": "assets/vendor-icons-NJWDDvJu.js",
-    "revision": null
-  }, {
-    "url": "assets/vendor-canvas-mBl2Q45M.js",
-    "revision": null
-  }, {
-    "url": "assets/vendor-canvas-Pes3i3zI.js",
+    "url": "assets/vendor-canvas-DCwySPZc.js",
     "revision": null
   }, {
     "url": "assets/right_side_sm.png",
@@ -176,25 +152,13 @@ define(['./workbox-afac4cd2'], (function (workbox) { 'use strict';
     "url": "assets/purify.es-DedTAGkB.js",
     "revision": null
   }, {
-    "url": "assets/purify.es-CLYHbGft.js",
+    "url": "assets/index.es-CGyXHHjW.js",
     "revision": null
   }, {
-    "url": "assets/index.es-C4CeG0HU.js",
+    "url": "assets/index-9OciSKb2.js",
     "revision": null
   }, {
-    "url": "assets/index.es-BaVgWWPY.js",
-    "revision": null
-  }, {
-    "url": "assets/index-RmSscsQH.js",
-    "revision": null
-  }, {
-    "url": "assets/index-C3vdZJ0N.css",
-    "revision": null
-  }, {
-    "url": "assets/index-C1BRLy-r.css",
-    "revision": null
-  }, {
-    "url": "assets/index-BjSkOb3O.js",
+    "url": "assets/index-75NjXcRK.css",
     "revision": null
   }, {
     "url": "assets/comp_top_sm.png",
