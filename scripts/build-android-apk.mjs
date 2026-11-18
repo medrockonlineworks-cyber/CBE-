@@ -40,6 +40,12 @@ run('npm run build');
 fs.rmSync(distDownloadsDir, { recursive: true, force: true });
 run('npx cap sync android');
 
+const defaultJdk21Dir = '/usr/lib/jvm/java-21-openjdk-amd64';
+if (fs.existsSync(defaultJdk21Dir)) {
+  process.env.JAVA_HOME = defaultJdk21Dir;
+  process.env.PATH = `${path.join(defaultJdk21Dir, 'bin')}:${process.env.PATH || ''}`;
+}
+
 const gradlew = process.platform === 'win32' ? 'gradlew.bat' : './gradlew';
 if (process.platform !== 'win32') {
   const gradlewPath = path.join(androidDir, 'gradlew');
@@ -48,7 +54,10 @@ if (process.platform !== 'win32') {
   }
 }
 const gradleTask = isRelease ? 'assembleRelease' : 'assembleDebug';
-run(`${gradlew} ${gradleTask} --no-daemon --console=plain`, androidDir);
+if (!process.env.GRADLE_OPTS) {
+  process.env.GRADLE_OPTS = '-Xmx192m -XX:+UseSerialGC';
+}
+run(`${gradlew} ${gradleTask} --no-daemon --max-workers=1 --console=plain -Dorg.gradle.vfs.watch=false -Dorg.gradle.jvmargs="-Xmx896m -XX:MaxMetaspaceSize=320m -XX:+UseSerialGC -Dfile.encoding=UTF-8"`, androidDir);
 
 const candidateApks = isRelease
   ? [
