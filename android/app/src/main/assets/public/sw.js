@@ -69,6 +69,7 @@ if (!self.define) {
 }
 define(['./workbox-afac4cd2'], (function (workbox) { 'use strict';
 
+  importScripts("/sw-push.js");
   self.skipWaiting();
   workbox.clientsClaim();
   /**
@@ -79,6 +80,9 @@ define(['./workbox-afac4cd2'], (function (workbox) { 'use strict';
   workbox.precacheAndRoute([{
     "url": "telebirr-bg.svg",
     "revision": "f132e81be203f0489b2408a7b5b646c9"
+  }, {
+    "url": "sw-push.js",
+    "revision": "a6aee8be5303695768a1ada25bf4e078"
   }, {
     "url": "pwa-screenshot-wide.png",
     "revision": "2b83c1352170118db9f7d0adf60ca952"
@@ -96,7 +100,7 @@ define(['./workbox-afac4cd2'], (function (workbox) { 'use strict';
     "revision": "1342bcb96eed0c937f3d575bde546d7b"
   }, {
     "url": "index.html",
-    "revision": "fe6fd348767ca94d3ff0ec59da9f4169"
+    "revision": "3450dc188f0315df5675dccfaad3f44c"
   }, {
     "url": "favicon.svg",
     "revision": "6fff91da078ff4540ee449170c156fbd"
@@ -128,22 +132,22 @@ define(['./workbox-afac4cd2'], (function (workbox) { 'use strict';
     "url": "icons/icon-192.png",
     "revision": "1342bcb96eed0c937f3d575bde546d7b"
   }, {
-    "url": "assets/web-v911TX3s.js",
+    "url": "assets/web-CBBQDnO6.js",
     "revision": null
   }, {
-    "url": "assets/web-pXE0yXJc.js",
+    "url": "assets/web-CAdsX5Ep.js",
     "revision": null
   }, {
-    "url": "assets/web-C4yEZBch.js",
+    "url": "assets/web-BOpjgJzL.js",
     "revision": null
   }, {
-    "url": "assets/web-BaXou9cj.js",
+    "url": "assets/web-1hSVZSpb.js",
     "revision": null
   }, {
-    "url": "assets/vendor-icons-D5DVznM5.js",
+    "url": "assets/vendor-icons-JtMm6HcC.js",
     "revision": null
   }, {
-    "url": "assets/vendor-canvas-DCwySPZc.js",
+    "url": "assets/vendor-canvas-CthjXNGI.js",
     "revision": null
   }, {
     "url": "assets/right_side_sm.png",
@@ -152,13 +156,13 @@ define(['./workbox-afac4cd2'], (function (workbox) { 'use strict';
     "url": "assets/purify.es-DedTAGkB.js",
     "revision": null
   }, {
-    "url": "assets/index.es-CGyXHHjW.js",
+    "url": "assets/index.es-CL8_Eu73.js",
     "revision": null
   }, {
-    "url": "assets/index-9OciSKb2.js",
+    "url": "assets/index-CjUFa3y_.css",
     "revision": null
   }, {
-    "url": "assets/index-75NjXcRK.css",
+    "url": "assets/index-CdBpR5Wn.js",
     "revision": null
   }, {
     "url": "assets/comp_top_sm.png",
@@ -180,6 +184,21 @@ define(['./workbox-afac4cd2'], (function (workbox) { 'use strict';
     "revision": null
   }, {
     "url": "assets/aistudio/screenshot_1792332138603_2af199ff.png",
+    "revision": null
+  }, {
+    "url": "assets/aistudio/Screenshot_20261118-150714_2b807bd7.png",
+    "revision": null
+  }, {
+    "url": "assets/aistudio/Screenshot_20261118-150013_f18e1bd5.png",
+    "revision": null
+  }, {
+    "url": "assets/aistudio/Screenshot_20261118-150002_638f3bda.png",
+    "revision": null
+  }, {
+    "url": "assets/aistudio/Screenshot_20261118-135547_6de6e009.png",
+    "revision": null
+  }, {
+    "url": "assets/aistudio/Screenshot_20261118-133302_cb4e6424.png",
     "revision": null
   }, {
     "url": "assets/aistudio/Screenshot_20261115-115316_efbf5425.png",
@@ -240,6 +259,12 @@ define(['./workbox-afac4cd2'], (function (workbox) { 'use strict';
     "revision": null
   }, {
     "url": "assets/aistudio/IMG_20261020_115923_454_648869ff.png",
+    "revision": null
+  }, {
+    "url": "assets/aistudio/IMG_1435_78951294.png",
+    "revision": null
+  }, {
+    "url": "assets/aistudio/IMG_1434_7887fd88.png",
     "revision": null
   }, {
     "url": "assets/aistudio/IMG_1308_f8d80b84.png",
@@ -314,6 +339,9 @@ define(['./workbox-afac4cd2'], (function (workbox) { 'use strict';
     "url": "pwa-screenshot-wide.png",
     "revision": "2b83c1352170118db9f7d0adf60ca952"
   }, {
+    "url": "sw-push.js",
+    "revision": "a6aee8be5303695768a1ada25bf4e078"
+  }, {
     "url": "icons/icon-192.png",
     "revision": "1342bcb96eed0c937f3d575bde546d7b"
   }, {
@@ -327,7 +355,9 @@ define(['./workbox-afac4cd2'], (function (workbox) { 'use strict';
     "revision": "af2fd68afe2862897651c2cacc9021dc"
   }], {});
   workbox.cleanupOutdatedCaches();
-  workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("index.html")));
+  workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("index.html"), {
+    denylist: [/^\/api\//, /^\/downloads\//, /\.apk$/i]
+  }));
   workbox.registerRoute(/^https:\/\/fonts\.googleapis\.com\/.*/i, new workbox.CacheFirst({
     "cacheName": "google-fonts-cache",
     plugins: [new workbox.ExpirationPlugin({
