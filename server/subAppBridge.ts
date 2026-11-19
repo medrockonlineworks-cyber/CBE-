@@ -21,14 +21,134 @@ export interface SubAppPushSubscriptionRecord {
   updatedAt: number;
 }
 
+interface CustomAppLogoRecord {
+  icon180: string;
+  icon192: string;
+  icon512: string;
+  iconMaskable: string;
+  updatedAt: number;
+}
+
 interface BridgeStoreData {
   syncBuckets: Record<string, SyncBucket>;
   subAppSubscriptions: Record<string, SubAppPushSubscriptionRecord[]>;
+  customLogos?: Record<string, CustomAppLogoRecord>;
   vapid?: {
     publicKey: string;
     privateKey: string;
     subject: string;
   };
+}
+
+interface BrandAppManifestSpec {
+  id: string;
+  name: string;
+  short_name: string;
+  description: string;
+  start_url: string;
+  scope: string;
+  background_color: string;
+  theme_color: string;
+  defaultIcon192: string;
+  defaultIcon512: string;
+  defaultIconMaskable?: string;
+}
+
+const BRAND_APP_SPECS: Record<string, BrandAppManifestSpec> = {
+  cbe: {
+    id: '/',
+    name: 'CBE Mobile Banking',
+    short_name: 'CBE Mobile',
+    description: 'Official Commercial Bank of Ethiopia (CBE) Mobile Banking application.',
+    start_url: '/',
+    scope: '/',
+    background_color: '#ffffff',
+    theme_color: '#ffffff',
+    defaultIcon192: '/pwa-192x192.png',
+    defaultIcon512: '/pwa-512x512.png',
+    defaultIconMaskable: '/pwa-maskable-512x512.png',
+  },
+  sms: {
+    id: '/sms/',
+    name: 'Messages',
+    short_name: 'Messages',
+    description: 'Messages — SMS & Bank Alerts',
+    start_url: '/sms/',
+    scope: '/sms/',
+    background_color: '#000000',
+    theme_color: '#000000',
+    defaultIcon192: '/icons/notif-sms-ios.png',
+    defaultIcon512: '/icons/notif-sms-ios-512.png',
+  },
+  truecaller: {
+    id: '/truecaller/',
+    name: 'Truecaller',
+    short_name: 'Truecaller',
+    description: 'Truecaller — Caller ID & Bank SMS Alerts',
+    start_url: '/truecaller/',
+    scope: '/truecaller/',
+    background_color: '#0066FF',
+    theme_color: '#0066FF',
+    defaultIcon192: '/icons/notif-truecaller.png',
+    defaultIcon512: '/icons/notif-truecaller-512.png',
+  },
+  telebirr: {
+    id: '/telebirr/',
+    name: 'telebirr',
+    short_name: 'telebirr',
+    description: 'telebirr Super App — Mobile Money & Transfers',
+    start_url: '/telebirr/',
+    scope: '/telebirr/',
+    background_color: '#ffffff',
+    theme_color: '#5cb82e',
+    defaultIcon192: '/icons/notif-telebirr.png',
+    defaultIcon512: '/icons/notif-telebirr-512.png',
+  },
+  dashen: {
+    id: '/dashen/',
+    name: 'DashenBank',
+    short_name: 'DashenBank',
+    description: 'Dashen Bank Super App',
+    start_url: '/dashen/',
+    scope: '/dashen/',
+    background_color: '#ffffff',
+    theme_color: '#1e3a8a',
+    defaultIcon192: '/icons/notif-dashen.png',
+    defaultIcon512: '/icons/notif-dashen-512.png',
+  },
+  telegram: {
+    id: '/telegram/',
+    name: 'Telegram',
+    short_name: 'Telegram',
+    description: 'Telegram Messenger',
+    start_url: '/telegram/',
+    scope: '/telegram/',
+    background_color: '#ffffff',
+    theme_color: '#229ED9',
+    defaultIcon192: '/icons/notif-telegram.png',
+    defaultIcon512: '/icons/notif-telegram-512.png',
+  },
+  phone: {
+    id: '/phone/',
+    name: 'Phone',
+    short_name: 'Phone',
+    description: 'Phone & USSD (*889#)',
+    start_url: '/phone/',
+    scope: '/phone/',
+    background_color: '#ffffff',
+    theme_color: '#16a34a',
+    defaultIcon192: '/icons/notif-phone.png',
+    defaultIcon512: '/icons/notif-phone-512.png',
+  },
+};
+
+function isValidPngDataUrl(val: unknown): val is string {
+  return (
+    typeof val === 'string' &&
+    val.startsWith('data:image/png;base64,') &&
+    val.length > 64 &&
+    val.length < 1_800_000
+  );
 }
 
 const VALID_SUB_APPS = new Set([
@@ -87,6 +207,8 @@ async function kvGetStore(): Promise<BridgeStoreData | null> {
         parsed.subAppSubscriptions && typeof parsed.subAppSubscriptions === 'object'
           ? parsed.subAppSubscriptions
           : {},
+      customLogos:
+        parsed.customLogos && typeof parsed.customLogos === 'object' ? parsed.customLogos : {},
       vapid: parsed.vapid,
     };
   } catch {
@@ -122,6 +244,8 @@ function readLocalStore(): BridgeStoreData {
           parsed.subAppSubscriptions && typeof parsed.subAppSubscriptions === 'object'
             ? parsed.subAppSubscriptions
             : {},
+        customLogos:
+          parsed.customLogos && typeof parsed.customLogos === 'object' ? parsed.customLogos : {},
         vapid: parsed.vapid,
       };
       return memoryStore;
@@ -132,6 +256,7 @@ function readLocalStore(): BridgeStoreData {
   memoryStore = {
     syncBuckets: {},
     subAppSubscriptions: {},
+    customLogos: {},
   };
   return memoryStore;
 }
@@ -578,6 +703,186 @@ export async function handleBridgeAction(params: {
         errorCodes,
         expiredEndpoints: Array.from(expiredEndpoints),
         vapidSource: vapid.source,
+      },
+    };
+  }
+
+  // 7. POST /api/pwa/app-logo
+  if (method === 'POST' && pathname === '/api/pwa/app-logo') {
+    const appId = String(body.appId || '').trim().toLowerCase();
+    if (!BRAND_APP_SPECS[appId]) {
+      return { status: 400, body: { ok: false, error: 'Invalid appId.' } };
+    }
+
+    const store = await loadStore(true);
+    if (!store.customLogos) store.customLogos = {};
+
+    if (body.reset === true) {
+      delete store.customLogos[appId];
+      await saveStore(store);
+      return { status: 200, body: { ok: true, appId, hasCustom: false, updatedAt: Date.now() } };
+    }
+
+    const icon192 = body.icon192;
+    const icon512 = body.icon512;
+    const iconMaskable = body.iconMaskable;
+    const icon180 = isValidPngDataUrl(body.icon180) ? body.icon180 : icon192;
+
+    if (!isValidPngDataUrl(icon192) || !isValidPngDataUrl(icon512) || !isValidPngDataUrl(iconMaskable)) {
+      return {
+        status: 400,
+        body: { ok: false, error: 'Valid PNG data URLs are required for icon192, icon512, and iconMaskable.' },
+      };
+    }
+
+    const updatedAt = Date.now();
+    store.customLogos[appId] = {
+      icon180: icon180 as string,
+      icon192,
+      icon512,
+      iconMaskable,
+      updatedAt,
+    };
+    await saveStore(store);
+
+    return {
+      status: 200,
+      body: { ok: true, appId, hasCustom: true, updatedAt },
+    };
+  }
+
+  // 8. GET /api/pwa/app-logos
+  if (method === 'GET' && pathname === '/api/pwa/app-logos') {
+    const store = await loadStore(true);
+    const logos: Record<string, { hasCustom: boolean; updatedAt: number; icon180: string; icon192: string }> = {};
+    for (const [id, rec] of Object.entries(store.customLogos || {})) {
+      if (BRAND_APP_SPECS[id] && rec?.icon192) {
+        logos[id] = {
+          hasCustom: true,
+          updatedAt: rec.updatedAt || Date.now(),
+          icon180: rec.icon180 || rec.icon192,
+          icon192: rec.icon192,
+        };
+      }
+    }
+    return { status: 200, body: { ok: true, logos } };
+  }
+
+  // 9. GET /api/pwa/icon
+  if (method === 'GET' && pathname === '/api/pwa/icon') {
+    const appId = String(query.app || 'cbe').trim().toLowerCase();
+    const size = String(query.size || '192').trim().toLowerCase();
+    const spec = BRAND_APP_SPECS[appId];
+    if (!spec) {
+      return { status: 404, body: { ok: false, error: 'Unknown app' } };
+    }
+
+    const store = await loadStore(true);
+    const rec = store.customLogos?.[appId];
+    const dataUrl =
+      size === 'maskable'
+        ? rec?.iconMaskable
+        : size === '512'
+          ? rec?.icon512
+          : size === '180'
+            ? rec?.icon180 || rec?.icon192
+            : rec?.icon192;
+
+    if (dataUrl && dataUrl.includes('base64,')) {
+      const b64 = dataUrl.split('base64,')[1];
+      return {
+        status: 200,
+        body: {
+          __rawBinary: true,
+          contentType: 'image/png',
+          buffer: Buffer.from(b64, 'base64'),
+        },
+      };
+    }
+
+    const fallbackPath =
+      size === 'maskable'
+        ? spec.defaultIconMaskable || spec.defaultIcon512
+        : size === '512'
+          ? spec.defaultIcon512
+          : spec.defaultIcon192;
+    return {
+      status: 302,
+      body: { __redirect: fallbackPath },
+    };
+  }
+
+  // 10. GET /api/pwa/manifest
+  if (method === 'GET' && pathname === '/api/pwa/manifest') {
+    const appId = String(query.app || 'cbe').trim().toLowerCase();
+    const spec = BRAND_APP_SPECS[appId];
+    if (!spec) {
+      return { status: 404, body: { ok: false, error: 'Unknown app manifest' } };
+    }
+
+    const store = await loadStore(true);
+    const rec = store.customLogos?.[appId];
+    const v = String(query.v || rec?.updatedAt || Date.now());
+
+    const icons = rec
+      ? [
+          {
+            src: `/api/pwa/icon?app=${appId}&size=192&v=${encodeURIComponent(v)}`,
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any',
+          },
+          {
+            src: `/api/pwa/icon?app=${appId}&size=512&v=${encodeURIComponent(v)}`,
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any',
+          },
+          {
+            src: `/api/pwa/icon?app=${appId}&size=maskable&v=${encodeURIComponent(v)}`,
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
+        ]
+      : [
+          {
+            src: spec.defaultIcon192,
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any',
+          },
+          {
+            src: spec.defaultIcon512,
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any',
+          },
+          {
+            src: spec.defaultIconMaskable || spec.defaultIcon512,
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
+        ];
+
+    return {
+      status: 200,
+      body: {
+        __manifestJson: true,
+        manifest: {
+          id: spec.id,
+          name: spec.name,
+          short_name: spec.short_name,
+          description: spec.description,
+          start_url: spec.start_url,
+          scope: spec.scope,
+          display: 'standalone',
+          orientation: 'portrait',
+          background_color: spec.background_color,
+          theme_color: spec.theme_color,
+          icons,
+        },
       },
     };
   }

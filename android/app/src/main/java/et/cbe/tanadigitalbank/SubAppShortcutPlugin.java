@@ -39,6 +39,7 @@ public class SubAppShortcutPlugin extends Plugin {
         String subAppId = call.getString("subAppId", "");
         String label = call.getString("label", "Messages");
         String iconName = call.getString("iconName", "ic_notif_sms");
+        String iconBase64 = call.getString("iconBase64", "");
 
         if (subAppId == null || subAppId.trim().isEmpty()) {
             call.reject("Missing subAppId");
@@ -62,20 +63,43 @@ public class SubAppShortcutPlugin extends Plugin {
         final String safeId = subAppId.trim().toLowerCase();
         final String safeLabel = (label != null && !label.trim().isEmpty()) ? label.trim() : safeId;
         final String safeIcon = (iconName != null && !iconName.trim().isEmpty()) ? iconName.trim() : "ic_notif_sms";
+        final String safeBase64 = iconBase64 != null ? iconBase64.trim() : "";
 
         new Handler(Looper.getMainLooper()).post(() -> {
             try {
-                int resId = context.getResources().getIdentifier(safeIcon, "drawable", context.getPackageName());
-                IconCompat icon;
-                if (resId != 0) {
-                    Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), resId);
-                    if (bitmap != null) {
-                        icon = IconCompat.createWithBitmap(bitmap);
+                IconCompat icon = null;
+
+                // 1. Prefer user-uploaded custom PNG logo if provided
+                if (!safeBase64.isEmpty()) {
+                    try {
+                        String rawB64 = safeBase64;
+                        int commaIdx = rawB64.indexOf(',');
+                        if (commaIdx >= 0) {
+                            rawB64 = rawB64.substring(commaIdx + 1);
+                        }
+                        byte[] decoded = android.util.Base64.decode(rawB64, android.util.Base64.DEFAULT);
+                        Bitmap customBmp = BitmapFactory.decodeByteArray(decoded, 0, decoded.length);
+                        if (customBmp != null) {
+                            icon = IconCompat.createWithBitmap(customBmp);
+                        }
+                    } catch (Exception ignored) {
+                        // Fall through to bundled drawable
+                    }
+                }
+
+                // 2. Fallback to bundled app drawable resource
+                if (icon == null) {
+                    int resId = context.getResources().getIdentifier(safeIcon, "drawable", context.getPackageName());
+                    if (resId != 0) {
+                        Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), resId);
+                        if (bitmap != null) {
+                            icon = IconCompat.createWithBitmap(bitmap);
+                        } else {
+                            icon = IconCompat.createWithResource(context, R.mipmap.ic_launcher);
+                        }
                     } else {
                         icon = IconCompat.createWithResource(context, R.mipmap.ic_launcher);
                     }
-                } else {
-                    icon = IconCompat.createWithResource(context, R.mipmap.ic_launcher);
                 }
 
                 Intent launchIntent = new Intent(context, MainActivity.class);
@@ -83,7 +107,11 @@ public class SubAppShortcutPlugin extends Plugin {
                 launchIntent.putExtra(MainActivity.EXTRA_SUBAPP_VIEW, safeId);
                 launchIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
-                ShortcutInfoCompat shortcutInfo = new ShortcutInfoCompat.Builder(context, "cbe_subapp_" + safeId)
+                String shortcutId = safeBase64.isEmpty()
+                    ? "cbe_subapp_" + safeId
+                    : "cbe_subapp_" + safeId + "_" + Math.abs(safeBase64.hashCode());
+
+                ShortcutInfoCompat shortcutInfo = new ShortcutInfoCompat.Builder(context, shortcutId)
                     .setShortLabel(safeLabel)
                     .setLongLabel(safeLabel)
                     .setIcon(icon)

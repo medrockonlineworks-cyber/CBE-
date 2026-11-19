@@ -1,4 +1,5 @@
 import { LocalDb, DEFAULT_CBE_LOGO } from '../lib/mockData';
+import { AppLogoService } from '../services/appLogoService';
 
 /**
  * PWA Dynamic Branding & Icon Manager
@@ -205,6 +206,13 @@ function dataUrlToBlob(dataUrl: string): Blob {
  */
 export async function updatePwaBranding(customLogoUrl?: string | null): Promise<void> {
   if (typeof window === 'undefined' || typeof document === 'undefined') {
+    return;
+  }
+
+  // Never overwrite a standalone sub-app route's manifest/icon (/sms/, /truecaller/, etc.) with CBE's manifest
+  const routeApp = AppLogoService.detectAppIdFromPath();
+  if (routeApp !== 'cbe') {
+    AppLogoService.applyHeadBrandingForApp(routeApp);
     return;
   }
 
@@ -510,42 +518,41 @@ export async function updatePwaBranding(customLogoUrl?: string | null): Promise<
  * Initializes PWA dynamic manifest on app load and listens for logo change events.
  */
 export async function initPwaDynamicManifest(): Promise<void> {
-  let localLogo = LocalDb.getCustomBankLogo();
+  // Always hydrate custom per-app logos from server first so every app installs with its uploaded icon
+  await AppLogoService.hydrateFromServer();
 
-  // If not in local storage (e.g. fresh session, new device, or standalone installed app),
-  // sync with server PWA status to see if administrator uploaded a custom bank logo
-  if (!localLogo) {
-    try {
-      const res = await fetch('/api/pwa/status');
-      if (res.ok) {
-        const data = await res.json();
-        if (data.hasCustom && data.rawLogo) {
-          localLogo = data.rawLogo;
-          LocalDb.setCustomBankLogo(localLogo);
-        }
-      }
-    } catch (statusErr) {
-      console.warn('[PWA Branding] Status fetch skipped:', statusErr);
-    }
+  const routeApp = AppLogoService.detectAppIdFromPath();
+  if (routeApp !== 'cbe') {
+    AppLogoService.applyHeadBrandingForApp(routeApp);
+    return;
   }
 
-  if (localLogo) {
-    // Apply custom uploaded logo to manifest, icons, and Apple touch icon
-    await updatePwaBranding(localLogo);
+  if (AppLogoService.hasCustomLogo('cbe')) {
+    AppLogoService.applyHeadBrandingForApp('cbe');
   } else {
-    // If no custom logo uploaded, use default PWA assets
-    const ts = Date.now();
-    const manifestLink = document.getElementById('pwa-manifest-link') as HTMLLinkElement | null || document.querySelector('link[rel="manifest"]') as HTMLLinkElement | null;
-    if (manifestLink) {
-      manifestLink.setAttribute('href', `/manifest.webmanifest?v=${ts}`);
+    let localLogo = LocalDb.getCustomBankLogo();
+
+    // If not in local storage (e.g. fresh session, new device, or standalone installed app),
+    // sync with server PWA status to see if administrator uploaded a custom bank logo
+    if (!localLogo) {
+      try {
+        const res = await fetch('/api/pwa/status');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.hasCustom && data.rawLogo) {
+            localLogo = data.rawLogo;
+            LocalDb.setCustomBankLogo(localLogo);
+          }
+        }
+      } catch (statusErr) {
+        console.warn('[PWA Branding] Status fetch skipped:', statusErr);
+      }
     }
-    const appleTouchLink = document.getElementById('app-apple-touch-icon') as HTMLLinkElement | null || document.querySelector('link[rel="apple-touch-icon"]') as HTMLLinkElement | null;
-    if (appleTouchLink) {
-      appleTouchLink.setAttribute('href', `/apple-touch-icon.png?v=${ts}`);
-    }
-    const faviconPng = document.getElementById('app-favicon-png') as HTMLLinkElement | null;
-    if (faviconPng) {
-      faviconPng.setAttribute('href', `/pwa-192x192.png?v=${ts}`);
+
+    if (localLogo) {
+      await updatePwaBranding(localLogo);
+    } else {
+      AppLogoService.applyHeadBrandingForApp('cbe');
     }
   }
 

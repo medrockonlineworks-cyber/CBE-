@@ -14,8 +14,10 @@ import {
   Smartphone,
   Download,
   AlertCircle,
+  ImagePlus,
   KeyRound,
   Link2,
+  RotateCcw,
   Unlink,
 } from 'lucide-react';
 import type { UserProfile } from '../types';
@@ -31,6 +33,7 @@ import {
 } from '../services/pushNotificationService';
 import { SubAppInstallService } from '../services/subAppInstallService';
 import { CrossAppSyncService, PairedSubAppLink } from '../services/crossAppSyncService';
+import { AppLogoService, BRAND_APP_LIST, BrandAppId } from '../services/appLogoService';
 
 interface NotificationSettingsCardProps {
   currentUser: UserProfile;
@@ -68,11 +71,14 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
     PushNotificationService.getSubAppPreferences()
   );
   const [testingSubApp, setTestingSubApp] = useState<SubAppNotificationId | null>(null);
-  const [installingSubApp, setInstallingSubApp] = useState<SubAppNotificationId | null>(null);
+  const [installingSubApp, setInstallingSubApp] = useState<BrandAppId | null>(null);
+  const [uploadingLogoApp, setUploadingLogoApp] = useState<BrandAppId | null>(null);
+  const [logoTick, setLogoTick] = useState(0);
   const [connectionKeyInput, setConnectionKeyInput] = useState('');
   const [pairedLinks, setPairedLinks] = useState<PairedSubAppLink[]>(() =>
     CrossAppSyncService.getPairedSubAppLinks()
   );
+  void logoTick;
 
   const refreshStatus = useCallback(async () => {
     setCaps(PushNotificationService.getPlatformCapabilities());
@@ -104,11 +110,16 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
     const syncPairedLinks = () => {
       setPairedLinks(CrossAppSyncService.getPairedSubAppLinks());
     };
+    const syncLogos = () => {
+      setLogoTick((t) => t + 1);
+    };
     window.addEventListener('cbe_subapp_push_prefs_updated', syncSubAppPrefs);
     window.addEventListener('cbe_paired_links_updated', syncPairedLinks);
+    window.addEventListener('cbe_app_logos_updated', syncLogos);
     return () => {
       window.removeEventListener('cbe_subapp_push_prefs_updated', syncSubAppPrefs);
       window.removeEventListener('cbe_paired_links_updated', syncPairedLinks);
+      window.removeEventListener('cbe_app_logos_updated', syncLogos);
     };
   }, []);
 
@@ -267,18 +278,52 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
     showBannerSuccess(res.message || `${label} push alert dispatched!`);
   };
 
-  const handleInstallSubApp = async (subAppId: SubAppNotificationId) => {
-    if (installingSubApp || testingSubApp || busyAction) return;
-    setInstallingSubApp(subAppId);
+  const handleInstallSubApp = async (appId: BrandAppId) => {
+    if (installingSubApp || testingSubApp || busyAction || uploadingLogoApp) return;
+    setInstallingSubApp(appId);
     setLocalError('');
     setLocalSuccess('');
-    const res = await SubAppInstallService.installSubAppToHomeScreen(subAppId);
+    const res = await SubAppInstallService.installAppWithCustomLogo(appId);
     setInstallingSubApp(null);
     if (!res.ok) {
       showBannerError(res.message);
       return;
     }
     showBannerSuccess(res.message);
+  };
+
+  const handleUploadAppLogo = async (
+    appId: BrandAppId,
+    label: string,
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || uploadingLogoApp) return;
+    setUploadingLogoApp(appId);
+    setLocalError('');
+    setLocalSuccess('');
+    const res = await AppLogoService.uploadCustomLogo(appId, file);
+    setUploadingLogoApp(null);
+    if (!res.ok) {
+      showBannerError(res.error || `Failed to upload logo for ${label}.`);
+      return;
+    }
+    setLogoTick((t) => t + 1);
+    showBannerSuccess(
+      `Custom logo saved for ${label}! Tap Install next to ${label} to install it with your uploaded logo.`
+    );
+  };
+
+  const handleResetAppLogo = async (appId: BrandAppId, label: string) => {
+    if (uploadingLogoApp) return;
+    setUploadingLogoApp(appId);
+    setLocalError('');
+    setLocalSuccess('');
+    await AppLogoService.resetCustomLogo(appId);
+    setUploadingLogoApp(null);
+    setLogoTick((t) => t + 1);
+    showBannerSuccess(`Restored default logo for ${label}.`);
   };
 
   const handleConnectSubAppKey = () => {
@@ -670,7 +715,7 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
               >
                 <div className="flex items-center gap-2.5 min-w-0">
                   <img
-                    src={app.webIcon}
+                    src={AppLogoService.getDisplayIcon(app.id)}
                     alt={app.name}
                     className="w-7 h-7 rounded-lg shrink-0 object-cover shadow-2xs"
                   />
@@ -747,6 +792,106 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
                         appCfg.enabled ? 'translate-x-4.5' : 'translate-x-0'
                       }`}
                     />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Custom App Logos & Install Icons (All Apps) */}
+      <div className="border-t border-gray-100 pt-3.5 space-y-3">
+        <div>
+          <p className="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider">
+            Custom App Logos &amp; Install Icons
+          </p>
+          <p className="text-[10px] text-gray-400 mt-0.5">
+            Upload a custom logo for any app below — when you install it to your Home Screen, it will install with your uploaded logo
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          {BRAND_APP_LIST.map((app) => {
+            const hasCustom = AppLogoService.hasCustomLogo(app.id);
+            const iconSrc = AppLogoService.getDisplayIcon(app.id);
+            const isUploading = uploadingLogoApp === app.id;
+            const isInstalling = installingSubApp === app.id;
+            const inputId = `upload-app-logo-${app.id}`;
+
+            return (
+              <div
+                key={app.id}
+                className="flex items-center justify-between gap-2.5 p-2.5 rounded-2xl bg-gray-50/90 border border-gray-100"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <img
+                    src={iconSrc}
+                    alt={app.name}
+                    className="w-8 h-8 rounded-xl shrink-0 object-cover border border-gray-200 bg-white shadow-2xs"
+                  />
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-xs font-bold text-gray-800 truncate">{app.name}</p>
+                      {hasCustom && (
+                        <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-purple-100 text-[#70189F] text-[9px] font-extrabold shrink-0">
+                          Custom
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-gray-400 truncate">
+                      {hasCustom ? 'Installs with your uploaded logo' : 'Using default app logo'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <input
+                    id={inputId}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => void handleUploadAppLogo(app.id, app.shortName, e)}
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor={inputId}
+                    className={`px-2 py-1 rounded-xl bg-white hover:bg-purple-50 border border-gray-200 text-[#70189F] font-bold text-[10px] flex items-center gap-1 transition cursor-pointer ${
+                      isUploading ? 'opacity-50 pointer-events-none' : ''
+                    }`}
+                  >
+                    {isUploading ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <ImagePlus className="w-3 h-3" />
+                    )}
+                    <span>Logo</span>
+                  </label>
+
+                  {hasCustom && (
+                    <button
+                      type="button"
+                      title={`Reset ${app.shortName} to default logo`}
+                      disabled={Boolean(uploadingLogoApp)}
+                      onClick={() => void handleResetAppLogo(app.id, app.shortName)}
+                      className="p-1.5 rounded-xl bg-white hover:bg-rose-50 border border-gray-200 text-gray-500 hover:text-rose-600 transition cursor-pointer disabled:opacity-50"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                    </button>
+                  )}
+
+                  <button
+                    type="button"
+                    title={`Install ${app.shortName} with ${hasCustom ? 'custom' : 'default'} logo`}
+                    disabled={Boolean(installingSubApp) || Boolean(uploadingLogoApp) || Boolean(busyAction)}
+                    onClick={() => void handleInstallSubApp(app.id)}
+                    className="px-2 py-1 rounded-xl bg-[#70189F] hover:bg-[#5c1285] text-white font-bold text-[10px] flex items-center gap-1 transition cursor-pointer disabled:opacity-50"
+                  >
+                    {isInstalling ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <Download className="w-3 h-3" />
+                    )}
+                    <span>Install</span>
                   </button>
                 </div>
               </div>

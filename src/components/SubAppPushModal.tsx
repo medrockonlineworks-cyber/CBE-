@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import {
   AlertCircle,
@@ -10,9 +10,11 @@ import {
   ExternalLink,
   Eye,
   EyeOff,
+  ImagePlus,
   KeyRound,
   Loader2,
   RefreshCw,
+  RotateCcw,
   Send,
   Share,
   Smartphone,
@@ -27,6 +29,8 @@ import {
 } from '../services/pushNotificationService';
 import { PhoneSettingsService } from '../services/phoneSettingsService';
 import { SubAppInstallService } from '../services/subAppInstallService';
+import { AppLogoService } from '../services/appLogoService';
+import { usePWAInstall } from '../hooks/usePWAInstall';
 
 interface SubAppPushModalProps {
   isOpen: boolean;
@@ -56,6 +60,14 @@ export const SubAppPushModal: React.FC<SubAppPushModalProps> = ({
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [connectionKey, setConnectionKey] = useState('');
   const [copiedConnKey, setCopiedConnKey] = useState(false);
+  const [logoVersion, setLogoVersion] = useState(0);
+  const logoInputRef = useRef<HTMLInputElement | null>(null);
+  const { isInstallable } = usePWAInstall();
+
+  const isIPhoneMode = PhoneSettingsService.isIPhoneMode();
+  const activeLogoSrc = AppLogoService.getDisplayIcon(subAppId, { isIPhone: isIPhoneMode });
+  const hasCustomLogo = AppLogoService.hasCustomLogo(subAppId);
+  void logoVersion;
 
   const subAppFullUrl =
     typeof window !== 'undefined'
@@ -82,8 +94,15 @@ export const SubAppPushModal: React.FC<SubAppPushModalProps> = ({
     const onPrefsUpdated = () => {
       setConfig(PushNotificationService.getSubAppPreferences()[subAppId]);
     };
+    const onLogosUpdated = () => {
+      setLogoVersion((v) => v + 1);
+    };
     window.addEventListener('cbe_subapp_push_prefs_updated', onPrefsUpdated);
-    return () => window.removeEventListener('cbe_subapp_push_prefs_updated', onPrefsUpdated);
+    window.addEventListener('cbe_app_logos_updated', onLogosUpdated);
+    return () => {
+      window.removeEventListener('cbe_subapp_push_prefs_updated', onPrefsUpdated);
+      window.removeEventListener('cbe_app_logos_updated', onLogosUpdated);
+    };
   }, [subAppId]);
 
   if (!isOpen) return null;
@@ -208,6 +227,36 @@ export const SubAppPushModal: React.FC<SubAppPushModalProps> = ({
     setSuccessMsg(res.message);
   };
 
+  const handleUploadCustomLogo = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || busy) return;
+    setBusy('logo');
+    setErrorMsg('');
+    setSuccessMsg('');
+    const res = await AppLogoService.uploadCustomLogo(subAppId, file);
+    setBusy(null);
+    if (!res.ok) {
+      setErrorMsg(res.error || 'Could not upload custom logo.');
+      return;
+    }
+    setLogoVersion((v) => v + 1);
+    setSuccessMsg(
+      `Custom ${meta.shortName} logo saved! Installing ${meta.shortName} now will use your uploaded logo.`
+    );
+  };
+
+  const handleResetCustomLogo = async () => {
+    if (busy) return;
+    setBusy('resetlogo');
+    setErrorMsg('');
+    setSuccessMsg('');
+    await AppLogoService.resetCustomLogo(subAppId);
+    setBusy(null);
+    setLogoVersion((v) => v + 1);
+    setSuccessMsg(`Restored default ${meta.shortName} icon.`);
+  };
+
   const handleCopySubAppUrl = async () => {
     try {
       if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
@@ -267,11 +316,7 @@ export const SubAppPushModal: React.FC<SubAppPushModalProps> = ({
         <div className="flex items-start justify-between gap-2 pb-3 border-b border-current/10">
           <div className="flex items-center gap-2.5 min-w-0">
             <img
-              src={
-                subAppId === 'sms' && PhoneSettingsService.isIPhoneMode()
-                  ? '/icons/notif-sms-ios.png'
-                  : meta.webIcon
-              }
+              src={activeLogoSrc}
               alt={meta.name}
               className="w-10 h-10 rounded-xl shrink-0 shadow-sm object-cover"
             />
@@ -511,7 +556,7 @@ export const SubAppPushModal: React.FC<SubAppPushModalProps> = ({
 
         {/* Install Sub-App to Home Screen (Synced with CBE Mobile Banking) */}
         <div
-          className={`rounded-2xl p-3.5 border space-y-2.5 ${
+          className={`rounded-2xl p-3.5 border space-y-3 ${
             isDarkMode ? 'bg-neutral-900/60 border-neutral-800' : 'bg-neutral-50 border-neutral-200'
           }`}
         >
@@ -522,10 +567,81 @@ export const SubAppPushModal: React.FC<SubAppPushModalProps> = ({
                 <span>Install {meta.shortName} on Home Screen</span>
               </div>
               <p className={`text-[10.5px] mt-0.5 leading-snug ${isDarkMode ? 'text-neutral-400' : 'text-neutral-500'}`}>
-                Places {meta.shortName} with its own icon on your phone while staying 100% synced with CBE Mobile Banking.
+                Upload a custom logo below, then install {meta.shortName} so it appears on your Home Screen with your uploaded icon.
               </p>
             </div>
           </div>
+
+          {/* Custom App Logo Uploader */}
+          <div
+            className={`rounded-xl p-2.5 border flex items-center justify-between gap-2.5 ${
+              isDarkMode ? 'bg-neutral-950/80 border-neutral-800' : 'bg-white border-neutral-200'
+            }`}
+          >
+            <div className="flex items-center gap-2.5 min-w-0">
+              <img
+                src={activeLogoSrc}
+                alt={`${meta.shortName} install icon`}
+                className="w-10 h-10 rounded-xl object-cover border border-current/10 shrink-0"
+              />
+              <div className="min-w-0">
+                <p className="text-[11px] font-bold truncate">
+                  {hasCustomLogo ? 'Custom Install Logo Active' : 'Default App Logo'}
+                </p>
+                <p className={`text-[10px] truncate ${isDarkMode ? 'text-neutral-400' : 'text-neutral-500'}`}>
+                  {hasCustomLogo
+                    ? 'Ready — installs with this icon'
+                    : 'PNG, JPG, WebP or SVG'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept="image/*"
+                onChange={(e) => void handleUploadCustomLogo(e)}
+                className="hidden"
+              />
+              <button
+                type="button"
+                disabled={Boolean(busy)}
+                onClick={() => logoInputRef.current?.click()}
+                className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1 transition cursor-pointer disabled:opacity-50 ${
+                  isDarkMode
+                    ? 'bg-blue-600 hover:bg-blue-500 text-white'
+                    : 'bg-blue-600 hover:bg-blue-700 text-white'
+                }`}
+              >
+                {busy === 'logo' ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <ImagePlus className="w-3 h-3" />
+                )}
+                <span>Upload</span>
+              </button>
+              {hasCustomLogo && (
+                <button
+                  type="button"
+                  disabled={Boolean(busy)}
+                  onClick={() => void handleResetCustomLogo()}
+                  title="Reset to default logo"
+                  className={`p-1.5 rounded-lg border transition cursor-pointer disabled:opacity-50 ${
+                    isDarkMode
+                      ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-neutral-300'
+                      : 'bg-neutral-100 hover:bg-neutral-200 border-neutral-300 text-neutral-700'
+                  }`}
+                >
+                  {busy === 'resetlogo' ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <RotateCcw className="w-3 h-3" />
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+
           {caps.isIOS && !Capacitor.isNativePlatform() ? (
             <div className="space-y-2">
               <div className="grid grid-cols-2 gap-2">
@@ -557,9 +673,9 @@ export const SubAppPushModal: React.FC<SubAppPushModalProps> = ({
                 </button>
               </div>
               <p className={`text-[10.5px] leading-relaxed ${isDarkMode ? 'text-neutral-400' : 'text-neutral-600'}`}>
-                1. Tap <strong>Open in Safari</strong> (or tap <strong>Copy Link</strong> and paste in Safari).<br />
+                1. Upload your logo above if desired.<br />
                 2. In Safari, tap <strong>Share (↑) → Add to Home Screen</strong> to install{' '}
-                <strong>{meta.shortName}</strong> with its own iPhone logo &amp; Lock Screen notifications.
+                <strong>{meta.shortName}</strong> with {hasCustomLogo ? 'your custom uploaded logo' : 'its own iPhone icon'}.
               </p>
             </div>
           ) : (
@@ -567,10 +683,13 @@ export const SubAppPushModal: React.FC<SubAppPushModalProps> = ({
               type="button"
               disabled={Boolean(busy)}
               onClick={() => void handleInstallToHomeScreen()}
-              className={`w-full py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer disabled:opacity-60 border ${
-                isDarkMode
-                  ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-white'
-                  : 'bg-white hover:bg-neutral-100 border-neutral-300 text-neutral-900'
+              style={isInstallable ? { backgroundColor: meta.color } : undefined}
+              className={`w-full py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer disabled:opacity-60 border ${
+                isInstallable
+                  ? 'text-white border-transparent shadow-sm hover:opacity-95'
+                  : isDarkMode
+                    ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-white'
+                    : 'bg-white hover:bg-neutral-100 border-neutral-300 text-neutral-900'
               }`}
             >
               {busy === 'install' ? (
@@ -580,8 +699,10 @@ export const SubAppPushModal: React.FC<SubAppPushModalProps> = ({
               )}
               <span>
                 {Capacitor.isNativePlatform()
-                  ? `Add ${meta.shortName} Icon to Home Screen`
-                  : `Install ${meta.shortName} Shortcut`}
+                  ? `Add ${meta.shortName} to Home Screen${hasCustomLogo ? ' (Custom Logo)' : ''}`
+                  : isInstallable
+                    ? `Install ${meta.shortName} App${hasCustomLogo ? ' (Custom Logo)' : ''}`
+                    : `Install ${meta.shortName} App`}
               </span>
             </button>
           )}

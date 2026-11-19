@@ -4,6 +4,7 @@ import type { Transaction, UserProfile } from '../types';
 import { AuthSessionService } from './authSessionService';
 import { PhoneSettingsService } from './phoneSettingsService';
 import { CrossAppSyncService } from './crossAppSyncService';
+import { AppLogoService } from './appLogoService';
 
 export type PrivacyMode = 'detailed' | 'private';
 
@@ -1991,7 +1992,9 @@ export class PushNotificationService {
         typeof window !== 'undefined' &&
         PhoneSettingsService.isIPhoneMode();
 
-      const resolvedWebIcon = isIosSmsMode ? '/icons/notif-sms-ios.png' : meta.webIcon;
+      const resolvedWebIcon = AppLogoService.getNotificationIconUrl(params.subAppId, {
+        isIPhone: isIosSmsMode,
+      });
       const resolvedLargeIcon = isIosSmsMode ? 'ic_notif_sms_ios' : meta.largeIcon;
       const resolvedColor = isIosSmsMode ? '#16C64F' : meta.color;
       const resolvedTag = params.tag || `cbe-subapp-${params.subAppId}-${Date.now()}`;
@@ -2123,7 +2126,9 @@ export class PushNotificationService {
       subAppId === 'sms' &&
       typeof window !== 'undefined' &&
       PhoneSettingsService.isIPhoneMode();
-    const resolvedWebIcon = isIosSmsMode ? '/icons/notif-sms-ios.png' : meta.webIcon;
+    const resolvedWebIcon = AppLogoService.getNotificationIconUrl(subAppId, {
+      isIPhone: isIosSmsMode,
+    });
     const tag = `cbe-subapp-test-${subAppId}-${Date.now()}`;
     const isInsideThisSubApp = !Capacitor.isNativePlatform() && this.detectCurrentSubAppFromPath() === subAppId;
 

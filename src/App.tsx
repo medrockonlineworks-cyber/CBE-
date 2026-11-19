@@ -28,6 +28,7 @@ import { BiometricAuthService } from './services/biometricAuthService';
 import { PushNotificationService } from './services/pushNotificationService';
 import { SubAppInstallService } from './services/subAppInstallService';
 import { CrossAppSyncService } from './services/crossAppSyncService';
+import { AppLogoService, BrandAppId } from './services/appLogoService';
 import Navigation, { TabType } from './components/Navigation';
 import OfflineBanner from './components/OfflineBanner';
 import PhoneRecentAppsModal, { AppViewId } from './components/PhoneRecentAppsModal';
@@ -318,69 +319,30 @@ export default function App() {
     SystemBarsService.syncForView(activeView, { isIPhone });
   }, [activeView, isIPhone]);
 
-  // Sync page title, Apple Touch Icon & PWA manifest with active sub-application for iPhone Home Screen installs
+  // Sync page title, Apple Touch Icon & dynamic PWA manifest with active app & any custom uploaded logo
   useEffect(() => {
     if (typeof document === 'undefined') return;
-    const subAppHeadMap: Record<
-      string,
-      { title: string; icon: string; manifest: string }
-    > = {
-      sms: {
-        title: 'Messages',
-        icon: isIPhone ? '/icons/notif-sms-ios.png' : '/icons/notif-sms.png',
-        manifest: '/manifests/subapp-sms.webmanifest',
-      },
-      truecaller: {
-        title: 'Truecaller',
-        icon: '/icons/notif-truecaller.png',
-        manifest: '/manifests/subapp-truecaller.webmanifest',
-      },
-      telebirr: {
-        title: 'telebirr',
-        icon: '/icons/notif-telebirr.png',
-        manifest: '/manifests/subapp-telebirr.webmanifest',
-      },
-      dashen: {
-        title: 'DashenBank',
-        icon: '/icons/notif-dashen.png',
-        manifest: '/manifests/subapp-dashen.webmanifest',
-      },
-      telegram: {
-        title: 'Telegram',
-        icon: '/icons/notif-telegram.png',
-        manifest: '/manifests/subapp-telegram.webmanifest',
-      },
-      phone: {
-        title: 'Phone',
-        icon: '/icons/notif-phone.png',
-        manifest: '/manifests/subapp-phone.webmanifest',
-      },
+    const validBrandApps: BrandAppId[] = [
+      'sms',
+      'truecaller',
+      'telebirr',
+      'dashen',
+      'telegram',
+      'phone',
+    ];
+    const activeBrandApp: BrandAppId = (validBrandApps as string[]).includes(activeView)
+      ? (activeView as BrandAppId)
+      : 'cbe';
+
+    const applyNow = () => {
+      AppLogoService.applyHeadBrandingForApp(activeBrandApp, { isIPhone });
     };
 
-    const target = subAppHeadMap[activeView] || {
-      title: 'CBE Mobile Banking',
-      icon: '/apple-touch-icon.png',
-      manifest: '/manifest.webmanifest',
+    applyNow();
+    window.addEventListener('cbe_app_logos_updated', applyNow);
+    return () => {
+      window.removeEventListener('cbe_app_logos_updated', applyNow);
     };
-
-    document.title = target.title;
-    const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
-    if (appleTitle) appleTitle.setAttribute('content', target.title);
-    const appName = document.querySelector('meta[name="application-name"]');
-    if (appName) appName.setAttribute('content', target.title);
-    const appleIcon = document.getElementById('app-apple-touch-icon');
-    if (appleIcon) appleIcon.setAttribute('href', target.icon);
-    const favIcon = document.getElementById('app-favicon-png');
-    if (favIcon) {
-      favIcon.setAttribute('href', target.icon === '/apple-touch-icon.png' ? '/pwa-192x192.png' : target.icon);
-    }
-    const manifestLink = document.getElementById('pwa-manifest-link');
-    if (manifestLink) manifestLink.setAttribute('href', target.manifest);
-    document.querySelectorAll('link[rel="manifest"]').forEach((el) => {
-      if (el.id !== 'pwa-manifest-link') {
-        el.remove();
-      }
-    });
   }, [activeView, isIPhone]);
 
   // Attach Service Worker notification click & subscription renewal listeners + deep-link handler

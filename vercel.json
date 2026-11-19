@@ -79,6 +79,46 @@
       "destination": "/api/bridge?route=/api/notifications/vapid-public-key"
     },
     {
+      "source": "/api/pwa/app-logo",
+      "destination": "/api/bridge?route=/api/pwa/app-logo"
+    },
+    {
+      "source": "/api/pwa/app-logos",
+      "destination": "/api/bridge?route=/api/pwa/app-logos"
+    },
+    {
+      "source": "/api/pwa/manifest",
+      "destination": "/api/bridge?route=/api/pwa/manifest"
+    },
+    {
+      "source": "/api/pwa/icon",
+      "destination": "/api/bridge?route=/api/pwa/icon"
+    },
+    {
+      "source": "/manifests/subapp-sms.webmanifest",
+      "destination": "/api/bridge?route=/api/pwa/manifest&app=sms"
+    },
+    {
+      "source": "/manifests/subapp-truecaller.webmanifest",
+      "destination": "/api/bridge?route=/api/pwa/manifest&app=truecaller"
+    },
+    {
+      "source": "/manifests/subapp-telebirr.webmanifest",
+      "destination": "/api/bridge?route=/api/pwa/manifest&app=telebirr"
+    },
+    {
+      "source": "/manifests/subapp-dashen.webmanifest",
+      "destination": "/api/bridge?route=/api/pwa/manifest&app=dashen"
+    },
+    {
+      "source": "/manifests/subapp-telegram.webmanifest",
+      "destination": "/api/bridge?route=/api/pwa/manifest&app=telegram"
+    },
+    {
+      "source": "/manifests/subapp-phone.webmanifest",
+      "destination": "/api/bridge?route=/api/pwa/manifest&app=phone"
+    },
+    {
       "source": "/sms",
       "destination": "/sms/index.html"
     },

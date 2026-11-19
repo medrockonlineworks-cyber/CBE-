@@ -21,9 +21,50 @@ self.addEventListener('activate', function (event) {
   }
 });
 
-// Minimal fetch handler required by Android Chrome to install standalone sub-apps as full WebAPKs
-self.addEventListener('fetch', function () {
-  // Pass through directly to network
+// Intercept dynamic custom app manifests & icons from Cache Storage first so installed PWAs/WebAPKs
+// always receive the user's uploaded custom logo even offline or across serverless cold starts.
+self.addEventListener('fetch', function (event) {
+  try {
+    const req = event.request;
+    if (!req || req.method !== 'GET') return;
+    const url = new URL(req.url);
+    if (url.origin !== self.location.origin) return;
+
+    const p = url.pathname;
+    const isCustomBrandingAsset =
+      p === '/api/pwa/manifest' ||
+      p === '/api/pwa/icon' ||
+      p === '/manifest.webmanifest' ||
+      p.indexOf('/manifests/subapp-') === 0;
+
+    if (!isCustomBrandingAsset) return;
+
+    event.respondWith(
+      caches
+        .open('cbe-custom-branding-cache')
+        .then(function (cache) {
+          return cache.match(req).then(function (exactHit) {
+            if (exactHit) return exactHit;
+            // Fallback match without cache-busting `v` query param
+            if (p === '/api/pwa/icon' || p === '/api/pwa/manifest') {
+              const cleanUrl = new URL(url.href);
+              cleanUrl.searchParams.delete('v');
+              return cache.match(cleanUrl.pathname + cleanUrl.search).then(function (cleanHit) {
+                return cleanHit || fetch(req);
+              });
+            }
+            return cache.match(p).then(function (pathHit) {
+              return pathHit || fetch(req);
+            });
+          });
+        })
+        .catch(function () {
+          return fetch(req);
+        })
+    );
+  } catch (_) {
+    // Pass through to network
+  }
 });
 
 function savePushToIndexedDb(payload) {
