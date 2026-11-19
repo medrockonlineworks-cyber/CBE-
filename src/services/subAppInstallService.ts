@@ -102,11 +102,22 @@ export class SubAppInstallService {
         navigator.maxTouchPoints > 1);
 
     if (isIOS) {
+      const fullUrl =
+        typeof window !== 'undefined' ? `${window.location.origin}${routePath}` : routePath;
+      let copied = false;
+      try {
+        if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+          await navigator.clipboard.writeText(fullUrl);
+          copied = true;
+        }
+      } catch {}
       return {
         ok: true,
         mode: 'ios_safari',
         routePath,
-        message: `Open ${routePath} in iPhone Safari, tap Share → Add to Home Screen. It installs with ${meta.shortName}'s own icon and syncs automatically with CBE Mobile Banking.`,
+        message: copied
+          ? `Link copied (${routePath})! Open iPhone Safari, paste it, then tap Share → Add to Home Screen for ${meta.shortName}'s own icon.`
+          : `Open ${fullUrl} in iPhone Safari, then tap Share → Add to Home Screen for ${meta.shortName}'s own icon.`,
       };
     }
 

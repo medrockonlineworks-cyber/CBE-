@@ -4,7 +4,10 @@ import {
   AlertCircle,
   Bell,
   BellOff,
+  Check,
   CheckCircle2,
+  Copy,
+  ExternalLink,
   Eye,
   EyeOff,
   Loader2,
@@ -48,6 +51,12 @@ export const SubAppPushModal: React.FC<SubAppPushModalProps> = ({
   const [successMsg, setSuccessMsg] = useState('');
   const [customSender, setCustomSender] = useState(meta.defaultSender);
   const [customBody, setCustomBody] = useState('');
+  const [copiedUrl, setCopiedUrl] = useState(false);
+
+  const subAppFullUrl =
+    typeof window !== 'undefined'
+      ? `${window.location.origin}/${subAppId}`
+      : `/${subAppId}`;
 
   const syncState = useCallback(async () => {
     if (Capacitor.isNativePlatform()) {
@@ -148,6 +157,30 @@ export const SubAppPushModal: React.FC<SubAppPushModalProps> = ({
     setSuccessMsg(res.message);
   };
 
+  const handleCopySubAppUrl = async () => {
+    try {
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        await navigator.clipboard.writeText(subAppFullUrl);
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = subAppFullUrl;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      setCopiedUrl(true);
+      setErrorMsg('');
+      setSuccessMsg(`Copied! Open Safari, paste the link, then tap Share → Add to Home Screen.`);
+      setTimeout(() => setCopiedUrl(false), 2500);
+    } catch {
+      setErrorMsg(`Copy failed. Manually open ${subAppFullUrl} in Safari.`);
+    }
+  };
+
   const badge = (() => {
     if (caps.requiresIosHomeScreenInstall) {
       return { label: 'Home Screen Required', cls: 'bg-amber-500/15 text-amber-400 border-amber-500/30' };
@@ -229,40 +262,19 @@ export const SubAppPushModal: React.FC<SubAppPushModalProps> = ({
           </div>
         )}
 
-        {/* iPhone / iOS 16.4+ Own-Logo Home Screen Notice */}
-        {caps.isIOS && !Capacitor.isNativePlatform() && (
-          <div
-            className={`rounded-2xl p-3.5 border space-y-1.5 text-[11px] leading-relaxed ${
-              caps.requiresIosHomeScreenInstall
-                ? 'bg-amber-500/10 border-amber-500/30 text-amber-200'
-                : isDarkMode
-                  ? 'bg-blue-500/10 border-blue-500/25 text-blue-200'
-                  : 'bg-blue-50 border-blue-200 text-blue-900'
-            }`}
-          >
+        {/* iPhone / iOS 16.4+ Setup Notice (only when not yet installed on Home Screen) */}
+        {caps.isIOS && !Capacitor.isNativePlatform() && caps.requiresIosHomeScreenInstall && (
+          <div className="rounded-2xl p-3.5 border space-y-1.5 text-[11px] leading-relaxed bg-amber-500/10 border-amber-500/30 text-amber-200">
             <div className="flex items-center gap-1.5 font-extrabold text-xs">
               <Share className="w-3.5 h-3.5 shrink-0" />
-              <span>
-                {caps.requiresIosHomeScreenInstall
-                  ? `iPhone Setup: Install ${meta.shortName} with Own Logo`
-                  : `iPhone Own-Logo Push Tip`}
-              </span>
+              <span>iPhone Setup: Install {meta.shortName} with Own Logo</span>
             </div>
-            {caps.requiresIosHomeScreenInstall ? (
-              <p className={isDarkMode ? 'opacity-90' : 'text-amber-900'}>
-                On iPhone (iOS 16.4+), tap Safari <strong>Share</strong> →{' '}
-                <strong>Add to Home Screen</strong> right here to install{' '}
-                <strong>{meta.shortName}</strong> with its own icon. Open it from your Home Screen,
-                then tap <strong>Enable</strong> below.
-              </p>
-            ) : (
-              <p className="opacity-90">
-                iPhone shows the installed Home Screen app icon on Lock Screen banners. To get{' '}
-                <strong>{meta.shortName}</strong>&apos;s own logo &amp; name on iPhone notifications,
-                open <span className="font-mono font-bold">/{subAppId}</span> in Safari and tap{' '}
-                <strong>Share → Add to Home Screen</strong>.
-              </p>
-            )}
+            <p className={isDarkMode ? 'opacity-90' : 'text-amber-900'}>
+              On iPhone (iOS 16.4+), tap Safari <strong>Share</strong> →{' '}
+              <strong>Add to Home Screen</strong> right here to install{' '}
+              <strong>{meta.shortName}</strong> with its own icon. Open it from your Home Screen,
+              then tap <strong>Enable</strong> below.
+            </p>
           </div>
         )}
 
@@ -382,27 +394,65 @@ export const SubAppPushModal: React.FC<SubAppPushModalProps> = ({
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            disabled={Boolean(busy)}
-            onClick={() => void handleInstallToHomeScreen()}
-            className={`w-full py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer disabled:opacity-60 border ${
-              isDarkMode
-                ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-white'
-                : 'bg-white hover:bg-neutral-100 border-neutral-300 text-neutral-900'
-            }`}
-          >
-            {busy === 'install' ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Smartphone className="w-3.5 h-3.5" />
-            )}
-            <span>
-              {Capacitor.isNativePlatform()
-                ? `Add ${meta.shortName} Icon to Home Screen`
-                : `Install ${meta.shortName} Shortcut`}
-            </span>
-          </button>
+          {caps.isIOS && !Capacitor.isNativePlatform() ? (
+            <div className="space-y-2">
+              <div className="grid grid-cols-2 gap-2">
+                <a
+                  href={subAppFullUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ backgroundColor: meta.color }}
+                  className="py-2.5 px-3 rounded-xl text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm hover:opacity-95 active:scale-[0.99] transition"
+                >
+                  <ExternalLink className="w-3.5 h-3.5 shrink-0" />
+                  <span>Open in Safari</span>
+                </a>
+                <button
+                  type="button"
+                  onClick={() => void handleCopySubAppUrl()}
+                  className={`py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer border ${
+                    isDarkMode
+                      ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-white'
+                      : 'bg-white hover:bg-neutral-100 border-neutral-300 text-neutral-900'
+                  }`}
+                >
+                  {copiedUrl ? (
+                    <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5 shrink-0" />
+                  )}
+                  <span>{copiedUrl ? 'Copied!' : 'Copy Link'}</span>
+                </button>
+              </div>
+              <p className={`text-[10.5px] leading-relaxed ${isDarkMode ? 'text-neutral-400' : 'text-neutral-600'}`}>
+                1. Tap <strong>Open in Safari</strong> (or tap <strong>Copy Link</strong> and paste in Safari).<br />
+                2. In Safari, tap <strong>Share (↑) → Add to Home Screen</strong> to install{' '}
+                <strong>{meta.shortName}</strong> with its own iPhone logo &amp; Lock Screen notifications.
+              </p>
+            </div>
+          ) : (
+            <button
+              type="button"
+              disabled={Boolean(busy)}
+              onClick={() => void handleInstallToHomeScreen()}
+              className={`w-full py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer disabled:opacity-60 border ${
+                isDarkMode
+                  ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-white'
+                  : 'bg-white hover:bg-neutral-100 border-neutral-300 text-neutral-900'
+              }`}
+            >
+              {busy === 'install' ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Smartphone className="w-3.5 h-3.5" />
+              )}
+              <span>
+                {Capacitor.isNativePlatform()
+                  ? `Add ${meta.shortName} Icon to Home Screen`
+                  : `Install ${meta.shortName} Shortcut`}
+              </span>
+            </button>
+          )}
         </div>
 
         {/* Custom Simulated SMS Push Sender (for SMS Simulator & Truecaller) */}
