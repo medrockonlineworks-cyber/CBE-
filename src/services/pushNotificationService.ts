@@ -1578,7 +1578,8 @@ export class PushNotificationService {
    * directly to this sub-app with its own icon & name.
    */
   public static async subscribeSubAppWebPush(
-    subAppId: SubAppNotificationId
+    subAppId: SubAppNotificationId,
+    options?: { forceRenew?: boolean }
   ): Promise<{
     ok: boolean;
     deviceCount?: number;
@@ -1611,7 +1612,8 @@ export class PushNotificationService {
       if (sub) {
         const existingKeyBuf = sub.options?.applicationServerKey;
         const existingKey = existingKeyBuf ? new Uint8Array(existingKeyBuf) : null;
-        if (existingKey && !this.uint8ArrayEquals(existingKey, appServerKey)) {
+        const keyMismatch = existingKey && !this.uint8ArrayEquals(existingKey, appServerKey);
+        if (options?.forceRenew || keyMismatch) {
           await sub.unsubscribe().catch(() => false);
           sub = null;
         }
@@ -1627,6 +1629,15 @@ export class PushNotificationService {
       const subJson = sub.toJSON();
       const bucketKey = CrossAppSyncService.getBucketKey();
       const connectionKey = CrossAppSyncService.encodeConnectionKey(subAppId, subJson, bucketKey);
+
+      // Keep same-origin paired link up-to-date automatically if this origin already has a link for subAppId
+      const existingSameOrigin = CrossAppSyncService.getPairedSubAppLinks(subAppId);
+      if (existingSameOrigin.length > 0 && subJson.endpoint && subJson.keys?.p256dh && subJson.keys?.auth) {
+        const parsedFresh = CrossAppSyncService.parseConnectionKey(connectionKey);
+        if (parsedFresh.ok && parsedFresh.link) {
+          CrossAppSyncService.savePairedSubAppLink(parsedFresh.link);
+        }
+      }
 
       const platform: 'ios' | 'android' | 'desktop' = caps.isIOS
         ? 'ios'
@@ -1673,7 +1684,8 @@ export class PushNotificationService {
    * with zero external database required.
    */
   public static async getOrCreateSubAppConnectionKey(
-    subAppId: SubAppNotificationId
+    subAppId: SubAppNotificationId,
+    options?: { forceRenew?: boolean }
   ): Promise<{ ok: boolean; connectionKey?: string; error?: string }> {
     const meta = SUB_APP_NOTIFICATION_META[subAppId];
     if (Capacitor.isNativePlatform()) {
@@ -1698,7 +1710,7 @@ export class PushNotificationService {
       }
     }
 
-    const subRes = await this.subscribeSubAppWebPush(subAppId);
+    const subRes = await this.subscribeSubAppWebPush(subAppId, options);
     if (!subRes.ok || !subRes.connectionKey) {
       return {
         ok: false,
@@ -1736,12 +1748,24 @@ export class PushNotificationService {
     tag: string;
     reference?: string;
     smsRecord?: Record<string, unknown>;
-  }): Promise<{ ok: boolean; delivered: number; total: number; errorCodes?: number[]; error?: string }> {
+    overrideDirectSubscriptions?: PushSubscriptionJSON[];
+  }): Promise<{
+    ok: boolean;
+    delivered: number;
+    total: number;
+    errorCodes?: number[];
+    expiredEndpoints?: string[];
+    error?: string;
+  }> {
     if (typeof window === 'undefined') {
       return { ok: false, delivered: 0, total: 0 };
     }
+    const { overrideDirectSubscriptions, ...pushPayload } = params;
     const pairedLinks = CrossAppSyncService.getPairedSubAppLinks(params.subAppId);
-    const directSubscriptions = pairedLinks.map((l) => l.subscription);
+    const directSubscriptions =
+      overrideDirectSubscriptions && overrideDirectSubscriptions.length > 0
+        ? overrideDirectSubscriptions
+        : pairedLinks.map((l) => l.subscription);
 
     // Inside Native Android APK, only dispatch remote push if the user linked a standalone sub-app via Special Connection Key
     if (Capacitor.isNativePlatform() && directSubscriptions.length === 0) {
@@ -1756,7 +1780,7 @@ export class PushNotificationService {
         body: JSON.stringify({
           bucketKey: CrossAppSyncService.getBucketKey(),
           directSubscriptions,
-          ...params,
+          ...pushPayload,
         }),
       });
       const data = await safeParseJson<{
@@ -1764,6 +1788,7 @@ export class PushNotificationService {
         delivered?: number;
         total?: number;
         errorCodes?: number[];
+        expiredEndpoints?: string[];
         error?: string;
       }>(res, '/api/subapp/push');
       if (!res.ok || !data?.ok) {
@@ -1774,11 +1799,16 @@ export class PushNotificationService {
           error: data?.error || `HTTP ${res.status}`,
         };
       }
+      const expiredEndpoints = Array.isArray(data.expiredEndpoints) ? data.expiredEndpoints : [];
+      if (expiredEndpoints.length > 0) {
+        CrossAppSyncService.pruneExpiredEndpoints(expiredEndpoints);
+      }
       return {
         ok: true,
         delivered: Number(data.delivered || 0),
         total: Number(data.total || 0),
         errorCodes: Array.isArray(data.errorCodes) ? data.errorCodes : [],
+        expiredEndpoints,
       };
     } catch (err) {
       return {
@@ -2034,7 +2064,7 @@ export class PushNotificationService {
   public static async sendSubAppTestNotification(
     subAppId: SubAppNotificationId,
     custom?: { title?: string; body?: string }
-  ): Promise<{ ok: boolean; message?: string; error?: string }> {
+  ): Promise<{ ok: boolean; message?: string; error?: string; connectionKey?: string }> {
     const meta = SUB_APP_NOTIFICATION_META[subAppId];
     if (Capacitor.isNativePlatform()) {
       await this.syncNativePermissionStatus();
@@ -2095,11 +2125,12 @@ export class PushNotificationService {
       PhoneSettingsService.isIPhoneMode();
     const resolvedWebIcon = isIosSmsMode ? '/icons/notif-sms-ios.png' : meta.webIcon;
     const tag = `cbe-subapp-test-${subAppId}-${Date.now()}`;
+    const isInsideThisSubApp = !Capacitor.isNativePlatform() && this.detectCurrentSubAppFromPath() === subAppId;
 
     // Try real cross-app FCM/APNs push to the standalone installed sub-app first (works on Web, iOS, AND Native Android APK!)
     const hasLinkedSubApp = CrossAppSyncService.getPairedSubAppLinks(subAppId).length > 0;
     if (!Capacitor.isNativePlatform() || hasLinkedSubApp) {
-      const remote = await this.dispatchRemoteSubAppPush({
+      const pushReq = {
         subAppId,
         appName: meta.shortName,
         title: finalTitle,
@@ -2109,7 +2140,8 @@ export class PushNotificationService {
         url: `/${subAppId}/`,
         tag,
         smsRecord,
-      });
+      };
+      const remote = await this.dispatchRemoteSubAppPush(pushReq);
 
       if (remote.delivered > 0) {
         return {
@@ -2119,9 +2151,34 @@ export class PushNotificationService {
       }
 
       if (remote.total > 0 && remote.errorCodes && remote.errorCodes.length > 0) {
+        const failedCode = remote.errorCodes[0];
+        const isExpiredSub = failedCode === 410 || failedCode === 404 || failedCode === 403;
+
+        // Auto-heal when the user is currently inside the standalone Messages/sub-app!
+        // Unsubscribe the stale FCM/APNs token, mint a brand-new live subscription, and retry immediately.
+        if (isInsideThisSubApp && isExpiredSub) {
+          const renewed = await this.subscribeSubAppWebPush(subAppId, { forceRenew: true });
+          if (renewed.ok && renewed.subscription) {
+            const retry = await this.dispatchRemoteSubAppPush({
+              ...pushReq,
+              tag: `cbe-subapp-test-${subAppId}-${Date.now()}`,
+              overrideDirectSubscriptions: [renewed.subscription],
+            });
+            if (retry.delivered > 0) {
+              return {
+                ok: true,
+                connectionKey: renewed.connectionKey,
+                message: `Refreshed expired push key automatically & delivered test push! Copy the new Connection Key below and paste it once in CBE Mobile Settings.`,
+              };
+            }
+          }
+        }
+
         return {
           ok: false,
-          error: `Push service rejected the saved key (code ${remote.errorCodes[0]}). Open your installed ${meta.shortName} app, copy a fresh Connection Key, and paste it here again.`,
+          error: isInsideThisSubApp
+            ? `Your previous push subscription expired (code ${failedCode}). Tap "Reset & Copy Fresh Key" below to create a brand-new subscription, then paste the new key in CBE Mobile Settings.`
+            : `The saved ${meta.shortName} key expired (code ${failedCode}) and was cleared. Open your installed ${meta.shortName} app → tap Bell → tap "Reset & Copy Fresh Key" → paste it here again.`,
         };
       }
     }

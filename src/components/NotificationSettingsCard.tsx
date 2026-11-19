@@ -101,8 +101,15 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
     const syncSubAppPrefs = () => {
       setSubAppPrefs(PushNotificationService.getSubAppPreferences());
     };
+    const syncPairedLinks = () => {
+      setPairedLinks(CrossAppSyncService.getPairedSubAppLinks());
+    };
     window.addEventListener('cbe_subapp_push_prefs_updated', syncSubAppPrefs);
-    return () => window.removeEventListener('cbe_subapp_push_prefs_updated', syncSubAppPrefs);
+    window.addEventListener('cbe_paired_links_updated', syncPairedLinks);
+    return () => {
+      window.removeEventListener('cbe_subapp_push_prefs_updated', syncSubAppPrefs);
+      window.removeEventListener('cbe_paired_links_updated', syncPairedLinks);
+    };
   }, []);
 
   const showBannerSuccess = (msg: string) => {

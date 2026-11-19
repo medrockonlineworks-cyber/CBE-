@@ -572,6 +572,7 @@ export default async function handler(req: any, res: any) {
         total: targets.length,
         failed,
         errorCodes,
+        expiredEndpoints: Array.from(expiredEndpoints),
         vapidSource: vapid.source,
       });
       return;

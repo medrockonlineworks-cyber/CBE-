@@ -576,6 +576,7 @@ export async function handleBridgeAction(params: {
         total: targets.length,
         failed,
         errorCodes,
+        expiredEndpoints: Array.from(expiredEndpoints),
         vapidSource: vapid.source,
       },
     };

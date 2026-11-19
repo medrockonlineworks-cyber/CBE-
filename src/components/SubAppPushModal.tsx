@@ -12,6 +12,7 @@ import {
   EyeOff,
   KeyRound,
   Loader2,
+  RefreshCw,
   Send,
   Share,
   Smartphone,
@@ -108,12 +109,14 @@ export const SubAppPushModal: React.FC<SubAppPushModalProps> = ({
     setSuccessMsg(res.message || `${meta.name} notifications enabled!`);
   };
 
-  const handleCopyConnectionKey = async () => {
+  const handleCopyConnectionKey = async (forceRenew = false) => {
     if (busy) return;
-    setBusy('connkey');
+    setBusy(forceRenew ? 'renewkey' : 'connkey');
     setErrorMsg('');
     setSuccessMsg('');
-    const res = await PushNotificationService.getOrCreateSubAppConnectionKey(subAppId);
+    const res = await PushNotificationService.getOrCreateSubAppConnectionKey(subAppId, {
+      forceRenew,
+    });
     await syncState();
     setBusy(null);
     if (!res.ok || !res.connectionKey) {
@@ -137,7 +140,9 @@ export const SubAppPushModal: React.FC<SubAppPushModalProps> = ({
       }
       setCopiedConnKey(true);
       setSuccessMsg(
-        `Connection Key copied! Open CBE Mobile → Profile → Push Notifications → paste it in "Connect Installed Sub-App" and tap Connect.`
+        forceRenew
+          ? `Brand-new Connection Key created & copied! Paste it in CBE Mobile → Settings → Connect Standalone Messages App and tap Connect.`
+          : `Connection Key copied! Open CBE Mobile → Settings → Connect Standalone Messages App → paste it and tap Connect.`
       );
       setTimeout(() => setCopiedConnKey(false), 3000);
     } catch {
@@ -179,6 +184,9 @@ export const SubAppPushModal: React.FC<SubAppPushModalProps> = ({
     );
     await syncState();
     setBusy(null);
+    if (res.connectionKey) {
+      setConnectionKey(res.connectionKey);
+    }
     if (!res.ok) {
       setErrorMsg(res.error || 'Could not send test notification.');
       return;
@@ -423,27 +431,47 @@ export const SubAppPushModal: React.FC<SubAppPushModalProps> = ({
               </div>
             )}
 
-            <button
-              type="button"
-              disabled={Boolean(busy)}
-              onClick={() => void handleCopyConnectionKey()}
-              className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.99] transition cursor-pointer disabled:opacity-60"
-            >
-              {busy === 'connkey' ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : copiedConnKey ? (
-                <Check className="w-3.5 h-3.5" />
-              ) : (
-                <Copy className="w-3.5 h-3.5" />
-              )}
-              <span>
-                {copiedConnKey
-                  ? 'Connection Key Copied!'
-                  : connectionKey
-                    ? 'Copy Connection Key Again'
-                    : `Generate & Copy ${meta.shortName} Connection Key`}
-              </span>
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                disabled={Boolean(busy)}
+                onClick={() => void handleCopyConnectionKey(false)}
+                className="flex-1 py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.99] transition cursor-pointer disabled:opacity-60"
+              >
+                {busy === 'connkey' ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : copiedConnKey ? (
+                  <Check className="w-3.5 h-3.5" />
+                ) : (
+                  <Copy className="w-3.5 h-3.5" />
+                )}
+                <span>
+                  {copiedConnKey
+                    ? 'Copied!'
+                    : connectionKey
+                      ? 'Copy Key'
+                      : `Generate & Copy Key`}
+                </span>
+              </button>
+              <button
+                type="button"
+                disabled={Boolean(busy)}
+                onClick={() => void handleCopyConnectionKey(true)}
+                title="Unsubscribe expired push token and create a brand-new Connection Key"
+                className={`py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 border transition cursor-pointer disabled:opacity-60 ${
+                  isDarkMode
+                    ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-emerald-300'
+                    : 'bg-white hover:bg-emerald-50 border-emerald-300 text-emerald-800'
+                }`}
+              >
+                {busy === 'renewkey' ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-3.5 h-3.5" />
+                )}
+                <span>Reset Key</span>
+              </button>
+            </div>
           </div>
         )}
 

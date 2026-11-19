@@ -280,13 +280,9 @@ class CrossAppSyncEngine {
   }
 
   public savePairedSubAppLink(link: PairedSubAppLink): PairedSubAppLink[] {
-    const existing = this.getPairedSubAppLinks().filter(
-      (item) => !(item.subAppId === link.subAppId && item.subscription.endpoint === link.subscription.endpoint)
-    );
-    // Keep latest paired link per subAppId clean & deterministic (up to 3 devices per subApp)
-    const sameSub = existing.filter((item) => item.subAppId === link.subAppId).slice(-2);
-    const others = existing.filter((item) => item.subAppId !== link.subAppId);
-    const next = [...others, ...sameSub, link];
+    // Replace previous links for this subAppId so stale/expired 410 tokens are never left behind
+    const others = this.getPairedSubAppLinks().filter((item) => item.subAppId !== link.subAppId);
+    const next = [...others, link];
     try {
       localStorage.setItem(PAIRED_LINKS_STORAGE_KEY, JSON.stringify(next));
       if (link.bucketKey && link.bucketKey !== this.getBucketKey()) {
@@ -294,6 +290,24 @@ class CrossAppSyncEngine {
       }
       window.dispatchEvent(new CustomEvent('cbe_paired_links_updated'));
     } catch {}
+    return next;
+  }
+
+  public pruneExpiredEndpoints(endpoints: string[]): PairedSubAppLink[] {
+    if (!Array.isArray(endpoints) || endpoints.length === 0) {
+      return this.getPairedSubAppLinks();
+    }
+    const expiredSet = new Set(endpoints.filter((e) => typeof e === 'string' && e.length > 0));
+    if (expiredSet.size === 0) return this.getPairedSubAppLinks();
+
+    const current = this.getPairedSubAppLinks();
+    const next = current.filter((item) => !expiredSet.has(item.subscription.endpoint));
+    if (next.length !== current.length) {
+      try {
+        localStorage.setItem(PAIRED_LINKS_STORAGE_KEY, JSON.stringify(next));
+        window.dispatchEvent(new CustomEvent('cbe_paired_links_updated'));
+      } catch {}
+    }
     return next;
   }
 
