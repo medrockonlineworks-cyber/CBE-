@@ -41,6 +41,7 @@ interface BridgeStoreData {
   syncBuckets: Record<string, SyncBucket>;
   subAppSubscriptions: Record<string, SubAppPushSubscriptionRecord[]>;
   customLogos?: Record<string, CustomAppLogoRecord>;
+  renewalNeeded?: Record<string, boolean>;
   vapid?: {
     publicKey: string;
     privateKey: string;
@@ -212,6 +213,8 @@ async function kvGetStore(): Promise<BridgeStoreData | null> {
           : {},
       customLogos:
         parsed.customLogos && typeof parsed.customLogos === 'object' ? parsed.customLogos : {},
+      renewalNeeded:
+        parsed.renewalNeeded && typeof parsed.renewalNeeded === 'object' ? parsed.renewalNeeded : {},
       vapid: parsed.vapid,
     };
   } catch {
@@ -249,6 +252,8 @@ function readLocalStore(): BridgeStoreData {
             : {},
         customLogos:
           parsed.customLogos && typeof parsed.customLogos === 'object' ? parsed.customLogos : {},
+        renewalNeeded:
+          parsed.renewalNeeded && typeof parsed.renewalNeeded === 'object' ? parsed.renewalNeeded : {},
         vapid: parsed.vapid,
       };
       return memoryStore;
@@ -256,7 +261,7 @@ function readLocalStore(): BridgeStoreData {
   } catch {
     // Fallback
   }
-  memoryStore = { syncBuckets: {}, subAppSubscriptions: {}, customLogos: {} };
+  memoryStore = { syncBuckets: {}, subAppSubscriptions: {}, customLogos: {}, renewalNeeded: {} };
   return memoryStore;
 }
 
@@ -550,9 +555,11 @@ export default async function handler(req: any, res: any) {
         platformRaw === 'ios' || platformRaw === 'android' ? platformRaw : 'desktop';
 
       const store = await loadStore(true);
-      const list = [...(store.subAppSubscriptions[bucketKey] || [])].filter(
-        (item) => !(item.subAppId === subAppId && item.endpoint === sub.endpoint)
-      );
+      const replaceExisting = body.replaceExisting === true;
+      const list = [...(store.subAppSubscriptions[bucketKey] || [])].filter((item) => {
+        if (replaceExisting && item.subAppId === subAppId) return false;
+        return !(item.subAppId === subAppId && item.endpoint === sub.endpoint);
+      });
       list.push({
         subAppId,
         endpoint: sub.endpoint,
@@ -562,6 +569,8 @@ export default async function handler(req: any, res: any) {
         updatedAt: Date.now(),
       });
       store.subAppSubscriptions[bucketKey] = list.slice(-MAX_SUBS_PER_BUCKET);
+      if (!store.renewalNeeded) store.renewalNeeded = {};
+      store.renewalNeeded[`${bucketKey}:${subAppId}`] = false;
       await saveStore(store);
 
       const countForSubApp = store.subAppSubscriptions[bucketKey].filter(
@@ -580,24 +589,31 @@ export default async function handler(req: any, res: any) {
     // 5. GET Sub-App Status
     if (method === 'GET' && pathname === '/api/subapp/status') {
       const bucketKey = sanitizeBucketKey(query.bucketKey || query.key);
+      const subAppFilter = String(query.subAppId || '').trim().toLowerCase();
       const store = await loadStore(true);
       const list = store.subAppSubscriptions[bucketKey] || [];
       const counts: Record<string, number> = {};
       for (const id of VALID_SUB_APPS) {
         counts[id] = list.filter((item) => item.subAppId === id).length;
       }
+      const renewalNeeded = subAppFilter
+        ? Boolean(store.renewalNeeded?.[`${bucketKey}:${subAppFilter}`])
+        : Object.entries(store.renewalNeeded || {}).some(
+            ([k, v]) => k.startsWith(`${bucketKey}:`) && v === true
+          );
       const vapid = await resolveVapidPair();
       res.status(200).json({
         ok: true,
         bucketKey,
         counts,
+        renewalNeeded,
         vapidSource: vapid.source,
         persistentStore: Boolean(getKvConfig()),
       });
       return;
     }
 
-    // 6. POST Push to Sub-App (supports stateless directSubscriptions from Special Connection Key + server-stored subs!)
+    // 6. POST Push to Sub-App (permanent pairId lookup + stateless fallback + auto-healing latestSubscription)
     if (method === 'POST' && pathname === '/api/subapp/push') {
       const bucketKey = sanitizeBucketKey(body.bucketKey || body.key);
       const subAppId = String(body.subAppId || '').trim().toLowerCase();
@@ -608,13 +624,16 @@ export default async function handler(req: any, res: any) {
 
       const store = await loadStore(true);
       const storedAll = store.subAppSubscriptions[bucketKey] || [];
-      const storedTargets = storedAll.filter((item) => item.subAppId === subAppId);
+      const storedTargets = storedAll
+        .filter((item) => item.subAppId === subAppId)
+        .sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0));
       const directTargets = extractValidSubscriptions(body.directSubscriptions);
 
       const mergedByEndpoint = new Map<
         string,
         { endpoint: string; expirationTime: number | null; keys: { p256dh: string; auth: string } }
       >();
+      // Prefer freshest server-stored rotated subscriptions under this permanent pairId first
       for (const t of storedTargets) {
         mergedByEndpoint.set(t.endpoint, {
           endpoint: t.endpoint,
@@ -623,24 +642,12 @@ export default async function handler(req: any, res: any) {
         });
       }
       for (const t of directTargets) {
-        mergedByEndpoint.set(t.endpoint, t);
+        if (!mergedByEndpoint.has(t.endpoint)) {
+          mergedByEndpoint.set(t.endpoint, t);
+        }
       }
 
       const targets = Array.from(mergedByEndpoint.values());
-      if (targets.length === 0) {
-        res.status(200).json({
-          ok: true,
-          delivered: 0,
-          total: 0,
-          failed: 0,
-          reason: 'no_subapp_subscription',
-        });
-        return;
-      }
-
-      const vapid = await resolveVapidPair();
-      setVapidDetails(vapid.subject, vapid.publicKey, vapid.privateKey);
-
       const smsRecord =
         body.smsRecord && typeof body.smsRecord === 'object' ? body.smsRecord : undefined;
 
@@ -662,16 +669,60 @@ export default async function handler(req: any, res: any) {
       }
       const payloadJson = JSON.stringify(payloadObj);
 
+      // Helper to queue message under permanent bucketKey so sub-app catches up even if token rotated while closed
+      const queuePendingPush = () => {
+        if (!store.syncBuckets[bucketKey]) store.syncBuckets[bucketKey] = {};
+        const prevRaw = store.syncBuckets[bucketKey]['cbe_pending_push_queue']?.value;
+        let queue: unknown[] = [];
+        try {
+          const parsed = prevRaw ? JSON.parse(prevRaw) : [];
+          if (Array.isArray(parsed)) queue = parsed;
+        } catch {}
+        queue.push(payloadObj);
+        store.syncBuckets[bucketKey]['cbe_pending_push_queue'] = {
+          value: JSON.stringify(queue.slice(-20)),
+          updatedAt: Date.now(),
+        };
+      };
+
+      if (targets.length === 0) {
+        queuePendingPush();
+        if (!store.renewalNeeded) store.renewalNeeded = {};
+        store.renewalNeeded[`${bucketKey}:${subAppId}`] = true;
+        await saveStore(store);
+        res.status(200).json({
+          ok: true,
+          delivered: 0,
+          total: 0,
+          failed: 0,
+          queued: true,
+          renewalRequested: true,
+          reason: 'no_subapp_subscription',
+        });
+        return;
+      }
+
+      const vapid = await resolveVapidPair();
+      setVapidDetails(vapid.subject, vapid.publicKey, vapid.privateKey);
+
       let delivered = 0;
       let failed = 0;
       const expiredEndpoints = new Set<string>();
       const errorCodes: number[] = [];
+      let latestSubscription: {
+        endpoint: string;
+        expirationTime: number | null;
+        keys: { p256dh: string; auth: string };
+      } | null = null;
 
       await Promise.all(
         targets.map(async (target) => {
           try {
             await sendNotification(target, payloadJson, { TTL: 180, urgency: 'high' });
             delivered += 1;
+            if (!latestSubscription) {
+              latestSubscription = target;
+            }
           } catch (err: any) {
             failed += 1;
             const statusCode = Number(err?.statusCode || 0);
@@ -683,10 +734,28 @@ export default async function handler(req: any, res: any) {
         })
       );
 
+      let storeDirty = false;
       if (expiredEndpoints.size > 0 && storedTargets.length > 0) {
         store.subAppSubscriptions[bucketKey] = storedAll.filter(
           (item) => !(item.subAppId === subAppId && expiredEndpoints.has(item.endpoint))
         );
+        storeDirty = true;
+      }
+
+      if (!store.renewalNeeded) store.renewalNeeded = {};
+      if (delivered > 0) {
+        if (store.renewalNeeded[`${bucketKey}:${subAppId}`]) {
+          store.renewalNeeded[`${bucketKey}:${subAppId}`] = false;
+          storeDirty = true;
+        }
+      } else {
+        // Never expire the user's permanent Connection Key — queue message & signal sub-app to auto-renew its token!
+        queuePendingPush();
+        store.renewalNeeded[`${bucketKey}:${subAppId}`] = true;
+        storeDirty = true;
+      }
+
+      if (storeDirty) {
         await saveStore(store);
       }
 
@@ -695,6 +764,9 @@ export default async function handler(req: any, res: any) {
         delivered,
         total: targets.length,
         failed,
+        queued: delivered === 0,
+        renewalRequested: delivered === 0,
+        latestSubscription,
         errorCodes,
         expiredEndpoints: Array.from(expiredEndpoints),
         vapidSource: vapid.source,

@@ -340,7 +340,7 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
     const subMeta = SUB_APP_NOTIFICATION_META[parsed.link.subAppId as SubAppNotificationId];
     const name = subMeta ? subMeta.shortName : parsed.link.subAppId;
     showBannerSuccess(
-      `${name} connected! Tap Test next to ${subMeta?.name || name} below to verify the notification pops up from ${name}.`
+      `${name} permanently connected! This key never expires — tap Test next to ${subMeta?.name || name} below to verify.`
     );
   };
 
@@ -663,12 +663,14 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-[#70189F]">
               <KeyRound className="w-3.5 h-3.5 shrink-0" />
-              <span>Connect Standalone Messages App (No CBE Logo)</span>
+              <span>Connect Standalone Messages App (Permanent Key)</span>
             </div>
+            <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 shrink-0">
+              Never Expires
+            </span>
           </div>
           <p className="text-[10px] text-gray-600 leading-relaxed">
-            To show SMS notifications strictly <strong>from the Messages app</strong> (without CBE&apos;s
-            bank icon): install{' '}
+            Paste your <strong>Permanent Connection Key</strong> once from{' '}
             <a
               href="https://www.cbebank.online/sms/"
               target="_blank"
@@ -677,9 +679,9 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
             >
               cbebank.online/sms/
             </a>{' '}
-            in Chrome/Safari → open it → tap the <strong>Bell</strong> →{' '}
-            <strong>Generate &amp; Copy Connection Key</strong> → paste below &amp; tap{' '}
-            <strong>Connect</strong>.
+            (Bell → <strong>Generate &amp; Copy Key</strong>) so SMS notifications always arrive
+            from the Messages app without CBE&apos;s icon. Push channels auto-renew in the
+            background.
           </p>
           <div className="flex items-center gap-1.5">
             <input
@@ -724,7 +726,7 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
                       <p className="text-xs font-bold text-gray-800 truncate">{app.name}</p>
                       {isLinked && (
                         <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[9px] font-extrabold shrink-0">
-                          Linked
+                          Permanent
                         </span>
                       )}
                     </div>

@@ -160,12 +160,12 @@ export const SubAppPushModal: React.FC<SubAppPushModalProps> = ({
       setCopiedConnKey(true);
       setSuccessMsg(
         forceRenew
-          ? `Brand-new Connection Key created & copied! Paste it in CBE Mobile → Settings → Connect Standalone Messages App and tap Connect.`
-          : `Connection Key copied! Open CBE Mobile → Settings → Connect Standalone Messages App → paste it and tap Connect.`
+          ? `Push channel refreshed under your same permanent key & copied! If already connected in CBE Mobile, it stays linked automatically.`
+          : `Permanent Connection Key copied! Paste it once in CBE Mobile → Profile → Push Notifications → Connect. It never expires.`
       );
       setTimeout(() => setCopiedConnKey(false), 3000);
     } catch {
-      setSuccessMsg('Connection Key generated below — tap and copy it, then paste in CBE Mobile Settings.');
+      setSuccessMsg('Permanent Connection Key generated below — copy and paste it once in CBE Mobile Settings.');
     }
   };
 
@@ -449,17 +449,23 @@ export const SubAppPushModal: React.FC<SubAppPushModalProps> = ({
             <div className="flex items-start gap-2">
               <KeyRound className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
               <div className="min-w-0">
-                <p className="text-xs font-extrabold">
-                  Special Connection Key (Sync with CBE Mobile)
-                </p>
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <p className="text-xs font-extrabold">
+                    Permanent Connection Key
+                  </p>
+                  <span className="text-[9px] font-extrabold uppercase tracking-wide px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                    Never Expires
+                  </span>
+                </div>
                 <p
                   className={`text-[10.5px] mt-0.5 leading-snug ${
                     isDarkMode ? 'text-neutral-300' : 'text-neutral-600'
                   }`}
                 >
-                  Copy this key from your installed <strong>{meta.shortName}</strong> app and paste it
-                  once inside <strong>CBE Mobile → Profile → Push Notifications</strong> so transfers
-                  and Test alerts arrive here with {meta.shortName}&apos;s own icon.
+                  Copy this permanent key from your installed <strong>{meta.shortName}</strong> app
+                  and paste it <strong>once</strong> inside{' '}
+                  <strong>CBE Mobile → Profile → Push Notifications</strong>. Background push
+                  channels auto-renew automatically so you never need to re-paste it.
                 </p>
               </div>
             </div>
@@ -502,7 +508,7 @@ export const SubAppPushModal: React.FC<SubAppPushModalProps> = ({
                 type="button"
                 disabled={Boolean(busy)}
                 onClick={() => void handleCopyConnectionKey(true)}
-                title="Unsubscribe expired push token and create a brand-new Connection Key"
+                title="Refresh the underlying browser push channel while keeping your exact same permanent Connection Key"
                 className={`py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 border transition cursor-pointer disabled:opacity-60 ${
                   isDarkMode
                     ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-emerald-300'
@@ -514,7 +520,7 @@ export const SubAppPushModal: React.FC<SubAppPushModalProps> = ({
                 ) : (
                   <RefreshCw className="w-3.5 h-3.5" />
                 )}
-                <span>Reset Key</span>
+                <span>Refresh Channel</span>
               </button>
             </div>
           </div>

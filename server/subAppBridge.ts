@@ -33,6 +33,7 @@ interface BridgeStoreData {
   syncBuckets: Record<string, SyncBucket>;
   subAppSubscriptions: Record<string, SubAppPushSubscriptionRecord[]>;
   customLogos?: Record<string, CustomAppLogoRecord>;
+  renewalNeeded?: Record<string, boolean>;
   vapid?: {
     publicKey: string;
     privateKey: string;
@@ -209,6 +210,8 @@ async function kvGetStore(): Promise<BridgeStoreData | null> {
           : {},
       customLogos:
         parsed.customLogos && typeof parsed.customLogos === 'object' ? parsed.customLogos : {},
+      renewalNeeded:
+        parsed.renewalNeeded && typeof parsed.renewalNeeded === 'object' ? parsed.renewalNeeded : {},
       vapid: parsed.vapid,
     };
   } catch {
@@ -246,6 +249,8 @@ function readLocalStore(): BridgeStoreData {
             : {},
         customLogos:
           parsed.customLogos && typeof parsed.customLogos === 'object' ? parsed.customLogos : {},
+        renewalNeeded:
+          parsed.renewalNeeded && typeof parsed.renewalNeeded === 'object' ? parsed.renewalNeeded : {},
         vapid: parsed.vapid,
       };
       return memoryStore;
@@ -257,6 +262,7 @@ function readLocalStore(): BridgeStoreData {
     syncBuckets: {},
     subAppSubscriptions: {},
     customLogos: {},
+    renewalNeeded: {},
   };
   return memoryStore;
 }
@@ -529,9 +535,11 @@ export async function handleBridgeAction(params: {
       platformRaw === 'ios' || platformRaw === 'android' ? platformRaw : 'desktop';
 
     const store = await loadStore(true);
-    const list = [...(store.subAppSubscriptions[bucketKey] || [])].filter(
-      (item) => !(item.subAppId === subAppId && item.endpoint === sub.endpoint)
-    );
+    const replaceExisting = body.replaceExisting === true;
+    const list = [...(store.subAppSubscriptions[bucketKey] || [])].filter((item) => {
+      if (replaceExisting && item.subAppId === subAppId) return false;
+      return !(item.subAppId === subAppId && item.endpoint === sub.endpoint);
+    });
 
     list.push({
       subAppId,
@@ -546,6 +554,8 @@ export async function handleBridgeAction(params: {
     });
 
     store.subAppSubscriptions[bucketKey] = list.slice(-MAX_SUBS_PER_BUCKET);
+    if (!store.renewalNeeded) store.renewalNeeded = {};
+    store.renewalNeeded[`${bucketKey}:${subAppId}`] = false;
     await saveStore(store);
 
     const countForSubApp = store.subAppSubscriptions[bucketKey].filter(
@@ -566,18 +576,25 @@ export async function handleBridgeAction(params: {
   // 5. GET Sub-App Subscription Status
   if (method === 'GET' && pathname === '/api/subapp/status') {
     const bucketKey = sanitizeBucketKey(query.bucketKey || query.key);
+    const subAppFilter = String(query.subAppId || '').trim().toLowerCase();
     const store = await loadStore(true);
     const list = store.subAppSubscriptions[bucketKey] || [];
     const counts: Record<string, number> = {};
     for (const id of VALID_SUB_APPS) {
       counts[id] = list.filter((item) => item.subAppId === id).length;
     }
+    const renewalNeeded = subAppFilter
+      ? Boolean(store.renewalNeeded?.[`${bucketKey}:${subAppFilter}`])
+      : Object.entries(store.renewalNeeded || {}).some(
+          ([k, v]) => k.startsWith(`${bucketKey}:`) && v === true
+        );
     return {
       status: 200,
       body: {
         ok: true,
         bucketKey,
         counts,
+        renewalNeeded,
         persistentStore: Boolean(getKvConfig() || !IS_VERCEL),
       },
     };
@@ -593,12 +610,15 @@ export async function handleBridgeAction(params: {
 
     const store = await loadStore(true);
     const allSubs = store.subAppSubscriptions[bucketKey] || [];
-    const storedTargets = allSubs.filter((item) => item.subAppId === subAppId);
+    const storedTargets = allSubs
+      .filter((item) => item.subAppId === subAppId)
+      .sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0));
 
     const mergedByEndpoint = new Map<
       string,
       { endpoint: string; expirationTime: number | null; keys: { p256dh: string; auth: string } }
     >();
+    // Prefer freshest server-stored rotated subscriptions under this permanent pairId first
     for (const t of storedTargets) {
       mergedByEndpoint.set(t.endpoint, {
         endpoint: t.endpoint,
@@ -619,7 +639,8 @@ export async function handleBridgeAction(params: {
           typeof item.keys?.p256dh === 'string' &&
           item.keys.p256dh.length >= 16 &&
           typeof item.keys?.auth === 'string' &&
-          item.keys.auth.length >= 8
+          item.keys.auth.length >= 8 &&
+          !mergedByEndpoint.has(item.endpoint)
         ) {
           mergedByEndpoint.set(item.endpoint, {
             endpoint: item.endpoint,
@@ -631,22 +652,6 @@ export async function handleBridgeAction(params: {
     }
 
     const targets = Array.from(mergedByEndpoint.values());
-    if (targets.length === 0) {
-      return {
-        status: 200,
-        body: {
-          ok: true,
-          delivered: 0,
-          total: 0,
-          failed: 0,
-          reason: 'no_subapp_subscription',
-        },
-      };
-    }
-
-    const vapid = await resolveVapidPair();
-    setVapidDetails(vapid.subject, vapid.publicKey, vapid.privateKey);
-
     const payloadObj: Record<string, unknown> = {
       appName: String(body.appName || subAppId),
       title: String(body.title || 'CBE').slice(0, 120),
@@ -665,16 +670,61 @@ export async function handleBridgeAction(params: {
     }
     const payloadJson = JSON.stringify(payloadObj);
 
+    const queuePendingPush = () => {
+      if (!store.syncBuckets[bucketKey]) store.syncBuckets[bucketKey] = {};
+      const prevRaw = store.syncBuckets[bucketKey]['cbe_pending_push_queue']?.value;
+      let queue: unknown[] = [];
+      try {
+        const parsed = prevRaw ? JSON.parse(prevRaw) : [];
+        if (Array.isArray(parsed)) queue = parsed;
+      } catch {}
+      queue.push(payloadObj);
+      store.syncBuckets[bucketKey]['cbe_pending_push_queue'] = {
+        value: JSON.stringify(queue.slice(-20)),
+        updatedAt: Date.now(),
+      };
+    };
+
+    if (targets.length === 0) {
+      queuePendingPush();
+      if (!store.renewalNeeded) store.renewalNeeded = {};
+      store.renewalNeeded[`${bucketKey}:${subAppId}`] = true;
+      await saveStore(store);
+      return {
+        status: 200,
+        body: {
+          ok: true,
+          delivered: 0,
+          total: 0,
+          failed: 0,
+          queued: true,
+          renewalRequested: true,
+          reason: 'no_subapp_subscription',
+        },
+      };
+    }
+
+    const vapid = await resolveVapidPair();
+    setVapidDetails(vapid.subject, vapid.publicKey, vapid.privateKey);
+
     let delivered = 0;
     let failed = 0;
     const expiredEndpoints = new Set<string>();
     const errorCodes: number[] = [];
+    let latestSubscription: {
+      endpoint: string;
+      expirationTime: number | null;
+      keys: { p256dh: string; auth: string };
+    } | null = null;
 
     await Promise.all(
       targets.map(async (target) => {
         try {
           await sendNotification(target, payloadJson, { TTL: 180, urgency: 'high' });
           delivered += 1;
+          if (!latestSubscription) {
+            latestSubscription = target;
+          }
         } catch (err: any) {
           failed += 1;
           const statusCode = Number(err?.statusCode || 0);
@@ -686,10 +736,27 @@ export async function handleBridgeAction(params: {
       })
     );
 
+    let storeDirty = false;
     if (expiredEndpoints.size > 0 && storedTargets.length > 0) {
       store.subAppSubscriptions[bucketKey] = allSubs.filter(
         (item) => !(item.subAppId === subAppId && expiredEndpoints.has(item.endpoint))
       );
+      storeDirty = true;
+    }
+
+    if (!store.renewalNeeded) store.renewalNeeded = {};
+    if (delivered > 0) {
+      if (store.renewalNeeded[`${bucketKey}:${subAppId}`]) {
+        store.renewalNeeded[`${bucketKey}:${subAppId}`] = false;
+        storeDirty = true;
+      }
+    } else {
+      queuePendingPush();
+      store.renewalNeeded[`${bucketKey}:${subAppId}`] = true;
+      storeDirty = true;
+    }
+
+    if (storeDirty) {
       await saveStore(store);
     }
 
@@ -700,6 +767,9 @@ export async function handleBridgeAction(params: {
         delivered,
         total: targets.length,
         failed,
+        queued: delivered === 0,
+        renewalRequested: delivered === 0,
+        latestSubscription,
         errorCodes,
         expiredEndpoints: Array.from(expiredEndpoints),
         vapidSource: vapid.source,

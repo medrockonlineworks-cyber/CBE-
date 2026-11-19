@@ -253,9 +253,37 @@ export default function App() {
       }
     };
     window.addEventListener('cbe_subapp_launch', handleNativeSubAppLaunch);
+
+    // Keep permanent standalone sub-app Connection Keys alive automatically whenever the sub-app opens or resumes
+    const maintainCurrentSubApp = (forceCheck = false) => {
+      if (Capacitor.isNativePlatform()) return;
+      const slug = window.location.pathname.toLowerCase().replace(/^\/+|\/+$/g, '').split('/')[0];
+      if (
+        slug === 'sms' ||
+        slug === 'truecaller' ||
+        slug === 'telebirr' ||
+        slug === 'dashen' ||
+        slug === 'telegram' ||
+        slug === 'phone'
+      ) {
+        void PushNotificationService.autoMaintainSubAppSubscription(slug, { forceCheck });
+      }
+    };
+    maintainCurrentSubApp(true);
+    const onSubAppFocus = () => maintainCurrentSubApp(false);
+    const onSubAppVisible = () => {
+      if (document.visibilityState === 'visible') {
+        maintainCurrentSubApp(false);
+      }
+    };
+    window.addEventListener('focus', onSubAppFocus);
+    document.addEventListener('visibilitychange', onSubAppVisible);
+
     return () => {
       mounted = false;
       window.removeEventListener('cbe_subapp_launch', handleNativeSubAppLaunch);
+      window.removeEventListener('focus', onSubAppFocus);
+      document.removeEventListener('visibilitychange', onSubAppVisible);
     };
   }, []);
   const [activeTab, setActiveTab] = useState<TabType>('home');

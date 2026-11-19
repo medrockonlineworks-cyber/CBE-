@@ -224,9 +224,79 @@ self.addEventListener('notificationclick', function (event) {
   );
 });
 
+const SW_META_DB_NAME = 'cbe_subapp_meta_db';
+const SW_META_STORE_NAME = 'meta';
+
+function readSwMeta(key) {
+  return new Promise(function (resolve) {
+    try {
+      if (!self.indexedDB) {
+        resolve(null);
+        return;
+      }
+      const req = self.indexedDB.open(SW_META_DB_NAME, 1);
+      req.onupgradeneeded = function () {
+        const db = req.result;
+        if (!db.objectStoreNames.contains(SW_META_STORE_NAME)) {
+          db.createObjectStore(SW_META_STORE_NAME, { keyPath: 'key' });
+        }
+      };
+      req.onsuccess = function () {
+        try {
+          const db = req.result;
+          if (!db.objectStoreNames.contains(SW_META_STORE_NAME)) {
+            db.close();
+            resolve(null);
+            return;
+          }
+          const tx = db.transaction(SW_META_STORE_NAME, 'readonly');
+          const getReq = tx.objectStore(SW_META_STORE_NAME).get(key);
+          getReq.onsuccess = function () {
+            const val = getReq.result ? getReq.result.value : null;
+            try {
+              db.close();
+            } catch (_) {}
+            resolve(val);
+          };
+          getReq.onerror = function () {
+            try {
+              db.close();
+            } catch (_) {}
+            resolve(null);
+          };
+        } catch (_) {
+          resolve(null);
+        }
+      };
+      req.onerror = function () {
+        resolve(null);
+      };
+    } catch (_) {
+      resolve(null);
+    }
+  });
+}
+
+function detectSubAppFromScope() {
+  try {
+    const scopePath = new URL(self.registration.scope).pathname.toLowerCase().replace(/^\/+|\/+$/g, '');
+    if (
+      scopePath === 'sms' ||
+      scopePath === 'truecaller' ||
+      scopePath === 'telebirr' ||
+      scopePath === 'dashen' ||
+      scopePath === 'telegram' ||
+      scopePath === 'phone'
+    ) {
+      return scopePath;
+    }
+  } catch (_) {}
+  return '';
+}
+
 self.addEventListener('pushsubscriptionchange', function (event) {
   event.waitUntil(
-    fetch('/api/subapp/vapid-key')
+    fetch('/api/subapp/vapid-key', { cache: 'no-store' })
       .then(function (res) {
         return res.json();
       })
@@ -246,14 +316,42 @@ self.addEventListener('pushsubscriptionchange', function (event) {
       })
       .then(function (newSubscription) {
         if (!newSubscription) return;
-        return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (clients) {
-          for (let i = 0; i < clients.length; i++) {
-            clients[i].postMessage({
-              type: 'CBE_PUSH_SUBSCRIPTION_CHANGED',
-              subscription: newSubscription.toJSON(),
-            });
-          }
-        });
+        const subJson = newSubscription.toJSON();
+        const subAppId = detectSubAppFromScope();
+
+        // Automatically re-register rotated token under permanent pairId even while app is closed!
+        const serverSyncPromise = subAppId
+          ? readSwMeta('pair_' + subAppId)
+              .then(function (pairId) {
+                if (!pairId) return;
+                return fetch('/api/subapp/subscribe', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    bucketKey: pairId,
+                    subAppId: subAppId,
+                    platform: 'android',
+                    replaceExisting: true,
+                    subscription: subJson,
+                  }),
+                });
+              })
+              .catch(function () {})
+          : Promise.resolve();
+
+        const notifyClientsPromise = self.clients
+          .matchAll({ type: 'window', includeUncontrolled: true })
+          .then(function (clients) {
+            for (let i = 0; i < clients.length; i++) {
+              clients[i].postMessage({
+                type: 'CBE_PUSH_SUBSCRIPTION_CHANGED',
+                subAppId: subAppId || null,
+                subscription: subJson,
+              });
+            }
+          });
+
+        return Promise.all([serverSyncPromise, notifyClientsPromise]);
       })
       .catch(function (err) {
         console.warn('[sw-push] pushsubscriptionchange warning:', err);

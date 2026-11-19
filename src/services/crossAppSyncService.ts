@@ -32,6 +32,10 @@ const BROADCAST_CHANNEL_NAME = 'cbe_cross_app_sync_v1';
 
 const SW_INBOX_DB_NAME = 'cbe_subapp_inbox_db';
 const SW_INBOX_STORE_NAME = 'incoming_items';
+const SW_META_DB_NAME = 'cbe_subapp_meta_db';
+const SW_META_STORE_NAME = 'meta';
+const PERMANENT_PAIR_ID_PREFIX = 'cbe_permanent_pair_id_';
+const PENDING_QUEUE_SEEN_TS_PREFIX = 'cbe_pending_queue_seen_ts_';
 
 interface SyncEntry {
   value: string;
@@ -49,6 +53,7 @@ export interface DirectPushSubscription {
 
 export interface PairedSubAppLink {
   subAppId: string;
+  pairId?: string;
   bucketKey: string;
   bridgeOrigin?: string;
   subscription: DirectPushSubscription;
@@ -151,16 +156,97 @@ class CrossAppSyncEngine {
     return DEFAULT_PUBLIC_BRIDGE_ORIGIN;
   }
 
+  private writeSwMeta(key: string, value: string): void {
+    if (typeof window === 'undefined' || !('indexedDB' in window)) return;
+    try {
+      const req = window.indexedDB.open(SW_META_DB_NAME, 1);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains(SW_META_STORE_NAME)) {
+          db.createObjectStore(SW_META_STORE_NAME, { keyPath: 'key' });
+        }
+      };
+      req.onsuccess = () => {
+        const db = req.result;
+        try {
+          if (!db.objectStoreNames.contains(SW_META_STORE_NAME)) {
+            db.close();
+            return;
+          }
+          const tx = db.transaction(SW_META_STORE_NAME, 'readwrite');
+          tx.objectStore(SW_META_STORE_NAME).put({ key, value, updatedAt: Date.now() });
+          tx.oncomplete = () => {
+            try {
+              db.close();
+            } catch {}
+          };
+          tx.onerror = () => {
+            try {
+              db.close();
+            } catch {}
+          };
+        } catch {
+          try {
+            db.close();
+          } catch {}
+        }
+      };
+    } catch {
+      // Non-fatal IndexedDB mirror
+    }
+  }
+
   /**
-   * Generates a compact Special Connection Key (CBELINK-<SUBAPP>-<token>) encoding
-   * the standalone sub-app's permanent APNs/FCM push subscription, bridge origin & sync bucket.
+   * Returns a stable, non-expiring permanent pairId for a standalone sub-app (e.g. pair_sms_xxxxxxxxxxxx).
+   * Mirrored into IndexedDB (cbe_subapp_meta_db) so sw-push.js can auto-renew rotated FCM/APNs endpoints
+   * under the exact same permanent key even while the app is closed.
+   */
+  public getOrCreatePermanentPairId(subAppId: string): string {
+    const cleanSubApp = String(subAppId || 'sms').toLowerCase().replace(/[^a-z0-9]/g, '') || 'sms';
+    const storageKey = `${PERMANENT_PAIR_ID_PREFIX}${cleanSubApp}`;
+    let pairId = '';
+    if (typeof window !== 'undefined') {
+      try {
+        const existing = localStorage.getItem(storageKey);
+        if (existing && /^pair_[a-z0-9_-]{6,56}$/i.test(existing.trim())) {
+          pairId = existing.trim().toLowerCase();
+        }
+      } catch {}
+    }
+    if (!pairId) {
+      let rand = '';
+      try {
+        if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+          const bytes = new Uint8Array(8);
+          crypto.getRandomValues(bytes);
+          rand = Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+        }
+      } catch {}
+      if (!rand) {
+        rand = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
+      }
+      pairId = `pair_${cleanSubApp}_${rand.slice(0, 16)}`.slice(0, 60);
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem(storageKey, pairId);
+        } catch {}
+      }
+    }
+    this.writeSwMeta(`pair_${cleanSubApp}`, pairId);
+    return pairId;
+  }
+
+  /**
+   * Generates a compact Permanent Connection Key (CBELINK-<SUBAPP>-<token>) encoding
+   * a permanent non-expiring pairId + fallback APNs/FCM push subscription + bridge origin.
    */
   public encodeConnectionKey(
     subAppId: string,
     subscription: PushSubscriptionJSON | DirectPushSubscription,
-    bucketKey?: string
+    pairIdOverride?: string
   ): string {
     const cleanSubApp = String(subAppId || 'sms').toLowerCase();
+    const permanentPairId = pairIdOverride || this.getOrCreatePermanentPairId(cleanSubApp);
     const origin =
       typeof window !== 'undefined' &&
       window.location.origin.startsWith('https://') &&
@@ -168,9 +254,10 @@ class CrossAppSyncEngine {
         ? window.location.origin
         : DEFAULT_PUBLIC_BRIDGE_ORIGIN;
     const payload = {
-      v: 1,
+      v: 2,
       a: cleanSubApp,
-      b: bucketKey || this.getBucketKey(),
+      i: permanentPairId,
+      b: permanentPairId,
       o: origin,
       e: subscription.endpoint || '',
       p: subscription.keys?.p256dh || '',
@@ -206,6 +293,7 @@ class CrossAppSyncEngine {
       const data = JSON.parse(jsonStr) as {
         v?: number;
         a?: string;
+        i?: string;
         b?: string;
         o?: string;
         e?: string;
@@ -233,11 +321,17 @@ class CrossAppSyncEngine {
           ? data.o.replace(/\/+$/, '')
           : DEFAULT_PUBLIC_BRIDGE_ORIGIN;
 
+      const resolvedPairId =
+        (typeof data.i === 'string' && data.i.trim()) ||
+        (typeof data.b === 'string' && data.b.trim()) ||
+        this.getBucketKey();
+
       return {
         ok: true,
         link: {
           subAppId,
-          bucketKey: data.b || this.getBucketKey(),
+          pairId: resolvedPairId,
+          bucketKey: resolvedPairId,
           bridgeOrigin,
           subscription: {
             endpoint: data.e,
@@ -293,22 +387,60 @@ class CrossAppSyncEngine {
     return next;
   }
 
-  public pruneExpiredEndpoints(endpoints: string[]): PairedSubAppLink[] {
-    if (!Array.isArray(endpoints) || endpoints.length === 0) {
-      return this.getPairedSubAppLinks();
+  /**
+   * Silently updates the cached fallback subscription of an existing permanent Connection Key
+   * when the server or Service Worker reports a freshly rotated FCM/APNs endpoint.
+   * Never deletes or expires the user's paired link.
+   */
+  public refreshPairedLinkSubscription(
+    subAppId: string,
+    newSub: DirectPushSubscription | PushSubscriptionJSON
+  ): void {
+    if (
+      !newSub?.endpoint ||
+      typeof newSub.endpoint !== 'string' ||
+      !newSub.keys?.p256dh ||
+      !newSub.keys?.auth
+    ) {
+      return;
     }
-    const expiredSet = new Set(endpoints.filter((e) => typeof e === 'string' && e.length > 0));
-    if (expiredSet.size === 0) return this.getPairedSubAppLinks();
-
     const current = this.getPairedSubAppLinks();
-    const next = current.filter((item) => !expiredSet.has(item.subscription.endpoint));
-    if (next.length !== current.length) {
+    let changed = false;
+    const next = current.map((item) => {
+      if (item.subAppId !== subAppId) return item;
+      if (
+        item.subscription.endpoint === newSub.endpoint &&
+        item.subscription.keys.p256dh === newSub.keys?.p256dh &&
+        item.subscription.keys.auth === newSub.keys?.auth
+      ) {
+        return item;
+      }
+      changed = true;
+      return {
+        ...item,
+        subscription: {
+          endpoint: newSub.endpoint!,
+          expirationTime: typeof newSub.expirationTime === 'number' ? newSub.expirationTime : null,
+          keys: {
+            p256dh: newSub.keys!.p256dh!,
+            auth: newSub.keys!.auth!,
+          },
+        },
+      };
+    });
+    if (changed) {
       try {
         localStorage.setItem(PAIRED_LINKS_STORAGE_KEY, JSON.stringify(next));
         window.dispatchEvent(new CustomEvent('cbe_paired_links_updated'));
       } catch {}
     }
-    return next;
+  }
+
+  /**
+   * Retained for backward compatibility; permanent Connection Keys are NEVER pruned/expired on 410.
+   */
+  public pruneExpiredEndpoints(_endpoints: string[]): PairedSubAppLink[] {
+    return this.getPairedSubAppLinks();
   }
 
   public removePairedSubAppLink(subAppId: string): PairedSubAppLink[] {
@@ -590,26 +722,78 @@ class CrossAppSyncEngine {
     return anyApplied;
   }
 
+  private detectSubAppSlugFromPath(): string | null {
+    if (typeof window === 'undefined') return null;
+    const slug = window.location.pathname.toLowerCase().replace(/^\/+|\/+$/g, '').split('/')[0];
+    return slug && VALID_SUB_APPS.has(slug) ? slug : null;
+  }
+
+  private drainPendingQueueEntry(entries: Record<string, SyncEntry>, pairId: string): boolean {
+    const queueEntry = entries['cbe_pending_push_queue'];
+    if (!queueEntry || typeof queueEntry.value !== 'string') return false;
+    try {
+      const items = JSON.parse(queueEntry.value);
+      if (!Array.isArray(items) || items.length === 0) return false;
+      const seenKey = `${PENDING_QUEUE_SEEN_TS_PREFIX}${pairId}`;
+      const lastSeenTs = Number(localStorage.getItem(seenKey) || '0');
+      let maxTs = lastSeenTs;
+      let appliedAny = false;
+      for (const item of items) {
+        if (!item || typeof item !== 'object') continue;
+        const ts = Number((item as any).timestamp || 0);
+        if (ts > lastSeenTs || lastSeenTs === 0) {
+          if (this.applyIncomingPushPayload(item)) {
+            appliedAny = true;
+          }
+          if (ts > maxTs) maxTs = ts;
+        }
+      }
+      if (maxTs > lastSeenTs) {
+        try {
+          localStorage.setItem(seenKey, String(maxTs));
+        } catch {}
+      }
+      return appliedAny;
+    } catch {
+      return false;
+    }
+  }
+
   public async pullNow(): Promise<boolean> {
     if (typeof window === 'undefined' || Capacitor.isNativePlatform()) return false;
-    const fromSwInbox = await this.drainServiceWorkerInbox();
-    try {
-      const bucketKey = this.getBucketKey();
-      const res = await fetch(`/api/sync/state?key=${encodeURIComponent(bucketKey)}`, {
-        cache: 'no-store',
-      });
-      if (!res.ok) return fromSwInbox;
-      const ct = (res.headers.get('content-type') || '').toLowerCase();
-      if (!ct.includes('application/json')) return fromSwInbox;
-      const data = await res.json();
-      if (data?.ok && data?.entries) {
-        const applied = this.applyRemoteEntries(data.entries);
-        return applied || fromSwInbox;
-      }
-      return fromSwInbox;
-    } catch {
-      return fromSwInbox;
+    let appliedAny = await this.drainServiceWorkerInbox();
+
+    const keysToPull = new Set<string>([this.getBucketKey()]);
+    const subSlug = this.detectSubAppSlugFromPath();
+    let permanentPairId = '';
+    if (subSlug) {
+      permanentPairId = this.getOrCreatePermanentPairId(subSlug);
+      keysToPull.add(permanentPairId);
     }
+
+    for (const key of keysToPull) {
+      try {
+        const res = await fetch(`/api/sync/state?key=${encodeURIComponent(key)}`, {
+          cache: 'no-store',
+        });
+        if (!res.ok) continue;
+        const ct = (res.headers.get('content-type') || '').toLowerCase();
+        if (!ct.includes('application/json')) continue;
+        const data = await res.json();
+        if (data?.ok && data?.entries) {
+          if (this.applyRemoteEntries(data.entries)) {
+            appliedAny = true;
+          }
+          if (this.drainPendingQueueEntry(data.entries, permanentPairId || key)) {
+            appliedAny = true;
+          }
+        }
+      } catch {
+        // Non-fatal
+      }
+    }
+
+    return appliedAny;
   }
 
   public schedulePush(): void {
@@ -630,21 +814,36 @@ class CrossAppSyncEngine {
     } catch {}
 
     // When running inside a native Android APK with paired standalone sub-apps, still push sync state to bridgeOrigin
-    const hasPairedLinks = this.getPairedSubAppLinks().length > 0;
-    if (Capacitor.isNativePlatform() && !hasPairedLinks) return true;
+    const pairedLinks = this.getPairedSubAppLinks();
+    if (Capacitor.isNativePlatform() && pairedLinks.length === 0) return true;
 
-    try {
-      const bucketKey = this.getBucketKey();
-      const baseUrl = this.getBridgeBaseUrl();
-      const res = await fetch(`${baseUrl}/api/sync/state`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key: bucketKey, entries: changed }),
-      });
-      return res.ok;
-    } catch {
-      return false;
+    const targetKeys = new Set<string>([this.getBucketKey()]);
+    for (const link of pairedLinks) {
+      if (link.pairId) targetKeys.add(link.pairId);
+      if (link.bucketKey) targetKeys.add(link.bucketKey);
     }
+    const subSlug = this.detectSubAppSlugFromPath();
+    if (subSlug) {
+      targetKeys.add(this.getOrCreatePermanentPairId(subSlug));
+    }
+
+    let anyOk = false;
+    const baseUrl = this.getBridgeBaseUrl();
+    await Promise.all(
+      Array.from(targetKeys).map(async (bucketKey) => {
+        try {
+          const res = await fetch(`${baseUrl}/api/sync/state`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: bucketKey, entries: changed }),
+          });
+          if (res.ok) anyOk = true;
+        } catch {
+          // Non-fatal
+        }
+      })
+    );
+    return anyOk;
   }
 
   public start(): void {
