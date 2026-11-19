@@ -903,6 +903,22 @@ export class SmsService {
             privateBody: 'New CBE SMS message received.',
             reference: newSms.transactionId,
             tag: `cbe-sms-${newSms.id}`,
+            smsRecord: {
+              id: newSms.id,
+              transactionId: newSms.transactionId,
+              accountNumber: newSms.accountNumber,
+              accountName: newSms.accountName,
+              role: newSms.role,
+              bankName: newSms.bankName,
+              sender: newSms.sender,
+              recipient: newSms.recipient,
+              type: newSms.type,
+              amount: newSms.amount,
+              balance: newSms.balance,
+              message: newSms.message,
+              timestamp: newSms.timestamp,
+              forAllUsers: true,
+            },
           });
         }
       }

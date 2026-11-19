@@ -14,6 +14,9 @@ import {
   Smartphone,
   Download,
   AlertCircle,
+  KeyRound,
+  Link2,
+  Unlink,
 } from 'lucide-react';
 import type { UserProfile } from '../types';
 import {
@@ -21,11 +24,13 @@ import {
   PlatformPushCapabilities,
   PushNotificationService,
   SUB_APP_NOTIFICATION_LIST,
+  SUB_APP_NOTIFICATION_META,
   SubAppNotificationId,
   SubAppPushPreferencesMap,
   SubscribedDeviceInfo,
 } from '../services/pushNotificationService';
 import { SubAppInstallService } from '../services/subAppInstallService';
+import { CrossAppSyncService, PairedSubAppLink } from '../services/crossAppSyncService';
 
 interface NotificationSettingsCardProps {
   currentUser: UserProfile;
@@ -64,6 +69,10 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
   );
   const [testingSubApp, setTestingSubApp] = useState<SubAppNotificationId | null>(null);
   const [installingSubApp, setInstallingSubApp] = useState<SubAppNotificationId | null>(null);
+  const [connectionKeyInput, setConnectionKeyInput] = useState('');
+  const [pairedLinks, setPairedLinks] = useState<PairedSubAppLink[]>(() =>
+    CrossAppSyncService.getPairedSubAppLinks()
+  );
 
   const refreshStatus = useCallback(async () => {
     setCaps(PushNotificationService.getPlatformCapabilities());
@@ -263,6 +272,30 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
       return;
     }
     showBannerSuccess(res.message);
+  };
+
+  const handleConnectSubAppKey = () => {
+    setLocalError('');
+    setLocalSuccess('');
+    const parsed = CrossAppSyncService.parseConnectionKey(connectionKeyInput);
+    if (!parsed.ok || !parsed.link) {
+      showBannerError(parsed.error || 'Invalid Special Connection Key.');
+      return;
+    }
+    const updated = CrossAppSyncService.savePairedSubAppLink(parsed.link);
+    setPairedLinks(updated);
+    setConnectionKeyInput('');
+    const subMeta = SUB_APP_NOTIFICATION_META[parsed.link.subAppId as SubAppNotificationId];
+    const name = subMeta ? subMeta.shortName : parsed.link.subAppId;
+    showBannerSuccess(
+      `${name} connected! Tap Test next to ${subMeta?.name || name} below to verify the notification pops up from ${name}.`
+    );
+  };
+
+  const handleUnlinkSubApp = (subAppId: SubAppNotificationId, label: string) => {
+    const updated = CrossAppSyncService.removePairedSubAppLink(subAppId);
+    setPairedLinks(updated);
+    showBannerSuccess(`Disconnected ${label}. You can paste a new Connection Key anytime.`);
   };
 
   const permissionBadge = (() => {
@@ -569,14 +602,50 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
             Sub-Application Push Alerts
           </p>
           <p className="text-[10px] text-gray-400 mt-0.5">
-            Native Android APK &amp; Lock Screen pop-down alerts for SMS Simulator and companion apps
+            Connect installed standalone sub-apps (Messages, Truecaller, etc.) so transfers &amp; Test alerts appear with their own logo
           </p>
         </div>
+
+        {/* Connect Standalone Sub-App via Special Connection Key */}
+        {!Capacitor.isNativePlatform() && (
+          <div className="rounded-2xl p-3 bg-purple-50/70 border border-purple-100 space-y-2">
+            <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-[#70189F]">
+              <KeyRound className="w-3.5 h-3.5 shrink-0" />
+              <span>Connect Installed Sub-App (Special Key)</span>
+            </div>
+            <p className="text-[10px] text-gray-600 leading-relaxed">
+              Open your installed <strong>Messages</strong> app → tap the <strong>Bell</strong> icon →
+              tap <strong>Generate &amp; Copy Connection Key</strong> → paste it below and tap{' '}
+              <strong>Connect</strong>.
+            </p>
+            <div className="flex items-center gap-1.5">
+              <input
+                id="input-subapp-connection-key"
+                type="text"
+                value={connectionKeyInput}
+                onChange={(e) => setConnectionKeyInput(e.target.value)}
+                placeholder="Paste CBELINK-SMS-... key here"
+                className="flex-1 min-w-0 px-3 py-2 rounded-xl bg-white border border-purple-200 text-xs font-mono text-gray-800 placeholder-gray-400 outline-none focus:border-[#70189F]"
+              />
+              <button
+                id="btn-connect-subapp-key"
+                type="button"
+                disabled={!connectionKeyInput.trim()}
+                onClick={handleConnectSubAppKey}
+                className="px-3 py-2 rounded-xl bg-[#70189F] hover:bg-[#5c1285] text-white font-bold text-xs flex items-center gap-1 shadow-xs transition cursor-pointer disabled:opacity-45 shrink-0"
+              >
+                <Link2 className="w-3.5 h-3.5" />
+                <span>Connect</span>
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-2.5">
           {SUB_APP_NOTIFICATION_LIST.map((app) => {
             const appCfg = subAppPrefs[app.id];
             const isTesting = testingSubApp === app.id;
+            const isLinked = pairedLinks.some((l) => l.subAppId === app.id);
             return (
               <div
                 key={app.id}
@@ -589,7 +658,14 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
                     className="w-7 h-7 rounded-lg shrink-0 object-cover shadow-2xs"
                   />
                   <div className="min-w-0">
-                    <p className="text-xs font-bold text-gray-800 truncate">{app.name}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-xs font-bold text-gray-800 truncate">{app.name}</p>
+                      {isLinked && (
+                        <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[9px] font-extrabold shrink-0">
+                          Linked
+                        </span>
+                      )}
+                    </div>
                     <p className="text-[10px] text-gray-400 leading-snug truncate">
                       {app.description}
                     </p>
@@ -597,6 +673,17 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
                 </div>
 
                 <div className="flex items-center gap-1.5 shrink-0">
+                  {isLinked && (
+                    <button
+                      type="button"
+                      title={`Disconnect ${app.shortName}`}
+                      onClick={() => handleUnlinkSubApp(app.id, app.shortName)}
+                      className="p-1.5 rounded-xl bg-white hover:bg-rose-50 border border-gray-200 text-gray-400 hover:text-rose-600 transition cursor-pointer"
+                    >
+                      <Unlink className="w-3 h-3" />
+                    </button>
+                  )}
+
                   <button
                     id={`btn-install-subapp-${app.id}`}
                     type="button"

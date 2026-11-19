@@ -10,6 +10,7 @@ import {
   ExternalLink,
   Eye,
   EyeOff,
+  KeyRound,
   Loader2,
   Send,
   Share,
@@ -52,6 +53,8 @@ export const SubAppPushModal: React.FC<SubAppPushModalProps> = ({
   const [customSender, setCustomSender] = useState(meta.defaultSender);
   const [customBody, setCustomBody] = useState('');
   const [copiedUrl, setCopiedUrl] = useState(false);
+  const [connectionKey, setConnectionKey] = useState('');
+  const [copiedConnKey, setCopiedConnKey] = useState(false);
 
   const subAppFullUrl =
     typeof window !== 'undefined'
@@ -99,7 +102,47 @@ export const SubAppPushModal: React.FC<SubAppPushModalProps> = ({
       setErrorMsg(res.message || 'Unable to enable notifications.');
       return;
     }
+    if (res.connectionKey) {
+      setConnectionKey(res.connectionKey);
+    }
     setSuccessMsg(res.message || `${meta.name} notifications enabled!`);
+  };
+
+  const handleCopyConnectionKey = async () => {
+    if (busy) return;
+    setBusy('connkey');
+    setErrorMsg('');
+    setSuccessMsg('');
+    const res = await PushNotificationService.getOrCreateSubAppConnectionKey(subAppId);
+    await syncState();
+    setBusy(null);
+    if (!res.ok || !res.connectionKey) {
+      setErrorMsg(res.error || 'Could not create Connection Key.');
+      return;
+    }
+    setConnectionKey(res.connectionKey);
+    try {
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        await navigator.clipboard.writeText(res.connectionKey);
+      } else {
+        const ta = document.createElement('textarea');
+        ta.value = res.connectionKey;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      setCopiedConnKey(true);
+      setSuccessMsg(
+        `Connection Key copied! Open CBE Mobile → Profile → Push Notifications → paste it in "Connect Installed Sub-App" and tap Connect.`
+      );
+      setTimeout(() => setCopiedConnKey(false), 3000);
+    } catch {
+      setSuccessMsg('Connection Key generated below — tap and copy it, then paste in CBE Mobile Settings.');
+    }
   };
 
   const handleToggleEnabled = () => {
@@ -339,6 +382,67 @@ export const SubAppPushModal: React.FC<SubAppPushModalProps> = ({
             >
               {config.enabled ? <BellOff className="w-3.5 h-3.5" /> : <Bell className="w-3.5 h-3.5" />}
               <span>{config.enabled ? 'Pause Alerts' : 'Resume Alerts'}</span>
+            </button>
+          </div>
+        )}
+
+        {/* Special Connection Key — Direct Link to CBE Mobile (Stateless APNs/FCM Bridge) */}
+        {!Capacitor.isNativePlatform() && !caps.requiresIosHomeScreenInstall && (
+          <div
+            className={`rounded-2xl p-3.5 border space-y-2.5 ${
+              isDarkMode ? 'bg-emerald-950/30 border-emerald-500/30' : 'bg-emerald-50 border-emerald-200'
+            }`}
+          >
+            <div className="flex items-start gap-2">
+              <KeyRound className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+              <div className="min-w-0">
+                <p className="text-xs font-extrabold">
+                  Special Connection Key (Sync with CBE Mobile)
+                </p>
+                <p
+                  className={`text-[10.5px] mt-0.5 leading-snug ${
+                    isDarkMode ? 'text-neutral-300' : 'text-neutral-600'
+                  }`}
+                >
+                  Copy this key from your installed <strong>{meta.shortName}</strong> app and paste it
+                  once inside <strong>CBE Mobile → Profile → Push Notifications</strong> so transfers
+                  and Test alerts arrive here with {meta.shortName}&apos;s own icon.
+                </p>
+              </div>
+            </div>
+
+            {connectionKey && (
+              <div
+                className={`rounded-xl px-2.5 py-2 text-[10px] font-mono break-all select-all border ${
+                  isDarkMode
+                    ? 'bg-neutral-950/90 border-neutral-700 text-emerald-300'
+                    : 'bg-white border-emerald-200 text-emerald-900'
+                }`}
+              >
+                {connectionKey}
+              </div>
+            )}
+
+            <button
+              type="button"
+              disabled={Boolean(busy)}
+              onClick={() => void handleCopyConnectionKey()}
+              className="w-full py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.99] transition cursor-pointer disabled:opacity-60"
+            >
+              {busy === 'connkey' ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : copiedConnKey ? (
+                <Check className="w-3.5 h-3.5" />
+              ) : (
+                <Copy className="w-3.5 h-3.5" />
+              )}
+              <span>
+                {copiedConnKey
+                  ? 'Connection Key Copied!'
+                  : connectionKey
+                    ? 'Copy Connection Key Again'
+                    : `Generate & Copy ${meta.shortName} Connection Key`}
+              </span>
             </button>
           </div>
         )}

@@ -468,8 +468,44 @@ export async function handleBridgeAction(params: {
 
     const store = await loadStore(true);
     const allSubs = store.subAppSubscriptions[bucketKey] || [];
-    const targets = allSubs.filter((item) => item.subAppId === subAppId);
+    const storedTargets = allSubs.filter((item) => item.subAppId === subAppId);
 
+    const mergedByEndpoint = new Map<
+      string,
+      { endpoint: string; expirationTime: number | null; keys: { p256dh: string; auth: string } }
+    >();
+    for (const t of storedTargets) {
+      mergedByEndpoint.set(t.endpoint, {
+        endpoint: t.endpoint,
+        expirationTime: t.expirationTime,
+        keys: t.keys,
+      });
+    }
+    if (Array.isArray(body.directSubscriptions)) {
+      for (const rawItem of body.directSubscriptions.slice(0, 12)) {
+        if (!rawItem || typeof rawItem !== 'object') continue;
+        const item = rawItem as {
+          endpoint?: unknown;
+          expirationTime?: unknown;
+          keys?: { p256dh?: unknown; auth?: unknown };
+        };
+        if (
+          isValidEndpoint(item.endpoint) &&
+          typeof item.keys?.p256dh === 'string' &&
+          item.keys.p256dh.length >= 16 &&
+          typeof item.keys?.auth === 'string' &&
+          item.keys.auth.length >= 8
+        ) {
+          mergedByEndpoint.set(item.endpoint, {
+            endpoint: item.endpoint,
+            expirationTime: typeof item.expirationTime === 'number' ? item.expirationTime : null,
+            keys: { p256dh: item.keys.p256dh, auth: item.keys.auth },
+          });
+        }
+      }
+    }
+
+    const targets = Array.from(mergedByEndpoint.values());
     if (targets.length === 0) {
       return {
         status: 200,
@@ -486,7 +522,7 @@ export async function handleBridgeAction(params: {
     const vapid = await resolveVapidPair();
     setVapidDetails(vapid.subject, vapid.publicKey, vapid.privateKey);
 
-    const payloadJson = JSON.stringify({
+    const payloadObj: Record<string, unknown> = {
       appName: String(body.appName || subAppId),
       title: String(body.title || 'CBE').slice(0, 120),
       body: String(body.body || 'You have a new message.').slice(0, 260),
@@ -498,7 +534,11 @@ export async function handleBridgeAction(params: {
       category: typeof body.category === 'string' ? body.category : 'subapp',
       view: subAppId,
       timestamp: Date.now(),
-    });
+    };
+    if (body.smsRecord && typeof body.smsRecord === 'object') {
+      payloadObj.smsRecord = body.smsRecord;
+    }
+    const payloadJson = JSON.stringify(payloadObj);
 
     let delivered = 0;
     let failed = 0;
@@ -508,15 +548,7 @@ export async function handleBridgeAction(params: {
     await Promise.all(
       targets.map(async (target) => {
         try {
-          await sendNotification(
-            {
-              endpoint: target.endpoint,
-              expirationTime: target.expirationTime,
-              keys: target.keys,
-            },
-            payloadJson,
-            { TTL: 120, urgency: 'high' }
-          );
+          await sendNotification(target, payloadJson, { TTL: 180, urgency: 'high' });
           delivered += 1;
         } catch (err: any) {
           failed += 1;
@@ -529,7 +561,7 @@ export async function handleBridgeAction(params: {
       })
     );
 
-    if (expiredEndpoints.size > 0) {
+    if (expiredEndpoints.size > 0 && storedTargets.length > 0) {
       store.subAppSubscriptions[bucketKey] = allSubs.filter(
         (item) => !(item.subAppId === subAppId && expiredEndpoints.has(item.endpoint))
       );

@@ -1579,7 +1579,13 @@ export class PushNotificationService {
    */
   public static async subscribeSubAppWebPush(
     subAppId: SubAppNotificationId
-  ): Promise<{ ok: boolean; deviceCount?: number; error?: string }> {
+  ): Promise<{
+    ok: boolean;
+    deviceCount?: number;
+    subscription?: PushSubscriptionJSON;
+    connectionKey?: string;
+    error?: string;
+  }> {
     if (Capacitor.isNativePlatform()) {
       return { ok: true, deviceCount: 1 };
     }
@@ -1595,7 +1601,7 @@ export class PushNotificationService {
         '/api/subapp/vapid-key'
       );
       if (!keyRes.ok || !keyData?.publicKey) {
-        return { ok: false, error: keyData?.error || 'VAPID public key unavailable.' };
+        return { ok: false, error: keyData?.error || 'VAPID public key unavailable on server.' };
       }
 
       const appServerKey = urlBase64ToUint8Array(keyData.publicKey);
@@ -1618,38 +1624,89 @@ export class PushNotificationService {
         });
       }
 
+      const subJson = sub.toJSON();
+      const bucketKey = CrossAppSyncService.getBucketKey();
+      const connectionKey = CrossAppSyncService.encodeConnectionKey(subAppId, subJson, bucketKey);
+
       const platform: 'ios' | 'android' | 'desktop' = caps.isIOS
         ? 'ios'
         : caps.isAndroid
           ? 'android'
           : 'desktop';
 
-      const res = await fetch('/api/subapp/subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          bucketKey: CrossAppSyncService.getBucketKey(),
-          subAppId,
-          platform,
-          subscription: sub.toJSON(),
-        }),
-      });
-
-      const data = await safeParseJson<{ ok?: boolean; deviceCount?: number; error?: string }>(
-        res,
-        '/api/subapp/subscribe'
-      );
-      if (!res.ok || !data?.ok) {
-        return { ok: false, error: data?.error || 'Failed to register sub-app push channel.' };
+      // Also register on server bridge (best-effort alongside direct stateless Connection Key)
+      let deviceCount = 1;
+      try {
+        const res = await fetch('/api/subapp/subscribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            bucketKey,
+            subAppId,
+            platform,
+            subscription: subJson,
+          }),
+        });
+        const data = await safeParseJson<{ ok?: boolean; deviceCount?: number }>(
+          res,
+          '/api/subapp/subscribe'
+        );
+        if (res.ok && data?.ok && typeof data.deviceCount === 'number') {
+          deviceCount = data.deviceCount;
+        }
+      } catch {
+        // Direct Connection Key still works 100% statelessly
       }
 
-      return { ok: true, deviceCount: data.deviceCount ?? 1 };
+      return { ok: true, deviceCount, subscription: subJson, connectionKey };
     } catch (err) {
       return {
         ok: false,
         error: err instanceof Error ? err.message : 'Unable to subscribe sub-app push.',
       };
     }
+  }
+
+  /**
+   * Generates a Special Connection Key (CBELINK-...) for this installed standalone sub-app.
+   * Pasting this key once into CBE Mobile links both apps directly via Apple APNs / FCM
+   * with zero external database required.
+   */
+  public static async getOrCreateSubAppConnectionKey(
+    subAppId: SubAppNotificationId
+  ): Promise<{ ok: boolean; connectionKey?: string; error?: string }> {
+    const meta = SUB_APP_NOTIFICATION_META[subAppId];
+    if (Capacitor.isNativePlatform()) {
+      return {
+        ok: false,
+        error: 'Native Android APK already shares local storage directly — no pairing key needed.',
+      };
+    }
+
+    const caps = this.getPlatformCapabilities();
+    if (caps.requiresIosHomeScreenInstall) {
+      return {
+        ok: false,
+        error: `First open ${meta.shortName} from your iPhone Home Screen (Share → Add to Home Screen), then generate the key there.`,
+      };
+    }
+
+    if (caps.permission !== 'granted') {
+      const enabled = await this.enableSubAppNotifications(subAppId);
+      if (!enabled.ok) {
+        return { ok: false, error: enabled.message || 'Please allow notifications first.' };
+      }
+    }
+
+    const subRes = await this.subscribeSubAppWebPush(subAppId);
+    if (!subRes.ok || !subRes.connectionKey) {
+      return {
+        ok: false,
+        error: subRes.error || 'Could not generate Connection Key. Make sure the site is deployed with VAPID keys.',
+      };
+    }
+
+    return { ok: true, connectionKey: subRes.connectionKey };
   }
 
   /**
@@ -1678,16 +1735,21 @@ export class PushNotificationService {
     url: string;
     tag: string;
     reference?: string;
-  }): Promise<{ ok: boolean; delivered: number; total: number }> {
+    smsRecord?: Record<string, unknown>;
+  }): Promise<{ ok: boolean; delivered: number; total: number; errorCodes?: number[]; error?: string }> {
     if (Capacitor.isNativePlatform() || typeof window === 'undefined') {
       return { ok: false, delivered: 0, total: 0 };
     }
     try {
+      const pairedLinks = CrossAppSyncService.getPairedSubAppLinks(params.subAppId);
+      const directSubscriptions = pairedLinks.map((l) => l.subscription);
+
       const res = await fetch('/api/subapp/push', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           bucketKey: CrossAppSyncService.getBucketKey(),
+          directSubscriptions,
           ...params,
         }),
       });
@@ -1695,22 +1757,35 @@ export class PushNotificationService {
         ok?: boolean;
         delivered?: number;
         total?: number;
+        errorCodes?: number[];
+        error?: string;
       }>(res, '/api/subapp/push');
       if (!res.ok || !data?.ok) {
-        return { ok: false, delivered: 0, total: 0 };
+        return {
+          ok: false,
+          delivered: 0,
+          total: directSubscriptions.length,
+          error: data?.error || `HTTP ${res.status}`,
+        };
       }
       return {
         ok: true,
         delivered: Number(data.delivered || 0),
         total: Number(data.total || 0),
+        errorCodes: Array.isArray(data.errorCodes) ? data.errorCodes : [],
       };
-    } catch {
-      return { ok: false, delivered: 0, total: 0 };
+    } catch (err) {
+      return {
+        ok: false,
+        delivered: 0,
+        total: 0,
+        error: err instanceof Error ? err.message : 'Network error',
+      };
     }
   }
 
-  private static appendSyncedTestSms(sender: string, body: string): void {
-    if (typeof window === 'undefined') return;
+  private static appendSyncedTestSms(sender: string, body: string): Record<string, unknown> | undefined {
+    if (typeof window === 'undefined') return undefined;
     try {
       const STORAGE_MESSAGES_KEY = 'bank_sms_messages_v6';
       const raw = localStorage.getItem(STORAGE_MESSAGES_KEY);
@@ -1721,12 +1796,12 @@ export class PushNotificationService {
       const txId = `FT${Math.floor(1000000000 + Math.random() * 9000000000)}`;
       const nowIso = new Date().toISOString();
 
-      messages.push({
+      const record = {
         id: `sms-test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
         transactionId: txId,
         accountNumber: activeAcc,
         accountName: 'Leykun Jemaneh Ylma',
-        role: 'receiver',
+        role: 'receiver' as const,
         bankName: sender || 'CBE',
         sender: sender || 'CBE',
         recipient: 'Leykun Jemaneh Ylma',
@@ -1737,12 +1812,15 @@ export class PushNotificationService {
         timestamp: nowIso,
         read: false,
         forAllUsers: true,
-      });
+      };
 
+      messages.push(record);
       localStorage.setItem(STORAGE_MESSAGES_KEY, JSON.stringify(messages));
       window.dispatchEvent(new CustomEvent('sms-updated'));
+      return record;
     } catch (err) {
       console.warn('[PushNotificationService] Failed to append test SMS:', err);
+      return undefined;
     }
   }
 
@@ -1752,7 +1830,7 @@ export class PushNotificationService {
   public static async enableSubAppNotifications(
     subAppId: SubAppNotificationId,
     userOverride?: UserProfile | null
-  ): Promise<{ ok: boolean; message?: string }> {
+  ): Promise<{ ok: boolean; message?: string; connectionKey?: string }> {
     const meta = SUB_APP_NOTIFICATION_META[subAppId];
     const user = userOverride || this.resolveActiveUserForPush();
 
@@ -1826,7 +1904,8 @@ export class PushNotificationService {
     if (subRes.ok) {
       return {
         ok: true,
-        message: `${meta.shortName} push notifications enabled & synced with CBE Mobile!`,
+        connectionKey: subRes.connectionKey,
+        message: `${meta.shortName} push notifications enabled! Copy the Connection Key below into CBE Mobile to link both apps permanently.`,
       };
     }
 
@@ -1848,6 +1927,7 @@ export class PushNotificationService {
     reference?: string;
     tag?: string;
     forceEvenIfMuted?: boolean;
+    smsRecord?: Record<string, unknown>;
   }): Promise<boolean> {
     try {
       const meta = SUB_APP_NOTIFICATION_META[params.subAppId];
@@ -1894,6 +1974,7 @@ export class PushNotificationService {
           url: resolvedUrl,
           tag: resolvedTag,
           reference: params.reference,
+          smsRecord: params.smsRecord,
         });
 
         // If delivered directly to the installed standalone sub-app (e.g. Messages) while triggered
@@ -1941,7 +2022,7 @@ export class PushNotificationService {
   /**
    * Send a realistic test push notification for a specific sub-application.
    * When triggered from CBE Mobile, also writes & syncs a real CBE test SMS and delivers via
-   * APNs/FCM directly to the standalone installed sub-app if subscribed.
+   * APNs/FCM directly to the standalone installed sub-app using its paired Connection Key.
    */
   public static async sendSubAppTestNotification(
     subAppId: SubAppNotificationId,
@@ -1991,8 +2072,9 @@ export class PushNotificationService {
     const finalBody = custom?.body?.trim() || sample.body;
 
     // For SMS Simulator tests, also add the message to the CBE SMS inbox & push sync state
+    let smsRecord: Record<string, unknown> | undefined;
     if (subAppId === 'sms') {
-      this.appendSyncedTestSms(finalTitle, finalBody);
+      smsRecord = this.appendSyncedTestSms(finalTitle, finalBody);
       await CrossAppSyncService.pushChangedNow([
         'bank_sms_messages_v6',
         'bank_sms_accounts_v6',
@@ -2018,12 +2100,20 @@ export class PushNotificationService {
         badge: resolvedWebIcon,
         url: `/${subAppId}/`,
         tag,
+        smsRecord,
       });
 
       if (remote.delivered > 0) {
         return {
           ok: true,
-          message: `Delivered to your installed ${meta.shortName} app! Notification will appear with ${meta.shortName}'s icon.`,
+          message: `Delivered to your installed ${meta.shortName} app! Notification will drop down with ${meta.shortName}'s icon and sync into the inbox.`,
+        };
+      }
+
+      if (remote.total > 0 && remote.errorCodes && remote.errorCodes.length > 0) {
+        return {
+          ok: false,
+          error: `Apple/Push service rejected the saved key (code ${remote.errorCodes[0]}). Open your installed ${meta.shortName} app, copy a fresh Connection Key, and paste it here again.`,
         };
       }
     }
@@ -2033,7 +2123,7 @@ export class PushNotificationService {
       return {
         ok: false,
         error: caps.isIOS
-          ? `Open your installed ${meta.shortName} app from your Home Screen and tap Allow Notifications once so CBE Mobile can push alerts directly to ${meta.shortName}.`
+          ? `Not linked yet: open your installed ${meta.shortName} app → tap the Bell icon → Copy Connection Key → paste it in CBE Settings above.`
           : 'Please tap Enable Notifications first so this device grants notification permission.',
       };
     }
@@ -2066,7 +2156,7 @@ export class PushNotificationService {
     if (caps.isIOS && !Capacitor.isNativePlatform() && this.detectCurrentSubAppFromPath() !== subAppId) {
       return {
         ok: true,
-        message: `Synced! Open your installed ${meta.shortName} app and tap Allow Notifications once so future alerts drop down with ${meta.shortName}'s own icon.`,
+        message: `Local preview sent. To deliver straight to your installed ${meta.shortName} app with its green icon, copy the Special Connection Key from ${meta.shortName} and paste it in the Connect box above.`,
       };
     }
 

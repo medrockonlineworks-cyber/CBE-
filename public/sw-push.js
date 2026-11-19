@@ -1,11 +1,13 @@
 /* eslint-disable no-restricted-globals */
 /**
- * CBE Mobil Web Push Service Worker Extension
- * Handles native Lock Screen / Notification Center Web Push events on:
- * - iOS 16.4+ Safari Home Screen Web Apps (APNs Web Push)
- * - Android Chrome Installed PWAs
- * - Desktop Chromium / Firefox / Safari
+ * CBE Mobil & Standalone Sub-App Web Push Service Worker
+ * Handles native Lock Screen / Notification Center Web Push events AND persists
+ * incoming synced messages directly into local IndexedDB so standalone iPhone
+ * Home Screen Web Apps receive synced messages even while closed.
  */
+
+const SW_INBOX_DB_NAME = 'cbe_subapp_inbox_db';
+const SW_INBOX_STORE_NAME = 'incoming_items';
 
 self.addEventListener('install', function () {
   if (typeof self.skipWaiting === 'function') {
@@ -19,6 +21,59 @@ self.addEventListener('activate', function (event) {
   }
 });
 
+function savePushToIndexedDb(payload) {
+  return new Promise(function (resolve) {
+    try {
+      if (!self.indexedDB || !payload || typeof payload !== 'object') {
+        resolve();
+        return;
+      }
+      const req = self.indexedDB.open(SW_INBOX_DB_NAME, 1);
+      req.onupgradeneeded = function () {
+        const db = req.result;
+        if (!db.objectStoreNames.contains(SW_INBOX_STORE_NAME)) {
+          db.createObjectStore(SW_INBOX_STORE_NAME, { keyPath: 'id' });
+        }
+      };
+      req.onsuccess = function () {
+        try {
+          const db = req.result;
+          const tx = db.transaction(SW_INBOX_STORE_NAME, 'readwrite');
+          const store = tx.objectStore(SW_INBOX_STORE_NAME);
+          const itemId =
+            (payload.smsRecord && payload.smsRecord.id) ||
+            payload.tag ||
+            'push-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
+          store.put({
+            id: itemId,
+            receivedAt: Date.now(),
+            payload: payload,
+          });
+          tx.oncomplete = function () {
+            try {
+              db.close();
+            } catch (_) {}
+            resolve();
+          };
+          tx.onerror = function () {
+            try {
+              db.close();
+            } catch (_) {}
+            resolve();
+          };
+        } catch (_) {
+          resolve();
+        }
+      };
+      req.onerror = function () {
+        resolve();
+      };
+    } catch (_) {
+      resolve();
+    }
+  });
+}
+
 function displayBankingNotification(data) {
   const payload = data && typeof data === 'object' ? data : {};
   const title = payload.title || payload.appName || 'CBE Mobil';
@@ -29,7 +84,7 @@ function displayBankingNotification(data) {
     body: body,
     icon: payload.icon || '/pwa-192x192.png',
     badge: payload.badge || '/pwa-192x192.png',
-    tag: payload.tag || ('cbe-notif-' + Date.now()),
+    tag: payload.tag || 'cbe-notif-' + Date.now(),
     renotify: true,
     silent: false,
     vibrate: [200, 100, 200],
@@ -61,6 +116,7 @@ self.addEventListener('push', function (event) {
 
   event.waitUntil(
     Promise.all([
+      savePushToIndexedDb(data),
       displayBankingNotification(data),
       self.clients
         .matchAll({ type: 'window', includeUncontrolled: true })
@@ -124,7 +180,7 @@ self.addEventListener('notificationclick', function (event) {
 
 self.addEventListener('pushsubscriptionchange', function (event) {
   event.waitUntil(
-    fetch('/api/notifications/vapid-public-key')
+    fetch('/api/subapp/vapid-key')
       .then(function (res) {
         return res.json();
       })
