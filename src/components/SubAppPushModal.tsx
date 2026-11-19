@@ -4,12 +4,12 @@ import {
   AlertCircle,
   Bell,
   BellOff,
-  BellRing,
   CheckCircle2,
   Eye,
   EyeOff,
   Loader2,
   Send,
+  Share,
   X,
 } from 'lucide-react';
 import {
@@ -213,6 +213,43 @@ export const SubAppPushModal: React.FC<SubAppPushModalProps> = ({
           </div>
         )}
 
+        {/* iPhone / iOS 16.4+ Own-Logo Home Screen Notice */}
+        {caps.isIOS && !Capacitor.isNativePlatform() && (
+          <div
+            className={`rounded-2xl p-3.5 border space-y-1.5 text-[11px] leading-relaxed ${
+              caps.requiresIosHomeScreenInstall
+                ? 'bg-amber-500/10 border-amber-500/30 text-amber-200'
+                : isDarkMode
+                  ? 'bg-blue-500/10 border-blue-500/25 text-blue-200'
+                  : 'bg-blue-50 border-blue-200 text-blue-900'
+            }`}
+          >
+            <div className="flex items-center gap-1.5 font-extrabold text-xs">
+              <Share className="w-3.5 h-3.5 shrink-0" />
+              <span>
+                {caps.requiresIosHomeScreenInstall
+                  ? `iPhone Setup: Install ${meta.shortName} with Own Logo`
+                  : `iPhone Own-Logo Push Tip`}
+              </span>
+            </div>
+            {caps.requiresIosHomeScreenInstall ? (
+              <p className={isDarkMode ? 'opacity-90' : 'text-amber-900'}>
+                On iPhone (iOS 16.4+), tap Safari <strong>Share</strong> →{' '}
+                <strong>Add to Home Screen</strong> right here to install{' '}
+                <strong>{meta.shortName}</strong> with its own icon. Open it from your Home Screen,
+                then tap <strong>Enable</strong> below.
+              </p>
+            ) : (
+              <p className="opacity-90">
+                iPhone shows the installed Home Screen app icon on Lock Screen banners. To get{' '}
+                <strong>{meta.shortName}</strong>&apos;s own logo &amp; name on iPhone notifications,
+                open <span className="font-mono font-bold">/{subAppId}</span> in Safari and tap{' '}
+                <strong>Share → Add to Home Screen</strong>.
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Status Card */}
         <div
           className={`rounded-2xl p-3.5 border space-y-2 text-xs ${
@@ -226,7 +263,11 @@ export const SubAppPushModal: React.FC<SubAppPushModalProps> = ({
           <div className="flex items-center justify-between">
             <span className={isDarkMode ? 'text-neutral-400' : 'text-neutral-500'}>Delivery Mode</span>
             <span className="font-bold">
-              {Capacitor.isNativePlatform() ? 'Android Native' : 'PWA / Browser'}
+              {Capacitor.isNativePlatform()
+                ? 'Android Native'
+                : caps.isIOS
+                  ? 'iPhone Home Screen PWA'
+                  : 'PWA / Browser'}
             </span>
           </div>
           <div className="flex items-center justify-between">

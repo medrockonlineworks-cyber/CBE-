@@ -1,0 +1,26 @@
+{
+  "id": "/dashen",
+  "name": "DashenBank",
+  "short_name": "DashenBank",
+  "description": "Dashen Bank Super App",
+  "start_url": "/dashen",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0e1c4d",
+  "theme_color": "#1e3a8a",
+  "icons": [
+    {
+      "src": "/icons/notif-dashen.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/notif-dashen.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

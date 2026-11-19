@@ -295,6 +295,66 @@ export default function App() {
     SystemBarsService.syncForView(activeView, { isIPhone });
   }, [activeView, isIPhone]);
 
+  // Sync page title, Apple Touch Icon & PWA manifest with active sub-application for iPhone Home Screen installs
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const subAppHeadMap: Record<
+      string,
+      { title: string; icon: string; manifest: string }
+    > = {
+      sms: {
+        title: 'Messages',
+        icon: isIPhone ? '/icons/notif-sms-ios.png' : '/icons/notif-sms.png',
+        manifest: '/manifests/subapp-sms.webmanifest',
+      },
+      truecaller: {
+        title: 'Truecaller',
+        icon: '/icons/notif-truecaller.png',
+        manifest: '/manifests/subapp-truecaller.webmanifest',
+      },
+      telebirr: {
+        title: 'telebirr',
+        icon: '/icons/notif-telebirr.png',
+        manifest: '/manifests/subapp-telebirr.webmanifest',
+      },
+      dashen: {
+        title: 'DashenBank',
+        icon: '/icons/notif-dashen.png',
+        manifest: '/manifests/subapp-dashen.webmanifest',
+      },
+      telegram: {
+        title: 'Telegram',
+        icon: '/icons/notif-telegram.png',
+        manifest: '/manifests/subapp-telegram.webmanifest',
+      },
+      phone: {
+        title: 'Phone',
+        icon: '/icons/notif-phone.png',
+        manifest: '/manifests/subapp-phone.webmanifest',
+      },
+    };
+
+    const target = subAppHeadMap[activeView] || {
+      title: 'CBE Mobile Banking',
+      icon: '/apple-touch-icon.png',
+      manifest: '/manifest.webmanifest',
+    };
+
+    document.title = target.title;
+    const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+    if (appleTitle) appleTitle.setAttribute('content', target.title);
+    const appName = document.querySelector('meta[name="application-name"]');
+    if (appName) appName.setAttribute('content', target.title);
+    const appleIcon = document.getElementById('app-apple-touch-icon');
+    if (appleIcon) appleIcon.setAttribute('href', target.icon);
+    const favIcon = document.getElementById('app-favicon-png');
+    if (favIcon) {
+      favIcon.setAttribute('href', target.icon === '/apple-touch-icon.png' ? '/pwa-192x192.png' : target.icon);
+    }
+    const manifestLink = document.getElementById('pwa-manifest-link');
+    if (manifestLink) manifestLink.setAttribute('href', target.manifest);
+  }, [activeView, isIPhone]);
+
   // Attach Service Worker notification click & subscription renewal listeners + deep-link handler
   const currentUserRef = useRef<UserProfile | null>(currentUser);
   useEffect(() => {
