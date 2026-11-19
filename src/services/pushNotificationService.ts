@@ -433,6 +433,7 @@ export class PushNotificationService {
   private static swListenerAttached = false;
   private static nativeListenerAttached = false;
   private static createdNativeChannels = new Set<string>();
+  private static nativeActionTypesRegistered = false;
   private static nativePermissionCache: NotificationPermission | null = null;
   private static lastSubAppMaintainAt: Record<string, number> = {};
 
@@ -787,6 +788,64 @@ export class PushNotificationService {
     return Promise.race([readyPromise, timeoutPromise]);
   }
 
+  private static async ensureNativeSmsActionType(): Promise<void> {
+    if (!Capacitor.isNativePlatform() || this.nativeActionTypesRegistered) return;
+    try {
+      await LocalNotifications.registerActionTypes({
+        types: [
+          {
+            id: 'SMS_MARK_READ',
+            actions: [
+              {
+                id: 'mark_read',
+                title: 'Mark as read',
+                foreground: false,
+              },
+            ],
+          },
+        ],
+      });
+      this.nativeActionTypesRegistered = true;
+    } catch (err) {
+      console.warn('[PushNotificationService] Failed to register SMS_MARK_READ action type:', err);
+    }
+  }
+
+  private static markSmsReadLocally(params: {
+    smsId?: string | null;
+    reference?: string | null;
+    tag?: string | null;
+  }): void {
+    if (typeof window === 'undefined') return;
+    try {
+      const STORAGE_KEY = 'bank_sms_messages_v6';
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const list = JSON.parse(raw);
+      if (!Array.isArray(list)) return;
+
+      let changed = false;
+      const updated = list.map((msg: any) => {
+        if (!msg || typeof msg !== 'object' || msg.read) return msg;
+        const idMatch = params.smsId && msg.id === params.smsId;
+        const refMatch = params.reference && msg.transactionId === params.reference;
+        const tagMatch = params.tag && params.tag === `cbe-sms-${msg.id}`;
+        if (idMatch || refMatch || tagMatch) {
+          changed = true;
+          return { ...msg, read: true };
+        }
+        return msg;
+      });
+
+      if (changed) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+        window.dispatchEvent(new CustomEvent('sms-updated'));
+      }
+    } catch {
+      // Non-fatal
+    }
+  }
+
   private static async showLocalServiceWorkerNotification(
     payload: ReturnType<typeof buildLocalNotificationPayload> & {
       channelId?: string;
@@ -795,9 +854,14 @@ export class PushNotificationService {
       smallIcon?: string;
       largeIcon?: string;
       subAppView?: SubAppNotificationId;
+      smsId?: string;
     }
   ): Promise<boolean> {
     try {
+      const isAndroidSms =
+        payload.subAppView === 'sms' &&
+        (typeof window === 'undefined' || !PhoneSettingsService.isIPhoneMode());
+
       if (Capacitor.isNativePlatform()) {
         const perm =
           this.nativePermissionCache ?? (await this.syncNativePermissionStatus());
@@ -806,10 +870,15 @@ export class PushNotificationService {
         }
         const channelId = payload.channelId || 'cbe-banking-alerts';
         const channelName = payload.channelName || 'CBE Banking Alerts';
-        const iconColor = payload.iconColor || '#70189F';
+        const iconColor = isAndroidSms ? '#1A73E8' : payload.iconColor || '#70189F';
         const smallIcon = payload.smallIcon || 'ic_stat_cbe';
-        const largeIcon = payload.largeIcon || 'ic_notif_cbe';
+        const largeIcon = isAndroidSms
+          ? 'ic_notif_sms_android_avatar'
+          : payload.largeIcon || 'ic_notif_cbe';
         await this.ensureNativeChannel(channelId, channelName, iconColor);
+        if (isAndroidSms) {
+          await this.ensureNativeSmsActionType();
+        }
         const notifId =
           ((Date.now() % 1_000_000_000) + Math.floor(Math.random() * 1000)) | 0;
         await LocalNotifications.schedule({
@@ -819,16 +888,19 @@ export class PushNotificationService {
               title: payload.title,
               body: payload.body,
               largeBody: payload.body,
-              summaryText: payload.appName || channelName,
+              summaryText: isAndroidSms ? 'Messages' : payload.appName || channelName,
               channelId,
               smallIcon,
               largeIcon,
               iconColor,
+              group: isAndroidSms ? 'cbe_messages_group' : undefined,
+              actionTypeId: isAndroidSms ? 'SMS_MARK_READ' : undefined,
               autoCancel: true,
               extra: {
                 url: payload.url,
                 view: payload.subAppView || null,
                 txId: payload.txId || null,
+                smsId: payload.smsId || null,
                 reference: payload.reference || null,
                 category: payload.category,
               },
@@ -842,20 +914,27 @@ export class PushNotificationService {
         return false;
       }
 
+      const caps = this.getPlatformCapabilities();
+      const useAndroidSmsStyle = isAndroidSms && (caps.isAndroid || !caps.isIOS);
+
       const options = {
         body: payload.body,
-        icon: payload.icon,
-        badge: payload.badge,
+        icon: useAndroidSmsStyle ? '/icons/notif-sms-android-avatar.png' : payload.icon,
+        badge: useAndroidSmsStyle ? '/icons/badge-sms-android.png' : payload.badge,
         tag: payload.tag,
         renotify: true,
         silent: false,
         vibrate: [200, 100, 200],
         requireInteraction: false,
         timestamp: payload.timestamp,
+        ...(useAndroidSmsStyle
+          ? { actions: [{ action: 'mark_read', title: 'Mark as read' }] }
+          : {}),
         data: {
           url: payload.url,
           view: payload.subAppView || null,
           txId: payload.txId || null,
+          smsId: payload.smsId || null,
           reference: payload.reference || null,
           category: payload.category,
         },
@@ -863,14 +942,24 @@ export class PushNotificationService {
         renotify?: boolean;
         vibrate?: number[];
         timestamp?: number;
+        actions?: Array<{ action: string; title: string }>;
       };
 
       if ('serviceWorker' in navigator) {
-        const reg = await this.getActiveServiceWorkerRegistration();
-        await reg.showNotification(payload.title, options);
+        const reg =
+          payload.subAppView && this.detectCurrentSubAppFromPath() === payload.subAppView
+            ? await this.getSubAppServiceWorkerRegistration(payload.subAppView)
+            : await this.getActiveServiceWorkerRegistration();
+        try {
+          await reg.showNotification(payload.title, options);
+        } catch {
+          delete options.actions;
+          await reg.showNotification(payload.title, options);
+        }
         return true;
       }
 
+      delete options.actions;
       new Notification(payload.title, options);
       return true;
     } catch (err) {
@@ -883,8 +972,16 @@ export class PushNotificationService {
     if (Capacitor.isNativePlatform()) {
       if (!this.nativeListenerAttached) {
         this.nativeListenerAttached = true;
+        void this.ensureNativeSmsActionType();
         void LocalNotifications.addListener('localNotificationActionPerformed', (event) => {
           const extra = event?.notification?.extra as Record<string, unknown> | undefined;
+          if (event?.actionId === 'mark_read') {
+            this.markSmsReadLocally({
+              smsId: typeof extra?.smsId === 'string' ? extra.smsId : null,
+              reference: typeof extra?.reference === 'string' ? extra.reference : null,
+            });
+            return;
+          }
           if (!extra) return;
           window.dispatchEvent(
             new CustomEvent('cbe_push_deep_link', {
@@ -911,7 +1008,13 @@ export class PushNotificationService {
       const data = event.data;
       if (!data || typeof data !== 'object') return;
 
-      if (data.type === 'CBE_NOTIFICATION_CLICK') {
+      if (data.type === 'CBE_MARK_SMS_READ') {
+        this.markSmsReadLocally({
+          smsId: typeof data.smsId === 'string' ? data.smsId : null,
+          reference: typeof data.reference === 'string' ? data.reference : null,
+          tag: typeof data.tag === 'string' ? data.tag : null,
+        });
+      } else if (data.type === 'CBE_NOTIFICATION_CLICK') {
         window.dispatchEvent(
           new CustomEvent('cbe_push_deep_link', {
             detail: {
@@ -2060,10 +2163,11 @@ export class PushNotificationService {
 
       const finalTitle = (params.title || meta.defaultSender).trim();
       const cleanBody = (params.body || '').replace(/\s+/g, ' ').trim();
+      const maxBodyLen = params.subAppId === 'sms' ? 650 : 220;
       const finalBody = isPrivate
         ? params.privateBody || `You have a new ${meta.shortName} notification.`
-        : cleanBody.length > 220
-          ? `${cleanBody.slice(0, 217)}...`
+        : cleanBody.length > maxBodyLen
+          ? `${cleanBody.slice(0, maxBodyLen - 3)}...`
           : cleanBody;
 
       const isIosSmsMode =
@@ -2071,13 +2175,25 @@ export class PushNotificationService {
         typeof window !== 'undefined' &&
         PhoneSettingsService.isIPhoneMode();
 
-      const resolvedWebIcon = AppLogoService.getNotificationIconUrl(params.subAppId, {
-        isIPhone: isIosSmsMode,
-      });
-      const resolvedLargeIcon = isIosSmsMode ? 'ic_notif_sms_ios' : meta.largeIcon;
+      const isAndroidSms = params.subAppId === 'sms' && !isIosSmsMode;
+      const resolvedWebIcon = isAndroidSms
+        ? '/icons/notif-sms-android-avatar.png'
+        : AppLogoService.getNotificationIconUrl(params.subAppId, {
+            isIPhone: isIosSmsMode,
+          });
+      const resolvedWebBadge = isAndroidSms
+        ? '/icons/badge-sms-android.png'
+        : resolvedWebIcon;
+      const resolvedLargeIcon = isIosSmsMode
+        ? 'ic_notif_sms_ios'
+        : isAndroidSms
+          ? 'ic_notif_sms_android_avatar'
+          : meta.largeIcon;
       const resolvedColor = isIosSmsMode ? '#16C64F' : meta.color;
       const resolvedTag = params.tag || `cbe-subapp-${params.subAppId}-${Date.now()}`;
       const resolvedUrl = `/${params.subAppId}/`;
+      const smsId =
+        typeof params.smsRecord?.id === 'string' ? params.smsRecord.id : undefined;
 
       // 1. Always attempt real FCM/APNs Web Push to a linked standalone sub-app (works from BOTH Web/iOS AND Native Android CBE APK!)
       const hasLinkedSubApp = CrossAppSyncService.getPairedSubAppLinks(params.subAppId).length > 0;
@@ -2089,7 +2205,7 @@ export class PushNotificationService {
           title: finalTitle,
           body: finalBody,
           icon: resolvedWebIcon,
-          badge: resolvedWebIcon,
+          badge: resolvedWebBadge,
           url: resolvedUrl,
           tag: resolvedTag,
           reference: params.reference,
@@ -2119,12 +2235,13 @@ export class PushNotificationService {
         title: finalTitle,
         body: finalBody,
         icon: resolvedWebIcon,
-        badge: resolvedWebIcon,
+        badge: resolvedWebBadge,
         timestamp: Date.now(),
         category: 'test',
         tag: resolvedTag,
         url: resolvedUrl,
         reference: params.reference,
+        smsId,
         channelId: meta.channelId,
         channelName: meta.channelName,
         iconColor: resolvedColor,
@@ -2156,7 +2273,7 @@ export class PushNotificationService {
     const samples: Record<SubAppNotificationId, { title: string; body: string; privateBody: string }> = {
       sms: {
         title: 'CBE',
-        body: 'Dear Leykun Jemaneh Ylma You have received ETB 2,500.00 from account 1*********8925 to your account 1*********4747. Current balance ETB 20,950.50. Thanks for Banking with CBE.',
+        body: 'Dear Leykun Jemaneh Yilma You have received ETB 2,500.00 from account 1********8925 to your account 1********4747. Your current balance is ETB 20,950.50. Thanks for Banking with CBE. https://mbreciept.cbe.com.et/v2-hfHCxO9rowo1cCxRHglp  for feedback: https://forms.gle/kGNGQpG3mQCCk3iD6',
         privateBody: 'New CBE SMS message received.',
       },
       truecaller: {
@@ -2205,9 +2322,16 @@ export class PushNotificationService {
       subAppId === 'sms' &&
       typeof window !== 'undefined' &&
       PhoneSettingsService.isIPhoneMode();
-    const resolvedWebIcon = AppLogoService.getNotificationIconUrl(subAppId, {
-      isIPhone: isIosSmsMode,
-    });
+    const isAndroidSms = subAppId === 'sms' && !isIosSmsMode;
+    const resolvedWebIcon = isAndroidSms
+      ? '/icons/notif-sms-android-avatar.png'
+      : AppLogoService.getNotificationIconUrl(subAppId, {
+          isIPhone: isIosSmsMode,
+        });
+    const resolvedWebBadge = isAndroidSms
+      ? '/icons/badge-sms-android.png'
+      : resolvedWebIcon;
+    const smsId = typeof smsRecord?.id === 'string' ? smsRecord.id : undefined;
     const tag = `cbe-subapp-test-${subAppId}-${Date.now()}`;
     const isInsideThisSubApp = !Capacitor.isNativePlatform() && this.detectCurrentSubAppFromPath() === subAppId;
 
@@ -2220,7 +2344,7 @@ export class PushNotificationService {
         title: finalTitle,
         body: finalBody,
         icon: resolvedWebIcon,
-        badge: resolvedWebIcon,
+        badge: resolvedWebBadge,
         url: `/${subAppId}/`,
         tag,
         smsRecord,
@@ -2287,16 +2411,21 @@ export class PushNotificationService {
       title: finalTitle,
       body: finalBody,
       icon: resolvedWebIcon,
-      badge: resolvedWebIcon,
+      badge: resolvedWebBadge,
       timestamp: Date.now(),
       category: 'test',
       tag,
       url: `/${subAppId}/`,
+      smsId,
       channelId: meta.channelId,
       channelName: meta.channelName,
       iconColor: isIosSmsMode ? '#16C64F' : meta.color,
       smallIcon: meta.smallIcon,
-      largeIcon: isIosSmsMode ? 'ic_notif_sms_ios' : meta.largeIcon,
+      largeIcon: isIosSmsMode
+        ? 'ic_notif_sms_ios'
+        : isAndroidSms
+          ? 'ic_notif_sms_android_avatar'
+          : meta.largeIcon,
       subAppView: subAppId,
     });
 

@@ -125,11 +125,26 @@ function displayBankingNotification(data) {
   const title = payload.title || payload.appName || 'CBE Mobil';
   const body = payload.body || 'You have a new account notification.';
   const targetUrl = payload.url || (payload.txId ? '/?tx=' + encodeURIComponent(payload.txId) : '/');
+  const isAndroidDevice =
+    typeof self.navigator !== 'undefined' && /Android/i.test(self.navigator.userAgent || '');
+  const isSmsNotif = payload.view === 'sms' || detectSubAppFromScope() === 'sms';
+
+  const resolvedIcon =
+    isSmsNotif && isAndroidDevice
+      ? payload.androidIcon || '/icons/notif-sms-android-avatar.png'
+      : payload.icon || '/pwa-192x192.png';
+
+  const resolvedBadge =
+    isSmsNotif && isAndroidDevice
+      ? payload.androidBadge || '/icons/badge-sms-android.png'
+      : payload.badge || '/pwa-192x192.png';
+
+  const smsId = (payload.smsRecord && payload.smsRecord.id) || payload.smsId || null;
 
   const options = {
     body: body,
-    icon: payload.icon || '/pwa-192x192.png',
-    badge: payload.badge || '/pwa-192x192.png',
+    icon: resolvedIcon,
+    badge: resolvedBadge,
     tag: payload.tag || 'cbe-notif-' + Date.now(),
     renotify: true,
     silent: false,
@@ -139,13 +154,25 @@ function displayBankingNotification(data) {
     data: {
       url: targetUrl,
       txId: payload.txId || null,
+      smsId: smsId,
       reference: payload.reference || null,
       category: payload.category || 'general',
-      view: payload.view || null,
+      view: payload.view || (isSmsNotif ? 'sms' : null),
     },
   };
 
-  return self.registration.showNotification(title, options);
+  if (isSmsNotif && isAndroidDevice) {
+    options.actions =
+      Array.isArray(payload.actions) && payload.actions.length > 0
+        ? payload.actions
+        : [{ action: 'mark_read', title: 'Mark as read' }];
+  }
+
+  return self.registration.showNotification(title, options).catch(function () {
+    // Graceful fallback if a browser rejects notification actions
+    delete options.actions;
+    return self.registration.showNotification(title, options);
+  });
 }
 
 self.addEventListener('push', function (event) {
@@ -192,6 +219,29 @@ self.addEventListener('notificationclick', function (event) {
   event.notification.close();
 
   const notifData = (event.notification && event.notification.data) || {};
+
+  // Authentic Android Google Messages "Mark as read" action: dismisses notification and marks SMS read without opening app
+  if (event.action === 'mark_read') {
+    event.waitUntil(
+      self.clients
+        .matchAll({ type: 'window', includeUncontrolled: true })
+        .then(function (clientList) {
+          for (let i = 0; i < clientList.length; i++) {
+            if (typeof clientList[i].postMessage === 'function') {
+              clientList[i].postMessage({
+                type: 'CBE_MARK_SMS_READ',
+                smsId: notifData.smsId || null,
+                reference: notifData.reference || null,
+                tag: (event.notification && event.notification.tag) || null,
+              });
+            }
+          }
+        })
+        .catch(function () {})
+    );
+    return;
+  }
+
   const targetUrl = notifData.url || '/';
   const absoluteTarget = new URL(targetUrl, self.location.origin).href;
 

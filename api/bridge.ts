@@ -654,12 +654,31 @@ export default async function handler(req: any, res: any) {
       const payloadObj: Record<string, unknown> = {
         appName: String(body.appName || subAppId),
         title: String(body.title || 'CBE').slice(0, 120),
-        body: String(body.body || 'You have a new message.').slice(0, 260),
+        body: String(body.body || 'You have a new message.').slice(0, 650),
         icon: typeof body.icon === 'string' ? body.icon : `/icons/notif-${subAppId}.png`,
         badge: typeof body.badge === 'string' ? body.badge : `/icons/notif-${subAppId}.png`,
+        androidIcon:
+          typeof body.androidIcon === 'string'
+            ? body.androidIcon
+            : subAppId === 'sms'
+              ? '/icons/notif-sms-android-avatar.png'
+              : undefined,
+        androidBadge:
+          typeof body.androidBadge === 'string'
+            ? body.androidBadge
+            : subAppId === 'sms'
+              ? '/icons/badge-sms-android.png'
+              : undefined,
+        actions:
+          Array.isArray(body.actions)
+            ? body.actions
+            : subAppId === 'sms'
+              ? [{ action: 'mark_read', title: 'Mark as read' }]
+              : undefined,
         url: typeof body.url === 'string' ? body.url : `/${subAppId}/`,
         tag: typeof body.tag === 'string' ? body.tag : `cbe-subapp-${subAppId}-${Date.now()}`,
         reference: typeof body.reference === 'string' ? body.reference : undefined,
+        smsId: typeof body.smsId === 'string' ? body.smsId : undefined,
         category: typeof body.category === 'string' ? body.category : 'subapp',
         view: subAppId,
         timestamp: Date.now(),
@@ -893,6 +912,13 @@ export default async function handler(req: any, res: any) {
       const rec = store.customLogos?.[appId];
       const v = String(query.v || rec?.updatedAt || Date.now());
 
+      const ua = String(req.headers['user-agent'] || '');
+      const isIosUa = /iPhone|iPad|iPod/i.test(ua);
+      const default192 =
+        appId === 'sms' && !isIosUa ? '/icons/notif-sms-android.png' : spec.defaultIcon192;
+      const default512 =
+        appId === 'sms' && !isIosUa ? '/icons/notif-sms-android-512.png' : spec.defaultIcon512;
+
       const icons = rec
         ? [
             {
@@ -916,19 +942,19 @@ export default async function handler(req: any, res: any) {
           ]
         : [
             {
-              src: spec.defaultIcon192,
+              src: default192,
               sizes: '192x192',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: spec.defaultIcon512,
+              src: default512,
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: spec.defaultIconMaskable || spec.defaultIcon512,
+              src: spec.defaultIconMaskable || default512,
               sizes: '512x512',
               type: 'image/png',
               purpose: 'maskable',

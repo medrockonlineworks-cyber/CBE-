@@ -78,8 +78,8 @@ const BRAND_APP_SPECS: Record<string, BrandAppManifestSpec> = {
     scope: '/sms/',
     background_color: '#000000',
     theme_color: '#000000',
-    defaultIcon192: '/icons/notif-sms-ios.png',
-    defaultIcon512: '/icons/notif-sms-ios-512.png',
+    defaultIcon192: '/icons/notif-sms-android.png',
+    defaultIcon512: '/icons/notif-sms-android-512.png',
   },
   truecaller: {
     id: '/truecaller/',
@@ -655,12 +655,31 @@ export async function handleBridgeAction(params: {
     const payloadObj: Record<string, unknown> = {
       appName: String(body.appName || subAppId),
       title: String(body.title || 'CBE').slice(0, 120),
-      body: String(body.body || 'You have a new message.').slice(0, 260),
+      body: String(body.body || 'You have a new message.').slice(0, 650),
       icon: typeof body.icon === 'string' ? body.icon : `/icons/notif-${subAppId}.png`,
       badge: typeof body.badge === 'string' ? body.badge : `/icons/notif-${subAppId}.png`,
+      androidIcon:
+        typeof body.androidIcon === 'string'
+          ? body.androidIcon
+          : subAppId === 'sms'
+            ? '/icons/notif-sms-android-avatar.png'
+            : undefined,
+      androidBadge:
+        typeof body.androidBadge === 'string'
+          ? body.androidBadge
+          : subAppId === 'sms'
+            ? '/icons/badge-sms-android.png'
+            : undefined,
+      actions:
+        Array.isArray(body.actions)
+          ? body.actions
+          : subAppId === 'sms'
+            ? [{ action: 'mark_read', title: 'Mark as read' }]
+            : undefined,
       url: typeof body.url === 'string' ? body.url : `/${subAppId}/`,
       tag: typeof body.tag === 'string' ? body.tag : `cbe-subapp-${subAppId}-${Date.now()}`,
       reference: typeof body.reference === 'string' ? body.reference : undefined,
+      smsId: typeof body.smsId === 'string' ? body.smsId : undefined,
       category: typeof body.category === 'string' ? body.category : 'subapp',
       view: subAppId,
       timestamp: Date.now(),
