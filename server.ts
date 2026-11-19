@@ -59,6 +59,7 @@ function applySubAppHeadBranding(html: string, reqPath: string): string {
   if (!brand) return html;
 
   return html
+    .replace(/<link\s+rel="manifest"\s+href="\/manifest\.webmanifest"\s*\/?>/gi, '')
     .replace(/<title>[^<]*<\/title>/i, `<title>${brand.title}</title>`)
     .replace(
       /(<meta\s+name="apple-mobile-web-app-title"\s+content=")[^"]*(")/i,
@@ -87,7 +88,9 @@ function applySubAppHeadBranding(html: string, reqPath: string): string {
     .replace(
       /(<link\s+id="app-favicon-png"\s+rel="icon"\s+type="image\/png"\s+sizes="192x192"\s+href=")[^"]*(")/i,
       `$1${brand.icon}$2`
-    );
+    )
+    .replace(/<link\s+id="app-favicon-svg"[^>]*>\s*/gi, '')
+    .replace(/<link\s+id="app-mask-icon"[^>]*>\s*/gi, '');
 }
 
 async function startServer() {
@@ -134,7 +137,8 @@ async function startServer() {
     });
 
     // Serve sub-app branded HTML head for iPhone Safari "Add to Home Screen"
-    app.get(Object.keys(SUBAPP_IOS_BRANDING), async (req, res, next) => {
+    const devSubAppPaths = Object.keys(SUBAPP_IOS_BRANDING).flatMap((p) => [p, `${p}/`]);
+    app.get(devSubAppPaths, async (req, res, next) => {
       try {
         const indexPath = path.resolve(process.cwd(), 'index.html');
         const rawHtml = fs.readFileSync(indexPath, 'utf-8');

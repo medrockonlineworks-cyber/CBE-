@@ -1,10 +1,10 @@
 {
-  "id": "/sms",
+  "id": "/sms/",
   "name": "Messages",
   "short_name": "Messages",
   "description": "Messages — SMS & Bank Alerts",
-  "start_url": "/sms",
-  "scope": "/",
+  "start_url": "/sms/",
+  "scope": "/sms/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#000000",
@@ -17,7 +17,7 @@
       "purpose": "any"
     },
     {
-      "src": "/icons/notif-sms-ios.png",
+      "src": "/icons/notif-sms-ios-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

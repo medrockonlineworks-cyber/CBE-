@@ -1,10 +1,10 @@
 {
-  "id": "/telebirr",
+  "id": "/telebirr/",
   "name": "telebirr",
   "short_name": "telebirr",
   "description": "telebirr Super App — Mobile Money & Transfers",
-  "start_url": "/telebirr",
-  "scope": "/",
+  "start_url": "/telebirr/",
+  "scope": "/telebirr/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#ffffff",
@@ -17,7 +17,7 @@
       "purpose": "any"
     },
     {
-      "src": "/icons/notif-telebirr.png",
+      "src": "/icons/notif-telebirr-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

@@ -55,7 +55,7 @@ export class SubAppInstallService {
     subAppId: SubAppNotificationId
   ): Promise<SubAppInstallResult> {
     const meta = SUB_APP_NOTIFICATION_META[subAppId];
-    const routePath = `/${subAppId}`;
+    const routePath = `/${subAppId}/`;
     const isIosSms = subAppId === 'sms' && PhoneSettingsService.isIPhoneMode();
     const iconName = isIosSms ? 'ic_notif_sms_ios' : meta.largeIcon;
 

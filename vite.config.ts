@@ -188,6 +188,122 @@ function pwaBrandingSyncPlugin() {
   };
 }
 
+function subAppStandaloneHtmlPlugin() {
+  const SUBAPPS: Record<
+    string,
+    { title: string; icon: string; manifest: string; themeColor: string; description: string }
+  > = {
+    sms: {
+      title: 'Messages',
+      icon: '/icons/notif-sms-ios.png',
+      manifest: '/manifests/subapp-sms.webmanifest',
+      themeColor: '#000000',
+      description: 'Messages — SMS & Bank Alerts',
+    },
+    truecaller: {
+      title: 'Truecaller',
+      icon: '/icons/notif-truecaller.png',
+      manifest: '/manifests/subapp-truecaller.webmanifest',
+      themeColor: '#0066FF',
+      description: 'Truecaller — Caller ID & Bank SMS Alerts',
+    },
+    telebirr: {
+      title: 'telebirr',
+      icon: '/icons/notif-telebirr.png',
+      manifest: '/manifests/subapp-telebirr.webmanifest',
+      themeColor: '#5cb82e',
+      description: 'telebirr Super App — Mobile Money & Transfers',
+    },
+    dashen: {
+      title: 'DashenBank',
+      icon: '/icons/notif-dashen.png',
+      manifest: '/manifests/subapp-dashen.webmanifest',
+      themeColor: '#1e3a8a',
+      description: 'Dashen Bank Super App',
+    },
+    telegram: {
+      title: 'Telegram',
+      icon: '/icons/notif-telegram.png',
+      manifest: '/manifests/subapp-telegram.webmanifest',
+      themeColor: '#229ED9',
+      description: 'Telegram Messenger',
+    },
+    phone: {
+      title: 'Phone',
+      icon: '/icons/notif-phone.png',
+      manifest: '/manifests/subapp-phone.webmanifest',
+      themeColor: '#16a34a',
+      description: 'Phone & USSD (*889#)',
+    },
+  };
+
+  return {
+    name: 'subapp-standalone-html-generator',
+    closeBundle() {
+      const distDir = path.resolve(__dirname, 'dist');
+      const indexFile = path.join(distDir, 'index.html');
+      if (!fs.existsSync(indexFile)) return;
+      const baseHtml = fs.readFileSync(indexFile, 'utf-8');
+      // Strip duplicate <link rel="manifest" href="/manifest.webmanifest"> injected by VitePWA
+      // since index.html already defines <link id="pwa-manifest-link" rel="manifest" ... />
+      const cleanedBaseHtml = baseHtml.replace(
+        /<link\s+rel="manifest"\s+href="\/manifest\.webmanifest"\s*\/?>/gi,
+        ''
+      );
+      if (cleanedBaseHtml !== baseHtml) {
+        fs.writeFileSync(indexFile, cleanedBaseHtml, 'utf-8');
+      }
+
+      for (const [slug, brand] of Object.entries(SUBAPPS)) {
+        const subHtml = cleanedBaseHtml
+          .replace(/<title>[^<]*<\/title>/i, `<title>${brand.title}</title>`)
+          .replace(
+            /(<meta\s+name="description"\s+content=")[^"]*(")/i,
+            `$1${brand.description}$2`
+          )
+          .replace(
+            /(<meta\s+property="og:title"\s+content=")[^"]*(")/i,
+            `$1${brand.title}$2`
+          )
+          .replace(
+            /(<meta\s+property="og:description"\s+content=")[^"]*(")/i,
+            `$1${brand.description}$2`
+          )
+          .replace(
+            /(<meta\s+name="apple-mobile-web-app-title"\s+content=")[^"]*(")/i,
+            `$1${brand.title}$2`
+          )
+          .replace(
+            /(<meta\s+name="application-name"\s+content=")[^"]*(")/i,
+            `$1${brand.title}$2`
+          )
+          .replace(
+            /(<meta\s+name="theme-color"\s+content=")[^"]*(")/i,
+            `$1${brand.themeColor}$2`
+          )
+          .replace(
+            /(<link\s+id="pwa-manifest-link"\s+rel="manifest"\s+href=")[^"]*(")/i,
+            `$1${brand.manifest}$2`
+          )
+          .replace(
+            /(<link\s+id="app-apple-touch-icon"\s+rel="apple-touch-icon"\s+href=")[^"]*("[^>]*>)/i,
+            `$1${brand.icon}$2\n    <link rel="apple-touch-icon" sizes="180x180" href="${brand.icon}" />`
+          )
+          .replace(
+            /(<link\s+id="app-favicon-png"\s+rel="icon"\s+type="image\/png"\s+sizes="192x192"\s+href=")[^"]*(")/i,
+            `$1${brand.icon}$2`
+          )
+          .replace(/<link\s+id="app-favicon-svg"[^>]*>\s*/gi, '')
+          .replace(/<link\s+id="app-mask-icon"[^>]*>\s*/gi, '');
+
+        const targetDir = path.join(distDir, slug);
+        fs.mkdirSync(targetDir, { recursive: true });
+        fs.writeFileSync(path.join(targetDir, 'index.html'), subHtml, 'utf-8');
+      }
+    },
+  };
+}
+
 export default defineConfig(() => {
   return {
     plugins: [
@@ -195,6 +311,7 @@ export default defineConfig(() => {
       react(),
       tailwindcss(),
       pwaBrandingSyncPlugin(),
+      subAppStandaloneHtmlPlugin(),
       VitePWA({
         injectRegister: null,
         registerType: 'autoUpdate',
@@ -290,7 +407,13 @@ export default defineConfig(() => {
           globIgnores: ['**/assets/aistudio/**'],
           cleanupOutdatedCaches: true,
           navigateFallback: 'index.html',
-          navigateFallbackDenylist: [/^\/api\//, /^\/downloads\//, /\.apk$/i],
+          navigateFallbackDenylist: [
+            /^\/api\//,
+            /^\/downloads\//,
+            /^\/manifests\//,
+            /^\/(sms|truecaller|telebirr|dashen|telegram|phone)(\/|$)/i,
+            /\.apk$/i,
+          ],
           runtimeCaching: [
             {
               urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -321,12 +444,26 @@ export default defineConfig(() => {
               },
             },
             {
-              urlPattern: /\/(manifest\.(webmanifest|json)|icons\/.*|pwa-.*|apple-touch-icon.*)/i,
+              urlPattern: /\/(manifests\/.*|manifest\.(webmanifest|json))/i,
+              handler: 'NetworkFirst',
+              options: {
+                cacheName: 'cbe-manifests-cache',
+                expiration: {
+                  maxEntries: 15,
+                  maxAgeSeconds: 60 * 60 * 24 * 7,
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+              },
+            },
+            {
+              urlPattern: /\/(icons\/.*|pwa-.*|apple-touch-icon.*)/i,
               handler: 'CacheFirst',
               options: {
                 cacheName: 'cbe-custom-branding-cache',
                 expiration: {
-                  maxEntries: 30,
+                  maxEntries: 40,
                   maxAgeSeconds: 60 * 60 * 24 * 365,
                 },
                 cacheableResponse: {

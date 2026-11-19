@@ -1,10 +1,10 @@
 {
-  "id": "/truecaller",
+  "id": "/truecaller/",
   "name": "Truecaller",
   "short_name": "Truecaller",
   "description": "Truecaller — Caller ID & Bank SMS Alerts",
-  "start_url": "/truecaller",
-  "scope": "/",
+  "start_url": "/truecaller/",
+  "scope": "/truecaller/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0b1220",
@@ -17,7 +17,7 @@
       "purpose": "any"
     },
     {
-      "src": "/icons/notif-truecaller.png",
+      "src": "/icons/notif-truecaller-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

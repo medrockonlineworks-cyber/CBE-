@@ -18,6 +18,19 @@
       ]
     },
     {
+      "source": "/manifests/(.*)\\.webmanifest",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/manifest+json; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
       "source": "/(sw-push\\.js|sw\\.js|manifest\\.webmanifest)",
       "headers": [
         {
@@ -29,7 +42,55 @@
   ],
   "rewrites": [
     {
-      "source": "/((?!api/|downloads/|assets/|icons/|sw-push\\.js|sw\\.js|manifest\\.webmanifest).*)",
+      "source": "/sms",
+      "destination": "/sms/index.html"
+    },
+    {
+      "source": "/sms/",
+      "destination": "/sms/index.html"
+    },
+    {
+      "source": "/truecaller",
+      "destination": "/truecaller/index.html"
+    },
+    {
+      "source": "/truecaller/",
+      "destination": "/truecaller/index.html"
+    },
+    {
+      "source": "/telebirr",
+      "destination": "/telebirr/index.html"
+    },
+    {
+      "source": "/telebirr/",
+      "destination": "/telebirr/index.html"
+    },
+    {
+      "source": "/dashen",
+      "destination": "/dashen/index.html"
+    },
+    {
+      "source": "/dashen/",
+      "destination": "/dashen/index.html"
+    },
+    {
+      "source": "/telegram",
+      "destination": "/telegram/index.html"
+    },
+    {
+      "source": "/telegram/",
+      "destination": "/telegram/index.html"
+    },
+    {
+      "source": "/phone",
+      "destination": "/phone/index.html"
+    },
+    {
+      "source": "/phone/",
+      "destination": "/phone/index.html"
+    },
+    {
+      "source": "/((?!api/|downloads/|assets/|icons/|manifests/|sms/|truecaller/|telebirr/|dashen/|telegram/|phone/|sw-push\\.js|sw\\.js|manifest\\.webmanifest).*)",
       "destination": "/index.html"
     }
   ]

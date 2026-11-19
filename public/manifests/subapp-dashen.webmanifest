@@ -1,10 +1,10 @@
 {
-  "id": "/dashen",
+  "id": "/dashen/",
   "name": "DashenBank",
   "short_name": "DashenBank",
   "description": "Dashen Bank Super App",
-  "start_url": "/dashen",
-  "scope": "/",
+  "start_url": "/dashen/",
+  "scope": "/dashen/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#0e1c4d",
@@ -17,7 +17,7 @@
       "purpose": "any"
     },
     {
-      "src": "/icons/notif-dashen.png",
+      "src": "/icons/notif-dashen-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

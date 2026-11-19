@@ -1,10 +1,10 @@
 {
-  "id": "/phone",
+  "id": "/phone/",
   "name": "Phone",
   "short_name": "Phone",
   "description": "Phone & USSD (*889#)",
-  "start_url": "/phone",
-  "scope": "/",
+  "start_url": "/phone/",
+  "scope": "/phone/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#000000",
@@ -17,7 +17,7 @@
       "purpose": "any"
     },
     {
-      "src": "/icons/notif-phone.png",
+      "src": "/icons/notif-phone-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

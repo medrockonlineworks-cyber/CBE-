@@ -55,8 +55,8 @@ export const SubAppPushModal: React.FC<SubAppPushModalProps> = ({
 
   const subAppFullUrl =
     typeof window !== 'undefined'
-      ? `${window.location.origin}/${subAppId}`
-      : `/${subAppId}`;
+      ? `${window.location.origin}/${subAppId}/`
+      : `/${subAppId}/`;
 
   const syncState = useCallback(async () => {
     if (Capacitor.isNativePlatform()) {

@@ -142,7 +142,7 @@ export default function App() {
   });
   const [activeView, setActiveView] = useState<'auth' | 'main' | 'receipt' | 'webreceipt' | 'admin' | 'sms' | 'truecaller' | 'phone' | 'dashen' | 'telebirr' | 'telegram'>(() => {
     if (typeof window !== 'undefined') {
-      const path = (window.location.pathname || '').toLowerCase();
+      const path = (window.location.pathname || '').toLowerCase().replace(/\/+$/, '') || '/';
       const search = new URLSearchParams(window.location.search);
       const appParam = (search.get('app') || search.get('view') || '').toLowerCase();
       const hash = (window.location.hash || '').toLowerCase();
@@ -376,6 +376,11 @@ export default function App() {
     }
     const manifestLink = document.getElementById('pwa-manifest-link');
     if (manifestLink) manifestLink.setAttribute('href', target.manifest);
+    document.querySelectorAll('link[rel="manifest"]').forEach((el) => {
+      if (el.id !== 'pwa-manifest-link') {
+        el.remove();
+      }
+    });
   }, [activeView, isIPhone]);
 
   // Attach Service Worker notification click & subscription renewal listeners + deep-link handler
@@ -402,7 +407,7 @@ export default function App() {
         targetSubView = detail.view as SubAppView;
       } else {
         for (const v of validSubViews) {
-          if (rawUrl.includes(`view=${v}`) || rawUrl === `/${v}`) {
+          if (rawUrl.includes(`view=${v}`) || rawUrl === `/${v}` || rawUrl === `/${v}/`) {
             targetSubView = v;
             break;
           }
@@ -416,7 +421,7 @@ export default function App() {
         }
         setActiveView(targetSubView);
         try {
-          window.history.pushState({ view: targetSubView, tab: 'home' }, '', `/${targetSubView}`);
+          window.history.pushState({ view: targetSubView, tab: 'home' }, '', `/${targetSubView}/`);
         } catch {}
         return;
       }
@@ -640,21 +645,22 @@ export default function App() {
       localStorage.setItem('tana_active_view', view);
       localStorage.setItem('tana_active_tab', tab);
       const stateObj = { view, tab };
+      const normalizedCurrentPath = window.location.pathname.replace(/\/+$/, '') || '/';
       const targetPath = view === 'sms' 
-        ? '/sms' 
+        ? '/sms/' 
         : (view === 'truecaller' 
-          ? '/truecaller' 
+          ? '/truecaller/' 
           : (view === 'phone' 
-            ? '/phone' 
+            ? '/phone/' 
             : (view === 'dashen' 
-              ? '/dashen' 
+              ? '/dashen/' 
               : (view === 'telebirr'
-                ? '/telebirr'
+                ? '/telebirr/'
                 : (view === 'telegram'
-                  ? '/telegram'
+                  ? '/telegram/'
                   : (view === 'webreceipt'
                     ? (standaloneWebReceiptData.payload?.refId ? `/v2-hfHCxG${standaloneWebReceiptData.payload.refId}` : '/webreceipt')
-                    : (['/sms', '/truecaller', '/phone', '/dashen', '/telebirr', '/telegram', '/webreceipt'].includes(window.location.pathname) || extractWebReceiptIdFromPath(window.location.pathname) ? '/' : window.location.pathname)))))));
+                    : (['/sms', '/truecaller', '/phone', '/dashen', '/telebirr', '/telegram', '/webreceipt'].includes(normalizedCurrentPath) || extractWebReceiptIdFromPath(window.location.pathname) ? '/' : window.location.pathname)))))));
       window.history.pushState(stateObj, '', targetPath);
       navHistoryRef.current.push(stateObj);
     } catch {
