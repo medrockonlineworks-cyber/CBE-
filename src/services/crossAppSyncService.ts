@@ -50,10 +50,13 @@ export interface DirectPushSubscription {
 export interface PairedSubAppLink {
   subAppId: string;
   bucketKey: string;
+  bridgeOrigin?: string;
   subscription: DirectPushSubscription;
   pairedAt: number;
   label?: string;
 }
+
+const DEFAULT_PUBLIC_BRIDGE_ORIGIN = 'https://www.cbebank.online';
 
 export interface CompactSmsPushRecord {
   id: string;
@@ -131,9 +134,26 @@ class CrossAppSyncEngine {
     return clean;
   }
 
+  public getBridgeBaseUrl(subAppId?: string): string {
+    if (typeof window !== 'undefined' && !Capacitor.isNativePlatform()) {
+      return '';
+    }
+    const links = this.getPairedSubAppLinks(subAppId);
+    const withOrigin = links.find((l) => l.bridgeOrigin && l.bridgeOrigin.startsWith('https://'));
+    if (withOrigin?.bridgeOrigin) {
+      return withOrigin.bridgeOrigin.replace(/\/+$/, '');
+    }
+    const allLinks = this.getPairedSubAppLinks();
+    const anyOrigin = allLinks.find((l) => l.bridgeOrigin && l.bridgeOrigin.startsWith('https://'));
+    if (anyOrigin?.bridgeOrigin) {
+      return anyOrigin.bridgeOrigin.replace(/\/+$/, '');
+    }
+    return DEFAULT_PUBLIC_BRIDGE_ORIGIN;
+  }
+
   /**
    * Generates a compact Special Connection Key (CBELINK-<SUBAPP>-<token>) encoding
-   * the standalone sub-app's permanent APNs/FCM push subscription & sync bucket.
+   * the standalone sub-app's permanent APNs/FCM push subscription, bridge origin & sync bucket.
    */
   public encodeConnectionKey(
     subAppId: string,
@@ -141,10 +161,17 @@ class CrossAppSyncEngine {
     bucketKey?: string
   ): string {
     const cleanSubApp = String(subAppId || 'sms').toLowerCase();
+    const origin =
+      typeof window !== 'undefined' &&
+      window.location.origin.startsWith('https://') &&
+      !window.location.hostname.includes('localhost')
+        ? window.location.origin
+        : DEFAULT_PUBLIC_BRIDGE_ORIGIN;
     const payload = {
       v: 1,
       a: cleanSubApp,
       b: bucketKey || this.getBucketKey(),
+      o: origin,
       e: subscription.endpoint || '',
       p: subscription.keys?.p256dh || '',
       t: subscription.keys?.auth || '',
@@ -180,6 +207,7 @@ class CrossAppSyncEngine {
         v?: number;
         a?: string;
         b?: string;
+        o?: string;
         e?: string;
         p?: string;
         t?: string;
@@ -200,11 +228,17 @@ class CrossAppSyncEngine {
         return { ok: false, error: 'Connection key is missing valid push credentials. Copy a fresh key from the sub-app.' };
       }
 
+      const bridgeOrigin =
+        typeof data.o === 'string' && data.o.startsWith('https://')
+          ? data.o.replace(/\/+$/, '')
+          : DEFAULT_PUBLIC_BRIDGE_ORIGIN;
+
       return {
         ok: true,
         link: {
           subAppId,
           bucketKey: data.b || this.getBucketKey(),
+          bridgeOrigin,
           subscription: {
             endpoint: data.e,
             expirationTime: null,
@@ -581,11 +615,14 @@ class CrossAppSyncEngine {
       this.channel?.postMessage({ type: 'SYNC_PATCH', entries: changed });
     } catch {}
 
-    if (Capacitor.isNativePlatform()) return true;
+    // When running inside a native Android APK with paired standalone sub-apps, still push sync state to bridgeOrigin
+    const hasPairedLinks = this.getPairedSubAppLinks().length > 0;
+    if (Capacitor.isNativePlatform() && !hasPairedLinks) return true;
 
     try {
       const bucketKey = this.getBucketKey();
-      const res = await fetch('/api/sync/state', {
+      const baseUrl = this.getBridgeBaseUrl();
+      const res = await fetch(`${baseUrl}/api/sync/state`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ key: bucketKey, entries: changed }),
@@ -600,6 +637,17 @@ class CrossAppSyncEngine {
     if (this.initialized || typeof window === 'undefined') return;
     this.initialized = true;
     this.captureInitialHashes();
+
+    // Auto-register the dedicated scoped push Service Worker when visiting any standalone sub-app route
+    // so Android Chrome offers full standalone WebAPK installation ("Install app") immediately
+    if (!Capacitor.isNativePlatform() && 'serviceWorker' in navigator && this.isStandaloneSubAppPath()) {
+      const slug = window.location.pathname.toLowerCase().replace(/^\/+|\/+$/g, '').split('/')[0];
+      if (slug && VALID_SUB_APPS.has(slug)) {
+        void navigator.serviceWorker
+          .register(`/${slug}/sw-push.js`, { scope: `/${slug}/` })
+          .catch(() => {});
+      }
+    }
 
     if ('BroadcastChannel' in window) {
       try {

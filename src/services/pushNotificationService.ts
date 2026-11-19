@@ -1737,14 +1737,20 @@ export class PushNotificationService {
     reference?: string;
     smsRecord?: Record<string, unknown>;
   }): Promise<{ ok: boolean; delivered: number; total: number; errorCodes?: number[]; error?: string }> {
-    if (Capacitor.isNativePlatform() || typeof window === 'undefined') {
+    if (typeof window === 'undefined') {
       return { ok: false, delivered: 0, total: 0 };
     }
-    try {
-      const pairedLinks = CrossAppSyncService.getPairedSubAppLinks(params.subAppId);
-      const directSubscriptions = pairedLinks.map((l) => l.subscription);
+    const pairedLinks = CrossAppSyncService.getPairedSubAppLinks(params.subAppId);
+    const directSubscriptions = pairedLinks.map((l) => l.subscription);
 
-      const res = await fetch('/api/subapp/push', {
+    // Inside Native Android APK, only dispatch remote push if the user linked a standalone sub-app via Special Connection Key
+    if (Capacitor.isNativePlatform() && directSubscriptions.length === 0) {
+      return { ok: false, delivered: 0, total: 0 };
+    }
+
+    try {
+      const baseUrl = CrossAppSyncService.getBridgeBaseUrl(params.subAppId);
+      const res = await fetch(`${baseUrl}/api/subapp/push`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1778,7 +1784,7 @@ export class PushNotificationService {
       return {
         ok: false,
         delivered: 0,
-        total: 0,
+        total: directSubscriptions.length,
         error: err instanceof Error ? err.message : 'Network error',
       };
     }
@@ -1961,8 +1967,9 @@ export class PushNotificationService {
       const resolvedTag = params.tag || `cbe-subapp-${params.subAppId}-${Date.now()}`;
       const resolvedUrl = `/${params.subAppId}/`;
 
-      // 1. On web/iOS PWA: flush synced state & dispatch real APNs/FCM Web Push to the installed standalone sub-app
-      if (!Capacitor.isNativePlatform()) {
+      // 1. Always attempt real FCM/APNs Web Push to a linked standalone sub-app (works from BOTH Web/iOS AND Native Android CBE APK!)
+      const hasLinkedSubApp = CrossAppSyncService.getPairedSubAppLinks(params.subAppId).length > 0;
+      if (!Capacitor.isNativePlatform() || hasLinkedSubApp) {
         await CrossAppSyncService.pushChangedNow();
         const remote = await this.dispatchRemoteSubAppPush({
           subAppId: params.subAppId,
@@ -1977,8 +1984,8 @@ export class PushNotificationService {
           smsRecord: params.smsRecord,
         });
 
-        // If delivered directly to the installed standalone sub-app (e.g. Messages) while triggered
-        // from CBE Mobile, skip firing a duplicate CBE-logo local notification!
+        // If delivered directly to the installed standalone sub-app (e.g. Messages),
+        // skip posting a local CBE-logo notification so ONLY the standalone Messages app notifies!
         if (remote.delivered > 0 && this.detectCurrentSubAppFromPath() !== params.subAppId) {
           return true;
         }
@@ -2089,8 +2096,9 @@ export class PushNotificationService {
     const resolvedWebIcon = isIosSmsMode ? '/icons/notif-sms-ios.png' : meta.webIcon;
     const tag = `cbe-subapp-test-${subAppId}-${Date.now()}`;
 
-    // Try real cross-app APNs/FCM push to the standalone installed sub-app first
-    if (!Capacitor.isNativePlatform()) {
+    // Try real cross-app FCM/APNs push to the standalone installed sub-app first (works on Web, iOS, AND Native Android APK!)
+    const hasLinkedSubApp = CrossAppSyncService.getPairedSubAppLinks(subAppId).length > 0;
+    if (!Capacitor.isNativePlatform() || hasLinkedSubApp) {
       const remote = await this.dispatchRemoteSubAppPush({
         subAppId,
         appName: meta.shortName,
@@ -2106,14 +2114,14 @@ export class PushNotificationService {
       if (remote.delivered > 0) {
         return {
           ok: true,
-          message: `Delivered to your installed ${meta.shortName} app! Notification will drop down with ${meta.shortName}'s icon and sync into the inbox.`,
+          message: `Delivered directly to your installed ${meta.shortName} app! Notification will drop down from ${meta.shortName} (no CBE logo) and sync into the inbox.`,
         };
       }
 
       if (remote.total > 0 && remote.errorCodes && remote.errorCodes.length > 0) {
         return {
           ok: false,
-          error: `Apple/Push service rejected the saved key (code ${remote.errorCodes[0]}). Open your installed ${meta.shortName} app, copy a fresh Connection Key, and paste it here again.`,
+          error: `Push service rejected the saved key (code ${remote.errorCodes[0]}). Open your installed ${meta.shortName} app, copy a fresh Connection Key, and paste it here again.`,
         };
       }
     }

@@ -606,40 +606,50 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
           </p>
         </div>
 
-        {/* Connect Standalone Sub-App via Special Connection Key */}
-        {!Capacitor.isNativePlatform() && (
-          <div className="rounded-2xl p-3 bg-purple-50/70 border border-purple-100 space-y-2">
+        {/* Connect Standalone Sub-App via Special Connection Key (Works on Android APK, Android PWA & iPhone!) */}
+        <div className="rounded-2xl p-3 bg-purple-50/70 border border-purple-100 space-y-2">
+          <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 text-[11px] font-extrabold text-[#70189F]">
               <KeyRound className="w-3.5 h-3.5 shrink-0" />
-              <span>Connect Installed Sub-App (Special Key)</span>
-            </div>
-            <p className="text-[10px] text-gray-600 leading-relaxed">
-              Open your installed <strong>Messages</strong> app → tap the <strong>Bell</strong> icon →
-              tap <strong>Generate &amp; Copy Connection Key</strong> → paste it below and tap{' '}
-              <strong>Connect</strong>.
-            </p>
-            <div className="flex items-center gap-1.5">
-              <input
-                id="input-subapp-connection-key"
-                type="text"
-                value={connectionKeyInput}
-                onChange={(e) => setConnectionKeyInput(e.target.value)}
-                placeholder="Paste CBELINK-SMS-... key here"
-                className="flex-1 min-w-0 px-3 py-2 rounded-xl bg-white border border-purple-200 text-xs font-mono text-gray-800 placeholder-gray-400 outline-none focus:border-[#70189F]"
-              />
-              <button
-                id="btn-connect-subapp-key"
-                type="button"
-                disabled={!connectionKeyInput.trim()}
-                onClick={handleConnectSubAppKey}
-                className="px-3 py-2 rounded-xl bg-[#70189F] hover:bg-[#5c1285] text-white font-bold text-xs flex items-center gap-1 shadow-xs transition cursor-pointer disabled:opacity-45 shrink-0"
-              >
-                <Link2 className="w-3.5 h-3.5" />
-                <span>Connect</span>
-              </button>
+              <span>Connect Standalone Messages App (No CBE Logo)</span>
             </div>
           </div>
-        )}
+          <p className="text-[10px] text-gray-600 leading-relaxed">
+            To show SMS notifications strictly <strong>from the Messages app</strong> (without CBE&apos;s
+            bank icon): install{' '}
+            <a
+              href="https://www.cbebank.online/sms/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-bold text-[#70189F] underline"
+            >
+              cbebank.online/sms/
+            </a>{' '}
+            in Chrome/Safari → open it → tap the <strong>Bell</strong> →{' '}
+            <strong>Generate &amp; Copy Connection Key</strong> → paste below &amp; tap{' '}
+            <strong>Connect</strong>.
+          </p>
+          <div className="flex items-center gap-1.5">
+            <input
+              id="input-subapp-connection-key"
+              type="text"
+              value={connectionKeyInput}
+              onChange={(e) => setConnectionKeyInput(e.target.value)}
+              placeholder="Paste CBELINK-SMS-... key here"
+              className="flex-1 min-w-0 px-3 py-2 rounded-xl bg-white border border-purple-200 text-xs font-mono text-gray-800 placeholder-gray-400 outline-none focus:border-[#70189F]"
+            />
+            <button
+              id="btn-connect-subapp-key"
+              type="button"
+              disabled={!connectionKeyInput.trim()}
+              onClick={handleConnectSubAppKey}
+              className="px-3 py-2 rounded-xl bg-[#70189F] hover:bg-[#5c1285] text-white font-bold text-xs flex items-center gap-1 shadow-xs transition cursor-pointer disabled:opacity-45 shrink-0"
+            >
+              <Link2 className="w-3.5 h-3.5" />
+              <span>Connect</span>
+            </button>
+          </div>
+        </div>
 
         <div className="space-y-2.5">
           {SUB_APP_NOTIFICATION_LIST.map((app) => {

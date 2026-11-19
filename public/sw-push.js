@@ -21,6 +21,11 @@ self.addEventListener('activate', function (event) {
   }
 });
 
+// Minimal fetch handler required by Android Chrome to install standalone sub-apps as full WebAPKs
+self.addEventListener('fetch', function () {
+  // Pass through directly to network
+});
+
 function savePushToIndexedDb(payload) {
   return new Promise(function (resolve) {
     try {
