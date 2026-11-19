@@ -879,8 +879,23 @@ export class SmsService {
         window.dispatchEvent(new CustomEvent('sms-created', { detail: newSms }));
         const activeAcc = String(this.getActiveAccountNumber() || '').replace(/\D/g, '');
         const msgAcc = String(newSms.accountNumber || '').replace(/\D/g, '');
-        const isForActiveAccount = !activeAcc || !msgAcc || msgAcc === activeAcc || newSms.forAllUsers;
-        if (!newSms.read && isForActiveAccount && newSms.message) {
+        let loggedInAcc = '';
+        try {
+          const activeUserId = localStorage.getItem('tana_active_user_id');
+          const rawUsers = localStorage.getItem('tana_users');
+          if (activeUserId && rawUsers) {
+            const parsed = JSON.parse(rawUsers);
+            const found = Array.isArray(parsed) ? parsed.find((u: any) => u?.id === activeUserId) : null;
+            loggedInAcc = String(found?.accountNumber || '').replace(/\D/g, '');
+          }
+        } catch {}
+        const matchesPrimaryAcc =
+          !activeAcc ||
+          !msgAcc ||
+          msgAcc === activeAcc ||
+          (Boolean(loggedInAcc) && msgAcc === loggedInAcc) ||
+          newSms.forAllUsers;
+        if (!newSms.read && matchesPrimaryAcc && newSms.message) {
           void PushNotificationService.notifySubApp({
             subAppId: 'sms',
             title: newSms.sender || newSms.bankName || 'CBE',

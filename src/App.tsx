@@ -30,6 +30,7 @@ import Navigation, { TabType } from './components/Navigation';
 import OfflineBanner from './components/OfflineBanner';
 import PhoneRecentAppsModal, { AppViewId } from './components/PhoneRecentAppsModal';
 import PhoneSettingsModal from './components/PhoneSettingsModal';
+import SubAppPermissionBanner from './components/SubAppPermissionBanner';
 import { CbeWebReceiptModal } from './components/CbeWebReceiptModal';
 import {
   cacheCurrentPublicOriginIfReachable,
@@ -1407,6 +1408,16 @@ export default function App() {
         isOpen={showPhoneSettingsModal}
         onClose={() => setShowPhoneSettingsModal(false)}
       />
+
+      {/* Automatic Notification Permission Prompt for Sub-Applications (SMS Simulator, Truecaller, Telebirr, Dashen, Telegram, Phone) */}
+      {(activeView === 'sms' ||
+        activeView === 'truecaller' ||
+        activeView === 'telebirr' ||
+        activeView === 'dashen' ||
+        activeView === 'telegram' ||
+        activeView === 'phone') && (
+        <SubAppPermissionBanner subAppId={activeView} />
+      )}
     </div>
   );
 }
