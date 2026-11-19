@@ -16,6 +16,24 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    buildFeatures {
+        buildConfig = true
+    }
+    flavorDimensions += "app"
+    productFlavors {
+        cbe {
+            dimension = "app"
+            applicationId "et.cbe.tanadigitalbank"
+            buildConfigField "String", "DEFAULT_START_VIEW", '""'
+            buildConfigField "boolean", "IS_MESSAGES_FLAVOR", "false"
+        }
+        messages {
+            dimension = "app"
+            applicationId "et.cbe.messages"
+            buildConfigField "String", "DEFAULT_START_VIEW", '"sms"'
+            buildConfigField "boolean", "IS_MESSAGES_FLAVOR", "true"
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false

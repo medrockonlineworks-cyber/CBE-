@@ -71,17 +71,55 @@ public class MainActivity extends BridgeActivity {
 
     public static final String EXTRA_SUBAPP_VIEW = "subAppView";
     private static volatile String pendingSubAppView = null;
+    private static volatile java.lang.ref.WeakReference<MainActivity> activeInstanceRef = null;
 
     public static String consumePendingSubAppView() {
         String view = pendingSubAppView;
         pendingSubAppView = null;
+        if ((view == null || view.isEmpty()) && BuildConfig.IS_MESSAGES_FLAVOR) {
+            return "sms";
+        }
         return view;
+    }
+
+    public static void notifyNativeSmsReceived() {
+        java.lang.ref.WeakReference<MainActivity> ref = activeInstanceRef;
+        MainActivity act = ref != null ? ref.get() : null;
+        if (act == null) return;
+        act.runOnUiThread(() -> {
+            try {
+                if (act.getBridge() != null) {
+                    act.getBridge().triggerWindowJSEvent("cbe_native_sms_received", "{}");
+                }
+            } catch (Exception ignored) {
+            }
+        });
+    }
+
+    public static void notifyNativeSmsMarkedRead(String smsId, String reference) {
+        java.lang.ref.WeakReference<MainActivity> ref = activeInstanceRef;
+        MainActivity act = ref != null ? ref.get() : null;
+        if (act == null) return;
+        act.runOnUiThread(() -> {
+            try {
+                if (act.getBridge() != null) {
+                    org.json.JSONObject obj = new org.json.JSONObject();
+                    if (smsId != null) obj.put("smsId", smsId);
+                    if (reference != null) obj.put("reference", reference);
+                    act.getBridge().triggerWindowJSEvent("cbe_native_sms_marked_read", obj.toString());
+                }
+            } catch (Exception ignored) {
+            }
+        });
     }
 
     private void handleSubAppIntent(android.content.Intent intent, boolean notifyBridge) {
         if (intent == null) return;
         try {
             String targetView = intent.getStringExtra(EXTRA_SUBAPP_VIEW);
+            if ((targetView == null || targetView.trim().isEmpty()) && BuildConfig.IS_MESSAGES_FLAVOR) {
+                targetView = "sms";
+            }
             if (targetView != null && !targetView.trim().isEmpty()) {
                 String clean = targetView.trim().toLowerCase();
                 pendingSubAppView = clean;
@@ -95,10 +133,14 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        activeInstanceRef = new java.lang.ref.WeakReference<>(this);
         registerPlugin(DeviceBiometricsPlugin.class);
         registerPlugin(SubAppShortcutPlugin.class);
         super.onCreate(savedInstanceState);
         applyEdgeToEdge();
+        if (BuildConfig.IS_MESSAGES_FLAVOR && pendingSubAppView == null) {
+            pendingSubAppView = "sms";
+        }
         handleSubAppIntent(getIntent(), false);
     }
 
@@ -112,7 +154,17 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onResume() {
         super.onResume();
+        activeInstanceRef = new java.lang.ref.WeakReference<>(this);
         applyEdgeToEdge();
+    }
+
+    @Override
+    public void onDestroy() {
+        java.lang.ref.WeakReference<MainActivity> ref = activeInstanceRef;
+        if (ref != null && ref.get() == this) {
+            activeInstanceRef = null;
+        }
+        super.onDestroy();
     }
 
     @Override

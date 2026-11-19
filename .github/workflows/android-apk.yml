@@ -62,33 +62,44 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x android/gradlew
 
-      - name: Build Debug APK
+      - name: Build CBE Mobile & Standalone Messages Debug APKs
         working-directory: android
-        run: ./gradlew assembleDebug --no-daemon
+        run: ./gradlew assembleCbeDebug assembleMessagesDebug --no-daemon
 
-      - name: Verify APK output
+      - name: Verify APK outputs
         run: |
-          APK_PATH="android/app/build/outputs/apk/debug/app-debug.apk"
-          test -f "$APK_PATH"
-          ls -lh "$APK_PATH"
+          CBE_APK="android/app/build/outputs/apk/cbe/debug/app-cbe-debug.apk"
+          MSG_APK="android/app/build/outputs/apk/messages/debug/app-messages-debug.apk"
+          test -f "$CBE_APK"
+          test -f "$MSG_APK"
+          ls -lh "$CBE_APK" "$MSG_APK"
 
-      - name: Upload Android APK artifact
+      - name: Upload CBE Mobile Banking APK artifact
         uses: actions/upload-artifact@v4
         with:
           name: cbe-mobile-banking-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: android/app/build/outputs/apk/cbe/debug/app-cbe-debug.apk
           if-no-files-found: error
           retention-days: 30
 
-      - name: Publish direct APK to GitHub Release (no ZIP required)
+      - name: Upload Standalone Messages SMS APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: messages-sms-debug-apk
+          path: android/app/build/outputs/apk/messages/debug/app-messages-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish direct APKs to GitHub Release (no ZIP required)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk CBE-Mobile-Banking-debug.apk
+          cp android/app/build/outputs/apk/cbe/debug/app-cbe-debug.apk CBE-Mobile-Banking-debug.apk
+          cp android/app/build/outputs/apk/messages/debug/app-messages-debug.apk Messages-SMS-debug.apk
           if gh release view latest-apk >/dev/null 2>&1; then
-            gh release upload latest-apk CBE-Mobile-Banking-debug.apk --clobber
+            gh release upload latest-apk CBE-Mobile-Banking-debug.apk Messages-SMS-debug.apk --clobber
           else
-            gh release create latest-apk CBE-Mobile-Banking-debug.apk \
-              --title "CBE Mobile Banking Debug APK" \
-              --notes "Latest installable debug APK (direct .apk download, no ZIP extraction needed)."
+            gh release create latest-apk CBE-Mobile-Banking-debug.apk Messages-SMS-debug.apk \
+              --title "CBE Mobile Banking & Standalone Messages APKs" \
+              --notes "Direct installable Android APKs: CBE-Mobile-Banking-debug.apk (CBE Mobile) and Messages-SMS-debug.apk (Standalone Google Messages SMS sub-app)."
           fi

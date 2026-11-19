@@ -31,6 +31,105 @@ public class SubAppShortcutPlugin extends Plugin {
     public void getLaunchSubApp(PluginCall call) {
         JSObject ret = new JSObject();
         ret.put("view", MainActivity.consumePendingSubAppView());
+        ret.put("isMessagesApk", BuildConfig.IS_MESSAGES_FLAVOR);
+        call.resolve(ret);
+    }
+
+    @PluginMethod
+    public void getAppFlavor(PluginCall call) {
+        Context context = getContext();
+        JSObject ret = new JSObject();
+        ret.put("isMessagesApk", BuildConfig.IS_MESSAGES_FLAVOR);
+        ret.put("defaultStartView", BuildConfig.DEFAULT_START_VIEW);
+        ret.put("packageName", context != null ? context.getPackageName() : "");
+        call.resolve(ret);
+    }
+
+    private boolean checkMessagesApkInstalled(Context context) {
+        if (context == null) return false;
+        try {
+            context.getPackageManager().getPackageInfo("et.cbe.messages", 0);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @PluginMethod
+    public void isMessagesApkInstalled(PluginCall call) {
+        JSObject ret = new JSObject();
+        ret.put("installed", checkMessagesApkInstalled(getContext()));
+        call.resolve(ret);
+    }
+
+    @PluginMethod
+    public void sendSmsToMessagesApk(PluginCall call) {
+        Context context = getContext();
+        JSObject ret = new JSObject();
+        if (context == null || BuildConfig.IS_MESSAGES_FLAVOR) {
+            ret.put("installed", false);
+            ret.put("delivered", false);
+            call.resolve(ret);
+            return;
+        }
+
+        boolean installed = checkMessagesApkInstalled(context);
+        ret.put("installed", installed);
+        if (!installed) {
+            ret.put("delivered", false);
+            call.resolve(ret);
+            return;
+        }
+
+        try {
+            Intent intent = new Intent(IncomingSmsReceiver.ACTION_INCOMING_SMS);
+            intent.setComponent(new android.content.ComponentName(
+                "et.cbe.messages",
+                "et.cbe.tanadigitalbank.IncomingSmsReceiver"
+            ));
+            intent.setPackage("et.cbe.messages");
+            intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+            intent.putExtra("sender", call.getString("sender", "CBE"));
+            intent.putExtra("body", call.getString("body", ""));
+            intent.putExtra("smsId", call.getString("smsId", ""));
+            intent.putExtra("reference", call.getString("reference", ""));
+            intent.putExtra("smsRecordJson", call.getString("smsRecordJson", ""));
+            context.sendBroadcast(intent);
+            ret.put("delivered", true);
+        } catch (Exception e) {
+            ret.put("delivered", false);
+            ret.put("error", e.getMessage());
+        }
+        call.resolve(ret);
+    }
+
+    @PluginMethod
+    public void drainNativeIncomingSms(PluginCall call) {
+        Context context = getContext();
+        JSObject ret = new JSObject();
+        if (context == null) {
+            ret.put("recordsJson", "[]");
+            ret.put("readIdsJson", "[]");
+            call.resolve(ret);
+            return;
+        }
+        try {
+            android.content.SharedPreferences prefs = context.getSharedPreferences(
+                IncomingSmsReceiver.PREFS_NAME,
+                Context.MODE_PRIVATE
+            );
+            String pending = prefs.getString(IncomingSmsReceiver.KEY_PENDING_SMS, "[]");
+            String readIds = prefs.getString(IncomingSmsReceiver.KEY_READ_IDS, "[]");
+            prefs.edit()
+                .putString(IncomingSmsReceiver.KEY_PENDING_SMS, "[]")
+                .putString(IncomingSmsReceiver.KEY_READ_IDS, "[]")
+                .apply();
+            ret.put("recordsJson", pending);
+            ret.put("readIdsJson", readIds);
+        } catch (Exception e) {
+            ret.put("recordsJson", "[]");
+            ret.put("readIdsJson", "[]");
+        }
         call.resolve(ret);
     }
 

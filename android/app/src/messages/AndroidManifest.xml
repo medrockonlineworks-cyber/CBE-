@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application>
+        <receiver
+            android:name="et.cbe.tanadigitalbank.IncomingSmsReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="et.cbe.messages.ACTION_INCOMING_SMS" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name="et.cbe.tanadigitalbank.MarkSmsReadReceiver"
+            android:exported="false" />
+    </application>
+</manifest>
