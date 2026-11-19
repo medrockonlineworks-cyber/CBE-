@@ -10,6 +10,7 @@ import {
   Loader2,
   Send,
   Share,
+  Smartphone,
   X,
 } from 'lucide-react';
 import {
@@ -20,6 +21,7 @@ import {
   SubAppPushConfig,
 } from '../services/pushNotificationService';
 import { PhoneSettingsService } from '../services/phoneSettingsService';
+import { SubAppInstallService } from '../services/subAppInstallService';
 
 interface SubAppPushModalProps {
   isOpen: boolean;
@@ -130,6 +132,20 @@ export const SubAppPushModal: React.FC<SubAppPushModalProps> = ({
       return;
     }
     setSuccessMsg(res.message || 'Test notification sent!');
+  };
+
+  const handleInstallToHomeScreen = async () => {
+    if (busy) return;
+    setBusy('install');
+    setErrorMsg('');
+    setSuccessMsg('');
+    const res = await SubAppInstallService.installSubAppToHomeScreen(subAppId);
+    setBusy(null);
+    if (!res.ok) {
+      setErrorMsg(res.message);
+      return;
+    }
+    setSuccessMsg(res.message);
   };
 
   const badge = (() => {
@@ -346,6 +362,46 @@ export const SubAppPushModal: React.FC<SubAppPushModalProps> = ({
                 config.showPreview ? 'translate-x-5' : 'translate-x-0'
               }`}
             />
+          </button>
+        </div>
+
+        {/* Install Sub-App to Home Screen (Synced with CBE Mobile Banking) */}
+        <div
+          className={`rounded-2xl p-3.5 border space-y-2.5 ${
+            isDarkMode ? 'bg-neutral-900/60 border-neutral-800' : 'bg-neutral-50 border-neutral-200'
+          }`}
+        >
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 text-xs font-bold">
+                <Smartphone className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                <span>Install {meta.shortName} on Home Screen</span>
+              </div>
+              <p className={`text-[10.5px] mt-0.5 leading-snug ${isDarkMode ? 'text-neutral-400' : 'text-neutral-500'}`}>
+                Places {meta.shortName} with its own icon on your phone while staying 100% synced with CBE Mobile Banking.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            disabled={Boolean(busy)}
+            onClick={() => void handleInstallToHomeScreen()}
+            className={`w-full py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition cursor-pointer disabled:opacity-60 border ${
+              isDarkMode
+                ? 'bg-neutral-800 hover:bg-neutral-700 border-neutral-700 text-white'
+                : 'bg-white hover:bg-neutral-100 border-neutral-300 text-neutral-900'
+            }`}
+          >
+            {busy === 'install' ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Smartphone className="w-3.5 h-3.5" />
+            )}
+            <span>
+              {Capacitor.isNativePlatform()
+                ? `Add ${meta.shortName} Icon to Home Screen`
+                : `Install ${meta.shortName} Shortcut`}
+            </span>
           </button>
         </div>
 

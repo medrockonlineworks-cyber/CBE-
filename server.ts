@@ -5,6 +5,7 @@ import fs from 'node:fs';
 import { initVapidAndSecrets } from './server/vapidConfig.ts';
 import { createNotificationRouter } from './server/notificationRoutes.ts';
 import { createApkRouter } from './server/apkRoutes.ts';
+import { createSyncRouter } from './server/syncRoutes.ts';
 
 interface SubAppBranding {
   title: string;
@@ -118,10 +119,12 @@ async function startServer() {
     next();
   });
 
-  // Scope JSON body parsing strictly to /api/auth and /api/notifications so /api/pwa/* & /api/app/upload-apk raw streams stay intact
+  // Scope JSON body parsing strictly to /api/auth, /api/notifications, and /api/sync so /api/pwa/* & /api/app/upload-apk raw streams stay intact
   app.use(['/api/auth', '/api/notifications'], express.json({ limit: '128kb' }));
+  app.use('/api/sync', express.json({ limit: '2mb' }));
   app.use(createNotificationRouter());
   app.use(createApkRouter());
+  app.use(createSyncRouter());
 
   if (!isProd) {
     const { createServer: createViteServer } = await import('vite');

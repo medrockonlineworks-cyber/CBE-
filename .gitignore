@@ -21,4 +21,5 @@ ios/App/App/public/
 ios/App/Pods/
 ios/App/build/
 ios/DerivedData/
+.cbe-crossapp-sync.json
 

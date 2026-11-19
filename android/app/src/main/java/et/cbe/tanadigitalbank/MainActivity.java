@@ -69,11 +69,44 @@ public class MainActivity extends BridgeActivity {
         }
     }
 
+    public static final String EXTRA_SUBAPP_VIEW = "subAppView";
+    private static volatile String pendingSubAppView = null;
+
+    public static String consumePendingSubAppView() {
+        String view = pendingSubAppView;
+        pendingSubAppView = null;
+        return view;
+    }
+
+    private void handleSubAppIntent(android.content.Intent intent, boolean notifyBridge) {
+        if (intent == null) return;
+        try {
+            String targetView = intent.getStringExtra(EXTRA_SUBAPP_VIEW);
+            if (targetView != null && !targetView.trim().isEmpty()) {
+                String clean = targetView.trim().toLowerCase();
+                pendingSubAppView = clean;
+                if (notifyBridge && getBridge() != null) {
+                    getBridge().triggerWindowJSEvent("cbe_subapp_launch", "{\"view\":\"" + clean + "\"}");
+                }
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(DeviceBiometricsPlugin.class);
+        registerPlugin(SubAppShortcutPlugin.class);
         super.onCreate(savedInstanceState);
         applyEdgeToEdge();
+        handleSubAppIntent(getIntent(), false);
+    }
+
+    @Override
+    protected void onNewIntent(android.content.Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleSubAppIntent(intent, true);
     }
 
     @Override

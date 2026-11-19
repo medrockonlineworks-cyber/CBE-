@@ -12,6 +12,7 @@ import {
   ShieldAlert,
   Share,
   Smartphone,
+  Download,
   AlertCircle,
 } from 'lucide-react';
 import type { UserProfile } from '../types';
@@ -24,6 +25,7 @@ import {
   SubAppPushPreferencesMap,
   SubscribedDeviceInfo,
 } from '../services/pushNotificationService';
+import { SubAppInstallService } from '../services/subAppInstallService';
 
 interface NotificationSettingsCardProps {
   currentUser: UserProfile;
@@ -61,6 +63,7 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
     PushNotificationService.getSubAppPreferences()
   );
   const [testingSubApp, setTestingSubApp] = useState<SubAppNotificationId | null>(null);
+  const [installingSubApp, setInstallingSubApp] = useState<SubAppNotificationId | null>(null);
 
   const refreshStatus = useCallback(async () => {
     setCaps(PushNotificationService.getPlatformCapabilities());
@@ -246,6 +249,20 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
       return;
     }
     showBannerSuccess(res.message || `${label} push alert dispatched!`);
+  };
+
+  const handleInstallSubApp = async (subAppId: SubAppNotificationId) => {
+    if (installingSubApp || testingSubApp || busyAction) return;
+    setInstallingSubApp(subAppId);
+    setLocalError('');
+    setLocalSuccess('');
+    const res = await SubAppInstallService.installSubAppToHomeScreen(subAppId);
+    setInstallingSubApp(null);
+    if (!res.ok) {
+      showBannerError(res.message);
+      return;
+    }
+    showBannerSuccess(res.message);
   };
 
   const permissionBadge = (() => {
@@ -579,13 +596,29 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button
+                    id={`btn-install-subapp-${app.id}`}
+                    type="button"
+                    title={`Install ${app.shortName} icon to Home Screen`}
+                    disabled={Boolean(installingSubApp) || Boolean(testingSubApp) || Boolean(busyAction)}
+                    onClick={() => handleInstallSubApp(app.id)}
+                    className="px-2 py-1 rounded-xl bg-white hover:bg-blue-50 border border-gray-200 text-blue-700 font-bold text-[10px] flex items-center gap-1 transition cursor-pointer disabled:opacity-50"
+                  >
+                    {installingSubApp === app.id ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <Download className="w-3 h-3" />
+                    )}
+                    <span>Pin</span>
+                  </button>
+
                   <button
                     id={`btn-test-subapp-${app.id}`}
                     type="button"
                     disabled={Boolean(testingSubApp) || Boolean(busyAction)}
                     onClick={() => handleTestSubApp(app.id, app.shortName)}
-                    className="px-2.5 py-1 rounded-xl bg-white hover:bg-purple-50 border border-gray-200 text-[#70189F] font-bold text-[10.5px] flex items-center gap-1 transition cursor-pointer disabled:opacity-50"
+                    className="px-2 py-1 rounded-xl bg-white hover:bg-purple-50 border border-gray-200 text-[#70189F] font-bold text-[10px] flex items-center gap-1 transition cursor-pointer disabled:opacity-50"
                   >
                     {isTesting ? (
                       <Loader2 className="w-3 h-3 animate-spin" />

@@ -26,6 +26,8 @@ import { SystemBarsService } from './services/systemBarsService';
 import { AuthSessionService } from './services/authSessionService';
 import { BiometricAuthService } from './services/biometricAuthService';
 import { PushNotificationService } from './services/pushNotificationService';
+import { SubAppInstallService } from './services/subAppInstallService';
+import { CrossAppSyncService } from './services/crossAppSyncService';
 import Navigation, { TabType } from './components/Navigation';
 import OfflineBanner from './components/OfflineBanner';
 import PhoneRecentAppsModal, { AppViewId } from './components/PhoneRecentAppsModal';
@@ -234,6 +236,26 @@ export default function App() {
 
   useEffect(() => {
     cacheCurrentPublicOriginIfReachable();
+    CrossAppSyncService.start();
+
+    let mounted = true;
+    void SubAppInstallService.consumeNativeLaunchSubApp().then((launchView) => {
+      if (mounted && launchView) {
+        setActiveView(launchView);
+      }
+    });
+
+    const handleNativeSubAppLaunch = (ev: Event) => {
+      const detail = (ev as CustomEvent<{ view?: string }>).detail;
+      if (detail?.view && SubAppInstallService.isValidSubApp(detail.view)) {
+        setActiveView(detail.view);
+      }
+    };
+    window.addEventListener('cbe_subapp_launch', handleNativeSubAppLaunch);
+    return () => {
+      mounted = false;
+      window.removeEventListener('cbe_subapp_launch', handleNativeSubAppLaunch);
+    };
   }, []);
   const [activeTab, setActiveTab] = useState<TabType>('home');
   const [returnTab, setReturnTab] = useState<TabType>('home');
