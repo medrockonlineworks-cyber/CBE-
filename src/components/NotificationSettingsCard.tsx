@@ -566,9 +566,10 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
                 className="flex items-center justify-between gap-2.5 p-2.5 rounded-2xl bg-gray-50/90 border border-gray-100"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <span
-                    className="w-2.5 h-2.5 rounded-full shrink-0"
-                    style={{ backgroundColor: app.color }}
+                  <img
+                    src={app.webIcon}
+                    alt={app.name}
+                    className="w-7 h-7 rounded-lg shrink-0 object-cover shadow-2xs"
                   />
                   <div className="min-w-0">
                     <p className="text-xs font-bold text-gray-800 truncate">{app.name}</p>

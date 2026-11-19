@@ -19,6 +19,7 @@ import {
   SubAppNotificationId,
   SubAppPushConfig,
 } from '../services/pushNotificationService';
+import { PhoneSettingsService } from '../services/phoneSettingsService';
 
 interface SubAppPushModalProps {
   isOpen: boolean;
@@ -165,12 +166,15 @@ export const SubAppPushModal: React.FC<SubAppPushModalProps> = ({
         {/* Header */}
         <div className="flex items-start justify-between gap-2 pb-3 border-b border-current/10">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center text-white shrink-0 shadow-sm"
-              style={{ backgroundColor: meta.color }}
-            >
-              <BellRing className="w-5 h-5" />
-            </div>
+            <img
+              src={
+                subAppId === 'sms' && PhoneSettingsService.isIPhoneMode()
+                  ? '/icons/notif-sms-ios.png'
+                  : meta.webIcon
+              }
+              alt={meta.name}
+              className="w-10 h-10 rounded-xl shrink-0 shadow-sm object-cover"
+            />
             <div className="min-w-0">
               <div className="flex items-center gap-2">
                 <h3 className="text-sm font-extrabold truncate">{meta.name} Push</h3>

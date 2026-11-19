@@ -2,6 +2,7 @@ import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import type { Transaction, UserProfile } from '../types';
 import { AuthSessionService } from './authSessionService';
+import { PhoneSettingsService } from './phoneSettingsService';
 
 export type PrivacyMode = 'detailed' | 'private';
 
@@ -96,6 +97,9 @@ export interface SubAppNotificationMeta {
   color: string;
   url: string;
   defaultSender: string;
+  smallIcon: string;
+  largeIcon: string;
+  webIcon: string;
 }
 
 export const SUB_APP_NOTIFICATION_META: Record<SubAppNotificationId, SubAppNotificationMeta> = {
@@ -105,10 +109,13 @@ export const SUB_APP_NOTIFICATION_META: Record<SubAppNotificationId, SubAppNotif
     shortName: 'Messages',
     description: 'Google Messages & iPhone Messages bank debit/credit SMS alerts',
     channelId: 'cbe-subapp-sms',
-    channelName: 'SMS Simulator Alerts',
+    channelName: 'Messages',
     color: '#1a73e8',
     url: '/?view=sms',
     defaultSender: 'CBE',
+    smallIcon: 'ic_stat_sms',
+    largeIcon: 'ic_notif_sms',
+    webIcon: '/icons/notif-sms.png',
   },
   truecaller: {
     id: 'truecaller',
@@ -116,10 +123,13 @@ export const SUB_APP_NOTIFICATION_META: Record<SubAppNotificationId, SubAppNotif
     shortName: 'Truecaller',
     description: 'Real device heads-up notifications for Truecaller pop-down bank alerts',
     channelId: 'cbe-subapp-truecaller',
-    channelName: 'Truecaller SMS Alerts',
+    channelName: 'Truecaller',
     color: '#0066FF',
     url: '/?view=truecaller',
     defaultSender: 'Truecaller • CBE',
+    smallIcon: 'ic_stat_truecaller',
+    largeIcon: 'ic_notif_truecaller',
+    webIcon: '/icons/notif-truecaller.png',
   },
   telebirr: {
     id: 'telebirr',
@@ -127,10 +137,13 @@ export const SUB_APP_NOTIFICATION_META: Record<SubAppNotificationId, SubAppNotif
     shortName: 'telebirr',
     description: 'Mobile wallet deposits, P2P transfers & bank transfer alerts',
     channelId: 'cbe-subapp-telebirr',
-    channelName: 'Telebirr Alerts',
+    channelName: 'telebirr',
     color: '#5cb82e',
     url: '/?view=telebirr',
     defaultSender: 'telebirr',
+    smallIcon: 'ic_stat_telebirr',
+    largeIcon: 'ic_notif_telebirr',
+    webIcon: '/icons/notif-telebirr.png',
   },
   dashen: {
     id: 'dashen',
@@ -138,10 +151,13 @@ export const SUB_APP_NOTIFICATION_META: Record<SubAppNotificationId, SubAppNotif
     shortName: 'DashenBank',
     description: 'Dashen account credits, outgoing transfers & IPS alerts',
     channelId: 'cbe-subapp-dashen',
-    channelName: 'Dashen Bank Alerts',
+    channelName: 'DashenBank',
     color: '#1e3a8a',
     url: '/?view=dashen',
     defaultSender: 'DashenBank',
+    smallIcon: 'ic_stat_dashen',
+    largeIcon: 'ic_notif_dashen',
+    webIcon: '/icons/notif-dashen.png',
   },
   telegram: {
     id: 'telegram',
@@ -149,21 +165,27 @@ export const SUB_APP_NOTIFICATION_META: Record<SubAppNotificationId, SubAppNotif
     shortName: 'Telegram',
     description: 'Incoming simulated chat messages & payment receipt alerts',
     channelId: 'cbe-subapp-telegram',
-    channelName: 'Telegram Simulator Alerts',
+    channelName: 'Telegram',
     color: '#229ED9',
     url: '/?view=telegram',
     defaultSender: 'Telegram',
+    smallIcon: 'ic_stat_telegram',
+    largeIcon: 'ic_notif_telegram',
+    webIcon: '/icons/notif-telegram.png',
   },
   phone: {
     id: 'phone',
     name: 'Phone & USSD (*889#)',
-    shortName: 'CBE *889#',
+    shortName: 'Phone',
     description: 'Completed USSD banking transfers & airtime confirmations',
     channelId: 'cbe-subapp-phone',
-    channelName: 'Phone & USSD Alerts',
+    channelName: 'Phone & USSD',
     color: '#26d367',
     url: '/?view=phone',
     defaultSender: 'CBE *889#',
+    smallIcon: 'ic_stat_phone',
+    largeIcon: 'ic_notif_phone',
+    webIcon: '/icons/notif-phone.png',
   },
 };
 
@@ -767,6 +789,8 @@ export class PushNotificationService {
       channelId?: string;
       channelName?: string;
       iconColor?: string;
+      smallIcon?: string;
+      largeIcon?: string;
       subAppView?: SubAppNotificationId;
     }
   ): Promise<boolean> {
@@ -780,6 +804,8 @@ export class PushNotificationService {
         const channelId = payload.channelId || 'cbe-banking-alerts';
         const channelName = payload.channelName || 'CBE Banking Alerts';
         const iconColor = payload.iconColor || '#70189F';
+        const smallIcon = payload.smallIcon || 'ic_stat_cbe';
+        const largeIcon = payload.largeIcon || 'ic_notif_cbe';
         await this.ensureNativeChannel(channelId, channelName, iconColor);
         const notifId =
           ((Date.now() % 1_000_000_000) + Math.floor(Math.random() * 1000)) | 0;
@@ -789,9 +815,13 @@ export class PushNotificationService {
               id: Math.max(1, notifId),
               title: payload.title,
               body: payload.body,
+              largeBody: payload.body,
+              summaryText: payload.appName || channelName,
               channelId,
-              smallIcon: 'ic_stat_cbe',
+              smallIcon,
+              largeIcon,
               iconColor,
+              autoCancel: true,
               extra: {
                 url: payload.url,
                 view: payload.subAppView || null,
@@ -1594,12 +1624,21 @@ export class PushNotificationService {
           ? `${cleanBody.slice(0, 217)}...`
           : cleanBody;
 
+      const isIosSmsMode =
+        params.subAppId === 'sms' &&
+        typeof window !== 'undefined' &&
+        PhoneSettingsService.isIPhoneMode();
+
+      const resolvedWebIcon = isIosSmsMode ? '/icons/notif-sms-ios.png' : meta.webIcon;
+      const resolvedLargeIcon = isIosSmsMode ? 'ic_notif_sms_ios' : meta.largeIcon;
+      const resolvedColor = isIosSmsMode ? '#16C64F' : meta.color;
+
       return await this.showLocalServiceWorkerNotification({
         appName: meta.shortName,
         title: finalTitle,
         body: finalBody,
-        icon: '/pwa-192x192.png',
-        badge: '/pwa-192x192.png',
+        icon: resolvedWebIcon,
+        badge: resolvedWebIcon,
         timestamp: Date.now(),
         category: 'test',
         tag: params.tag || `cbe-subapp-${params.subAppId}-${Date.now()}`,
@@ -1607,7 +1646,9 @@ export class PushNotificationService {
         reference: params.reference,
         channelId: meta.channelId,
         channelName: meta.channelName,
-        iconColor: meta.color,
+        iconColor: resolvedColor,
+        smallIcon: meta.smallIcon,
+        largeIcon: resolvedLargeIcon,
         subAppView: params.subAppId,
       });
     } catch (err) {
