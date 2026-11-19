@@ -64,7 +64,8 @@ import {
   Eye,
   ShoppingBag,
   QrCode,
-  Palette
+  Palette,
+  BellRing
 } from 'lucide-react';
 import { CbeWebReceiptModal } from './CbeWebReceiptModal';
 import { CbeHolidayCardModal } from './CbeHolidayCardModal';
@@ -83,7 +84,9 @@ import {
   TruecallerThemeConfig
 } from '../types/truecaller';
 import PhoneSettingsModal from './PhoneSettingsModal';
+import SubAppPushModal from './SubAppPushModal';
 import { PhoneSettingsService, PhoneModelType } from '../services/phoneSettingsService';
+import { PushNotificationService } from '../services/pushNotificationService';
 import { 
   TruecallerService, 
   BANK_PRESETS, 
@@ -296,6 +299,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
   const [recentTxOnTop, setRecentTxOnTop] = useState<boolean>(true);
   const [enableSoundHaptics, setEnableSoundHaptics] = useState<boolean>(true);
   const [showPhoneSettingsModal, setShowPhoneSettingsModal] = useState<boolean>(false);
+  const [showPushSettingsModal, setShowPushSettingsModal] = useState<boolean>(false);
 
   const [showAddAccountModal, setShowAddAccountModal] = useState<boolean>(false);
   const [newAccountHolder, setNewAccountHolder] = useState<string>('Leykun Jemaneh Ylma');
@@ -627,7 +631,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
     setTimeout(() => setToastMessage(null), 2500);
   };
 
-  // Trigger Pop-down alert with animation and audio
+  // Trigger Pop-down alert with animation, audio, and real device Push Notification
   const triggerPopdownAlert = (alert: TruecallerAlert) => {
     setCurrentAlert(alert);
     setIsPopdownVisible(true);
@@ -635,6 +639,20 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
     if (soundEnabled) {
       playTruecallerChime();
     }
+    const formattedAmt = Number(alert.amount || 0).toLocaleString('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    const direction = alert.role === 'receiver' ? 'credited with' : 'debited with';
+    const fallbackBody = `Account ${alert.maskedAccount || alert.fullAccount || ''} ${direction} ETB ${formattedAmt}.`;
+    void PushNotificationService.notifySubApp({
+      subAppId: 'truecaller',
+      title: `${alert.bankName || 'CBE'} • Truecaller`,
+      body: alert.fullSmsText || alert.summaryText || fallbackBody,
+      privateBody: 'New Truecaller bank SMS alert.',
+      reference: alert.txId,
+      tag: `cbe-tc-${alert.id}`,
+    });
     setTimeout(() => {
       setIsPopdownAnimating(false);
     }, 500);
@@ -3516,6 +3534,29 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                       Truecaller SMS Preferences
                     </span>
 
+                    {/* Real Device Push Notifications */}
+                    <div className="flex items-center justify-between pb-2 border-b border-neutral-800 gap-2">
+                      <div className="min-w-0">
+                        <div className="font-semibold text-white flex items-center gap-1.5">
+                          <BellRing className="w-3.5 h-3.5 text-[#0087FF] shrink-0" />
+                          <span>Real Device Push Notifications</span>
+                        </div>
+                        <div className="text-[10.5px] text-neutral-400">
+                          Native Android APK &amp; Lock Screen pop-down alerts
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowThreeDotMenu(false);
+                          setShowPushSettingsModal(true);
+                        }}
+                        className="px-3 py-1.5 rounded-lg bg-[#0066FF] hover:bg-blue-500 text-white text-[11px] font-bold shrink-0 cursor-pointer transition"
+                      >
+                        Configure
+                      </button>
+                    </div>
+
                     {/* Clock Mode Setting */}
                     <div className="flex items-center justify-between">
                       <div>
@@ -4673,6 +4714,14 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
       <PhoneSettingsModal 
         isOpen={showPhoneSettingsModal} 
         onClose={() => setShowPhoneSettingsModal(false)} 
+      />
+
+      {/* Truecaller Push Notifications Settings Modal */}
+      <SubAppPushModal
+        isOpen={showPushSettingsModal}
+        onClose={() => setShowPushSettingsModal(false)}
+        subAppId="truecaller"
+        isDarkMode={!isLightMode}
       />
 
     </div>

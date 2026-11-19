@@ -9,6 +9,7 @@ import {
 import { buildSeptember15DemoMessages } from '../utils/telegramDemoChatData';
 import { LocalDb, generateCbeTxId } from '../lib/mockData';
 import { Transaction } from '../types';
+import { PushNotificationService } from './pushNotificationService';
 
 const STORAGE_KEY = 'telegram_simulator_chats_v5';
 const ACTIVE_CHAT_KEY = 'telegram_simulator_active_chat_id_v5';
@@ -352,6 +353,17 @@ export class TelegramSimulatorService {
 
     chat.messages.push(newMsg);
     this.updateChat(chatId, { messages: chat.messages });
+
+    if (message.sender === 'left') {
+      void PushNotificationService.notifySubApp({
+        subAppId: 'telegram',
+        title: `Telegram • ${chat.contactName}`,
+        body: message.text || 'New receipt / media message received',
+        privateBody: 'New Telegram Simulator message.',
+        tag: `cbe-tg-${newMsg.id}`,
+      });
+    }
+
     return newMsg;
   }
 

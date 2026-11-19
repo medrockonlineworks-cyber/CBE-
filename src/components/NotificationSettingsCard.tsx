@@ -19,6 +19,9 @@ import {
   NotificationPreferences,
   PlatformPushCapabilities,
   PushNotificationService,
+  SUB_APP_NOTIFICATION_LIST,
+  SubAppNotificationId,
+  SubAppPushPreferencesMap,
   SubscribedDeviceInfo,
 } from '../services/pushNotificationService';
 
@@ -54,6 +57,10 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
   });
   const [localError, setLocalError] = useState('');
   const [localSuccess, setLocalSuccess] = useState('');
+  const [subAppPrefs, setSubAppPrefs] = useState<SubAppPushPreferencesMap>(() =>
+    PushNotificationService.getSubAppPreferences()
+  );
+  const [testingSubApp, setTestingSubApp] = useState<SubAppNotificationId | null>(null);
 
   const refreshStatus = useCallback(async () => {
     setCaps(PushNotificationService.getPlatformCapabilities());
@@ -77,6 +84,14 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
   useEffect(() => {
     void refreshStatus();
   }, [refreshStatus]);
+
+  useEffect(() => {
+    const syncSubAppPrefs = () => {
+      setSubAppPrefs(PushNotificationService.getSubAppPreferences());
+    };
+    window.addEventListener('cbe_subapp_push_prefs_updated', syncSubAppPrefs);
+    return () => window.removeEventListener('cbe_subapp_push_prefs_updated', syncSubAppPrefs);
+  }, []);
 
   const showBannerSuccess = (msg: string) => {
     setLocalError('');
@@ -207,6 +222,30 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
     }
 
     showBannerSuccess(res.message || 'Test banking notification dispatched!');
+  };
+
+  const handleToggleSubApp = (subAppId: SubAppNotificationId) => {
+    const current = subAppPrefs[subAppId];
+    const nextEnabled = !current.enabled;
+    const updated = PushNotificationService.updateSubAppPreference(subAppId, {
+      enabled: nextEnabled,
+    });
+    setSubAppPrefs(updated);
+  };
+
+  const handleTestSubApp = async (subAppId: SubAppNotificationId, label: string) => {
+    if (testingSubApp || busyAction) return;
+    setTestingSubApp(subAppId);
+    setLocalError('');
+    setLocalSuccess('');
+    const res = await PushNotificationService.sendSubAppTestNotification(subAppId);
+    setCaps(PushNotificationService.getPlatformCapabilities());
+    setTestingSubApp(null);
+    if (!res.ok) {
+      showBannerError(res.error || `Failed to send ${label} test notification.`);
+      return;
+    }
+    showBannerSuccess(res.message || `${label} push alert dispatched!`);
   };
 
   const permissionBadge = (() => {
@@ -504,6 +543,78 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
             </div>
           );
         })}
+      </div>
+
+      {/* Sub-Application Push Alerts */}
+      <div className="border-t border-gray-100 pt-3.5 space-y-3">
+        <div>
+          <p className="text-[11px] font-extrabold text-gray-500 uppercase tracking-wider">
+            Sub-Application Push Alerts
+          </p>
+          <p className="text-[10px] text-gray-400 mt-0.5">
+            Native Android APK &amp; Lock Screen pop-down alerts for SMS Simulator and companion apps
+          </p>
+        </div>
+
+        <div className="space-y-2.5">
+          {SUB_APP_NOTIFICATION_LIST.map((app) => {
+            const appCfg = subAppPrefs[app.id];
+            const isTesting = testingSubApp === app.id;
+            return (
+              <div
+                key={app.id}
+                className="flex items-center justify-between gap-2.5 p-2.5 rounded-2xl bg-gray-50/90 border border-gray-100"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <span
+                    className="w-2.5 h-2.5 rounded-full shrink-0"
+                    style={{ backgroundColor: app.color }}
+                  />
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-gray-800 truncate">{app.name}</p>
+                    <p className="text-[10px] text-gray-400 leading-snug truncate">
+                      {app.description}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    id={`btn-test-subapp-${app.id}`}
+                    type="button"
+                    disabled={Boolean(testingSubApp) || Boolean(busyAction)}
+                    onClick={() => handleTestSubApp(app.id, app.shortName)}
+                    className="px-2.5 py-1 rounded-xl bg-white hover:bg-purple-50 border border-gray-200 text-[#70189F] font-bold text-[10.5px] flex items-center gap-1 transition cursor-pointer disabled:opacity-50"
+                  >
+                    {isTesting ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <Send className="w-3 h-3" />
+                    )}
+                    <span>Test</span>
+                  </button>
+
+                  <button
+                    id={`toggle-subapp-${app.id}`}
+                    type="button"
+                    role="switch"
+                    aria-checked={appCfg.enabled}
+                    onClick={() => handleToggleSubApp(app.id)}
+                    className={`w-10 h-5.5 rounded-full p-0.5 transition duration-200 cursor-pointer shrink-0 ${
+                      appCfg.enabled ? 'bg-[#70189F]' : 'bg-gray-200'
+                    }`}
+                  >
+                    <div
+                      className={`w-4.5 h-4.5 bg-white rounded-full shadow-sm transition-transform duration-200 ${
+                        appCfg.enabled ? 'translate-x-4.5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

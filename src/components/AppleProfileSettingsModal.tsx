@@ -12,10 +12,12 @@ import {
   ArrowLeft,
   CreditCard,
   ShieldCheck,
-  Sliders
+  Sliders,
+  BellRing
 } from 'lucide-react';
 import { SmsAccount } from '../types/sms';
 import PhoneSettingsModal from './PhoneSettingsModal';
+import SubAppPushModal from './SubAppPushModal';
 
 interface AppleProfileSettingsModalProps {
   isOpen: boolean;
@@ -45,6 +47,7 @@ export const AppleProfileSettingsModal: React.FC<AppleProfileSettingsModalProps>
   onToggleTheme,
 }) => {
   const [showPhoneSettings, setShowPhoneSettings] = useState(false);
+  const [showPushSettings, setShowPushSettings] = useState(false);
 
   if (!isOpen) return null;
 
@@ -96,6 +99,23 @@ export const AppleProfileSettingsModal: React.FC<AppleProfileSettingsModalProps>
                 <div>
                   <div className="text-[15px] font-medium text-white">Phone &amp; Status Bar Settings</div>
                   <div className="text-[12px] text-[#8e8e93]">Switch iPhone / Android, battery, time &amp; carrier</div>
+                </div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-[#8e8e93]/60 shrink-0" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowPushSettings(true)}
+              className="w-full p-4 flex items-center justify-between text-left hover:bg-white/5 active:bg-white/10 transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                  <BellRing className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-[15px] font-medium text-white">Push Notifications</div>
+                  <div className="text-[12px] text-[#8e8e93]">Real device Lock Screen &amp; Notification Center alerts</div>
                 </div>
               </div>
               <ChevronRight className="w-5 h-5 text-[#8e8e93]/60 shrink-0" />
@@ -194,6 +214,14 @@ export const AppleProfileSettingsModal: React.FC<AppleProfileSettingsModalProps>
       <PhoneSettingsModal
         isOpen={showPhoneSettings}
         onClose={() => setShowPhoneSettings(false)}
+      />
+
+      {/* Embedded SMS Simulator Push Notifications Modal */}
+      <SubAppPushModal
+        isOpen={showPushSettings}
+        onClose={() => setShowPushSettings(false)}
+        subAppId="sms"
+        isDarkMode={true}
       />
     </>
   );

@@ -70,8 +70,124 @@ const DEFAULT_PREFERENCES: NotificationPreferences = {
   privacyMode: 'detailed',
 };
 
+export type SubAppNotificationId =
+  | 'sms'
+  | 'truecaller'
+  | 'telebirr'
+  | 'dashen'
+  | 'telegram'
+  | 'phone';
+
+export interface SubAppPushConfig {
+  enabled: boolean;
+  showPreview: boolean;
+  updatedAt?: string;
+}
+
+export type SubAppPushPreferencesMap = Record<SubAppNotificationId, SubAppPushConfig>;
+
+export interface SubAppNotificationMeta {
+  id: SubAppNotificationId;
+  name: string;
+  shortName: string;
+  description: string;
+  channelId: string;
+  channelName: string;
+  color: string;
+  url: string;
+  defaultSender: string;
+}
+
+export const SUB_APP_NOTIFICATION_META: Record<SubAppNotificationId, SubAppNotificationMeta> = {
+  sms: {
+    id: 'sms',
+    name: 'SMS Simulator',
+    shortName: 'Messages',
+    description: 'Google Messages & iPhone Messages bank debit/credit SMS alerts',
+    channelId: 'cbe-subapp-sms',
+    channelName: 'SMS Simulator Alerts',
+    color: '#1a73e8',
+    url: '/?view=sms',
+    defaultSender: 'CBE',
+  },
+  truecaller: {
+    id: 'truecaller',
+    name: 'Truecaller SMS Simulator',
+    shortName: 'Truecaller',
+    description: 'Real device heads-up notifications for Truecaller pop-down bank alerts',
+    channelId: 'cbe-subapp-truecaller',
+    channelName: 'Truecaller SMS Alerts',
+    color: '#0066FF',
+    url: '/?view=truecaller',
+    defaultSender: 'Truecaller • CBE',
+  },
+  telebirr: {
+    id: 'telebirr',
+    name: 'Telebirr Super App',
+    shortName: 'telebirr',
+    description: 'Mobile wallet deposits, P2P transfers & bank transfer alerts',
+    channelId: 'cbe-subapp-telebirr',
+    channelName: 'Telebirr Alerts',
+    color: '#5cb82e',
+    url: '/?view=telebirr',
+    defaultSender: 'telebirr',
+  },
+  dashen: {
+    id: 'dashen',
+    name: 'Dashen Bank Super App',
+    shortName: 'DashenBank',
+    description: 'Dashen account credits, outgoing transfers & IPS alerts',
+    channelId: 'cbe-subapp-dashen',
+    channelName: 'Dashen Bank Alerts',
+    color: '#1e3a8a',
+    url: '/?view=dashen',
+    defaultSender: 'DashenBank',
+  },
+  telegram: {
+    id: 'telegram',
+    name: 'Telegram Chat Simulator',
+    shortName: 'Telegram',
+    description: 'Incoming simulated chat messages & payment receipt alerts',
+    channelId: 'cbe-subapp-telegram',
+    channelName: 'Telegram Simulator Alerts',
+    color: '#229ED9',
+    url: '/?view=telegram',
+    defaultSender: 'Telegram',
+  },
+  phone: {
+    id: 'phone',
+    name: 'Phone & USSD (*889#)',
+    shortName: 'CBE *889#',
+    description: 'Completed USSD banking transfers & airtime confirmations',
+    channelId: 'cbe-subapp-phone',
+    channelName: 'Phone & USSD Alerts',
+    color: '#26d367',
+    url: '/?view=phone',
+    defaultSender: 'CBE *889#',
+  },
+};
+
+export const SUB_APP_NOTIFICATION_LIST: SubAppNotificationMeta[] = [
+  SUB_APP_NOTIFICATION_META.sms,
+  SUB_APP_NOTIFICATION_META.truecaller,
+  SUB_APP_NOTIFICATION_META.telebirr,
+  SUB_APP_NOTIFICATION_META.dashen,
+  SUB_APP_NOTIFICATION_META.telegram,
+  SUB_APP_NOTIFICATION_META.phone,
+];
+
+const DEFAULT_SUB_APP_PREFS: SubAppPushPreferencesMap = {
+  sms: { enabled: true, showPreview: true },
+  truecaller: { enabled: true, showPreview: true },
+  telebirr: { enabled: true, showPreview: true },
+  dashen: { enabled: true, showPreview: true },
+  telegram: { enabled: true, showPreview: true },
+  phone: { enabled: true, showPreview: true },
+};
+
 const LOCAL_PREFS_PREFIX = 'cbe_push_local_prefs_';
 const LOCAL_ENABLED_PREFIX = 'cbe_push_local_enabled_';
+const SUB_APP_PREFS_KEY = 'cbe_subapp_push_prefs_v1';
 
 class BackendUnavailableError extends Error {
   constructor(message: string) {
@@ -292,7 +408,7 @@ export class PushNotificationService {
   private static sessionPromise: Promise<string | null> | null = null;
   private static swListenerAttached = false;
   private static nativeListenerAttached = false;
-  private static nativeChannelCreated = false;
+  private static createdNativeChannels = new Set<string>();
   private static nativePermissionCache: NotificationPermission | null = null;
 
   private static mapNativeDisplayPermission(display?: string): NotificationPermission {
@@ -317,24 +433,92 @@ export class PushNotificationService {
     }
   }
 
-  private static async ensureNativeChannel(): Promise<void> {
-    if (!Capacitor.isNativePlatform() || this.nativeChannelCreated) return;
+  private static async ensureNativeChannel(
+    channelId: string = 'cbe-banking-alerts',
+    channelName: string = 'CBE Banking Alerts',
+    lightColor: string = '#70189F',
+    description: string = 'Lock screen and notification center banking alerts'
+  ): Promise<void> {
+    if (!Capacitor.isNativePlatform() || this.createdNativeChannels.has(channelId)) return;
     try {
       if (Capacitor.getPlatform() === 'android') {
         await LocalNotifications.createChannel({
-          id: 'cbe-banking-alerts',
-          name: 'CBE Banking Alerts',
-          description: 'Lock screen and notification center banking alerts',
+          id: channelId,
+          name: channelName,
+          description,
           importance: 5,
           visibility: 1,
           vibration: true,
           lights: true,
-          lightColor: '#70189F',
+          lightColor,
         });
       }
-      this.nativeChannelCreated = true;
+      this.createdNativeChannels.add(channelId);
     } catch (err) {
       console.warn('[PushNotificationService] Failed to create notification channel:', err);
+    }
+  }
+
+  public static getSubAppPreferences(): SubAppPushPreferencesMap {
+    const fallback: SubAppPushPreferencesMap = {
+      sms: { ...DEFAULT_SUB_APP_PREFS.sms },
+      truecaller: { ...DEFAULT_SUB_APP_PREFS.truecaller },
+      telebirr: { ...DEFAULT_SUB_APP_PREFS.telebirr },
+      dashen: { ...DEFAULT_SUB_APP_PREFS.dashen },
+      telegram: { ...DEFAULT_SUB_APP_PREFS.telegram },
+      phone: { ...DEFAULT_SUB_APP_PREFS.phone },
+    };
+    if (typeof window === 'undefined') return fallback;
+    try {
+      const raw = localStorage.getItem(SUB_APP_PREFS_KEY);
+      if (!raw) return fallback;
+      const parsed = JSON.parse(raw) as Partial<SubAppPushPreferencesMap>;
+      (Object.keys(fallback) as SubAppNotificationId[]).forEach((key) => {
+        if (parsed && parsed[key] && typeof parsed[key] === 'object') {
+          fallback[key] = { ...fallback[key], ...parsed[key] };
+        }
+      });
+      return fallback;
+    } catch {
+      return fallback;
+    }
+  }
+
+  public static updateSubAppPreference(
+    subAppId: SubAppNotificationId,
+    patch: Partial<SubAppPushConfig>
+  ): SubAppPushPreferencesMap {
+    const current = this.getSubAppPreferences();
+    const next: SubAppPushPreferencesMap = {
+      ...current,
+      [subAppId]: {
+        ...current[subAppId],
+        ...patch,
+        updatedAt: new Date().toISOString(),
+      },
+    };
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(SUB_APP_PREFS_KEY, JSON.stringify(next));
+        window.dispatchEvent(
+          new CustomEvent('cbe_subapp_push_prefs_updated', { detail: { subAppId, prefs: next } })
+        );
+      } catch {
+        // ignore storage errors
+      }
+    }
+    return next;
+  }
+
+  private static resolveActiveUserForPush(): UserProfile | null {
+    if (typeof window === 'undefined') return null;
+    try {
+      const storedUsersRaw = localStorage.getItem('tana_users');
+      const users: UserProfile[] = storedUsersRaw ? JSON.parse(storedUsersRaw) : [];
+      const activeId = localStorage.getItem('tana_active_user_id');
+      return users.find((u) => u.id === activeId) || users[0] || null;
+    } catch {
+      return null;
     }
   }
 
@@ -579,7 +763,12 @@ export class PushNotificationService {
   }
 
   private static async showLocalServiceWorkerNotification(
-    payload: ReturnType<typeof buildLocalNotificationPayload>
+    payload: ReturnType<typeof buildLocalNotificationPayload> & {
+      channelId?: string;
+      channelName?: string;
+      iconColor?: string;
+      subAppView?: SubAppNotificationId;
+    }
   ): Promise<boolean> {
     try {
       if (Capacitor.isNativePlatform()) {
@@ -588,7 +777,10 @@ export class PushNotificationService {
         if (perm !== 'granted') {
           return false;
         }
-        await this.ensureNativeChannel();
+        const channelId = payload.channelId || 'cbe-banking-alerts';
+        const channelName = payload.channelName || 'CBE Banking Alerts';
+        const iconColor = payload.iconColor || '#70189F';
+        await this.ensureNativeChannel(channelId, channelName, iconColor);
         const notifId =
           ((Date.now() % 1_000_000_000) + Math.floor(Math.random() * 1000)) | 0;
         await LocalNotifications.schedule({
@@ -597,11 +789,12 @@ export class PushNotificationService {
               id: Math.max(1, notifId),
               title: payload.title,
               body: payload.body,
-              channelId: 'cbe-banking-alerts',
+              channelId,
               smallIcon: 'ic_stat_cbe',
-              iconColor: '#70189F',
+              iconColor,
               extra: {
                 url: payload.url,
+                view: payload.subAppView || null,
                 txId: payload.txId || null,
                 reference: payload.reference || null,
                 category: payload.category,
@@ -628,6 +821,7 @@ export class PushNotificationService {
         timestamp: payload.timestamp,
         data: {
           url: payload.url,
+          view: payload.subAppView || null,
           txId: payload.txId || null,
           reference: payload.reference || null,
           category: payload.category,
@@ -663,6 +857,7 @@ export class PushNotificationService {
             new CustomEvent('cbe_push_deep_link', {
               detail: {
                 url: (typeof extra.url === 'string' && extra.url) || '/',
+                view: typeof extra.view === 'string' ? extra.view : null,
                 txId: extra.txId || null,
                 reference: extra.reference || null,
                 category: extra.category || null,
@@ -688,6 +883,7 @@ export class PushNotificationService {
           new CustomEvent('cbe_push_deep_link', {
             detail: {
               url: data.url || '/',
+              view: data.view || null,
               txId: data.txId || null,
               reference: data.reference || null,
               category: data.category || null,
@@ -1279,5 +1475,218 @@ export class PushNotificationService {
         await this.showLocalServiceWorkerNotification(payload);
       }
     }
+  }
+
+  /**
+   * Enable push notifications directly from any sub-application (SMS Simulator, Truecaller, Telebirr, Dashen, Telegram, Phone/USSD).
+   */
+  public static async enableSubAppNotifications(
+    subAppId: SubAppNotificationId,
+    userOverride?: UserProfile | null
+  ): Promise<{ ok: boolean; message?: string }> {
+    const meta = SUB_APP_NOTIFICATION_META[subAppId];
+    const user = userOverride || this.resolveActiveUserForPush();
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const req = await LocalNotifications.requestPermissions();
+        const permission = this.mapNativeDisplayPermission(req?.display);
+        this.nativePermissionCache = permission;
+        if (permission !== 'granted') {
+          return {
+            ok: false,
+            message:
+              permission === 'denied'
+                ? 'Notification permission was blocked. Please allow notifications for CBE Mobile Banking in Android App Settings.'
+                : 'Notification permission was dismissed.',
+          };
+        }
+        await this.ensureNativeChannel(meta.channelId, meta.channelName, meta.color, meta.description);
+        if (user?.id) {
+          this.setLocalEnabled(user.id, true);
+          this.saveLocalPreferences(user.id, { enabled: true });
+        }
+        this.updateSubAppPreference(subAppId, { enabled: true });
+        return {
+          ok: true,
+          message: `${meta.name} push notifications enabled on your Android device!`,
+        };
+      } catch (err) {
+        return {
+          ok: false,
+          message: err instanceof Error ? err.message : 'Unable to enable notifications.',
+        };
+      }
+    }
+
+    if (user) {
+      const res = await this.enableNotifications(user);
+      if (!res.ok) {
+        return { ok: false, message: res.message };
+      }
+      this.updateSubAppPreference(subAppId, { enabled: true });
+      return {
+        ok: true,
+        message: `${meta.name} push notifications enabled!`,
+      };
+    }
+
+    const caps = this.getPlatformCapabilities();
+    if (!caps.isLocalSwSupported) {
+      return {
+        ok: false,
+        message: 'Notifications are not supported in this browser.',
+      };
+    }
+
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      return {
+        ok: false,
+        message: 'Notification permission was not granted.',
+      };
+    }
+    this.updateSubAppPreference(subAppId, { enabled: true });
+    return { ok: true, message: `${meta.name} notifications enabled!` };
+  }
+
+  /**
+   * Dispatch a real native Android (Capacitor LocalNotifications) or PWA Service Worker push notification
+   * for any sub-application (SMS Simulator, Truecaller, Telebirr, Dashen, Telegram, Phone/USSD).
+   */
+  public static async notifySubApp(params: {
+    subAppId: SubAppNotificationId;
+    title: string;
+    body: string;
+    privateBody?: string;
+    reference?: string;
+    tag?: string;
+    forceEvenIfMuted?: boolean;
+  }): Promise<boolean> {
+    try {
+      const meta = SUB_APP_NOTIFICATION_META[params.subAppId];
+      if (!meta) return false;
+
+      const subPrefs = this.getSubAppPreferences()[params.subAppId];
+      if (!params.forceEvenIfMuted && !subPrefs?.enabled) {
+        return false;
+      }
+
+      const permissionGranted = Capacitor.isNativePlatform()
+        ? (await this.syncNativePermissionStatus()) === 'granted'
+        : typeof window !== 'undefined' &&
+          'Notification' in window &&
+          Notification.permission === 'granted';
+
+      if (!permissionGranted) {
+        return false;
+      }
+
+      const activeUser = this.resolveActiveUserForPush();
+      const userPrefs = activeUser ? this.getLocalPreferences(activeUser.id) : DEFAULT_PREFERENCES;
+      const isPrivate = userPrefs.privacyMode === 'private' || !subPrefs.showPreview;
+
+      const finalTitle = (params.title || meta.defaultSender).trim();
+      const cleanBody = (params.body || '').replace(/\s+/g, ' ').trim();
+      const finalBody = isPrivate
+        ? params.privateBody || `You have a new ${meta.shortName} notification.`
+        : cleanBody.length > 220
+          ? `${cleanBody.slice(0, 217)}...`
+          : cleanBody;
+
+      return await this.showLocalServiceWorkerNotification({
+        appName: meta.shortName,
+        title: finalTitle,
+        body: finalBody,
+        icon: '/pwa-192x192.png',
+        badge: '/pwa-192x192.png',
+        timestamp: Date.now(),
+        category: 'test',
+        tag: params.tag || `cbe-subapp-${params.subAppId}-${Date.now()}`,
+        url: meta.url,
+        reference: params.reference,
+        channelId: meta.channelId,
+        channelName: meta.channelName,
+        iconColor: meta.color,
+        subAppView: params.subAppId,
+      });
+    } catch (err) {
+      console.warn('[PushNotificationService] notifySubApp failed:', err);
+      return false;
+    }
+  }
+
+  /**
+   * Send a realistic test push notification for a specific sub-application.
+   */
+  public static async sendSubAppTestNotification(
+    subAppId: SubAppNotificationId,
+    custom?: { title?: string; body?: string }
+  ): Promise<{ ok: boolean; message?: string; error?: string }> {
+    const meta = SUB_APP_NOTIFICATION_META[subAppId];
+    if (Capacitor.isNativePlatform()) {
+      await this.syncNativePermissionStatus();
+    }
+    const caps = this.getPlatformCapabilities();
+    if (caps.permission !== 'granted') {
+      return {
+        ok: false,
+        error: 'Please tap Enable Notifications first so this device grants notification permission.',
+      };
+    }
+
+    const samples: Record<SubAppNotificationId, { title: string; body: string; privateBody: string }> = {
+      sms: {
+        title: 'CBE',
+        body: 'Dear Leykun Jemaneh Ylma You have received ETB 2,500.00 from account 1*********8925 to your account 1*********4747. Current balance ETB 20,950.50. Thanks for Banking with CBE.',
+        privateBody: 'New CBE SMS message received.',
+      },
+      truecaller: {
+        title: 'Truecaller • CBE',
+        body: 'Account 1********4747 credited with ETB 4,500.00 • Available Balance: ETB 22,950.50',
+        privateBody: 'New Truecaller bank SMS alert.',
+      },
+      telebirr: {
+        title: 'telebirr',
+        body: 'You have received ETB 1,250.00 via telebirr. Your current telebirr balance is ETB 43,115.79.',
+        privateBody: 'New telebirr wallet transaction.',
+      },
+      dashen: {
+        title: 'DashenBank',
+        body: "Dear LEYKUN, your account '5502******011' has been credited with ETB 5,000.00. Current Balance: ETB 23,720.00.",
+        privateBody: 'New Dashen Bank account alert.',
+      },
+      telegram: {
+        title: 'Telegram • CBE Payment',
+        body: 'Payment receipt & SMS deposit confirmation for ETB 3,000.00 received.',
+        privateBody: 'New message in Telegram Simulator.',
+      },
+      phone: {
+        title: 'CBE *889# USSD',
+        body: 'Your *889# transfer of ETB 500.00 has been processed successfully.',
+        privateBody: 'New CBE *889# USSD alert.',
+      },
+    };
+
+    const sample = samples[subAppId];
+    const shown = await this.notifySubApp({
+      subAppId,
+      title: custom?.title?.trim() || sample.title,
+      body: custom?.body?.trim() || sample.body,
+      privateBody: sample.privateBody,
+      forceEvenIfMuted: true,
+    });
+
+    if (!shown) {
+      return {
+        ok: false,
+        error: `Could not trigger ${meta.name} notification. Check device notification permissions.`,
+      };
+    }
+
+    return {
+      ok: true,
+      message: `${meta.name} notification sent to your Lock Screen & Notification Center!`,
+    };
   }
 }

@@ -14,9 +14,11 @@ import {
   Battery,
   ShieldCheck,
   ChevronRight,
-  Smartphone
+  Smartphone,
+  BellRing
 } from 'lucide-react';
 import PhoneSettingsModal from './PhoneSettingsModal';
+import SubAppPushModal from './SubAppPushModal';
 import { MessageThread } from '../types/messages';
 import { GoogleMessagesService } from '../services/googleMessagesData';
 
@@ -43,6 +45,7 @@ export default function GoogleMessagesInbox({
   const [isSearching, setIsSearching] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showPhoneSettingsModal, setShowPhoneSettingsModal] = useState(false);
+  const [showPushSettingsModal, setShowPushSettingsModal] = useState(false);
   const [showStartChatModal, setShowStartChatModal] = useState(false);
   const [showGeminiModal, setShowGeminiModal] = useState(false);
   
@@ -325,6 +328,23 @@ export default function GoogleMessagesInbox({
                 <ChevronRight className="w-4 h-4 text-neutral-400" />
               </button>
 
+              <button
+                id="btn-google-messages-push-settings"
+                onClick={() => {
+                  setShowProfileModal(false);
+                  setShowPushSettingsModal(true);
+                }}
+                className={`w-full p-3 rounded-xl flex items-center justify-between text-sm font-medium transition-colors ${
+                  isDarkMode ? 'bg-neutral-800/70 hover:bg-neutral-800 text-neutral-200' : 'bg-neutral-100 hover:bg-neutral-200 text-neutral-800'
+                }`}
+              >
+                <span className="flex items-center space-x-2.5">
+                  <BellRing className="w-4 h-4 text-emerald-400" />
+                  <span>Push Notifications (Lock Screen)</span>
+                </span>
+                <ChevronRight className="w-4 h-4 text-neutral-400" />
+              </button>
+
 
 
               <button
@@ -513,6 +533,14 @@ export default function GoogleMessagesInbox({
       <PhoneSettingsModal 
         isOpen={showPhoneSettingsModal} 
         onClose={() => setShowPhoneSettingsModal(false)} 
+      />
+
+      {/* SMS Simulator Push Notifications Modal */}
+      <SubAppPushModal
+        isOpen={showPushSettingsModal}
+        onClose={() => setShowPushSettingsModal(false)}
+        subAppId="sms"
+        isDarkMode={isDarkMode}
       />
 
     </div>

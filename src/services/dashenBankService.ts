@@ -1,5 +1,6 @@
 // Dashen Bank Super App Service & State Engine
 // Manages Dashen account balance, transactions, inter-bank transfers, and registered accounts.
+import { PushNotificationService } from './pushNotificationService';
 
 export interface DashenTransaction {
   id: string;
@@ -337,10 +338,20 @@ export class DashenBankService {
     this.saveTransactions(currentTxs);
 
     // 5. Add notification
+    const notifBody = `ETB ${amount.toFixed(2)} received from ${senderName} (${senderBank}). Ref: ${newTx.reference}`;
     this.addNotification({
       title: 'Transfer Received',
-      body: `ETB ${amount.toFixed(2)} received from ${senderName} (${senderBank}). Ref: ${newTx.reference}`,
+      body: notifBody,
       time: 'Just now'
+    });
+
+    void PushNotificationService.notifySubApp({
+      subAppId: 'dashen',
+      title: 'DashenBank • Transfer Received',
+      body: notifBody,
+      privateBody: 'You have received a new Dashen Bank transfer.',
+      reference: newTx.reference,
+      tag: `cbe-dashen-${newTx.id}`,
     });
 
     return newTx;
@@ -405,10 +416,20 @@ export class DashenBankService {
     this.saveTransactions(txs);
 
     // Notification
+    const sentBody = `ETB ${amount.toFixed(2)} transferred to ${recipientName} (${recipientAccount}).`;
     this.addNotification({
       title: 'Transfer Sent',
-      body: `ETB ${amount.toFixed(2)} transferred to ${recipientName} (${recipientAccount}).`,
+      body: sentBody,
       time: 'Just now'
+    });
+
+    void PushNotificationService.notifySubApp({
+      subAppId: 'dashen',
+      title: 'DashenBank • Transfer Sent',
+      body: sentBody,
+      privateBody: 'A Dashen Bank transfer was completed.',
+      reference: newTx.reference,
+      tag: `cbe-dashen-${newTx.id}`,
     });
 
     return { success: true, tx: newTx };

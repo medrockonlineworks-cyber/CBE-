@@ -3,6 +3,7 @@
  * Full business logic, data persistence, and transaction simulation for Telebirr Super App
  * Matching authentic layout from Screenshot_20260912-123258.png to Screenshot_20260913-110444.png
  */
+import { PushNotificationService } from './pushNotificationService';
 
 export interface TelebirrRecentRecipient {
   id: string;
@@ -770,6 +771,15 @@ export class TelebirrService {
     state.transactions = [newTx, ...state.transactions];
     this.saveState(state);
 
+    void PushNotificationService.notifySubApp({
+      subAppId: 'telebirr',
+      title: 'telebirr • Transfer to Bank',
+      body: `Transferred ETB ${params.amount.toFixed(2)} to ${newTx.recipientName} (${newTx.bankName}). Tx: ${newTx.txNumber}`,
+      privateBody: 'A Telebirr bank transfer was completed.',
+      reference: newTx.txNumber,
+      tag: `cbe-tb-${newTx.id}`,
+    });
+
     return newTx;
   }
 
@@ -832,6 +842,15 @@ export class TelebirrService {
     state.transactions = [newTx, ...state.transactions];
     this.saveState(state);
 
+    void PushNotificationService.notifySubApp({
+      subAppId: 'telebirr',
+      title: 'telebirr • Money Received',
+      body: `You received ETB ${params.amount.toFixed(2)} from ${params.senderName}. New balance: ETB ${state.balance.toFixed(2)}.`,
+      privateBody: 'You have received a new Telebirr payment.',
+      reference: newTx.txNumber,
+      tag: `cbe-tb-${newTx.id}`,
+    });
+
     return { tx: newTx, newBalance: state.balance };
   }
 
@@ -868,6 +887,15 @@ export class TelebirrService {
 
     state.transactions = [newTx, ...state.transactions];
     this.saveState(state);
+
+    void PushNotificationService.notifySubApp({
+      subAppId: 'telebirr',
+      title: 'telebirr • Money Sent',
+      body: `Sent ETB ${params.amount.toFixed(2)} to ${params.recipientName} (${params.recipientPhone}). Tx: ${newTx.txNumber}`,
+      privateBody: 'A Telebirr mobile transfer was completed.',
+      reference: newTx.txNumber,
+      tag: `cbe-tb-${newTx.id}`,
+    });
 
     return { tx: newTx, newBalance: state.balance };
   }

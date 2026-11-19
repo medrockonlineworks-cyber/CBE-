@@ -20,10 +20,12 @@ import {
   Smartphone,
   Clock,
   Sliders,
-  ChevronRight
+  ChevronRight,
+  BellRing
 } from 'lucide-react';
 import { SmsMessage, SmsAccount } from '../types/sms';
 import PhoneSettingsModal from '../components/PhoneSettingsModal';
+import SubAppPushModal from '../components/SubAppPushModal';
 import { 
   SmsService, 
   maskAccountNumber, 
@@ -71,6 +73,7 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
     return SmsService.getSmsMessages(acc);
   });
   const [showPhoneSettingsModal, setShowPhoneSettingsModal] = useState<boolean>(false);
+  const [showPushSettingsModal, setShowPushSettingsModal] = useState<boolean>(false);
   const [isIPhone, setIsIPhone] = useState<boolean>(() => PhoneSettingsService.isIPhoneMode());
 
   useEffect(() => {
@@ -619,6 +622,29 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
                   </span>
                 </button>
 
+                {/* 🔔 Push Notifications Option inside 3-dot */}
+                <button
+                  id="btn-sms-push-notifications"
+                  onClick={() => {
+                    setShowMenu(false);
+                    setShowPushSettingsModal(true);
+                  }}
+                  className={`w-full px-4 py-2.5 text-left text-sm flex items-center justify-between transition-colors border-b ${
+                    isDarkMode 
+                      ? 'border-neutral-800/80 text-neutral-200 hover:bg-neutral-800/70' 
+                      : 'border-neutral-100 text-neutral-800 hover:bg-neutral-50'
+                  }`}
+                  title="Configure SMS Simulator Push Notifications"
+                >
+                  <div className="flex items-center space-x-2.5">
+                    <BellRing className="w-4 h-4 text-emerald-400" />
+                    <span className="font-medium">Push Notifications</span>
+                  </div>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                    Alerts
+                  </span>
+                </button>
+
                 {/* Truecaller Simulator Option inside 3-dot */}
                 <button
                   onClick={() => {
@@ -1080,6 +1106,14 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
       <PhoneSettingsModal 
         isOpen={showPhoneSettingsModal} 
         onClose={() => setShowPhoneSettingsModal(false)} 
+      />
+
+      {/* 9. SMS Simulator Push Notifications Settings Modal */}
+      <SubAppPushModal
+        isOpen={showPushSettingsModal}
+        onClose={() => setShowPushSettingsModal(false)}
+        subAppId="sms"
+        isDarkMode={isDarkMode}
       />
 
     </div>

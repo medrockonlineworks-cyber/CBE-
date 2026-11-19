@@ -40,6 +40,7 @@ function displayBankingNotification(data) {
       txId: payload.txId || null,
       reference: payload.reference || null,
       category: payload.category || 'general',
+      view: payload.view || null,
     },
   };
 
@@ -89,6 +90,7 @@ self.addEventListener('notificationclick', function (event) {
                 txId: notifData.txId || null,
                 reference: notifData.reference || null,
                 category: notifData.category || null,
+                view: notifData.view || null,
               });
             }
             if (typeof client.focus === 'function') {

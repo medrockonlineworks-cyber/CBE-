@@ -264,6 +264,24 @@ export default function App() {
     } catch {}
     return null;
   });
+  const [pendingDeepLinkView, setPendingDeepLinkView] = useState<'sms' | 'truecaller' | 'telebirr' | 'dashen' | 'telegram' | 'phone' | null>(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const search = new URLSearchParams(window.location.search);
+      const viewParam = search.get('view');
+      if (
+        viewParam === 'sms' ||
+        viewParam === 'truecaller' ||
+        viewParam === 'telebirr' ||
+        viewParam === 'dashen' ||
+        viewParam === 'telegram' ||
+        viewParam === 'phone'
+      ) {
+        return viewParam;
+      }
+    } catch {}
+    return null;
+  });
   const [activeDetailTxId, setActiveDetailTxId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -287,11 +305,40 @@ export default function App() {
     PushNotificationService.attachServiceWorkerListeners(() => currentUserRef.current);
 
     const handleDeepLink = (e: Event) => {
-      const detail = (e as CustomEvent<{ url?: string; txId?: string | null }>).detail;
+      const detail = (
+        e as CustomEvent<{ url?: string; txId?: string | null; view?: string | null }>
+      ).detail;
       if (!detail) return;
 
-      let targetTab: TabType | null = null;
       const rawUrl = detail.url || '';
+      const validSubViews = ['sms', 'truecaller', 'telebirr', 'dashen', 'telegram', 'phone'] as const;
+      type SubAppView = (typeof validSubViews)[number];
+
+      let targetSubView: SubAppView | null = null;
+      if (detail.view && (validSubViews as readonly string[]).includes(detail.view)) {
+        targetSubView = detail.view as SubAppView;
+      } else {
+        for (const v of validSubViews) {
+          if (rawUrl.includes(`view=${v}`) || rawUrl === `/${v}`) {
+            targetSubView = v;
+            break;
+          }
+        }
+      }
+
+      if (targetSubView) {
+        if (activeView === 'auth') {
+          setPendingDeepLinkView(targetSubView);
+          return;
+        }
+        setActiveView(targetSubView);
+        try {
+          window.history.pushState({ view: targetSubView, tab: 'home' }, '', `/${targetSubView}`);
+        } catch {}
+        return;
+      }
+
+      let targetTab: TabType | null = null;
       if (rawUrl.includes('tab=profile')) targetTab = 'profile';
       else if (rawUrl.includes('tab=history') || detail.txId) targetTab = 'history';
 
@@ -819,6 +866,13 @@ export default function App() {
     localStorage.setItem('tana_active_user_id', user.id);
     const alreadyEnrolled = BiometricAuthService.isBiometricEnrolledForUser(user.id);
     setShowBiometricEnrollPrompt(method === 'credentials' && !alreadyEnrolled);
+
+    if (pendingDeepLinkView) {
+      const targetView = pendingDeepLinkView;
+      setPendingDeepLinkView(null);
+      navigateTo(targetView, 'home');
+      return;
+    }
 
     if (pendingDeepLinkTxId) {
       setActiveDetailTxId(pendingDeepLinkTxId);

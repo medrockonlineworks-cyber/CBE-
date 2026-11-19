@@ -3,6 +3,7 @@ import { Transaction } from '../types';
 import { calculateCbeFee } from '../lib/cbeTariff';
 import { ALL_NEW_REGISTERED_ENTRIES } from '../lib/additionalAccountsData';
 import { generateCbeTxId } from '../lib/mockData';
+import { PushNotificationService } from './pushNotificationService';
 
 const STORAGE_MESSAGES_KEY = 'bank_sms_messages_v6';
 const STORAGE_ACCOUNTS_KEY = 'bank_sms_accounts_v6';
@@ -876,6 +877,19 @@ export class SmsService {
 
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('sms-created', { detail: newSms }));
+        const activeAcc = String(this.getActiveAccountNumber() || '').replace(/\D/g, '');
+        const msgAcc = String(newSms.accountNumber || '').replace(/\D/g, '');
+        const isForActiveAccount = !activeAcc || !msgAcc || msgAcc === activeAcc || newSms.forAllUsers;
+        if (!newSms.read && isForActiveAccount && newSms.message) {
+          void PushNotificationService.notifySubApp({
+            subAppId: 'sms',
+            title: newSms.sender || newSms.bankName || 'CBE',
+            body: newSms.message,
+            privateBody: 'New CBE SMS message received.',
+            reference: newSms.transactionId,
+            tag: `cbe-sms-${newSms.id}`,
+          });
+        }
       }
 
       return newSms;
