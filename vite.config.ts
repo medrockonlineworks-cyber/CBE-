@@ -299,6 +299,11 @@ function subAppStandaloneHtmlPlugin() {
         const targetDir = path.join(distDir, slug);
         fs.mkdirSync(targetDir, { recursive: true });
         fs.writeFileSync(path.join(targetDir, 'index.html'), subHtml, 'utf-8');
+
+        const swSource = path.resolve(__dirname, 'public', 'sw-push.js');
+        if (fs.existsSync(swSource)) {
+          fs.copyFileSync(swSource, path.join(targetDir, 'sw-push.js'));
+        }
       }
     },
   };

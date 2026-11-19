@@ -45,6 +45,8 @@ export const SubAppPermissionBanner: React.FC<SubAppPermissionBannerProps> = ({ 
     const sync = async () => {
       if (Capacitor.isNativePlatform()) {
         await PushNotificationService.syncNativePermissionStatus();
+      } else if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+        void PushNotificationService.syncSubAppPushSubscriptionSilently(subAppId);
       }
       if (!active) return;
       setCaps(PushNotificationService.getPlatformCapabilities());

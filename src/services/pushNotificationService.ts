@@ -3,6 +3,7 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 import type { Transaction, UserProfile } from '../types';
 import { AuthSessionService } from './authSessionService';
 import { PhoneSettingsService } from './phoneSettingsService';
+import { CrossAppSyncService } from './crossAppSyncService';
 
 export type PrivacyMode = 'detailed' | 'private';
 
@@ -1507,6 +1508,244 @@ export class PushNotificationService {
     }
   }
 
+  private static detectCurrentSubAppFromPath(): SubAppNotificationId | null {
+    if (typeof window === 'undefined') return null;
+    const norm = window.location.pathname.toLowerCase().replace(/\/+$/, '');
+    const map: Record<string, SubAppNotificationId> = {
+      '/sms': 'sms',
+      '/truecaller': 'truecaller',
+      '/telebirr': 'telebirr',
+      '/dashen': 'dashen',
+      '/telegram': 'telegram',
+      '/phone': 'phone',
+    };
+    return map[norm] || null;
+  }
+
+  private static async getSubAppServiceWorkerRegistration(
+    subAppId: SubAppNotificationId
+  ): Promise<ServiceWorkerRegistration> {
+    if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) {
+      throw new Error('Service Worker is not supported on this browser.');
+    }
+
+    const subScope = `/${subAppId}/`;
+    const subSwScript = `/${subAppId}/sw-push.js`;
+    const isInsideSubApp = this.detectCurrentSubAppFromPath() === subAppId;
+
+    if (isInsideSubApp) {
+      try {
+        let reg = await navigator.serviceWorker.getRegistration(subScope);
+        if (!reg) {
+          reg = await navigator.serviceWorker.register(subSwScript, { scope: subScope });
+        }
+        if (reg.active) return reg;
+        const waited = await Promise.race([
+          new Promise<ServiceWorkerRegistration>((resolve) => {
+            const worker = reg!.installing || reg!.waiting;
+            if (!worker) {
+              resolve(reg!);
+              return;
+            }
+            worker.addEventListener('statechange', () => {
+              if (worker.state === 'activated' || reg!.active) {
+                resolve(reg!);
+              }
+            });
+          }),
+          new Promise<ServiceWorkerRegistration>((resolve) => setTimeout(() => resolve(reg!), 3500)),
+        ]);
+        if (waited.active) return waited;
+      } catch (err) {
+        console.warn(`[PushNotificationService] Scoped SW registration fallback for ${subAppId}:`, err);
+      }
+    }
+
+    return this.getActiveServiceWorkerRegistration();
+  }
+
+  private static uint8ArrayEquals(a: Uint8Array | null, b: Uint8Array | null): boolean {
+    if (!a || !b || a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) return false;
+    }
+    return true;
+  }
+
+  /**
+   * Registers the current installed sub-app (e.g. standalone iPhone Messages /sms/)
+   * with the /api/subapp/subscribe bridge so CBE Mobile can send real APNs/FCM pushes
+   * directly to this sub-app with its own icon & name.
+   */
+  public static async subscribeSubAppWebPush(
+    subAppId: SubAppNotificationId
+  ): Promise<{ ok: boolean; deviceCount?: number; error?: string }> {
+    if (Capacitor.isNativePlatform()) {
+      return { ok: true, deviceCount: 1 };
+    }
+    const caps = this.getPlatformCapabilities();
+    if (!caps.isPushSupported || caps.permission !== 'granted') {
+      return { ok: false, error: 'Web Push permission not granted yet.' };
+    }
+
+    try {
+      const keyRes = await fetch('/api/subapp/vapid-key', { cache: 'no-store' });
+      const keyData = await safeParseJson<{ ok?: boolean; publicKey?: string; error?: string }>(
+        keyRes,
+        '/api/subapp/vapid-key'
+      );
+      if (!keyRes.ok || !keyData?.publicKey) {
+        return { ok: false, error: keyData?.error || 'VAPID public key unavailable.' };
+      }
+
+      const appServerKey = urlBase64ToUint8Array(keyData.publicKey);
+      const reg = await this.getSubAppServiceWorkerRegistration(subAppId);
+
+      let sub = await reg.pushManager.getSubscription();
+      if (sub) {
+        const existingKeyBuf = sub.options?.applicationServerKey;
+        const existingKey = existingKeyBuf ? new Uint8Array(existingKeyBuf) : null;
+        if (existingKey && !this.uint8ArrayEquals(existingKey, appServerKey)) {
+          await sub.unsubscribe().catch(() => false);
+          sub = null;
+        }
+      }
+
+      if (!sub) {
+        sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: appServerKey.buffer as ArrayBuffer,
+        });
+      }
+
+      const platform: 'ios' | 'android' | 'desktop' = caps.isIOS
+        ? 'ios'
+        : caps.isAndroid
+          ? 'android'
+          : 'desktop';
+
+      const res = await fetch('/api/subapp/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bucketKey: CrossAppSyncService.getBucketKey(),
+          subAppId,
+          platform,
+          subscription: sub.toJSON(),
+        }),
+      });
+
+      const data = await safeParseJson<{ ok?: boolean; deviceCount?: number; error?: string }>(
+        res,
+        '/api/subapp/subscribe'
+      );
+      if (!res.ok || !data?.ok) {
+        return { ok: false, error: data?.error || 'Failed to register sub-app push channel.' };
+      }
+
+      return { ok: true, deviceCount: data.deviceCount ?? 1 };
+    } catch (err) {
+      return {
+        ok: false,
+        error: err instanceof Error ? err.message : 'Unable to subscribe sub-app push.',
+      };
+    }
+  }
+
+  /**
+   * Silently refreshes a standalone sub-app's Web Push subscription on open (never prompts).
+   */
+  public static async syncSubAppPushSubscriptionSilently(
+    subAppId: SubAppNotificationId
+  ): Promise<void> {
+    try {
+      if (Capacitor.isNativePlatform()) return;
+      if (typeof window === 'undefined' || !('Notification' in window)) return;
+      if (Notification.permission !== 'granted') return;
+      await this.subscribeSubAppWebPush(subAppId);
+    } catch {
+      // Non-fatal background sync
+    }
+  }
+
+  private static async dispatchRemoteSubAppPush(params: {
+    subAppId: SubAppNotificationId;
+    appName: string;
+    title: string;
+    body: string;
+    icon: string;
+    badge: string;
+    url: string;
+    tag: string;
+    reference?: string;
+  }): Promise<{ ok: boolean; delivered: number; total: number }> {
+    if (Capacitor.isNativePlatform() || typeof window === 'undefined') {
+      return { ok: false, delivered: 0, total: 0 };
+    }
+    try {
+      const res = await fetch('/api/subapp/push', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bucketKey: CrossAppSyncService.getBucketKey(),
+          ...params,
+        }),
+      });
+      const data = await safeParseJson<{
+        ok?: boolean;
+        delivered?: number;
+        total?: number;
+      }>(res, '/api/subapp/push');
+      if (!res.ok || !data?.ok) {
+        return { ok: false, delivered: 0, total: 0 };
+      }
+      return {
+        ok: true,
+        delivered: Number(data.delivered || 0),
+        total: Number(data.total || 0),
+      };
+    } catch {
+      return { ok: false, delivered: 0, total: 0 };
+    }
+  }
+
+  private static appendSyncedTestSms(sender: string, body: string): void {
+    if (typeof window === 'undefined') return;
+    try {
+      const STORAGE_MESSAGES_KEY = 'bank_sms_messages_v6';
+      const raw = localStorage.getItem(STORAGE_MESSAGES_KEY);
+      const list = raw ? JSON.parse(raw) : [];
+      const messages = Array.isArray(list) ? list : [];
+
+      const activeAcc = localStorage.getItem('bank_sms_active_account') || '1000419524747';
+      const txId = `FT${Math.floor(1000000000 + Math.random() * 9000000000)}`;
+      const nowIso = new Date().toISOString();
+
+      messages.push({
+        id: `sms-test-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        transactionId: txId,
+        accountNumber: activeAcc,
+        accountName: 'Leykun Jemaneh Ylma',
+        role: 'receiver',
+        bankName: sender || 'CBE',
+        sender: sender || 'CBE',
+        recipient: 'Leykun Jemaneh Ylma',
+        type: 'receive',
+        amount: 2500,
+        balance: 20950.5,
+        message: body,
+        timestamp: nowIso,
+        read: false,
+        forAllUsers: true,
+      });
+
+      localStorage.setItem(STORAGE_MESSAGES_KEY, JSON.stringify(messages));
+      window.dispatchEvent(new CustomEvent('sms-updated'));
+    } catch (err) {
+      console.warn('[PushNotificationService] Failed to append test SMS:', err);
+    }
+  }
+
   /**
    * Enable push notifications directly from any sub-application (SMS Simulator, Truecaller, Telebirr, Dashen, Telegram, Phone/USSD).
    */
@@ -1549,19 +1788,14 @@ export class PushNotificationService {
       }
     }
 
-    if (user) {
-      const res = await this.enableNotifications(user);
-      if (!res.ok) {
-        return { ok: false, message: res.message };
-      }
-      this.updateSubAppPreference(subAppId, { enabled: true });
+    const caps = this.getPlatformCapabilities();
+    if (caps.requiresIosHomeScreenInstall) {
       return {
-        ok: true,
-        message: `${meta.name} push notifications enabled!`,
+        ok: false,
+        message: `On iPhone, first open ${meta.shortName} from your Home Screen (Safari Share → Add to Home Screen), then tap Allow Notifications.`,
       };
     }
 
-    const caps = this.getPlatformCapabilities();
     if (!caps.isLocalSwSupported) {
       return {
         ok: false,
@@ -1569,20 +1803,42 @@ export class PushNotificationService {
       };
     }
 
+    // Request permission directly from the user tap (required by iOS 16.4+)
     const permission = await Notification.requestPermission();
     if (permission !== 'granted') {
       return {
         ok: false,
-        message: 'Notification permission was not granted.',
+        message:
+          permission === 'denied'
+            ? `Notification permission was blocked. Enable notifications for ${meta.shortName} in iPhone Settings.`
+            : 'Notification permission was not granted.',
       };
     }
+
     this.updateSubAppPreference(subAppId, { enabled: true });
-    return { ok: true, message: `${meta.name} notifications enabled!` };
+    if (user?.id) {
+      this.setLocalEnabled(user.id, true);
+      this.saveLocalPreferences(user.id, { enabled: true });
+    }
+
+    // Register this standalone sub-app with real APNs/FCM Web Push so CBE Mobile can push straight to it
+    const subRes = await this.subscribeSubAppWebPush(subAppId);
+    if (subRes.ok) {
+      return {
+        ok: true,
+        message: `${meta.shortName} push notifications enabled & synced with CBE Mobile!`,
+      };
+    }
+
+    return {
+      ok: true,
+      message: `${meta.shortName} notifications enabled on this device!`,
+    };
   }
 
   /**
-   * Dispatch a real native Android (Capacitor LocalNotifications) or PWA Service Worker push notification
-   * for any sub-application (SMS Simulator, Truecaller, Telebirr, Dashen, Telegram, Phone/USSD).
+   * Dispatch a real native Android (Capacitor LocalNotifications), cross-app APNs/FCM Web Push
+   * to the standalone installed sub-app, or local PWA Service Worker notification.
    */
   public static async notifySubApp(params: {
     subAppId: SubAppNotificationId;
@@ -1599,16 +1855,6 @@ export class PushNotificationService {
 
       const subPrefs = this.getSubAppPreferences()[params.subAppId];
       if (!params.forceEvenIfMuted && !subPrefs?.enabled) {
-        return false;
-      }
-
-      const permissionGranted = Capacitor.isNativePlatform()
-        ? (await this.syncNativePermissionStatus()) === 'granted'
-        : typeof window !== 'undefined' &&
-          'Notification' in window &&
-          Notification.permission === 'granted';
-
-      if (!permissionGranted) {
         return false;
       }
 
@@ -1632,6 +1878,41 @@ export class PushNotificationService {
       const resolvedWebIcon = isIosSmsMode ? '/icons/notif-sms-ios.png' : meta.webIcon;
       const resolvedLargeIcon = isIosSmsMode ? 'ic_notif_sms_ios' : meta.largeIcon;
       const resolvedColor = isIosSmsMode ? '#16C64F' : meta.color;
+      const resolvedTag = params.tag || `cbe-subapp-${params.subAppId}-${Date.now()}`;
+      const resolvedUrl = `/${params.subAppId}/`;
+
+      // 1. On web/iOS PWA: flush synced state & dispatch real APNs/FCM Web Push to the installed standalone sub-app
+      if (!Capacitor.isNativePlatform()) {
+        await CrossAppSyncService.pushChangedNow();
+        const remote = await this.dispatchRemoteSubAppPush({
+          subAppId: params.subAppId,
+          appName: meta.shortName,
+          title: finalTitle,
+          body: finalBody,
+          icon: resolvedWebIcon,
+          badge: resolvedWebIcon,
+          url: resolvedUrl,
+          tag: resolvedTag,
+          reference: params.reference,
+        });
+
+        // If delivered directly to the installed standalone sub-app (e.g. Messages) while triggered
+        // from CBE Mobile, skip firing a duplicate CBE-logo local notification!
+        if (remote.delivered > 0 && this.detectCurrentSubAppFromPath() !== params.subAppId) {
+          return true;
+        }
+      }
+
+      // 2. Native Android APK or local fallback
+      const permissionGranted = Capacitor.isNativePlatform()
+        ? (await this.syncNativePermissionStatus()) === 'granted'
+        : typeof window !== 'undefined' &&
+          'Notification' in window &&
+          Notification.permission === 'granted';
+
+      if (!permissionGranted) {
+        return false;
+      }
 
       return await this.showLocalServiceWorkerNotification({
         appName: meta.shortName,
@@ -1641,8 +1922,8 @@ export class PushNotificationService {
         badge: resolvedWebIcon,
         timestamp: Date.now(),
         category: 'test',
-        tag: params.tag || `cbe-subapp-${params.subAppId}-${Date.now()}`,
-        url: meta.url,
+        tag: resolvedTag,
+        url: resolvedUrl,
         reference: params.reference,
         channelId: meta.channelId,
         channelName: meta.channelName,
@@ -1659,6 +1940,8 @@ export class PushNotificationService {
 
   /**
    * Send a realistic test push notification for a specific sub-application.
+   * When triggered from CBE Mobile, also writes & syncs a real CBE test SMS and delivers via
+   * APNs/FCM directly to the standalone installed sub-app if subscribed.
    */
   public static async sendSubAppTestNotification(
     subAppId: SubAppNotificationId,
@@ -1669,12 +1952,6 @@ export class PushNotificationService {
       await this.syncNativePermissionStatus();
     }
     const caps = this.getPlatformCapabilities();
-    if (caps.permission !== 'granted') {
-      return {
-        ok: false,
-        error: 'Please tap Enable Notifications first so this device grants notification permission.',
-      };
-    }
 
     const samples: Record<SubAppNotificationId, { title: string; body: string; privateBody: string }> = {
       sms: {
@@ -1710,18 +1987,86 @@ export class PushNotificationService {
     };
 
     const sample = samples[subAppId];
-    const shown = await this.notifySubApp({
-      subAppId,
-      title: custom?.title?.trim() || sample.title,
-      body: custom?.body?.trim() || sample.body,
-      privateBody: sample.privateBody,
-      forceEvenIfMuted: true,
+    const finalTitle = custom?.title?.trim() || sample.title;
+    const finalBody = custom?.body?.trim() || sample.body;
+
+    // For SMS Simulator tests, also add the message to the CBE SMS inbox & push sync state
+    if (subAppId === 'sms') {
+      this.appendSyncedTestSms(finalTitle, finalBody);
+      await CrossAppSyncService.pushChangedNow([
+        'bank_sms_messages_v6',
+        'bank_sms_accounts_v6',
+        'bank_sms_active_account',
+      ]);
+    }
+
+    const isIosSmsMode =
+      subAppId === 'sms' &&
+      typeof window !== 'undefined' &&
+      PhoneSettingsService.isIPhoneMode();
+    const resolvedWebIcon = isIosSmsMode ? '/icons/notif-sms-ios.png' : meta.webIcon;
+    const tag = `cbe-subapp-test-${subAppId}-${Date.now()}`;
+
+    // Try real cross-app APNs/FCM push to the standalone installed sub-app first
+    if (!Capacitor.isNativePlatform()) {
+      const remote = await this.dispatchRemoteSubAppPush({
+        subAppId,
+        appName: meta.shortName,
+        title: finalTitle,
+        body: finalBody,
+        icon: resolvedWebIcon,
+        badge: resolvedWebIcon,
+        url: `/${subAppId}/`,
+        tag,
+      });
+
+      if (remote.delivered > 0) {
+        return {
+          ok: true,
+          message: `Delivered to your installed ${meta.shortName} app! Notification will appear with ${meta.shortName}'s icon.`,
+        };
+      }
+    }
+
+    // Fallback to local / native Android notification
+    if (caps.permission !== 'granted') {
+      return {
+        ok: false,
+        error: caps.isIOS
+          ? `Open your installed ${meta.shortName} app from your Home Screen and tap Allow Notifications once so CBE Mobile can push alerts directly to ${meta.shortName}.`
+          : 'Please tap Enable Notifications first so this device grants notification permission.',
+      };
+    }
+
+    const shown = await this.showLocalServiceWorkerNotification({
+      appName: meta.shortName,
+      title: finalTitle,
+      body: finalBody,
+      icon: resolvedWebIcon,
+      badge: resolvedWebIcon,
+      timestamp: Date.now(),
+      category: 'test',
+      tag,
+      url: `/${subAppId}/`,
+      channelId: meta.channelId,
+      channelName: meta.channelName,
+      iconColor: isIosSmsMode ? '#16C64F' : meta.color,
+      smallIcon: meta.smallIcon,
+      largeIcon: isIosSmsMode ? 'ic_notif_sms_ios' : meta.largeIcon,
+      subAppView: subAppId,
     });
 
     if (!shown) {
       return {
         ok: false,
         error: `Could not trigger ${meta.name} notification. Check device notification permissions.`,
+      };
+    }
+
+    if (caps.isIOS && !Capacitor.isNativePlatform() && this.detectCurrentSubAppFromPath() !== subAppId) {
+      return {
+        ok: true,
+        message: `Synced! Open your installed ${meta.shortName} app and tap Allow Notifications once so future alerts drop down with ${meta.shortName}'s own icon.`,
       };
     }
 

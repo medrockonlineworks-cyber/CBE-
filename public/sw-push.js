@@ -59,7 +59,24 @@ self.addEventListener('push', function (event) {
     }
   }
 
-  event.waitUntil(displayBankingNotification(data));
+  event.waitUntil(
+    Promise.all([
+      displayBankingNotification(data),
+      self.clients
+        .matchAll({ type: 'window', includeUncontrolled: true })
+        .then(function (clientList) {
+          for (let i = 0; i < clientList.length; i++) {
+            if (typeof clientList[i].postMessage === 'function') {
+              clientList[i].postMessage({
+                type: 'CBE_SUBAPP_PUSH_RECEIVED',
+                payload: data,
+              });
+            }
+          }
+        })
+        .catch(function () {}),
+    ])
+  );
 });
 
 self.addEventListener('message', function (event) {

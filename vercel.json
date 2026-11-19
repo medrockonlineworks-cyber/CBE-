@@ -31,6 +31,19 @@
       ]
     },
     {
+      "source": "/(sms|truecaller|telebirr|dashen|telegram|phone)/sw-push\\.js",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/javascript; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
       "source": "/(sw-push\\.js|sw\\.js|manifest\\.webmanifest)",
       "headers": [
         {
@@ -41,6 +54,30 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/api/sync/state",
+      "destination": "/api/bridge?route=/api/sync/state"
+    },
+    {
+      "source": "/api/subapp/vapid-key",
+      "destination": "/api/bridge?route=/api/subapp/vapid-key"
+    },
+    {
+      "source": "/api/subapp/subscribe",
+      "destination": "/api/bridge?route=/api/subapp/subscribe"
+    },
+    {
+      "source": "/api/subapp/push",
+      "destination": "/api/bridge?route=/api/subapp/push"
+    },
+    {
+      "source": "/api/subapp/status",
+      "destination": "/api/bridge?route=/api/subapp/status"
+    },
+    {
+      "source": "/api/notifications/vapid-public-key",
+      "destination": "/api/bridge?route=/api/notifications/vapid-public-key"
+    },
     {
       "source": "/sms",
       "destination": "/sms/index.html"

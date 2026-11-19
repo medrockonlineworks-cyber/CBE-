@@ -113,6 +113,7 @@ async function startServer() {
   app.use((req, res, next) => {
     if (
       req.path === '/sw-push.js' ||
+      req.path.endsWith('/sw-push.js') ||
       req.path === '/sw.js' ||
       req.path === '/manifest.webmanifest' ||
       req.path.startsWith('/manifests/subapp-')
@@ -122,12 +123,25 @@ async function startServer() {
     next();
   });
 
-  // Scope JSON body parsing strictly to /api/auth, /api/notifications, and /api/sync so /api/pwa/* & /api/app/upload-apk raw streams stay intact
+  // Scope JSON body parsing strictly to /api/auth, /api/notifications, /api/sync, and /api/subapp
   app.use(['/api/auth', '/api/notifications'], express.json({ limit: '128kb' }));
-  app.use('/api/sync', express.json({ limit: '2mb' }));
+  app.use(['/api/sync', '/api/subapp'], express.json({ limit: '2mb' }));
   app.use(createNotificationRouter());
   app.use(createApkRouter());
   app.use(createSyncRouter());
+
+  // Serve scoped sub-app push service workers (e.g. /sms/sw-push.js)
+  const subAppSwPaths = Object.keys(SUBAPP_IOS_BRANDING).map((p) => `${p}/sw-push.js`);
+  app.get(subAppSwPaths, (_req, res) => {
+    const swFile = path.resolve(process.cwd(), 'public', 'sw-push.js');
+    res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    if (fs.existsSync(swFile)) {
+      res.sendFile(swFile);
+    } else {
+      res.status(404).end('// sw-push.js not found');
+    }
+  });
 
   if (!isProd) {
     const { createServer: createViteServer } = await import('vite');
