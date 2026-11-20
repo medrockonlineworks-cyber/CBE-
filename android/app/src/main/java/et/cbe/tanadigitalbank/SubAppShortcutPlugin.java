@@ -48,14 +48,6 @@ public class SubAppShortcutPlugin extends Plugin {
         call.resolve(ret);
     }
 
-    @PluginMethod
-    public void setNavigationBarStyle(PluginCall call) {
-        String color = call.getString("color", "#FFFFFF");
-        boolean isDark = Boolean.TRUE.equals(call.getBoolean("isDark", false));
-        MainActivity.updateNavigationBarStyle(color, isDark);
-        call.resolve();
-    }
-
     private String resolvePackageForSubApp(String subAppId) {
         if (subAppId == null) return null;
         String id = subAppId.trim().toLowerCase();

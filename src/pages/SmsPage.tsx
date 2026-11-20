@@ -21,8 +21,7 @@ import {
   Clock,
   Sliders,
   ChevronRight,
-  BellRing,
-  Search
+  BellRing
 } from 'lucide-react';
 import { SmsMessage, SmsAccount } from '../types/sms';
 import PhoneSettingsModal from '../components/PhoneSettingsModal';
@@ -87,7 +86,6 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
   });
   const [showPhoneSettingsModal, setShowPhoneSettingsModal] = useState<boolean>(false);
   const [showPushSettingsModal, setShowPushSettingsModal] = useState<boolean>(false);
-  const [accountSearchQuery, setAccountSearchQuery] = useState<string>('');
   const [isIPhone, setIsIPhone] = useState<boolean>(() => PhoneSettingsService.isIPhoneMode());
 
   useEffect(() => {
@@ -729,80 +727,29 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
                 </button>
 
                 {/* Menu Header / Section Label */}
-                <div className={`px-4 py-2 border-b ${isDarkMode ? 'border-neutral-800' : 'border-neutral-100'} space-y-2`}>
-                  <div className="flex items-center justify-between">
-                    <div className={`flex items-center space-x-2 text-xs font-semibold ${isDarkMode ? 'text-neutral-300' : 'text-neutral-600'} uppercase tracking-wider`}>
-                      <Landmark className="w-3.5 h-3.5 text-purple-400" />
-                      <span>Bank Accounts</span>
-                    </div>
-                    <button
-                      onClick={() => {
-                        setShowMenu(false);
-                        setShowAccountModal(true);
-                      }}
-                      className="text-xs text-purple-500 hover:text-purple-600 font-medium flex items-center space-x-0.5"
-                    >
-                      <Plus className="w-3 h-3" />
-                      <span>Switch/Add</span>
-                    </button>
+                <div className={`px-4 py-2 border-b ${isDarkMode ? 'border-neutral-800' : 'border-neutral-100'} flex items-center justify-between`}>
+                  <div className={`flex items-center space-x-2 text-xs font-semibold ${isDarkMode ? 'text-neutral-300' : 'text-neutral-600'} uppercase tracking-wider`}>
+                    <Landmark className="w-3.5 h-3.5 text-purple-400" />
+                    <span>Bank Accounts</span>
                   </div>
-
-                  {/* Quick Account Search Bar */}
-                  <div className="relative">
-                    <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <input
-                      type="text"
-                      value={accountSearchQuery}
-                      onChange={(e) => setAccountSearchQuery(e.target.value)}
-                      onClick={(e) => e.stopPropagation()}
-                      placeholder="Search name or account number..."
-                      className={`w-full pl-8 pr-7 py-1.5 rounded-xl text-xs border outline-none ${
-                        isDarkMode
-                          ? 'bg-neutral-900 border-neutral-700 text-white placeholder-neutral-500 focus:border-purple-500'
-                          : 'bg-neutral-50 border-neutral-300 text-neutral-900 placeholder-neutral-400 focus:border-purple-500'
-                      }`}
-                    />
-                    {accountSearchQuery && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setAccountSearchQuery('');
-                        }}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white"
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    )}
-                  </div>
+                  <button
+                    onClick={() => {
+                      setShowMenu(false);
+                      setShowAccountModal(true);
+                    }}
+                    className="text-xs text-purple-500 hover:text-purple-600 font-medium flex items-center space-x-0.5"
+                  >
+                    <Plus className="w-3 h-3" />
+                    <span>Switch/Add</span>
+                  </button>
                 </div>
 
                 {/* Account list options grouped by transaction day (Recent, Yesterday, Last week, Last month) */}
                 <div className="max-h-64 overflow-y-auto py-0.5">
-                  {(() => {
-                    const q = accountSearchQuery.trim().toLowerCase();
-                    const visibleSections = q
-                      ? groupedSections
-                          .map((sec) => ({
-                            ...sec,
-                            accounts: sec.accounts.filter(
-                              (m) =>
-                                (m.account.accountName || '').toLowerCase().includes(q) ||
-                                (m.account.accountNumber || '').toLowerCase().includes(q)
-                            ),
-                          }))
-                          .filter((sec) => sec.accounts.length > 0)
-                      : groupedSections;
-
-                    if (visibleSections.length === 0) {
-                      return (
-                        <div className="px-4 py-4 text-xs text-neutral-500 text-center">
-                          No matching accounts found
-                        </div>
-                      );
-                    }
-
-                    return visibleSections.map(section => (
+                  {groupedSections.length === 0 ? (
+                    <div className="px-4 py-3 text-xs text-neutral-500 text-center">No accounts found</div>
+                  ) : (
+                    groupedSections.map(section => (
                       <div key={section.key} className="py-0.5">
                         {/* Group Header */}
                         <div className={`px-4 py-1 text-[10px] font-bold uppercase tracking-wider ${
@@ -823,10 +770,7 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
                             return (
                               <button
                                 key={meta.account.accountNumber}
-                                onClick={() => {
-                                  setAccountSearchQuery('');
-                                  handleSelectAccount(meta.account.accountNumber);
-                                }}
+                                onClick={() => handleSelectAccount(meta.account.accountNumber)}
                                 className={`w-full px-4 py-2.5 flex items-center justify-between text-left transition-colors ${
                                   isSelected 
                                     ? (isDarkMode ? 'bg-purple-950/30 text-white font-medium' : 'bg-purple-50 text-purple-950 font-medium')
@@ -847,17 +791,11 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
                                   </div>
                                 </div>
 
-                                <div className="flex items-center space-x-1.5 flex-shrink-0 ml-1">
-                                  {/* "Now • Sender" / "Now • Receiver" badge strictly for latest transaction's 2 accounts */}
+                                <div className="flex items-center space-x-2 flex-shrink-0 ml-1">
+                                  {/* "Now" badge (restricted strictly to receiver and sender) or formatted transaction time */}
                                   {meta.isNow ? (
-                                    <span
-                                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full border tracking-tight whitespace-nowrap ${
-                                        meta.nowRole === 'receiver'
-                                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                                          : 'bg-purple-900/60 text-purple-200 border-purple-500/50'
-                                      }`}
-                                    >
-                                      {meta.nowRole === 'receiver' ? 'Now • Receiver' : 'Now • Sender'}
+                                    <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-purple-900/50 text-purple-300 border border-purple-700/40 tracking-tight">
+                                      Now
                                     </span>
                                   ) : (
                                     <span className={`text-[11px] font-medium ${isDarkMode ? 'text-neutral-400' : 'text-neutral-500'}`}>
@@ -865,7 +803,7 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
                                     </span>
                                   )}
 
-                                  {/* Pink unread notification dot */}
+                                  {/* Pink unread notification dot matching user's screenshot */}
                                   {meta.unreadCount > 0 && (
                                     <span 
                                       className="w-2.5 h-2.5 rounded-full bg-[#f43f5e] flex-shrink-0" 
@@ -882,8 +820,8 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
                           })}
                         </div>
                       </div>
-                    ));
-                  })()}
+                    ))
+                  )}
                 </div>
 
                 <div className={`border-t ${isDarkMode ? 'border-neutral-800' : 'border-neutral-200'} my-1`}></div>
@@ -1023,10 +961,10 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
         </div>
       )}
 
-      {/* 4. Bottom Banner: Exact text with bottom safe area clearance */}
+      {/* 4. Bottom Banner: Exact text from screenshot */}
       <footer className={`w-full ${
         isDarkMode ? 'bg-[#161719] border-neutral-800/80 text-neutral-300' : 'bg-white border-neutral-200 text-neutral-600'
-      } border-t px-4 pt-2.5 pb-[max(env(safe-area-inset-bottom,0px),14px)] z-30 shrink-0`}>
+      } border-t px-4 py-2.5 z-30 shrink-0`}>
         <div className="max-w-xl mx-auto flex items-center justify-center text-center">
           <p className={`text-[12.5px] ${isDarkMode ? 'text-neutral-300' : 'text-neutral-600'} font-normal`}>
             Sender can't accept replies. Contact them directly.{' '}
@@ -1067,53 +1005,12 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
                 Each sender or receiver account has its own independent message thread. Select an account to view its messages or add a new account number.
               </p>
 
-              {/* Search Accounts Input inside Switch/Add Modal */}
-              <div className="relative">
-                <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <input
-                  type="text"
-                  value={accountSearchQuery}
-                  onChange={(e) => setAccountSearchQuery(e.target.value)}
-                  placeholder="Search account by name or number..."
-                  className={`w-full pl-9 pr-8 py-2 rounded-xl text-sm border outline-none ${
-                    isDarkMode
-                      ? 'bg-neutral-900 border-neutral-700 text-white placeholder-neutral-500 focus:border-purple-500'
-                      : 'bg-neutral-50 border-neutral-300 text-neutral-900 placeholder-neutral-400 focus:border-purple-500'
-                  }`}
-                />
-                {accountSearchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setAccountSearchQuery('')}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-
               {/* Accounts List grouped by transaction days */}
               <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
-                {(() => {
-                  const q = accountSearchQuery.trim().toLowerCase();
-                  const visibleSections = q
-                    ? groupedSections
-                        .map((sec) => ({
-                          ...sec,
-                          accounts: sec.accounts.filter(
-                            (m) =>
-                              (m.account.accountName || '').toLowerCase().includes(q) ||
-                              (m.account.accountNumber || '').toLowerCase().includes(q)
-                          ),
-                        }))
-                        .filter((sec) => sec.accounts.length > 0)
-                    : groupedSections;
-
-                  if (visibleSections.length === 0) {
-                    return <div className="py-4 text-center text-xs text-neutral-500">No matching accounts found</div>;
-                  }
-
-                  return visibleSections.map(section => (
+                {groupedSections.length === 0 ? (
+                  <div className="py-4 text-center text-xs text-neutral-500">No accounts found</div>
+                ) : (
+                  groupedSections.map(section => (
                     <div key={section.key} className="space-y-1.5">
                       <div className={`px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider ${
                         isDarkMode ? 'text-neutral-400' : 'text-neutral-500'
@@ -1130,10 +1027,7 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
                           return (
                             <div
                               key={meta.account.accountNumber}
-                              onClick={() => {
-                                setAccountSearchQuery('');
-                                handleSelectAccount(meta.account.accountNumber);
-                              }}
+                              onClick={() => handleSelectAccount(meta.account.accountNumber)}
                               className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
                                 isSelected 
                                   ? (isDarkMode ? 'border-purple-500 bg-purple-950/20 text-white' : 'border-purple-500 bg-purple-50 text-purple-950')
@@ -1141,7 +1035,7 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
                               }`}
                             >
                               <div>
-                                <div className="flex items-center space-x-1.5 flex-wrap gap-y-1">
+                                <div className="flex items-center space-x-2">
                                   <span className="font-mono font-semibold text-sm">{meta.account.accountNumber}</span>
                                   {isSelected && (
                                     <span className={`text-[10px] ${isDarkMode ? 'bg-purple-500/20 text-purple-300' : 'bg-purple-200 text-purple-800'} px-1.5 py-0.5 rounded-full font-medium`}>
@@ -1149,14 +1043,8 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
                                     </span>
                                   )}
                                   {meta.isNow ? (
-                                    <span
-                                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full border whitespace-nowrap ${
-                                        meta.nowRole === 'receiver'
-                                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                                          : 'bg-purple-900/60 text-purple-200 border-purple-500/50'
-                                      }`}
-                                    >
-                                      {meta.nowRole === 'receiver' ? 'Now • Receiver' : 'Now • Sender'}
+                                    <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-purple-900/50 text-purple-300 border border-purple-700/40">
+                                      Now
                                     </span>
                                   ) : (
                                     <span className={`text-[10.5px] ${isDarkMode ? 'text-neutral-400' : 'text-neutral-500'}`}>
@@ -1187,8 +1075,8 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
                         })}
                       </div>
                     </div>
-                  ));
-                })()}
+                  ))
+                )}
               </div>
 
               {/* Add / Switch by Account Number */}

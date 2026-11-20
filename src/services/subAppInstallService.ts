@@ -49,7 +49,6 @@ interface SubAppShortcutPluginInterface {
     iconName: string;
     iconBase64?: string;
   }): Promise<{ supported: boolean; pinned: boolean }>;
-  setNavigationBarStyle(options: { color: string; isDark: boolean }): Promise<void>;
 }
 
 const SubAppShortcut = registerPlugin<SubAppShortcutPluginInterface>('SubAppShortcut');
@@ -76,15 +75,6 @@ export class SubAppInstallService {
 
   public static isValidSubApp(view: unknown): view is SubAppNotificationId {
     return typeof view === 'string' && (VALID_SUB_APPS as string[]).includes(view);
-  }
-
-  public static setNativeNavigationBarStyle(color: string, isDark: boolean): void {
-    if (!Capacitor.isNativePlatform()) return;
-    try {
-      SubAppShortcut.setNavigationBarStyle({ color, isDark }).catch(() => {});
-    } catch {
-      // Safe non-blocking
-    }
   }
 
   public static async getStandaloneSubAppFlavor(): Promise<SubAppNotificationId | null> {

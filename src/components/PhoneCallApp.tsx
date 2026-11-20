@@ -1044,45 +1044,9 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
     return Math.max(0, ...callerAccounts.map(a => a.lastTxTimestamp || 0));
   }, [callerAccounts]);
 
-  const [callerAccountSearch, setCallerAccountSearch] = useState<string>('');
-
-  // Identify strictly the top 2 accounts (Sender & Receiver) from the latest transaction
-  const latestTxRoleMap = useMemo(() => {
-    const map = new Map<string, 'sender' | 'receiver'>();
-    try {
-      const rawTx = localStorage.getItem('tana_transactions') || localStorage.getItem('cbe_transactions');
-      if (rawTx) {
-        const txList = JSON.parse(rawTx);
-        if (Array.isArray(txList) && txList.length > 0) {
-          const sorted = [...txList].sort((a: any, b: any) => {
-            const tA = new Date(a?.createdAt || a?.date || a?.timestamp || 0).getTime();
-            const tB = new Date(b?.createdAt || b?.date || b?.timestamp || 0).getTime();
-            return (isNaN(tB) ? 0 : tB) - (isNaN(tA) ? 0 : tA);
-          });
-          const latest = sorted[0];
-          const sClean = String(latest?.senderAccount || '').replace(/\D/g, '');
-          const rClean = String(latest?.recipientAccount || '').replace(/\D/g, '');
-          if (sClean) map.set(sClean, 'sender');
-          if (rClean && rClean !== sClean) map.set(rClean, 'receiver');
-        }
-      }
-    } catch {}
-    return map;
-  }, [callerAccounts]);
-
-  // Filter caller accounts by search & role tab, ensuring latest transaction's Sender & Receiver are pinned at the TOP
+  // Filter caller accounts by role tab, ensuring recent transactions are sorted to the TOP
   const filteredCallerAccounts = useMemo(() => {
     let list = [...callerAccounts];
-
-    if (callerAccountSearch.trim()) {
-      const q = callerAccountSearch.toLowerCase().trim();
-      list = list.filter(
-        (a) =>
-          (a.name || '').toLowerCase().includes(q) ||
-          (a.accountNumber || '').toLowerCase().includes(q) ||
-          (a.phoneNumber || '').toLowerCase().includes(q)
-      );
-    }
 
     // Find the max transaction timestamp
     let maxTxTimestamp = 0;
@@ -1093,15 +1057,7 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
     }
 
     list.sort((a, b) => {
-      // 1. Latest transaction Sender & Receiver pinned strictly at top
-      const aClean = (a.accountNumber || '').replace(/\D/g, '');
-      const bClean = (b.accountNumber || '').replace(/\D/g, '');
-      const aRole = latestTxRoleMap.get(aClean);
-      const bRole = latestTxRoleMap.get(bClean);
-      if (aRole && !bRole) return -1;
-      if (!aRole && bRole) return 1;
-      if (aRole && bRole && aRole !== bRole) return aRole === 'sender' ? -1 : 1;
-
+      // 1. isNow priority
       const isNowA = Boolean(a.isNow || (maxTxTimestamp > 0 && a.lastTxTimestamp === maxTxTimestamp));
       const isNowB = Boolean(b.isNow || (maxTxTimestamp > 0 && b.lastTxTimestamp === maxTxTimestamp));
       if (isNowA && !isNowB) return -1;
@@ -1126,7 +1082,7 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
       return list.filter(a => a.role === 'receiver');
     }
     return list;
-  }, [callerAccounts, accountFilter, callerAccountSearch, latestTxRoleMap]);
+  }, [callerAccounts, accountFilter]);
 
   const currentDetailTx = sampleTransactions[selectedTxIndex] || sampleTransactions[0];
 
@@ -1530,9 +1486,9 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
         )}
       </div>
 
-      {/* 5. Keypad Overlay Sheet with bottom safe-area clearance */}
+      {/* 5. Keypad Overlay Sheet (Matching Screenshot_20260906-121622.png) */}
       {isKeypadOpen && (
-        <div className="w-full bg-black border-t border-neutral-900/80 px-4 pt-1 pb-[max(env(safe-area-inset-bottom,0px),10px)] shrink-0 z-20 animate-in slide-in-from-bottom-6 duration-200">
+        <div className="w-full bg-black border-t border-neutral-900/80 px-4 pt-1 pb-1 shrink-0 z-20 animate-in slide-in-from-bottom-6 duration-200">
           
           {/* Dialed Number Display (if any) */}
           {dialedNumber && (
@@ -1742,7 +1698,7 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
       )}
 
       {/* 6. Bottom Navigation Bar (Recents & Contacts matching Screenshot 1) */}
-      <div className="w-full bg-black border-t border-neutral-900 px-8 pt-1.5 pb-[max(env(safe-area-inset-bottom,0px),10px)] flex items-center justify-around shrink-0 z-20">
+      <div className="w-full bg-black border-t border-neutral-900 px-8 py-1.5 flex items-center justify-around shrink-0 z-20">
         {/* Recents: Blue filled circular badge with white clock inside */}
         <button 
           onClick={() => setActiveTab('recents')}
@@ -2146,31 +2102,8 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
               </button>
             </div>
 
-            {/* Search Accounts Bar */}
-            <div className="px-4 pt-2.5 shrink-0">
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <input
-                  type="text"
-                  value={callerAccountSearch}
-                  onChange={(e) => setCallerAccountSearch(e.target.value)}
-                  placeholder="Search account by name, number, or phone..."
-                  className="w-full pl-8 pr-8 py-2 bg-neutral-900 border border-neutral-800 rounded-xl text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500"
-                />
-                {callerAccountSearch && (
-                  <button
-                    type="button"
-                    onClick={() => setCallerAccountSearch('')}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                )}
-              </div>
-            </div>
-
             {/* Filter Tabs: All, Senders, Receivers */}
-            <div className="px-4 pt-2 pb-1 flex items-center gap-2 shrink-0">
+            <div className="px-4 pt-2.5 pb-1 flex items-center gap-2 shrink-0">
               <button 
                 onClick={() => setAccountFilter('all')}
                 className={`flex-1 py-1.5 rounded-xl text-xs font-semibold transition ${
@@ -2214,14 +2147,10 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
               ) : (
                 filteredCallerAccounts.map((acc) => {
                   const isActive = activeCallerAccount?.id === acc.id;
-                  const cleanAccNum = (acc.accountNumber || '').replace(/\D/g, '');
-                  const latestRole = latestTxRoleMap.get(cleanAccNum) || null;
                   const isNow = Boolean(
-                    latestRole ||
                     acc.isNow || 
                     (highestTxTimestamp > 0 && acc.lastTxTimestamp === highestTxTimestamp)
                   );
-                  const displayNowRole = latestRole || (acc.role === 'sender' ? 'sender' : 'receiver');
                   return (
                     <div 
                       key={acc.id}
@@ -2266,29 +2195,22 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
 
                         {/* Role & Now Badges */}
                         <div className="flex items-center gap-1.5 shrink-0">
-                          {isNow ? (
+                          {isNow && (
                             <span 
                               id={`badge-now-${acc.id}`}
-                              className={`inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider border whitespace-nowrap ${
-                                displayNowRole === 'receiver'
-                                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/45'
-                                  : 'bg-amber-500/20 text-amber-300 border-amber-500/45'
-                              }`}
+                              className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/45 shadow-xs shadow-emerald-950/40"
                             >
-                              <span className={`w-1.5 h-1.5 rounded-full inline-block animate-pulse ${
-                                displayNowRole === 'receiver' ? 'bg-emerald-400' : 'bg-amber-400'
-                              }`} />
-                              {displayNowRole === 'receiver' ? 'Now • Receiver' : 'Now • Sender'}
-                            </span>
-                          ) : (
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                              acc.role === 'sender' 
-                                ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' 
-                                : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                            }`}>
-                              {acc.role}
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse" />
+                              Now
                             </span>
                           )}
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                            acc.role === 'sender' 
+                              ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' 
+                              : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                          }`}>
+                            {acc.role}
+                          </span>
                         </div>
                       </div>
 

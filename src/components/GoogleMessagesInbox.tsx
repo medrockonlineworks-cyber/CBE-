@@ -24,7 +24,7 @@ import SubAppPushModal from './SubAppPushModal';
 import { MessageThread } from '../types/messages';
 import { SmsAccount } from '../types/sms';
 import { GoogleMessagesService } from '../services/googleMessagesData';
-import { SmsService, maskAccountNumber } from '../services/smsService';
+import { maskAccountNumber } from '../services/smsService';
 
 interface GoogleMessagesInboxProps {
   threads: MessageThread[];
@@ -55,20 +55,8 @@ export default function GoogleMessagesInbox({
   const [isSearching, setIsSearching] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showAccountList, setShowAccountList] = useState(false);
-  const [accountSearch, setAccountSearch] = useState('');
 
   const googleProfile = GoogleMessagesService.buildGoogleAccountProfile(activeAccount);
-  const groupedAccountMetas = React.useMemo(() => {
-    const sections = SmsService.getGroupedAccounts() || [];
-    const flat = sections.flatMap((s) => s.accounts);
-    if (!accountSearch.trim()) return flat;
-    const q = accountSearch.toLowerCase().trim();
-    return flat.filter((meta) => {
-      const name = (meta.account.accountName || '').toLowerCase();
-      const num = (meta.account.accountNumber || '').toLowerCase();
-      return name.includes(q) || num.includes(q);
-    });
-  }, [accounts, activeAccount, accountSearch]);
   const otherAccounts = (accounts || []).filter(
     (acc) => acc && (acc.accountNumber || '').replace(/\D/g, '') !== googleProfile.accountNumber
   );
@@ -118,7 +106,7 @@ export default function GoogleMessagesInbox({
   };
 
   return (
-    <div className={`h-[100dvh] min-h-[100dvh] overflow-hidden ${isDarkMode ? 'bg-[#121316] text-white' : 'bg-[#f8f9fa] text-neutral-900'} flex flex-col font-sans transition-colors duration-150 select-none`}>
+    <div className={`min-h-screen ${isDarkMode ? 'bg-[#121316] text-white' : 'bg-[#f8f9fa] text-neutral-900'} flex flex-col font-sans transition-colors duration-150 select-none`}>
       
       {/* 🔍 Google Messages Top App Bar */}
       <header className={`px-4 pt-[max(env(safe-area-inset-top,0px),12px)] pb-2 flex items-center justify-between sticky top-0 z-30 ${isDarkMode ? 'bg-[#121316]' : 'bg-[#f8f9fa]'}`}>
@@ -191,7 +179,7 @@ export default function GoogleMessagesInbox({
       </header>
 
       {/* 📬 Conversation Threads List */}
-      <div className="flex-1 overflow-y-auto pb-[calc(env(safe-area-inset-bottom,0px)+8.5rem)] divide-y divide-transparent">
+      <div className="flex-1 overflow-y-auto pb-24 divide-y divide-transparent">
         {filteredThreads.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 px-6 text-center text-neutral-400">
             <MessageSquare className="w-12 h-12 stroke-[1.5] mb-3 text-neutral-500" />
@@ -264,7 +252,7 @@ export default function GoogleMessagesInbox({
       </div>
 
       {/* 🚀 Floating Action Buttons (Right-aligned matching Android Google Messages) */}
-      <div className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] right-4 flex flex-col items-end space-y-3 z-40">
+      <div className="fixed bottom-12 right-4 flex flex-col items-end space-y-3 z-40">
         {/* Gemini AI Sparkle Button */}
         <button
           onClick={() => setShowGeminiModal(true)}
@@ -354,95 +342,49 @@ export default function GoogleMessagesInbox({
 
               {onSelectAccount && showAccountList && otherAccounts.length > 0 && (
                 <div
-                  className={`mt-3 pt-2.5 border-t space-y-2 ${
+                  className={`mt-3 pt-2.5 border-t max-h-44 overflow-y-auto space-y-1 ${
                     isDarkMode ? 'border-neutral-800' : 'border-neutral-200'
                   }`}
                 >
-                  <p className="text-[10.5px] font-semibold uppercase tracking-wider text-neutral-400 px-1">
+                  <p className="text-[10.5px] font-semibold uppercase tracking-wider text-neutral-400 px-1 mb-1">
                     Switch Google Account
                   </p>
-                  {/* Account Search Input */}
-                  <div className="relative">
-                    <Search className="w-3.5 h-3.5 text-neutral-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <input
-                      type="text"
-                      value={accountSearch}
-                      onChange={(e) => setAccountSearch(e.target.value)}
-                      placeholder="Search account name or number..."
-                      className={`w-full pl-8 pr-7 py-1.5 rounded-xl text-xs border outline-none ${
-                        isDarkMode
-                          ? 'bg-neutral-900 border-neutral-700 text-white placeholder-neutral-500 focus:border-blue-500'
-                          : 'bg-neutral-50 border-neutral-300 text-neutral-900 placeholder-neutral-400 focus:border-blue-500'
-                      }`}
-                    />
-                    {accountSearch && (
+                  {accounts.map((acc) => {
+                    const prof = GoogleMessagesService.buildGoogleAccountProfile(acc);
+                    const isActive = prof.accountNumber === googleProfile.accountNumber;
+                    return (
                       <button
+                        key={acc.accountNumber}
                         type="button"
-                        onClick={() => setAccountSearch('')}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white"
+                        onClick={() => {
+                          onSelectAccount(acc.accountNumber);
+                          setShowAccountList(false);
+                          setShowProfileModal(false);
+                        }}
+                        className={`w-full px-2.5 py-2 rounded-xl flex items-center space-x-2.5 text-left transition-colors ${
+                          isActive
+                            ? isDarkMode
+                              ? 'bg-blue-500/15 text-white'
+                              : 'bg-blue-50 text-neutral-900'
+                            : isDarkMode
+                              ? 'hover:bg-neutral-800/80 text-neutral-200'
+                              : 'hover:bg-neutral-100 text-neutral-800'
+                        }`}
                       >
-                        <X className="w-3.5 h-3.5" />
+                        <div
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-xs flex-shrink-0"
+                          style={{ backgroundColor: prof.avatarColor }}
+                        >
+                          {prof.initial}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-semibold truncate">{prof.fullName}</p>
+                          <p className="text-[11px] text-neutral-400 truncate">{prof.email}</p>
+                        </div>
+                        {isActive && <Check className="w-4 h-4 text-blue-400 flex-shrink-0" />}
                       </button>
-                    )}
-                  </div>
-
-                  <div className="max-h-48 overflow-y-auto space-y-1 pr-0.5">
-                    {groupedAccountMetas.length === 0 ? (
-                      <p className="text-xs text-neutral-500 text-center py-3">No matching accounts</p>
-                    ) : (
-                      groupedAccountMetas.slice(0, 80).map((meta) => {
-                        const acc = meta.account;
-                        const prof = GoogleMessagesService.buildGoogleAccountProfile(acc);
-                        const isActive = prof.accountNumber === googleProfile.accountNumber;
-                        return (
-                          <button
-                            key={acc.accountNumber}
-                            type="button"
-                            onClick={() => {
-                              onSelectAccount(acc.accountNumber);
-                              setAccountSearch('');
-                              setShowAccountList(false);
-                              setShowProfileModal(false);
-                            }}
-                            className={`w-full px-2.5 py-2 rounded-xl flex items-center space-x-2.5 text-left transition-colors ${
-                              isActive
-                                ? isDarkMode
-                                  ? 'bg-blue-500/15 text-white'
-                                  : 'bg-blue-50 text-neutral-900'
-                                : isDarkMode
-                                  ? 'hover:bg-neutral-800/80 text-neutral-200'
-                                  : 'hover:bg-neutral-100 text-neutral-800'
-                            }`}
-                          >
-                            <div
-                              className="w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-xs flex-shrink-0"
-                              style={{ backgroundColor: prof.avatarColor }}
-                            >
-                              {prof.initial}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <p className="text-xs font-semibold truncate">{prof.fullName}</p>
-                                {meta.isNow && (
-                                  <span
-                                    className={`text-[9.5px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap ${
-                                      meta.nowRole === 'receiver'
-                                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                                        : 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
-                                    }`}
-                                  >
-                                    {meta.nowRole === 'receiver' ? 'Now • Receiver' : 'Now • Sender'}
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-[11px] text-neutral-400 truncate font-mono">{acc.accountNumber}</p>
-                            </div>
-                            {isActive && <Check className="w-4 h-4 text-blue-400 flex-shrink-0" />}
-                          </button>
-                        );
-                      })
-                    )}
-                  </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
