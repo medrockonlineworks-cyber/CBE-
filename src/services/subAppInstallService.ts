@@ -12,7 +12,21 @@ import {
 
 interface SubAppShortcutPluginInterface {
   isPinSupported(): Promise<{ supported: boolean }>;
-  getLaunchSubApp(): Promise<{ view: string | null }>;
+  getLaunchSubApp(): Promise<{ view: string | null; isMessagesApk?: boolean }>;
+  getAppFlavor(): Promise<{
+    isMessagesApk: boolean;
+    defaultStartView: string;
+    packageName: string;
+  }>;
+  isMessagesApkInstalled(): Promise<{ installed: boolean }>;
+  sendSmsToMessagesApk(options: {
+    sender: string;
+    body: string;
+    smsId?: string;
+    reference?: string;
+    smsRecordJson?: string;
+  }): Promise<{ installed: boolean; delivered: boolean; error?: string }>;
+  drainNativeIncomingSms(): Promise<{ recordsJson: string; readIdsJson: string }>;
   pinSubApp(options: {
     subAppId: string;
     label: string;
@@ -40,16 +54,94 @@ export interface SubAppInstallResult {
 }
 
 export class SubAppInstallService {
+  private static cachedIsMessagesApk: boolean | null = null;
+
   public static isValidSubApp(view: unknown): view is SubAppNotificationId {
     return typeof view === 'string' && (VALID_SUB_APPS as string[]).includes(view);
+  }
+
+  public static async isStandaloneMessagesApk(): Promise<boolean> {
+    if (!Capacitor.isNativePlatform()) return false;
+    if (this.cachedIsMessagesApk !== null) return this.cachedIsMessagesApk;
+    try {
+      const res = await SubAppShortcut.getAppFlavor();
+      this.cachedIsMessagesApk = Boolean(res?.isMessagesApk);
+      return this.cachedIsMessagesApk;
+    } catch {
+      this.cachedIsMessagesApk = false;
+      return false;
+    }
+  }
+
+  public static async isMessagesApkInstalled(): Promise<boolean> {
+    if (!Capacitor.isNativePlatform()) return false;
+    try {
+      const res = await SubAppShortcut.isMessagesApkInstalled();
+      return Boolean(res?.installed);
+    } catch {
+      return false;
+    }
+  }
+
+  public static async sendSmsToMessagesApk(params: {
+    sender: string;
+    body: string;
+    smsId?: string;
+    reference?: string;
+    smsRecord?: Record<string, unknown>;
+  }): Promise<{ installed: boolean; delivered: boolean }> {
+    if (!Capacitor.isNativePlatform()) {
+      return { installed: false, delivered: false };
+    }
+    try {
+      const res = await SubAppShortcut.sendSmsToMessagesApk({
+        sender: params.sender,
+        body: params.body,
+        smsId: params.smsId || '',
+        reference: params.reference || '',
+        smsRecordJson: params.smsRecord ? JSON.stringify(params.smsRecord) : '',
+      });
+      return {
+        installed: Boolean(res?.installed),
+        delivered: Boolean(res?.delivered),
+      };
+    } catch {
+      return { installed: false, delivered: false };
+    }
+  }
+
+  public static async drainNativeIncomingSms(): Promise<{
+    records: Array<Record<string, unknown>>;
+    readIds: Array<{ smsId?: string; reference?: string }>;
+  }> {
+    if (!Capacitor.isNativePlatform()) {
+      return { records: [], readIds: [] };
+    }
+    try {
+      const res = await SubAppShortcut.drainNativeIncomingSms();
+      const parsedRecords = res?.recordsJson ? JSON.parse(res.recordsJson) : [];
+      const parsedReads = res?.readIdsJson ? JSON.parse(res.readIdsJson) : [];
+      return {
+        records: Array.isArray(parsedRecords) ? parsedRecords : [],
+        readIds: Array.isArray(parsedReads) ? parsedReads : [],
+      };
+    } catch {
+      return { records: [], readIds: [] };
+    }
   }
 
   public static async consumeNativeLaunchSubApp(): Promise<SubAppNotificationId | null> {
     if (!Capacitor.isNativePlatform()) return null;
     try {
       const res = await SubAppShortcut.getLaunchSubApp();
+      if (typeof res?.isMessagesApk === 'boolean') {
+        this.cachedIsMessagesApk = res.isMessagesApk;
+      }
       if (res?.view && this.isValidSubApp(res.view)) {
         return res.view;
+      }
+      if (res?.isMessagesApk) {
+        return 'sms';
       }
     } catch {
       // Ignore if running in browser or older APK build

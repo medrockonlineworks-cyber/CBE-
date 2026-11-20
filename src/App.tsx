@@ -240,11 +240,48 @@ export default function App() {
     CrossAppSyncService.start();
 
     let mounted = true;
+    const drainNativeMessagesBridge = async () => {
+      if (!Capacitor.isNativePlatform()) return;
+      const { records, readIds } = await SubAppInstallService.drainNativeIncomingSms();
+      for (const rec of records) {
+        CrossAppSyncService.applyIncomingPushPayload({ view: 'sms', smsRecord: rec });
+      }
+      if (readIds.length > 0) {
+        try {
+          const raw = localStorage.getItem('bank_sms_messages_v6');
+          if (raw) {
+            const list = JSON.parse(raw);
+            if (Array.isArray(list)) {
+              let changed = false;
+              const next = list.map((msg: any) => {
+                if (!msg || msg.read) return msg;
+                const matched = readIds.some(
+                  (r) =>
+                    (r.smsId && msg.id === r.smsId) ||
+                    (r.reference && msg.transactionId === r.reference)
+                );
+                if (matched) {
+                  changed = true;
+                  return { ...msg, read: true };
+                }
+                return msg;
+              });
+              if (changed) {
+                localStorage.setItem('bank_sms_messages_v6', JSON.stringify(next));
+                window.dispatchEvent(new CustomEvent('sms-updated'));
+              }
+            }
+          }
+        } catch {}
+      }
+    };
+
     void SubAppInstallService.consumeNativeLaunchSubApp().then((launchView) => {
       if (mounted && launchView) {
         setActiveView(launchView);
       }
     });
+    void drainNativeMessagesBridge();
 
     const handleNativeSubAppLaunch = (ev: Event) => {
       const detail = (ev as CustomEvent<{ view?: string }>).detail;
@@ -252,7 +289,12 @@ export default function App() {
         setActiveView(detail.view);
       }
     };
+    const handleNativeSmsBridgeEvent = () => {
+      void drainNativeMessagesBridge();
+    };
     window.addEventListener('cbe_subapp_launch', handleNativeSubAppLaunch);
+    window.addEventListener('cbe_native_sms_received', handleNativeSmsBridgeEvent);
+    window.addEventListener('cbe_native_sms_marked_read', handleNativeSmsBridgeEvent);
 
     // Keep permanent standalone sub-app Connection Keys alive automatically whenever the sub-app opens or resumes
     const maintainCurrentSubApp = (forceCheck = false) => {
@@ -270,10 +312,14 @@ export default function App() {
       }
     };
     maintainCurrentSubApp(true);
-    const onSubAppFocus = () => maintainCurrentSubApp(false);
+    const onSubAppFocus = () => {
+      maintainCurrentSubApp(false);
+      void drainNativeMessagesBridge();
+    };
     const onSubAppVisible = () => {
       if (document.visibilityState === 'visible') {
         maintainCurrentSubApp(false);
+        void drainNativeMessagesBridge();
       }
     };
     window.addEventListener('focus', onSubAppFocus);
@@ -282,6 +328,8 @@ export default function App() {
     return () => {
       mounted = false;
       window.removeEventListener('cbe_subapp_launch', handleNativeSubAppLaunch);
+      window.removeEventListener('cbe_native_sms_received', handleNativeSmsBridgeEvent);
+      window.removeEventListener('cbe_native_sms_marked_read', handleNativeSmsBridgeEvent);
       window.removeEventListener('focus', onSubAppFocus);
       document.removeEventListener('visibilitychange', onSubAppVisible);
     };

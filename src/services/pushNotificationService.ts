@@ -5,6 +5,7 @@ import { AuthSessionService } from './authSessionService';
 import { PhoneSettingsService } from './phoneSettingsService';
 import { CrossAppSyncService } from './crossAppSyncService';
 import { AppLogoService } from './appLogoService';
+import { SubAppInstallService } from './subAppInstallService';
 
 export type PrivacyMode = 'detailed' | 'private';
 
@@ -410,12 +411,14 @@ function buildLocalNotificationPayload(params: {
     }
   }
 
+  const cbeAppIcon = AppLogoService.getNotificationIconUrl('cbe') || '/pwa-192x192.png';
+
   return {
-    appName: 'CBE Mobil',
+    appName: 'CBE Mobile Banking',
     title,
     body,
-    icon: '/pwa-192x192.png',
-    badge: '/pwa-192x192.png',
+    icon: cbeAppIcon,
+    badge: cbeAppIcon,
     timestamp: Date.now(),
     category: params.category,
     tag: params.txId ? `cbe-tx-${params.txId}` : `cbe-${params.category}-${Date.now()}`,
@@ -872,9 +875,13 @@ export class PushNotificationService {
         const channelName = payload.channelName || 'CBE Banking Alerts';
         const iconColor = isAndroidSms ? '#1A73E8' : payload.iconColor || '#70189F';
         const smallIcon = payload.smallIcon || 'ic_stat_cbe';
-        const largeIcon = isAndroidSms
-          ? 'ic_notif_sms_android_avatar'
-          : payload.largeIcon || 'ic_notif_cbe';
+        // For main CBE Mobile Banking notifications, omit largeIcon so Android displays ONLY the app icon
+        // (no second duplicate/mismatched icon on the right side of the heads-up banner or notification rows).
+        const largeIcon = payload.subAppView
+          ? isAndroidSms
+            ? 'ic_notif_sms_android_avatar'
+            : payload.largeIcon
+          : undefined;
         await this.ensureNativeChannel(channelId, channelName, iconColor);
         if (isAndroidSms) {
           await this.ensureNativeSmsActionType();
@@ -888,10 +895,14 @@ export class PushNotificationService {
               title: payload.title,
               body: payload.body,
               largeBody: payload.body,
-              summaryText: isAndroidSms ? 'Messages' : payload.appName || channelName,
+              summaryText: isAndroidSms
+                ? 'Messages'
+                : payload.subAppView
+                  ? payload.appName || channelName
+                  : undefined,
               channelId,
               smallIcon,
-              largeIcon,
+              ...(largeIcon ? { largeIcon } : {}),
               iconColor,
               group: isAndroidSms ? 'cbe_messages_group' : undefined,
               actionTypeId: isAndroidSms ? 'SMS_MARK_READ' : undefined,
@@ -2195,6 +2206,21 @@ export class PushNotificationService {
       const smsId =
         typeof params.smsRecord?.id === 'string' ? params.smsRecord.id : undefined;
 
+      // 0. If running inside Native Android CBE Mobile APK and standalone Messages APK (et.cbe.messages) is installed,
+      // deliver directly via Android explicit package broadcast (instant, offline, zero CBE logo, never expires!)
+      if (Capacitor.isNativePlatform() && params.subAppId === 'sms') {
+        const directApk = await SubAppInstallService.sendSmsToMessagesApk({
+          sender: finalTitle,
+          body: finalBody,
+          smsId,
+          reference: params.reference,
+          smsRecord: params.smsRecord,
+        });
+        if (directApk.delivered) {
+          return true;
+        }
+      }
+
       // 1. Always attempt real FCM/APNs Web Push to a linked standalone sub-app (works from BOTH Web/iOS AND Native Android CBE APK!)
       const hasLinkedSubApp = CrossAppSyncService.getPairedSubAppLinks(params.subAppId).length > 0;
       if (!Capacitor.isNativePlatform() || hasLinkedSubApp) {
@@ -2334,6 +2360,24 @@ export class PushNotificationService {
     const smsId = typeof smsRecord?.id === 'string' ? smsRecord.id : undefined;
     const tag = `cbe-subapp-test-${subAppId}-${Date.now()}`;
     const isInsideThisSubApp = !Capacitor.isNativePlatform() && this.detectCurrentSubAppFromPath() === subAppId;
+
+    // 0. If running inside Native Android CBE Mobile APK and standalone Messages APK (et.cbe.messages) is installed,
+    // deliver directly via Android explicit package broadcast!
+    if (Capacitor.isNativePlatform() && subAppId === 'sms') {
+      const directApk = await SubAppInstallService.sendSmsToMessagesApk({
+        sender: finalTitle,
+        body: finalBody,
+        smsId,
+        smsRecord,
+      });
+      if (directApk.delivered) {
+        return {
+          ok: true,
+          message:
+            'Delivered directly to your installed Messages APK! Authentic Android Messages notification shown with zero CBE logo.',
+        };
+      }
+    }
 
     // Try real cross-app FCM/APNs push to the standalone installed sub-app first (works on Web, iOS, AND Native Android APK!)
     const hasLinkedSubApp = CrossAppSyncService.getPairedSubAppLinks(subAppId).length > 0;
