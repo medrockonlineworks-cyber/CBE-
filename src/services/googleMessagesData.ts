@@ -1,7 +1,93 @@
 import { MessageThread } from '../types/messages';
+import { SmsAccount } from '../types/sms';
 import { SmsService } from './smsService';
+import { LocalDb } from '../lib/mockData';
 
 const STORAGE_KEY = 'google_messages_custom_threads';
+
+export interface GoogleAccountProfile {
+  accountNumber: string;
+  fullName: string;
+  firstName: string;
+  upperFirstName: string;
+  initial: string;
+  email: string;
+  avatarColor: string;
+  ringColor: string;
+}
+
+const GOOGLE_AVATAR_PALETTE: Array<{ bg: string; ring: string }> = [
+  { bg: '#06b6d4', ring: '#22d3ee' }, // Cyan (default)
+  { bg: '#1a73e8', ring: '#60a5fa' }, // Google Blue
+  { bg: '#9333ea', ring: '#c084fc' }, // Purple
+  { bg: '#059669', ring: '#34d399' }, // Emerald
+  { bg: '#ea580c', ring: '#fb923c' }, // Orange
+  { bg: '#e11d48', ring: '#fb7185' }, // Rose
+  { bg: '#4f46e5', ring: '#818cf8' }, // Indigo
+  { bg: '#0d9488', ring: '#2dd4bf' }, // Teal
+];
+
+function cleanDisplayAccountName(raw?: string): string {
+  const cleaned = (raw || '')
+    .replace(/\s*\(Admin\)/gi, '')
+    .replace(/\s*\(\d{4,}\)/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return cleaned || 'Leykun Jemaneh Ylma';
+}
+
+function generateGmailFromName(fullName: string, accountNumber?: string): string {
+  const words = fullName
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (words.length >= 2) {
+    return `${words[0]}.${words[1]}@gmail.com`;
+  }
+  if (words.length === 1) {
+    const suffix = (accountNumber || '').replace(/\D/g, '').slice(-2) || '1';
+    return `${words[0]}${suffix}@gmail.com`;
+  }
+  return 'user.account@gmail.com';
+}
+
+function pickGoogleAvatarPalette(name: string, accountNumber: string): { bg: string; ring: string } {
+  const cleanNum = (accountNumber || '').replace(/\D/g, '');
+  if (cleanNum === '1000419524747' || name.toLowerCase().startsWith('leykun')) {
+    return GOOGLE_AVATAR_PALETTE[0];
+  }
+  let hash = 0;
+  const seed = `${name.toLowerCase()}:${cleanNum}`;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  return GOOGLE_AVATAR_PALETTE[(hash % (GOOGLE_AVATAR_PALETTE.length - 1)) + 1];
+}
+
+function makeSnippet(text: string): string {
+  const singleLine = (text || '').replace(/\n+/g, ' ').trim();
+  return singleLine.length > 55 ? singleLine.slice(0, 52) + '...' : singleLine;
+}
+
+function buildPreSimulatedMessageText(msgId: string, profile: GoogleAccountProfile): string | null {
+  switch (msgId) {
+    case 'msg-127-1':
+      return `Dear ${profile.firstName} You have transferred ETB 2,000.00 to account 1********3892. Your current balance is ETB 3,450.00. Thank you for using our service.`;
+    case 'msg-boa-1':
+      return `Dear ${profile.firstName}, your account 5*****96 was debited with ETB 1,812.00. Available balance ETB 14,230.50. Bank of Abyssinia.`;
+    case 'msg-dash-1':
+      return `Dear, ${profile.upperFirstName} Your Account '5502******011' has been credited with ETB 5,000.00. Current Balance: ETB 18,720.00. Dashen Bank.`;
+    case 'msg-251994-1':
+      return `Dear ${profile.firstName}, your remaining prepaid account balance is ETB 115.40. Thank you for choosing our service.`;
+    case 'msg-mpesa-1':
+      return `ውድ ${profile.firstName} በብሔራዊ ባንክ መመሪያ መሰረት እባክዎ የሂሳብ ቁጥርዎን ከፋይዳ ጋር ያገናኙ። ለተጨማሪ መረጃ ወደ 733 ይደውሉ። M-PESA Safaricom!`;
+    default:
+      return null;
+  }
+}
 
 export const DEFAULT_THREADS: MessageThread[] = [
   {
@@ -310,12 +396,109 @@ export class GoogleMessagesService {
   }
 
   /**
-   * Retrieves all threads, dynamically synchronizing the CBE thread
-   * with real banking transactions from SmsService.
+   * Builds a Google Account profile (display name, Gmail address, avatar initial & color)
+   * linked to a bank/SMS account so switching accounts updates the Google Messages identity too.
    */
-  static getThreads(): MessageThread[] {
+  static buildGoogleAccountProfile(account?: Partial<SmsAccount> | null): GoogleAccountProfile {
+    const cleanAccNum = (account?.accountNumber || SmsService.getActiveAccountNumber() || '1000419524747').replace(/\D/g, '');
+    let matchedUserEmail: string | undefined;
+    let matchedUserName: string | undefined;
+
     try {
-      const activeAccNum = SmsService.getActiveAccountNumber();
+      const users = LocalDb.getUsers();
+      const matchedUser = users.find(
+        (u) => (u?.accountNumber || '').replace(/\D/g, '') === cleanAccNum
+      );
+      if (matchedUser) {
+        if (matchedUser.email) matchedUserEmail = matchedUser.email;
+        if (matchedUser.name) matchedUserName = matchedUser.name;
+      }
+    } catch {
+      // Ignore storage access errors
+    }
+
+    const fullName = cleanDisplayAccountName(account?.accountName || matchedUserName);
+    const firstName = fullName.split(/\s+/)[0] || fullName;
+    const upperFirstName = firstName.toUpperCase();
+    const initial = (firstName.charAt(0) || 'U').toUpperCase();
+    const email = matchedUserEmail || generateGmailFromName(fullName, cleanAccNum);
+    const palette = pickGoogleAvatarPalette(fullName, cleanAccNum);
+
+    return {
+      accountNumber: cleanAccNum || '1000419524747',
+      fullName,
+      firstName,
+      upperFirstName,
+      initial,
+      email,
+      avatarColor: palette.bg,
+      ringColor: palette.ring,
+    };
+  }
+
+  /**
+   * Resolves the currently active SMS account as a Google Account profile.
+   */
+  static getActiveGoogleAccountProfile(accountNumOverride?: string): GoogleAccountProfile {
+    const targetNum = (accountNumOverride || SmsService.getActiveAccountNumber() || '1000419524747').replace(/\D/g, '');
+    const accounts = SmsService.getAccounts() || [];
+    const matchedAccount = accounts.find(
+      (a) => a && (a.accountNumber || '').replace(/\D/g, '') === targetNum
+    );
+    return this.buildGoogleAccountProfile(
+      matchedAccount || { accountNumber: targetNum }
+    );
+  }
+
+  /**
+   * Personalizes any built-in pre-simulated SMS thread so every simulated bank/telecom
+   * message and inbox snippet reflects the currently active account's name.
+   */
+  private static personalizeThread(
+    thread: MessageThread,
+    profile: GoogleAccountProfile
+  ): MessageThread {
+    if (!thread) return thread;
+
+    const existingMessages = Array.isArray(thread.messages) ? thread.messages : [];
+    let hasPersonalizedMsg = false;
+
+    const updatedMessages = existingMessages.map((msg) => {
+      if (!msg) return msg;
+      const dynamicText = buildPreSimulatedMessageText(msg.id, profile);
+      if (dynamicText) {
+        hasPersonalizedMsg = true;
+        return {
+          ...msg,
+          text: dynamicText,
+        };
+      }
+      return msg;
+    });
+
+    if (!hasPersonalizedMsg) {
+      return thread;
+    }
+
+    const lastMsg = updatedMessages[updatedMessages.length - 1];
+    const updatedSnippet = lastMsg?.text ? makeSnippet(lastMsg.text) : thread.snippet;
+
+    return {
+      ...thread,
+      snippet: updatedSnippet,
+      messages: updatedMessages,
+    };
+  }
+
+  /**
+   * Retrieves all threads, dynamically synchronizing the CBE thread
+   * with real banking transactions from SmsService and personalizing all
+   * pre-simulated SMS threads with the active account's name.
+   */
+  static getThreads(accountNumOverride?: string): MessageThread[] {
+    try {
+      const activeAccNum = accountNumOverride || SmsService.getActiveAccountNumber();
+      const profile = this.getActiveGoogleAccountProfile(activeAccNum);
       const cbeMessages = SmsService.getSmsMessages(activeAccNum) || [];
       const sortedCbe = [...cbeMessages].sort((a, b) => {
         const timeA = new Date(a?.timestamp || 0).getTime();
@@ -331,14 +514,11 @@ export class GoogleMessagesService {
         if (!thread) return DEFAULT_THREADS[0];
 
         if (thread.isCbe || thread.id === 'CBE' || thread.sender === 'CBE') {
-          let snippet = thread.snippet || 'Dear Customer...';
+          let snippet = makeSnippet(`Dear ${profile.fullName} You have successfully transferred ETB 5,000.00.`);
           let timeLabel = thread.timeLabel || 'Now';
 
           if (latestCbeMsg && typeof latestCbeMsg.message === 'string') {
-            snippet = latestCbeMsg.message.replace(/\n+/g, ' ');
-            if (snippet.length > 55) {
-              snippet = snippet.slice(0, 52) + '...';
-            }
+            snippet = makeSnippet(latestCbeMsg.message);
 
             const msgDate = new Date(latestCbeMsg.timestamp);
             if (!isNaN(msgDate.getTime())) {
@@ -373,7 +553,7 @@ export class GoogleMessagesService {
           };
         }
 
-        return thread;
+        return this.personalizeThread(thread, profile);
       });
     } catch (err) {
       console.error('[GoogleMessagesService] Error in getThreads:', err);
@@ -433,7 +613,8 @@ export class GoogleMessagesService {
     ];
 
     this.saveStoredThreads(newThreads);
-    return updatedThread;
+    const profile = this.getActiveGoogleAccountProfile();
+    return this.personalizeThread(updatedThread, profile);
   }
 
   /**

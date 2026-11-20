@@ -56,11 +56,20 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
   // Navigation View State: 'inbox' (Google Messages list) | 'cbe' | 'generic_thread'
   const [pageView, setPageView] = useState<'inbox' | 'cbe' | 'generic_thread'>('inbox');
   const [selectedGenericThread, setSelectedGenericThread] = useState<MessageThread | null>(null);
-  const [threads, setThreads] = useState<MessageThread[]>(() => GoogleMessagesService.getThreads());
+  const [threads, setThreads] = useState<MessageThread[]>(() =>
+    GoogleMessagesService.getThreads(initialAccountId || SmsService.getActiveAccountNumber())
+  );
 
-  const refreshThreads = () => {
-    setThreads(GoogleMessagesService.getThreads());
-  };
+  const refreshThreads = useCallback((accountNumOverride?: string) => {
+    const nextThreads = GoogleMessagesService.getThreads(
+      accountNumOverride || activeAccountNumRef.current || SmsService.getActiveAccountNumber()
+    );
+    setThreads(nextThreads);
+    setSelectedGenericThread((prev) => {
+      if (!prev) return prev;
+      return nextThreads.find((t) => t.id === prev.id) || prev;
+    });
+  }, []);
 
   // Accounts and active account state
   const [accounts, setAccounts] = useState<SmsAccount[]>(() => SmsService.getAccounts());
@@ -156,14 +165,16 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
     setMessages(msgs || []);
   }, []);
 
-  // Listen to SMS updates, account changes, and transactions
+  // Sync only when initialAccountId prop itself changes (do not snap back when user switches accounts inside SMS app)
   useEffect(() => {
-    if (initialAccountId && initialAccountId !== activeAccountNum) {
+    if (initialAccountId && initialAccountId !== activeAccountNumRef.current) {
       setActiveAccountNum(initialAccountId);
+      activeAccountNumRef.current = initialAccountId;
       SmsService.setActiveAccountNumber(initialAccountId);
       reloadMessages(initialAccountId);
+      refreshThreads(initialAccountId);
     }
-  }, [initialAccountId, activeAccountNum, reloadMessages]);
+  }, [initialAccountId, reloadMessages, refreshThreads]);
 
   // Selection and chat handlers for Google Messages
   const handleSelectThread = (thread: MessageThread) => {
@@ -201,9 +212,10 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
 
     const handleActiveAccChanged = (e: CustomEvent<string>) => {
       if (e.detail && e.detail !== activeAccountNumRef.current) {
+        activeAccountNumRef.current = e.detail;
         setActiveAccountNum(e.detail);
         reloadMessages(e.detail);
-        refreshThreads();
+        refreshThreads(e.detail);
       }
     };
 
@@ -259,9 +271,11 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
 
   // Switch active account
   const handleSelectAccount = (accNum: string) => {
+    activeAccountNumRef.current = accNum;
     SmsService.setActiveAccountNumber(accNum);
     setActiveAccountNum(accNum);
     reloadMessages(accNum);
+    refreshThreads(accNum);
     setShowMenu(false);
     setShowAccountModal(false);
 
@@ -390,6 +404,7 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
           onOpenCbeThread={() => setPageView('cbe')}
           onBackToApp={onBack}
           isDarkMode={isDarkMode}
+          activeAccountName={activeAccount.accountName}
         />
       );
     }
@@ -411,8 +426,7 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
             accounts={accounts}
             activeAccount={currentAcc}
             onSelectAccount={(acc) => {
-              setActiveAccountNum(acc.accountNumber);
-              setMessages(SmsService.getSmsMessages(acc.accountNumber));
+              handleSelectAccount(acc.accountNumber);
             }}
             onBack={() => {
               refreshThreads();
@@ -497,7 +511,10 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
         isDarkMode={isDarkMode}
         onToggleTheme={handleToggleTheme}
         onStartChat={handleStartChat}
-        onRefresh={refreshThreads}
+        onRefresh={() => refreshThreads()}
+        activeAccount={activeAccount}
+        accounts={accounts}
+        onSelectAccount={handleSelectAccount}
       />
     );
   }

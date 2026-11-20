@@ -20,6 +20,7 @@ interface AppleMessagesInboxProps {
   onOpenCbeThread: () => void;
   onBackToApp: () => void;
   isDarkMode?: boolean;
+  activeAccountName?: string;
 }
 
 export const AppleMessagesInbox: React.FC<AppleMessagesInboxProps> = ({
@@ -28,6 +29,7 @@ export const AppleMessagesInbox: React.FC<AppleMessagesInboxProps> = ({
   onOpenCbeThread,
   onBackToApp,
   isDarkMode = true,
+  activeAccountName = 'Leykun Jemaneh Ylma',
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -193,7 +195,7 @@ export const AppleMessagesInbox: React.FC<AppleMessagesInboxProps> = ({
       <AppleProfileSettingsModal
         isOpen={showSettingsModal}
         onClose={() => setShowSettingsModal(false)}
-        senderName="Leykun Jemaneh Ylma"
+        senderName={activeAccountName}
         senderSubtitle="Messages &amp; Phone Preferences"
         onBackToApp={onBackToApp}
       />

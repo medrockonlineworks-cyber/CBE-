@@ -14,13 +14,17 @@ import {
   Battery,
   ShieldCheck,
   ChevronRight,
+  ChevronDown,
+  Check,
   Smartphone,
   BellRing
 } from 'lucide-react';
 import PhoneSettingsModal from './PhoneSettingsModal';
 import SubAppPushModal from './SubAppPushModal';
 import { MessageThread } from '../types/messages';
+import { SmsAccount } from '../types/sms';
 import { GoogleMessagesService } from '../services/googleMessagesData';
+import { maskAccountNumber } from '../services/smsService';
 
 interface GoogleMessagesInboxProps {
   threads: MessageThread[];
@@ -30,6 +34,9 @@ interface GoogleMessagesInboxProps {
   onToggleTheme: () => void;
   onStartChat: (recipient: string, message: string) => void;
   onRefresh: () => void;
+  activeAccount?: SmsAccount;
+  accounts?: SmsAccount[];
+  onSelectAccount?: (accountNumber: string) => void;
 }
 
 export default function GoogleMessagesInbox({
@@ -40,10 +47,19 @@ export default function GoogleMessagesInbox({
   onToggleTheme,
   onStartChat,
   onRefresh,
+  activeAccount,
+  accounts = [],
+  onSelectAccount,
 }: GoogleMessagesInboxProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showAccountList, setShowAccountList] = useState(false);
+
+  const googleProfile = GoogleMessagesService.buildGoogleAccountProfile(activeAccount);
+  const otherAccounts = (accounts || []).filter(
+    (acc) => acc && (acc.accountNumber || '').replace(/\D/g, '') !== googleProfile.accountNumber
+  );
   const [showPhoneSettingsModal, setShowPhoneSettingsModal] = useState(false);
   const [showPushSettingsModal, setShowPushSettingsModal] = useState(false);
   const [showStartChatModal, setShowStartChatModal] = useState(false);
@@ -114,14 +130,18 @@ export default function GoogleMessagesInbox({
                 <Search className="w-5 h-5" />
               </button>
 
-              {/* User Profile Avatar with Cyan Ring */}
+              {/* User Profile Avatar with Dynamic Google Account Color & Initial */}
               <button
                 onClick={() => setShowProfileModal(true)}
-                className="relative flex items-center justify-center p-[2px] rounded-full border-2 border-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                title="Google Account"
+                className="relative flex items-center justify-center p-[2px] rounded-full border-2 focus:outline-none"
+                style={{ borderColor: googleProfile.ringColor }}
+                title={`Google Account: ${googleProfile.fullName}`}
               >
-                <div className="w-8 h-8 rounded-full bg-cyan-500 flex items-center justify-center text-white font-semibold text-sm shadow-sm">
-                  L
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm"
+                  style={{ backgroundColor: googleProfile.avatarColor }}
+                >
+                  {googleProfile.initial}
                 </div>
               </button>
             </div>
@@ -199,11 +219,6 @@ export default function GoogleMessagesInbox({
                     }`}>
                       {thread.sender}
                     </h2>
-                    {thread.isCbe && (
-                      <span className="text-[9.5px] font-medium px-1.5 py-0.2 rounded bg-purple-500/20 text-purple-300">
-                        Banking
-                      </span>
-                    )}
                   </div>
                   <p className={`text-[13.5px] truncate mt-0.5 leading-snug ${
                     thread.unreadCount > 0 
@@ -286,15 +301,92 @@ export default function GoogleMessagesInbox({
               </button>
             </div>
 
-            {/* Profile Info */}
-            <div className="py-4 flex items-center space-x-3.5">
-              <div className="w-12 h-12 rounded-full bg-cyan-500 border-2 border-cyan-400 flex items-center justify-center text-white font-bold text-lg">
-                L
+            {/* Active Google Account Info + Switcher Toggle */}
+            <div className="py-4">
+              <div className="flex items-center space-x-3.5">
+                <div
+                  className="w-12 h-12 rounded-full border-2 flex items-center justify-center text-white font-bold text-lg flex-shrink-0"
+                  style={{
+                    backgroundColor: googleProfile.avatarColor,
+                    borderColor: googleProfile.ringColor,
+                  }}
+                >
+                  {googleProfile.initial}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-semibold text-base text-current truncate">{googleProfile.fullName}</h3>
+                  <p className="text-xs text-neutral-400 truncate">{googleProfile.email}</p>
+                  <p className="text-[11px] text-neutral-500 font-mono truncate mt-0.5">
+                    {maskAccountNumber(googleProfile.accountNumber)}
+                  </p>
+                </div>
+                {onSelectAccount && otherAccounts.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAccountList((prev) => !prev)}
+                    className={`p-1.5 rounded-full border transition-colors ${
+                      isDarkMode
+                        ? 'border-neutral-700 hover:bg-neutral-800 text-neutral-300'
+                        : 'border-neutral-300 hover:bg-neutral-100 text-neutral-600'
+                    }`}
+                    title="Switch Google Account"
+                  >
+                    <ChevronDown
+                      className={`w-4 h-4 transition-transform duration-150 ${
+                        showAccountList ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </button>
+                )}
               </div>
-              <div className="min-w-0 flex-1">
-                <h3 className="font-semibold text-base text-current truncate">Leykun Jemaneh Ylma</h3>
-                <p className="text-xs text-neutral-400 truncate">leykunjemaneh3@gmail.com</p>
-              </div>
+
+              {onSelectAccount && showAccountList && otherAccounts.length > 0 && (
+                <div
+                  className={`mt-3 pt-2.5 border-t max-h-44 overflow-y-auto space-y-1 ${
+                    isDarkMode ? 'border-neutral-800' : 'border-neutral-200'
+                  }`}
+                >
+                  <p className="text-[10.5px] font-semibold uppercase tracking-wider text-neutral-400 px-1 mb-1">
+                    Switch Google Account
+                  </p>
+                  {accounts.map((acc) => {
+                    const prof = GoogleMessagesService.buildGoogleAccountProfile(acc);
+                    const isActive = prof.accountNumber === googleProfile.accountNumber;
+                    return (
+                      <button
+                        key={acc.accountNumber}
+                        type="button"
+                        onClick={() => {
+                          onSelectAccount(acc.accountNumber);
+                          setShowAccountList(false);
+                          setShowProfileModal(false);
+                        }}
+                        className={`w-full px-2.5 py-2 rounded-xl flex items-center space-x-2.5 text-left transition-colors ${
+                          isActive
+                            ? isDarkMode
+                              ? 'bg-blue-500/15 text-white'
+                              : 'bg-blue-50 text-neutral-900'
+                            : isDarkMode
+                              ? 'hover:bg-neutral-800/80 text-neutral-200'
+                              : 'hover:bg-neutral-100 text-neutral-800'
+                        }`}
+                      >
+                        <div
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-xs flex-shrink-0"
+                          style={{ backgroundColor: prof.avatarColor }}
+                        >
+                          {prof.initial}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-semibold truncate">{prof.fullName}</p>
+                          <p className="text-[11px] text-neutral-400 truncate">{prof.email}</p>
+                        </div>
+                        {isActive && <Check className="w-4 h-4 text-blue-400 flex-shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Quick Actions */}

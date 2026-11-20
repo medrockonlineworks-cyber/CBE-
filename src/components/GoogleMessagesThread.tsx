@@ -42,6 +42,9 @@ export default function GoogleMessagesThread({
 
   useEffect(() => {
     setCurrentThread(thread);
+  }, [thread]);
+
+  useEffect(() => {
     GoogleMessagesService.markThreadRead(thread.id);
     onThreadUpdated();
   }, [thread.id]);
@@ -165,14 +168,15 @@ export default function GoogleMessagesThread({
                                     if (isHoliday) {
                                       setShowHolidayCardModal(true);
                                     } else if (isReceipt) {
+                                      const activeProfile = GoogleMessagesService.getActiveGoogleAccountProfile();
                                       const smsPayload = {
                                         id: 'FT26248KLR82',
                                         transactionId: 'FT26248KLR82',
                                         bankName: 'Commercial Bank of Ethiopia',
                                         type: 'CREDIT' as const,
                                         sender: 'Dejene Buta',
-                                        recipient: 'Leykun',
-                                        accountNumber: '1000419524747',
+                                        recipient: activeProfile.fullName,
+                                        accountNumber: activeProfile.accountNumber,
                                         amount: 50.00,
                                         balance: 348.54,
                                         timestamp: '2026-09-05T16:41:01Z',
