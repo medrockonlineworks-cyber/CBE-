@@ -12,13 +12,20 @@ import {
 
 interface SubAppShortcutPluginInterface {
   isPinSupported(): Promise<{ supported: boolean }>;
-  getLaunchSubApp(): Promise<{ view: string | null; isMessagesApk?: boolean }>;
+  getLaunchSubApp(): Promise<{
+    view: string | null;
+    isMessagesApk?: boolean;
+    isStandaloneSubApp?: boolean;
+    defaultStartView?: string;
+  }>;
   getAppFlavor(): Promise<{
     isMessagesApk: boolean;
+    isStandaloneSubApp?: boolean;
     defaultStartView: string;
     packageName: string;
   }>;
   isMessagesApkInstalled(): Promise<{ installed: boolean }>;
+  isSubAppApkInstalled(options: { subAppId: string }): Promise<{ installed: boolean; packageName?: string }>;
   sendSmsToMessagesApk(options: {
     sender: string;
     body: string;
@@ -26,7 +33,16 @@ interface SubAppShortcutPluginInterface {
     reference?: string;
     smsRecordJson?: string;
   }): Promise<{ installed: boolean; delivered: boolean; error?: string }>;
+  sendAlertToSubAppApk(options: {
+    subAppId: string;
+    sender: string;
+    body: string;
+    alertId?: string;
+    reference?: string;
+    payloadJson?: string;
+  }): Promise<{ installed: boolean; delivered: boolean; error?: string }>;
   drainNativeIncomingSms(): Promise<{ recordsJson: string; readIdsJson: string }>;
+  drainNativeIncomingSubAppAlerts(options: { subAppId: string }): Promise<{ recordsJson: string }>;
   pinSubApp(options: {
     subAppId: string;
     label: string;
@@ -55,28 +71,54 @@ export interface SubAppInstallResult {
 
 export class SubAppInstallService {
   private static cachedIsMessagesApk: boolean | null = null;
+  private static cachedStandaloneFlavor: SubAppNotificationId | '' | null = null;
 
   public static isValidSubApp(view: unknown): view is SubAppNotificationId {
     return typeof view === 'string' && (VALID_SUB_APPS as string[]).includes(view);
   }
 
-  public static async isStandaloneMessagesApk(): Promise<boolean> {
-    if (!Capacitor.isNativePlatform()) return false;
-    if (this.cachedIsMessagesApk !== null) return this.cachedIsMessagesApk;
+  public static async getStandaloneSubAppFlavor(): Promise<SubAppNotificationId | null> {
+    if (!Capacitor.isNativePlatform()) return null;
+    if (this.cachedStandaloneFlavor !== null) {
+      return this.cachedStandaloneFlavor || null;
+    }
     try {
       const res = await SubAppShortcut.getAppFlavor();
       this.cachedIsMessagesApk = Boolean(res?.isMessagesApk);
-      return this.cachedIsMessagesApk;
+      const view = (res?.defaultStartView || '').trim().toLowerCase();
+      if (this.isValidSubApp(view)) {
+        this.cachedStandaloneFlavor = view;
+        return view;
+      }
+      if (res?.isMessagesApk) {
+        this.cachedStandaloneFlavor = 'sms';
+        return 'sms';
+      }
+      this.cachedStandaloneFlavor = '';
+      return null;
     } catch {
-      this.cachedIsMessagesApk = false;
-      return false;
+      this.cachedStandaloneFlavor = '';
+      return null;
     }
   }
 
+  public static async isStandaloneMessagesApk(): Promise<boolean> {
+    const flavor = await this.getStandaloneSubAppFlavor();
+    return flavor === 'sms';
+  }
+
   public static async isMessagesApkInstalled(): Promise<boolean> {
+    return this.isSubAppApkInstalled('sms');
+  }
+
+  public static async isSubAppApkInstalled(subAppId: SubAppNotificationId): Promise<boolean> {
     if (!Capacitor.isNativePlatform()) return false;
     try {
-      const res = await SubAppShortcut.isMessagesApkInstalled();
+      if (subAppId === 'sms') {
+        const res = await SubAppShortcut.isMessagesApkInstalled();
+        return Boolean(res?.installed);
+      }
+      const res = await SubAppShortcut.isSubAppApkInstalled({ subAppId });
       return Boolean(res?.installed);
     } catch {
       return false;
@@ -110,6 +152,44 @@ export class SubAppInstallService {
     }
   }
 
+  public static async sendAlertToSubAppApk(params: {
+    subAppId: 'sms' | 'truecaller' | 'phone';
+    sender: string;
+    body: string;
+    alertId?: string;
+    reference?: string;
+    payloadRecord?: Record<string, unknown>;
+  }): Promise<{ installed: boolean; delivered: boolean }> {
+    if (!Capacitor.isNativePlatform()) {
+      return { installed: false, delivered: false };
+    }
+    if (params.subAppId === 'sms') {
+      return this.sendSmsToMessagesApk({
+        sender: params.sender,
+        body: params.body,
+        smsId: params.alertId,
+        reference: params.reference,
+        smsRecord: params.payloadRecord,
+      });
+    }
+    try {
+      const res = await SubAppShortcut.sendAlertToSubAppApk({
+        subAppId: params.subAppId,
+        sender: params.sender,
+        body: params.body,
+        alertId: params.alertId || '',
+        reference: params.reference || '',
+        payloadJson: params.payloadRecord ? JSON.stringify(params.payloadRecord) : '',
+      });
+      return {
+        installed: Boolean(res?.installed),
+        delivered: Boolean(res?.delivered),
+      };
+    } catch {
+      return { installed: false, delivered: false };
+    }
+  }
+
   public static async drainNativeIncomingSms(): Promise<{
     records: Array<Record<string, unknown>>;
     readIds: Array<{ smsId?: string; reference?: string }>;
@@ -130,6 +210,21 @@ export class SubAppInstallService {
     }
   }
 
+  public static async drainNativeIncomingSubAppAlerts(
+    subAppId: 'truecaller' | 'phone'
+  ): Promise<Array<Record<string, unknown>>> {
+    if (!Capacitor.isNativePlatform()) {
+      return [];
+    }
+    try {
+      const res = await SubAppShortcut.drainNativeIncomingSubAppAlerts({ subAppId });
+      const parsed = res?.recordsJson ? JSON.parse(res.recordsJson) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
   public static async consumeNativeLaunchSubApp(): Promise<SubAppNotificationId | null> {
     if (!Capacitor.isNativePlatform()) return null;
     try {
@@ -137,8 +232,15 @@ export class SubAppInstallService {
       if (typeof res?.isMessagesApk === 'boolean') {
         this.cachedIsMessagesApk = res.isMessagesApk;
       }
+      const flavorView = (res?.defaultStartView || '').trim().toLowerCase();
+      if (this.isValidSubApp(flavorView)) {
+        this.cachedStandaloneFlavor = flavorView;
+      }
       if (res?.view && this.isValidSubApp(res.view)) {
         return res.view;
+      }
+      if (this.isValidSubApp(flavorView)) {
+        return flavorView;
       }
       if (res?.isMessagesApk) {
         return 'sms';

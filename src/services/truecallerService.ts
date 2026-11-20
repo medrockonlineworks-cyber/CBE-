@@ -11,12 +11,14 @@ import {
 import { Transaction } from '../types';
 import { ALL_NEW_REGISTERED_ENTRIES } from '../lib/additionalAccountsData';
 import { generateCbeTxId } from '../lib/mockData';
+import { PushNotificationService } from './pushNotificationService';
 
 const STORAGE_TC_ACCOUNTS_KEY = 'tc_sim_accounts_v2';
 const STORAGE_TC_ALERTS_KEY = 'tc_sim_alerts_v2';
 const STORAGE_TC_ACTIVE_ACC_KEY = 'tc_sim_active_account_id';
 const STORAGE_TC_BASE_THEME_KEY = 'tc_theme_base';
 const STORAGE_TC_ACCENT_THEME_KEY = 'tc_theme_accent';
+const PENDING_RECEIVER_TC_NOTIFS_KEY = 'cbe_pending_receiver_tc_notifs_v1';
 
 export const TRUECALLER_ACCENT_PRESETS: TruecallerColorAccent[] = [
   {
@@ -940,8 +942,30 @@ export const TruecallerService = {
     const updatedAlerts = [receiveAlert, sendAlert, ...filteredAlerts];
     this.saveAlerts(updatedAlerts);
 
+    // Fire immediate Truecaller notification for the active account (sender on transfer, receiver on receive)
+    // and queue the receiver's alert so switching to the receiver's account fires it automatically!
+    const primaryAlert = tx.type === 'receive' ? receiveAlert : sendAlert;
+    try {
+      void PushNotificationService.notifySubApp({
+        subAppId: 'truecaller',
+        title: primaryAlert.bankName || 'CBE',
+        body: primaryAlert.fullSmsText || primaryAlert.summaryText,
+        privateBody: 'New Truecaller bank SMS alert.',
+        reference: primaryAlert.txId,
+        tag: `cbe-tc-${primaryAlert.id}`,
+        payloadRecord: primaryAlert as unknown as Record<string, unknown>,
+      });
+
+      // Queue receiver alert if the receiver is a distinct account from the sender
+      const cleanSenderAcc = (senderAcc.accountNumber || '').replace(/\D/g, '');
+      const cleanRecipAcc = (recipientAcc.accountNumber || '').replace(/\D/g, '');
+      if (tx.type !== 'receive' && cleanRecipAcc && cleanRecipAcc !== cleanSenderAcc) {
+        this.enqueuePendingReceiverAlert(cleanRecipAcc, receiveAlert);
+      }
+    } catch {}
+
     window.dispatchEvent(new CustomEvent('tc_alerts_updated', { detail: { alert: receiveAlert, sendAlert, account: senderAcc } }));
-    return tx.type === 'receive' ? receiveAlert : sendAlert;
+    return primaryAlert;
   },
 
   // Direct helper: Simulate a transfer between User X and User Y:
@@ -1150,5 +1174,109 @@ export const TruecallerService = {
   getBaseTheme(baseId?: TruecallerBaseTheme) {
     const id = baseId || this.getThemeConfig().base;
     return TRUECALLER_BASE_THEMES.find(b => b.id === id) || TRUECALLER_BASE_THEMES[0];
+  },
+
+  setActiveAccountByNumber(accountNumber: string): TruecallerBankAccount | null {
+    const clean = (accountNumber || '').replace(/\D/g, '');
+    if (!clean) return null;
+    const accounts = this.getAccounts();
+    const match = accounts.find(a => (a.accountNumber || '').replace(/\D/g, '') === clean);
+    if (match) {
+      this.setActiveAccountId(match.id);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('tc_account_changed', { detail: { account: match } }));
+      }
+      return match;
+    }
+    return null;
+  },
+
+  enqueuePendingReceiverAlert(accountNumber: string, alert: TruecallerAlert): void {
+    const cleanAcc = (accountNumber || '').replace(/\D/g, '');
+    if (!cleanAcc) return;
+    try {
+      const raw = localStorage.getItem(PENDING_RECEIVER_TC_NOTIFS_KEY);
+      const list: Array<{ accountNumber: string; alert: TruecallerAlert; createdAt: number }> = raw
+        ? JSON.parse(raw)
+        : [];
+      const deduped = list.filter(item => item?.alert?.id !== alert.id);
+      deduped.push({ accountNumber: cleanAcc, alert, createdAt: Date.now() });
+      localStorage.setItem(PENDING_RECEIVER_TC_NOTIFS_KEY, JSON.stringify(deduped.slice(-40)));
+    } catch {}
+  },
+
+  deliverPendingReceiverAlerts(accountNumber: string): number {
+    const cleanAcc = (accountNumber || '').replace(/\D/g, '');
+    if (!cleanAcc) return 0;
+    try {
+      const raw = localStorage.getItem(PENDING_RECEIVER_TC_NOTIFS_KEY);
+      if (!raw) return 0;
+      const list: Array<{ accountNumber: string; alert: TruecallerAlert; createdAt: number }> = JSON.parse(raw);
+      if (!Array.isArray(list) || list.length === 0) return 0;
+
+      const matching = list.filter(item => (item?.accountNumber || '').replace(/\D/g, '') === cleanAcc);
+      if (matching.length === 0) return 0;
+
+      const remaining = list.filter(item => (item?.accountNumber || '').replace(/\D/g, '') !== cleanAcc);
+      localStorage.setItem(PENDING_RECEIVER_TC_NOTIFS_KEY, JSON.stringify(remaining));
+
+      for (const item of matching) {
+        const alert = item.alert;
+        if (!alert) continue;
+        void PushNotificationService.notifySubApp({
+          subAppId: 'truecaller',
+          title: alert.bankName || 'CBE',
+          body: alert.fullSmsText || alert.summaryText,
+          privateBody: 'New Truecaller bank SMS alert.',
+          reference: alert.txId,
+          tag: `cbe-tc-recv-${alert.id}`,
+          payloadRecord: alert as unknown as Record<string, unknown>,
+        });
+      }
+      return matching.length;
+    } catch {
+      return 0;
+    }
+  },
+
+  applyNativeIncomingAlert(raw: Record<string, unknown>): void {
+    try {
+      if (!raw || typeof raw !== 'object') return;
+      const existing = this.getAlerts();
+      const id = typeof raw.id === 'string' && raw.id.trim() ? raw.id : `tc-native-${Date.now()}`;
+      if (existing.some(a => a.id === id)) return;
+
+      const accounts = this.getAccounts();
+      const fullAcc = typeof raw.fullAccount === 'string' ? raw.fullAccount : (accounts[0]?.accountNumber || '1000419524747');
+      const cleanAcc = fullAcc.replace(/\D/g, '');
+      const matchedAcc = accounts.find(a => (a.accountNumber || '').replace(/\D/g, '') === cleanAcc) || accounts[0];
+
+      const incoming: TruecallerAlert = {
+        id,
+        accountId: typeof raw.accountId === 'string' ? raw.accountId : (matchedAcc?.id || 'acc-cbe-leykun'),
+        bankKey: (typeof raw.bankKey === 'string' ? raw.bankKey : 'cbe') as TruecallerBankKey,
+        bankName: typeof raw.bankName === 'string' ? raw.bankName : (typeof raw.sender === 'string' ? raw.sender : 'CBE'),
+        role: raw.role === 'sender' ? 'sender' : 'receiver',
+        amount: typeof raw.amount === 'number' ? raw.amount : 0,
+        maskedAccount: typeof raw.maskedAccount === 'string' ? raw.maskedAccount : maskTruecallerAccount(fullAcc),
+        fullAccount: fullAcc,
+        holderName: typeof raw.holderName === 'string' ? raw.holderName : (matchedAcc?.holderName || 'Customer'),
+        counterpartyName: typeof raw.counterpartyName === 'string' ? raw.counterpartyName : 'CBE',
+        counterpartyAccount: typeof raw.counterpartyAccount === 'string' ? raw.counterpartyAccount : '',
+        balanceAfter: typeof raw.balanceAfter === 'number' ? raw.balanceAfter : (matchedAcc?.balance || 0),
+        timeString: typeof raw.timeString === 'string' ? raw.timeString : 'Now',
+        timestamp: typeof raw.timestamp === 'string' ? raw.timestamp : new Date().toISOString(),
+        summaryText: typeof raw.summaryText === 'string' ? raw.summaryText : (typeof raw.body === 'string' ? raw.body.slice(0, 120) : 'New bank alert'),
+        txId: typeof raw.txId === 'string' ? raw.txId : (typeof raw.reference === 'string' ? raw.reference : id),
+        fullSmsText: typeof raw.fullSmsText === 'string' ? raw.fullSmsText : (typeof raw.body === 'string' ? raw.body : ''),
+        read: false,
+        backgroundApp: (typeof raw.backgroundApp === 'string' ? raw.backgroundApp : 'messages') as TruecallerBackgroundApp,
+      };
+
+      this.saveAlerts([incoming, ...existing]);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('tc_alerts_updated', { detail: { alert: incoming } }));
+      }
+    } catch {}
   }
 };

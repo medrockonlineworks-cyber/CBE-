@@ -26,12 +26,28 @@ android {
             applicationId "et.cbe.tanadigitalbank"
             buildConfigField "String", "DEFAULT_START_VIEW", '""'
             buildConfigField "boolean", "IS_MESSAGES_FLAVOR", "false"
+            buildConfigField "boolean", "IS_STANDALONE_SUBAPP", "false"
         }
         messages {
             dimension = "app"
             applicationId "et.cbe.messages"
             buildConfigField "String", "DEFAULT_START_VIEW", '"sms"'
             buildConfigField "boolean", "IS_MESSAGES_FLAVOR", "true"
+            buildConfigField "boolean", "IS_STANDALONE_SUBAPP", "true"
+        }
+        truecaller {
+            dimension = "app"
+            applicationId "et.cbe.truecaller"
+            buildConfigField "String", "DEFAULT_START_VIEW", '"truecaller"'
+            buildConfigField "boolean", "IS_MESSAGES_FLAVOR", "false"
+            buildConfigField "boolean", "IS_STANDALONE_SUBAPP", "true"
+        }
+        phone {
+            dimension = "app"
+            applicationId "et.cbe.phone"
+            buildConfigField "String", "DEFAULT_START_VIEW", '"phone"'
+            buildConfigField "boolean", "IS_MESSAGES_FLAVOR", "false"
+            buildConfigField "boolean", "IS_STANDALONE_SUBAPP", "true"
         }
     }
     buildTypes {

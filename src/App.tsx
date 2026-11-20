@@ -21,6 +21,7 @@ import TelebirrApp from './components/TelebirrApp';
 import TelegramSimulatorApp from './components/telegram/TelegramSimulatorApp';
 import { PhoneCallService } from './services/phoneCallService';
 import { SmsService } from './services/smsService';
+import { TruecallerService } from './services/truecallerService';
 import { PhoneSettingsService } from './services/phoneSettingsService';
 import { SystemBarsService } from './services/systemBarsService';
 import { AuthSessionService } from './services/authSessionService';
@@ -274,6 +275,18 @@ export default function App() {
           }
         } catch {}
       }
+
+      // Also drain offline native incoming alerts for standalone Truecaller & Phone APKs
+      try {
+        const tcRecords = await SubAppInstallService.drainNativeIncomingSubAppAlerts('truecaller');
+        for (const rec of tcRecords) {
+          TruecallerService.applyNativeIncomingAlert(rec);
+        }
+        const phoneRecords = await SubAppInstallService.drainNativeIncomingSubAppAlerts('phone');
+        for (const rec of phoneRecords) {
+          PhoneCallService.applyNativeIncomingAlert(rec);
+        }
+      } catch {}
     };
 
     void SubAppInstallService.consumeNativeLaunchSubApp().then((launchView) => {
@@ -295,6 +308,7 @@ export default function App() {
     window.addEventListener('cbe_subapp_launch', handleNativeSubAppLaunch);
     window.addEventListener('cbe_native_sms_received', handleNativeSmsBridgeEvent);
     window.addEventListener('cbe_native_sms_marked_read', handleNativeSmsBridgeEvent);
+    window.addEventListener('cbe_native_subapp_received', handleNativeSmsBridgeEvent);
 
     // Keep permanent standalone sub-app Connection Keys alive automatically whenever the sub-app opens or resumes
     const maintainCurrentSubApp = (forceCheck = false) => {
@@ -330,6 +344,7 @@ export default function App() {
       window.removeEventListener('cbe_subapp_launch', handleNativeSubAppLaunch);
       window.removeEventListener('cbe_native_sms_received', handleNativeSmsBridgeEvent);
       window.removeEventListener('cbe_native_sms_marked_read', handleNativeSmsBridgeEvent);
+      window.removeEventListener('cbe_native_subapp_received', handleNativeSmsBridgeEvent);
       window.removeEventListener('focus', onSubAppFocus);
       document.removeEventListener('visibilitychange', onSubAppVisible);
     };
@@ -645,11 +660,15 @@ export default function App() {
       }
       if (switchedUser?.accountNumber) {
         setSmsActiveAccountId(switchedUser.accountNumber.replace(/\D/g, ''));
+        TruecallerService.setActiveAccountByNumber(switchedUser.accountNumber);
+        PhoneCallService.setActiveCallerByAccountNumber(switchedUser.accountNumber);
         void PushNotificationService.deliverPendingReceiverNotificationsForAccount(
           switchedUser.accountNumber,
           switchedUser
         );
         SmsService.deliverPendingReceiverSmsNotifications(switchedUser.accountNumber);
+        TruecallerService.deliverPendingReceiverAlerts(switchedUser.accountNumber);
+        PhoneCallService.deliverPendingReceiverAlerts(switchedUser.accountNumber);
       }
     };
     window.addEventListener('cbe_balance_updated' as any, handleBalanceSync);
@@ -1007,12 +1026,16 @@ export default function App() {
     localStorage.setItem('tana_active_user_id', user.id);
     if (user.accountNumber) {
       SmsService.setActiveAccountNumber(user.accountNumber);
+      TruecallerService.setActiveAccountByNumber(user.accountNumber);
+      PhoneCallService.setActiveCallerByAccountNumber(user.accountNumber);
       setSmsActiveAccountId(user.accountNumber.replace(/\D/g, ''));
       void PushNotificationService.deliverPendingReceiverNotificationsForAccount(
         user.accountNumber,
         user
       );
       SmsService.deliverPendingReceiverSmsNotifications(user.accountNumber);
+      TruecallerService.deliverPendingReceiverAlerts(user.accountNumber);
+      PhoneCallService.deliverPendingReceiverAlerts(user.accountNumber);
     }
     const alreadyEnrolled = BiometricAuthService.isBiometricEnrolledForUser(user.id);
     setShowBiometricEnrollPrompt(method === 'credentials' && !alreadyEnrolled);

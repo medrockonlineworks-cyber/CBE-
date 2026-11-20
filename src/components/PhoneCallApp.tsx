@@ -42,6 +42,8 @@ import { LocalDb } from '../lib/mockData';
 import { UserProfile, Transaction } from '../types';
 import { SmsService } from '../services/smsService';
 import { TruecallerService } from '../services/truecallerService';
+import { PushNotificationService } from '../services/pushNotificationService';
+import { GoogleMessagesService } from '../services/googleMessagesData';
 import ApplePhoneApp from './ApplePhoneApp';
 import { PhoneSettingsService } from '../services/phoneSettingsService';
 import { openExternalUrlInBrowser } from '../services/webReceiptBrowserService';
@@ -186,19 +188,29 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
   const user = useMemo(() => {
     if (currentUser) return currentUser;
     const users = LocalDb.getUsers();
-    return users[0] || {
+    const savedId = typeof window !== 'undefined' ? localStorage.getItem('tana_active_user_id') : null;
+    const savedUser = savedId ? users.find(u => u.id === savedId) : null;
+    if (savedUser) return savedUser;
+    if (users[0]) return users[0];
+    const fallbackName = activeCallerAccount?.name || 'CBE Account Holder';
+    const fallbackAcc = activeCallerAccount?.accountNumber || '1000419524747';
+    const googleProfile = GoogleMessagesService.buildGoogleAccountProfile({
+      accountNumber: fallbackAcc,
+      accountName: fallbackName,
+    });
+    return {
       id: 'user_1',
-      name: 'Leykun Jemaneh Ylma',
-      email: 'leykunjemaneh3@gmail.com',
-      phone: '+251900112233',
-      accountNumber: '1000419524747',
+      name: fallbackName,
+      email: googleProfile.email,
+      phone: activeCallerAccount?.phoneNumber || '+251900112233',
+      accountNumber: fallbackAcc,
       role: 'admin' as const,
       status: 'active' as const,
       createdAt: '2026-01-01T08:00:00Z',
-      balance: 18450.50,
-      availableBalance: 18450.50
+      balance: activeCallerAccount?.balance ?? 18450.50,
+      availableBalance: activeCallerAccount?.availableBalance ?? 18450.50
     };
-  }, [currentUser]);
+  }, [currentUser, activeCallerAccount?.name, activeCallerAccount?.accountNumber, activeCallerAccount?.phoneNumber, activeCallerAccount?.balance, activeCallerAccount?.availableBalance]);
 
   // Real transactions from database
   const userTransactions = useMemo(() => {
@@ -248,12 +260,22 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
       setCallLogs(PhoneCallService.getCallLogs());
       setContacts(PhoneCallService.getContacts());
     };
+    const handleExternalAccountSwitch = (e: Event) => {
+      const detail = (e as CustomEvent<{ user?: { accountNumber?: string } }>).detail;
+      const accNum = detail?.user?.accountNumber;
+      if (accNum) {
+        PhoneCallService.setActiveCallerByAccountNumber(accNum);
+      }
+      handleAccountsUpdate();
+    };
     window.addEventListener('caller_accounts_updated', handleAccountsUpdate);
     window.addEventListener('caller_account_changed', handleAccountsUpdate);
+    window.addEventListener('cbe_account_switched', handleExternalAccountSwitch);
     window.addEventListener('storage', handleAccountsUpdate);
     return () => {
       window.removeEventListener('caller_accounts_updated', handleAccountsUpdate);
       window.removeEventListener('caller_account_changed', handleAccountsUpdate);
+      window.removeEventListener('cbe_account_switched', handleExternalAccountSwitch);
       window.removeEventListener('storage', handleAccountsUpdate);
     };
   }, []);
@@ -279,10 +301,37 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
     }
   }, [user?.accountNumber, user?.name, user?.balance]);
 
-  // Switch Active Caller Account
+  // Switch Active Caller Account (full cross-app sync + receiver notification delivery)
   const handleSwitchCaller = (acc: CallerAccount) => {
     PhoneCallService.setActiveCallerAccountId(acc.id);
     setActiveCallerAccount(acc);
+
+    let matchedUser: UserProfile | null = null;
+    try {
+      if (acc.accountNumber) {
+        SmsService.setActiveAccountNumber(acc.accountNumber);
+        TruecallerService.setActiveAccountByNumber(acc.accountNumber);
+        const cleanNum = acc.accountNumber.replace(/\D/g, '');
+        const users = LocalDb.getUsers();
+        const match = users.find(u => (u.accountNumber || '').replace(/\D/g, '') === cleanNum);
+        if (match) {
+          matchedUser = match;
+          localStorage.setItem('tana_active_user_id', match.id);
+          window.dispatchEvent(new CustomEvent('cbe_account_switched', { detail: { user: match } }));
+          window.dispatchEvent(new CustomEvent('cbe_balance_updated', { detail: { user: match, balance: match.balance } }));
+        }
+      }
+    } catch {}
+
+    try {
+      if (acc.accountNumber) {
+        void PushNotificationService.deliverPendingReceiverNotificationsForAccount(acc.accountNumber, matchedUser);
+        SmsService.deliverPendingReceiverSmsNotifications(acc.accountNumber);
+        TruecallerService.deliverPendingReceiverAlerts(acc.accountNumber);
+        PhoneCallService.deliverPendingReceiverAlerts(acc.accountNumber);
+      }
+    } catch {}
+
     setToastMessage(`Active Caller set to: ${acc.name} (${acc.role === 'sender' ? 'Sender' : 'Receiver'})`);
     setTimeout(() => setToastMessage(null), 3000);
   };
@@ -829,7 +878,7 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
           paymentAbout: tx.description || 'Pay done via Mobile',
           sender: tx.senderName || (isOut ? activeCallerAccount.name : 'Dejene Buta Feye'),
           senderAccount: tx.senderAccount,
-          receiver: tx.recipientName || (isOut ? 'Leykun Jemaneh Ylma' : activeCallerAccount.name),
+          receiver: tx.recipientName || (isOut ? 'CBE Beneficiary' : activeCallerAccount.name),
           receiverAccount: tx.recipientAccount,
           date: tx.createdAt ? tx.createdAt.replace('T', ' ').slice(0, 16) : `${day}/${month}`,
           timestamp: new Date(tx.createdAt).getTime()
@@ -1075,7 +1124,7 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
 
       case 'cbe_account_summary':
         return [
-          activeCallerAccount?.name || user.name || 'Leykun Jemaneh Ylma',
+          activeCallerAccount?.name || user.name || 'CBE Account Holder',
           `Available Balance is ETB ${formattedBalance}`,
           'Transactions',
           ...page1Txs.map((tx, idx) => `${idx + 1}:${tx.line}`),
@@ -1085,7 +1134,7 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
 
       case 'cbe_account_summary_page2':
         return [
-          activeCallerAccount?.name || user.name || 'Leykun Jemaneh Ylma',
+          activeCallerAccount?.name || user.name || 'CBE Account Holder',
           `Available Balance is ETB ${formattedBalance}`,
           'Transactions (Page 2)',
           ...page2Txs.map((tx, idx) => `${idx + 1}:${tx.line}`),

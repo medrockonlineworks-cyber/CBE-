@@ -100,6 +100,9 @@ import {
 import { LocalDb } from '../lib/mockData';
 import { Transaction } from '../types';
 import { SystemBarsService } from '../services/systemBarsService';
+import { SmsService } from '../services/smsService';
+import { PhoneCallService } from '../services/phoneCallService';
+import { GoogleMessagesService } from '../services/googleMessagesData';
 
 interface TruecallerSimulatorProps {
   onBack: () => void;
@@ -589,7 +592,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
     }
   }, []);
 
-  // Listen for external transaction updates
+  // Listen for external transaction & account-switch updates
   useEffect(() => {
     const handleUpdate = () => {
       setAccounts(TruecallerService.getAccounts());
@@ -598,11 +601,28 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
         setRawAppTransactions(LocalDb.getTransactions());
       } catch {}
     };
+    const handleExternalAccountSwitch = (e: Event) => {
+      const detail = (e as CustomEvent<{ user?: { accountNumber?: string }; account?: { id?: string; accountNumber?: string } }>).detail;
+      const accNum = detail?.user?.accountNumber || detail?.account?.accountNumber;
+      if (accNum) {
+        const matched = TruecallerService.setActiveAccountByNumber(accNum);
+        if (matched) {
+          setActiveAccountId(matched.id);
+          setSimSenderAccount(matched.accountNumber);
+          setSimSenderName(matched.holderName);
+        }
+      }
+      handleUpdate();
+    };
     window.addEventListener('tc_alerts_updated', handleUpdate);
+    window.addEventListener('tc_account_changed', handleExternalAccountSwitch);
+    window.addEventListener('cbe_account_switched', handleExternalAccountSwitch);
     window.addEventListener('sms-created', handleUpdate);
     window.addEventListener('sms-updated', handleUpdate);
     return () => {
       window.removeEventListener('tc_alerts_updated', handleUpdate);
+      window.removeEventListener('tc_account_changed', handleExternalAccountSwitch);
+      window.removeEventListener('cbe_account_switched', handleExternalAccountSwitch);
       window.removeEventListener('sms-created', handleUpdate);
       window.removeEventListener('sms-updated', handleUpdate);
     };
@@ -1147,15 +1167,41 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
     }
   };
 
-  // Filtered threads for inbox search
+  // Active Google Account profile synchronized to the currently selected account
+  const activeGoogleProfile = useMemo(() => {
+    return GoogleMessagesService.buildGoogleAccountProfile({
+      accountNumber: activeAccount?.accountNumber || '1000419524747',
+      accountName: activeAccount?.holderName || 'Leykun Jemaneh Ylma',
+    });
+  }, [activeAccount?.holderName, activeAccount?.accountNumber]);
+
+  const activeHolderFullName = activeAccount?.holderName || 'Leykun Jemaneh Ylma';
+  const activeHolderFirstName = activeHolderFullName.trim().split(/\s+/)[0] || 'Customer';
+
+  // Filtered threads for inbox search — all pre-simulated texts personalized to active account name
   const filteredThreads = useMemo(() => {
-    if (!searchQuery.trim()) return DEFAULT_INBOX_THREADS;
+    const personalizedThreads = DEFAULT_INBOX_THREADS.map(t => {
+      if (t.id === 'CBE') {
+        return {
+          ...t,
+          snippet: `Dear ${activeHolderFullName} A ...`,
+        };
+      }
+      if (t.id === 'mpesa-info') {
+        return {
+          ...t,
+          snippet: `ውድ ${activeHolderFirstName} በብሔራዊ ባንክ መመሪያ መሰረት እባክዎ የሂ...`,
+        };
+      }
+      return t;
+    });
+    if (!searchQuery.trim()) return personalizedThreads;
     const q = searchQuery.toLowerCase();
-    return DEFAULT_INBOX_THREADS.filter(t => 
+    return personalizedThreads.filter(t => 
       t.sender.toLowerCase().includes(q) || 
       t.snippet.toLowerCase().includes(q)
     );
-  }, [searchQuery]);
+  }, [searchQuery, activeHolderFullName, activeHolderFirstName]);
 
   // =========================================================================
   // 1. BACKGROUND SCREENS (TikTok, YouTube, Telegram, Instagram, WhatsApp, LockScreen)
@@ -1565,7 +1611,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
         {/* WhatsApp Messages Feed */}
         <div className="flex-1 overflow-y-auto p-3 space-y-2.5 bg-[#0b141a]">
           <div className="bg-[#202c33] p-3 rounded-2xl text-xs text-white max-w-[80%] rounded-tl-xs space-y-1">
-            <p>Hey Leykun, just transferred ETB 450.00 to your CBE account for the project materials.</p>
+            <p>Hey {activeHolderFirstName}, just transferred ETB 450.00 to your CBE account for the project materials.</p>
             <span className="text-[10px] text-neutral-400 text-right block">11:57 AM</span>
           </div>
 
@@ -1642,7 +1688,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
               <Building2 className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-[14px] font-bold text-white tracking-tight leading-tight">Hello Leykun</h2>
+              <h2 className="text-[14px] font-bold text-white tracking-tight leading-tight">Hello {activeHolderFirstName}</h2>
               <p className="text-[10.5px] text-neutral-300 font-medium">Welcome Back!</p>
             </div>
           </div>
@@ -1659,9 +1705,9 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
 
         {/* Dashen Content Body */}
         <div className="relative flex-1 overflow-y-auto px-4 py-1 space-y-3 z-10 scrollbar-none">
-          {/* Leykun Jemaneh Yilma & Balance */}
+          {/* Active holder name & Balance */}
           <div className="text-center pt-0.5 pb-1 space-y-0.5">
-            <p className="text-[13px] font-semibold text-neutral-200">Leykun Jemaneh Yilma</p>
+            <p className="text-[13px] font-semibold text-neutral-200">{activeHolderFullName}</p>
             <div className="flex items-center justify-center gap-2">
               <span className="text-[26px] font-extrabold text-white tracking-tight">
                 778.18 ETB
@@ -1738,7 +1784,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
               </div>
               <div>
                 <p className="text-[13px] font-bold tracking-tight">Telebirr Super App</p>
-                <p className="text-[10px] text-sky-200">Leykun Jemaneh</p>
+                <p className="text-[10px] text-sky-200">{activeHolderFullName}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -2575,18 +2621,25 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                   <Search className="w-5 h-5" />
                 </button>
 
-                {/* User Profile Avatar with Accent Ring */}
-                <div
-                  className="relative flex items-center justify-center p-[2px] rounded-full border-2 select-none"
+                {/* Dynamic Google Account Avatar synchronized with active account */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveBankKey('cbe');
+                    setView('bank_thread');
+                    setShowThreeDotMenu(true);
+                  }}
+                  title={`${activeGoogleProfile.fullName} (${activeGoogleProfile.email})`}
+                  className="relative flex items-center justify-center p-[2px] rounded-full border-2 select-none cursor-pointer active:scale-95 transition"
                   style={{ borderColor: currentAccent.primary }}
                 >
                   <div 
                     className="w-8 h-8 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm"
-                    style={{ backgroundColor: currentAccent.primary }}
+                    style={{ backgroundColor: activeGoogleProfile.avatarColor || currentAccent.primary }}
                   >
-                    L
+                    {activeGoogleProfile.initial}
                   </div>
-                </div>
+                </button>
               </div>
             </>
           ) : (
@@ -2662,11 +2715,6 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                       }`}>
                         {thread.sender}
                       </h2>
-                      {isCbeThread && (
-                        <span className="text-[9.5px] font-bold px-2 py-0.5 rounded-full bg-purple-600 text-white uppercase tracking-wider">
-                          Bank CBE • Tap to Open
-                        </span>
-                      )}
                     </div>
                     <p className={`text-[13.5px] truncate mt-0.5 leading-snug ${
                       thread.unreadCount > 0 
@@ -2888,11 +2936,11 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                                         type: (tx.role === 'receiver' ? 'receive' : 'transfer') as 'receive' | 'transfer',
                                         amount: tx.amount || 50.00,
                                         fee: 0,
-                                        recipientName: tx.role === 'receiver' ? (tx.holderName || 'Leykun') : (tx.counterpartyName || 'Dejene Buta'),
-                                        recipientAccount: tx.role === 'receiver' ? (tx.accountNumber || '1000419524747') : '1000419520913',
+                                        recipientName: tx.role === 'receiver' ? (tx.holderName || activeHolderFullName) : (tx.counterpartyName || 'Dejene Buta'),
+                                        recipientAccount: tx.role === 'receiver' ? (tx.accountNumber || activeAccount?.accountNumber || '1000419524747') : '1000419520913',
                                         recipientBank: 'Commercial Bank of Ethiopia',
-                                        senderName: tx.role === 'receiver' ? (tx.counterpartyName || 'Dejene Buta') : (tx.holderName || 'Leykun Jemaneh Ylma'),
-                                        senderAccount: tx.role === 'receiver' ? '1000419520842' : (tx.accountNumber || '1000419524747'),
+                                        senderName: tx.role === 'receiver' ? (tx.counterpartyName || 'Dejene Buta') : (tx.holderName || activeHolderFullName),
+                                        senderAccount: tx.role === 'receiver' ? '1000419520842' : (tx.accountNumber || activeAccount?.accountNumber || '1000419524747'),
                                         reference: tx.txId || 'FT26248KLR82',
                                         createdAt: tx.timestamp || '2026-09-05T16:41:01Z',
                                         status: 'success' as const,
@@ -3148,6 +3196,30 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                             TruecallerService.setActiveAccountId(acc.id);
                             setSimSenderAccount(acc.accountNumber);
                             setSimSenderName(acc.holderName);
+
+                            // Sync across CBE Bank, Messages SMS, and Phone apps + deliver waiting receiver notifications!
+                            let matchedUser = null;
+                            try {
+                              SmsService.setActiveAccountNumber(acc.accountNumber);
+                              PhoneCallService.setActiveCallerByAccountNumber(acc.accountNumber);
+                              const cleanNum = (acc.accountNumber || '').replace(/\D/g, '');
+                              const users = LocalDb.getUsers();
+                              const match = users.find(u => (u.accountNumber || '').replace(/\D/g, '') === cleanNum);
+                              if (match) {
+                                matchedUser = match;
+                                localStorage.setItem('tana_active_user_id', match.id);
+                                window.dispatchEvent(new CustomEvent('cbe_account_switched', { detail: { user: match } }));
+                                window.dispatchEvent(new CustomEvent('cbe_balance_updated', { detail: { user: match, balance: match.balance } }));
+                              }
+                            } catch {}
+
+                            try {
+                              void PushNotificationService.deliverPendingReceiverNotificationsForAccount(acc.accountNumber, matchedUser);
+                              SmsService.deliverPendingReceiverSmsNotifications(acc.accountNumber);
+                              TruecallerService.deliverPendingReceiverAlerts(acc.accountNumber);
+                              PhoneCallService.deliverPendingReceiverAlerts(acc.accountNumber);
+                            } catch {}
+
                             showToast(`Selected account: ${acc.holderName}`);
                           }}
                           className={`p-3 rounded-2xl border transition cursor-pointer flex items-center justify-between group ${
@@ -4044,11 +4116,11 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                       type: (tx.role === 'receiver' ? 'receive' : 'transfer') as 'receive' | 'transfer',
                       amount: tx.amount || 50.00,
                       fee: 0,
-                      recipientName: tx.role === 'receiver' ? (tx.holderName || 'Leykun') : (tx.counterpartyName || 'Retail Merchant'),
-                      recipientAccount: tx.role === 'receiver' ? (tx.accountNumber || '1000419524747') : '1000419520913',
+                      recipientName: tx.role === 'receiver' ? (tx.holderName || activeHolderFullName) : (tx.counterpartyName || 'Retail Merchant'),
+                      recipientAccount: tx.role === 'receiver' ? (tx.accountNumber || activeAccount?.accountNumber || '1000419524747') : '1000419520913',
                       recipientBank: 'Commercial Bank of Ethiopia',
-                      senderName: tx.role === 'receiver' ? (tx.counterpartyName || 'Dejene Buta') : (tx.holderName || 'Leykun Jemaneh Ylma'),
-                      senderAccount: tx.role === 'receiver' ? '1000419520842' : (tx.accountNumber || '1000419524747'),
+                      senderName: tx.role === 'receiver' ? (tx.counterpartyName || 'Dejene Buta') : (tx.holderName || activeHolderFullName),
+                      senderAccount: tx.role === 'receiver' ? '1000419520842' : (tx.accountNumber || activeAccount?.accountNumber || '1000419524747'),
                       reference: tx.txId || 'FT26248KLR82',
                       createdAt: tx.timestamp || '2026-09-05T16:41:01Z',
                       status: 'success' as const,

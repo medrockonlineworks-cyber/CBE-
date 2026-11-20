@@ -73,11 +73,21 @@ public class MainActivity extends BridgeActivity {
     private static volatile String pendingSubAppView = null;
     private static volatile java.lang.ref.WeakReference<MainActivity> activeInstanceRef = null;
 
+    private static String getDefaultFlavorStartView() {
+        if (BuildConfig.DEFAULT_START_VIEW != null && !BuildConfig.DEFAULT_START_VIEW.trim().isEmpty()) {
+            return BuildConfig.DEFAULT_START_VIEW.trim().toLowerCase();
+        }
+        if (BuildConfig.IS_MESSAGES_FLAVOR) {
+            return "sms";
+        }
+        return null;
+    }
+
     public static String consumePendingSubAppView() {
         String view = pendingSubAppView;
         pendingSubAppView = null;
-        if ((view == null || view.isEmpty()) && BuildConfig.IS_MESSAGES_FLAVOR) {
-            return "sms";
+        if (view == null || view.isEmpty()) {
+            return getDefaultFlavorStartView();
         }
         return view;
     }
@@ -90,6 +100,23 @@ public class MainActivity extends BridgeActivity {
             try {
                 if (act.getBridge() != null) {
                     act.getBridge().triggerWindowJSEvent("cbe_native_sms_received", "{}");
+                }
+            } catch (Exception ignored) {
+            }
+        });
+    }
+
+    public static void notifyNativeSubAppReceived(String subAppId) {
+        java.lang.ref.WeakReference<MainActivity> ref = activeInstanceRef;
+        MainActivity act = ref != null ? ref.get() : null;
+        if (act == null) return;
+        final String safeId = subAppId != null ? subAppId.trim().toLowerCase() : "";
+        act.runOnUiThread(() -> {
+            try {
+                if (act.getBridge() != null) {
+                    org.json.JSONObject obj = new org.json.JSONObject();
+                    obj.put("subAppId", safeId);
+                    act.getBridge().triggerWindowJSEvent("cbe_native_subapp_received", obj.toString());
                 }
             } catch (Exception ignored) {
             }
@@ -117,8 +144,8 @@ public class MainActivity extends BridgeActivity {
         if (intent == null) return;
         try {
             String targetView = intent.getStringExtra(EXTRA_SUBAPP_VIEW);
-            if ((targetView == null || targetView.trim().isEmpty()) && BuildConfig.IS_MESSAGES_FLAVOR) {
-                targetView = "sms";
+            if (targetView == null || targetView.trim().isEmpty()) {
+                targetView = getDefaultFlavorStartView();
             }
             if (targetView != null && !targetView.trim().isEmpty()) {
                 String clean = targetView.trim().toLowerCase();
@@ -138,8 +165,9 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(SubAppShortcutPlugin.class);
         super.onCreate(savedInstanceState);
         applyEdgeToEdge();
-        if (BuildConfig.IS_MESSAGES_FLAVOR && pendingSubAppView == null) {
-            pendingSubAppView = "sms";
+        String defaultView = getDefaultFlavorStartView();
+        if (defaultView != null && pendingSubAppView == null) {
+            pendingSubAppView = defaultView;
         }
         handleSubAppIntent(getIntent(), false);
     }

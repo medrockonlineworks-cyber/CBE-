@@ -47,6 +47,8 @@ import { CbeHolidayCardModal } from '../components/CbeHolidayCardModal';
 import { SystemBarsService } from '../services/systemBarsService';
 import { openWebReceiptInRealBrowser } from '../services/webReceiptBrowserService';
 import { PushNotificationService } from '../services/pushNotificationService';
+import { TruecallerService } from '../services/truecallerService';
+import { PhoneCallService } from '../services/phoneCallService';
 
 interface SmsPageProps {
   onBack: () => void;
@@ -293,10 +295,14 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
       }
     } catch {}
 
-    // Deliver any waiting incoming receiver notifications for BOTH CBE Mobile Banking and SMS app
+    // Deliver any waiting incoming receiver notifications across CBE Bank, SMS, Truecaller, and Phone
     try {
+      TruecallerService.setActiveAccountByNumber(accNum);
+      PhoneCallService.setActiveCallerByAccountNumber(accNum);
       void PushNotificationService.deliverPendingReceiverNotificationsForAccount(accNum, matchedUser);
       SmsService.deliverPendingReceiverSmsNotifications(accNum);
+      TruecallerService.deliverPendingReceiverAlerts(accNum);
+      PhoneCallService.deliverPendingReceiverAlerts(accNum);
     } catch {}
   };
 

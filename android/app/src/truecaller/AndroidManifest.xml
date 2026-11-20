@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application
+        android:icon="@mipmap/ic_truecaller_launcher"
+        android:roundIcon="@mipmap/ic_truecaller_launcher_round"
+        android:label="@string/app_name"
+        tools:replace="android:icon,android:roundIcon,android:label">
+
+        <receiver
+            android:name="et.cbe.tanadigitalbank.IncomingSubAppReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="et.cbe.truecaller.ACTION_INCOMING_ALERT" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>

@@ -1,6 +1,9 @@
 import { LocalDb } from '../lib/mockData';
 import { UserProfile, Transaction } from '../types';
 import { ACCOUNT_BALANCES_UP_TO_50K, ALL_NEW_REGISTERED_ENTRIES } from '../lib/additionalAccountsData';
+import { PushNotificationService } from './pushNotificationService';
+
+const PENDING_RECEIVER_PHONE_NOTIFS_KEY = 'cbe_pending_receiver_phone_notifs_v1';
 
 export interface CallLogItem {
   id: string;
@@ -737,8 +740,8 @@ export const PhoneCallService = {
       paymentAbout: 'Pay done via Mobile',
       sender: isCurrentOut ? acc.name : (acc.name.toLowerCase().includes('dejene') ? 'Kasahun Yematawork' : 'Dejene Buta Feye'),
       senderAccount: isCurrentOut ? acc.accountNumber : '1000284758657',
-      receiver: isCurrentOut ? 'Leykun Jemaneh Ylma' : acc.name,
-      receiverAccount: isCurrentOut ? '1000419524747' : acc.accountNumber,
+      receiver: isCurrentOut ? (acc.name.toLowerCase().includes('leykun') ? 'Selamawit Tekle Haile' : 'Yared Tadesse Haile') : acc.name,
+      receiverAccount: isCurrentOut ? '1000246810121' : acc.accountNumber,
       date: d.toISOString().replace('T', ' ').slice(0, 16),
       timestamp: acc.lastTxTimestamp || new Date(2026, 8, 4, 18, 22).getTime()
     });
@@ -1156,7 +1159,7 @@ export const PhoneCallService = {
   },
 
   // Called automatically whenever any transaction is executed in CBE Banking
-  syncTransactionToCallerApp(tx: Transaction): void {
+  syncTransactionToCallerApp(tx: Transaction, options?: { notify?: boolean }): void {
     const accounts = this.getCallerAccounts();
     const txTimestamp = tx.createdAt ? new Date(tx.createdAt).getTime() : Date.now();
     const dateStr = new Date(txTimestamp).toLocaleDateString('en-GB', { day: 'numeric', month: 'numeric' });
@@ -1375,6 +1378,157 @@ export const PhoneCallService = {
         note: `Receiver: ${receiverAcc.accountNumber}`
       });
     }
+
+    // Fire immediate Phone *889# notification for sender and queue receiver's alert for account switch!
+    if (options?.notify !== false) {
+      try {
+        const formattedAmtNotif = Number(tx.amount || 0).toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+        const senderBody = `${senderAcc.name}: *889# debit of ETB ${formattedAmtNotif} to ${receiverAcc.name}. Available Balance: ETB ${(senderAcc.availableBalance ?? senderAcc.balance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`;
+        const receiverBody = `${receiverAcc.name}: You received ETB ${formattedAmtNotif} from ${senderAcc.name}. Available Balance: ETB ${(receiverAcc.availableBalance ?? receiverAcc.balance).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`;
+
+        const isReceiveTx = tx.type === 'receive';
+        void PushNotificationService.notifySubApp({
+          subAppId: 'phone',
+          title: 'CBE *889#',
+          body: isReceiveTx ? receiverBody : senderBody,
+          privateBody: 'New CBE *889# USSD transaction update.',
+          reference: tx.reference || tx.id,
+          tag: `cbe-phone-${tx.id || Date.now()}`,
+          payloadRecord: {
+            id: `phone-tx-${tx.id || Date.now()}`,
+            senderAccount: senderAcc.accountNumber,
+            senderName: senderAcc.name,
+            receiverAccount: receiverAcc.accountNumber,
+            receiverName: receiverAcc.name,
+            amount: tx.amount,
+            reference: tx.reference || tx.id,
+            body: isReceiveTx ? receiverBody : senderBody,
+            timestamp: txTimestamp,
+          },
+        });
+
+        const cleanSenderAcc = (senderAcc.accountNumber || '').replace(/\D/g, '');
+        const cleanRecipAcc = (receiverAcc.accountNumber || '').replace(/\D/g, '');
+        if (!isReceiveTx && cleanRecipAcc && cleanRecipAcc !== cleanSenderAcc) {
+          this.enqueuePendingReceiverAlert(cleanRecipAcc, {
+            id: `phone-recv-${tx.id || Date.now()}`,
+            title: 'CBE *889#',
+            body: receiverBody,
+            reference: tx.reference || tx.id,
+            amount: tx.amount,
+            senderName: senderAcc.name,
+            senderAccount: senderAcc.accountNumber,
+            receiverName: receiverAcc.name,
+            receiverAccount: receiverAcc.accountNumber,
+            timestamp: txTimestamp,
+          });
+        }
+      } catch {}
+    }
+  },
+
+  setActiveCallerByAccountNumber(accountNumber: string): CallerAccount | null {
+    const clean = (accountNumber || '').replace(/\D/g, '');
+    if (!clean) return null;
+    const accounts = this.getCallerAccounts();
+    const match = accounts.find(a => (a.accountNumber || '').replace(/\D/g, '') === clean);
+    if (match) {
+      this.setActiveCallerAccountId(match.id);
+      return match;
+    }
+    return null;
+  },
+
+  enqueuePendingReceiverAlert(
+    accountNumber: string,
+    payload: {
+      id: string;
+      title: string;
+      body: string;
+      reference?: string;
+      amount?: number;
+      senderName?: string;
+      senderAccount?: string;
+      receiverName?: string;
+      receiverAccount?: string;
+      timestamp?: number;
+    }
+  ): void {
+    const cleanAcc = (accountNumber || '').replace(/\D/g, '');
+    if (!cleanAcc) return;
+    try {
+      const raw = localStorage.getItem(PENDING_RECEIVER_PHONE_NOTIFS_KEY);
+      const list: Array<{ accountNumber: string; payload: typeof payload; createdAt: number }> = raw
+        ? JSON.parse(raw)
+        : [];
+      const deduped = list.filter(item => item?.payload?.id !== payload.id);
+      deduped.push({ accountNumber: cleanAcc, payload, createdAt: Date.now() });
+      localStorage.setItem(PENDING_RECEIVER_PHONE_NOTIFS_KEY, JSON.stringify(deduped.slice(-40)));
+    } catch {}
+  },
+
+  deliverPendingReceiverAlerts(accountNumber: string): number {
+    const cleanAcc = (accountNumber || '').replace(/\D/g, '');
+    if (!cleanAcc) return 0;
+    try {
+      const raw = localStorage.getItem(PENDING_RECEIVER_PHONE_NOTIFS_KEY);
+      if (!raw) return 0;
+      const list: Array<{ accountNumber: string; payload: any; createdAt: number }> = JSON.parse(raw);
+      if (!Array.isArray(list) || list.length === 0) return 0;
+
+      const matching = list.filter(item => (item?.accountNumber || '').replace(/\D/g, '') === cleanAcc);
+      if (matching.length === 0) return 0;
+
+      const remaining = list.filter(item => (item?.accountNumber || '').replace(/\D/g, '') !== cleanAcc);
+      localStorage.setItem(PENDING_RECEIVER_PHONE_NOTIFS_KEY, JSON.stringify(remaining));
+
+      for (const item of matching) {
+        const p = item.payload;
+        if (!p) continue;
+        void PushNotificationService.notifySubApp({
+          subAppId: 'phone',
+          title: p.title || 'CBE *889#',
+          body: p.body || 'New *889# credit received.',
+          privateBody: 'New CBE *889# USSD credit alert.',
+          reference: p.reference,
+          tag: `cbe-phone-recv-${p.id}`,
+          payloadRecord: p,
+        });
+      }
+      return matching.length;
+    } catch {
+      return 0;
+    }
+  },
+
+  applyNativeIncomingAlert(raw: Record<string, unknown>): void {
+    try {
+      if (!raw || typeof raw !== 'object') return;
+      const amount = typeof raw.amount === 'number' ? raw.amount : 0;
+      const senderAccount = typeof raw.senderAccount === 'string' ? raw.senderAccount : '';
+      const receiverAccount = typeof raw.receiverAccount === 'string' ? raw.receiverAccount : '';
+      if (amount > 0 && (senderAccount || receiverAccount)) {
+        const tx: Transaction = {
+          id: typeof raw.id === 'string' ? raw.id : `phone-native-${Date.now()}`,
+          type: 'transfer',
+          senderName: typeof raw.senderName === 'string' ? raw.senderName : 'Sender',
+          senderAccount: senderAccount || '1000284758657',
+          recipientName: typeof raw.receiverName === 'string' ? raw.receiverName : 'Receiver',
+          recipientAccount: receiverAccount || '1000419524747',
+          recipientBank: 'Commercial Bank of Ethiopia',
+          amount,
+          fee: 0,
+          description: 'Pay done via Mobile',
+          reference: typeof raw.reference === 'string' ? raw.reference : undefined,
+          status: 'success',
+          createdAt: new Date(typeof raw.timestamp === 'number' ? raw.timestamp : Date.now()).toISOString(),
+        };
+        this.syncTransactionToCallerApp(tx, { notify: false });
+      }
+    } catch {}
   },
 
   // Scan all past transactions and ensure all senders and receivers have caller accounts
@@ -1385,7 +1539,7 @@ export const PhoneCallService = {
     // Sort oldest first so that the latest transaction is synced last and gets isNow=true and highest timestamp
     list.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
     for (const tx of list) {
-      this.syncTransactionToCallerApp(tx);
+      this.syncTransactionToCallerApp(tx, { notify: false });
     }
   }
 };

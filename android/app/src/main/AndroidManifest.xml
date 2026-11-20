@@ -44,6 +44,8 @@
 
     <queries>
         <package android:name="et.cbe.messages" />
+        <package android:name="et.cbe.truecaller" />
+        <package android:name="et.cbe.phone" />
     </queries>
 
     <uses-feature android:name="android.hardware.fingerprint" android:required="false" />

@@ -59,6 +59,23 @@ export const ApplePhoneApp: React.FC<ApplePhoneAppProps> = ({
   } | null>(null);
   const [ussdInput, setUssdInput] = useState('');
 
+  // Live sync active caller account & logs on account switch
+  useEffect(() => {
+    const syncPhoneState = () => {
+      setCallerAccounts(PhoneCallService.getCallerAccounts());
+      setActiveCallerAccount(PhoneCallService.getActiveCallerAccount());
+      setCallLogs(PhoneCallService.getCallLogs());
+    };
+    window.addEventListener('caller_accounts_updated', syncPhoneState);
+    window.addEventListener('caller_account_changed', syncPhoneState);
+    window.addEventListener('cbe_account_switched', syncPhoneState);
+    return () => {
+      window.removeEventListener('caller_accounts_updated', syncPhoneState);
+      window.removeEventListener('caller_account_changed', syncPhoneState);
+      window.removeEventListener('cbe_account_switched', syncPhoneState);
+    };
+  }, []);
+
   // Call timer effect
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -142,11 +159,12 @@ export const ApplePhoneApp: React.FC<ApplePhoneAppProps> = ({
         });
       }
     } else if (ussdModal.step === 'pin') {
-      const balance = currentUser?.balance || 25430.00;
+      const holderName = activeCallerAccount?.name || currentUser?.name || 'Customer';
+      const balance = activeCallerAccount?.availableBalance ?? activeCallerAccount?.balance ?? currentUser?.balance ?? 25430.00;
       setUssdModal({
         isOpen: true,
         title: 'CBE Account Balance',
-        message: `Your CBE Account balance is ETB ${balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}.\nAvailable: ETB ${balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}.\nThank you for banking with CBE!`,
+        message: `${holderName}\nYour CBE Account balance is ETB ${balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}.\nAvailable: ETB ${balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}.\nThank you for banking with CBE!`,
         step: 'done',
       });
     } else {

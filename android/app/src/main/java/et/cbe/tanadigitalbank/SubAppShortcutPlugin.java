@@ -32,6 +32,8 @@ public class SubAppShortcutPlugin extends Plugin {
         JSObject ret = new JSObject();
         ret.put("view", MainActivity.consumePendingSubAppView());
         ret.put("isMessagesApk", BuildConfig.IS_MESSAGES_FLAVOR);
+        ret.put("isStandaloneSubApp", BuildConfig.IS_STANDALONE_SUBAPP);
+        ret.put("defaultStartView", BuildConfig.DEFAULT_START_VIEW);
         call.resolve(ret);
     }
 
@@ -40,25 +42,49 @@ public class SubAppShortcutPlugin extends Plugin {
         Context context = getContext();
         JSObject ret = new JSObject();
         ret.put("isMessagesApk", BuildConfig.IS_MESSAGES_FLAVOR);
+        ret.put("isStandaloneSubApp", BuildConfig.IS_STANDALONE_SUBAPP);
         ret.put("defaultStartView", BuildConfig.DEFAULT_START_VIEW);
         ret.put("packageName", context != null ? context.getPackageName() : "");
         call.resolve(ret);
     }
 
-    private boolean checkMessagesApkInstalled(Context context) {
-        if (context == null) return false;
+    private String resolvePackageForSubApp(String subAppId) {
+        if (subAppId == null) return null;
+        String id = subAppId.trim().toLowerCase();
+        if ("sms".equals(id)) return "et.cbe.messages";
+        if ("truecaller".equals(id)) return "et.cbe.truecaller";
+        if ("phone".equals(id)) return "et.cbe.phone";
+        return null;
+    }
+
+    private boolean checkPackageInstalled(Context context, String packageName) {
+        if (context == null || packageName == null || packageName.isEmpty()) return false;
         try {
-            context.getPackageManager().getPackageInfo("et.cbe.messages", 0);
+            context.getPackageManager().getPackageInfo(packageName, 0);
             return true;
         } catch (Exception e) {
             return false;
         }
     }
 
+    private boolean checkMessagesApkInstalled(Context context) {
+        return checkPackageInstalled(context, "et.cbe.messages");
+    }
+
     @PluginMethod
     public void isMessagesApkInstalled(PluginCall call) {
         JSObject ret = new JSObject();
         ret.put("installed", checkMessagesApkInstalled(getContext()));
+        call.resolve(ret);
+    }
+
+    @PluginMethod
+    public void isSubAppApkInstalled(PluginCall call) {
+        String subAppId = call.getString("subAppId", "");
+        String pkg = resolvePackageForSubApp(subAppId);
+        JSObject ret = new JSObject();
+        ret.put("installed", checkPackageInstalled(getContext(), pkg));
+        ret.put("packageName", pkg != null ? pkg : "");
         call.resolve(ret);
     }
 
@@ -104,6 +130,67 @@ public class SubAppShortcutPlugin extends Plugin {
     }
 
     @PluginMethod
+    public void sendAlertToSubAppApk(PluginCall call) {
+        Context context = getContext();
+        JSObject ret = new JSObject();
+        String subAppId = call.getString("subAppId", "");
+        String cleanId = subAppId != null ? subAppId.trim().toLowerCase() : "";
+
+        if ("sms".equals(cleanId)) {
+            sendSmsToMessagesApk(call);
+            return;
+        }
+
+        String targetPkg = resolvePackageForSubApp(cleanId);
+        if (context == null || targetPkg == null) {
+            ret.put("installed", false);
+            ret.put("delivered", false);
+            call.resolve(ret);
+            return;
+        }
+
+        // Do not broadcast to ourselves when already running inside that exact standalone APK
+        if (targetPkg.equals(context.getPackageName())) {
+            ret.put("installed", true);
+            ret.put("delivered", false);
+            call.resolve(ret);
+            return;
+        }
+
+        boolean installed = checkPackageInstalled(context, targetPkg);
+        ret.put("installed", installed);
+        if (!installed) {
+            ret.put("delivered", false);
+            call.resolve(ret);
+            return;
+        }
+
+        try {
+            String action = "truecaller".equals(cleanId)
+                ? IncomingSubAppReceiver.ACTION_TRUECALLER_ALERT
+                : IncomingSubAppReceiver.ACTION_PHONE_ALERT;
+            Intent intent = new Intent(action);
+            intent.setComponent(new android.content.ComponentName(
+                targetPkg,
+                "et.cbe.tanadigitalbank.IncomingSubAppReceiver"
+            ));
+            intent.setPackage(targetPkg);
+            intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+            intent.putExtra("sender", call.getString("sender", "truecaller".equals(cleanId) ? "CBE" : "CBE *889#"));
+            intent.putExtra("body", call.getString("body", ""));
+            intent.putExtra("alertId", call.getString("alertId", ""));
+            intent.putExtra("reference", call.getString("reference", ""));
+            intent.putExtra("payloadJson", call.getString("payloadJson", ""));
+            context.sendBroadcast(intent);
+            ret.put("delivered", true);
+        } catch (Exception e) {
+            ret.put("delivered", false);
+            ret.put("error", e.getMessage());
+        }
+        call.resolve(ret);
+    }
+
+    @PluginMethod
     public void drainNativeIncomingSms(PluginCall call) {
         Context context = getContext();
         JSObject ret = new JSObject();
@@ -129,6 +216,34 @@ public class SubAppShortcutPlugin extends Plugin {
         } catch (Exception e) {
             ret.put("recordsJson", "[]");
             ret.put("readIdsJson", "[]");
+        }
+        call.resolve(ret);
+    }
+
+    @PluginMethod
+    public void drainNativeIncomingSubAppAlerts(PluginCall call) {
+        Context context = getContext();
+        JSObject ret = new JSObject();
+        String subAppId = call.getString("subAppId", "");
+        String cleanId = subAppId != null ? subAppId.trim().toLowerCase() : "";
+        if (context == null || (!"truecaller".equals(cleanId) && !"phone".equals(cleanId))) {
+            ret.put("recordsJson", "[]");
+            call.resolve(ret);
+            return;
+        }
+        try {
+            String prefKey = "truecaller".equals(cleanId)
+                ? IncomingSubAppReceiver.KEY_PENDING_TRUECALLER
+                : IncomingSubAppReceiver.KEY_PENDING_PHONE;
+            android.content.SharedPreferences prefs = context.getSharedPreferences(
+                IncomingSubAppReceiver.PREFS_NAME,
+                Context.MODE_PRIVATE
+            );
+            String pending = prefs.getString(prefKey, "[]");
+            prefs.edit().putString(prefKey, "[]").apply();
+            ret.put("recordsJson", pending);
+        } catch (Exception e) {
+            ret.put("recordsJson", "[]");
         }
         call.resolve(ret);
     }

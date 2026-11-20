@@ -62,17 +62,21 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x android/gradlew
 
-      - name: Build CBE Mobile & Standalone Messages Debug APKs
+      - name: Build CBE Mobile, Messages, Truecaller & Phone Debug APKs
         working-directory: android
-        run: ./gradlew assembleCbeDebug assembleMessagesDebug --no-daemon
+        run: ./gradlew assembleCbeDebug assembleMessagesDebug assembleTruecallerDebug assemblePhoneDebug --no-daemon
 
       - name: Verify APK outputs
         run: |
           CBE_APK="android/app/build/outputs/apk/cbe/debug/app-cbe-debug.apk"
           MSG_APK="android/app/build/outputs/apk/messages/debug/app-messages-debug.apk"
+          TC_APK="android/app/build/outputs/apk/truecaller/debug/app-truecaller-debug.apk"
+          PHONE_APK="android/app/build/outputs/apk/phone/debug/app-phone-debug.apk"
           test -f "$CBE_APK"
           test -f "$MSG_APK"
-          ls -lh "$CBE_APK" "$MSG_APK"
+          test -f "$TC_APK"
+          test -f "$PHONE_APK"
+          ls -lh "$CBE_APK" "$MSG_APK" "$TC_APK" "$PHONE_APK"
           AAPT2=$(find "${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools" -name aapt2 2>/dev/null | sort -V | tail -n 1)
           if [ -n "$AAPT2" ]; then
             echo "=== Messages APK Badging ==="
@@ -80,6 +84,18 @@ jobs:
             echo "$BADGING" | grep -E "package:|application-label|application-icon|launchable-activity"
             echo "$BADGING" | grep -q "name='et.cbe.messages'"
             echo "$BADGING" | grep -q "ic_messages_launcher"
+
+            echo "=== Truecaller APK Badging ==="
+            TC_BADGING=$("$AAPT2" dump badging "$TC_APK")
+            echo "$TC_BADGING" | grep -E "package:|application-label|application-icon|launchable-activity"
+            echo "$TC_BADGING" | grep -q "name='et.cbe.truecaller'"
+            echo "$TC_BADGING" | grep -q "ic_truecaller_launcher"
+
+            echo "=== Phone APK Badging ==="
+            PHONE_BADGING=$("$AAPT2" dump badging "$PHONE_APK")
+            echo "$PHONE_BADGING" | grep -E "package:|application-label|application-icon|launchable-activity"
+            echo "$PHONE_BADGING" | grep -q "name='et.cbe.phone'"
+            echo "$PHONE_BADGING" | grep -q "ic_phone_launcher"
           fi
 
       - name: Upload CBE Mobile Banking APK artifact
@@ -98,16 +114,34 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+      - name: Upload Standalone Truecaller APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: truecaller-debug-apk
+          path: android/app/build/outputs/apk/truecaller/debug/app-truecaller-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Upload Standalone Phone APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: phone-debug-apk
+          path: android/app/build/outputs/apk/phone/debug/app-phone-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Publish direct APKs to GitHub Release (no ZIP required)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           cp android/app/build/outputs/apk/cbe/debug/app-cbe-debug.apk CBE-Mobile-Banking-debug.apk
           cp android/app/build/outputs/apk/messages/debug/app-messages-debug.apk Messages-SMS-debug.apk
+          cp android/app/build/outputs/apk/truecaller/debug/app-truecaller-debug.apk Truecaller-debug.apk
+          cp android/app/build/outputs/apk/phone/debug/app-phone-debug.apk Phone-debug.apk
           if gh release view latest-apk >/dev/null 2>&1; then
-            gh release upload latest-apk CBE-Mobile-Banking-debug.apk Messages-SMS-debug.apk --clobber
+            gh release upload latest-apk CBE-Mobile-Banking-debug.apk Messages-SMS-debug.apk Truecaller-debug.apk Phone-debug.apk --clobber
           else
-            gh release create latest-apk CBE-Mobile-Banking-debug.apk Messages-SMS-debug.apk \
-              --title "CBE Mobile Banking & Standalone Messages APKs" \
-              --notes "Direct installable Android APKs: CBE-Mobile-Banking-debug.apk (CBE Mobile) and Messages-SMS-debug.apk (Standalone Google Messages SMS sub-app)."
+            gh release create latest-apk CBE-Mobile-Banking-debug.apk Messages-SMS-debug.apk Truecaller-debug.apk Phone-debug.apk \
+              --title "CBE Mobile Banking & Standalone Sub-App APKs" \
+              --notes "Direct installable Android APKs: CBE-Mobile-Banking-debug.apk (CBE Mobile), Messages-SMS-debug.apk (Messages), Truecaller-debug.apk (Truecaller), and Phone-debug.apk (Phone)."
           fi

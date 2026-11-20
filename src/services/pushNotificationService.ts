@@ -2319,6 +2319,7 @@ export class PushNotificationService {
     tag?: string;
     forceEvenIfMuted?: boolean;
     smsRecord?: Record<string, unknown>;
+    payloadRecord?: Record<string, unknown>;
   }): Promise<boolean> {
     try {
       const meta = SUB_APP_NOTIFICATION_META[params.subAppId];
@@ -2335,7 +2336,7 @@ export class PushNotificationService {
 
       const finalTitle = (params.title || meta.defaultSender).trim();
       const cleanBody = (params.body || '').replace(/\s+/g, ' ').trim();
-      const maxBodyLen = params.subAppId === 'sms' ? 650 : 220;
+      const maxBodyLen = params.subAppId === 'sms' || params.subAppId === 'truecaller' ? 650 : 280;
       const finalBody = isPrivate
         ? params.privateBody || `You have a new ${meta.shortName} notification.`
         : cleanBody.length > maxBodyLen
@@ -2356,26 +2357,41 @@ export class PushNotificationService {
       const resolvedWebBadge = isAndroidSms
         ? '/icons/badge-sms-android.png'
         : resolvedWebIcon;
-      const resolvedLargeIcon = isIosSmsMode
-        ? 'ic_notif_sms_ios'
-        : isAndroidSms
-          ? 'ic_notif_sms_android_avatar'
-          : meta.largeIcon;
+      const standaloneFlavor = Capacitor.isNativePlatform()
+        ? await SubAppInstallService.getStandaloneSubAppFlavor()
+        : null;
+      const isOwnStandaloneAppIconOnly =
+        standaloneFlavor === 'truecaller' || standaloneFlavor === 'phone';
+      const resolvedLargeIcon = isOwnStandaloneAppIconOnly
+        ? undefined
+        : isIosSmsMode
+          ? 'ic_notif_sms_ios'
+          : isAndroidSms
+            ? 'ic_notif_sms_android_avatar'
+            : meta.largeIcon;
       const resolvedColor = isIosSmsMode ? '#16C64F' : meta.color;
       const resolvedTag = params.tag || `cbe-subapp-${params.subAppId}-${Date.now()}`;
       const resolvedUrl = `/${params.subAppId}/`;
       const smsId =
-        typeof params.smsRecord?.id === 'string' ? params.smsRecord.id : undefined;
+        typeof params.smsRecord?.id === 'string'
+          ? params.smsRecord.id
+          : typeof params.payloadRecord?.id === 'string'
+            ? params.payloadRecord.id
+            : undefined;
 
-      // 0. If running inside Native Android CBE Mobile APK and standalone Messages APK (et.cbe.messages) is installed,
-      // deliver directly via Android explicit package broadcast (instant, offline, zero CBE logo, never expires!)
-      if (Capacitor.isNativePlatform() && params.subAppId === 'sms') {
-        const directApk = await SubAppInstallService.sendSmsToMessagesApk({
+      // 0. If running inside Native Android APK and standalone Messages/Truecaller/Phone APK is installed,
+      // deliver directly via Android explicit package broadcast (instant, offline, own app icon only, never expires!)
+      if (
+        Capacitor.isNativePlatform() &&
+        (params.subAppId === 'sms' || params.subAppId === 'truecaller' || params.subAppId === 'phone')
+      ) {
+        const directApk = await SubAppInstallService.sendAlertToSubAppApk({
+          subAppId: params.subAppId,
           sender: finalTitle,
           body: finalBody,
-          smsId,
+          alertId: smsId,
           reference: params.reference,
-          smsRecord: params.smsRecord,
+          payloadRecord: params.payloadRecord || params.smsRecord,
         });
         if (directApk.delivered) {
           return true;
@@ -2399,8 +2415,8 @@ export class PushNotificationService {
           smsRecord: params.smsRecord,
         });
 
-        // If delivered directly to the installed standalone sub-app (e.g. Messages),
-        // skip posting a local CBE-logo notification so ONLY the standalone Messages app notifies!
+        // If delivered directly to the installed standalone sub-app (e.g. Messages/Truecaller/Phone),
+        // skip posting a local CBE-logo notification so ONLY the standalone app notifies!
         if (remote.delivered > 0 && this.detectCurrentSubAppFromPath() !== params.subAppId) {
           return true;
         }
@@ -2456,16 +2472,24 @@ export class PushNotificationService {
       await this.syncNativePermissionStatus();
     }
     const caps = this.getPlatformCapabilities();
+    const activeUser = this.resolveActiveUserForPush();
+    const activeHolderName = (activeUser?.name || 'Leykun Jemaneh Yilma').trim();
+    const activeFirstName = activeHolderName.split(/\s+/)[0] || 'Customer';
+    const activeAccNum = (activeUser?.accountNumber || '1000419524747').replace(/\D/g, '');
+    const activeMaskedAcc =
+      activeAccNum.length >= 4
+        ? `${activeAccNum[0]}********${activeAccNum.slice(-4)}`
+        : '1********4747';
 
     const samples: Record<SubAppNotificationId, { title: string; body: string; privateBody: string }> = {
       sms: {
         title: 'CBE',
-        body: 'Dear Leykun Jemaneh Yilma You have received ETB 2,500.00 from account 1********8925 to your account 1********4747. Your current balance is ETB 20,950.50. Thanks for Banking with CBE. https://mbreciept.cbe.com.et/v2-hfHCxO9rowo1cCxRHglp  for feedback: https://forms.gle/kGNGQpG3mQCCk3iD6',
+        body: `Dear ${activeHolderName} You have received ETB 2,500.00 from account 1********8925 to your account ${activeMaskedAcc}. Your current balance is ETB 20,950.50. Thanks for Banking with CBE. https://mbreciept.cbe.com.et/v2-hfHCxO9rowo1cCxRHglp  for feedback: https://forms.gle/kGNGQpG3mQCCk3iD6`,
         privateBody: 'New CBE SMS message received.',
       },
       truecaller: {
-        title: 'Truecaller • CBE',
-        body: 'Account 1********4747 credited with ETB 4,500.00 • Available Balance: ETB 22,950.50',
+        title: 'CBE',
+        body: `Dear ${activeHolderName} Account ${activeMaskedAcc} credited with ETB 4,500.00 • Available Balance: ETB 22,950.50`,
         privateBody: 'New Truecaller bank SMS alert.',
       },
       telebirr: {
@@ -2475,7 +2499,7 @@ export class PushNotificationService {
       },
       dashen: {
         title: 'DashenBank',
-        body: "Dear LEYKUN, your account '5502******011' has been credited with ETB 5,000.00. Current Balance: ETB 23,720.00.",
+        body: `Dear ${activeFirstName.toUpperCase()}, your account '5502******011' has been credited with ETB 5,000.00. Current Balance: ETB 23,720.00.`,
         privateBody: 'New Dashen Bank account alert.',
       },
       telegram: {
@@ -2484,8 +2508,8 @@ export class PushNotificationService {
         privateBody: 'New message in Telegram Simulator.',
       },
       phone: {
-        title: 'CBE *889# USSD',
-        body: 'Your *889# transfer of ETB 500.00 has been processed successfully.',
+        title: 'CBE *889#',
+        body: `${activeHolderName}: Your *889# transfer of ETB 500.00 has been processed successfully.`,
         privateBody: 'New CBE *889# USSD alert.',
       },
     };
@@ -2522,20 +2546,23 @@ export class PushNotificationService {
     const tag = `cbe-subapp-test-${subAppId}-${Date.now()}`;
     const isInsideThisSubApp = !Capacitor.isNativePlatform() && this.detectCurrentSubAppFromPath() === subAppId;
 
-    // 0. If running inside Native Android CBE Mobile APK and standalone Messages APK (et.cbe.messages) is installed,
+    // 0. If running inside Native Android CBE Mobile APK and standalone Messages/Truecaller/Phone APK is installed,
     // deliver directly via Android explicit package broadcast!
-    if (Capacitor.isNativePlatform() && subAppId === 'sms') {
-      const directApk = await SubAppInstallService.sendSmsToMessagesApk({
+    if (
+      Capacitor.isNativePlatform() &&
+      (subAppId === 'sms' || subAppId === 'truecaller' || subAppId === 'phone')
+    ) {
+      const directApk = await SubAppInstallService.sendAlertToSubAppApk({
+        subAppId,
         sender: finalTitle,
         body: finalBody,
-        smsId,
-        smsRecord,
+        alertId: smsId,
+        payloadRecord: smsRecord,
       });
       if (directApk.delivered) {
         return {
           ok: true,
-          message:
-            'Delivered directly to your installed Messages APK! Authentic Android Messages notification shown with zero CBE logo.',
+          message: `Delivered directly to your installed ${meta.shortName} APK! Authentic notification shown with its own app icon and zero CBE logo.`,
         };
       }
     }
