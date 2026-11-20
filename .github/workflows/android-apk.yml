@@ -73,6 +73,14 @@ jobs:
           test -f "$CBE_APK"
           test -f "$MSG_APK"
           ls -lh "$CBE_APK" "$MSG_APK"
+          AAPT2=$(find "${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools" -name aapt2 2>/dev/null | sort -V | tail -n 1)
+          if [ -n "$AAPT2" ]; then
+            echo "=== Messages APK Badging ==="
+            BADGING=$("$AAPT2" dump badging "$MSG_APK")
+            echo "$BADGING" | grep -E "package:|application-label|application-icon|launchable-activity"
+            echo "$BADGING" | grep -q "name='et.cbe.messages'"
+            echo "$BADGING" | grep -q "ic_messages_launcher"
+          fi
 
       - name: Upload CBE Mobile Banking APK artifact
         uses: actions/upload-artifact@v4
