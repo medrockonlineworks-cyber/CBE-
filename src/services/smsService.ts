@@ -8,6 +8,7 @@ import { PushNotificationService } from './pushNotificationService';
 const STORAGE_MESSAGES_KEY = 'bank_sms_messages_v6';
 const STORAGE_ACCOUNTS_KEY = 'bank_sms_accounts_v6';
 const STORAGE_ACTIVE_ACC_KEY = 'bank_sms_active_account';
+const PENDING_RECEIVER_SMS_NOTIFS_KEY = 'cbe_pending_receiver_sms_notifs_v1';
 
 export interface AccountTimeMeta {
   account: SmsAccount;
@@ -895,31 +896,14 @@ export class SmsService {
           msgAcc === activeAcc ||
           (Boolean(loggedInAcc) && msgAcc === loggedInAcc) ||
           newSms.forAllUsers;
-        if (!newSms.read && matchesPrimaryAcc && newSms.message) {
-          void PushNotificationService.notifySubApp({
-            subAppId: 'sms',
-            title: newSms.sender || newSms.bankName || 'CBE',
-            body: newSms.message,
-            privateBody: 'New CBE SMS message received.',
-            reference: newSms.transactionId,
-            tag: `cbe-sms-${newSms.id}`,
-            smsRecord: {
-              id: newSms.id,
-              transactionId: newSms.transactionId,
-              accountNumber: newSms.accountNumber,
-              accountName: newSms.accountName,
-              role: newSms.role,
-              bankName: newSms.bankName,
-              sender: newSms.sender,
-              recipient: newSms.recipient,
-              type: newSms.type,
-              amount: newSms.amount,
-              balance: newSms.balance,
-              message: newSms.message,
-              timestamp: newSms.timestamp,
-              forAllUsers: true,
-            },
-          });
+        if (!newSms.read && newSms.message) {
+          if (matchesPrimaryAcc) {
+            this.dispatchSmsSubAppNotification(newSms);
+          } else if (msgAcc && newSms.role === 'receiver') {
+            // Queue the receiver's incoming credit SMS so switching to the receiver account
+            // (in either CBE Bank app or SMS app) triggers their real SMS notification!
+            this.enqueuePendingReceiverSmsNotification(newSms);
+          }
         }
       }
 
@@ -928,6 +912,105 @@ export class SmsService {
       console.error('[SmsService] Error creating SMS:', err);
       return null;
     }
+  }
+
+  private static dispatchSmsSubAppNotification(sms: SmsMessage): void {
+    if (!sms || !sms.message) return;
+    void PushNotificationService.notifySubApp({
+      subAppId: 'sms',
+      title: sms.sender || sms.bankName || 'CBE',
+      body: sms.message,
+      privateBody: 'New CBE SMS message received.',
+      reference: sms.transactionId,
+      tag: `cbe-sms-${sms.id}`,
+      smsRecord: {
+        id: sms.id,
+        transactionId: sms.transactionId,
+        accountNumber: sms.accountNumber,
+        accountName: sms.accountName,
+        role: sms.role,
+        bankName: sms.bankName,
+        sender: sms.sender,
+        recipient: sms.recipient,
+        type: sms.type,
+        amount: sms.amount,
+        balance: sms.balance,
+        message: sms.message,
+        timestamp: sms.timestamp,
+        forAllUsers: true,
+      },
+    });
+  }
+
+  private static readPendingReceiverSmsNotifications(): SmsMessage[] {
+    if (typeof window === 'undefined') return [];
+    try {
+      const raw = localStorage.getItem(PENDING_RECEIVER_SMS_NOTIFS_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private static savePendingReceiverSmsNotifications(items: SmsMessage[]): void {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem(PENDING_RECEIVER_SMS_NOTIFS_KEY, JSON.stringify(items.slice(-30)));
+    } catch {
+      // Ignore storage errors
+    }
+  }
+
+  private static enqueuePendingReceiverSmsNotification(sms: SmsMessage): void {
+    if (typeof window === 'undefined' || !sms?.id) return;
+    const list = this.readPendingReceiverSmsNotifications();
+    if (list.some((item) => item && item.id === sms.id)) return;
+    list.push(sms);
+    this.savePendingReceiverSmsNotifications(list);
+  }
+
+  /**
+   * Fires queued incoming receiver SMS notifications when the user switches to
+   * the receiver's account in either CBE Mobile Banking or the SMS app.
+   */
+  static deliverPendingReceiverSmsNotifications(accountNumber: string): number {
+    if (typeof window === 'undefined') return 0;
+    const cleanAcc = String(accountNumber || '').replace(/\D/g, '');
+    if (!cleanAcc) return 0;
+
+    const pending = this.readPendingReceiverSmsNotifications();
+    if (pending.length === 0) return 0;
+
+    const matching: SmsMessage[] = [];
+    const remaining: SmsMessage[] = [];
+
+    for (const item of pending) {
+      if (!item) continue;
+      const itemAcc = String(item.accountNumber || '').replace(/\D/g, '');
+      if (itemAcc === cleanAcc) {
+        matching.push(item);
+      } else {
+        remaining.push(item);
+      }
+    }
+
+    if (matching.length === 0) return 0;
+
+    // Drain atomically before dispatch so notifications never fire twice
+    this.savePendingReceiverSmsNotifications(remaining);
+
+    // Confirm messages are still unread in storage before alerting
+    const currentMsgs = this.getSmsMessages(cleanAcc);
+    let delivered = 0;
+    for (const item of matching) {
+      const stored = currentMsgs.find((m) => m && m.id === item.id);
+      if (stored && stored.read) continue;
+      this.dispatchSmsSubAppNotification(stored || item);
+      delivered += 1;
+    }
+    return delivered;
   }
 
   /**
@@ -1156,8 +1239,10 @@ export class SmsService {
   static markAllAsRead(accountNumber?: string): void {
     const messages = this.getSmsMessages();
     let changed = false;
+    const cleanAcc = accountNumber ? String(accountNumber).replace(/\D/g, '') : '';
     messages.forEach(m => {
-      if (!accountNumber || m.accountNumber === accountNumber) {
+      const mAcc = String(m.accountNumber || '').replace(/\D/g, '');
+      if (!cleanAcc || mAcc === cleanAcc) {
         if (!m.read) {
           m.read = true;
           changed = true;
@@ -1166,6 +1251,16 @@ export class SmsService {
     });
     if (changed) {
       this.saveMessages(messages);
+    }
+    // Clear any queued receiver SMS alerts for accounts just marked as read
+    const pending = this.readPendingReceiverSmsNotifications();
+    if (pending.length > 0) {
+      const remaining = cleanAcc
+        ? pending.filter((p) => String(p?.accountNumber || '').replace(/\D/g, '') !== cleanAcc)
+        : [];
+      if (remaining.length !== pending.length) {
+        this.savePendingReceiverSmsNotifications(remaining);
+      }
     }
   }
 

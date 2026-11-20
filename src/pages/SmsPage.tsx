@@ -46,6 +46,7 @@ import { CbeWebReceiptModal } from '../components/CbeWebReceiptModal';
 import { CbeHolidayCardModal } from '../components/CbeHolidayCardModal';
 import { SystemBarsService } from '../services/systemBarsService';
 import { openWebReceiptInRealBrowser } from '../services/webReceiptBrowserService';
+import { PushNotificationService } from '../services/pushNotificationService';
 
 interface SmsPageProps {
   onBack: () => void;
@@ -279,15 +280,23 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
     setShowMenu(false);
     setShowAccountModal(false);
 
+    let matchedUser = null;
     try {
       const cleanNum = accNum.replace(/\D/g, '');
       const users = LocalDb.getUsers();
       const match = users.find(u => (u.accountNumber || '').replace(/\D/g, '') === cleanNum);
       if (match) {
+        matchedUser = match;
         localStorage.setItem('tana_active_user_id', match.id);
         window.dispatchEvent(new CustomEvent('cbe_account_switched', { detail: { user: match } }));
         window.dispatchEvent(new CustomEvent('cbe_balance_updated', { detail: { user: match, balance: match.balance } }));
       }
+    } catch {}
+
+    // Deliver any waiting incoming receiver notifications for BOTH CBE Mobile Banking and SMS app
+    try {
+      void PushNotificationService.deliverPendingReceiverNotificationsForAccount(accNum, matchedUser);
+      SmsService.deliverPendingReceiverSmsNotifications(accNum);
     } catch {}
   };
 

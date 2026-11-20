@@ -627,21 +627,35 @@ export default function App() {
       }
     };
     const handleAccountSwitched = (e: any) => {
+      let switchedUser: UserProfile | null = null;
       if (e?.detail?.user) {
         localStorage.setItem('tana_active_user_id', e.detail.user.id);
-        setCurrentUser({ ...e.detail.user });
+        switchedUser = { ...e.detail.user };
+        setCurrentUser(switchedUser);
       } else {
         const savedActiveId = typeof window !== 'undefined' ? localStorage.getItem('tana_active_user_id') : null;
         if (savedActiveId) {
           const users = LocalDb.getUsers();
           const match = users.find(u => u.id === savedActiveId);
-          if (match) setCurrentUser({ ...match });
+          if (match) {
+            switchedUser = { ...match };
+            setCurrentUser(switchedUser);
+          }
         }
+      }
+      if (switchedUser?.accountNumber) {
+        setSmsActiveAccountId(switchedUser.accountNumber.replace(/\D/g, ''));
+        void PushNotificationService.deliverPendingReceiverNotificationsForAccount(
+          switchedUser.accountNumber,
+          switchedUser
+        );
+        SmsService.deliverPendingReceiverSmsNotifications(switchedUser.accountNumber);
       }
     };
     window.addEventListener('cbe_balance_updated' as any, handleBalanceSync);
     window.addEventListener('cbe_transaction_completed' as any, handleBalanceSync);
     window.addEventListener('cbe_accounts_updated' as any, handleBalanceSync);
+    window.addEventListener('cbe_account_switched' as any, handleAccountSwitched);
     const handleCbeNavigateTab = (e: any) => {
       const targetTab = e?.detail?.tab;
       if (targetTab) {
@@ -991,6 +1005,15 @@ export default function App() {
   ) => {
     setCurrentUser(user);
     localStorage.setItem('tana_active_user_id', user.id);
+    if (user.accountNumber) {
+      SmsService.setActiveAccountNumber(user.accountNumber);
+      setSmsActiveAccountId(user.accountNumber.replace(/\D/g, ''));
+      void PushNotificationService.deliverPendingReceiverNotificationsForAccount(
+        user.accountNumber,
+        user
+      );
+      SmsService.deliverPendingReceiverSmsNotifications(user.accountNumber);
+    }
     const alreadyEnrolled = BiometricAuthService.isBiometricEnrolledForUser(user.id);
     setShowBiometricEnrollPrompt(method === 'credentials' && !alreadyEnrolled);
 

@@ -212,7 +212,20 @@ const DEFAULT_SUB_APP_PREFS: SubAppPushPreferencesMap = {
 
 const LOCAL_PREFS_PREFIX = 'cbe_push_local_prefs_';
 const LOCAL_ENABLED_PREFIX = 'cbe_push_local_enabled_';
+const LOCAL_ENABLED_DEVICE_KEY = 'cbe_push_local_enabled_device';
+const PENDING_RECEIVER_BANK_NOTIFS_KEY = 'cbe_pending_receiver_bank_notifs_v1';
 const SUB_APP_PREFS_KEY = 'cbe_subapp_push_prefs_v1';
+
+interface PendingReceiverBankNotification {
+  id: string;
+  reference: string;
+  recipientAccount: string;
+  recipientId?: string;
+  recipientName?: string;
+  senderName?: string;
+  amount: number;
+  createdAt: string;
+}
 
 class BackendUnavailableError extends Error {
   constructor(message: string) {
@@ -326,6 +339,7 @@ function buildLocalNotificationPayload(params: {
   amount?: number;
   txId?: string;
   reference?: string;
+  senderName?: string;
   privacyMode: PrivacyMode;
 }): {
   appName: string;
@@ -358,12 +372,19 @@ function buildLocalNotificationPayload(params: {
     body = 'You have a new account transaction.';
   } else {
     switch (params.category) {
-      case 'money_received':
+      case 'money_received': {
         title = 'Money Received';
+        const cleanSender = (params.senderName || '')
+          .replace(/\s*\(Admin\)/gi, '')
+          .replace(/\s*\(\d{4,}\)/g, '')
+          .trim();
         body = formattedAmount
-          ? `You have received ${formattedAmount} successfully.`
+          ? cleanSender
+            ? `You have received ${formattedAmount} from ${cleanSender} successfully.`
+            : `You have received ${formattedAmount} successfully.`
           : 'You have received funds in your account successfully.';
         break;
+      }
       case 'money_sent':
         title = 'Transfer Successful';
         body = formattedAmount
@@ -590,7 +611,18 @@ export class PushNotificationService {
   private static isLocalEnabled(userId: string): boolean {
     if (typeof window === 'undefined' || !userId) return false;
     try {
-      return localStorage.getItem(`${LOCAL_ENABLED_PREFIX}${userId}`) === '1';
+      const explicit = localStorage.getItem(`${LOCAL_ENABLED_PREFIX}${userId}`);
+      if (explicit === '1') return true;
+      if (explicit === '0') return false;
+      if (localStorage.getItem(LOCAL_ENABLED_DEVICE_KEY) === '1') return true;
+      // Inherit device-level enabled state when user switches to another account on the same device
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(LOCAL_ENABLED_PREFIX) && localStorage.getItem(key) === '1') {
+          return true;
+        }
+      }
+      return false;
     } catch {
       return false;
     }
@@ -601,11 +633,135 @@ export class PushNotificationService {
     try {
       if (enabled) {
         localStorage.setItem(`${LOCAL_ENABLED_PREFIX}${userId}`, '1');
+        localStorage.setItem(LOCAL_ENABLED_DEVICE_KEY, '1');
       } else {
-        localStorage.removeItem(`${LOCAL_ENABLED_PREFIX}${userId}`);
+        localStorage.setItem(`${LOCAL_ENABLED_PREFIX}${userId}`, '0');
       }
     } catch {
       // Ignore storage errors
+    }
+  }
+
+  private static readPendingReceiverBankNotifications(): PendingReceiverBankNotification[] {
+    if (typeof window === 'undefined') return [];
+    try {
+      const raw = localStorage.getItem(PENDING_RECEIVER_BANK_NOTIFS_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private static savePendingReceiverBankNotifications(items: PendingReceiverBankNotification[]): void {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem(PENDING_RECEIVER_BANK_NOTIFS_KEY, JSON.stringify(items.slice(-30)));
+    } catch {
+      // Ignore storage errors
+    }
+  }
+
+  public static enqueuePendingReceiverBankNotification(
+    tx: Transaction & { overrideType?: 'deposit' | 'withdrawal' }
+  ): void {
+    if (typeof window === 'undefined' || !tx || tx.status !== 'success') return;
+    const recipientAcc = String(tx.recipientAccount || '').replace(/\D/g, '');
+    const senderAcc = String(tx.senderAccount || '').replace(/\D/g, '');
+    if (!recipientAcc || recipientAcc === senderAcc) return;
+    if (tx.type === 'receive' || tx.overrideType === 'deposit' || tx.overrideType === 'withdrawal') {
+      return;
+    }
+
+    const list = this.readPendingReceiverBankNotifications();
+    const exists = list.some(
+      (item) => item && item.id === tx.id && item.recipientAccount === recipientAcc
+    );
+    if (exists) return;
+
+    list.push({
+      id: tx.id,
+      reference: tx.reference || tx.id,
+      recipientAccount: recipientAcc,
+      recipientId: tx.recipientId,
+      recipientName: tx.recipientName,
+      senderName: tx.senderName,
+      amount: tx.amount,
+      createdAt: tx.createdAt || new Date().toISOString(),
+    });
+    this.savePendingReceiverBankNotifications(list);
+  }
+
+  /**
+   * Delivers queued CBE Mobile Banking "Money Received" notifications when the user
+   * switches to the receiver's account (from either CBE Bank app or SMS app).
+   */
+  public static async deliverPendingReceiverNotificationsForAccount(
+    accountNumber: string,
+    targetUser?: UserProfile | null
+  ): Promise<number> {
+    if (typeof window === 'undefined') return 0;
+    const cleanAcc = String(accountNumber || targetUser?.accountNumber || '').replace(/\D/g, '');
+    if (!cleanAcc) return 0;
+
+    const allPending = this.readPendingReceiverBankNotifications();
+    if (allPending.length === 0) return 0;
+
+    const matching: PendingReceiverBankNotification[] = [];
+    const remaining: PendingReceiverBankNotification[] = [];
+
+    for (const item of allPending) {
+      if (!item) continue;
+      const accMatch = item.recipientAccount === cleanAcc;
+      const idMatch = Boolean(targetUser?.id && item.recipientId && item.recipientId === targetUser.id);
+      if (accMatch || idMatch) {
+        matching.push(item);
+      } else {
+        remaining.push(item);
+      }
+    }
+
+    if (matching.length === 0) return 0;
+
+    // Drain atomically before async dispatch to prevent duplicate notifications
+    this.savePendingReceiverBankNotifications(remaining);
+
+    try {
+      const permissionGranted = Capacitor.isNativePlatform()
+        ? (await this.syncNativePermissionStatus()) === 'granted'
+        : 'Notification' in window && Notification.permission === 'granted';
+
+      if (!permissionGranted) return 0;
+
+      const resolvedUser = targetUser || this.resolveActiveUserForPush();
+      const userId = resolvedUser?.id || `acc_${cleanAcc}`;
+      if (!this.isLocalEnabled(userId) && !Capacitor.isNativePlatform()) {
+        return 0;
+      }
+
+      const prefs = this.getLocalPreferences(userId);
+      if (!isCategoryAllowed(prefs, 'money_received')) {
+        return 0;
+      }
+
+      let delivered = 0;
+      for (const item of matching) {
+        const payload = buildLocalNotificationPayload({
+          category: 'money_received',
+          amount: item.amount,
+          txId: item.id,
+          reference: item.reference,
+          senderName: item.senderName,
+          privacyMode: prefs.privacyMode,
+        });
+        payload.tag = `cbe-rx-${item.id}-${cleanAcc}`;
+        const shown = await this.showLocalServiceWorkerNotification(payload);
+        if (shown) delivered += 1;
+      }
+      return delivered;
+    } catch {
+      return 0;
     }
   }
 
@@ -1545,6 +1701,10 @@ export class PushNotificationService {
           'Notification' in window &&
           Notification.permission === 'granted';
 
+      // Always queue the receiver's incoming credit alert so switching to the receiver account
+      // delivers their "Money Received" CBE Bank notification automatically.
+      this.enqueuePendingReceiverBankNotification(tx);
+
       // If backend push didn't deliver (or running in native Capacitor APK), trigger device notification
       if (
         !backendDelivered &&
@@ -1572,6 +1732,7 @@ export class PushNotificationService {
             amount: tx.amount,
             txId: tx.id,
             reference: tx.reference,
+            senderName: tx.senderName,
             privacyMode: prefs.privacyMode,
           });
           await this.showLocalServiceWorkerNotification(payload);
