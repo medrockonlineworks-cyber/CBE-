@@ -12,6 +12,7 @@ import { Transaction } from '../types';
 import { ALL_NEW_REGISTERED_ENTRIES } from '../lib/additionalAccountsData';
 import { generateCbeTxId } from '../lib/mockData';
 import { PushNotificationService } from './pushNotificationService';
+import { CrossAppSyncService } from './crossAppSyncService';
 
 const STORAGE_TC_ACCOUNTS_KEY = 'tc_sim_accounts_v2';
 const STORAGE_TC_ALERTS_KEY = 'tc_sim_alerts_v2';
@@ -20,16 +21,34 @@ const STORAGE_TC_BASE_THEME_KEY = 'tc_theme_base';
 const STORAGE_TC_ACCENT_THEME_KEY = 'tc_theme_accent';
 const PENDING_RECEIVER_TC_NOTIFS_KEY = 'cbe_pending_receiver_tc_notifs_v1';
 
+const formatTruecallerClockTime = (dateInput?: Date | string): string => {
+  try {
+    const dt = dateInput ? new Date(dateInput) : new Date();
+    if (!Number.isNaN(dt.getTime())) {
+      return dt.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      });
+    }
+  } catch {}
+  return new Date().toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  });
+};
+
 export const TRUECALLER_ACCENT_PRESETS: TruecallerColorAccent[] = [
   {
     id: 'classic_blue',
     name: 'Truecaller Blue',
     primary: '#0066FF',
     secondary: '#0052cc',
-    gradientFrom: '#003882',
+    gradientFrom: '#0066FF',
     gradientTo: '#0066FF',
-    lightBg: '#dbe8ff',
-    glow: 'rgba(0, 102, 255, 0.4)',
+    lightBg: '#E5EEFA',
+    glow: 'rgba(0, 102, 255, 0.42)',
     badgeText: 'Classic'
   },
   {
@@ -881,7 +900,7 @@ export const TruecallerService = {
     const formattedAmount = tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const formattedSenderBal = senderNewBal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const formattedRecipBal = recipientNewBal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    const timeStr = 'Now';
+    const timeStr = formatTruecallerClockTime(tx.createdAt);
 
     // 3. CREATE SENDER ALERT (Debited ETB [amount])
     const maskedSender = senderAcc.maskedAccount || maskTruecallerAccount(senderAcc.accountNumber);
@@ -946,6 +965,21 @@ export const TruecallerService = {
     // and queue the receiver's alert so switching to the receiver's account fires it automatically!
     const primaryAlert = tx.type === 'receive' ? receiveAlert : sendAlert;
     try {
+      // Queue receiver alert if the receiver is a distinct account from the sender
+      const cleanSenderAcc = (senderAcc.accountNumber || '').replace(/\D/g, '');
+      const cleanRecipAcc = (recipientAcc.accountNumber || '').replace(/\D/g, '');
+      if (tx.type !== 'receive' && cleanRecipAcc && cleanRecipAcc !== cleanSenderAcc) {
+        this.enqueuePendingReceiverAlert(cleanRecipAcc, receiveAlert);
+      }
+
+      // Immediately push synced Truecaller keys across tabs / PWAs / paired standalone apps (identical to SMS Simulator)
+      void CrossAppSyncService.pushChangedNow([
+        STORAGE_TC_ALERTS_KEY,
+        STORAGE_TC_ACCOUNTS_KEY,
+        STORAGE_TC_ACTIVE_ACC_KEY,
+        PENDING_RECEIVER_TC_NOTIFS_KEY,
+      ]);
+
       void PushNotificationService.notifySubApp({
         subAppId: 'truecaller',
         title: primaryAlert.bankName || 'CBE',
@@ -955,16 +989,13 @@ export const TruecallerService = {
         tag: `cbe-tc-${primaryAlert.id}`,
         payloadRecord: primaryAlert as unknown as Record<string, unknown>,
       });
-
-      // Queue receiver alert if the receiver is a distinct account from the sender
-      const cleanSenderAcc = (senderAcc.accountNumber || '').replace(/\D/g, '');
-      const cleanRecipAcc = (recipientAcc.accountNumber || '').replace(/\D/g, '');
-      if (tx.type !== 'receive' && cleanRecipAcc && cleanRecipAcc !== cleanSenderAcc) {
-        this.enqueuePendingReceiverAlert(cleanRecipAcc, receiveAlert);
-      }
     } catch {}
 
-    window.dispatchEvent(new CustomEvent('tc_alerts_updated', { detail: { alert: receiveAlert, sendAlert, account: senderAcc } }));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('tc_alerts_updated', { detail: { alert: receiveAlert, sendAlert, primaryAlert, account: senderAcc } }));
+      // Trigger immediate Truecaller SMS pop-down card over CBE Mobile Banking / Truecaller
+      window.dispatchEvent(new CustomEvent('tc_live_popdown', { detail: { alert: primaryAlert } }));
+    }
     return primaryAlert;
   },
 
@@ -1124,6 +1155,12 @@ export const TruecallerService = {
   markAlertAsRead(id: string): void {
     const alerts = this.getAlerts().map(a => a.id === id ? { ...a, read: true } : a);
     this.saveAlerts(alerts);
+    try {
+      void CrossAppSyncService.pushChangedNow([STORAGE_TC_ALERTS_KEY]);
+    } catch {}
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('tc_alerts_updated'));
+    }
   },
 
   markAllAsRead(): void {
@@ -1223,15 +1260,22 @@ export const TruecallerService = {
       for (const item of matching) {
         const alert = item.alert;
         if (!alert) continue;
+        const freshAlert: TruecallerAlert = {
+          ...alert,
+          timeString: formatTruecallerClockTime(),
+        };
         void PushNotificationService.notifySubApp({
           subAppId: 'truecaller',
-          title: alert.bankName || 'CBE',
-          body: alert.fullSmsText || alert.summaryText,
+          title: freshAlert.bankName || 'CBE',
+          body: freshAlert.fullSmsText || freshAlert.summaryText,
           privateBody: 'New Truecaller bank SMS alert.',
-          reference: alert.txId,
-          tag: `cbe-tc-recv-${alert.id}`,
-          payloadRecord: alert as unknown as Record<string, unknown>,
+          reference: freshAlert.txId,
+          tag: `cbe-tc-recv-${freshAlert.id}`,
+          payloadRecord: freshAlert as unknown as Record<string, unknown>,
         });
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('tc_live_popdown', { detail: { alert: freshAlert } }));
+        }
       }
       return matching.length;
     } catch {
@@ -1250,6 +1294,9 @@ export const TruecallerService = {
       const fullAcc = typeof raw.fullAccount === 'string' ? raw.fullAccount : (accounts[0]?.accountNumber || '1000419524747');
       const cleanAcc = fullAcc.replace(/\D/g, '');
       const matchedAcc = accounts.find(a => (a.accountNumber || '').replace(/\D/g, '') === cleanAcc) || accounts[0];
+      const rawTime = typeof raw.timeString === 'string' && raw.timeString.trim() && raw.timeString.toLowerCase() !== 'now'
+        ? raw.timeString
+        : formatTruecallerClockTime(typeof raw.timestamp === 'string' ? raw.timestamp : undefined);
 
       const incoming: TruecallerAlert = {
         id,
@@ -1264,7 +1311,7 @@ export const TruecallerService = {
         counterpartyName: typeof raw.counterpartyName === 'string' ? raw.counterpartyName : 'CBE',
         counterpartyAccount: typeof raw.counterpartyAccount === 'string' ? raw.counterpartyAccount : '',
         balanceAfter: typeof raw.balanceAfter === 'number' ? raw.balanceAfter : (matchedAcc?.balance || 0),
-        timeString: typeof raw.timeString === 'string' ? raw.timeString : 'Now',
+        timeString: rawTime,
         timestamp: typeof raw.timestamp === 'string' ? raw.timestamp : new Date().toISOString(),
         summaryText: typeof raw.summaryText === 'string' ? raw.summaryText : (typeof raw.body === 'string' ? raw.body.slice(0, 120) : 'New bank alert'),
         txId: typeof raw.txId === 'string' ? raw.txId : (typeof raw.reference === 'string' ? raw.reference : id),
@@ -1276,6 +1323,7 @@ export const TruecallerService = {
       this.saveAlerts([incoming, ...existing]);
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('tc_alerts_updated', { detail: { alert: incoming } }));
+        window.dispatchEvent(new CustomEvent('tc_live_popdown', { detail: { alert: incoming, force: true } }));
       }
     } catch {}
   }

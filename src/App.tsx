@@ -35,6 +35,7 @@ import OfflineBanner from './components/OfflineBanner';
 import PhoneRecentAppsModal, { AppViewId } from './components/PhoneRecentAppsModal';
 import PhoneSettingsModal from './components/PhoneSettingsModal';
 import SubAppPermissionBanner from './components/SubAppPermissionBanner';
+import TruecallerSmsPopdownOverlay from './components/TruecallerSmsPopdownOverlay';
 import { CbeWebReceiptModal } from './components/CbeWebReceiptModal';
 import {
   cacheCurrentPublicOriginIfReachable,
@@ -276,11 +277,18 @@ export default function App() {
         } catch {}
       }
 
-      // Also drain offline native incoming alerts for standalone Truecaller & Phone APKs
+      // Also drain offline native incoming alerts & marked-read actions for standalone Truecaller & Phone APKs
       try {
-        const tcRecords = await SubAppInstallService.drainNativeIncomingSubAppAlerts('truecaller');
-        for (const rec of tcRecords) {
+        const tcBridge = await SubAppInstallService.drainNativeSubAppBridge('truecaller');
+        for (const rec of tcBridge.records) {
           TruecallerService.applyNativeIncomingAlert(rec);
+        }
+        if (tcBridge.readIds.length > 0) {
+          for (const readItem of tcBridge.readIds) {
+            if (readItem?.alertId) {
+              TruecallerService.markAlertAsRead(readItem.alertId);
+            }
+          }
         }
         const phoneRecords = await SubAppInstallService.drainNativeIncomingSubAppAlerts('phone');
         for (const rec of phoneRecords) {
@@ -309,6 +317,7 @@ export default function App() {
     window.addEventListener('cbe_native_sms_received', handleNativeSmsBridgeEvent);
     window.addEventListener('cbe_native_sms_marked_read', handleNativeSmsBridgeEvent);
     window.addEventListener('cbe_native_subapp_received', handleNativeSmsBridgeEvent);
+    window.addEventListener('cbe_native_truecaller_marked_read', handleNativeSmsBridgeEvent);
 
     // Keep permanent standalone sub-app Connection Keys alive automatically whenever the sub-app opens or resumes
     const maintainCurrentSubApp = (forceCheck = false) => {
@@ -345,6 +354,7 @@ export default function App() {
       window.removeEventListener('cbe_native_sms_received', handleNativeSmsBridgeEvent);
       window.removeEventListener('cbe_native_sms_marked_read', handleNativeSmsBridgeEvent);
       window.removeEventListener('cbe_native_subapp_received', handleNativeSmsBridgeEvent);
+      window.removeEventListener('cbe_native_truecaller_marked_read', handleNativeSmsBridgeEvent);
       window.removeEventListener('focus', onSubAppFocus);
       document.removeEventListener('visibilitychange', onSubAppVisible);
     };
@@ -1125,6 +1135,13 @@ export default function App() {
       console.error('[SmsService] Non-blocking completion SMS error:', smsErr);
     }
 
+    // Ensure Truecaller SMS alert is synced immediately with accurate updated balance & live pop-down
+    try {
+      TruecallerService.syncTransactionToTruecaller(tx, match ? match.balance : currentUser?.balance);
+    } catch (tcErr) {
+      console.error('[TruecallerService] Non-blocking completion Truecaller sync error:', tcErr);
+    }
+
     // Ensure PhoneCallService syncs caller accounts so recent transaction is at the top with Now badge
     try {
       PhoneCallService.syncTransactionToCallerApp(tx);
@@ -1503,6 +1520,12 @@ export default function App() {
         </main>
 
       </div>
+
+      {/* Immediate Authentic Truecaller SMS Pop-Down Overlay */}
+      <TruecallerSmsPopdownOverlay
+        activeView={activeView}
+        onOpenTruecaller={() => navigateTo('truecaller', 'home')}
+      />
 
       {/* Android / iPhone Recent Multitasking Apps Modal */}
       <PhoneRecentAppsModal 

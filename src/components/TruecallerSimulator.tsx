@@ -482,7 +482,52 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
     return null;
   }, [alerts, accounts, activeBankKey]);
 
-  // Search filtered accounts list with current message top-first rule strictly inside the account list:
+  // Resolve strictly the 2 accounts (Sender & Receiver) from the most recent transaction so BOTH appear at the very top with Now • Sender / Now • Receiver badges
+  const latestTxRoleMap = useMemo(() => {
+    const map = new Map<string, 'sender' | 'receiver'>();
+    try {
+      const rawTx = localStorage.getItem('tana_transactions') || localStorage.getItem('cbe_transactions');
+      if (rawTx) {
+        const txList = JSON.parse(rawTx);
+        if (Array.isArray(txList) && txList.length > 0) {
+          const sorted = [...txList].sort((a: any, b: any) => {
+            const tA = new Date(a?.createdAt || a?.date || a?.timestamp || 0).getTime();
+            const tB = new Date(b?.createdAt || b?.date || b?.timestamp || 0).getTime();
+            return (isNaN(tB) ? 0 : tB) - (isNaN(tA) ? 0 : tA);
+          });
+          const latest = sorted[0];
+          const sClean = String(latest?.senderAccount || '').replace(/\D/g, '');
+          const rClean = String(latest?.recipientAccount || '').replace(/\D/g, '');
+          if (sClean) map.set(sClean, 'sender');
+          if (rClean && rClean !== sClean) map.set(rClean, 'receiver');
+        }
+      }
+    } catch {}
+
+    if (map.size < 2 && alerts.length > 0) {
+      const bankAlerts = alerts.filter(a => a.bankKey === activeBankKey);
+      const topAlert = bankAlerts[0];
+      if (topAlert) {
+        const baseRef = (topAlert.txId || '').replace(/-(SD|RC)$/i, '');
+        const pair = baseRef
+          ? bankAlerts.filter(a => (a.txId || '').replace(/-(SD|RC)$/i, '') === baseRef)
+          : [topAlert];
+        for (const al of pair) {
+          const accClean = String(al.fullAccount || '').replace(/\D/g, '');
+          if (accClean && !map.has(accClean)) {
+            map.set(accClean, al.role === 'sender' ? 'sender' : 'receiver');
+          }
+          const cpClean = String(al.counterpartyAccount || '').replace(/\D/g, '');
+          if (cpClean && !map.has(cpClean)) {
+            map.set(cpClean, al.role === 'sender' ? 'receiver' : 'sender');
+          }
+        }
+      }
+    }
+    return map;
+  }, [alerts, accounts, activeBankKey]);
+
+  // Search filtered accounts list with latest Sender & Receiver pinned at top:
   const filteredAccounts = useMemo(() => {
     let list = bankSpecificAccounts;
     if (accountSearchQuery.trim()) {
@@ -494,19 +539,28 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
       );
     }
 
-    // The current message top-first rule applies strictly inside the account list!
     return [...list].sort((a, b) => {
-      if (recentTxOnTop && currentMessageAccountId) {
-        const aIsCurrent = a.id === currentMessageAccountId;
-        const bIsCurrent = b.id === currentMessageAccountId;
-        if (aIsCurrent && !bIsCurrent) return -1;
-        if (!aIsCurrent && bIsCurrent) return 1;
+      if (recentTxOnTop) {
+        const aClean = (a.accountNumber || '').replace(/\D/g, '');
+        const bClean = (b.accountNumber || '').replace(/\D/g, '');
+        const aRole = latestTxRoleMap.get(aClean);
+        const bRole = latestTxRoleMap.get(bClean);
+        if (aRole && !bRole) return -1;
+        if (!aRole && bRole) return 1;
+        if (aRole && bRole && aRole !== bRole) return aRole === 'sender' ? -1 : 1;
+
+        if (currentMessageAccountId) {
+          const aIsCurrent = a.id === currentMessageAccountId;
+          const bIsCurrent = b.id === currentMessageAccountId;
+          if (aIsCurrent && !bIsCurrent) return -1;
+          if (!aIsCurrent && bIsCurrent) return 1;
+        }
       }
       const timeA = a.lastTransactionAt ? new Date(a.lastTransactionAt).getTime() : 0;
       const timeB = b.lastTransactionAt ? new Date(b.lastTransactionAt).getTime() : 0;
       return timeB - timeA;
     });
-  }, [bankSpecificAccounts, accountSearchQuery, currentMessageAccountId, recentTxOnTop]);
+  }, [bankSpecificAccounts, accountSearchQuery, currentMessageAccountId, recentTxOnTop, latestTxRoleMap]);
 
   // Modal: Choose Phone Screen & Phone Type
   const [showPickerModal, setShowPickerModal] = useState<boolean>(false);
@@ -1187,10 +1241,46 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
           snippet: `Dear ${activeHolderFullName} A ...`,
         };
       }
+      if (t.id === '251994') {
+        return {
+          ...t,
+          snippet: `Dear ${activeHolderFirstName}, Your prepaid account has bee...`,
+        };
+      }
+      if (t.id === 'safaricom') {
+        return {
+          ...t,
+          snippet: `ውድ ${activeHolderFirstName}፣ አስደሳች ዜና!...`,
+        };
+      }
       if (t.id === 'mpesa-info') {
         return {
           ...t,
           snippet: `ውድ ${activeHolderFirstName} በብሔራዊ ባንክ መመሪያ መሰረት እባክዎ የሂ...`,
+        };
+      }
+      if (t.id === 'BOA') {
+        return {
+          ...t,
+          snippet: `ውድ ${activeHolderFirstName}፣ ዓለም አቀፍ ግብይቶችን በቀላሉ ያድርጉ!...`,
+        };
+      }
+      if (t.id === 'bunna-bank') {
+        return {
+          ...t,
+          snippet: `ውድ ${activeHolderFirstName}፣ የቡና ባንክ ዲጂታል አገልግሎት...`,
+        };
+      }
+      if (t.id === 'telebirr') {
+        return {
+          ...t,
+          snippet: `ውድ ${activeHolderFirstName}፣ የቴሌብር ሂሳብዎ...`,
+        };
+      }
+      if (t.id === 'ethio-tel') {
+        return {
+          ...t,
+          snippet: `ውድ ${activeHolderFirstName}፣ አድማስ ዲጂታል ሎተሪ በ51ኛው ዙር...`,
         };
       }
       return t;
@@ -2556,7 +2646,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
           </div>
 
           {/* Floating Test Alert Action */}
-          <div className="fixed bottom-10 right-4 z-30">
+          <div className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] right-4 z-30">
             <button
               type="button"
               onClick={() => {
@@ -2750,7 +2840,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
         </div>
 
         {/* Floating Action Buttons: Start Chat + Gemini sparkle */}
-        <div className="fixed bottom-10 right-5 flex flex-col items-end space-y-3 z-30">
+        <div className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] right-5 flex flex-col items-end space-y-3 z-30">
           <div className={`w-11 h-11 rounded-full border flex items-center justify-center shadow-xl cursor-pointer transition ${
             isLightMode 
               ? 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50' 
@@ -3033,7 +3123,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
           </div>
 
           {/* Non-replyable sender footer message */}
-          <div className="w-full bg-black text-center text-[12px] text-[#8e9aa8] py-1 select-none pointer-events-auto">
+          <div className="w-full bg-black text-center text-[12px] text-[#8e9aa8] pt-1 pb-[max(env(safe-area-inset-bottom,0px),12px)] select-none pointer-events-auto">
             Replying is not supported by this sender
           </div>
         </div>
@@ -3187,7 +3277,9 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                   <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
                     {filteredAccounts.map(acc => {
                       const isSelected = activeAccount?.id === acc.id || activeAccountId === acc.id;
-                      const isNowAccount = acc.id === currentMessageAccountId;
+                      const cleanAccNum = (acc.accountNumber || '').replace(/\D/g, '');
+                      const nowRole = latestTxRoleMap.get(cleanAccNum) || null;
+                      const isNowAccount = Boolean(nowRole || acc.id === currentMessageAccountId);
                       return (
                         <div 
                           key={acc.id}
@@ -3231,15 +3323,21 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                           }`}
                         >
                           <div className="space-y-0.5">
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center space-x-1.5 flex-wrap gap-y-1">
                               <span className={`text-xs font-bold ${isSelected || isNowAccount ? 'text-white' : 'text-neutral-200 group-hover:text-white'}`}>
                                 {acc.holderName}
                               </span>
-                              {/* "Now" badge strictly inside the account list matching user rule */}
+                              {/* "Now • Sender" / "Now • Receiver" badge strictly for the latest transaction's 2 accounts */}
                               {isNowAccount && (
-                                <span className="text-[9.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#0066FF] text-white flex items-center space-x-1 shadow-sm border border-blue-400/40">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-200 animate-pulse mr-0.5" />
-                                  <span>Now</span>
+                                <span
+                                  className={`text-[9.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full text-white flex items-center space-x-1 shadow-sm border whitespace-nowrap ${
+                                    nowRole === 'receiver'
+                                      ? 'bg-emerald-600 border-emerald-400/50'
+                                      : 'bg-[#0066FF] border-blue-400/40'
+                                  }`}
+                                >
+                                  <span className="w-1.5 h-1.5 rounded-full bg-white/90 animate-pulse mr-0.5" />
+                                  <span>{nowRole === 'receiver' ? 'Now • Receiver' : 'Now • Sender'}</span>
                                 </span>
                               )}
                               {isSelected ? (
@@ -4439,16 +4537,16 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
               }`}
             >
               <div 
-                className="w-full rounded-[24px] overflow-hidden p-[3px] shadow-[0_20px_60px_rgba(0,0,0,0.85)] border transition-all"
-                style={{ backgroundColor: currentAccent.primary, borderColor: currentAccent.primary }}
+                className="w-full rounded-[26px] overflow-hidden p-[6px] shadow-[0_18px_46px_rgba(0,45,130,0.45)] transition-all"
+                style={{ backgroundColor: currentAccent.primary }}
               >
-                {/* Signature Truecaller Header Bar with Accent Gradient */}
+                {/* Signature Truecaller Header Bar */}
                 <div 
-                  className="px-3.5 pt-2 pb-1.5 flex items-center justify-between text-white select-none"
+                  className="px-3.5 pt-2 pb-2.5 flex items-center justify-between text-white select-none"
                   style={{ background: `linear-gradient(135deg, ${currentAccent.gradientFrom}, ${currentAccent.gradientTo})` }}
                 >
                   <div className="flex items-center space-x-2">
-                    <span className="font-extrabold text-[16.5px] tracking-tight lowercase text-white">
+                    <span className="font-extrabold text-[18px] tracking-[-0.03em] lowercase leading-none text-white">
                       truecaller
                     </span>
                     {currentAccent.isGold && (
@@ -4459,44 +4557,46 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                     )}
                   </div>
 
-                  <div className="text-[13px] text-white/95 font-medium tracking-wide">
-                    SMS • {currentAlert.timeString}
+                  <div className="text-[14.5px] text-white/95 font-medium tracking-normal leading-none">
+                    SMS • {currentAlert.timeString && currentAlert.timeString.toLowerCase() !== 'now'
+                      ? currentAlert.timeString
+                      : new Date(currentAlert.timestamp || Date.now()).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
                   </div>
 
                   {/* Close 'X' Button */}
                   <button 
                     type="button"
                     onClick={() => setIsPopdownVisible(false)}
-                    className="w-6 h-6 rounded-full hover:bg-white/20 active:scale-90 transition flex items-center justify-center cursor-pointer text-white"
+                    className="w-7 h-7 -mr-1 rounded-full hover:bg-white/20 active:scale-90 transition flex items-center justify-center cursor-pointer text-white"
                     title="Dismiss alert"
                   >
-                    <X className="w-4 h-4 text-white stroke-[2.5]" />
+                    <X className="w-[19px] h-[19px] text-white stroke-[2.3]" />
                   </button>
                 </div>
 
-                {/* White Inset Body Card with curved corners matching reference photo IMG_20260905_131647_440.jpg */}
-                <div className="bg-white rounded-[21px] overflow-hidden text-slate-900">
+                {/* White Inset Body Card with curved corners matching authentic Truecaller popdown */}
+                <div className="bg-white rounded-[20px] overflow-hidden text-[#111827]">
                   
                   {/* Top content area with avatar, text, and AI summary */}
-                  <div className="px-4 pt-3.5 pb-3 space-y-2.5">
+                  <div className="px-4 pt-4 pb-3.5 space-y-3">
                     {/* Bank Avatar & Name Header */}
-                    <div className="flex items-center space-x-2.5">
+                    <div className="flex items-center space-x-3">
                       <div 
-                        className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
-                        style={{ backgroundColor: currentAccent.lightBg, color: currentAccent.primary }}
+                        className="w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{ backgroundColor: currentAccent.lightBg || '#E5EEFA', color: currentAccent.primary }}
                       >
-                        <Building2 className="w-5 h-5 text-[#2c3e50]" />
+                        <Building2 className="w-[22px] h-[22px] text-[#1F2937] stroke-[2]" />
                       </div>
                       <div>
-                        <h2 className="font-extrabold text-[17.5px] text-slate-900 tracking-tight leading-none">
+                        <h2 className="font-bold text-[19.5px] text-[#111827] tracking-[-0.015em] leading-none">
                           {currentAlert.bankKey === 'cbe' ? 'CBE' : currentAlert.bankName}
                         </h2>
                       </div>
                     </div>
 
-                    {/* Main Transaction Message Text (Matches exact layout in reference photo IMG_20260905_131647_440.jpg) */}
+                    {/* Main Transaction Message Text */}
                     <div 
-                      className="leading-snug text-slate-900 font-bold tracking-tight pt-0.5"
+                      className="leading-snug text-[#111827] font-bold tracking-[-0.01em] pt-0.5"
                       style={{
                         fontFamily: activeFont.style,
                         fontSize: computedAccountFontSize,
@@ -4504,7 +4604,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                     >
                       Account {(currentAlert.maskedAccount || '1********0913').replace(/X/g, '*')} {currentAlert.role === 'receiver' ? 'credited with' : 'debited with'}
                       <div 
-                        className="font-extrabold text-slate-950 tracking-tight mt-0.5 leading-none whitespace-nowrap"
+                        className="font-extrabold text-[#0B0F19] tracking-[-0.025em] mt-0.5 leading-[1.15] whitespace-nowrap"
                         style={{
                           fontFamily: activeFont.style,
                           fontSize: computedAmountFontSize,
@@ -4516,16 +4616,20 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                       </div>
                     </div>
 
-                    {/* AI Summary Tag matching reference photo IMG_20260905_131647_440.jpg */}
+                    {/* AI Summary Tag */}
                     <div className="pt-0.5">
                       <button
                         type="button"
                         onClick={() => setShowAiBreakdown(!showAiBreakdown)}
-                        className="inline-flex items-center space-x-1.5 text-slate-600 hover:opacity-80 text-[14px] font-medium transition cursor-pointer"
+                        className="inline-flex items-center space-x-2 text-[#4B5563] hover:opacity-80 text-[15px] font-normal transition cursor-pointer"
                         style={{ color: showAiBreakdown ? currentAccent.primary : undefined }}
                       >
-                        <Sparkles className="w-4 h-4" style={{ color: currentAccent.primary, fill: currentAccent.primary }} />
-                        <span className="font-medium text-slate-600">AI summary</span>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="flex-shrink-0" aria-hidden="true">
+                          <path d="M11 2L13.2 8.8L20 11L13.2 13.2L11 20L8.8 13.2L2 11L8.8 8.8L11 2Z" fill={currentAccent.primary} />
+                          <path d="M18.5 3L19.4 5.6L22 6.5L19.4 7.4L18.5 10L17.6 7.4L15 6.5L17.6 5.6L18.5 3Z" fill={currentAccent.primary} />
+                          <circle cx="5.5" cy="18.5" r="1.5" fill={currentAccent.primary} />
+                        </svg>
+                        <span className="text-[#4B5563]">AI summary</span>
                       </button>
 
                       {/* Expandable AI Breakdown Details */}
@@ -4560,15 +4664,14 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                     </div>
                   </div>
 
-                  {/* Bottom Action Strip matching reference image IMG_20260905_131647_440.jpg */}
+                  {/* Bottom Action Strip */}
                   <div 
-                    className="px-4 py-3 text-center border-t rounded-b-[21px]"
-                    style={{ backgroundColor: `${currentAccent.lightBg}65`, borderColor: `${currentAccent.primary}25` }}
+                    className="px-4 py-3.5 text-center border-t border-[#E5E7EB] bg-[#F5F8FC] rounded-b-[20px]"
                   >
                     <button
                       type="button"
                       onClick={handleMarkAsRead}
-                      className="w-full py-0.5 text-center font-bold text-[17px] transition cursor-pointer flex items-center justify-center space-x-1.5 active:scale-98"
+                      className="w-full py-0.5 text-center font-bold text-[17.5px] tracking-[-0.01em] transition cursor-pointer flex items-center justify-center space-x-1.5 active:scale-98"
                       style={!currentAlert.read ? { color: currentAccent.primary } : undefined}
                     >
                       {currentAlert.read ? (

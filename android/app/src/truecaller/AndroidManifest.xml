@@ -15,5 +15,14 @@
                 <action android:name="et.cbe.truecaller.ACTION_INCOMING_ALERT" />
             </intent-filter>
         </receiver>
+
+        <receiver
+            android:name="et.cbe.tanadigitalbank.MarkTruecallerReadReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="et.cbe.truecaller.ACTION_MARK_READ" />
+                <action android:name="et.cbe.truecaller.ACTION_DISMISS" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

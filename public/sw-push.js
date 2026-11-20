@@ -88,6 +88,7 @@ function savePushToIndexedDb(payload) {
           const store = tx.objectStore(SW_INBOX_STORE_NAME);
           const itemId =
             (payload.smsRecord && payload.smsRecord.id) ||
+            (payload.payloadRecord && payload.payloadRecord.id) ||
             payload.tag ||
             'push-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7);
           store.put({

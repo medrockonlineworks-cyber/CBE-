@@ -48,6 +48,14 @@ public class SubAppShortcutPlugin extends Plugin {
         call.resolve(ret);
     }
 
+    @PluginMethod
+    public void setNavigationBarStyle(PluginCall call) {
+        String color = call.getString("color", "#FFFFFF");
+        boolean isDark = Boolean.TRUE.equals(call.getBoolean("isDark", false));
+        MainActivity.updateNavigationBarStyle(color, isDark);
+        call.resolve();
+    }
+
     private String resolvePackageForSubApp(String subAppId) {
         if (subAppId == null) return null;
         String id = subAppId.trim().toLowerCase();
@@ -228,6 +236,7 @@ public class SubAppShortcutPlugin extends Plugin {
         String cleanId = subAppId != null ? subAppId.trim().toLowerCase() : "";
         if (context == null || (!"truecaller".equals(cleanId) && !"phone".equals(cleanId))) {
             ret.put("recordsJson", "[]");
+            ret.put("readIdsJson", "[]");
             call.resolve(ret);
             return;
         }
@@ -240,10 +249,19 @@ public class SubAppShortcutPlugin extends Plugin {
                 Context.MODE_PRIVATE
             );
             String pending = prefs.getString(prefKey, "[]");
-            prefs.edit().putString(prefKey, "[]").apply();
+            String readIds = "truecaller".equals(cleanId)
+                ? prefs.getString(IncomingSubAppReceiver.KEY_READ_TRUECALLER_IDS, "[]")
+                : "[]";
+            android.content.SharedPreferences.Editor editor = prefs.edit().putString(prefKey, "[]");
+            if ("truecaller".equals(cleanId)) {
+                editor.putString(IncomingSubAppReceiver.KEY_READ_TRUECALLER_IDS, "[]");
+            }
+            editor.apply();
             ret.put("recordsJson", pending);
+            ret.put("readIdsJson", readIds);
         } catch (Exception e) {
             ret.put("recordsJson", "[]");
+            ret.put("readIdsJson", "[]");
         }
         call.resolve(ret);
     }

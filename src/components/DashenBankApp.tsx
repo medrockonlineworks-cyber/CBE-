@@ -1761,7 +1761,7 @@ export default function DashenBankApp({ currentUser, onBack, onOpenTelebirr }: D
       {/* BOTTOM NAVIGATION BAR (Exact match for Screenshots 1, 2, 3)          */}
       {/* Tabs: Home | Apps | E-Comm... | Transact... | Profile               */}
       {/* =================================================================== */}
-      <div className="w-full bg-[#050c18] border-t border-[#131d2e] px-2 py-2 flex items-center justify-around shrink-0 z-30 select-none">
+      <div className="w-full bg-[#050c18] border-t border-[#131d2e] px-2 pt-2 pb-[max(env(safe-area-inset-bottom,0px),10px)] flex items-center justify-around shrink-0 z-30 select-none">
         {/* 1. Home */}
         <button 
           onClick={() => {

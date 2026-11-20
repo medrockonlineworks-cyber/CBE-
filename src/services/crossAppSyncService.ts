@@ -14,8 +14,10 @@ const SYNCED_STORAGE_KEYS = [
   'bank_sms_messages_v6',
   'bank_sms_accounts_v6',
   'bank_sms_active_account',
-  'truecaller_alerts_v1',
-  'truecaller_accounts_v1',
+  'tc_sim_alerts_v2',
+  'tc_sim_accounts_v2',
+  'tc_sim_active_account_id',
+  'cbe_pending_receiver_tc_notifs_v1',
   'dashen_bank_account_v1',
   'dashen_bank_transactions_v1',
   'telebirr_app_state_v2',
@@ -468,6 +470,91 @@ class CrossAppSyncEngine {
       const parsed = raw ? JSON.parse(raw) : [];
       const list = Array.isArray(parsed) ? parsed : [];
 
+      // Handle Truecaller incoming push payload cleanly (syncs alert & triggers immediate pop-down!)
+      const isTruecallerPayload =
+        payload.view === 'truecaller' ||
+        payload.subAppId === 'truecaller' ||
+        (typeof payload.url === 'string' && payload.url.includes('/truecaller'));
+
+      if (isTruecallerPayload) {
+        const TC_ALERTS_KEY = 'tc_sim_alerts_v2';
+        const rawTc = localStorage.getItem(TC_ALERTS_KEY);
+        const tcList: any[] = rawTc ? JSON.parse(rawTc) : [];
+        if (!Array.isArray(tcList)) return false;
+
+        const tcRec = payload.payloadRecord || payload.truecallerRecord || null;
+        const alertId =
+          tcRec?.id ||
+          payload.tag ||
+          `tc-push-${payload.timestamp || Date.now()}`;
+        if (tcList.some((a: any) => a?.id === alertId)) {
+          return false;
+        }
+
+        const nowDate = new Date(payload.timestamp || Date.now());
+        const formattedTime = nowDate.toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
+          hour12: true,
+        });
+        const bodyText = tcRec?.fullSmsText || payload.body || '';
+        const amtMatch = bodyText.match(/ETB\s*([\d,]+(?:\.\d{1,2})?)/i);
+        const parsedAmount =
+          typeof tcRec?.amount === 'number'
+            ? tcRec.amount
+            : amtMatch
+              ? parseFloat(amtMatch[1].replace(/,/g, '')) || 0
+              : 0;
+        const accMatch = bodyText.match(/1[*X]{6,10}\d{3,4}/);
+        const parsedMasked = tcRec?.maskedAccount || (accMatch ? accMatch[0].replace(/X/g, '*') : '1********4747');
+        const inferredRole =
+          tcRec?.role === 'sender' || tcRec?.role === 'receiver'
+            ? tcRec.role
+            : /debit|debited/i.test(bodyText)
+              ? 'sender'
+              : 'receiver';
+
+        const newAlert = {
+          id: alertId,
+          accountId: tcRec?.accountId || localStorage.getItem('tc_sim_active_account_id') || 'acc-cbe-leykun',
+          bankKey: tcRec?.bankKey || 'cbe',
+          bankName: tcRec?.bankName || payload.title || 'CBE',
+          role: inferredRole,
+          amount: parsedAmount,
+          maskedAccount: parsedMasked,
+          fullAccount: tcRec?.fullAccount || '1000419524747',
+          holderName: tcRec?.holderName || 'Leykun Jemaneh Ylma',
+          counterpartyName: tcRec?.counterpartyName || 'CBE',
+          counterpartyAccount: tcRec?.counterpartyAccount || '',
+          balanceAfter: typeof tcRec?.balanceAfter === 'number' ? tcRec.balanceAfter : undefined,
+          timeString: tcRec?.timeString && tcRec.timeString !== 'Now' ? tcRec.timeString : formattedTime,
+          timestamp: tcRec?.timestamp || nowDate.toISOString(),
+          summaryText:
+            tcRec?.summaryText ||
+            `Account ${parsedMasked} ${inferredRole === 'receiver' ? 'credited with' : 'debited with'} ETB ${parsedAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}.`,
+          txId: tcRec?.txId || payload.reference || alertId,
+          fullSmsText: bodyText,
+          read: false,
+          backgroundApp: tcRec?.backgroundApp || 'messages',
+        };
+
+        this.isApplyingRemote = true;
+        try {
+          const updated = [newAlert, ...tcList];
+          const serialized = JSON.stringify(updated);
+          localStorage.setItem(TC_ALERTS_KEY, serialized);
+          this.lastHashes[TC_ALERTS_KEY] = this.computeHash(serialized);
+        } finally {
+          this.isApplyingRemote = false;
+        }
+
+        window.dispatchEvent(new CustomEvent('tc_alerts_updated', { detail: { alert: newAlert } }));
+        window.dispatchEvent(new CustomEvent('truecaller_updated', { detail: { alert: newAlert } }));
+        window.dispatchEvent(new CustomEvent('tc_live_popdown', { detail: { alert: newAlert } }));
+        window.dispatchEvent(new CustomEvent('cbe_crossapp_synced'));
+        return true;
+      }
+
       const activeAcc =
         smsRec?.accountNumber ||
         localStorage.getItem('bank_sms_active_account') ||
@@ -502,7 +589,7 @@ class CrossAppSyncEngine {
         message: msgText,
         timestamp: smsRec?.timestamp || new Date(payload.timestamp || Date.now()).toISOString(),
         read: false,
-        forAllUsers: true,
+        forAllUsers: Boolean(smsRec?.forAllUsers),
       };
 
       this.isApplyingRemote = true;
@@ -686,7 +773,7 @@ class CrossAppSyncEngine {
           this.lastHashes[key] = this.computeHash(remote.value);
           anyApplied = true;
           if (key.startsWith('bank_sms_')) smsUpdated = true;
-          if (key.startsWith('truecaller_')) truecallerUpdated = true;
+          if (key.startsWith('tc_sim_') || key === 'cbe_pending_receiver_tc_notifs_v1') truecallerUpdated = true;
           if (key.startsWith('dashen_')) dashenUpdated = true;
           if (key.startsWith('telebirr_')) telebirrUpdated = true;
           if (key.startsWith('tana_')) tanaUpdated = true;
@@ -701,7 +788,20 @@ class CrossAppSyncEngine {
           window.dispatchEvent(new CustomEvent('sms-accounts-updated'));
         }
         if (truecallerUpdated) {
+          window.dispatchEvent(new CustomEvent('tc_alerts_updated'));
           window.dispatchEvent(new CustomEvent('truecaller_updated'));
+          // If a brand-new unread Truecaller alert arrived via cross-app sync, pop it down immediately!
+          try {
+            const rawTc = localStorage.getItem('tc_sim_alerts_v2');
+            const parsed = rawTc ? JSON.parse(rawTc) : [];
+            if (Array.isArray(parsed) && parsed.length > 0 && parsed[0] && !parsed[0].read) {
+              const latest = parsed[0];
+              const ageMs = Date.now() - new Date(latest.timestamp || 0).getTime();
+              if (Number.isFinite(ageMs) && ageMs >= -5000 && ageMs < 25000) {
+                window.dispatchEvent(new CustomEvent('tc_live_popdown', { detail: { alert: latest } }));
+              }
+            }
+          } catch {}
         }
         if (dashenUpdated) {
           window.dispatchEvent(new CustomEvent('dashen_data_updated'));

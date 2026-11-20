@@ -650,6 +650,8 @@ export default async function handler(req: any, res: any) {
       const targets = Array.from(mergedByEndpoint.values());
       const smsRecord =
         body.smsRecord && typeof body.smsRecord === 'object' ? body.smsRecord : undefined;
+      const payloadRecord =
+        body.payloadRecord && typeof body.payloadRecord === 'object' ? body.payloadRecord : undefined;
 
       const payloadObj: Record<string, unknown> = {
         appName: String(body.appName || subAppId),
@@ -672,7 +674,7 @@ export default async function handler(req: any, res: any) {
         actions:
           Array.isArray(body.actions)
             ? body.actions
-            : subAppId === 'sms'
+            : subAppId === 'sms' || subAppId === 'truecaller'
               ? [{ action: 'mark_read', title: 'Mark as read' }]
               : undefined,
         url: typeof body.url === 'string' ? body.url : `/${subAppId}/`,
@@ -685,6 +687,9 @@ export default async function handler(req: any, res: any) {
       };
       if (smsRecord) {
         payloadObj.smsRecord = smsRecord;
+      }
+      if (payloadRecord) {
+        payloadObj.payloadRecord = payloadRecord;
       }
       const payloadJson = JSON.stringify(payloadObj);
 

@@ -2047,7 +2047,7 @@ export class LocalDb {
 
     // Automatically sync to Truecaller SMS simulator
     try {
-      TruecallerService.syncTransactionToTruecaller(tx, fromAcc.balance);
+      TruecallerService.syncTransactionToTruecaller(tx, fromAcc.balance, toAcc.balance);
     } catch (tcErr) {
       console.error('[TruecallerService] Non-blocking own account transfer Truecaller alert error:', tcErr);
     }

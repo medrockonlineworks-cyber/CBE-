@@ -2077,6 +2077,7 @@ export class PushNotificationService {
     tag: string;
     reference?: string;
     smsRecord?: Record<string, unknown>;
+    payloadRecord?: Record<string, unknown>;
     overrideDirectSubscriptions?: PushSubscriptionJSON[];
     overrideBucketKey?: string;
   }): Promise<{
@@ -2413,6 +2414,7 @@ export class PushNotificationService {
           tag: resolvedTag,
           reference: params.reference,
           smsRecord: params.smsRecord,
+          payloadRecord: params.payloadRecord,
         });
 
         // If delivered directly to the installed standalone sub-app (e.g. Messages/Truecaller/Phone),
@@ -2518,14 +2520,58 @@ export class PushNotificationService {
     const finalTitle = custom?.title?.trim() || sample.title;
     const finalBody = custom?.body?.trim() || sample.body;
 
-    // For SMS Simulator tests, also add the message to the CBE SMS inbox & push sync state
+    // For SMS & Truecaller Simulator tests, also persist a real synced record & push sync state immediately
     let smsRecord: Record<string, unknown> | undefined;
+    let payloadRecord: Record<string, unknown> | undefined;
     if (subAppId === 'sms') {
       smsRecord = this.appendSyncedTestSms(finalTitle, finalBody);
+      payloadRecord = smsRecord;
       await CrossAppSyncService.pushChangedNow([
         'bank_sms_messages_v6',
         'bank_sms_accounts_v6',
         'bank_sms_active_account',
+      ]);
+    } else if (subAppId === 'truecaller') {
+      const nowTime = new Date().toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      });
+      const tcAlertId = `tc-test-${Date.now()}`;
+      const tcRecord: Record<string, unknown> = {
+        id: tcAlertId,
+        accountId: localStorage.getItem('tc_sim_active_account_id') || 'acc-cbe-leykun',
+        bankKey: 'cbe',
+        bankName: finalTitle || 'CBE',
+        role: 'receiver',
+        amount: 4500,
+        maskedAccount: activeMaskedAcc,
+        fullAccount: activeAccNum || '1000419524747',
+        holderName: activeHolderName,
+        counterpartyName: 'CBE Mobile',
+        balanceAfter: (activeUser?.balance || 18450.5) + 4500,
+        timeString: nowTime,
+        timestamp: new Date().toISOString(),
+        summaryText: `Account ${activeMaskedAcc} credited with ETB 4,500.00.`,
+        txId: `FT${Math.floor(10000000 + Math.random() * 89999999)}`,
+        fullSmsText: finalBody,
+        read: false,
+        backgroundApp: 'messages',
+      };
+      payloadRecord = tcRecord;
+      try {
+        const raw = localStorage.getItem('tc_sim_alerts_v2');
+        const list = raw ? JSON.parse(raw) : [];
+        if (Array.isArray(list)) {
+          localStorage.setItem('tc_sim_alerts_v2', JSON.stringify([tcRecord, ...list]));
+        }
+        window.dispatchEvent(new CustomEvent('tc_alerts_updated', { detail: { alert: tcRecord } }));
+        window.dispatchEvent(new CustomEvent('tc_live_popdown', { detail: { alert: tcRecord } }));
+      } catch {}
+      await CrossAppSyncService.pushChangedNow([
+        'tc_sim_alerts_v2',
+        'tc_sim_accounts_v2',
+        'tc_sim_active_account_id',
       ]);
     }
 
@@ -2542,7 +2588,12 @@ export class PushNotificationService {
     const resolvedWebBadge = isAndroidSms
       ? '/icons/badge-sms-android.png'
       : resolvedWebIcon;
-    const smsId = typeof smsRecord?.id === 'string' ? smsRecord.id : undefined;
+    const smsId =
+      typeof smsRecord?.id === 'string'
+        ? smsRecord.id
+        : typeof payloadRecord?.id === 'string'
+          ? payloadRecord.id
+          : undefined;
     const tag = `cbe-subapp-test-${subAppId}-${Date.now()}`;
     const isInsideThisSubApp = !Capacitor.isNativePlatform() && this.detectCurrentSubAppFromPath() === subAppId;
 
@@ -2557,7 +2608,7 @@ export class PushNotificationService {
         sender: finalTitle,
         body: finalBody,
         alertId: smsId,
-        payloadRecord: smsRecord,
+        payloadRecord: payloadRecord || smsRecord,
       });
       if (directApk.delivered) {
         return {
@@ -2580,6 +2631,7 @@ export class PushNotificationService {
         url: `/${subAppId}/`,
         tag,
         smsRecord,
+        payloadRecord,
       };
       const remote = await this.dispatchRemoteSubAppPush(pushReq);
 

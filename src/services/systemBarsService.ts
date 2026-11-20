@@ -6,6 +6,7 @@
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
 import { PhoneSettingsService } from './phoneSettingsService';
+import { SubAppInstallService } from './subAppInstallService';
 
 export interface SystemBarsConfig {
   statusBarColor: string;
@@ -93,9 +94,28 @@ export class SystemBarsService {
         StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
         StatusBar.setStyle({ style: isDarkStyle ? Style.Light : Style.Dark }).catch(() => {});
         StatusBar.setBackgroundColor({ color: statusBarColor }).catch(() => {});
+        const isDarkNavBar = this.isHexColorDark(navBarColor);
+        SubAppInstallService.setNativeNavigationBarStyle(navBarColor, isDarkNavBar);
       } catch (err) {
         // Safe non-blocking
       }
+    }
+  }
+
+  private static isHexColorDark(hex: string): boolean {
+    try {
+      const clean = (hex || '').replace('#', '').trim();
+      const full = clean.length === 3
+        ? clean.split('').map(c => c + c).join('')
+        : clean;
+      if (full.length !== 6) return false;
+      const r = parseInt(full.slice(0, 2), 16);
+      const g = parseInt(full.slice(2, 4), 16);
+      const b = parseInt(full.slice(4, 6), 16);
+      const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+      return luminance < 0.55;
+    } catch {
+      return false;
     }
   }
 
