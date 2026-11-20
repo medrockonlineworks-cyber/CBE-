@@ -83,19 +83,22 @@ jobs:
             BADGING=$("$AAPT2" dump badging "$MSG_APK")
             echo "$BADGING" | grep -E "package:|application-label|application-icon|launchable-activity"
             echo "$BADGING" | grep -q "name='et.cbe.messages'"
-            echo "$BADGING" | grep -q "ic_messages_launcher"
+            echo "$BADGING" | grep -q "application-label:'Messages'"
+            (echo "$BADGING" | grep -q "ic_messages_launcher" || unzip -l "$MSG_APK" | grep -q "ic_messages_launcher")
 
             echo "=== Truecaller APK Badging ==="
             TC_BADGING=$("$AAPT2" dump badging "$TC_APK")
             echo "$TC_BADGING" | grep -E "package:|application-label|application-icon|launchable-activity"
             echo "$TC_BADGING" | grep -q "name='et.cbe.truecaller'"
-            echo "$TC_BADGING" | grep -q "ic_truecaller_launcher"
+            echo "$TC_BADGING" | grep -q "application-label:'Truecaller'"
+            (echo "$TC_BADGING" | grep -q "ic_truecaller_launcher" || unzip -l "$TC_APK" | grep -q "ic_truecaller_launcher")
 
             echo "=== Phone APK Badging ==="
             PHONE_BADGING=$("$AAPT2" dump badging "$PHONE_APK")
             echo "$PHONE_BADGING" | grep -E "package:|application-label|application-icon|launchable-activity"
             echo "$PHONE_BADGING" | grep -q "name='et.cbe.phone'"
-            echo "$PHONE_BADGING" | grep -q "ic_phone_launcher"
+            echo "$PHONE_BADGING" | grep -q "application-label:'Phone'"
+            (echo "$PHONE_BADGING" | grep -q "ic_phone_launcher" || unzip -l "$PHONE_APK" | grep -q "ic_phone_launcher")
           fi
 
       - name: Upload CBE Mobile Banking APK artifact
