@@ -1,12 +1,29 @@
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
+
+interface NativeCrossApkSyncPlugin {
+  getAppFlavor(): Promise<{
+    isMessagesApk: boolean;
+    isStandaloneSubApp?: boolean;
+    defaultStartView: string;
+    packageName: string;
+  }>;
+  pushNativeSyncEntries(options: {
+    entriesJson: string;
+    seedOnly?: boolean;
+  }): Promise<{ ok: boolean; updated?: boolean; error?: string }>;
+  pullNativeSyncEntries(): Promise<{ ok: boolean; entriesJson: string; error?: string }>;
+}
+
+const NativeCrossApkSync = registerPlugin<NativeCrossApkSyncPlugin>('SubAppShortcut');
 
 /**
  * CrossAppSyncService
  * Keeps CBE Mobile Banking and installed standalone sub-apps (Messages/SMS, Truecaller, Phone) synchronized across:
- * 1. Direct APNs/FCM Web Push Connection Keys (CBELINK-...) + Service Worker IndexedDB inbox
- *    (100% stateless across Vercel cold starts — works even when Messages is completely closed!)
- * 2. Same-origin tabs/PWAs via BroadcastChannel + localStorage events
- * 3. Server state sync via /api/sync/state bridge
+ * 1. Native Android Cross-APK ContentProvider (content://et.cbe.tanadigitalbank.syncprovider) + BroadcastReceiver
+ *    (100% offline, instant bidirectional sync across CBE, Messages, Truecaller & Phone APKs!)
+ * 2. Direct APNs/FCM Web Push Connection Keys (CBELINK-...) + Service Worker IndexedDB inbox
+ * 3. Same-origin tabs/PWAs via BroadcastChannel + localStorage events
+ * 4. Server state sync via /api/sync/state bridge
  */
 
 const SYNCED_STORAGE_KEYS = [
@@ -17,6 +34,8 @@ const SYNCED_STORAGE_KEYS = [
   'tc_sim_alerts_v2',
   'tc_sim_accounts_v2',
   'tc_sim_active_account_id',
+  'tc_theme_base',
+  'tc_theme_accent',
   'cbe_pending_receiver_tc_notifs_v1',
   'cbe_tc_active_popdown_v1',
   'cbe_tc_dismissed_popdown_ids_v1',
@@ -29,6 +48,10 @@ const SYNCED_STORAGE_KEYS = [
   'tana_transactions',
   'tana_users',
   'tana_active_user_id',
+  'tana_starting_tx_prefix',
+  'tana_generated_tx_ids',
+  'tana_phone_settings_v1',
+  'cbe_receipt_browser_type',
   'cbe_pending_receiver_notifs_v1',
 ] as const;
 
@@ -789,8 +812,10 @@ class CrossAppSyncEngine {
     let anyApplied = false;
     let smsUpdated = false;
     let truecallerUpdated = false;
+    let tcThemeUpdated = false;
     let tcPopdownCleared = false;
     let phoneUpdated = false;
+    let phoneSettingsUpdated = false;
     let tanaUpdated = false;
     let activeUserSwitched = false;
 
@@ -829,6 +854,9 @@ class CrossAppSyncEngine {
           ) {
             truecallerUpdated = true;
           }
+          if (key === 'tc_theme_base' || key === 'tc_theme_accent') {
+            tcThemeUpdated = true;
+          }
           if (
             key.startsWith('tana_phone_') ||
             key.startsWith('tana_caller_') ||
@@ -837,10 +865,15 @@ class CrossAppSyncEngine {
           ) {
             phoneUpdated = true;
           }
+          if (key === 'tana_phone_settings_v1' || key === 'cbe_receipt_browser_type') {
+            phoneSettingsUpdated = true;
+          }
           if (
             key === 'tana_transactions' ||
             key === 'tana_users' ||
             key === 'tana_active_user_id' ||
+            key === 'tana_starting_tx_prefix' ||
+            key === 'tana_generated_tx_ids' ||
             key === 'cbe_pending_receiver_notifs_v1'
           ) {
             tanaUpdated = true;
@@ -855,6 +888,16 @@ class CrossAppSyncEngine {
         if (smsUpdated) {
           window.dispatchEvent(new CustomEvent('sms-updated'));
           window.dispatchEvent(new CustomEvent('sms-accounts-updated'));
+        }
+        if (tcThemeUpdated) {
+          window.dispatchEvent(
+            new CustomEvent('tc_theme_changed', {
+              detail: {
+                base: localStorage.getItem('tc_theme_base') || 'dark',
+                accentId: localStorage.getItem('tc_theme_accent') || 'classic_blue',
+              },
+            })
+          );
         }
         if (truecallerUpdated) {
           window.dispatchEvent(new CustomEvent('tc_alerts_updated'));
@@ -888,12 +931,30 @@ class CrossAppSyncEngine {
         if (phoneUpdated) {
           window.dispatchEvent(new CustomEvent('phone_call_updated'));
         }
+        if (phoneSettingsUpdated) {
+          window.dispatchEvent(new CustomEvent('cbe_phone_settings_updated'));
+        }
         if (tanaUpdated) {
           window.dispatchEvent(new CustomEvent('tana_data_updated'));
           window.dispatchEvent(new CustomEvent('cbe_balance_updated'));
           window.dispatchEvent(new CustomEvent('cbe_accounts_updated'));
           if (activeUserSwitched) {
-            window.dispatchEvent(new CustomEvent('cbe_account_switched'));
+            let switchedUser: Record<string, unknown> | undefined;
+            try {
+              const activeId = localStorage.getItem('tana_active_user_id');
+              const rawUsers = localStorage.getItem('tana_users');
+              if (activeId && rawUsers) {
+                const list = JSON.parse(rawUsers);
+                if (Array.isArray(list)) {
+                  switchedUser = list.find((u: any) => u?.id === activeId);
+                }
+              }
+            } catch {}
+            window.dispatchEvent(
+              new CustomEvent('cbe_account_switched', {
+                detail: switchedUser ? { user: switchedUser } : undefined,
+              })
+            );
           }
         }
       }
@@ -943,8 +1004,54 @@ class CrossAppSyncEngine {
     }
   }
 
+  private async bootstrapNativeApkSync(): Promise<void> {
+    if (!Capacitor.isNativePlatform()) return;
+    // 1. Always pull latest shared state from CBE's ContentProvider first so we never overwrite newer sibling changes
+    await this.pullNow();
+    try {
+      const flavor = await NativeCrossApkSync.getAppFlavor();
+      if (!flavor?.isStandaloneSubApp) {
+        // Inside main CBE APK: seed any missing keys in CbeSyncContentProvider so all sibling APKs mirror CBE immediately
+        const localTs = this.getTimestamps();
+        const seedEntries: Record<string, SyncEntry> = {};
+        for (const key of SYNCED_STORAGE_KEYS) {
+          try {
+            const val = localStorage.getItem(key);
+            if (val !== null) {
+              seedEntries[key] = { value: val, updatedAt: Number(localTs[key] || 1) };
+            }
+          } catch {}
+        }
+        if (Object.keys(seedEntries).length > 0) {
+          await NativeCrossApkSync.pushNativeSyncEntries({
+            entriesJson: JSON.stringify(seedEntries),
+            seedOnly: true,
+          });
+        }
+      }
+    } catch {
+      // Non-fatal on older APK builds
+    }
+  }
+
   public async pullNow(): Promise<boolean> {
-    if (typeof window === 'undefined' || Capacitor.isNativePlatform()) return false;
+    if (typeof window === 'undefined') return false;
+
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const res = await NativeCrossApkSync.pullNativeSyncEntries();
+        if (res?.ok && res.entriesJson) {
+          const parsed = JSON.parse(res.entriesJson) as Record<string, SyncEntry>;
+          if (parsed && typeof parsed === 'object') {
+            return this.applyRemoteEntries(parsed);
+          }
+        }
+      } catch {
+        // Non-fatal when CBE APK is not installed or older build
+      }
+      return false;
+    }
+
     let appliedAny = await this.drainServiceWorkerInbox();
 
     const keysToPull = new Set<string>([this.getBucketKey()]);
@@ -997,9 +1104,22 @@ class CrossAppSyncEngine {
       this.channel?.postMessage({ type: 'SYNC_PATCH', entries: changed });
     } catch {}
 
-    // When running inside a native Android APK with paired standalone sub-apps, still push sync state to bridgeOrigin
+    let nativePushed = false;
+    if (Capacitor.isNativePlatform()) {
+      try {
+        const res = await NativeCrossApkSync.pushNativeSyncEntries({
+          entriesJson: JSON.stringify(changed),
+          seedOnly: false,
+        });
+        nativePushed = Boolean(res?.ok);
+      } catch {
+        // Non-fatal
+      }
+    }
+
+    // When running inside a native Android APK with paired standalone web sub-apps, also push sync state to bridgeOrigin
     const pairedLinks = this.getPairedSubAppLinks();
-    if (Capacitor.isNativePlatform() && pairedLinks.length === 0) return true;
+    if (Capacitor.isNativePlatform() && pairedLinks.length === 0) return nativePushed || true;
 
     const targetKeys = new Set<string>([this.getBucketKey()]);
     for (const link of pairedLinks) {
@@ -1011,7 +1131,7 @@ class CrossAppSyncEngine {
       targetKeys.add(this.getOrCreatePermanentPairId(subSlug));
     }
 
-    let anyOk = false;
+    let anyOk = nativePushed;
     const baseUrl = this.getBridgeBaseUrl();
     await Promise.all(
       Array.from(targetKeys).map(async (bucketKey) => {
@@ -1083,8 +1203,13 @@ class CrossAppSyncEngine {
     window.addEventListener('truecaller_updated', triggerPush);
     window.addEventListener('tc_alerts_updated', triggerPush);
     window.addEventListener('tc_account_changed', triggerPush);
+    window.addEventListener('tc_theme_changed', triggerPush);
     window.addEventListener('tc_popdown_dismissed', triggerPush);
     window.addEventListener('phone_call_updated', triggerPush);
+    window.addEventListener('cbe_phone_settings_updated', triggerPush);
+    window.addEventListener('cbe_native_state_synced', () => {
+      void this.pullNow();
+    });
     window.addEventListener('storage', () => {
       this.captureInitialHashes();
       window.dispatchEvent(new CustomEvent('cbe_crossapp_synced'));
@@ -1102,7 +1227,15 @@ class CrossAppSyncEngine {
     window.addEventListener('focus', () => void this.pullNow());
     document.addEventListener('visibilitychange', onReturnForeground);
 
-    if (!Capacitor.isNativePlatform()) {
+    if (Capacitor.isNativePlatform()) {
+      void this.bootstrapNativeApkSync();
+      // Periodic foreground safety poll in addition to instant CbeStateSyncReceiver broadcasts
+      this.pollTimer = setInterval(() => {
+        if (document.visibilityState === 'visible') {
+          void this.pullNow();
+        }
+      }, 4000);
+    } else {
       void this.pullNow();
       if (this.isStandaloneSubAppPath()) {
         this.pollTimer = setInterval(() => {

@@ -174,6 +174,20 @@ public class MainActivity extends BridgeActivity {
         });
     }
 
+    public static void notifyNativeStateSynced() {
+        java.lang.ref.WeakReference<MainActivity> ref = activeInstanceRef;
+        MainActivity act = ref != null ? ref.get() : null;
+        if (act == null) return;
+        act.runOnUiThread(() -> {
+            try {
+                if (act.getBridge() != null) {
+                    act.getBridge().triggerWindowJSEvent("cbe_native_state_synced", "{}");
+                }
+            } catch (Exception ignored) {
+            }
+        });
+    }
+
     private void handleSubAppIntent(android.content.Intent intent, boolean notifyBridge) {
         if (intent == null) return;
         try {

@@ -61,6 +61,11 @@ interface SubAppShortcutPluginInterface {
     showImmediately?: boolean;
   }): Promise<{ saved: boolean; canDrawOverlays?: boolean }>;
   hideTruecallerOverlay(): Promise<{ hidden: boolean }>;
+  pushNativeSyncEntries(options: {
+    entriesJson: string;
+    seedOnly?: boolean;
+  }): Promise<{ ok: boolean; updated?: boolean; error?: string }>;
+  pullNativeSyncEntries(): Promise<{ ok: boolean; entriesJson: string; error?: string }>;
   pinSubApp(options: {
     subAppId: string;
     label: string;
@@ -323,6 +328,36 @@ export class SubAppInstallService {
       await SubAppShortcut.hideTruecallerOverlay();
     } catch {
       // Safe fallback on older APKs
+    }
+  }
+
+  public static async pushNativeSyncEntries(
+    entries: Record<string, { value: string; updatedAt: number }>,
+    options?: { seedOnly?: boolean }
+  ): Promise<boolean> {
+    if (!Capacitor.isNativePlatform()) return false;
+    try {
+      const res = await SubAppShortcut.pushNativeSyncEntries({
+        entriesJson: JSON.stringify(entries),
+        seedOnly: Boolean(options?.seedOnly),
+      });
+      return Boolean(res?.ok);
+    } catch {
+      return false;
+    }
+  }
+
+  public static async pullNativeSyncEntries(): Promise<
+    Record<string, { value: string; updatedAt: number }> | null
+  > {
+    if (!Capacitor.isNativePlatform()) return null;
+    try {
+      const res = await SubAppShortcut.pullNativeSyncEntries();
+      if (!res?.ok || !res.entriesJson) return null;
+      const parsed = JSON.parse(res.entriesJson);
+      return parsed && typeof parsed === 'object' ? parsed : null;
+    } catch {
+      return null;
     }
   }
 

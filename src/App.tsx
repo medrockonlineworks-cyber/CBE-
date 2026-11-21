@@ -1036,6 +1036,7 @@ export default function App() {
       TruecallerService.deliverPendingReceiverAlerts(user.accountNumber);
       PhoneCallService.deliverPendingReceiverAlerts(user.accountNumber);
     }
+    void CrossAppSyncService.pushChangedNow();
     const alreadyEnrolled = BiometricAuthService.isBiometricEnrolledForUser(user.id);
     setShowBiometricEnrollPrompt(method === 'credentials' && !alreadyEnrolled);
 
@@ -1095,6 +1096,7 @@ export default function App() {
   const handleUpdateUserProfile = (updatedUser: UserProfile) => {
     setCurrentUser(updatedUser);
     localStorage.setItem('tana_active_user_id', updatedUser.id);
+    void CrossAppSyncService.pushChangedNow();
   };
 
   const handleSelectTransaction = (tx: Transaction) => {

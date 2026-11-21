@@ -6,9 +6,12 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import androidx.core.content.pm.ShortcutInfoCompat;
 import androidx.core.content.pm.ShortcutManagerCompat;
 import androidx.core.graphics.drawable.IconCompat;
@@ -20,6 +23,8 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 
 @CapacitorPlugin(name = "SubAppShortcut")
 public class SubAppShortcutPlugin extends Plugin {
+
+    private static final ExecutorService SYNC_EXECUTOR = Executors.newSingleThreadExecutor();
 
     @PluginMethod
     public void isPinSupported(PluginCall call) {
@@ -274,6 +279,75 @@ public class SubAppShortcutPlugin extends Plugin {
             ret.put("dismissedIdsJson", "[]");
         }
         call.resolve(ret);
+    }
+
+    @PluginMethod
+    public void pushNativeSyncEntries(PluginCall call) {
+        final Context context = getContext();
+        final String entriesJson = call.getString("entriesJson", "{}");
+        final boolean seedOnly = Boolean.TRUE.equals(call.getBoolean("seedOnly", false));
+        if (context == null) {
+            JSObject ret = new JSObject();
+            ret.put("ok", false);
+            call.resolve(ret);
+            return;
+        }
+        final Context appCtx = context.getApplicationContext();
+        SYNC_EXECUTOR.execute(() -> {
+            JSObject ret = new JSObject();
+            try {
+                Bundle extras = new Bundle();
+                extras.putString("entriesJson", entriesJson != null ? entriesJson : "{}");
+                extras.putString("sourcePackage", appCtx.getPackageName());
+                extras.putBoolean("seedOnly", seedOnly);
+                Bundle response = appCtx.getContentResolver().call(
+                    CbeSyncContentProvider.CONTENT_URI,
+                    CbeSyncContentProvider.METHOD_PUSH_PATCH,
+                    null,
+                    extras
+                );
+                boolean ok = response != null && response.getBoolean("ok", false);
+                ret.put("ok", ok);
+                ret.put("updated", response != null && response.getBoolean("updated", false));
+            } catch (Exception e) {
+                ret.put("ok", false);
+                ret.put("error", e.getMessage() != null ? e.getMessage() : "Sync provider unavailable");
+            }
+            call.resolve(ret);
+        });
+    }
+
+    @PluginMethod
+    public void pullNativeSyncEntries(PluginCall call) {
+        final Context context = getContext();
+        if (context == null) {
+            JSObject ret = new JSObject();
+            ret.put("ok", false);
+            ret.put("entriesJson", "{}");
+            call.resolve(ret);
+            return;
+        }
+        final Context appCtx = context.getApplicationContext();
+        SYNC_EXECUTOR.execute(() -> {
+            JSObject ret = new JSObject();
+            try {
+                Bundle response = appCtx.getContentResolver().call(
+                    CbeSyncContentProvider.CONTENT_URI,
+                    CbeSyncContentProvider.METHOD_PULL_ALL,
+                    null,
+                    null
+                );
+                boolean ok = response != null && response.getBoolean("ok", false);
+                String entriesJson = response != null ? response.getString("entriesJson", "{}") : "{}";
+                ret.put("ok", ok);
+                ret.put("entriesJson", entriesJson != null ? entriesJson : "{}");
+            } catch (Exception e) {
+                ret.put("ok", false);
+                ret.put("entriesJson", "{}");
+                ret.put("error", e.getMessage() != null ? e.getMessage() : "Sync provider unavailable");
+            }
+            call.resolve(ret);
+        });
     }
 
     @PluginMethod

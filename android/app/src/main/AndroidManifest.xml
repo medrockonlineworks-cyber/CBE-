@@ -38,6 +38,14 @@
         <service
             android:name=".TruecallerOverlayService"
             android:exported="false" />
+
+        <receiver
+            android:name=".CbeStateSyncReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="et.cbe.ACTION_STATE_SYNCED" />
+            </intent-filter>
+        </receiver>
     </application>
 
     <!-- Minimal Required Permissions Only -->
@@ -48,9 +56,11 @@
     <uses-permission android:name="android.permission.USE_FINGERPRINT" />
 
     <queries>
+        <package android:name="et.cbe.tanadigitalbank" />
         <package android:name="et.cbe.messages" />
         <package android:name="et.cbe.truecaller" />
         <package android:name="et.cbe.phone" />
+        <provider android:authorities="et.cbe.tanadigitalbank.syncprovider" />
     </queries>
 
     <uses-feature android:name="android.hardware.fingerprint" android:required="false" />
