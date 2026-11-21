@@ -219,19 +219,6 @@ export class SystemBarsService {
         isDarkStyle = true;
         break;
 
-      case 'dashen':
-        statusBarColor = '#040b18';
-        navBarColor = '#040b18';
-        isDarkStyle = true;
-        break;
-
-      case 'telebirr':
-        statusBarColor = '#005fa8';
-        navBarColor = '#ffffff';
-        isDarkStyle = true;
-        break;
-
-      case 'telegram':
       case 'admin':
         statusBarColor = '#0f172a';
         navBarColor = '#0f172a';

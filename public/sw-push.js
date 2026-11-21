@@ -370,9 +370,6 @@ function detectSubAppFromScope() {
     if (
       scopePath === 'sms' ||
       scopePath === 'truecaller' ||
-      scopePath === 'telebirr' ||
-      scopePath === 'dashen' ||
-      scopePath === 'telegram' ||
       scopePath === 'phone'
     ) {
       return scopePath;

@@ -59,9 +59,6 @@ interface ProfileProps {
   onOpenSmsSimulator?: () => void;
   onOpenTruecallerSimulator?: () => void;
   onOpenPhoneApp?: () => void;
-  onOpenDashenApp?: () => void;
-  onOpenTelebirrApp?: () => void;
-  onOpenTelegramApp?: () => void;
 }
 
 const LANGUAGES = [
@@ -79,10 +76,7 @@ export default function Profile({
   onBack,
   onOpenSmsSimulator, 
   onOpenTruecallerSimulator, 
-  onOpenPhoneApp, 
-  onOpenDashenApp, 
-  onOpenTelebirrApp, 
-  onOpenTelegramApp 
+  onOpenPhoneApp,
 }: ProfileProps) {
   const [activeLang, setActiveLang] = useState('en');
   const [showLogoModal, setShowLogoModal] = useState(false);
@@ -1747,124 +1741,6 @@ export default function Profile({
                 }
               }}
               className="px-3 py-1.5 bg-[#26d367] hover:bg-[#20ba59] active:scale-95 text-white rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 shadow-xs flex-shrink-0"
-            >
-              <span>Open</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          {/* Dashen Bank Super App */}
-          <div className="flex items-center justify-between p-3 rounded-2xl bg-blue-50/50 hover:bg-blue-50 border border-blue-100/80 transition">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-[#0c1e3f] text-white rounded-xl flex-shrink-0 shadow-sm flex flex-col items-center justify-center w-9 h-9 border border-blue-400/30">
-                <div className="w-4 h-2 border-b border-white flex items-end justify-center">
-                  <div className="w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[5px] border-b-white" />
-                </div>
-                <span className="text-[5px] font-bold text-white leading-none mt-0.5">ዳሽን</span>
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-bold text-gray-800">Dashen Bank Super App</p>
-                  <span className="text-[9px] font-extrabold bg-[#1a73e8] text-white px-2 py-0.5 rounded-full uppercase tracking-wider">
-                    Live
-                  </span>
-                </div>
-                <p className="text-[10px] text-gray-400 truncate max-w-[200px] sm:max-w-xs">
-                  Account 5502877108011 • Transfers, Cards &amp; E-commerce
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              id="settings-dashen-bank-app-btn"
-              onClick={() => {
-                if (onOpenDashenApp) {
-                  onOpenDashenApp();
-                } else {
-                  try {
-                    window.history.pushState({ view: 'dashen' }, '', '/dashen');
-                    window.dispatchEvent(new PopStateEvent('popstate', { state: { view: 'dashen' } }));
-                  } catch {}
-                }
-              }}
-              className="px-3 py-1.5 bg-[#1a73e8] hover:bg-[#1557b0] active:scale-95 text-white rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 shadow-xs flex-shrink-0"
-            >
-              <span>Open</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          {/* Telebirr Super App (Requested Below Dashen Bank) */}
-          <div className="flex items-center justify-between p-3 rounded-2xl bg-lime-50/50 hover:bg-lime-50 border border-lime-200/80 transition">
-            <div className="flex items-center gap-3">
-              <div className="p-1.5 bg-gradient-to-br from-[#5cb82e] to-[#0085ca] text-white rounded-xl flex-shrink-0 shadow-sm flex flex-col items-center justify-center w-9 h-9 border border-lime-300">
-                <span className="text-[11px] font-black text-white leading-none">t</span>
-                <span className="text-[6px] font-extrabold text-white leading-none mt-0.5">telebirr</span>
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-bold text-gray-800">Telebirr Super App</p>
-                  <span className="text-[9px] font-extrabold bg-[#5cb82e] text-white px-2 py-0.5 rounded-full uppercase tracking-wider">
-                    Live
-                  </span>
-                </div>
-                <p className="text-[10px] text-gray-500 truncate max-w-[200px] sm:max-w-xs">
-                  Balance 41,865.79 ETB • Transfer to Bank &amp; Airtime
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              id="settings-telebirr-app-btn"
-              onClick={() => {
-                if (onOpenTelebirrApp) {
-                  onOpenTelebirrApp();
-                } else {
-                  try {
-                    window.history.pushState({ view: 'telebirr' }, '', '/telebirr');
-                    window.dispatchEvent(new PopStateEvent('popstate', { state: { view: 'telebirr' } }));
-                  } catch {}
-                }
-              }}
-              className="px-3 py-1.5 bg-[#5cb82e] hover:bg-[#4ea026] active:scale-95 text-white rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 shadow-xs flex-shrink-0"
-            >
-              <span>Open</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          {/* Telegram Chat Simulator (Requested Below Telebirr App) */}
-          <div className="flex items-center justify-between p-3 rounded-2xl bg-sky-50/50 hover:bg-sky-50 border border-sky-200/80 transition">
-            <div className="flex items-center gap-3">
-              <div className="p-1.5 bg-[#229ED9] text-white rounded-xl flex-shrink-0 shadow-sm flex flex-col items-center justify-center w-9 h-9 border border-sky-300">
-                <MessageSquare className="w-5 h-5 text-white" />
-              </div>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="text-sm font-bold text-gray-800">Telegram Chat Simulator</p>
-                  <span className="text-[9px] font-extrabold bg-[#229ED9] text-white px-2 py-0.5 rounded-full uppercase tracking-wider">
-                    New
-                  </span>
-                </div>
-                <p className="text-[10px] text-gray-500 truncate max-w-[200px] sm:max-w-xs">
-                  Fictional mock chat editor • Custom bubbles, receipts &amp; export
-                </p>
-              </div>
-            </div>
-            <button
-              type="button"
-              id="settings-telegram-simulator-app-btn"
-              onClick={() => {
-                if (onOpenTelegramApp) {
-                  onOpenTelegramApp();
-                } else {
-                  try {
-                    window.history.pushState({ view: 'telegram' }, '', '/telegram');
-                    window.dispatchEvent(new PopStateEvent('popstate', { state: { view: 'telegram' } }));
-                  } catch {}
-                }
-              }}
-              className="px-3 py-1.5 bg-[#229ED9] hover:bg-[#1b88bd] active:scale-95 text-white rounded-xl text-xs font-bold transition cursor-pointer flex items-center gap-1 shadow-xs flex-shrink-0"
             >
               <span>Open</span>
               <ChevronRight className="w-3.5 h-3.5" />

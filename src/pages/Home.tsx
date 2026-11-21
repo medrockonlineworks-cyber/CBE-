@@ -56,9 +56,6 @@ interface HomeProps {
   onOpenSmsSimulator?: () => void;
   onOpenTruecallerSimulator?: () => void;
   onOpenPhoneApp?: () => void;
-  onOpenDashenApp?: () => void;
-  onOpenTelebirrApp?: () => void;
-  onOpenTelegramSimulator?: () => void;
 }
 
 export const Home: React.FC<HomeProps> = ({
@@ -75,9 +72,6 @@ export const Home: React.FC<HomeProps> = ({
   onOpenSmsSimulator,
   onOpenTruecallerSimulator,
   onOpenPhoneApp,
-  onOpenDashenApp,
-  onOpenTelebirrApp,
-  onOpenTelegramSimulator,
 }) => {
   // Active user state to reflect balance and account changes in real time
   const [activeUser, setActiveUser] = useState<UserProfile>(() => {
@@ -1081,69 +1075,6 @@ export const Home: React.FC<HomeProps> = ({
                 <PhoneCall className="w-5 h-5 text-emerald-600 mb-1.5" />
                 <p className="text-xs font-bold text-emerald-950">Phone &amp; USSD</p>
                 <p className="text-[10px] text-emerald-700">*889# Mobile Banking</p>
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveModal(null);
-                  if (onOpenDashenApp) {
-                    onOpenDashenApp();
-                  } else {
-                    try {
-                      window.history.pushState({ view: 'dashen' }, '', '/dashen');
-                      window.dispatchEvent(new PopStateEvent('popstate', { state: { view: 'dashen' } }));
-                    } catch {}
-                  }
-                }}
-                className="p-3 bg-blue-50 hover:bg-blue-100/80 rounded-2xl text-left transition cursor-pointer border border-blue-200"
-              >
-                <div className="w-5 h-5 bg-[#0c1e3f] rounded-lg text-white flex flex-col items-center justify-center mb-1.5">
-                  <span className="text-[6px] font-bold">ዳሽን</span>
-                </div>
-                <p className="text-xs font-bold text-blue-950">Dashen Bank</p>
-                <p className="text-[10px] text-blue-700">Super App &amp; Transfer</p>
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveModal(null);
-                  if (onOpenTelebirrApp) {
-                    onOpenTelebirrApp();
-                  } else {
-                    try {
-                      window.history.pushState({ view: 'telebirr' }, '', '/telebirr');
-                      window.dispatchEvent(new PopStateEvent('popstate', { state: { view: 'telebirr' } }));
-                    } catch {}
-                  }
-                }}
-                className="p-3 bg-lime-50 hover:bg-lime-100/80 rounded-2xl text-left transition cursor-pointer border border-lime-200"
-              >
-                <div className="w-5 h-5 bg-gradient-to-br from-[#5cb82e] to-[#0085ca] rounded-lg text-white flex flex-col items-center justify-center mb-1.5 shadow-xs">
-                  <span className="text-[7px] font-black">t</span>
-                </div>
-                <p className="text-xs font-bold text-lime-950">Telebirr App</p>
-                <p className="text-[10px] text-lime-700">Transfer &amp; 41,865 ETB</p>
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveModal(null);
-                  if (onOpenTelegramSimulator) {
-                    onOpenTelegramSimulator();
-                  } else {
-                    try {
-                      window.history.pushState({ view: 'telegram' }, '', '/telegram');
-                      window.dispatchEvent(new PopStateEvent('popstate', { state: { view: 'telegram' } }));
-                    } catch {}
-                  }
-                }}
-                className="p-3 bg-sky-50 hover:bg-sky-100/80 rounded-2xl text-left transition cursor-pointer border border-sky-200"
-              >
-                <div className="w-5 h-5 bg-[#229ED9] rounded-lg text-white flex items-center justify-center mb-1.5 shadow-xs">
-                  <MessageSquare className="w-3 h-3 text-white" />
-                </div>
-                <p className="text-xs font-bold text-sky-950">Telegram Simulator</p>
-                <p className="text-[10px] text-sky-700">Mockup Chat Designer</p>
               </button>
 
               {onOpenAdmin && (

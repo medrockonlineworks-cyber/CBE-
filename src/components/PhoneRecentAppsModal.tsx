@@ -1,16 +1,13 @@
 import React from 'react';
 import { 
   Building2, 
-  Smartphone, 
   MessageSquare, 
   PhoneCall, 
   ShieldCheck, 
-  Send, 
-  X,
-  CreditCard
+  X
 } from 'lucide-react';
 
-export type AppViewId = 'main' | 'telebirr' | 'dashen' | 'sms' | 'phone' | 'truecaller' | 'telegram' | 'admin';
+export type AppViewId = 'main' | 'sms' | 'phone' | 'truecaller' | 'admin';
 
 interface PhoneRecentAppsModalProps {
   isOpen: boolean;
@@ -40,24 +37,6 @@ const APPS: AppInfo[] = [
     icon: <Building2 className="w-5 h-5 text-white" />,
   },
   {
-    id: 'telebirr',
-    name: 'Telebirr SuperApp',
-    subtitle: 'Ethio Telecom • Mobile Money & Services',
-    color: '#7BBF18',
-    badge: 'tele',
-    iconBg: 'bg-[#7BBF18]',
-    icon: <Smartphone className="w-5 h-5 text-white" />,
-  },
-  {
-    id: 'dashen',
-    name: 'Dashen Amole',
-    subtitle: 'Dashen Bank • Digital Banking & Wallet',
-    color: '#004B87',
-    badge: 'DB',
-    iconBg: 'bg-[#004B87]',
-    icon: <CreditCard className="w-5 h-5 text-white" />,
-  },
-  {
     id: 'sms',
     name: 'Messages & SMS',
     subtitle: 'Google Messages • CBE Alerts & 127 OTP',
@@ -83,15 +62,6 @@ const APPS: AppInfo[] = [
     badge: 'ID',
     iconBg: 'bg-[#0284C7]',
     icon: <ShieldCheck className="w-5 h-5 text-white" />,
-  },
-  {
-    id: 'telegram',
-    name: 'Telegram',
-    subtitle: 'CBE Community & Verification Bots',
-    color: '#229ED9',
-    badge: 'TG',
-    iconBg: 'bg-[#229ED9]',
-    icon: <Send className="w-5 h-5 text-white" />,
   },
 ];
 

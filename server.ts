@@ -27,24 +27,6 @@ const SUBAPP_IOS_BRANDING: Record<string, SubAppBranding> = {
     manifest: '/manifests/subapp-truecaller.webmanifest',
     themeColor: '#0066FF',
   },
-  '/telebirr': {
-    title: 'telebirr',
-    icon: '/icons/notif-telebirr.png',
-    manifest: '/manifests/subapp-telebirr.webmanifest',
-    themeColor: '#5cb82e',
-  },
-  '/dashen': {
-    title: 'DashenBank',
-    icon: '/icons/notif-dashen.png',
-    manifest: '/manifests/subapp-dashen.webmanifest',
-    themeColor: '#1e3a8a',
-  },
-  '/telegram': {
-    title: 'Telegram',
-    icon: '/icons/notif-telegram.png',
-    manifest: '/manifests/subapp-telegram.webmanifest',
-    themeColor: '#229ED9',
-  },
   '/phone': {
     title: 'Phone',
     icon: '/icons/notif-phone.png',

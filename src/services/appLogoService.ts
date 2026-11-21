@@ -6,9 +6,6 @@ export type BrandAppId =
   | 'cbe'
   | 'sms'
   | 'truecaller'
-  | 'telebirr'
-  | 'dashen'
-  | 'telegram'
   | 'phone';
 
 export interface BrandAppMeta {
@@ -65,42 +62,6 @@ export const BRAND_APP_LIST: BrandAppMeta[] = [
     defaultIcon512: '/icons/notif-truecaller-512.png',
     themeColor: '#0066FF',
     backgroundColor: '#0066FF',
-  },
-  {
-    id: 'telebirr',
-    name: 'telebirr',
-    shortName: 'telebirr',
-    description: 'telebirr Super App wallet & P2P transfers',
-    routePath: '/telebirr/',
-    staticManifest: '/manifests/subapp-telebirr.webmanifest',
-    defaultIcon: '/icons/notif-telebirr.png',
-    defaultIcon512: '/icons/notif-telebirr-512.png',
-    themeColor: '#5cb82e',
-    backgroundColor: '#ffffff',
-  },
-  {
-    id: 'dashen',
-    name: 'DashenBank',
-    shortName: 'DashenBank',
-    description: 'Dashen Bank Super App & IPS transfers',
-    routePath: '/dashen/',
-    staticManifest: '/manifests/subapp-dashen.webmanifest',
-    defaultIcon: '/icons/notif-dashen.png',
-    defaultIcon512: '/icons/notif-dashen-512.png',
-    themeColor: '#1e3a8a',
-    backgroundColor: '#ffffff',
-  },
-  {
-    id: 'telegram',
-    name: 'Telegram',
-    shortName: 'Telegram',
-    description: 'Telegram chat & payment receipt alerts',
-    routePath: '/telegram/',
-    staticManifest: '/manifests/subapp-telegram.webmanifest',
-    defaultIcon: '/icons/notif-telegram.png',
-    defaultIcon512: '/icons/notif-telegram-512.png',
-    themeColor: '#229ED9',
-    backgroundColor: '#ffffff',
   },
   {
     id: 'phone',
@@ -369,9 +330,6 @@ export class AppLogoService {
     if (
       clean === 'sms' ||
       clean === 'truecaller' ||
-      clean === 'telebirr' ||
-      clean === 'dashen' ||
-      clean === 'telegram' ||
       clean === 'phone'
     ) {
       return clean;

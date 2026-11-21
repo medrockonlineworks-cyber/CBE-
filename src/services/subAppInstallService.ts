@@ -63,9 +63,6 @@ const SubAppShortcut = registerPlugin<SubAppShortcutPluginInterface>('SubAppShor
 const VALID_SUB_APPS: SubAppNotificationId[] = [
   'sms',
   'truecaller',
-  'telebirr',
-  'dashen',
-  'telegram',
   'phone',
 ];
 

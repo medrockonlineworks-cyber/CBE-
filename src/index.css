@@ -140,31 +140,6 @@ input, select, textarea {
   will-change: transform, opacity;
 }
 
-/* Telebirr continuous marquee animations */
-@keyframes marqueeScroll {
-  0% { transform: translateX(0%); }
-  100% { transform: translateX(-50%); }
-}
-
-@keyframes tickerMarquee {
-  0% { transform: translateX(0%); }
-  100% { transform: translateX(-50%); }
-}
-
-.animate-marquee-scroll {
-  display: flex;
-  width: max-content;
-  will-change: transform;
-  animation: marqueeScroll 18s linear infinite;
-}
-
-.animate-ticker-marquee {
-  display: flex;
-  width: max-content;
-  will-change: transform;
-  animation: tickerMarquee 8s linear infinite;
-}
-
 /* Authentic Commercial Bank of Ethiopia (CBE) Success Checkmark & Badge Breathing Animation */
 @keyframes cbePulse {
   0%, 100% {

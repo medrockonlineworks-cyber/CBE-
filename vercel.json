@@ -31,7 +31,7 @@
       ]
     },
     {
-      "source": "/(sms|truecaller|telebirr|dashen|telegram|phone)/sw-push\\.js",
+      "source": "/(sms|truecaller|phone)/sw-push\\.js",
       "headers": [
         {
           "key": "Content-Type",
@@ -103,18 +103,6 @@
       "destination": "/api/bridge?route=/api/pwa/manifest&app=truecaller"
     },
     {
-      "source": "/manifests/subapp-telebirr.webmanifest",
-      "destination": "/api/bridge?route=/api/pwa/manifest&app=telebirr"
-    },
-    {
-      "source": "/manifests/subapp-dashen.webmanifest",
-      "destination": "/api/bridge?route=/api/pwa/manifest&app=dashen"
-    },
-    {
-      "source": "/manifests/subapp-telegram.webmanifest",
-      "destination": "/api/bridge?route=/api/pwa/manifest&app=telegram"
-    },
-    {
       "source": "/manifests/subapp-phone.webmanifest",
       "destination": "/api/bridge?route=/api/pwa/manifest&app=phone"
     },
@@ -135,30 +123,6 @@
       "destination": "/truecaller/index.html"
     },
     {
-      "source": "/telebirr",
-      "destination": "/telebirr/index.html"
-    },
-    {
-      "source": "/telebirr/",
-      "destination": "/telebirr/index.html"
-    },
-    {
-      "source": "/dashen",
-      "destination": "/dashen/index.html"
-    },
-    {
-      "source": "/dashen/",
-      "destination": "/dashen/index.html"
-    },
-    {
-      "source": "/telegram",
-      "destination": "/telegram/index.html"
-    },
-    {
-      "source": "/telegram/",
-      "destination": "/telegram/index.html"
-    },
-    {
       "source": "/phone",
       "destination": "/phone/index.html"
     },
@@ -167,7 +131,7 @@
       "destination": "/phone/index.html"
     },
     {
-      "source": "/((?!api/|downloads/|assets/|icons/|manifests/|sms/|truecaller/|telebirr/|dashen/|telegram/|phone/|sw-push\\.js|sw\\.js|manifest\\.webmanifest).*)",
+      "source": "/((?!api/|downloads/|assets/|icons/|manifests/|sms/|truecaller/|phone/|sw-push\\.js|sw\\.js|manifest\\.webmanifest).*)",
       "destination": "/index.html"
     }
   ]

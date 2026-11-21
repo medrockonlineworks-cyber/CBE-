@@ -207,27 +207,6 @@ function subAppStandaloneHtmlPlugin() {
       themeColor: '#0066FF',
       description: 'Truecaller — Caller ID & Bank SMS Alerts',
     },
-    telebirr: {
-      title: 'telebirr',
-      icon: '/icons/notif-telebirr.png',
-      manifest: '/manifests/subapp-telebirr.webmanifest',
-      themeColor: '#5cb82e',
-      description: 'telebirr Super App — Mobile Money & Transfers',
-    },
-    dashen: {
-      title: 'DashenBank',
-      icon: '/icons/notif-dashen.png',
-      manifest: '/manifests/subapp-dashen.webmanifest',
-      themeColor: '#1e3a8a',
-      description: 'Dashen Bank Super App',
-    },
-    telegram: {
-      title: 'Telegram',
-      icon: '/icons/notif-telegram.png',
-      manifest: '/manifests/subapp-telegram.webmanifest',
-      themeColor: '#229ED9',
-      description: 'Telegram Messenger',
-    },
     phone: {
       title: 'Phone',
       icon: '/icons/notif-phone.png',
@@ -416,7 +395,7 @@ export default defineConfig(() => {
             /^\/api\//,
             /^\/downloads\//,
             /^\/manifests\//,
-            /^\/(sms|truecaller|telebirr|dashen|telegram|phone)(\/|$)/i,
+            /^\/(sms|truecaller|phone)(\/|$)/i,
             /\.apk$/i,
           ],
           runtimeCaching: [

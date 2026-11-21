@@ -77,9 +77,6 @@ const DEFAULT_PREFERENCES: NotificationPreferences = {
 export type SubAppNotificationId =
   | 'sms'
   | 'truecaller'
-  | 'telebirr'
-  | 'dashen'
-  | 'telegram'
   | 'phone';
 
 export interface SubAppPushConfig {
@@ -134,48 +131,6 @@ export const SUB_APP_NOTIFICATION_META: Record<SubAppNotificationId, SubAppNotif
     largeIcon: 'ic_notif_truecaller',
     webIcon: '/icons/notif-truecaller.png',
   },
-  telebirr: {
-    id: 'telebirr',
-    name: 'Telebirr Super App',
-    shortName: 'telebirr',
-    description: 'Mobile wallet deposits, P2P transfers & bank transfer alerts',
-    channelId: 'cbe-subapp-telebirr',
-    channelName: 'telebirr',
-    color: '#5cb82e',
-    url: '/?view=telebirr',
-    defaultSender: 'telebirr',
-    smallIcon: 'ic_stat_telebirr',
-    largeIcon: 'ic_notif_telebirr',
-    webIcon: '/icons/notif-telebirr.png',
-  },
-  dashen: {
-    id: 'dashen',
-    name: 'Dashen Bank Super App',
-    shortName: 'DashenBank',
-    description: 'Dashen account credits, outgoing transfers & IPS alerts',
-    channelId: 'cbe-subapp-dashen',
-    channelName: 'DashenBank',
-    color: '#1e3a8a',
-    url: '/?view=dashen',
-    defaultSender: 'DashenBank',
-    smallIcon: 'ic_stat_dashen',
-    largeIcon: 'ic_notif_dashen',
-    webIcon: '/icons/notif-dashen.png',
-  },
-  telegram: {
-    id: 'telegram',
-    name: 'Telegram Chat Simulator',
-    shortName: 'Telegram',
-    description: 'Incoming simulated chat messages & payment receipt alerts',
-    channelId: 'cbe-subapp-telegram',
-    channelName: 'Telegram',
-    color: '#229ED9',
-    url: '/?view=telegram',
-    defaultSender: 'Telegram',
-    smallIcon: 'ic_stat_telegram',
-    largeIcon: 'ic_notif_telegram',
-    webIcon: '/icons/notif-telegram.png',
-  },
   phone: {
     id: 'phone',
     name: 'Phone & USSD (*889#)',
@@ -195,18 +150,12 @@ export const SUB_APP_NOTIFICATION_META: Record<SubAppNotificationId, SubAppNotif
 export const SUB_APP_NOTIFICATION_LIST: SubAppNotificationMeta[] = [
   SUB_APP_NOTIFICATION_META.sms,
   SUB_APP_NOTIFICATION_META.truecaller,
-  SUB_APP_NOTIFICATION_META.telebirr,
-  SUB_APP_NOTIFICATION_META.dashen,
-  SUB_APP_NOTIFICATION_META.telegram,
   SUB_APP_NOTIFICATION_META.phone,
 ];
 
 const DEFAULT_SUB_APP_PREFS: SubAppPushPreferencesMap = {
   sms: { enabled: true, showPreview: true },
   truecaller: { enabled: true, showPreview: true },
-  telebirr: { enabled: true, showPreview: true },
-  dashen: { enabled: true, showPreview: true },
-  telegram: { enabled: true, showPreview: true },
   phone: { enabled: true, showPreview: true },
 };
 
@@ -513,9 +462,6 @@ export class PushNotificationService {
     const fallback: SubAppPushPreferencesMap = {
       sms: { ...DEFAULT_SUB_APP_PREFS.sms },
       truecaller: { ...DEFAULT_SUB_APP_PREFS.truecaller },
-      telebirr: { ...DEFAULT_SUB_APP_PREFS.telebirr },
-      dashen: { ...DEFAULT_SUB_APP_PREFS.dashen },
-      telegram: { ...DEFAULT_SUB_APP_PREFS.telegram },
       phone: { ...DEFAULT_SUB_APP_PREFS.phone },
     };
     if (typeof window === 'undefined') return fallback;
@@ -1867,9 +1813,6 @@ export class PushNotificationService {
     const map: Record<string, SubAppNotificationId> = {
       '/sms': 'sms',
       '/truecaller': 'truecaller',
-      '/telebirr': 'telebirr',
-      '/dashen': 'dashen',
-      '/telegram': 'telegram',
       '/phone': 'phone',
     };
     return map[norm] || null;
@@ -2566,21 +2509,6 @@ export class PushNotificationService {
         title: 'CBE',
         body: `Dear ${activeHolderName} Account ${activeMaskedAcc} credited with ETB 4,500.00 • Available Balance: ETB 22,950.50`,
         privateBody: 'New Truecaller bank SMS alert.',
-      },
-      telebirr: {
-        title: 'telebirr',
-        body: 'You have received ETB 1,250.00 via telebirr. Your current telebirr balance is ETB 43,115.79.',
-        privateBody: 'New telebirr wallet transaction.',
-      },
-      dashen: {
-        title: 'DashenBank',
-        body: `Dear ${activeFirstName.toUpperCase()}, your account '5502******011' has been credited with ETB 5,000.00. Current Balance: ETB 23,720.00.`,
-        privateBody: 'New Dashen Bank account alert.',
-      },
-      telegram: {
-        title: 'Telegram • CBE Payment',
-        body: 'Payment receipt & SMS deposit confirmation for ETB 3,000.00 received.',
-        privateBody: 'New message in Telegram Simulator.',
       },
       phone: {
         title: 'CBE *889#',

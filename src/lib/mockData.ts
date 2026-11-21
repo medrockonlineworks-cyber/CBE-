@@ -16,7 +16,6 @@ import { calculateCbeFee } from './cbeTariff';
 import { SmsService } from '../services/smsService';
 import { TruecallerService } from '../services/truecallerService';
 import { PhoneCallService } from '../services/phoneCallService';
-import { DashenBankService } from '../services/dashenBankService';
 import { PushNotificationService } from '../services/pushNotificationService';
 import { CrossAppSyncService } from '../services/crossAppSyncService';
 import { 
@@ -2429,26 +2428,7 @@ export class LocalDb {
       console.error('[PhoneCallService] Non-blocking caller account sync error:', callErr);
     }
 
-    // Automatically credit & register inside Dashen Bank if recipient is Dashen or account 550...
-    try {
-      const isDashen = (newTx.recipientBank && newTx.recipientBank.toLowerCase().includes('dashen')) ||
-                       (newTx.recipientAccount && newTx.recipientAccount.replace(/\D/g, '').startsWith('550')) ||
-                       (newTx.recipientAccount && newTx.recipientAccount.replace(/\D/g, '') === '5502877108011');
-      if (isDashen && type !== 'receive') {
-        DashenBankService.receiveIncomingTransfer({
-          amount: newTx.amount,
-          senderName: newTx.senderName || user.name,
-          senderAccount: newTx.senderAccount || user.accountNumber,
-          senderBank: 'Commercial Bank of Ethiopia',
-          reference: newTx.reference || newTx.id,
-          description: newTx.description
-        });
-      }
-    } catch (dashErr) {
-      console.error('[DashenBankService] Non-blocking Dashen sync error:', dashErr);
-    }
-
-    // Immediately push ALL changed CBE & sub-app state (SMS, Truecaller, Phone, Dashen, Telebirr, Telegram) across apps
+    // Immediately push ALL changed CBE & sub-app state (SMS, Truecaller, Phone) across apps
     try {
       void CrossAppSyncService.pushChangedNow();
     } catch {}

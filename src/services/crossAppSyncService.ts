@@ -2,8 +2,7 @@ import { Capacitor } from '@capacitor/core';
 
 /**
  * CrossAppSyncService
- * Keeps CBE Mobile Banking and installed standalone sub-apps (Messages/SMS, Truecaller,
- * Telebirr, Dashen Bank, Telegram, Phone) synchronized across:
+ * Keeps CBE Mobile Banking and installed standalone sub-apps (Messages/SMS, Truecaller, Phone) synchronized across:
  * 1. Direct APNs/FCM Web Push Connection Keys (CBELINK-...) + Service Worker IndexedDB inbox
  *    (100% stateless across Vercel cold starts — works even when Messages is completely closed!)
  * 2. Same-origin tabs/PWAs via BroadcastChannel + localStorage events
@@ -27,11 +26,6 @@ const SYNCED_STORAGE_KEYS = [
   'tana_active_caller_account_id_v2',
   'tana_caller_transactions_v5',
   'cbe_pending_receiver_phone_notifs_v1',
-  'dashen_bank_account_v1',
-  'dashen_bank_transactions_v1',
-  'telebirr_app_state_v2',
-  'telebirr_superapp_wallet_v2',
-  'telegram_simulator_chats_v5',
   'tana_transactions',
   'tana_users',
   'tana_active_user_id',
@@ -97,9 +91,6 @@ export interface CompactSmsPushRecord {
 const VALID_SUB_APPS = new Set([
   'sms',
   'truecaller',
-  'telebirr',
-  'dashen',
-  'telegram',
   'phone',
 ]);
 
@@ -718,7 +709,7 @@ class CrossAppSyncEngine {
   private isStandaloneSubAppPath(): boolean {
     if (typeof window === 'undefined') return false;
     const norm = window.location.pathname.toLowerCase().replace(/\/+$/, '');
-    return ['/sms', '/truecaller', '/telebirr', '/dashen', '/telegram', '/phone'].includes(norm);
+    return ['/sms', '/truecaller', '/phone'].includes(norm);
   }
 
   private getTimestamps(): Record<string, number> {
@@ -800,9 +791,6 @@ class CrossAppSyncEngine {
     let truecallerUpdated = false;
     let tcPopdownCleared = false;
     let phoneUpdated = false;
-    let dashenUpdated = false;
-    let telebirrUpdated = false;
-    let telegramUpdated = false;
     let tanaUpdated = false;
     let activeUserSwitched = false;
 
@@ -849,9 +837,6 @@ class CrossAppSyncEngine {
           ) {
             phoneUpdated = true;
           }
-          if (key.startsWith('dashen_')) dashenUpdated = true;
-          if (key.startsWith('telebirr_')) telebirrUpdated = true;
-          if (key.startsWith('telegram_')) telegramUpdated = true;
           if (
             key === 'tana_transactions' ||
             key === 'tana_users' ||
@@ -902,15 +887,6 @@ class CrossAppSyncEngine {
         }
         if (phoneUpdated) {
           window.dispatchEvent(new CustomEvent('phone_call_updated'));
-        }
-        if (dashenUpdated) {
-          window.dispatchEvent(new CustomEvent('dashen_data_updated'));
-        }
-        if (telebirrUpdated) {
-          window.dispatchEvent(new CustomEvent('telebirr_data_updated'));
-        }
-        if (telegramUpdated) {
-          window.dispatchEvent(new CustomEvent('telegram_data_updated'));
         }
         if (tanaUpdated) {
           window.dispatchEvent(new CustomEvent('tana_data_updated'));
@@ -1104,9 +1080,6 @@ class CrossAppSyncEngine {
     window.addEventListener('cbe_balance_updated', triggerPush);
     window.addEventListener('cbe_accounts_updated', triggerPush);
     window.addEventListener('cbe_account_switched', triggerPush);
-    window.addEventListener('dashen_data_updated', triggerPush);
-    window.addEventListener('telebirr_data_updated', triggerPush);
-    window.addEventListener('telegram_data_updated', triggerPush);
     window.addEventListener('truecaller_updated', triggerPush);
     window.addEventListener('tc_alerts_updated', triggerPush);
     window.addEventListener('tc_account_changed', triggerPush);
@@ -1118,9 +1091,6 @@ class CrossAppSyncEngine {
       window.dispatchEvent(new CustomEvent('sms-updated'));
       window.dispatchEvent(new CustomEvent('tc_alerts_updated'));
       window.dispatchEvent(new CustomEvent('phone_call_updated'));
-      window.dispatchEvent(new CustomEvent('dashen_data_updated'));
-      window.dispatchEvent(new CustomEvent('telebirr_data_updated'));
-      window.dispatchEvent(new CustomEvent('telegram_data_updated'));
       window.dispatchEvent(new CustomEvent('cbe_balance_updated'));
     });
 
