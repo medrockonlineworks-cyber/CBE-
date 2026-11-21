@@ -647,6 +647,12 @@ export const TruecallerService = {
     } catch {}
   },
 
+  getActiveAccount(): TruecallerBankAccount | null {
+    const accounts = this.getAccounts();
+    const activeId = this.getActiveAccountId();
+    return accounts.find((a) => a.id === activeId) || accounts[0] || null;
+  },
+
   getAlerts(): TruecallerAlert[] {
     try {
       const stored = localStorage.getItem(STORAGE_TC_ALERTS_KEY);
@@ -1187,6 +1193,37 @@ export const TruecallerService = {
     );
   },
 
+  syncPopdownToNativeOverlay(alert: TruecallerAlert): void {
+    if (!alert || !alert.id) return;
+    try {
+      const bankLabel =
+        alert.bankKey === 'cbe' || !alert.bankName ? 'CBE' : alert.bankName;
+      const maskedAcc = (
+        alert.maskedAccount || maskTruecallerAccount(alert.fullAccount || '')
+      ).replace(/X/g, '*');
+      const actionVerb = alert.role === 'receiver' ? 'credited with' : 'debited with';
+      const formattedAmt = Number(alert.amount || 0).toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+      const rawTime = (alert.timeString || '').trim();
+      const timeDisplay =
+        rawTime && rawTime.toLowerCase() !== 'now'
+          ? rawTime
+          : formatTruecallerClockTime(alert.timestamp);
+
+      void SubAppInstallService.setActiveTruecallerOverlay({
+        alertId: alert.id,
+        reference: alert.txId || '',
+        bankLabel,
+        actionLine: `Account ${maskedAcc} ${actionVerb}`,
+        amountLine: `ETB ${formattedAmt}`,
+        timeDisplay,
+        showImmediately: false,
+      });
+    } catch {}
+  },
+
   setActivePopdownAlert(
     alert: TruecallerAlert,
     options?: { skipEvent?: boolean; skipPush?: boolean; silent?: boolean }
@@ -1200,6 +1237,8 @@ export const TruecallerService = {
       localStorage.setItem(STORAGE_TC_DISMISSED_POPDOWN_KEY, JSON.stringify(dismissed.slice(-100)));
       localStorage.setItem(STORAGE_TC_ACTIVE_POPDOWN_KEY, JSON.stringify(alert));
     } catch {}
+    // Keep native Android floating overlay payload synchronized so leaving the app NEVER drops the pop-down
+    this.syncPopdownToNativeOverlay(alert);
     if (!options?.skipPush) {
       try {
         void CrossAppSyncService.pushChangedNow([

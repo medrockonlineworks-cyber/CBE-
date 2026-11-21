@@ -84,6 +84,7 @@ export const TruecallerSmsPopdownOverlay: React.FC<TruecallerSmsPopdownOverlayPr
   const [isVisible, setIsVisible] = useState(false);
   const [isMarkedRead, setIsMarkedRead] = useState(false);
   const [showAiBreakdown, setShowAiBreakdown] = useState(false);
+  const [isTakeoverPopdownOpen, setIsTakeoverPopdownOpen] = useState(false);
   const lastChimedIdRef = useRef<string | null>(null);
   const hideAnimTimerRef = useRef<number | null>(null);
 
@@ -108,6 +109,7 @@ export const TruecallerSmsPopdownOverlay: React.FC<TruecallerSmsPopdownOverlayPr
     clearHideAnimTimer();
     setActiveAlert(incoming);
     setIsMarkedRead(Boolean(incoming.read));
+    TruecallerService.syncPopdownToNativeOverlay(incoming);
     requestAnimationFrame(() => {
       setIsVisible(true);
     });
@@ -160,6 +162,15 @@ export const TruecallerSmsPopdownOverlay: React.FC<TruecallerSmsPopdownOverlayPr
       }
     };
 
+    const handleTakeoverState = (ev: Event) => {
+      const detail = (ev as CustomEvent<{ active?: boolean }>).detail;
+      setIsTakeoverPopdownOpen(Boolean(detail?.active));
+    };
+
+    if (activeView !== 'truecaller') {
+      setIsTakeoverPopdownOpen(false);
+    }
+
     window.addEventListener('tc_live_popdown', handleLivePopdown);
     window.addEventListener('tc_popdown_dismissed', handleExplicitDismiss);
     window.addEventListener('tc_alerts_updated', handleExternalSync);
@@ -168,6 +179,7 @@ export const TruecallerSmsPopdownOverlay: React.FC<TruecallerSmsPopdownOverlayPr
     window.addEventListener('cbe_account_switched', handleExternalSync);
     window.addEventListener('cbe_native_truecaller_marked_read', handleExplicitDismiss);
     window.addEventListener('cbe_native_truecaller_dismissed', handleExplicitDismiss);
+    window.addEventListener('tc_takeover_popdown_state', handleTakeoverState);
     window.addEventListener('focus', handleExternalSync);
     document.addEventListener('visibilitychange', handleVisible);
 
@@ -180,6 +192,7 @@ export const TruecallerSmsPopdownOverlay: React.FC<TruecallerSmsPopdownOverlayPr
       window.removeEventListener('cbe_account_switched', handleExternalSync);
       window.removeEventListener('cbe_native_truecaller_marked_read', handleExplicitDismiss);
       window.removeEventListener('cbe_native_truecaller_dismissed', handleExplicitDismiss);
+      window.removeEventListener('tc_takeover_popdown_state', handleTakeoverState);
       window.removeEventListener('focus', handleExternalSync);
       document.removeEventListener('visibilitychange', handleVisible);
       clearHideAnimTimer();
@@ -187,6 +200,7 @@ export const TruecallerSmsPopdownOverlay: React.FC<TruecallerSmsPopdownOverlayPr
   }, [activeView]);
 
   if (!activeAlert) return null;
+  if (activeView === 'truecaller' && isTakeoverPopdownOpen) return null;
 
   const senderLabel =
     activeAlert.bankKey === 'cbe' || !activeAlert.bankName
@@ -222,7 +236,7 @@ export const TruecallerSmsPopdownOverlay: React.FC<TruecallerSmsPopdownOverlayPr
 
   return (
     <div
-      className="fixed inset-x-0 top-0 z-[9999] pointer-events-none flex justify-center px-2.5 pt-[max(env(safe-area-inset-top,0px),10px)]"
+      className="fixed inset-x-0 top-0 z-[9999] pointer-events-none flex justify-center px-2.5 pt-[max(env(safe-area-inset-top,0px),36px)]"
       role="dialog"
       aria-label="Truecaller SMS Alert"
     >

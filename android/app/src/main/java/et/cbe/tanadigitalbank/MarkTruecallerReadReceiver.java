@@ -49,6 +49,8 @@ public class MarkTruecallerReadReceiver extends BroadcastReceiver {
             }
         }
 
+        TruecallerOverlayService.hideAndClearOverlay(context);
+
         if (ACTION_DISMISS.equals(action)) {
             try {
                 SharedPreferences prefs = context.getSharedPreferences(

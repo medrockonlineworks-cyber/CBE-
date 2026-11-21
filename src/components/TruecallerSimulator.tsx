@@ -99,10 +99,12 @@ import {
 } from '../services/truecallerService';
 import { LocalDb } from '../lib/mockData';
 import { Transaction } from '../types';
+import { Capacitor } from '@capacitor/core';
 import { SystemBarsService } from '../services/systemBarsService';
 import { SmsService } from '../services/smsService';
 import { PhoneCallService } from '../services/phoneCallService';
 import { GoogleMessagesService } from '../services/googleMessagesData';
+import { SubAppInstallService } from '../services/subAppInstallService';
 
 interface TruecallerSimulatorProps {
   onBack: () => void;
@@ -609,6 +611,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
   const [showAiBreakdown, setShowAiBreakdown] = useState<boolean>(false);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [hasOverlayPermission, setHasOverlayPermission] = useState<boolean>(() => !Capacitor.isNativePlatform());
 
   // Quick simulate transaction modal
   const [showQuickSimModal, setShowQuickSimModal] = useState<boolean>(false);
@@ -624,7 +627,42 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
   const [simCounterparty, setSimCounterparty] = useState<string>('Abebe Bikila');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const touchStartY = useRef<number>(0);
+
+  // Check native Android "Display over other apps" permission so pop-down stays pinned even after leaving Truecaller
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    let mounted = true;
+    const refreshPermission = async () => {
+      const granted = await SubAppInstallService.canDrawOverlays();
+      if (mounted) setHasOverlayPermission(granted);
+    };
+    void refreshPermission();
+    const onFocusOrVis = () => {
+      if (document.visibilityState === 'visible') {
+        void refreshPermission();
+      }
+    };
+    window.addEventListener('focus', onFocusOrVis);
+    document.addEventListener('visibilitychange', onFocusOrVis);
+    return () => {
+      mounted = false;
+      window.removeEventListener('focus', onFocusOrVis);
+      document.removeEventListener('visibilitychange', onFocusOrVis);
+    };
+  }, []);
+
+  // Coordinate with global TruecallerSmsPopdownOverlay so takeover screen doesn't double-render the card,
+  // while leaving takeover (or leaving Truecaller) hands off immediately without hiding the pop-down.
+  useEffect(() => {
+    const takeoverActive = view === 'takeover' && isPopdownVisible && Boolean(currentAlert);
+    window.dispatchEvent(new CustomEvent('tc_takeover_popdown_state', { detail: { active: takeoverActive } }));
+    if (takeoverActive && currentAlert && !currentAlert.read) {
+      TruecallerService.setActivePopdownAlert(currentAlert, { skipEvent: true, skipPush: true });
+    }
+    return () => {
+      window.dispatchEvent(new CustomEvent('tc_takeover_popdown_state', { detail: { active: false } }));
+    };
+  }, [view, isPopdownVisible, currentAlert]);
 
   // Sync with banking transactions on mount
   useEffect(() => {
@@ -689,13 +727,14 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
     };
   }, []);
 
-  // Handle mobile navigation bar Back button
+  // Handle mobile navigation bar Back button — NEVER hides the pop-down (only explicit X or Mark as read can dismiss it)
   useEffect(() => {
     const handlePhoneBack = () => {
       if (showPickerModal) {
         setShowPickerModal(false);
-      } else if (isPopdownVisible) {
-        setIsPopdownVisible(false);
+      } else if (view === 'takeover') {
+        // Leaving takeover returns to bank thread while keeping the pop-down active in global overlay + native Android overlay
+        setView('bank_thread');
       } else if (view === 'bank_thread') {
         setView('inbox');
       } else {
@@ -704,7 +743,25 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
     };
     window.addEventListener('cbe_phone_back', handlePhoneBack);
     return () => window.removeEventListener('cbe_phone_back', handlePhoneBack);
-  }, [view, showPickerModal, isPopdownVisible, onBack]);
+  }, [view, showPickerModal, onBack]);
+
+  // Sync explicit native overlay/notification Cancel or Mark-as-read back into takeover screen
+  useEffect(() => {
+    const handleExplicitExternalDismiss = () => {
+      const stillActive = TruecallerService.getActivePopdownAlert();
+      if (!stillActive) {
+        setIsPopdownVisible(false);
+      }
+    };
+    window.addEventListener('tc_popdown_dismissed', handleExplicitExternalDismiss);
+    window.addEventListener('cbe_native_truecaller_dismissed', handleExplicitExternalDismiss);
+    window.addEventListener('cbe_native_truecaller_marked_read', handleExplicitExternalDismiss);
+    return () => {
+      window.removeEventListener('tc_popdown_dismissed', handleExplicitExternalDismiss);
+      window.removeEventListener('cbe_native_truecaller_dismissed', handleExplicitExternalDismiss);
+      window.removeEventListener('cbe_native_truecaller_marked_read', handleExplicitExternalDismiss);
+    };
+  }, []);
 
   // Toast notification banner
   const showToast = (msg: string) => {
@@ -712,27 +769,30 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
     setTimeout(() => setToastMessage(null), 2500);
   };
 
-  // Trigger Pop-down alert with animation, audio, and real device Push Notification
+  // Trigger Pop-down alert with animation, audio, persistent state, and real device Push Notification + Native Floating Overlay
   const triggerPopdownAlert = (alert: TruecallerAlert) => {
-    setCurrentAlert(alert);
+    const freshAlert: TruecallerAlert = { ...alert, read: false };
+    setCurrentAlert(freshAlert);
     setIsPopdownVisible(true);
     setIsPopdownAnimating(true);
+    TruecallerService.setActivePopdownAlert(freshAlert, { skipEvent: true });
     if (soundEnabled) {
       playTruecallerChime();
     }
-    const formattedAmt = Number(alert.amount || 0).toLocaleString('en-US', {
+    const formattedAmt = Number(freshAlert.amount || 0).toLocaleString('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
-    const direction = alert.role === 'receiver' ? 'credited with' : 'debited with';
-    const fallbackBody = `Account ${alert.maskedAccount || alert.fullAccount || ''} ${direction} ETB ${formattedAmt}.`;
+    const direction = freshAlert.role === 'receiver' ? 'credited with' : 'debited with';
+    const fallbackBody = `Account ${freshAlert.maskedAccount || freshAlert.fullAccount || ''} ${direction} ETB ${formattedAmt}.`;
     void PushNotificationService.notifySubApp({
       subAppId: 'truecaller',
-      title: `${alert.bankName || 'CBE'} • Truecaller`,
-      body: alert.fullSmsText || alert.summaryText || fallbackBody,
+      title: `${freshAlert.bankName || 'CBE'} • Truecaller`,
+      body: freshAlert.fullSmsText || freshAlert.summaryText || fallbackBody,
       privateBody: 'New Truecaller bank SMS alert.',
-      reference: alert.txId,
-      tag: `cbe-tc-${alert.id}`,
+      reference: freshAlert.txId,
+      tag: `cbe-tc-${freshAlert.id}`,
+      payloadRecord: freshAlert as unknown as Record<string, unknown>,
     });
     setTimeout(() => {
       setIsPopdownAnimating(false);
@@ -1209,6 +1269,16 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
     });
   };
 
+  // Explicit Cancel ('X') — the only way (besides Mark as read) to hide the pop-down
+  const handleDismissPopdown = () => {
+    if (currentAlert) {
+      TruecallerService.dismissPopdownAlert(currentAlert.id);
+    } else {
+      TruecallerService.dismissPopdownAlert(null);
+    }
+    setIsPopdownVisible(false);
+  };
+
   // Mark alert read
   const handleMarkAsRead = () => {
     if (currentAlert) {
@@ -1217,7 +1287,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
       showToast('Marked as read');
       setTimeout(() => {
         setIsPopdownVisible(false);
-      }, 600);
+      }, 450);
     }
   };
 
@@ -2775,6 +2845,26 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
           )}
         </header>
 
+        {/* Native Android "Display over other apps" one-tap permission helper so pop-down stays pinned outside Truecaller */}
+        {Capacitor.isNativePlatform() && !hasOverlayPermission && (
+          <div className="px-3 py-2 bg-[#0066FF]/15 border-b border-[#0066FF]/30 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <BellRing className="w-4 h-4 text-[#0066FF] flex-shrink-0" />
+              <p className={`text-[12px] font-medium leading-tight truncate ${isLightMode ? 'text-slate-800' : 'text-blue-100'}`}>
+                Allow display over other apps to keep pop-down pinned
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                void SubAppInstallService.requestOverlayPermission();
+              }}
+              className="px-3 py-1.5 rounded-full bg-[#0066FF] text-white text-[11.5px] font-bold flex-shrink-0 active:scale-95 transition cursor-pointer"
+            >
+              Enable
+            </button>
+          </div>
+        )}
 
         {/* Conversation Threads List */}
         <div className="flex-1 overflow-y-auto pb-24 divide-y divide-transparent">
@@ -4522,20 +4612,11 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
 
           {/* =============================================================== */}
           {/* TRUECALLER SMS NOTIFICATION POP-DOWN OVERLAY                    */}
-          {/* Zero vertical gap with status bar, matching IMG_20260905_131647_440.jpg */}
+          {/* Stays pinned until explicitly canceled (X) or marked as read.  */}
           {/* =============================================================== */}
           {isPopdownVisible && currentAlert && (
             <div 
-              onTouchStart={(e) => {
-                touchStartY.current = e.touches[0].clientY;
-              }}
-              onTouchEnd={(e) => {
-                const diff = touchStartY.current - e.changedTouches[0].clientY;
-                if (diff > 45) {
-                  setIsPopdownVisible(false);
-                }
-              }}
-              className={`absolute top-0 inset-x-0 z-50 px-2 sm:px-2.5 pointer-events-auto transition-all duration-300 transform ${
+              className={`absolute top-0 inset-x-0 z-50 px-2 sm:px-2.5 pt-[max(env(safe-area-inset-top,0px),36px)] pointer-events-auto transition-all duration-300 transform ${
                 isPopdownAnimating 
                   ? '-translate-y-full opacity-0 scale-95' 
                   : 'translate-y-0 opacity-100 scale-100'
@@ -4568,10 +4649,10 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                       : new Date(currentAlert.timestamp || Date.now()).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}
                   </div>
 
-                  {/* Close 'X' Button */}
+                  {/* Close 'X' Button — explicit cancel */}
                   <button 
                     type="button"
-                    onClick={() => setIsPopdownVisible(false)}
+                    onClick={handleDismissPopdown}
                     className="w-7 h-7 -mr-1 rounded-full hover:bg-white/20 active:scale-90 transition flex items-center justify-center cursor-pointer text-white"
                     title="Dismiss alert"
                   >
@@ -4701,7 +4782,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
           {/* MUST NOT BE SEEN while the popdown message is displayed.       */}
           {/* =============================================================== */}
           <div 
-            className={`absolute inset-x-0 top-2.5 z-20 px-3 sm:px-4 flex items-center justify-center select-none transition-all duration-200 ${
+            className={`absolute inset-x-0 top-[max(env(safe-area-inset-top,0px),36px)] z-20 px-3 sm:px-4 flex items-center justify-center select-none transition-all duration-200 ${
               isPopdownVisible 
                 ? 'opacity-0 pointer-events-none invisible' 
                 : 'opacity-100 pointer-events-auto visible'

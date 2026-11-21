@@ -13,6 +13,7 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="et.cbe.truecaller.ACTION_INCOMING_ALERT" />
+                <action android:name="et.cbe.truecaller.ACTION_CLEAR_OVERLAY" />
             </intent-filter>
         </receiver>
 

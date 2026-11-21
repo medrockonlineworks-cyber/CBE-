@@ -49,6 +49,18 @@ interface SubAppShortcutPluginInterface {
     dismissedIdsJson?: string;
   }>;
   clearTruecallerNotifications(): Promise<{ cleared: boolean }>;
+  canDrawOverlays(): Promise<{ granted: boolean }>;
+  requestOverlayPermission(): Promise<{ opened: boolean; alreadyGranted?: boolean; error?: string }>;
+  setActiveTruecallerOverlay(options: {
+    alertId: string;
+    reference?: string;
+    bankLabel: string;
+    actionLine: string;
+    amountLine: string;
+    timeDisplay: string;
+    showImmediately?: boolean;
+  }): Promise<{ saved: boolean; canDrawOverlays?: boolean }>;
+  hideTruecallerOverlay(): Promise<{ hidden: boolean }>;
   pinSubApp(options: {
     subAppId: string;
     label: string;
@@ -255,8 +267,72 @@ export class SubAppInstallService {
     }
   }
 
+  public static async canDrawOverlays(): Promise<boolean> {
+    if (!Capacitor.isNativePlatform()) return true;
+    try {
+      const res = await SubAppShortcut.canDrawOverlays();
+      return Boolean(res?.granted);
+    } catch {
+      return false;
+    }
+  }
+
+  public static async requestOverlayPermission(): Promise<{ opened: boolean; alreadyGranted?: boolean }> {
+    if (!Capacitor.isNativePlatform()) {
+      return { opened: false, alreadyGranted: true };
+    }
+    try {
+      const res = await SubAppShortcut.requestOverlayPermission();
+      return {
+        opened: Boolean(res?.opened),
+        alreadyGranted: Boolean(res?.alreadyGranted),
+      };
+    } catch {
+      return { opened: false };
+    }
+  }
+
+  public static async setActiveTruecallerOverlay(params: {
+    alertId: string;
+    reference?: string;
+    bankLabel: string;
+    actionLine: string;
+    amountLine: string;
+    timeDisplay: string;
+    showImmediately?: boolean;
+  }): Promise<void> {
+    if (!Capacitor.isNativePlatform()) return;
+    try {
+      await SubAppShortcut.setActiveTruecallerOverlay({
+        alertId: params.alertId,
+        reference: params.reference || '',
+        bankLabel: params.bankLabel || 'CBE',
+        actionLine: params.actionLine,
+        amountLine: params.amountLine,
+        timeDisplay: params.timeDisplay || 'Now',
+        showImmediately: Boolean(params.showImmediately),
+      });
+    } catch {
+      // Safe fallback on older APKs
+    }
+  }
+
+  public static async hideNativeTruecallerOverlay(): Promise<void> {
+    if (!Capacitor.isNativePlatform()) return;
+    try {
+      await SubAppShortcut.hideTruecallerOverlay();
+    } catch {
+      // Safe fallback on older APKs
+    }
+  }
+
   public static async clearNativeTruecallerNotifications(): Promise<void> {
     if (!Capacitor.isNativePlatform()) return;
+    try {
+      await SubAppShortcut.hideTruecallerOverlay();
+    } catch {
+      // Safe fallback on older APKs
+    }
     try {
       await SubAppShortcut.clearTruecallerNotifications();
     } catch {

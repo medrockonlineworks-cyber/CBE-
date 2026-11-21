@@ -4,8 +4,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
 import androidx.core.content.pm.ShortcutInfoCompat;
 import androidx.core.content.pm.ShortcutManagerCompat;
 import androidx.core.graphics.drawable.IconCompat;
@@ -274,9 +277,107 @@ public class SubAppShortcutPlugin extends Plugin {
     }
 
     @PluginMethod
+    public void canDrawOverlays(PluginCall call) {
+        JSObject ret = new JSObject();
+        ret.put("granted", TruecallerOverlayService.canDrawOverlays(getContext()));
+        call.resolve(ret);
+    }
+
+    @PluginMethod
+    public void requestOverlayPermission(PluginCall call) {
+        Context context = getContext();
+        JSObject ret = new JSObject();
+        if (context == null) {
+            ret.put("opened", false);
+            call.resolve(ret);
+            return;
+        }
+        if (TruecallerOverlayService.canDrawOverlays(context)) {
+            ret.put("opened", false);
+            ret.put("alreadyGranted", true);
+            call.resolve(ret);
+            return;
+        }
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                Intent intent = new Intent(
+                    Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    Uri.parse("package:" + context.getPackageName())
+                );
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
+                ret.put("opened", true);
+                call.resolve(ret);
+                return;
+            }
+        } catch (Exception e) {
+            ret.put("error", e.getMessage());
+        }
+        ret.put("opened", false);
+        call.resolve(ret);
+    }
+
+    @PluginMethod
+    public void setActiveTruecallerOverlay(PluginCall call) {
+        Context context = getContext();
+        JSObject ret = new JSObject();
+        if (context == null) {
+            ret.put("saved", false);
+            call.resolve(ret);
+            return;
+        }
+        String alertId = call.getString("alertId", "");
+        String reference = call.getString("reference", "");
+        String bankLabel = call.getString("bankLabel", "CBE");
+        String actionLine = call.getString("actionLine", "");
+        String amountLine = call.getString("amountLine", "ETB 0.00");
+        String timeDisplay = call.getString("timeDisplay", "Now");
+        boolean showImmediately = Boolean.TRUE.equals(call.getBoolean("showImmediately", false));
+
+        TruecallerOverlayService.saveOverlayPayload(
+            context,
+            alertId,
+            reference,
+            bankLabel,
+            actionLine,
+            amountLine,
+            timeDisplay
+        );
+
+        boolean canDraw = TruecallerOverlayService.canDrawOverlays(context);
+        if (canDraw && (showImmediately || !MainActivity.isActivityInForeground())) {
+            TruecallerOverlayService.showOverlay(
+                context,
+                alertId,
+                reference,
+                bankLabel,
+                actionLine,
+                amountLine,
+                timeDisplay
+            );
+        }
+
+        ret.put("saved", true);
+        ret.put("canDrawOverlays", canDraw);
+        call.resolve(ret);
+    }
+
+    @PluginMethod
+    public void hideTruecallerOverlay(PluginCall call) {
+        Context context = getContext();
+        if (context != null) {
+            TruecallerOverlayService.hideAndClearOverlay(context);
+        }
+        JSObject ret = new JSObject();
+        ret.put("hidden", true);
+        call.resolve(ret);
+    }
+
+    @PluginMethod
     public void clearTruecallerNotifications(PluginCall call) {
         Context context = getContext();
         if (context != null) {
+            TruecallerOverlayService.hideAndClearOverlay(context);
             try {
                 android.content.SharedPreferences prefs = context.getSharedPreferences(
                     IncomingSubAppReceiver.PREFS_NAME,
@@ -295,6 +396,22 @@ public class SubAppShortcutPlugin extends Plugin {
                 }
                 prefs.edit().putString(IncomingSubAppReceiver.KEY_ACTIVE_TC_NOTIF_IDS, "[]").apply();
             } catch (Exception ignored) {
+            }
+
+            // If CBE APK dismissed/marked read, also sync-clear standalone Truecaller APK's floating overlay & notification
+            if (!"et.cbe.truecaller".equals(context.getPackageName())
+                && checkPackageInstalled(context, "et.cbe.truecaller")) {
+                try {
+                    Intent clearIntent = new Intent(IncomingSubAppReceiver.ACTION_TRUECALLER_CLEAR_OVERLAY);
+                    clearIntent.setComponent(new android.content.ComponentName(
+                        "et.cbe.truecaller",
+                        "et.cbe.tanadigitalbank.IncomingSubAppReceiver"
+                    ));
+                    clearIntent.setPackage("et.cbe.truecaller");
+                    clearIntent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+                    context.sendBroadcast(clearIntent);
+                } catch (Exception ignored) {
+                }
             }
         }
         JSObject ret = new JSObject();

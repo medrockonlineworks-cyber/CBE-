@@ -38,6 +38,7 @@ import org.json.JSONObject;
 public class IncomingSubAppReceiver extends BroadcastReceiver {
 
     public static final String ACTION_TRUECALLER_ALERT = "et.cbe.truecaller.ACTION_INCOMING_ALERT";
+    public static final String ACTION_TRUECALLER_CLEAR_OVERLAY = "et.cbe.truecaller.ACTION_CLEAR_OVERLAY";
     public static final String ACTION_PHONE_ALERT = "et.cbe.phone.ACTION_INCOMING_ALERT";
 
     public static final String PREFS_NAME = "cbe_subapp_bridge_prefs";
@@ -57,6 +58,10 @@ public class IncomingSubAppReceiver extends BroadcastReceiver {
         if (action == null) return;
 
         String flavorView = BuildConfig.DEFAULT_START_VIEW != null ? BuildConfig.DEFAULT_START_VIEW : "";
+        if (ACTION_TRUECALLER_CLEAR_OVERLAY.equals(action) && "truecaller".equals(flavorView)) {
+            clearAllTruecallerOverlaysAndNotifications(context);
+            return;
+        }
         String subAppId;
         if (ACTION_TRUECALLER_ALERT.equals(action) && "truecaller".equals(flavorView)) {
             subAppId = "truecaller";
@@ -167,6 +172,23 @@ public class IncomingSubAppReceiver extends BroadcastReceiver {
         }
     }
 
+    private void clearAllTruecallerOverlaysAndNotifications(Context context) {
+        TruecallerOverlayService.hideAndClearOverlay(context);
+        try {
+            SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            JSONArray activeIds = new JSONArray(prefs.getString(KEY_ACTIVE_TC_NOTIF_IDS, "[]"));
+            NotificationManagerCompat nm = NotificationManagerCompat.from(context);
+            for (int i = 0; i < activeIds.length(); i++) {
+                int id = activeIds.optInt(i, -1);
+                if (id > 0) {
+                    nm.cancel(id);
+                }
+            }
+            prefs.edit().putString(KEY_ACTIVE_TC_NOTIF_IDS, "[]").apply();
+        } catch (Exception ignored) {
+        }
+    }
+
     private void postNativeNotification(
         Context context,
         String subAppId,
@@ -177,56 +199,19 @@ public class IncomingSubAppReceiver extends BroadcastReceiver {
         String payloadJson
     ) {
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
-                    != PackageManager.PERMISSION_GRANTED) {
-                    return;
-                }
-            }
-
-            ensureChannel(context, subAppId);
             boolean isTc = "truecaller".equals(subAppId);
-            String channelId = isTc ? CHANNEL_TRUECALLER : CHANNEL_PHONE;
 
-            int notifId = Math.abs((alertId + ":" + System.currentTimeMillis()).hashCode());
-            if (notifId == 0) {
-                notifId = (int) (System.currentTimeMillis() % 800000) + 200;
-            }
-
-            Intent openIntent = new Intent(context, MainActivity.class);
-            openIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            openIntent.putExtra(MainActivity.EXTRA_SUBAPP_VIEW, subAppId);
-            PendingIntent contentPi = PendingIntent.getActivity(
-                context,
-                notifId,
-                openIntent,
-                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
-            );
-
-            // Uses ONLY the standalone APK's own app icon + status bar icon (zero CBE logo)
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelId)
-                .setSmallIcon(isTc ? R.drawable.ic_stat_truecaller : R.drawable.ic_stat_phone)
-                .setColor(Color.parseColor(isTc ? "#0066FF" : "#16A34A"))
-                .setContentTitle(sender)
-                .setContentText(body)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
-                .setCategory(isTc ? NotificationCompat.CATEGORY_MESSAGE : NotificationCompat.CATEGORY_CALL)
-                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                .setAutoCancel(!isTc)
-                .setOngoing(isTc)
-                .setDefaults(NotificationCompat.DEFAULT_ALL)
-                .setWhen(System.currentTimeMillis())
-                .setShowWhen(true)
-                .setContentIntent(contentPi);
+            // Parse Truecaller structured card details FIRST so the persistent floating overlay
+            // works even if system notification permissions are muted.
+            String bankLabel = (sender == null || sender.trim().isEmpty()) ? "CBE" : sender.trim();
+            String maskedAccount = "1********4747";
+            boolean isReceiver = true;
+            String amountFormatted = "0.00";
+            String timeDisplay = formatNowClock();
+            String actionLine = "";
+            String amountLine = "";
 
             if (isTc) {
-                // Parse structured Truecaller alert fields for exact Truecaller blue SMS pop-down card
-                String bankLabel = (sender == null || sender.trim().isEmpty()) ? "CBE" : sender.trim();
-                String maskedAccount = "1********4747";
-                boolean isReceiver = true;
-                String amountFormatted = "0.00";
-                String timeDisplay = formatNowClock();
-
                 try {
                     if (payloadJson != null && !payloadJson.trim().isEmpty()) {
                         JSONObject obj = new JSONObject(payloadJson);
@@ -284,9 +269,74 @@ public class IncomingSubAppReceiver extends BroadcastReceiver {
                     }
                 }
 
-                String actionLine = "Account " + maskedAccount + (isReceiver ? " credited with" : " debited with");
-                String amountLine = "ETB " + amountFormatted;
+                actionLine = "Account " + maskedAccount + (isReceiver ? " credited with" : " debited with");
+                amountLine = "ETB " + amountFormatted;
 
+                // Persist active floating overlay payload; if app is not foregrounded, display floating overlay immediately
+                TruecallerOverlayService.saveOverlayPayload(
+                    context,
+                    alertId,
+                    reference,
+                    bankLabel,
+                    actionLine,
+                    amountLine,
+                    timeDisplay
+                );
+                if (!MainActivity.isActivityInForeground() && TruecallerOverlayService.canDrawOverlays(context)) {
+                    TruecallerOverlayService.showOverlay(
+                        context,
+                        alertId,
+                        reference,
+                        bankLabel,
+                        actionLine,
+                        amountLine,
+                        timeDisplay
+                    );
+                }
+            }
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                    return;
+                }
+            }
+
+            ensureChannel(context, subAppId);
+            String channelId = isTc ? CHANNEL_TRUECALLER : CHANNEL_PHONE;
+
+            int notifId = Math.abs((alertId + ":" + System.currentTimeMillis()).hashCode());
+            if (notifId == 0) {
+                notifId = (int) (System.currentTimeMillis() % 800000) + 200;
+            }
+
+            Intent openIntent = new Intent(context, MainActivity.class);
+            openIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            openIntent.putExtra(MainActivity.EXTRA_SUBAPP_VIEW, subAppId);
+            PendingIntent contentPi = PendingIntent.getActivity(
+                context,
+                notifId,
+                openIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+            );
+
+            // Uses ONLY the standalone APK's own app icon + status bar icon (zero CBE logo)
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, channelId)
+                .setSmallIcon(isTc ? R.drawable.ic_stat_truecaller : R.drawable.ic_stat_phone)
+                .setColor(Color.parseColor(isTc ? "#0066FF" : "#16A34A"))
+                .setContentTitle(sender)
+                .setContentText(body)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setCategory(isTc ? NotificationCompat.CATEGORY_MESSAGE : NotificationCompat.CATEGORY_CALL)
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .setAutoCancel(!isTc)
+                .setOngoing(isTc)
+                .setDefaults(NotificationCompat.DEFAULT_ALL)
+                .setWhen(System.currentTimeMillis())
+                .setShowWhen(true)
+                .setContentIntent(contentPi);
+
+            if (isTc) {
                 Intent markReadIntent = new Intent(context, MarkTruecallerReadReceiver.class);
                 markReadIntent.setAction(MarkTruecallerReadReceiver.ACTION_MARK_READ);
                 markReadIntent.putExtra("notifId", notifId);

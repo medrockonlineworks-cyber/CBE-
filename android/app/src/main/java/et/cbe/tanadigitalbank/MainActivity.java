@@ -67,6 +67,11 @@ public class MainActivity extends BridgeActivity {
     public static final String EXTRA_SUBAPP_VIEW = "subAppView";
     private static volatile String pendingSubAppView = null;
     private static volatile java.lang.ref.WeakReference<MainActivity> activeInstanceRef = null;
+    private static volatile boolean isInForeground = false;
+
+    public static boolean isActivityInForeground() {
+        return isInForeground;
+    }
 
     private static String getDefaultFlavorStartView() {
         if (BuildConfig.DEFAULT_START_VIEW != null && !BuildConfig.DEFAULT_START_VIEW.trim().isEmpty()) {
@@ -211,12 +216,36 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onResume() {
         super.onResume();
+        isInForeground = true;
         activeInstanceRef = new java.lang.ref.WeakReference<>(this);
         applyEdgeToEdge();
+        // While inside the app, WebView renders the interactive pop-down; pause duplicate native overlay without clearing it
+        TruecallerOverlayService.pauseVisualOverlayOnly(this);
+    }
+
+    @Override
+    protected void onUserLeaveHint() {
+        super.onUserLeaveHint();
+        // User is leaving the app (Home / Recent Apps / switching apps) — immediately pin floating overlay if active
+        if (TruecallerOverlayService.hasActiveOverlayPayload(this)
+            && TruecallerOverlayService.canDrawOverlays(this)) {
+            TruecallerOverlayService.ensureVisibleFromPrefs(this);
+        }
+    }
+
+    @Override
+    public void onStop() {
+        isInForeground = false;
+        super.onStop();
+        if (TruecallerOverlayService.hasActiveOverlayPayload(this)
+            && TruecallerOverlayService.canDrawOverlays(this)) {
+            TruecallerOverlayService.ensureVisibleFromPrefs(this);
+        }
     }
 
     @Override
     public void onDestroy() {
+        isInForeground = false;
         java.lang.ref.WeakReference<MainActivity> ref = activeInstanceRef;
         if (ref != null && ref.get() == this) {
             activeInstanceRef = null;
