@@ -178,7 +178,7 @@ const TelebirrSuperAppContent: React.FC<TelebirrSuperAppContentProps> = ({
       </main>
 
       {/* 3. FIXED BOTTOM CONTROLS CONTAINER: Telebirr Bottom Nav */}
-      <div className="w-full shrink-0 flex flex-col z-40 bg-[#7BBF18] pb-[1px]">
+      <div className="w-full shrink-0 flex flex-col z-40 bg-[#7BBF18]">
         {/* Telebirr 5 Tabs Navigation with floating Scan QR button */}
         {activeSubView !== '/qr-scanner' && (
           <TelebirrBottomNav 

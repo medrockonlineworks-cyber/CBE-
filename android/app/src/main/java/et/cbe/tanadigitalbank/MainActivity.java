@@ -7,10 +7,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowInsetsController;
 import android.view.WindowManager;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
-import androidx.core.view.WindowInsetsCompat;
 import com.getcapacitor.BridgeActivity;
 
 /**
@@ -104,21 +101,12 @@ public class MainActivity extends BridgeActivity {
         });
     }
 
-    private void setupBottomSafeAreaInsets() {
+    private void clearBottomContentPadding() {
         try {
             View contentView = findViewById(android.R.id.content);
-            if (contentView == null) return;
-            contentView.setBackgroundColor(currentNavBarColor);
-            ViewCompat.setOnApplyWindowInsetsListener(contentView, (v, windowInsets) -> {
-                Insets navAndIme = windowInsets.getInsets(
-                    WindowInsetsCompat.Type.navigationBars()
-                        | WindowInsetsCompat.Type.ime()
-                        | WindowInsetsCompat.Type.displayCutout()
-                );
-                v.setPadding(navAndIme.left, 0, navAndIme.right, navAndIme.bottom);
-                return windowInsets;
-            });
-            ViewCompat.requestApplyInsets(contentView);
+            if (contentView != null) {
+                contentView.setPadding(0, 0, 0, 0);
+            }
         } catch (Exception ignored) {
         }
     }
@@ -287,7 +275,7 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(SubAppShortcutPlugin.class);
         super.onCreate(savedInstanceState);
         applyEdgeToEdge();
-        setupBottomSafeAreaInsets();
+        clearBottomContentPadding();
         String defaultView = getDefaultFlavorStartView();
         if (defaultView != null && pendingSubAppView == null) {
             pendingSubAppView = defaultView;

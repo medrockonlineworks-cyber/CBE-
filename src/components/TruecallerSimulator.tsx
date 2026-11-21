@@ -3130,7 +3130,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
           </div>
 
           {/* Non-replyable sender footer message */}
-          <div className="w-full bg-black text-center text-[12px] text-[#8e9aa8] pt-1 pb-[1px] select-none pointer-events-auto">
+          <div className="w-full bg-black text-center text-[12px] text-[#8e9aa8] pt-1 select-none pointer-events-auto">
             Replying is not supported by this sender
           </div>
         </div>

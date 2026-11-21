@@ -143,7 +143,7 @@ export const TelebirrBottomNav: React.FC<TelebirrBottomNavProps> = ({
         <nav
           id="telebirr-bottom-bar"
           aria-label="Telebirr Navigation"
-          className="w-full bg-[#7BBF18] px-2 pt-1.5 pb-[1px] flex justify-around items-center border-t border-white/10"
+          className="w-full bg-[#7BBF18] px-2 pt-1.5 flex justify-around items-center border-t border-white/10"
         >
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;

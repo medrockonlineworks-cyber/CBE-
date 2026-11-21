@@ -1109,7 +1109,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         {!hideUiElements && (
           <div 
             id="cbe-receipt-bottom-actions-container"
-            className="bg-white px-4 sm:px-5 pb-[1px] pt-2.5 space-y-2.5 flex-shrink-0 z-20 select-none border-t border-gray-100/80 shadow-[0_-4px_12px_rgba(0,0,0,0.03)]"
+            className="bg-white px-4 sm:px-5 pt-2.5 space-y-2.5 flex-shrink-0 z-20 select-none border-t border-gray-100/80 shadow-[0_-4px_12px_rgba(0,0,0,0.03)]"
           >
             {/* 3 Action Buttons matching exact app icons */}
             <div className="flex items-center justify-around px-3 text-black">

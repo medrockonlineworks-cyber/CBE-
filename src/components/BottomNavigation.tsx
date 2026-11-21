@@ -101,8 +101,8 @@ export const BottomNavigation: React.FC<BottomNavigationProps> = ({
         aria-label="Main Navigation"
         className={`w-full pointer-events-auto bg-white border-t border-gray-100/50 px-6 select-none shrink-0 flex justify-between items-center ${
           isIPhone 
-            ? 'pt-1.5 pb-[1px]' 
-            : 'pt-2 pb-[1px]'
+            ? 'pt-1.5 pb-0'
+            : 'pt-2 pb-0'
         }`}
       >
         {/* Item 1: Home */}
