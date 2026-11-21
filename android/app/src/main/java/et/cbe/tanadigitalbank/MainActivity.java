@@ -12,108 +12,18 @@ import com.getcapacitor.BridgeActivity;
 
 /**
  * MainActivity
- * Enforces edge-to-edge top rendering behind the status bar while safely insetting
- * the bottom navigation bar & IME so no screen, footer, tab bar, or FAB ever overlaps
- * the device's system navigation bar.
+ * Enforces true edge-to-edge full-screen rendering on Android so the application
+ * extends seamlessly under both the status bar and navigation bar.
  */
 public class MainActivity extends BridgeActivity {
 
-    private int currentNavBarColor = Color.WHITE;
-    private boolean currentNavBarDark = false;
-    private boolean navBarInitialized = false;
-
-    private void initDefaultNavBarForFlavor() {
-        if (navBarInitialized) return;
-        navBarInitialized = true;
-        String defaultView = getDefaultFlavorStartView();
-        if ("sms".equals(defaultView)) {
-            currentNavBarColor = Color.parseColor("#121212");
-            currentNavBarDark = true;
-        } else if ("truecaller".equals(defaultView) || "phone".equals(defaultView)) {
-            currentNavBarColor = Color.BLACK;
-            currentNavBarDark = true;
-        } else {
-            currentNavBarColor = Color.WHITE;
-            currentNavBarDark = false;
-        }
-    }
-
-    private void applyNavigationBarAppearance(Window window, int color, boolean isDarkBackground) {
-        if (window == null) return;
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                window.setNavigationBarColor(color);
-            }
-            View contentView = findViewById(android.R.id.content);
-            if (contentView != null) {
-                contentView.setBackgroundColor(color);
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                WindowInsetsController controller = window.getInsetsController();
-                if (controller != null) {
-                    if (isDarkBackground) {
-                        controller.setSystemBarsAppearance(
-                            0,
-                            WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
-                        );
-                    } else {
-                        controller.setSystemBarsAppearance(
-                            WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
-                            WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
-                        );
-                    }
-                }
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                View decorView = window.getDecorView();
-                if (decorView != null) {
-                    int flags = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                              | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
-                    if (!isDarkBackground) {
-                        flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
-                    }
-                    decorView.setSystemUiVisibility(flags);
-                }
-            }
-        } catch (Exception ignored) {
-        }
-    }
-
     public static void updateNavigationBarStyle(String hexColor, boolean isDarkBackground) {
-        java.lang.ref.WeakReference<MainActivity> ref = activeInstanceRef;
-        MainActivity act = ref != null ? ref.get() : null;
-        if (act == null) return;
-        final int parsedColor;
-        int fallback = isDarkBackground ? Color.parseColor("#121212") : Color.WHITE;
-        int tempColor = fallback;
-        try {
-            if (hexColor != null && !hexColor.trim().isEmpty()) {
-                tempColor = Color.parseColor(hexColor.trim());
-            }
-        } catch (Exception ignored) {
-            tempColor = fallback;
-        }
-        parsedColor = tempColor;
-        act.runOnUiThread(() -> {
-            act.currentNavBarColor = parsedColor;
-            act.currentNavBarDark = isDarkBackground;
-            act.navBarInitialized = true;
-            act.applyNavigationBarAppearance(act.getWindow(), parsedColor, isDarkBackground);
-        });
-    }
-
-    private void clearBottomContentPadding() {
-        try {
-            View contentView = findViewById(android.R.id.content);
-            if (contentView != null) {
-                contentView.setPadding(0, 0, 0, 0);
-            }
-        } catch (Exception ignored) {
-        }
+        // Kept as a no-op compatibility hook for existing JS bridge calls;
+        // navigation bar stays transparent edge-to-edge as in the original design.
     }
 
     private void applyEdgeToEdge() {
         try {
-            initDefaultNavBarForFlavor();
             Window window = getWindow();
             if (window == null) return;
 
@@ -122,6 +32,7 @@ public class MainActivity extends BridgeActivity {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
                 window.setStatusBarColor(Color.TRANSPARENT);
+                window.setNavigationBarColor(Color.TRANSPARENT);
             }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -133,13 +44,21 @@ public class MainActivity extends BridgeActivity {
                 WindowInsetsController controller = window.getInsetsController();
                 if (controller != null) {
                     controller.setSystemBarsAppearance(
-                        0,
+                        WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
                         WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
+                            | WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
                     );
                 }
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                View decorView = window.getDecorView();
+                if (decorView != null) {
+                    int flags = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                              | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                              | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                              | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+                    decorView.setSystemUiVisibility(flags);
+                }
             }
-
-            applyNavigationBarAppearance(window, currentNavBarColor, currentNavBarDark);
         } catch (Exception e) {
             // Guard against vendor quirks
         }
@@ -275,7 +194,6 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(SubAppShortcutPlugin.class);
         super.onCreate(savedInstanceState);
         applyEdgeToEdge();
-        clearBottomContentPadding();
         String defaultView = getDefaultFlavorStartView();
         if (defaultView != null && pendingSubAppView == null) {
             pendingSubAppView = defaultView;

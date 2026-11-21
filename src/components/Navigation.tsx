@@ -101,8 +101,8 @@ export default function Navigation({
         aria-label="Main Navigation"
         className={`w-full pointer-events-auto bg-white border-t border-gray-100/50 px-6 select-none shrink-0 flex justify-between items-center ${
           isIPhone 
-            ? 'pt-1.5 pb-0'
-            : 'pt-2 pb-0'
+            ? 'pt-1.5 pb-[max(env(safe-area-inset-bottom,0px),4px)]'
+            : 'pt-2 pb-[max(env(safe-area-inset-bottom,0px),10px)]'
         }`}
       >
         {/* Item 1: Home */}

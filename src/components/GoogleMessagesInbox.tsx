@@ -264,7 +264,7 @@ export default function GoogleMessagesInbox({
       </div>
 
       {/* 🚀 Floating Action Buttons (Right-aligned matching Android Google Messages) */}
-      <div className="fixed bottom-3 right-4 flex flex-col items-end space-y-3 z-40">
+      <div className="fixed bottom-6 right-4 flex flex-col items-end space-y-3 z-40">
         {/* Gemini AI Sparkle Button */}
         <button
           onClick={() => setShowGeminiModal(true)}

@@ -271,7 +271,7 @@ export const AppleMessagesThread: React.FC<AppleMessagesThreadProps> = ({
       </div>
 
       {/* 4. Fixed Bottom Bar (+ button and Text Message input pill matching IMG_1139) */}
-      <div className="fixed bottom-0 inset-x-0 bg-black px-3 pt-2 z-30 flex items-center gap-2 border-t border-[#1c1c1e]">
+      <div className="fixed bottom-0 inset-x-0 bg-black px-3 pt-2 pb-[max(env(safe-area-inset-bottom,0px),8px)] z-30 flex items-center gap-2 border-t border-[#1c1c1e]">
         {/* Circular Plus Button */}
         <button
           type="button"

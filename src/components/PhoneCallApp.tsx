@@ -1541,7 +1541,7 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
 
       {/* 5. Keypad Overlay Sheet (Matching Screenshot_20260906-121622.png) */}
       {isKeypadOpen && (
-        <div className="w-full bg-black border-t border-neutral-900/80 px-4 pt-1 shrink-0 z-20 animate-in slide-in-from-bottom-6 duration-200">
+        <div className="w-full bg-black border-t border-neutral-900/80 px-4 pt-1 pb-[max(env(safe-area-inset-bottom,0px),8px)] shrink-0 z-20 animate-in slide-in-from-bottom-6 duration-200">
           
           {/* Dialed Number Display (if any) */}
           {dialedNumber && (
@@ -1734,7 +1734,7 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
 
       {/* Floating Keypad Open Button when collapsed */}
       {!isKeypadOpen && (
-        <div className="absolute bottom-16 right-4 z-20">
+        <div className="absolute bottom-20 right-4 z-20">
           <button 
             type="button"
             onClick={() => setIsKeypadOpen(true)}
@@ -1751,7 +1751,7 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
       )}
 
       {/* 6. Bottom Navigation Bar (Recents & Contacts matching Screenshot 1) */}
-      <div className="w-full bg-black border-t border-neutral-900 px-8 pt-1.5 flex items-center justify-around shrink-0 z-20">
+      <div className="w-full bg-black border-t border-neutral-900 px-8 pt-1.5 pb-[max(env(safe-area-inset-bottom,0px),8px)] flex items-center justify-around shrink-0 z-20">
         {/* Recents: Blue filled circular badge with white clock inside */}
         <button 
           onClick={() => setActiveTab('recents')}

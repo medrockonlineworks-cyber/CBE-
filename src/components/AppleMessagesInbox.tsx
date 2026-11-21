@@ -160,7 +160,7 @@ export const AppleMessagesInbox: React.FC<AppleMessagesInboxProps> = ({
       </div>
 
       {/* 5. Fixed Bottom Navigation Bar (Pill Search Bar + Compose Circle Button) */}
-      <div className="fixed bottom-0 inset-x-0 bg-black/90 backdrop-blur-xl px-4 pt-2 z-30 flex items-center justify-between gap-3 border-t border-white/5">
+      <div className="fixed bottom-0 inset-x-0 bg-black/90 backdrop-blur-xl px-4 pt-2 pb-[max(env(safe-area-inset-bottom,0px),8px)] z-30 flex items-center justify-between gap-3 border-t border-white/5">
         {/* Search Pill */}
         <div className="flex-1 bg-[#1c1c1e] border border-[#2c2c2e]/60 rounded-full px-4 py-2 flex items-center gap-2.5 transition-colors">
           <Search className="w-4 h-4 text-[#8e8e93] shrink-0" />
