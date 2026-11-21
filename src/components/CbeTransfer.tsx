@@ -324,6 +324,11 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
       }
     }
 
+    // Dismiss any OS soft keyboard before showing the in-app PIN confirmation keypad
+    try {
+      (document.activeElement as HTMLElement | null)?.blur?.();
+    } catch {}
+
     // Open the PIN confirmation bottom sheet
     setPin('');
     setPinError('');
@@ -1006,7 +1011,7 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
       {showPinSheet && (
         <div className="fixed inset-0 z-[130] bg-black/50 backdrop-blur-2xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
           <div 
-            className="bg-white rounded-t-[32px] sm:rounded-3xl pt-3 pb-6 px-5 max-w-sm w-full shadow-2xl border border-gray-100 flex flex-col animate-in slide-in-from-bottom-6 duration-200"
+            className="bg-white rounded-t-[32px] sm:rounded-3xl pt-3 pb-[max(env(safe-area-inset-bottom,0px),60px)] sm:pb-6 px-5 max-w-sm w-full shadow-2xl border border-gray-100 flex flex-col animate-in slide-in-from-bottom-6 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             
@@ -1122,22 +1127,24 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
                 0
               </button>
 
-              {/* Bottom Row Right: Checkmark ✓ Right Icon */}
+              {/* Bottom Row Right: Checkmark ✓ Right Icon — solid CBE purple when all 6 digits are filled */}
               <button
                 id="pin-btn-submit-right-icon"
                 type="button"
                 disabled={isSubmitting}
                 onClick={handleConfirmPin}
-                className={`h-12 bg-gray-100/80 hover:bg-gray-200/80 active:bg-gray-300/80 active:scale-95 rounded-2xl flex items-center justify-center transition cursor-pointer select-none ${
-                  pin.length === 6 ? 'text-[#70189F]' : 'text-gray-400'
+                className={`h-12 active:scale-95 rounded-2xl flex items-center justify-center transition-all duration-150 cursor-pointer select-none ${
+                  pin.length === 6
+                    ? 'bg-[#70189F] hover:bg-[#5e1385] active:bg-[#4e0f70] text-white shadow-md shadow-purple-900/25'
+                    : 'bg-gray-100/80 hover:bg-gray-200/80 active:bg-gray-300/80 text-gray-400'
                 }`}
                 title="Confirm PIN & View Receipt"
                 aria-label="Confirm PIN"
               >
                 {isSubmitting ? (
-                  <Loader2 className="w-5 h-5 animate-spin text-[#70189F]" />
+                  <Loader2 className={`w-5 h-5 animate-spin ${pin.length === 6 ? 'text-white' : 'text-[#70189F]'}`} />
                 ) : (
-                  <Check className={`w-6 h-6 stroke-[2.5] ${pin.length === 6 ? 'text-[#70189F]' : 'text-gray-400'}`} />
+                  <Check className={`w-6 h-6 stroke-[2.75] ${pin.length === 6 ? 'text-white' : 'text-gray-400'}`} />
                 )}
               </button>
             </div>

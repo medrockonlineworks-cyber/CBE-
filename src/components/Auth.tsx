@@ -871,10 +871,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
           </div>
 
           {/* FOOTER: © Commercial Bank of Ethiopia */}
-          <div 
-            style={{ paddingBottom: '1px' }}
-            className="text-center text-[#737882] text-[12px] font-normal font-sans"
-          >
+          <div className="text-center text-[#737882] text-[12px] font-normal font-sans pb-[max(env(safe-area-inset-bottom,0px),16px)]">
             &copy; Commercial Bank of Ethiopia
           </div>
         </div>
@@ -948,29 +945,19 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
             </button>
 
             {/* FOOTER: © Commercial Bank of Ethiopia (Exact replica of Image 1 & 2) */}
-            <div 
-              style={{ paddingBottom: '1px' }}
-              className="pt-8 text-center text-[#9ca3af] text-[11.5px] font-normal font-sans"
-            >
+            <div className="pt-8 pb-[max(env(safe-area-inset-bottom,0px),16px)] text-center text-[#9ca3af] text-[11.5px] font-normal font-sans">
               &copy; Commercial Bank of Ethiopia
             </div>
           </div>
         </div>
       )}
 
-      {/* VIEW B: ON-SCREEN NUMERIC KEYPAD (Shown in PIN mode when keypad is open) */}
+      {/* VIEW B: ON-SCREEN NUMERIC KEYPAD (Always visible in PIN mode above system navigation bar) */}
       {loginMode === 'pin' && showKeypad && (
-        <div 
-          style={{ paddingBottom: '1px' }}
-          className="w-full max-w-md mx-auto bg-[#f8f9fa] rounded-t-[32px] shadow-[0_-4px_24px_rgba(0,0,0,0.04)] border-t border-neutral-100/80 px-6 pt-3 shrink-0 animate-in slide-in-from-bottom-8 duration-200"
-        >
+        <div className="w-full max-w-md mx-auto bg-[#f8f9fa] rounded-t-[32px] shadow-[0_-4px_24px_rgba(0,0,0,0.04)] border-t border-neutral-100/80 px-6 pt-3 pb-[max(env(safe-area-inset-bottom,0px),56px)] sm:pb-5 shrink-0 animate-in slide-in-from-bottom-8 duration-200">
           
-          {/* Subtle grab handle bar at top center (Exact replica of Image 2) */}
-          <div 
-            onClick={() => setShowKeypad(false)}
-            className="w-12 h-1 bg-[#d1d5db] hover:bg-neutral-400 rounded-full mx-auto mb-3.5 cursor-pointer transition"
-            title="Tap to switch to Biometrics & Login button"
-          />
+          {/* Subtle grab handle bar at top center */}
+          <div className="w-12 h-1 bg-[#d1d5db] rounded-full mx-auto mb-3.5" />
 
           {/* 3x4 Numeric Keypad Grid (Exact replica of Image 2) */}
           <div className="grid grid-cols-3 gap-2.5 w-full">
@@ -1008,21 +995,34 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
               0
             </button>
 
-            {/* Submit Checkmark Key: Soft Lavender/Purple Checkmark (Exact replica of Image 2) */}
+            {/* Submit Checkmark Key: Turns solid CBE Purple when 6 digits are filled */}
             <button
               type="button"
               aria-label="Submit PIN"
               onClick={handleLoginAttempt}
-              className="h-[58px] rounded-2xl bg-[#f3f4f6] hover:bg-purple-50 active:bg-purple-100 flex items-center justify-center transition shadow-xs cursor-pointer select-none"
+              className={`h-[58px] rounded-2xl flex items-center justify-center transition-all duration-150 cursor-pointer select-none ${
+                pin.length === 6
+                  ? 'bg-[#70189F] hover:bg-[#5e1385] active:bg-[#4e0f70] shadow-md shadow-purple-900/25'
+                  : 'bg-[#f3f4f6] hover:bg-purple-50 active:bg-purple-100 shadow-xs'
+              }`}
             >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#b4a2db" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke={pin.length === 6 ? '#ffffff' : '#b4a2db'}
+                strokeWidth="2.75"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </button>
           </div>
 
-          {/* Quick toggle to Biometrics / Login view */}
-          <div className="flex items-center justify-between pt-3 mt-1 px-1">
+          {/* Biometrics switch */}
+          <div className="flex items-center justify-center pt-3 mt-1 px-1">
             <button
               type="button"
               onClick={handleBiometricsLogin}
@@ -1031,14 +1031,6 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
             >
               {renderBiometricGlyph(18, '#70189F', 2.0, 18)}
               <span>Use Biometrics</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setShowKeypad(false)}
-              className="text-xs text-[#8e8e93] hover:text-neutral-900 font-medium cursor-pointer"
-            >
-              Hide Keypad ⌵
             </button>
           </div>
 
