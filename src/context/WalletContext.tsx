@@ -178,8 +178,41 @@ export const WalletProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   
   const [isTelePlayOpen, setIsTelePlayOpen] = useState<boolean>(false);
 
+  const isHydratingRemoteRef = React.useRef(false);
+
+  // Listen for cross-app sync updates from CBE / other tabs
+  useEffect(() => {
+    const syncFromStorage = () => {
+      const latest = loadSaved();
+      if (!latest) return;
+      isHydratingRemoteRef.current = true;
+      try {
+        if (typeof latest.balance === 'number') setBalance(latest.balance);
+        if (typeof latest.endekiseBalance === 'number') setEndekiseBalance(latest.endekiseBalance);
+        if (typeof latest.rewardBalance === 'number') setRewardBalance(latest.rewardBalance);
+        if (Array.isArray(latest.transactions)) setTransactions(latest.transactions);
+        if (Array.isArray(latest.recentRecipients)) setRecentRecipients(latest.recentRecipients);
+        if (typeof latest.userName === 'string') setUserName(latest.userName);
+        if (typeof latest.phoneNumber === 'string') setPhoneNumber(latest.phoneNumber);
+      } finally {
+        setTimeout(() => {
+          isHydratingRemoteRef.current = false;
+        }, 0);
+      }
+    };
+    window.addEventListener('telebirr_data_updated', syncFromStorage);
+    window.addEventListener('cbe_crossapp_synced', syncFromStorage);
+    window.addEventListener('storage', syncFromStorage);
+    return () => {
+      window.removeEventListener('telebirr_data_updated', syncFromStorage);
+      window.removeEventListener('cbe_crossapp_synced', syncFromStorage);
+      window.removeEventListener('storage', syncFromStorage);
+    };
+  }, []);
+
   // Auto save to localStorage
   useEffect(() => {
+    if (isHydratingRemoteRef.current) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({
         balance,

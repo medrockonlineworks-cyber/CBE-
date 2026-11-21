@@ -144,7 +144,17 @@ export default function DashenBankApp({ currentUser, onBack, onOpenTelebirr }: D
     };
 
     window.addEventListener('tana_dashen_updated', handleUpdate);
-    return () => window.removeEventListener('tana_dashen_updated', handleUpdate);
+    window.addEventListener('dashen_data_updated', handleUpdate);
+    window.addEventListener('cbe_crossapp_synced', handleUpdate);
+    window.addEventListener('cbe_transaction_completed', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('tana_dashen_updated', handleUpdate);
+      window.removeEventListener('dashen_data_updated', handleUpdate);
+      window.removeEventListener('cbe_crossapp_synced', handleUpdate);
+      window.removeEventListener('cbe_transaction_completed', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
   }, []);
 
   // Quick refresh action

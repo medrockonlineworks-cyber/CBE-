@@ -84,61 +84,105 @@ export const TruecallerSmsPopdownOverlay: React.FC<TruecallerSmsPopdownOverlayPr
   const [isVisible, setIsVisible] = useState(false);
   const [isMarkedRead, setIsMarkedRead] = useState(false);
   const [showAiBreakdown, setShowAiBreakdown] = useState(false);
-  const dismissTimerRef = useRef<number | null>(null);
-  const touchStartYRef = useRef<number>(0);
+  const lastChimedIdRef = useRef<string | null>(null);
+  const hideAnimTimerRef = useRef<number | null>(null);
 
-  const clearDismissTimer = () => {
-    if (dismissTimerRef.current !== null) {
-      window.clearTimeout(dismissTimerRef.current);
-      dismissTimerRef.current = null;
+  const clearHideAnimTimer = () => {
+    if (hideAnimTimerRef.current !== null) {
+      window.clearTimeout(hideAnimTimerRef.current);
+      hideAnimTimerRef.current = null;
     }
   };
 
-  const dismissPopdown = () => {
-    clearDismissTimer();
+  const hideOverlayVisually = () => {
+    clearHideAnimTimer();
     setIsVisible(false);
-    window.setTimeout(() => {
+    hideAnimTimerRef.current = window.setTimeout(() => {
       setActiveAlert(null);
       setIsMarkedRead(false);
       setShowAiBreakdown(false);
-    }, 260);
+    }, 240);
+  };
+
+  const showAlertPopdown = (incoming: TruecallerAlert, playSound: boolean) => {
+    clearHideAnimTimer();
+    setActiveAlert(incoming);
+    setIsMarkedRead(Boolean(incoming.read));
+    requestAnimationFrame(() => {
+      setIsVisible(true);
+    });
+    if (playSound && lastChimedIdRef.current !== incoming.id) {
+      lastChimedIdRef.current = incoming.id;
+      playTruecallerChime();
+    }
+  };
+
+  const syncPopdownFromStore = (playSoundIfNew: boolean) => {
+    const persisted = TruecallerService.getActivePopdownAlert({
+      fallbackToLatestUnread: activeView === 'truecaller',
+    });
+    if (persisted) {
+      showAlertPopdown(persisted, playSoundIfNew);
+    } else {
+      hideOverlayVisually();
+    }
   };
 
   useEffect(() => {
+    // Immediately restore any undismissed/unread pop-down when mounting or switching views (especially when opening Truecaller!)
+    syncPopdownFromStore(false);
+
     const handleLivePopdown = (ev: Event) => {
-      const detail = (ev as CustomEvent<{ alert?: TruecallerAlert; force?: boolean }>).detail;
+      const detail = (
+        ev as CustomEvent<{ alert?: TruecallerAlert; force?: boolean; silent?: boolean }>
+      ).detail;
       const incoming = detail?.alert;
       if (!incoming) return;
-
-      // Avoid double-overlay if user is already viewing the TruecallerSimulator popdown preview itself
-      if (activeView === 'truecaller' && !detail?.force) {
+      if (incoming.read || TruecallerService.isPopdownDismissed(incoming.id, incoming.txId)) {
         return;
       }
-
-      clearDismissTimer();
-      setActiveAlert(incoming);
-      setIsMarkedRead(Boolean(incoming.read));
       setShowAiBreakdown(false);
+      showAlertPopdown(incoming, !detail?.silent);
+    };
 
-      // Trigger smooth slide-down animation
-      requestAnimationFrame(() => {
-        setIsVisible(true);
-      });
-      playTruecallerChime();
+    const handleExternalSync = () => {
+      syncPopdownFromStore(false);
+    };
 
-      // Auto-dismiss after 14 seconds unless user expands AI summary
-      dismissTimerRef.current = window.setTimeout(() => {
-        setIsVisible(false);
-        window.setTimeout(() => {
-          setActiveAlert(null);
-        }, 280);
-      }, 14000);
+    const handleExplicitDismiss = () => {
+      // Only hides when explicitly canceled (×) or marked as read
+      syncPopdownFromStore(false);
+    };
+
+    const handleVisible = () => {
+      if (document.visibilityState === 'visible') {
+        syncPopdownFromStore(false);
+      }
     };
 
     window.addEventListener('tc_live_popdown', handleLivePopdown);
+    window.addEventListener('tc_popdown_dismissed', handleExplicitDismiss);
+    window.addEventListener('tc_alerts_updated', handleExternalSync);
+    window.addEventListener('truecaller_updated', handleExternalSync);
+    window.addEventListener('cbe_crossapp_synced', handleExternalSync);
+    window.addEventListener('cbe_account_switched', handleExternalSync);
+    window.addEventListener('cbe_native_truecaller_marked_read', handleExplicitDismiss);
+    window.addEventListener('cbe_native_truecaller_dismissed', handleExplicitDismiss);
+    window.addEventListener('focus', handleExternalSync);
+    document.addEventListener('visibilitychange', handleVisible);
+
     return () => {
       window.removeEventListener('tc_live_popdown', handleLivePopdown);
-      clearDismissTimer();
+      window.removeEventListener('tc_popdown_dismissed', handleExplicitDismiss);
+      window.removeEventListener('tc_alerts_updated', handleExternalSync);
+      window.removeEventListener('truecaller_updated', handleExternalSync);
+      window.removeEventListener('cbe_crossapp_synced', handleExternalSync);
+      window.removeEventListener('cbe_account_switched', handleExternalSync);
+      window.removeEventListener('cbe_native_truecaller_marked_read', handleExplicitDismiss);
+      window.removeEventListener('cbe_native_truecaller_dismissed', handleExplicitDismiss);
+      window.removeEventListener('focus', handleExternalSync);
+      document.removeEventListener('visibilitychange', handleVisible);
+      clearHideAnimTimer();
     };
   }, [activeView]);
 
@@ -156,19 +200,23 @@ export const TruecallerSmsPopdownOverlay: React.FC<TruecallerSmsPopdownOverlayPr
   });
   const displayTime = formatLiveTime(activeAlert);
 
+  const handleExplicitCancel = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    TruecallerService.dismissPopdownAlert(activeAlert.id);
+    hideOverlayVisually();
+  };
+
   const handleMarkAsRead = (e: React.MouseEvent) => {
     e.stopPropagation();
     TruecallerService.markAlertAsRead(activeAlert.id);
     setIsMarkedRead(true);
-    clearDismissTimer();
     window.setTimeout(() => {
-      dismissPopdown();
-    }, 450);
+      hideOverlayVisually();
+    }, 380);
   };
 
   const handleToggleBreakdown = (e: React.MouseEvent) => {
     e.stopPropagation();
-    clearDismissTimer();
     setShowAiBreakdown((prev) => !prev);
   };
 
@@ -179,15 +227,6 @@ export const TruecallerSmsPopdownOverlay: React.FC<TruecallerSmsPopdownOverlayPr
       aria-label="Truecaller SMS Alert"
     >
       <div
-        onTouchStart={(e) => {
-          touchStartYRef.current = e.touches[0].clientY;
-        }}
-        onTouchEnd={(e) => {
-          const deltaY = touchStartYRef.current - e.changedTouches[0].clientY;
-          if (deltaY > 36) {
-            dismissPopdown();
-          }
-        }}
         className={`w-full max-w-[420px] pointer-events-auto transition-all duration-300 ease-out transform ${
           isVisible
             ? 'translate-y-0 opacity-100 scale-100'
@@ -208,10 +247,7 @@ export const TruecallerSmsPopdownOverlay: React.FC<TruecallerSmsPopdownOverlayPr
 
             <button
               type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                dismissPopdown();
-              }}
+              onClick={handleExplicitCancel}
               aria-label="Dismiss Truecaller SMS notification"
               className="w-7 h-7 -mr-1 rounded-full flex items-center justify-center text-white hover:bg-white/15 active:scale-90 transition cursor-pointer"
             >
@@ -219,11 +255,10 @@ export const TruecallerSmsPopdownOverlay: React.FC<TruecallerSmsPopdownOverlayPr
             </button>
           </div>
 
-          {/* Inner Crisp White Card */}
+          {/* Inner Crisp White Card — tapping opens Truecaller WITHOUT canceling the pop-down */}
           <div
             onClick={() => {
-              if (onOpenTruecaller) {
-                dismissPopdown();
+              if (onOpenTruecaller && activeView !== 'truecaller') {
                 onOpenTruecaller();
               }
             }}

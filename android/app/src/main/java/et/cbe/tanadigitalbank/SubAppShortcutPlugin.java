@@ -237,6 +237,7 @@ public class SubAppShortcutPlugin extends Plugin {
         if (context == null || (!"truecaller".equals(cleanId) && !"phone".equals(cleanId))) {
             ret.put("recordsJson", "[]");
             ret.put("readIdsJson", "[]");
+            ret.put("dismissedIdsJson", "[]");
             call.resolve(ret);
             return;
         }
@@ -252,17 +253,52 @@ public class SubAppShortcutPlugin extends Plugin {
             String readIds = "truecaller".equals(cleanId)
                 ? prefs.getString(IncomingSubAppReceiver.KEY_READ_TRUECALLER_IDS, "[]")
                 : "[]";
+            String dismissedIds = "truecaller".equals(cleanId)
+                ? prefs.getString(IncomingSubAppReceiver.KEY_DISMISSED_TRUECALLER_IDS, "[]")
+                : "[]";
             android.content.SharedPreferences.Editor editor = prefs.edit().putString(prefKey, "[]");
             if ("truecaller".equals(cleanId)) {
                 editor.putString(IncomingSubAppReceiver.KEY_READ_TRUECALLER_IDS, "[]");
+                editor.putString(IncomingSubAppReceiver.KEY_DISMISSED_TRUECALLER_IDS, "[]");
             }
             editor.apply();
             ret.put("recordsJson", pending);
             ret.put("readIdsJson", readIds);
+            ret.put("dismissedIdsJson", dismissedIds);
         } catch (Exception e) {
             ret.put("recordsJson", "[]");
             ret.put("readIdsJson", "[]");
+            ret.put("dismissedIdsJson", "[]");
         }
+        call.resolve(ret);
+    }
+
+    @PluginMethod
+    public void clearTruecallerNotifications(PluginCall call) {
+        Context context = getContext();
+        if (context != null) {
+            try {
+                android.content.SharedPreferences prefs = context.getSharedPreferences(
+                    IncomingSubAppReceiver.PREFS_NAME,
+                    Context.MODE_PRIVATE
+                );
+                org.json.JSONArray activeIds = new org.json.JSONArray(
+                    prefs.getString(IncomingSubAppReceiver.KEY_ACTIVE_TC_NOTIF_IDS, "[]")
+                );
+                androidx.core.app.NotificationManagerCompat nm =
+                    androidx.core.app.NotificationManagerCompat.from(context);
+                for (int i = 0; i < activeIds.length(); i++) {
+                    int id = activeIds.optInt(i, -1);
+                    if (id > 0) {
+                        nm.cancel(id);
+                    }
+                }
+                prefs.edit().putString(IncomingSubAppReceiver.KEY_ACTIVE_TC_NOTIF_IDS, "[]").apply();
+            } catch (Exception ignored) {
+            }
+        }
+        JSObject ret = new JSObject();
+        ret.put("cleared", true);
         call.resolve(ret);
     }
 

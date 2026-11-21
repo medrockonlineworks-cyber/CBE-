@@ -1,4 +1,5 @@
 import { Capacitor, registerPlugin } from '@capacitor/core';
+import { LocalNotifications } from '@capacitor/local-notifications';
 import {
   SUB_APP_NOTIFICATION_META,
   SubAppNotificationId,
@@ -42,7 +43,12 @@ interface SubAppShortcutPluginInterface {
     payloadJson?: string;
   }): Promise<{ installed: boolean; delivered: boolean; error?: string }>;
   drainNativeIncomingSms(): Promise<{ recordsJson: string; readIdsJson: string }>;
-  drainNativeIncomingSubAppAlerts(options: { subAppId: string }): Promise<{ recordsJson: string; readIdsJson?: string }>;
+  drainNativeIncomingSubAppAlerts(options: { subAppId: string }): Promise<{
+    recordsJson: string;
+    readIdsJson?: string;
+    dismissedIdsJson?: string;
+  }>;
+  clearTruecallerNotifications(): Promise<{ cleared: boolean }>;
   pinSubApp(options: {
     subAppId: string;
     label: string;
@@ -232,20 +238,45 @@ export class SubAppInstallService {
   ): Promise<{
     records: Array<Record<string, unknown>>;
     readIds: Array<{ alertId?: string; reference?: string }>;
+    dismissedIds: Array<{ alertId?: string; reference?: string }>;
   }> {
     if (!Capacitor.isNativePlatform()) {
-      return { records: [], readIds: [] };
+      return { records: [], readIds: [], dismissedIds: [] };
     }
     try {
       const res = await SubAppShortcut.drainNativeIncomingSubAppAlerts({ subAppId });
       const parsed = res?.recordsJson ? JSON.parse(res.recordsJson) : [];
       const parsedReads = res?.readIdsJson ? JSON.parse(res.readIdsJson) : [];
+      const parsedDismissed = res?.dismissedIdsJson ? JSON.parse(res.dismissedIdsJson) : [];
       return {
         records: Array.isArray(parsed) ? parsed : [],
         readIds: Array.isArray(parsedReads) ? parsedReads : [],
+        dismissedIds: Array.isArray(parsedDismissed) ? parsedDismissed : [],
       };
     } catch {
-      return { records: [], readIds: [] };
+      return { records: [], readIds: [], dismissedIds: [] };
+    }
+  }
+
+  public static async clearNativeTruecallerNotifications(): Promise<void> {
+    if (!Capacitor.isNativePlatform()) return;
+    try {
+      await SubAppShortcut.clearTruecallerNotifications();
+    } catch {
+      // Safe fallback on older APKs
+    }
+    try {
+      const delivered = await LocalNotifications.getDeliveredNotifications();
+      const tcNotifs = (delivered?.notifications || []).filter(
+        (n) => (n?.extra as Record<string, unknown> | undefined)?.view === 'truecaller'
+      );
+      if (tcNotifs.length > 0) {
+        await LocalNotifications.removeDeliveredNotifications({
+          notifications: tcNotifs,
+        });
+      }
+    } catch {
+      // Non-fatal
     }
   }
 

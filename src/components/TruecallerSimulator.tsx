@@ -664,16 +664,28 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
       handleUpdate();
     };
     window.addEventListener('tc_alerts_updated', handleUpdate);
+    window.addEventListener('truecaller_updated', handleUpdate);
+    window.addEventListener('tc_popdown_dismissed', handleUpdate);
     window.addEventListener('tc_account_changed', handleExternalAccountSwitch);
     window.addEventListener('cbe_account_switched', handleExternalAccountSwitch);
+    window.addEventListener('cbe_crossapp_synced', handleUpdate);
+    window.addEventListener('cbe_balance_updated', handleUpdate);
+    window.addEventListener('cbe_transaction_completed', handleUpdate);
     window.addEventListener('sms-created', handleUpdate);
     window.addEventListener('sms-updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
     return () => {
       window.removeEventListener('tc_alerts_updated', handleUpdate);
+      window.removeEventListener('truecaller_updated', handleUpdate);
+      window.removeEventListener('tc_popdown_dismissed', handleUpdate);
       window.removeEventListener('tc_account_changed', handleExternalAccountSwitch);
       window.removeEventListener('cbe_account_switched', handleExternalAccountSwitch);
+      window.removeEventListener('cbe_crossapp_synced', handleUpdate);
+      window.removeEventListener('cbe_balance_updated', handleUpdate);
+      window.removeEventListener('cbe_transaction_completed', handleUpdate);
       window.removeEventListener('sms-created', handleUpdate);
       window.removeEventListener('sms-updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
     };
   }, []);
 

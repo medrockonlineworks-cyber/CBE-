@@ -44,6 +44,8 @@ public class IncomingSubAppReceiver extends BroadcastReceiver {
     public static final String KEY_PENDING_TRUECALLER = "pending_truecaller_alerts";
     public static final String KEY_PENDING_PHONE = "pending_phone_alerts";
     public static final String KEY_READ_TRUECALLER_IDS = "marked_read_tc_ids";
+    public static final String KEY_DISMISSED_TRUECALLER_IDS = "dismissed_tc_ids";
+    public static final String KEY_ACTIVE_TC_NOTIF_IDS = "active_tc_notif_ids";
 
     public static final String CHANNEL_TRUECALLER = "cbe-truecaller-alerts";
     public static final String CHANNEL_PHONE = "cbe-phone-alerts";
@@ -210,7 +212,8 @@ public class IncomingSubAppReceiver extends BroadcastReceiver {
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setCategory(isTc ? NotificationCompat.CATEGORY_MESSAGE : NotificationCompat.CATEGORY_CALL)
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                .setAutoCancel(true)
+                .setAutoCancel(!isTc)
+                .setOngoing(isTc)
                 .setDefaults(NotificationCompat.DEFAULT_ALL)
                 .setWhen(System.currentTimeMillis())
                 .setShowWhen(true)
@@ -301,6 +304,10 @@ public class IncomingSubAppReceiver extends BroadcastReceiver {
                 Intent dismissIntent = new Intent(context, MarkTruecallerReadReceiver.class);
                 dismissIntent.setAction(MarkTruecallerReadReceiver.ACTION_DISMISS);
                 dismissIntent.putExtra("notifId", notifId);
+                dismissIntent.putExtra("alertId", alertId);
+                if (reference != null) {
+                    dismissIntent.putExtra("reference", reference);
+                }
                 PendingIntent dismissPi = PendingIntent.getBroadcast(
                     context,
                     notifId + 2,
@@ -323,6 +330,20 @@ public class IncomingSubAppReceiver extends BroadcastReceiver {
                     .setCustomContentView(rv)
                     .setCustomBigContentView(rv)
                     .setCustomHeadsUpContentView(rv);
+
+                // Track active Truecaller notification ID so in-app Cancel / Mark as read clears it too
+                try {
+                    SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+                    JSONArray activeIds = new JSONArray(prefs.getString(KEY_ACTIVE_TC_NOTIF_IDS, "[]"));
+                    activeIds.put(notifId);
+                    JSONArray trimmedIds = new JSONArray();
+                    int startIdx = Math.max(0, activeIds.length() - 20);
+                    for (int i = startIdx; i < activeIds.length(); i++) {
+                        trimmedIds.put(activeIds.get(i));
+                    }
+                    prefs.edit().putString(KEY_ACTIVE_TC_NOTIF_IDS, trimmedIds.toString()).apply();
+                } catch (Exception ignored) {
+                }
             } else {
                 builder.setStyle(new NotificationCompat.BigTextStyle().bigText(body));
             }

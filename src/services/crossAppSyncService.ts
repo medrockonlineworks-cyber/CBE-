@@ -14,16 +14,28 @@ const SYNCED_STORAGE_KEYS = [
   'bank_sms_messages_v6',
   'bank_sms_accounts_v6',
   'bank_sms_active_account',
+  'cbe_pending_receiver_sms_notifs_v1',
   'tc_sim_alerts_v2',
   'tc_sim_accounts_v2',
   'tc_sim_active_account_id',
   'cbe_pending_receiver_tc_notifs_v1',
+  'cbe_tc_active_popdown_v1',
+  'cbe_tc_dismissed_popdown_ids_v1',
+  'tana_phone_call_logs_v1',
+  'tana_phone_contacts_v1',
+  'tana_caller_accounts_v4',
+  'tana_active_caller_account_id_v2',
+  'tana_caller_transactions_v5',
+  'cbe_pending_receiver_phone_notifs_v1',
   'dashen_bank_account_v1',
   'dashen_bank_transactions_v1',
   'telebirr_app_state_v2',
+  'telebirr_superapp_wallet_v2',
   'telegram_simulator_chats_v5',
   'tana_transactions',
   'tana_users',
+  'tana_active_user_id',
+  'cbe_pending_receiver_notifs_v1',
 ] as const;
 
 const META_TIMESTAMPS_KEY = 'cbe_crossapp_sync_ts_v1';
@@ -544,13 +556,31 @@ class CrossAppSyncEngine {
           const serialized = JSON.stringify(updated);
           localStorage.setItem(TC_ALERTS_KEY, serialized);
           this.lastHashes[TC_ALERTS_KEY] = this.computeHash(serialized);
+
+          // Persist active Truecaller pop-down so it never auto-cancels unless explicitly dismissed or read
+          const dismissedRaw = localStorage.getItem('cbe_tc_dismissed_popdown_ids_v1');
+          const dismissedList = dismissedRaw ? JSON.parse(dismissedRaw) : [];
+          const isDismissed =
+            Array.isArray(dismissedList) &&
+            (dismissedList.includes(newAlert.id) || dismissedList.includes(newAlert.txId));
+          if (!isDismissed) {
+            const popSerialized = JSON.stringify(newAlert);
+            localStorage.setItem('cbe_tc_active_popdown_v1', popSerialized);
+            this.lastHashes['cbe_tc_active_popdown_v1'] = this.computeHash(popSerialized);
+          }
         } finally {
           this.isApplyingRemote = false;
         }
 
         window.dispatchEvent(new CustomEvent('tc_alerts_updated', { detail: { alert: newAlert } }));
         window.dispatchEvent(new CustomEvent('truecaller_updated', { detail: { alert: newAlert } }));
-        window.dispatchEvent(new CustomEvent('tc_live_popdown', { detail: { alert: newAlert } }));
+        window.dispatchEvent(new CustomEvent('tc_live_popdown', { detail: { alert: newAlert, force: true } }));
+        window.dispatchEvent(new CustomEvent('cbe_crossapp_synced'));
+        return true;
+      }
+
+      if (payload.view === 'phone') {
+        window.dispatchEvent(new CustomEvent('phone_call_updated', { detail: payload.payloadRecord || payload }));
         window.dispatchEvent(new CustomEvent('cbe_crossapp_synced'));
         return true;
       }
@@ -720,7 +750,19 @@ class CrossAppSyncEngine {
     for (const key of SYNCED_STORAGE_KEYS) {
       try {
         const val = localStorage.getItem(key);
-        if (val === null) continue;
+        // Allow empty-string sentinel propagation when cbe_tc_active_popdown_v1 is explicitly cleared
+        if (val === null) {
+          if (
+            key === 'cbe_tc_active_popdown_v1' &&
+            (this.lastHashes[key] !== 'EMPTY' || (forceSet && forceSet.has(key)))
+          ) {
+            this.lastHashes[key] = 'EMPTY';
+            timestamps[key] = now;
+            tsUpdated = true;
+            changed[key] = { value: '', updatedAt: now };
+          }
+          continue;
+        }
         const hash = this.computeHash(val);
         if (this.lastHashes[key] !== hash || (forceSet && forceSet.has(key))) {
           this.lastHashes[key] = hash;
@@ -743,6 +785,8 @@ class CrossAppSyncEngine {
         const val = localStorage.getItem(key);
         if (val !== null) {
           this.lastHashes[key] = this.computeHash(val);
+        } else if (key === 'cbe_tc_active_popdown_v1') {
+          this.lastHashes[key] = 'EMPTY';
         }
       } catch {}
     }
@@ -754,9 +798,13 @@ class CrossAppSyncEngine {
     let anyApplied = false;
     let smsUpdated = false;
     let truecallerUpdated = false;
+    let tcPopdownCleared = false;
+    let phoneUpdated = false;
     let dashenUpdated = false;
     let telebirrUpdated = false;
+    let telegramUpdated = false;
     let tanaUpdated = false;
+    let activeUserSwitched = false;
 
     this.isApplyingRemote = true;
     try {
@@ -767,16 +815,52 @@ class CrossAppSyncEngine {
         const currentLocalTs = Number(localTs[key] || 0);
         const currentVal = localStorage.getItem(key);
 
+        if (key === 'cbe_tc_active_popdown_v1' && remote.value === '') {
+          if (currentVal !== null && remoteUpdatedAt > currentLocalTs) {
+            localStorage.removeItem(key);
+            localTs[key] = remoteUpdatedAt || Date.now();
+            this.lastHashes[key] = 'EMPTY';
+            anyApplied = true;
+            truecallerUpdated = true;
+            tcPopdownCleared = true;
+          }
+          continue;
+        }
+
         if (remote.value !== currentVal && (remoteUpdatedAt > currentLocalTs || currentVal === null)) {
           localStorage.setItem(key, remote.value);
           localTs[key] = remoteUpdatedAt || Date.now();
           this.lastHashes[key] = this.computeHash(remote.value);
           anyApplied = true;
-          if (key.startsWith('bank_sms_')) smsUpdated = true;
-          if (key.startsWith('tc_sim_') || key === 'cbe_pending_receiver_tc_notifs_v1') truecallerUpdated = true;
+          if (key.startsWith('bank_sms_') || key === 'cbe_pending_receiver_sms_notifs_v1') smsUpdated = true;
+          if (
+            key.startsWith('tc_sim_') ||
+            key === 'cbe_pending_receiver_tc_notifs_v1' ||
+            key === 'cbe_tc_active_popdown_v1' ||
+            key === 'cbe_tc_dismissed_popdown_ids_v1'
+          ) {
+            truecallerUpdated = true;
+          }
+          if (
+            key.startsWith('tana_phone_') ||
+            key.startsWith('tana_caller_') ||
+            key === 'tana_active_caller_account_id_v2' ||
+            key === 'cbe_pending_receiver_phone_notifs_v1'
+          ) {
+            phoneUpdated = true;
+          }
           if (key.startsWith('dashen_')) dashenUpdated = true;
           if (key.startsWith('telebirr_')) telebirrUpdated = true;
-          if (key.startsWith('tana_')) tanaUpdated = true;
+          if (key.startsWith('telegram_')) telegramUpdated = true;
+          if (
+            key === 'tana_transactions' ||
+            key === 'tana_users' ||
+            key === 'tana_active_user_id' ||
+            key === 'cbe_pending_receiver_notifs_v1'
+          ) {
+            tanaUpdated = true;
+            if (key === 'tana_active_user_id') activeUserSwitched = true;
+          }
         }
       }
 
@@ -790,18 +874,34 @@ class CrossAppSyncEngine {
         if (truecallerUpdated) {
           window.dispatchEvent(new CustomEvent('tc_alerts_updated'));
           window.dispatchEvent(new CustomEvent('truecaller_updated'));
-          // If a brand-new unread Truecaller alert arrived via cross-app sync, pop it down immediately!
-          try {
-            const rawTc = localStorage.getItem('tc_sim_alerts_v2');
-            const parsed = rawTc ? JSON.parse(rawTc) : [];
-            if (Array.isArray(parsed) && parsed.length > 0 && parsed[0] && !parsed[0].read) {
-              const latest = parsed[0];
-              const ageMs = Date.now() - new Date(latest.timestamp || 0).getTime();
-              if (Number.isFinite(ageMs) && ageMs >= -5000 && ageMs < 25000) {
-                window.dispatchEvent(new CustomEvent('tc_live_popdown', { detail: { alert: latest } }));
+          if (tcPopdownCleared) {
+            window.dispatchEvent(new CustomEvent('tc_popdown_dismissed', { detail: { alertId: null } }));
+          } else {
+            // If an active undismissed Truecaller pop-down exists, show it immediately regardless of age!
+            try {
+              const rawActive = localStorage.getItem('cbe_tc_active_popdown_v1');
+              const dismissedRaw = localStorage.getItem('cbe_tc_dismissed_popdown_ids_v1');
+              const dismissedList = dismissedRaw ? JSON.parse(dismissedRaw) : [];
+              const dismissedSet = new Set(Array.isArray(dismissedList) ? dismissedList : []);
+              if (rawActive) {
+                const parsedActive = JSON.parse(rawActive);
+                if (
+                  parsedActive &&
+                  parsedActive.id &&
+                  !parsedActive.read &&
+                  !dismissedSet.has(parsedActive.id) &&
+                  !(parsedActive.txId && dismissedSet.has(parsedActive.txId))
+                ) {
+                  window.dispatchEvent(
+                    new CustomEvent('tc_live_popdown', { detail: { alert: parsedActive, force: true } })
+                  );
+                }
               }
-            }
-          } catch {}
+            } catch {}
+          }
+        }
+        if (phoneUpdated) {
+          window.dispatchEvent(new CustomEvent('phone_call_updated'));
         }
         if (dashenUpdated) {
           window.dispatchEvent(new CustomEvent('dashen_data_updated'));
@@ -809,8 +909,16 @@ class CrossAppSyncEngine {
         if (telebirrUpdated) {
           window.dispatchEvent(new CustomEvent('telebirr_data_updated'));
         }
+        if (telegramUpdated) {
+          window.dispatchEvent(new CustomEvent('telegram_data_updated'));
+        }
         if (tanaUpdated) {
           window.dispatchEvent(new CustomEvent('tana_data_updated'));
+          window.dispatchEvent(new CustomEvent('cbe_balance_updated'));
+          window.dispatchEvent(new CustomEvent('cbe_accounts_updated'));
+          if (activeUserSwitched) {
+            window.dispatchEvent(new CustomEvent('cbe_account_switched'));
+          }
         }
       }
     } catch {
@@ -990,14 +1098,30 @@ class CrossAppSyncEngine {
     const triggerPush = () => this.schedulePush();
     window.addEventListener('sms-created', triggerPush);
     window.addEventListener('sms-updated', triggerPush);
+    window.addEventListener('sms-accounts-updated', triggerPush);
     window.addEventListener('tana_data_updated', triggerPush);
+    window.addEventListener('cbe_transaction_completed', triggerPush);
+    window.addEventListener('cbe_balance_updated', triggerPush);
+    window.addEventListener('cbe_accounts_updated', triggerPush);
+    window.addEventListener('cbe_account_switched', triggerPush);
     window.addEventListener('dashen_data_updated', triggerPush);
     window.addEventListener('telebirr_data_updated', triggerPush);
+    window.addEventListener('telegram_data_updated', triggerPush);
     window.addEventListener('truecaller_updated', triggerPush);
+    window.addEventListener('tc_alerts_updated', triggerPush);
+    window.addEventListener('tc_account_changed', triggerPush);
+    window.addEventListener('tc_popdown_dismissed', triggerPush);
+    window.addEventListener('phone_call_updated', triggerPush);
     window.addEventListener('storage', () => {
       this.captureInitialHashes();
       window.dispatchEvent(new CustomEvent('cbe_crossapp_synced'));
       window.dispatchEvent(new CustomEvent('sms-updated'));
+      window.dispatchEvent(new CustomEvent('tc_alerts_updated'));
+      window.dispatchEvent(new CustomEvent('phone_call_updated'));
+      window.dispatchEvent(new CustomEvent('dashen_data_updated'));
+      window.dispatchEvent(new CustomEvent('telebirr_data_updated'));
+      window.dispatchEvent(new CustomEvent('telegram_data_updated'));
+      window.dispatchEvent(new CustomEvent('cbe_balance_updated'));
     });
 
     const onReturnForeground = () => {

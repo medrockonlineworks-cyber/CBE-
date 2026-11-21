@@ -13,6 +13,7 @@ import { ALL_NEW_REGISTERED_ENTRIES } from '../lib/additionalAccountsData';
 import { generateCbeTxId } from '../lib/mockData';
 import { PushNotificationService } from './pushNotificationService';
 import { CrossAppSyncService } from './crossAppSyncService';
+import { SubAppInstallService } from './subAppInstallService';
 
 const STORAGE_TC_ACCOUNTS_KEY = 'tc_sim_accounts_v2';
 const STORAGE_TC_ALERTS_KEY = 'tc_sim_alerts_v2';
@@ -20,6 +21,8 @@ const STORAGE_TC_ACTIVE_ACC_KEY = 'tc_sim_active_account_id';
 const STORAGE_TC_BASE_THEME_KEY = 'tc_theme_base';
 const STORAGE_TC_ACCENT_THEME_KEY = 'tc_theme_accent';
 const PENDING_RECEIVER_TC_NOTIFS_KEY = 'cbe_pending_receiver_tc_notifs_v1';
+const STORAGE_TC_ACTIVE_POPDOWN_KEY = 'cbe_tc_active_popdown_v1';
+const STORAGE_TC_DISMISSED_POPDOWN_KEY = 'cbe_tc_dismissed_popdown_ids_v1';
 
 const formatTruecallerClockTime = (dateInput?: Date | string): string => {
   try {
@@ -805,7 +808,12 @@ export const TruecallerService = {
     return newAlert;
   },
 
-  syncTransactionToTruecaller(tx: Transaction, userBalance?: number, recipientBalance?: number): TruecallerAlert {
+  syncTransactionToTruecaller(
+    tx: Transaction,
+    userBalance?: number,
+    recipientBalance?: number,
+    options?: { isBackfill?: boolean }
+  ): TruecallerAlert {
     const bankKey = getBankKeyFromName(tx.recipientBank || 'cbe');
     const preset = BANK_PRESETS.find(p => p.key === bankKey) || BANK_PRESETS[0];
 
@@ -964,37 +972,45 @@ export const TruecallerService = {
     // Fire immediate Truecaller notification for the active account (sender on transfer, receiver on receive)
     // and queue the receiver's alert so switching to the receiver's account fires it automatically!
     const primaryAlert = tx.type === 'receive' ? receiveAlert : sendAlert;
+    const isBackfill = Boolean(options?.isBackfill);
     try {
       // Queue receiver alert if the receiver is a distinct account from the sender
       const cleanSenderAcc = (senderAcc.accountNumber || '').replace(/\D/g, '');
       const cleanRecipAcc = (recipientAcc.accountNumber || '').replace(/\D/g, '');
-      if (tx.type !== 'receive' && cleanRecipAcc && cleanRecipAcc !== cleanSenderAcc) {
+      if (!isBackfill && tx.type !== 'receive' && cleanRecipAcc && cleanRecipAcc !== cleanSenderAcc) {
         this.enqueuePendingReceiverAlert(cleanRecipAcc, receiveAlert);
       }
 
-      // Immediately push synced Truecaller keys across tabs / PWAs / paired standalone apps (identical to SMS Simulator)
-      void CrossAppSyncService.pushChangedNow([
-        STORAGE_TC_ALERTS_KEY,
-        STORAGE_TC_ACCOUNTS_KEY,
-        STORAGE_TC_ACTIVE_ACC_KEY,
-        PENDING_RECEIVER_TC_NOTIFS_KEY,
-      ]);
+      if (!isBackfill) {
+        // Persist active pop-down immediately so it stays until explicitly canceled or marked read
+        this.setActivePopdownAlert(primaryAlert, { skipEvent: true, skipPush: true });
 
-      void PushNotificationService.notifySubApp({
-        subAppId: 'truecaller',
-        title: primaryAlert.bankName || 'CBE',
-        body: primaryAlert.fullSmsText || primaryAlert.summaryText,
-        privateBody: 'New Truecaller bank SMS alert.',
-        reference: primaryAlert.txId,
-        tag: `cbe-tc-${primaryAlert.id}`,
-        payloadRecord: primaryAlert as unknown as Record<string, unknown>,
-      });
+        // Immediately push synced Truecaller keys across tabs / PWAs / paired standalone apps (identical to SMS Simulator)
+        void CrossAppSyncService.pushChangedNow([
+          STORAGE_TC_ALERTS_KEY,
+          STORAGE_TC_ACCOUNTS_KEY,
+          STORAGE_TC_ACTIVE_ACC_KEY,
+          PENDING_RECEIVER_TC_NOTIFS_KEY,
+          STORAGE_TC_ACTIVE_POPDOWN_KEY,
+          STORAGE_TC_DISMISSED_POPDOWN_KEY,
+        ]);
+
+        void PushNotificationService.notifySubApp({
+          subAppId: 'truecaller',
+          title: primaryAlert.bankName || 'CBE',
+          body: primaryAlert.fullSmsText || primaryAlert.summaryText,
+          privateBody: 'New Truecaller bank SMS alert.',
+          reference: primaryAlert.txId,
+          tag: `cbe-tc-${primaryAlert.id}`,
+          payloadRecord: primaryAlert as unknown as Record<string, unknown>,
+        });
+      }
     } catch {}
 
-    if (typeof window !== 'undefined') {
+    if (!isBackfill && typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('tc_alerts_updated', { detail: { alert: receiveAlert, sendAlert, primaryAlert, account: senderAcc } }));
-      // Trigger immediate Truecaller SMS pop-down card over CBE Mobile Banking / Truecaller
-      window.dispatchEvent(new CustomEvent('tc_live_popdown', { detail: { alert: primaryAlert } }));
+      // Trigger immediate persistent Truecaller SMS pop-down card over CBE Mobile Banking / Truecaller
+      window.dispatchEvent(new CustomEvent('tc_live_popdown', { detail: { alert: primaryAlert, force: true } }));
     }
     return primaryAlert;
   },
@@ -1148,15 +1164,174 @@ export const TruecallerService = {
     // Process from oldest to newest so newest ends up at the very top
     const chronological = [...transactions].reverse();
     for (const tx of chronological) {
-      this.syncTransactionToTruecaller(tx);
+      this.syncTransactionToTruecaller(tx, undefined, undefined, { isBackfill: true });
     }
   },
 
-  markAlertAsRead(id: string): void {
-    const alerts = this.getAlerts().map(a => a.id === id ? { ...a, read: true } : a);
-    this.saveAlerts(alerts);
+  getDismissedPopdownIds(): string[] {
     try {
-      void CrossAppSyncService.pushChangedNow([STORAGE_TC_ALERTS_KEY]);
+      const raw = localStorage.getItem(STORAGE_TC_DISMISSED_POPDOWN_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === 'string') : [];
+    } catch {
+      return [];
+    }
+  },
+
+  isPopdownDismissed(alertId?: string | null, txId?: string | null): boolean {
+    const ids = this.getDismissedPopdownIds();
+    if (ids.length === 0) return false;
+    return Boolean(
+      (alertId && ids.includes(alertId)) ||
+      (txId && ids.includes(txId))
+    );
+  },
+
+  setActivePopdownAlert(
+    alert: TruecallerAlert,
+    options?: { skipEvent?: boolean; skipPush?: boolean; silent?: boolean }
+  ): void {
+    if (!alert || !alert.id) return;
+    try {
+      // Remove from dismissed list if explicitly re-triggered
+      const dismissed = this.getDismissedPopdownIds().filter(
+        (id) => id !== alert.id && id !== alert.txId
+      );
+      localStorage.setItem(STORAGE_TC_DISMISSED_POPDOWN_KEY, JSON.stringify(dismissed.slice(-100)));
+      localStorage.setItem(STORAGE_TC_ACTIVE_POPDOWN_KEY, JSON.stringify(alert));
+    } catch {}
+    if (!options?.skipPush) {
+      try {
+        void CrossAppSyncService.pushChangedNow([
+          STORAGE_TC_ACTIVE_POPDOWN_KEY,
+          STORAGE_TC_DISMISSED_POPDOWN_KEY,
+        ]);
+      } catch {}
+    }
+    if (!options?.skipEvent && typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('tc_live_popdown', {
+          detail: { alert, force: true, silent: Boolean(options?.silent) },
+        })
+      );
+    }
+  },
+
+  getActivePopdownAlert(options?: { fallbackToLatestUnread?: boolean }): TruecallerAlert | null {
+    try {
+      const alerts = this.getAlerts();
+      const dismissed = new Set(this.getDismissedPopdownIds());
+
+      const raw = localStorage.getItem(STORAGE_TC_ACTIVE_POPDOWN_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as TruecallerAlert | null;
+        if (parsed && parsed.id) {
+          const liveMatch = alerts.find(
+            (a) => a.id === parsed.id || (parsed.txId && a.txId === parsed.txId)
+          );
+          const candidate = liveMatch || parsed;
+          const isDismissed =
+            dismissed.has(candidate.id) ||
+            (candidate.txId ? dismissed.has(candidate.txId) : false);
+          if (!candidate.read && !isDismissed) {
+            return candidate;
+          }
+        }
+      }
+
+      if (options?.fallbackToLatestUnread) {
+        const activeAccount = this.getActiveAccount();
+        const activeCleanAcc = (activeAccount?.accountNumber || '').replace(/\D/g, '');
+        const unreadUndismissed = alerts.filter(
+          (a) =>
+            !a.read &&
+            !dismissed.has(a.id) &&
+            !(a.txId && dismissed.has(a.txId))
+        );
+        if (unreadUndismissed.length > 0) {
+          const forActive = unreadUndismissed.find(
+            (a) =>
+              (activeAccount && a.accountId === activeAccount.id) ||
+              (activeCleanAcc && (a.fullAccount || '').replace(/\D/g, '') === activeCleanAcc)
+          );
+          return forActive || unreadUndismissed[0];
+        }
+      }
+    } catch {}
+    return null;
+  },
+
+  dismissPopdownAlert(
+    alertIdOrRef?: string | null,
+    options?: { fromNative?: boolean; skipPush?: boolean }
+  ): void {
+    try {
+      const dismissed = new Set(this.getDismissedPopdownIds());
+      const raw = localStorage.getItem(STORAGE_TC_ACTIVE_POPDOWN_KEY);
+      let active: TruecallerAlert | null = null;
+      if (raw) {
+        try {
+          active = JSON.parse(raw) as TruecallerAlert;
+        } catch {
+          active = null;
+        }
+      }
+
+      if (alertIdOrRef) {
+        dismissed.add(alertIdOrRef);
+        const match = this.getAlerts().find(
+          (a) => a.id === alertIdOrRef || a.txId === alertIdOrRef
+        );
+        if (match?.id) dismissed.add(match.id);
+        if (match?.txId) dismissed.add(match.txId);
+      }
+      if (
+        !alertIdOrRef ||
+        (active && (active.id === alertIdOrRef || active.txId === alertIdOrRef))
+      ) {
+        if (active?.id) dismissed.add(active.id);
+        if (active?.txId) dismissed.add(active.txId);
+        localStorage.removeItem(STORAGE_TC_ACTIVE_POPDOWN_KEY);
+      }
+
+      localStorage.setItem(
+        STORAGE_TC_DISMISSED_POPDOWN_KEY,
+        JSON.stringify(Array.from(dismissed).slice(-120))
+      );
+    } catch {}
+
+    if (!options?.fromNative) {
+      void SubAppInstallService.clearNativeTruecallerNotifications();
+    }
+
+    if (!options?.skipPush) {
+      try {
+        void CrossAppSyncService.pushChangedNow([
+          STORAGE_TC_ACTIVE_POPDOWN_KEY,
+          STORAGE_TC_DISMISSED_POPDOWN_KEY,
+        ]);
+      } catch {}
+    }
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('tc_popdown_dismissed', { detail: { alertId: alertIdOrRef || null } })
+      );
+    }
+  },
+
+  markAlertAsRead(id: string, options?: { fromNative?: boolean }): void {
+    const alerts = this.getAlerts().map((a) =>
+      a.id === id || a.txId === id ? { ...a, read: true } : a
+    );
+    this.saveAlerts(alerts);
+    this.dismissPopdownAlert(id, { fromNative: options?.fromNative, skipPush: true });
+    try {
+      void CrossAppSyncService.pushChangedNow([
+        STORAGE_TC_ALERTS_KEY,
+        STORAGE_TC_ACTIVE_POPDOWN_KEY,
+        STORAGE_TC_DISMISSED_POPDOWN_KEY,
+      ]);
     } catch {}
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('tc_alerts_updated'));
@@ -1166,11 +1341,23 @@ export const TruecallerService = {
   markAllAsRead(): void {
     const alerts = this.getAlerts().map(a => ({ ...a, read: true }));
     this.saveAlerts(alerts);
+    this.dismissPopdownAlert(null);
+    try {
+      void CrossAppSyncService.pushChangedNow([
+        STORAGE_TC_ALERTS_KEY,
+        STORAGE_TC_ACTIVE_POPDOWN_KEY,
+        STORAGE_TC_DISMISSED_POPDOWN_KEY,
+      ]);
+    } catch {}
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('tc_alerts_updated'));
+    }
   },
 
   deleteAlert(id: string): void {
     const alerts = this.getAlerts().filter(a => a.id !== id);
     this.saveAlerts(alerts);
+    this.dismissPopdownAlert(id);
   },
 
   getUnreadCount(): number {
@@ -1262,8 +1449,19 @@ export const TruecallerService = {
         if (!alert) continue;
         const freshAlert: TruecallerAlert = {
           ...alert,
+          read: false,
           timeString: formatTruecallerClockTime(),
         };
+        const existingAlerts = this.getAlerts();
+        const deduped = existingAlerts.filter(a => a.id !== freshAlert.id);
+        this.saveAlerts([freshAlert, ...deduped]);
+        this.setActivePopdownAlert(freshAlert, { skipEvent: true, skipPush: true });
+        void CrossAppSyncService.pushChangedNow([
+          STORAGE_TC_ALERTS_KEY,
+          PENDING_RECEIVER_TC_NOTIFS_KEY,
+          STORAGE_TC_ACTIVE_POPDOWN_KEY,
+          STORAGE_TC_DISMISSED_POPDOWN_KEY,
+        ]);
         void PushNotificationService.notifySubApp({
           subAppId: 'truecaller',
           title: freshAlert.bankName || 'CBE',
@@ -1274,7 +1472,8 @@ export const TruecallerService = {
           payloadRecord: freshAlert as unknown as Record<string, unknown>,
         });
         if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('tc_live_popdown', { detail: { alert: freshAlert } }));
+          window.dispatchEvent(new CustomEvent('tc_alerts_updated', { detail: { alert: freshAlert } }));
+          window.dispatchEvent(new CustomEvent('tc_live_popdown', { detail: { alert: freshAlert, force: true } }));
         }
       }
       return matching.length;
@@ -1288,7 +1487,14 @@ export const TruecallerService = {
       if (!raw || typeof raw !== 'object') return;
       const existing = this.getAlerts();
       const id = typeof raw.id === 'string' && raw.id.trim() ? raw.id : `tc-native-${Date.now()}`;
-      if (existing.some(a => a.id === id)) return;
+      const txId = typeof raw.txId === 'string' ? raw.txId : (typeof raw.reference === 'string' ? raw.reference : id);
+      const alreadyExists = existing.find(a => a.id === id);
+      if (alreadyExists) {
+        if (!alreadyExists.read && !this.isPopdownDismissed(alreadyExists.id, alreadyExists.txId)) {
+          this.setActivePopdownAlert(alreadyExists, { silent: true });
+        }
+        return;
+      }
 
       const accounts = this.getAccounts();
       const fullAcc = typeof raw.fullAccount === 'string' ? raw.fullAccount : (accounts[0]?.accountNumber || '1000419524747');
@@ -1314,16 +1520,21 @@ export const TruecallerService = {
         timeString: rawTime,
         timestamp: typeof raw.timestamp === 'string' ? raw.timestamp : new Date().toISOString(),
         summaryText: typeof raw.summaryText === 'string' ? raw.summaryText : (typeof raw.body === 'string' ? raw.body.slice(0, 120) : 'New bank alert'),
-        txId: typeof raw.txId === 'string' ? raw.txId : (typeof raw.reference === 'string' ? raw.reference : id),
+        txId,
         fullSmsText: typeof raw.fullSmsText === 'string' ? raw.fullSmsText : (typeof raw.body === 'string' ? raw.body : ''),
         read: false,
         backgroundApp: (typeof raw.backgroundApp === 'string' ? raw.backgroundApp : 'messages') as TruecallerBackgroundApp,
       };
 
       this.saveAlerts([incoming, ...existing]);
+      if (!this.isPopdownDismissed(incoming.id, incoming.txId)) {
+        this.setActivePopdownAlert(incoming, { skipEvent: true, skipPush: true });
+      }
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('tc_alerts_updated', { detail: { alert: incoming } }));
-        window.dispatchEvent(new CustomEvent('tc_live_popdown', { detail: { alert: incoming, force: true } }));
+        if (!this.isPopdownDismissed(incoming.id, incoming.txId)) {
+          window.dispatchEvent(new CustomEvent('tc_live_popdown', { detail: { alert: incoming, force: true } }));
+        }
       }
     } catch {}
   }

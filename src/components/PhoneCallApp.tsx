@@ -271,12 +271,20 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
     };
     window.addEventListener('caller_accounts_updated', handleAccountsUpdate);
     window.addEventListener('caller_account_changed', handleAccountsUpdate);
+    window.addEventListener('phone_call_updated', handleAccountsUpdate);
     window.addEventListener('cbe_account_switched', handleExternalAccountSwitch);
+    window.addEventListener('cbe_crossapp_synced', handleAccountsUpdate);
+    window.addEventListener('cbe_balance_updated', handleAccountsUpdate);
+    window.addEventListener('cbe_transaction_completed', handleAccountsUpdate);
     window.addEventListener('storage', handleAccountsUpdate);
     return () => {
       window.removeEventListener('caller_accounts_updated', handleAccountsUpdate);
       window.removeEventListener('caller_account_changed', handleAccountsUpdate);
+      window.removeEventListener('phone_call_updated', handleAccountsUpdate);
       window.removeEventListener('cbe_account_switched', handleExternalAccountSwitch);
+      window.removeEventListener('cbe_crossapp_synced', handleAccountsUpdate);
+      window.removeEventListener('cbe_balance_updated', handleAccountsUpdate);
+      window.removeEventListener('cbe_transaction_completed', handleAccountsUpdate);
       window.removeEventListener('storage', handleAccountsUpdate);
     };
   }, []);

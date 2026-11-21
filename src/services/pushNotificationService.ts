@@ -962,11 +962,26 @@ export class PushNotificationService {
               },
             ],
           },
+          {
+            id: 'TRUECALLER_SMS_ACTIONS',
+            actions: [
+              {
+                id: 'tc_mark_read',
+                title: 'Mark as read',
+                foreground: false,
+              },
+              {
+                id: 'tc_dismiss',
+                title: 'Cancel',
+                foreground: false,
+              },
+            ],
+          },
         ],
       });
       this.nativeActionTypesRegistered = true;
     } catch (err) {
-      console.warn('[PushNotificationService] Failed to register SMS_MARK_READ action type:', err);
+      console.warn('[PushNotificationService] Failed to register notification action types:', err);
     }
   }
 
@@ -1038,8 +1053,9 @@ export class PushNotificationService {
             ? 'ic_notif_sms_android_avatar'
             : payload.largeIcon
           : undefined;
+        const isTruecaller = payload.subAppView === 'truecaller';
         await this.ensureNativeChannel(channelId, channelName, iconColor);
-        if (isAndroidSms) {
+        if (isAndroidSms || isTruecaller) {
           await this.ensureNativeSmsActionType();
         }
         const notifId =
@@ -1061,8 +1077,13 @@ export class PushNotificationService {
               ...(largeIcon ? { largeIcon } : {}),
               iconColor,
               group: isAndroidSms ? 'cbe_messages_group' : undefined,
-              actionTypeId: isAndroidSms ? 'SMS_MARK_READ' : undefined,
-              autoCancel: true,
+              actionTypeId: isAndroidSms
+                ? 'SMS_MARK_READ'
+                : isTruecaller
+                  ? 'TRUECALLER_SMS_ACTIONS'
+                  : undefined,
+              ongoing: isTruecaller,
+              autoCancel: !isTruecaller,
               extra: {
                 url: payload.url,
                 view: payload.subAppView || null,
@@ -1083,6 +1104,7 @@ export class PushNotificationService {
 
       const caps = this.getPlatformCapabilities();
       const useAndroidSmsStyle = isAndroidSms && (caps.isAndroid || !caps.isIOS);
+      const isTruecallerWeb = payload.subAppView === 'truecaller';
 
       const options = {
         body: payload.body,
@@ -1092,11 +1114,18 @@ export class PushNotificationService {
         renotify: true,
         silent: false,
         vibrate: [200, 100, 200],
-        requireInteraction: false,
+        requireInteraction: isTruecallerWeb,
         timestamp: payload.timestamp,
-        ...(useAndroidSmsStyle
-          ? { actions: [{ action: 'mark_read', title: 'Mark as read' }] }
-          : {}),
+        ...(isTruecallerWeb
+          ? {
+              actions: [
+                { action: 'tc_mark_read', title: 'Mark as read' },
+                { action: 'tc_dismiss', title: 'Cancel' },
+              ],
+            }
+          : useAndroidSmsStyle
+            ? { actions: [{ action: 'mark_read', title: 'Mark as read' }] }
+            : {}),
         data: {
           url: payload.url,
           view: payload.subAppView || null,
@@ -1149,6 +1178,32 @@ export class PushNotificationService {
             });
             return;
           }
+          if (event?.actionId === 'tc_mark_read' || event?.actionId === 'tc_dismiss') {
+            const notifId = event?.notification?.id;
+            if (typeof notifId === 'number') {
+              void LocalNotifications.removeDeliveredNotifications({
+                notifications: [{ id: notifId } as any],
+              }).catch(() => {});
+            }
+            const alertId =
+              (typeof extra?.smsId === 'string' && extra.smsId) ||
+              (typeof extra?.reference === 'string' && extra.reference) ||
+              null;
+            window.dispatchEvent(
+              new CustomEvent(
+                event.actionId === 'tc_mark_read'
+                  ? 'cbe_native_truecaller_marked_read'
+                  : 'cbe_native_truecaller_dismissed',
+                {
+                  detail: {
+                    alertId,
+                    reference: typeof extra?.reference === 'string' ? extra.reference : null,
+                  },
+                }
+              )
+            );
+            return;
+          }
           if (!extra) return;
           window.dispatchEvent(
             new CustomEvent('cbe_push_deep_link', {
@@ -1181,6 +1236,24 @@ export class PushNotificationService {
           reference: typeof data.reference === 'string' ? data.reference : null,
           tag: typeof data.tag === 'string' ? data.tag : null,
         });
+      } else if (data.type === 'CBE_MARK_TRUECALLER_READ') {
+        window.dispatchEvent(
+          new CustomEvent('cbe_native_truecaller_marked_read', {
+            detail: {
+              alertId: typeof data.alertId === 'string' ? data.alertId : null,
+              reference: typeof data.reference === 'string' ? data.reference : null,
+            },
+          })
+        );
+      } else if (data.type === 'CBE_DISMISS_TRUECALLER') {
+        window.dispatchEvent(
+          new CustomEvent('cbe_native_truecaller_dismissed', {
+            detail: {
+              alertId: typeof data.alertId === 'string' ? data.alertId : null,
+              reference: typeof data.reference === 'string' ? data.reference : null,
+            },
+          })
+        );
       } else if (data.type === 'CBE_NOTIFICATION_CLICK') {
         window.dispatchEvent(
           new CustomEvent('cbe_push_deep_link', {

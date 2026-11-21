@@ -30,9 +30,41 @@ public class MarkTruecallerReadReceiver extends BroadcastReceiver {
                 NotificationManagerCompat.from(context).cancel(notifId);
             } catch (Exception ignored) {
             }
+            try {
+                SharedPreferences prefs = context.getSharedPreferences(
+                    IncomingSubAppReceiver.PREFS_NAME,
+                    Context.MODE_PRIVATE
+                );
+                JSONArray activeIds = new JSONArray(
+                    prefs.getString(IncomingSubAppReceiver.KEY_ACTIVE_TC_NOTIF_IDS, "[]")
+                );
+                JSONArray remaining = new JSONArray();
+                for (int i = 0; i < activeIds.length(); i++) {
+                    if (activeIds.optInt(i, -1) != notifId) {
+                        remaining.put(activeIds.get(i));
+                    }
+                }
+                prefs.edit().putString(IncomingSubAppReceiver.KEY_ACTIVE_TC_NOTIF_IDS, remaining.toString()).apply();
+            } catch (Exception ignored) {
+            }
         }
 
         if (ACTION_DISMISS.equals(action)) {
+            try {
+                SharedPreferences prefs = context.getSharedPreferences(
+                    IncomingSubAppReceiver.PREFS_NAME,
+                    Context.MODE_PRIVATE
+                );
+                String raw = prefs.getString(IncomingSubAppReceiver.KEY_DISMISSED_TRUECALLER_IDS, "[]");
+                JSONArray arr = new JSONArray(raw);
+                JSONObject rec = new JSONObject();
+                if (alertId != null) rec.put("alertId", alertId);
+                if (reference != null) rec.put("reference", reference);
+                arr.put(rec);
+                prefs.edit().putString(IncomingSubAppReceiver.KEY_DISMISSED_TRUECALLER_IDS, arr.toString()).apply();
+            } catch (Exception ignored) {
+            }
+            MainActivity.notifyNativeTruecallerDismissed(alertId, reference);
             return;
         }
 

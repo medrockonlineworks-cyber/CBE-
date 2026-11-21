@@ -53,6 +53,23 @@ export default function TelegramSimulatorApp({
     setChats(updated);
   };
 
+  useEffect(() => {
+    const handleSync = () => {
+      setChats(TelegramSimulatorService.getChats());
+      setActiveChatId(TelegramSimulatorService.getActiveChatId());
+    };
+    window.addEventListener('telegram_data_updated', handleSync);
+    window.addEventListener('cbe_crossapp_synced', handleSync);
+    window.addEventListener('cbe_transaction_completed', handleSync);
+    window.addEventListener('storage', handleSync);
+    return () => {
+      window.removeEventListener('telegram_data_updated', handleSync);
+      window.removeEventListener('cbe_crossapp_synced', handleSync);
+      window.removeEventListener('cbe_transaction_completed', handleSync);
+      window.removeEventListener('storage', handleSync);
+    };
+  }, []);
+
   const handleSelectChat = (id: string) => {
     TelegramSimulatorService.setActiveChatId(id);
     setActiveChatId(id);

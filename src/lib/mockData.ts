@@ -18,6 +18,7 @@ import { TruecallerService } from '../services/truecallerService';
 import { PhoneCallService } from '../services/phoneCallService';
 import { DashenBankService } from '../services/dashenBankService';
 import { PushNotificationService } from '../services/pushNotificationService';
+import { CrossAppSyncService } from '../services/crossAppSyncService';
 import { 
   ADDITIONAL_DIRECTORY_ACCOUNTS, 
   ADDITIONAL_USERS_SEED, 
@@ -2446,6 +2447,11 @@ export class LocalDb {
     } catch (dashErr) {
       console.error('[DashenBankService] Non-blocking Dashen sync error:', dashErr);
     }
+
+    // Immediately push ALL changed CBE & sub-app state (SMS, Truecaller, Phone, Dashen, Telebirr, Telegram) across apps
+    try {
+      void CrossAppSyncService.pushChangedNow();
+    } catch {}
 
     // Dispatch verified Web Push notification after transaction commit
     void PushNotificationService.notifyVerifiedTransaction(newTx, user);

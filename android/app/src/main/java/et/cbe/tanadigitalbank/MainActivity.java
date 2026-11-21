@@ -245,6 +245,23 @@ public class MainActivity extends BridgeActivity {
         });
     }
 
+    public static void notifyNativeTruecallerDismissed(String alertId, String reference) {
+        java.lang.ref.WeakReference<MainActivity> ref = activeInstanceRef;
+        MainActivity act = ref != null ? ref.get() : null;
+        if (act == null) return;
+        act.runOnUiThread(() -> {
+            try {
+                if (act.getBridge() != null) {
+                    org.json.JSONObject obj = new org.json.JSONObject();
+                    if (alertId != null) obj.put("alertId", alertId);
+                    if (reference != null) obj.put("reference", reference);
+                    act.getBridge().triggerWindowJSEvent("cbe_native_truecaller_dismissed", obj.toString());
+                }
+            } catch (Exception ignored) {
+            }
+        });
+    }
+
     private void handleSubAppIntent(android.content.Intent intent, boolean notifyBridge) {
         if (intent == null) return;
         try {

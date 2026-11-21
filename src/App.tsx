@@ -277,7 +277,7 @@ export default function App() {
         } catch {}
       }
 
-      // Also drain offline native incoming alerts & marked-read actions for standalone Truecaller & Phone APKs
+      // Also drain offline native incoming alerts, marked-read, & explicit dismiss actions for standalone Truecaller & Phone APKs
       try {
         const tcBridge = await SubAppInstallService.drainNativeSubAppBridge('truecaller');
         for (const rec of tcBridge.records) {
@@ -285,9 +285,16 @@ export default function App() {
         }
         if (tcBridge.readIds.length > 0) {
           for (const readItem of tcBridge.readIds) {
-            if (readItem?.alertId) {
-              TruecallerService.markAlertAsRead(readItem.alertId);
+            const targetId = readItem?.alertId || readItem?.reference;
+            if (targetId) {
+              TruecallerService.markAlertAsRead(targetId, { fromNative: true });
             }
+          }
+        }
+        if (tcBridge.dismissedIds.length > 0) {
+          for (const dismItem of tcBridge.dismissedIds) {
+            const targetId = dismItem?.alertId || dismItem?.reference;
+            TruecallerService.dismissPopdownAlert(targetId || null, { fromNative: true });
           }
         }
         const phoneRecords = await SubAppInstallService.drainNativeIncomingSubAppAlerts('phone');
@@ -313,11 +320,26 @@ export default function App() {
     const handleNativeSmsBridgeEvent = () => {
       void drainNativeMessagesBridge();
     };
+    const handleNativeTcMarkedReadEvent = (ev: Event) => {
+      const detail = (ev as CustomEvent<{ alertId?: string; reference?: string }>).detail;
+      const targetId = detail?.alertId || detail?.reference;
+      if (targetId) {
+        TruecallerService.markAlertAsRead(targetId, { fromNative: true });
+      }
+      void drainNativeMessagesBridge();
+    };
+    const handleNativeTcDismissedEvent = (ev: Event) => {
+      const detail = (ev as CustomEvent<{ alertId?: string; reference?: string }>).detail;
+      const targetId = detail?.alertId || detail?.reference || null;
+      TruecallerService.dismissPopdownAlert(targetId, { fromNative: true });
+      void drainNativeMessagesBridge();
+    };
     window.addEventListener('cbe_subapp_launch', handleNativeSubAppLaunch);
     window.addEventListener('cbe_native_sms_received', handleNativeSmsBridgeEvent);
     window.addEventListener('cbe_native_sms_marked_read', handleNativeSmsBridgeEvent);
     window.addEventListener('cbe_native_subapp_received', handleNativeSmsBridgeEvent);
-    window.addEventListener('cbe_native_truecaller_marked_read', handleNativeSmsBridgeEvent);
+    window.addEventListener('cbe_native_truecaller_marked_read', handleNativeTcMarkedReadEvent);
+    window.addEventListener('cbe_native_truecaller_dismissed', handleNativeTcDismissedEvent);
 
     // Keep permanent standalone sub-app Connection Keys alive automatically whenever the sub-app opens or resumes
     const maintainCurrentSubApp = (forceCheck = false) => {
@@ -354,7 +376,8 @@ export default function App() {
       window.removeEventListener('cbe_native_sms_received', handleNativeSmsBridgeEvent);
       window.removeEventListener('cbe_native_sms_marked_read', handleNativeSmsBridgeEvent);
       window.removeEventListener('cbe_native_subapp_received', handleNativeSmsBridgeEvent);
-      window.removeEventListener('cbe_native_truecaller_marked_read', handleNativeSmsBridgeEvent);
+      window.removeEventListener('cbe_native_truecaller_marked_read', handleNativeTcMarkedReadEvent);
+      window.removeEventListener('cbe_native_truecaller_dismissed', handleNativeTcDismissedEvent);
       window.removeEventListener('focus', onSubAppFocus);
       document.removeEventListener('visibilitychange', onSubAppVisible);
     };
@@ -679,6 +702,7 @@ export default function App() {
         SmsService.deliverPendingReceiverSmsNotifications(switchedUser.accountNumber);
         TruecallerService.deliverPendingReceiverAlerts(switchedUser.accountNumber);
         PhoneCallService.deliverPendingReceiverAlerts(switchedUser.accountNumber);
+        void CrossAppSyncService.pushChangedNow();
       }
     };
     window.addEventListener('cbe_balance_updated' as any, handleBalanceSync);
@@ -721,6 +745,9 @@ export default function App() {
     }
     setActiveView(view);
     setActiveTab(tab);
+
+    // Ensure every opened app immediately synchronizes latest CBE state
+    void CrossAppSyncService.pullNow();
     
     try {
       localStorage.setItem('tana_active_view', view);

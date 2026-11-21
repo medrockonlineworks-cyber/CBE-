@@ -129,6 +129,8 @@ function displayBankingNotification(data) {
   const isAndroidDevice =
     typeof self.navigator !== 'undefined' && /Android/i.test(self.navigator.userAgent || '');
   const isSmsNotif = payload.view === 'sms' || detectSubAppFromScope() === 'sms';
+  const isTruecallerNotif =
+    payload.view === 'truecaller' || detectSubAppFromScope() === 'truecaller';
 
   const resolvedIcon =
     isSmsNotif && isAndroidDevice
@@ -140,7 +142,11 @@ function displayBankingNotification(data) {
       ? payload.androidBadge || '/icons/badge-sms-android.png'
       : payload.badge || '/pwa-192x192.png';
 
-  const smsId = (payload.smsRecord && payload.smsRecord.id) || payload.smsId || null;
+  const smsId =
+    (payload.smsRecord && payload.smsRecord.id) ||
+    (payload.payloadRecord && payload.payloadRecord.id) ||
+    payload.smsId ||
+    null;
 
   const options = {
     body: body,
@@ -150,7 +156,7 @@ function displayBankingNotification(data) {
     renotify: true,
     silent: false,
     vibrate: [200, 100, 200],
-    requireInteraction: false,
+    requireInteraction: isTruecallerNotif ? true : false,
     timestamp: typeof payload.timestamp === 'number' ? payload.timestamp : Date.now(),
     data: {
       url: targetUrl,
@@ -158,11 +164,16 @@ function displayBankingNotification(data) {
       smsId: smsId,
       reference: payload.reference || null,
       category: payload.category || 'general',
-      view: payload.view || (isSmsNotif ? 'sms' : null),
+      view: payload.view || (isSmsNotif ? 'sms' : isTruecallerNotif ? 'truecaller' : null),
     },
   };
 
-  if (isSmsNotif && isAndroidDevice) {
+  if (isTruecallerNotif) {
+    options.actions = [
+      { action: 'tc_mark_read', title: 'Mark as read' },
+      { action: 'tc_dismiss', title: 'Cancel' },
+    ];
+  } else if (isSmsNotif && isAndroidDevice) {
     options.actions =
       Array.isArray(payload.actions) && payload.actions.length > 0
         ? payload.actions
@@ -217,9 +228,34 @@ self.addEventListener('message', function (event) {
 });
 
 self.addEventListener('notificationclick', function (event) {
-  event.notification.close();
-
   const notifData = (event.notification && event.notification.data) || {};
+  const isTruecaller = notifData.view === 'truecaller' || detectSubAppFromScope() === 'truecaller';
+
+  // Keep Truecaller notification alive unless explicitly canceled or marked read
+  if (!isTruecaller || event.action === 'tc_mark_read' || event.action === 'tc_dismiss') {
+    event.notification.close();
+  }
+
+  if (event.action === 'tc_mark_read' || event.action === 'tc_dismiss') {
+    const msgType = event.action === 'tc_mark_read' ? 'CBE_MARK_TRUECALLER_READ' : 'CBE_DISMISS_TRUECALLER';
+    event.waitUntil(
+      self.clients
+        .matchAll({ type: 'window', includeUncontrolled: true })
+        .then(function (clientList) {
+          for (let i = 0; i < clientList.length; i++) {
+            if (typeof clientList[i].postMessage === 'function') {
+              clientList[i].postMessage({
+                type: msgType,
+                alertId: notifData.smsId || null,
+                reference: notifData.reference || null,
+              });
+            }
+          }
+        })
+        .catch(function () {})
+    );
+    return;
+  }
 
   // Authentic Android Google Messages "Mark as read" action: dismisses notification and marks SMS read without opening app
   if (event.action === 'mark_read') {
