@@ -15,6 +15,7 @@ export interface AccountTimeMeta {
   latestTimestamp: string | null;
   timeLabel: string;
   isNow: boolean;
+  nowRole?: 'sender' | 'receiver' | null;
   groupKey: 'recent' | 'yesterday' | 'last_week' | 'last_month' | 'older';
   groupTitle: string;
   unreadCount: number;
@@ -773,8 +774,18 @@ export class SmsService {
             listNeedsResave = true;
           }
 
-          // Migrate any existing messages that contain mreciept.cbe.com.et to mbreceipt.cbe.com.et
+          // Self-heal: clear accidental forAllUsers flag on account-specific messages so other accounts never leak
           list.forEach(m => {
+            if (
+              m &&
+              m.forAllUsers === true &&
+              m.accountNumber &&
+              m.accountNumber !== 'ALL' &&
+              m.id !== 'sms-cbe-holiday-2019'
+            ) {
+              m.forAllUsers = false;
+              listNeedsResave = true;
+            }
             if (m.receiptUrl && (m.receiptUrl.includes('mreciept.cbe.com.et') || m.receiptUrl.includes('mbreciept.cbe.com.et'))) {
               m.receiptUrl = m.receiptUrl.replace(/m(?:b)?reciept\.cbe\.com\.et/g, 'mbreceipt.cbe.com.et');
               listNeedsResave = true;
@@ -799,11 +810,103 @@ export class SmsService {
 
       if (accountNumber) {
         const cleanTarget = String(accountNumber || '').replace(/\D/g, '');
-        return list.filter(m => {
+        const allAccounts = this.getAccounts() || [];
+        const matchedAcc = allAccounts.find(
+          a => a && String(a.accountNumber || '').replace(/\D/g, '') === cleanTarget
+        );
+        const holderName = (matchedAcc?.accountName || 'Customer')
+          .replace(/\s*\(Admin\)/gi, '')
+          .replace(/\s*\(\d{4,}\)/g, '')
+          .trim() || 'Customer';
+        const firstName = holderName.split(/\s+/)[0] || holderName;
+        const maskedAcc = maskAccountNumber(cleanTarget || accountNumber);
+        const bal = typeof matchedAcc?.balance === 'number' ? matchedAcc.balance : 12450.0;
+
+        const ownMessages = list.filter(m => {
           if (!m) return false;
           const mAcc = String(m.accountNumber || '').replace(/\D/g, '');
-          return (cleanTarget && mAcc === cleanTarget) || m.forAllUsers === true || m.accountNumber === 'ALL';
+          const isHoliday = m.id === 'sms-cbe-holiday-2019' || m.accountNumber === 'ALL';
+          return !isHoliday && Boolean(cleanTarget) && mAcc === cleanTarget;
         });
+
+        const holidayMessages = list
+          .filter(m => m && (m.id === 'sms-cbe-holiday-2019' || m.accountNumber === 'ALL'))
+          .map(m => {
+            if (m.id === 'sms-cbe-holiday-2019' || (m.message && m.message.includes('combanketh.et/holidays'))) {
+              return {
+                ...m,
+                accountName: holderName,
+                recipient: holderName,
+                message: `ውድ ${firstName}፣ ${CBE_NEW_YEAR_2019_MESSAGE}`,
+              };
+            }
+            return { ...m, accountName: holderName };
+          });
+
+        // Synthesize authentic pre-simulated CBE messages in this account's name when account has no personal transactions yet
+        let result = [...ownMessages, ...holidayMessages];
+        if (ownMessages.length === 0 && cleanTarget) {
+          const seedSuffix = cleanTarget.slice(-4) || '0000';
+          const preCreditAmt = 5000.0;
+          const preDebitAmt = 1250.0;
+          const balBeforeDebit = bal + preDebitAmt;
+          const preCreditTxId = `FT26074P${seedSuffix}1`;
+          const preDebitTxId = `FT26074P${seedSuffix}2`;
+          const synthetic: SmsMessage[] = [
+            {
+              id: `sms-presim-cr-${cleanTarget}`,
+              transactionId: preCreditTxId,
+              accountNumber: cleanTarget,
+              accountName: holderName,
+              role: 'receiver',
+              bankName: 'CBE',
+              sender: 'CBE',
+              recipient: holderName,
+              type: 'CREDIT',
+              amount: preCreditAmt,
+              serviceCharge: 0,
+              vat: 0,
+              disasterRecovery: 0,
+              totalDebited: 0,
+              balance: balBeforeDebit,
+              message: `Dear ${holderName} your Account ${maskedAcc} has been Credited with ETB ${preCreditAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}. Your Current Balance is ETB ${balBeforeDebit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}. Thank you for Banking with CBE! https://apps.cbe.com.et:100/?id=${preCreditTxId}09545864`,
+              receiptUrl: `https://apps.cbe.com.et:100/?id=${preCreditTxId}09545864`,
+              feedbackUrl: DEFAULT_FEEDBACK_URL,
+              timestamp: getRelativeDate(1, 10, 15),
+              read: true,
+            },
+            {
+              id: `sms-presim-dr-${cleanTarget}`,
+              transactionId: preDebitTxId,
+              accountNumber: cleanTarget,
+              accountName: holderName,
+              role: 'sender',
+              bankName: 'CBE',
+              sender: holderName,
+              recipient: 'CBE Account',
+              type: 'TRANSFER',
+              amount: preDebitAmt,
+              serviceCharge: 0.5,
+              vat: 0.08,
+              disasterRecovery: 0,
+              totalDebited: preDebitAmt + 0.58,
+              balance: bal,
+              message: `Dear ${holderName} your Account ${maskedAcc} has been debited with ETB ${preDebitAmt.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}. Service charge of ETB 0.50 and VAT(15%) of ETB 0.08 with a total of ETB ${(preDebitAmt + 0.58).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}. Your Current Balance is ETB ${bal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}. Thank you for Banking with CBE! https://apps.cbe.com.et:100/?id=${preDebitTxId}09545864`,
+              receiptUrl: `https://apps.cbe.com.et:100/?id=${preDebitTxId}09545864`,
+              feedbackUrl: DEFAULT_FEEDBACK_URL,
+              timestamp: getRelativeDate(0, 9, 25),
+              read: true,
+            },
+          ];
+          result = [...synthetic, ...holidayMessages];
+        }
+
+        result.sort((a, b) => {
+          const timeA = new Date(a?.timestamp || 0).getTime();
+          const timeB = new Date(b?.timestamp || 0).getTime();
+          return (isNaN(timeA) ? 0 : timeA) - (isNaN(timeB) ? 0 : timeB);
+        });
+        return result;
       }
       return list;
     } catch (err) {
@@ -937,7 +1040,7 @@ export class SmsService {
         balance: sms.balance,
         message: sms.message,
         timestamp: sms.timestamp,
-        forAllUsers: true,
+        forAllUsers: Boolean(sms.forAllUsers),
       },
     });
   }
@@ -1323,12 +1426,15 @@ export class SmsService {
         });
 
       // Identify the sender and receiver of the most recent transaction (strictly max 2 accounts)
-      const nowAccountCleanSet = new Set<string>();
+      let latestSenderAcc = '';
+      let latestReceiverAcc = '';
+      const nowRoleMap = new Map<string, 'sender' | 'receiver'>();
 
-      // 1. Check local transactions
+      // 1. Check live LocalDb transactions ('tana_transactions') and legacy 'cbe_transactions'
       try {
         if (typeof window !== 'undefined') {
-          const storedTxRaw = localStorage.getItem('cbe_transactions');
+          const storedTxRaw =
+            localStorage.getItem('tana_transactions') || localStorage.getItem('cbe_transactions');
           if (storedTxRaw) {
             const txList = JSON.parse(storedTxRaw);
             if (Array.isArray(txList) && txList.length > 0) {
@@ -1339,11 +1445,15 @@ export class SmsService {
               });
               const latestTx = sortedTx[0];
               if (latestTx) {
-                if (latestTx.senderAccount) {
-                  nowAccountCleanSet.add(String(latestTx.senderAccount).replace(/\D/g, ''));
+                const sClean = String(latestTx.senderAccount || '').replace(/\D/g, '');
+                const rClean = String(latestTx.recipientAccount || '').replace(/\D/g, '');
+                if (sClean) {
+                  latestSenderAcc = sClean;
+                  nowRoleMap.set(sClean, 'sender');
                 }
-                if (latestTx.recipientAccount) {
-                  nowAccountCleanSet.add(String(latestTx.recipientAccount).replace(/\D/g, ''));
+                if (rClean && rClean !== sClean) {
+                  latestReceiverAcc = rClean;
+                  nowRoleMap.set(rClean, 'receiver');
                 }
               }
             }
@@ -1353,34 +1463,47 @@ export class SmsService {
         // Non-blocking fallback
       }
 
-      // 2. Check SMS messages for the latest transaction sender and receiver
+      // 2. Check SMS messages for the latest transaction sender and receiver if not yet found
       const sortedAllMessages = [...allMessages]
-        .filter(m => m && !m.forAllUsers && m.accountNumber !== 'ALL')
+        .filter(m => m && !m.forAllUsers && m.accountNumber !== 'ALL' && m.id !== 'sms-cbe-holiday-2019')
         .sort((a, b) => {
           const timeA = new Date(a?.timestamp || 0).getTime();
           const timeB = new Date(b?.timestamp || 0).getTime();
           return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
         });
 
-      if (nowAccountCleanSet.size < 2 && sortedAllMessages.length > 0) {
+      if (nowRoleMap.size < 2 && sortedAllMessages.length > 0) {
         const topMsg = sortedAllMessages[0];
         const topTxId = topMsg.transactionId;
-
-        if (topMsg.accountNumber) {
-          nowAccountCleanSet.add(String(topMsg.accountNumber).replace(/\D/g, ''));
+        const topClean = String(topMsg.accountNumber || '').replace(/\D/g, '');
+        if (topClean && !nowRoleMap.has(topClean)) {
+          const inferredRole: 'sender' | 'receiver' =
+            topMsg.role === 'sender' || topMsg.type === 'TRANSFER' || topMsg.type === 'DEBIT'
+              ? 'sender'
+              : 'receiver';
+          nowRoleMap.set(topClean, inferredRole);
+          if (inferredRole === 'sender' && !latestSenderAcc) latestSenderAcc = topClean;
+          if (inferredRole === 'receiver' && !latestReceiverAcc) latestReceiverAcc = topClean;
         }
 
-        if (topTxId) {
+        if (topTxId && nowRoleMap.size < 2) {
           const matchingTxMsgs = sortedAllMessages.filter(m => m.transactionId === topTxId);
           for (const m of matchingTxMsgs) {
-            if (m.accountNumber) {
-              nowAccountCleanSet.add(String(m.accountNumber).replace(/\D/g, ''));
+            const cleanM = String(m.accountNumber || '').replace(/\D/g, '');
+            if (cleanM && !nowRoleMap.has(cleanM)) {
+              const roleM: 'sender' | 'receiver' =
+                m.role === 'sender' || m.type === 'TRANSFER' || m.type === 'DEBIT'
+                  ? 'sender'
+                  : 'receiver';
+              nowRoleMap.set(cleanM, roleM);
+              if (roleM === 'sender' && !latestSenderAcc) latestSenderAcc = cleanM;
+              if (roleM === 'receiver' && !latestReceiverAcc) latestReceiverAcc = cleanM;
             }
-            if (nowAccountCleanSet.size >= 2) break;
+            if (nowRoleMap.size >= 2) break;
           }
         }
 
-        if (nowAccountCleanSet.size < 2) {
+        if (nowRoleMap.size < 2) {
           const otherParty = topMsg.role === 'sender' ? topMsg.recipient : topMsg.sender;
           if (otherParty && typeof otherParty === 'string') {
             const cleanOther = String(otherParty).replace(/\D/g, '');
@@ -1389,8 +1512,10 @@ export class SmsService {
                 const cleanA = String(a?.accountNumber || '').replace(/\D/g, '');
                 return cleanA && (cleanA === cleanOther || (cleanOther.length >= 4 && cleanA.endsWith(cleanOther.slice(-4))));
               });
-              if (matchedAcc && matchedAcc.accountNumber) {
-                nowAccountCleanSet.add(String(matchedAcc.accountNumber).replace(/\D/g, ''));
+              const cleanFound = matchedAcc ? String(matchedAcc.accountNumber || '').replace(/\D/g, '') : '';
+              if (cleanFound && !nowRoleMap.has(cleanFound)) {
+                const otherRole: 'sender' | 'receiver' = topMsg.role === 'sender' ? 'receiver' : 'sender';
+                nowRoleMap.set(cleanFound, otherRole);
               }
             }
           }
@@ -1398,30 +1523,42 @@ export class SmsService {
       }
 
       // If still need counterpart, pick the next highest activity account
-      if (nowAccountCleanSet.size < 2 && accountMetas.length > 0) {
-        for (const meta of accountMetas) {
+      if (nowRoleMap.size < 2 && accountMetas.length > 0) {
+        const sortedFallback = [...accountMetas].sort((a, b) => {
+          const timeA = a.latestTimestamp ? new Date(a.latestTimestamp).getTime() : 0;
+          const timeB = b.latestTimestamp ? new Date(b.latestTimestamp).getTime() : 0;
+          return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
+        });
+        for (const meta of sortedFallback) {
           const cleanAcc = String(meta.account?.accountNumber || '').replace(/\D/g, '');
-          if (cleanAcc) {
-            nowAccountCleanSet.add(cleanAcc);
+          if (cleanAcc && !nowRoleMap.has(cleanAcc)) {
+            const hasSender = Array.from(nowRoleMap.values()).includes('sender');
+            nowRoleMap.set(cleanAcc, hasSender ? 'receiver' : 'sender');
           }
-          if (nowAccountCleanSet.size >= 2) break;
+          if (nowRoleMap.size >= 2) break;
         }
       }
 
-      // Fulfills: "the now badge is only should have two accounts ok. the receiver and sender."
-      const finalNowAccounts = new Set(Array.from(nowAccountCleanSet).slice(0, 2));
+      // Strictly keep max 2 accounts: latest Sender & Receiver
+      const finalNowRoleMap = new Map<string, 'sender' | 'receiver'>(
+        Array.from(nowRoleMap.entries()).slice(0, 2)
+      );
 
       // Sort all accounts:
-      // 1. The two "Now" accounts (sender and receiver of latest transaction) are FIRST
+      // 1. The two "Now" accounts (receiver & sender of latest transaction) are ALWAYS FIRST
       // 2. The other accounts are sorted by their timestamp descending
       accountMetas.sort((a, b) => {
         const aClean = String(a.account?.accountNumber || '').replace(/\D/g, '');
         const bClean = String(b.account?.accountNumber || '').replace(/\D/g, '');
-        const aIsNow = aClean ? finalNowAccounts.has(aClean) : false;
-        const bIsNow = bClean ? finalNowAccounts.has(bClean) : false;
+        const aRole = aClean ? finalNowRoleMap.get(aClean) : undefined;
+        const bRole = bClean ? finalNowRoleMap.get(bClean) : undefined;
 
-        if (aIsNow && !bIsNow) return -1;
-        if (!aIsNow && bIsNow) return 1;
+        if (aRole && !bRole) return -1;
+        if (!aRole && bRole) return 1;
+        if (aRole && bRole && aRole !== bRole) {
+          // Receiver first, then Sender
+          return aRole === 'receiver' ? -1 : 1;
+        }
 
         const timeA = a.latestTimestamp ? new Date(a.latestTimestamp).getTime() : 0;
         const timeB = b.latestTimestamp ? new Date(b.latestTimestamp).getTime() : 0;
@@ -1434,11 +1571,22 @@ export class SmsService {
 
       accountMetas.forEach((item) => {
         const cleanAcc = String(item.account?.accountNumber || '').replace(/\D/g, '');
-        const isSenderOrReceiver = cleanAcc ? finalNowAccounts.has(cleanAcc) : false;
+        const nowRole = cleanAcc ? finalNowRoleMap.get(cleanAcc) || null : null;
+
+        // Strictly pin the 2 latest transaction accounts (Receiver & Sender) into Recent with explicit badges
+        if (nowRole) {
+          item.groupKey = 'recent';
+          item.groupTitle = 'Recent';
+          item.isNow = true;
+          item.nowRole = nowRole;
+          item.timeLabel = nowRole === 'receiver' ? 'Now • Receiver' : 'Now • Sender';
+          return;
+        }
 
         if (!item.latestTimestamp) {
           item.timeLabel = 'No activity';
           item.isNow = false;
+          item.nowRole = null;
           item.groupKey = 'older';
           item.groupTitle = 'Older';
           return;
@@ -1448,6 +1596,7 @@ export class SmsService {
         if (isNaN(date.getTime())) {
           item.timeLabel = 'No activity';
           item.isNow = false;
+          item.nowRole = null;
           item.groupKey = 'older';
           item.groupTitle = 'Older';
           return;
@@ -1459,28 +1608,21 @@ export class SmsService {
         if (diffDays <= 0) {
           item.groupKey = 'recent';
           item.groupTitle = 'Recent';
-
-          // Only the receiver and sender have the "Now" badge!
-          if (isSenderOrReceiver) {
-            item.isNow = true;
-            item.timeLabel = 'Now';
-          } else {
-            // All other accounts in the recent list display their timestamp
-            item.isNow = false;
-            nonNowRecentIndex++;
-            // Stagger if timestamps are identical so each shows a realistic, distinct time
-            const staggeredDate = new Date(date.getTime() - (nonNowRecentIndex * 15 * 60 * 1000));
-            const displayDate = (!isNaN(staggeredDate.getTime()) && staggeredDate.getDate() === date.getDate()) ? staggeredDate : date;
-            item.timeLabel = displayDate.toLocaleTimeString('en-US', {
-              hour: 'numeric',
-              minute: '2-digit',
-              hour12: true,
-            });
-          }
+          item.isNow = false;
+          item.nowRole = null;
+          nonNowRecentIndex++;
+          const staggeredDate = new Date(date.getTime() - (nonNowRecentIndex * 15 * 60 * 1000));
+          const displayDate = (!isNaN(staggeredDate.getTime()) && staggeredDate.getDate() === date.getDate()) ? staggeredDate : date;
+          item.timeLabel = displayDate.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true,
+          });
         } else if (diffDays === 1) {
           item.groupKey = 'yesterday';
           item.groupTitle = 'Yesterday';
           item.isNow = false;
+          item.nowRole = null;
           item.timeLabel = 'Yesterday';
         } else if (diffDays > 1 && diffDays <= 7) {
           const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });

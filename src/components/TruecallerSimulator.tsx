@@ -482,7 +482,46 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
     return null;
   }, [alerts, accounts, activeBankKey]);
 
-  // Search filtered accounts list with current message top-first rule strictly inside the account list:
+  // Identify both latest transaction Receiver & Sender from live tana_transactions + Truecaller alerts
+  const latestTxRoleMap = useMemo(() => {
+    const map = new Map<string, 'sender' | 'receiver'>();
+    try {
+      const rawTx = typeof window !== 'undefined'
+        ? localStorage.getItem('tana_transactions') || localStorage.getItem('cbe_transactions')
+        : null;
+      if (rawTx) {
+        const parsed = JSON.parse(rawTx);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const sorted = [...parsed].sort((a: any, b: any) => {
+            const ta = new Date(a?.createdAt || a?.date || a?.timestamp || 0).getTime();
+            const tb = new Date(b?.createdAt || b?.date || b?.timestamp || 0).getTime();
+            return (isNaN(tb) ? 0 : tb) - (isNaN(ta) ? 0 : ta);
+          });
+          const top = sorted[0];
+          if (top) {
+            const rClean = String(top.recipientAccount || '').replace(/\D/g, '');
+            const sClean = String(top.senderAccount || '').replace(/\D/g, '');
+            if (rClean) map.set(rClean, 'receiver');
+            if (sClean && sClean !== rClean) map.set(sClean, 'sender');
+          }
+        }
+      }
+    } catch {}
+
+    if (map.size < 2 && alerts.length > 0) {
+      const bankAlerts = alerts.filter(a => a.bankKey === activeBankKey);
+      for (const a of bankAlerts) {
+        const clean = String(a.fullAccount || '').replace(/\D/g, '');
+        if (clean && !map.has(clean)) {
+          map.set(clean, a.role === 'sender' ? 'sender' : 'receiver');
+        }
+        if (map.size >= 2) break;
+      }
+    }
+    return map;
+  }, [alerts, accounts, activeBankKey]);
+
+  // Search filtered accounts list with both latest Receiver & Sender pinned at top:
   const filteredAccounts = useMemo(() => {
     let list = bankSpecificAccounts;
     if (accountSearchQuery.trim()) {
@@ -494,19 +533,29 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
       );
     }
 
-    // The current message top-first rule applies strictly inside the account list!
     return [...list].sort((a, b) => {
-      if (recentTxOnTop && currentMessageAccountId) {
-        const aIsCurrent = a.id === currentMessageAccountId;
-        const bIsCurrent = b.id === currentMessageAccountId;
-        if (aIsCurrent && !bIsCurrent) return -1;
-        if (!aIsCurrent && bIsCurrent) return 1;
+      if (recentTxOnTop) {
+        const aClean = String(a.accountNumber || '').replace(/\D/g, '');
+        const bClean = String(b.accountNumber || '').replace(/\D/g, '');
+        const aRole = latestTxRoleMap.get(aClean);
+        const bRole = latestTxRoleMap.get(bClean);
+        if (aRole && !bRole) return -1;
+        if (!aRole && bRole) return 1;
+        if (aRole && bRole && aRole !== bRole) {
+          return aRole === 'receiver' ? -1 : 1;
+        }
+        if (currentMessageAccountId) {
+          const aIsCurrent = a.id === currentMessageAccountId;
+          const bIsCurrent = b.id === currentMessageAccountId;
+          if (aIsCurrent && !bIsCurrent) return -1;
+          if (!aIsCurrent && bIsCurrent) return 1;
+        }
       }
       const timeA = a.lastTransactionAt ? new Date(a.lastTransactionAt).getTime() : 0;
       const timeB = b.lastTransactionAt ? new Date(b.lastTransactionAt).getTime() : 0;
       return timeB - timeA;
     });
-  }, [bankSpecificAccounts, accountSearchQuery, currentMessageAccountId, recentTxOnTop]);
+  }, [bankSpecificAccounts, accountSearchQuery, currentMessageAccountId, recentTxOnTop, latestTxRoleMap]);
 
   // Modal: Choose Phone Screen & Phone Type
   const [showPickerModal, setShowPickerModal] = useState<boolean>(false);
@@ -1187,10 +1236,46 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
           snippet: `Dear ${activeHolderFullName} A ...`,
         };
       }
+      if (t.id === '251994') {
+        return {
+          ...t,
+          snippet: `Dear ${activeHolderFirstName}, Your prepaid account has bee...`,
+        };
+      }
+      if (t.id === 'safaricom') {
+        return {
+          ...t,
+          snippet: `ውድ ${activeHolderFirstName}፣ አስደሳች ዜና!...`,
+        };
+      }
       if (t.id === 'mpesa-info') {
         return {
           ...t,
           snippet: `ውድ ${activeHolderFirstName} በብሔራዊ ባንክ መመሪያ መሰረት እባክዎ የሂ...`,
+        };
+      }
+      if (t.id === 'BOA') {
+        return {
+          ...t,
+          snippet: `ውድ ${activeHolderFirstName}፣ ዓለም አቀፍ ግብይቶችን በቀላሉ ያድርጉ!...`,
+        };
+      }
+      if (t.id === 'bunna-bank') {
+        return {
+          ...t,
+          snippet: `ውድ ${activeHolderFirstName}፣ የቡና ባንክ ዲጂታል አገልግሎት...`,
+        };
+      }
+      if (t.id === 'telebirr') {
+        return {
+          ...t,
+          snippet: `ውድ ${activeHolderFirstName}፣ የቴሌብር ሂሳብዎ...`,
+        };
+      }
+      if (t.id === 'ethio-tel') {
+        return {
+          ...t,
+          snippet: `ውድ ${activeHolderFirstName}፣ አድማስ ዲጂታል ሎተሪ በ51ኛው ዙር...`,
         };
       }
       return t;
@@ -2556,7 +2641,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
           </div>
 
           {/* Floating Test Alert Action */}
-          <div className="fixed bottom-10 right-4 z-30">
+          <div className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] right-4 z-30">
             <button
               type="button"
               onClick={() => {
@@ -2750,7 +2835,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
         </div>
 
         {/* Floating Action Buttons: Start Chat + Gemini sparkle */}
-        <div className="fixed bottom-10 right-5 flex flex-col items-end space-y-3 z-30">
+        <div className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] right-5 flex flex-col items-end space-y-3 z-30">
           <div className={`w-11 h-11 rounded-full border flex items-center justify-center shadow-xl cursor-pointer transition ${
             isLightMode 
               ? 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50' 
@@ -3033,7 +3118,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
           </div>
 
           {/* Non-replyable sender footer message */}
-          <div className="w-full bg-black text-center text-[12px] text-[#8e9aa8] py-1 select-none pointer-events-auto">
+          <div className="w-full bg-black text-center text-[12px] text-[#8e9aa8] pt-1 pb-[max(env(safe-area-inset-bottom,0px),12px)] select-none pointer-events-auto">
             Replying is not supported by this sender
           </div>
         </div>
@@ -3187,7 +3272,9 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                   <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
                     {filteredAccounts.map(acc => {
                       const isSelected = activeAccount?.id === acc.id || activeAccountId === acc.id;
-                      const isNowAccount = acc.id === currentMessageAccountId;
+                      const accClean = String(acc.accountNumber || '').replace(/\D/g, '');
+                      const nowRole = latestTxRoleMap.get(accClean) || null;
+                      const isNowAccount = Boolean(nowRole) || acc.id === currentMessageAccountId;
                       return (
                         <div 
                           key={acc.id}
@@ -3231,15 +3318,19 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
                           }`}
                         >
                           <div className="space-y-0.5">
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center flex-wrap gap-1.5">
                               <span className={`text-xs font-bold ${isSelected || isNowAccount ? 'text-white' : 'text-neutral-200 group-hover:text-white'}`}>
                                 {acc.holderName}
                               </span>
-                              {/* "Now" badge strictly inside the account list matching user rule */}
+                              {/* Explicit "Now • Receiver" / "Now • Sender" badge for latest 2 transaction accounts */}
                               {isNowAccount && (
-                                <span className="text-[9.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-[#0066FF] text-white flex items-center space-x-1 shadow-sm border border-blue-400/40">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-200 animate-pulse mr-0.5" />
-                                  <span>Now</span>
+                                <span className={`text-[9.5px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full flex items-center space-x-1 shadow-sm border whitespace-nowrap ${
+                                  nowRole === 'receiver'
+                                    ? 'bg-emerald-600/90 text-white border-emerald-400/50'
+                                    : 'bg-[#0066FF] text-white border-blue-400/40'
+                                }`}>
+                                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse mr-0.5" />
+                                  <span>{nowRole === 'receiver' ? 'Now • Receiver' : nowRole === 'sender' ? 'Now • Sender' : 'Now'}</span>
                                 </span>
                               )}
                               {isSelected ? (

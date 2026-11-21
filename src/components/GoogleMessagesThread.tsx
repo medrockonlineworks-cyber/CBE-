@@ -226,7 +226,7 @@ export default function GoogleMessagesThread({
       </div>
 
       {/* Bottom Composer */}
-      <footer className={`p-3 border-t sticky bottom-0 ${
+      <footer className={`px-3 pt-3 pb-[max(env(safe-area-inset-bottom,0px),12px)] border-t sticky bottom-0 ${
         isDarkMode ? 'bg-[#1a1b1e] border-neutral-800' : 'bg-white border-neutral-200'
       }`}>
         <form onSubmit={handleSend} className="flex items-center space-x-2">

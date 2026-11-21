@@ -78,12 +78,29 @@ function buildPreSimulatedMessageText(msgId: string, profile: GoogleAccountProfi
       return `Dear ${profile.firstName} You have transferred ETB 2,000.00 to account 1********3892. Your current balance is ETB 3,450.00. Thank you for using our service.`;
     case 'msg-boa-1':
       return `Dear ${profile.firstName}, your account 5*****96 was debited with ETB 1,812.00. Available balance ETB 14,230.50. Bank of Abyssinia.`;
+    case 'msg-830-1':
+      return `ውድ ${profile.firstName}፣ በቴሌብር ስላደረጉት የገንዘብ ዝውውር እናመሰግናለን:: ወደ *830*1# በመደወል አገልግሎትዎን ያግኙ። telebirr!`;
+    case 'msg-25195-1':
+      return `ውድ ${profile.firstName}፣ በአቢሲኒያ ቤት የእረፍት ቀኖችን ከ 400% ጉርሻ ጋር ያጣጥሙ ! አሁኑኑ ይመዝገቡና ልዩ ሽልማቶችን ያሸንፉ!`;
     case 'msg-dash-1':
       return `Dear, ${profile.upperFirstName} Your Account '5502******011' has been credited with ETB 5,000.00. Current Balance: ETB 18,720.00. Dashen Bank.`;
     case 'msg-251994-1':
       return `Dear ${profile.firstName}, your remaining prepaid account balance is ETB 115.40. Thank you for choosing our service.`;
+    case 'msg-saf-1':
+      return `ውድ ${profile.firstName}፣ አስደሳች ዜና!\nበአንድ ጥቅል ውስጥ የተለያዩ የቴሌ ቁጥሮች ይደውሉ!\nወደ *777# ይደውሉና "ቴሌ ደቂቃ"ን ይምረጡ::`;
+    case 'msg-saf-2':
+      return `Dear ${profile.firstName}, <#> 4463 is your verification code. NEVER share your M-PESA Safaricom verification code.`;
+    case 'msg-saf-3':
+    case 'msg-saf-4':
+      return `ውድ ${profile.firstName}፣ ዕለታዊ የተመረጡ መረጃዎች እንዳያመልጦ! አስተማማኝ እና እውነተኛ የቴክኖሎጂ ዜናዎችን ለማግኘት ዛሬውኑ ይቀላቀሉ::አገልግሎት ለማግኘት "A" ብለው 30000 ላይ በአጭር መልዕክት ይላኩ ወደ *799# ይደውሉ!`;
     case 'msg-mpesa-1':
       return `ውድ ${profile.firstName} በብሔራዊ ባንክ መመሪያ መሰረት እባክዎ የሂሳብ ቁጥርዎን ከፋይዳ ጋር ያገናኙ። ለተጨማሪ መረጃ ወደ 733 ይደውሉ። M-PESA Safaricom!`;
+    case 'msg-boa-promo-1':
+      return `ውድ ${profile.firstName}፣ ዓለም አቀፍ ግብይቶችን በቀላሉ ያድርጉ! የባንክ ኦፍ አቢሲንያ ዲጂታል የክፍያ አማራጮችን አሁኑኑ ይጠቀሙ። ለተጨማሪ መረጃ 8397 ይደውሉ።`;
+    case 'msg-bunna-1':
+      return `ውድ ${profile.firstName}፣ የቡና ባንክ ሞባይል ባንኪንግ አገልግሎትን ስለመረጡ እናመሰግናለን። የሂሳብዎን እንቅስቃሴ በደህንነት ይከታተሉ።`;
+    case 'msg-fraud-1':
+      return `Dear ${profile.fullName}, be aware of fraudulent messages asking for your PIN or OTP. Commercial Bank of Ethiopia will never ask for your password.`;
     default:
       return null;
   }

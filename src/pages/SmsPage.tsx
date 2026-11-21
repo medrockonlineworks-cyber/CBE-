@@ -21,7 +21,8 @@ import {
   Clock,
   Sliders,
   ChevronRight,
-  BellRing
+  BellRing,
+  Search
 } from 'lucide-react';
 import { SmsMessage, SmsAccount } from '../types/sms';
 import PhoneSettingsModal from '../components/PhoneSettingsModal';
@@ -267,10 +268,27 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
     };
   }, [accounts, activeAccountNum]);
 
-  // Group accounts according to transaction days: Recent (with Now for latest), Yesterday, Last week, Last month
+  const [accountSearchQuery, setAccountSearchQuery] = useState('');
+
+  // Group accounts according to transaction days: Recent (with Now • Receiver & Now • Sender for latest), Yesterday, Last week, Last month
   const groupedSections = useMemo(() => {
     return SmsService.getGroupedAccounts();
   }, [accounts, messages]);
+
+  const filteredGroupedSections = useMemo(() => {
+    const q = accountSearchQuery.toLowerCase().trim();
+    if (!q) return groupedSections;
+    return groupedSections
+      .map(section => ({
+        ...section,
+        accounts: section.accounts.filter(meta => {
+          const name = (meta.account.accountName || '').toLowerCase();
+          const num = (meta.account.accountNumber || '').toLowerCase();
+          return name.includes(q) || num.includes(q);
+        }),
+      }))
+      .filter(section => section.accounts.length > 0);
+  }, [groupedSections, accountSearchQuery]);
 
   // Switch active account
   const handleSelectAccount = (accNum: string) => {
@@ -744,12 +762,41 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
                   </button>
                 </div>
 
+                {/* Instant Account Search Bar */}
+                <div className={`px-3 py-2 border-b ${isDarkMode ? 'border-neutral-800' : 'border-neutral-100'}`}>
+                  <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border ${
+                    isDarkMode ? 'bg-neutral-900 border-neutral-700/80 text-white' : 'bg-neutral-100 border-neutral-200 text-neutral-900'
+                  }`}>
+                    <Search className="w-3.5 h-3.5 text-neutral-400 flex-shrink-0" />
+                    <input
+                      type="text"
+                      value={accountSearchQuery}
+                      onChange={(e) => setAccountSearchQuery(e.target.value)}
+                      onClick={(e) => e.stopPropagation()}
+                      placeholder="Search name or account..."
+                      className="w-full bg-transparent text-xs outline-none placeholder-neutral-500"
+                    />
+                    {accountSearchQuery && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setAccountSearchQuery('');
+                        }}
+                        className="text-neutral-400 hover:text-neutral-200"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 {/* Account list options grouped by transaction day (Recent, Yesterday, Last week, Last month) */}
                 <div className="max-h-64 overflow-y-auto py-0.5">
-                  {groupedSections.length === 0 ? (
-                    <div className="px-4 py-3 text-xs text-neutral-500 text-center">No accounts found</div>
+                  {filteredGroupedSections.length === 0 ? (
+                    <div className="px-4 py-3 text-xs text-neutral-500 text-center">No matching accounts found</div>
                   ) : (
-                    groupedSections.map(section => (
+                    filteredGroupedSections.map(section => (
                       <div key={section.key} className="py-0.5">
                         {/* Group Header */}
                         <div className={`px-4 py-1 text-[10px] font-bold uppercase tracking-wider ${
@@ -792,10 +839,14 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
                                 </div>
 
                                 <div className="flex items-center space-x-2 flex-shrink-0 ml-1">
-                                  {/* "Now" badge (restricted strictly to receiver and sender) or formatted transaction time */}
+                                  {/* Explicit "Now • Receiver" / "Now • Sender" badge for latest 2 transaction accounts */}
                                   {meta.isNow ? (
-                                    <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-purple-900/50 text-purple-300 border border-purple-700/40 tracking-tight">
-                                      Now
+                                    <span className={`text-[10.5px] font-semibold px-2 py-0.5 rounded-full whitespace-nowrap tracking-tight border ${
+                                      meta.nowRole === 'receiver'
+                                        ? 'bg-emerald-900/50 text-emerald-300 border-emerald-600/50'
+                                        : 'bg-purple-900/50 text-purple-300 border-purple-700/50'
+                                    }`}>
+                                      {meta.nowRole === 'receiver' ? 'Now • Receiver' : 'Now • Sender'}
                                     </span>
                                   ) : (
                                     <span className={`text-[11px] font-medium ${isDarkMode ? 'text-neutral-400' : 'text-neutral-500'}`}>
@@ -964,7 +1015,7 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
       {/* 4. Bottom Banner: Exact text from screenshot */}
       <footer className={`w-full ${
         isDarkMode ? 'bg-[#161719] border-neutral-800/80 text-neutral-300' : 'bg-white border-neutral-200 text-neutral-600'
-      } border-t px-4 py-2.5 z-30 shrink-0`}>
+      } border-t px-4 pt-2.5 pb-[max(env(safe-area-inset-bottom,0px),14px)] z-30 shrink-0`}>
         <div className="max-w-xl mx-auto flex items-center justify-center text-center">
           <p className={`text-[12.5px] ${isDarkMode ? 'text-neutral-300' : 'text-neutral-600'} font-normal`}>
             Sender can't accept replies. Contact them directly.{' '}
@@ -1005,12 +1056,35 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
                 Each sender or receiver account has its own independent message thread. Select an account to view its messages or add a new account number.
               </p>
 
+              {/* Search input for modal accounts list */}
+              <div className={`flex items-center gap-2 px-3 py-2 rounded-xl border ${
+                isDarkMode ? 'bg-neutral-900 border-neutral-700 text-white' : 'bg-neutral-100 border-neutral-300 text-neutral-900'
+              }`}>
+                <Search className="w-4 h-4 text-neutral-400 flex-shrink-0" />
+                <input
+                  type="text"
+                  value={accountSearchQuery}
+                  onChange={(e) => setAccountSearchQuery(e.target.value)}
+                  placeholder="Search account by name or number..."
+                  className="w-full bg-transparent text-xs outline-none placeholder-neutral-500"
+                />
+                {accountSearchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setAccountSearchQuery('')}
+                    className="text-neutral-400 hover:text-neutral-200"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
               {/* Accounts List grouped by transaction days */}
               <div className="space-y-3 max-h-64 overflow-y-auto pr-1">
-                {groupedSections.length === 0 ? (
-                  <div className="py-4 text-center text-xs text-neutral-500">No accounts found</div>
+                {filteredGroupedSections.length === 0 ? (
+                  <div className="py-4 text-center text-xs text-neutral-500">No matching accounts found</div>
                 ) : (
-                  groupedSections.map(section => (
+                  filteredGroupedSections.map(section => (
                     <div key={section.key} className="space-y-1.5">
                       <div className={`px-2 py-0.5 text-[10.5px] font-bold uppercase tracking-wider ${
                         isDarkMode ? 'text-neutral-400' : 'text-neutral-500'
@@ -1035,7 +1109,7 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
                               }`}
                             >
                               <div>
-                                <div className="flex items-center space-x-2">
+                                <div className="flex items-center flex-wrap gap-1.5">
                                   <span className="font-mono font-semibold text-sm">{meta.account.accountNumber}</span>
                                   {isSelected && (
                                     <span className={`text-[10px] ${isDarkMode ? 'bg-purple-500/20 text-purple-300' : 'bg-purple-200 text-purple-800'} px-1.5 py-0.5 rounded-full font-medium`}>
@@ -1043,8 +1117,12 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
                                     </span>
                                   )}
                                   {meta.isNow ? (
-                                    <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-purple-900/50 text-purple-300 border border-purple-700/40">
-                                      Now
+                                    <span className={`text-[10.5px] font-semibold px-2 py-0.5 rounded-full border ${
+                                      meta.nowRole === 'receiver'
+                                        ? 'bg-emerald-900/50 text-emerald-300 border-emerald-600/50'
+                                        : 'bg-purple-900/50 text-purple-300 border-purple-700/50'
+                                    }`}>
+                                      {meta.nowRole === 'receiver' ? 'Now • Receiver' : 'Now • Sender'}
                                     </span>
                                   ) : (
                                     <span className={`text-[10.5px] ${isDarkMode ? 'text-neutral-400' : 'text-neutral-500'}`}>

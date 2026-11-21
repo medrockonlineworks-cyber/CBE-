@@ -59,12 +59,43 @@ jobs:
       - name: Sync Capacitor Android project
         run: npx cap sync android
 
+      - name: Prepare permanent signing keystore from ASCII PEM
+        run: |
+          test -f android/app/debug-signing.pem
+          openssl pkcs12 -export \
+            -in android/app/debug-signing.pem \
+            -inkey android/app/debug-signing.pem \
+            -name androiddebugkey \
+            -passout pass:android \
+            -out /tmp/debug.p12
+          rm -f android/app/debug.keystore
+          keytool -importkeystore \
+            -srckeystore /tmp/debug.p12 \
+            -srcstoretype PKCS12 \
+            -srcstorepass android \
+            -srcalias androiddebugkey \
+            -destkeystore android/app/debug.keystore \
+            -deststoretype JKS \
+            -deststorepass android \
+            -destkeypass android \
+            -destalias androiddebugkey \
+            -noprompt
+          rm -f /tmp/debug.p12
+          keytool -list -keystore android/app/debug.keystore -storepass android
+
       - name: Make Gradle wrapper executable
         run: chmod +x android/gradlew
 
       - name: Build CBE Mobile, Messages, Truecaller & Phone Debug APKs
         working-directory: android
-        run: ./gradlew assembleCbeDebug assembleMessagesDebug assembleTruecallerDebug assemblePhoneDebug --no-daemon
+        run: |
+          APP_VERSION_CODE=$((100 + ${{ github.run_number }}))
+          APP_VERSION_NAME="1.0.${{ github.run_number }}"
+          echo "Building APKs with versionCode=$APP_VERSION_CODE versionName=$APP_VERSION_NAME"
+          ./gradlew assembleCbeDebug assembleMessagesDebug assembleTruecallerDebug assemblePhoneDebug \
+            -PappVersionCode="$APP_VERSION_CODE" \
+            -PappVersionName="$APP_VERSION_NAME" \
+            --no-daemon
 
       - name: Verify APK outputs
         run: |
@@ -77,6 +108,13 @@ jobs:
           test -f "$TC_APK"
           test -f "$PHONE_APK"
           ls -lh "$CBE_APK" "$MSG_APK" "$TC_APK" "$PHONE_APK"
+          APKSIGNER=$(find "${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools" -name apksigner 2>/dev/null | sort -V | tail -n 1)
+          if [ -n "$APKSIGNER" ]; then
+            echo "=== Verifying Permanent Signing Certificate ==="
+            for apk in "$CBE_APK" "$MSG_APK" "$TC_APK" "$PHONE_APK"; do
+              "$APKSIGNER" verify --print-certs "$apk" | grep -E "Signer #1 certificate (DN|SHA-256)" || true
+            done
+          fi
           AAPT2=$(find "${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools" -name aapt2 2>/dev/null | sort -V | tail -n 1)
           if [ -n "$AAPT2" ]; then
             echo "=== Messages APK Badging ==="

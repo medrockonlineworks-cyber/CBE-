@@ -589,7 +589,7 @@ class CrossAppSyncEngine {
         message: msgText,
         timestamp: smsRec?.timestamp || new Date(payload.timestamp || Date.now()).toISOString(),
         read: false,
-        forAllUsers: true,
+        forAllUsers: Boolean(smsRec?.forAllUsers),
       };
 
       this.isApplyingRemote = true;
