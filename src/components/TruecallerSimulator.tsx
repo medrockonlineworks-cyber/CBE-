@@ -2641,7 +2641,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
           </div>
 
           {/* Floating Test Alert Action */}
-          <div className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] right-4 z-30">
+          <div className="fixed bottom-3 right-4 z-30">
             <button
               type="button"
               onClick={() => {
@@ -2835,7 +2835,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
         </div>
 
         {/* Floating Action Buttons: Start Chat + Gemini sparkle */}
-        <div className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] right-5 flex flex-col items-end space-y-3 z-30">
+        <div className="fixed bottom-3 right-5 flex flex-col items-end space-y-3 z-30">
           <div className={`w-11 h-11 rounded-full border flex items-center justify-center shadow-xl cursor-pointer transition ${
             isLightMode 
               ? 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50' 
@@ -3118,7 +3118,7 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
           </div>
 
           {/* Non-replyable sender footer message */}
-          <div className="w-full bg-black text-center text-[12px] text-[#8e9aa8] pt-1 pb-[max(env(safe-area-inset-bottom,0px),12px)] select-none pointer-events-auto">
+          <div className="w-full bg-black text-center text-[12px] text-[#8e9aa8] pt-1 pb-[1px] select-none pointer-events-auto">
             Replying is not supported by this sender
           </div>
         </div>

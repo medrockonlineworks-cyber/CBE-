@@ -405,7 +405,7 @@ export default function TelegramSimulatorApp({
       </main>
 
       {/* Bottom Navigation Dock (Home, Chats, Editor, Preview) */}
-      <nav className="min-h-14 pt-1 pb-[max(env(safe-area-inset-bottom,0px),8px)] bg-slate-950 border-t border-slate-800 flex items-center justify-around px-2 z-30 shrink-0 select-none">
+      <nav className="min-h-14 pt-1 pb-[1px] bg-slate-950 border-t border-slate-800 flex items-center justify-around px-2 z-30 shrink-0 select-none">
         <button 
           onClick={() => setActiveTab('home')}
           className={`flex flex-col items-center justify-center gap-0.5 py-1 px-3 rounded-xl transition cursor-pointer ${

@@ -1109,7 +1109,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         {!hideUiElements && (
           <div 
             id="cbe-receipt-bottom-actions-container"
-            className="bg-white px-4 sm:px-5 pb-[max(env(safe-area-inset-bottom,0px),10px)] pt-2.5 space-y-2.5 flex-shrink-0 z-20 select-none border-t border-gray-100/80 shadow-[0_-4px_12px_rgba(0,0,0,0.03)]"
+            className="bg-white px-4 sm:px-5 pb-[1px] pt-2.5 space-y-2.5 flex-shrink-0 z-20 select-none border-t border-gray-100/80 shadow-[0_-4px_12px_rgba(0,0,0,0.03)]"
           >
             {/* 3 Action Buttons matching exact app icons */}
             <div className="flex items-center justify-around px-3 text-black">
@@ -1188,7 +1188,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         {hideUiElements && (
           <div
             id="cbe-live-gray-bottom-strip"
-            className="w-full min-h-[max(35px,env(safe-area-inset-bottom,0px))] pb-[env(safe-area-inset-bottom,0px)] bg-[#f0f1f4] border-t border-[#e2e4e8] flex-shrink-0"
+            className="w-full h-[1px] bg-[#f0f1f4] border-t border-[#e2e4e8] flex-shrink-0"
           />
         )}
 

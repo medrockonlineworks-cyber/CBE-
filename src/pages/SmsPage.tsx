@@ -1015,7 +1015,7 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
       {/* 4. Bottom Banner: Exact text from screenshot */}
       <footer className={`w-full ${
         isDarkMode ? 'bg-[#161719] border-neutral-800/80 text-neutral-300' : 'bg-white border-neutral-200 text-neutral-600'
-      } border-t px-4 pt-2.5 pb-[max(env(safe-area-inset-bottom,0px),14px)] z-30 shrink-0`}>
+      } border-t px-4 pt-2 pb-[1px] z-30 shrink-0`}>
         <div className="max-w-xl mx-auto flex items-center justify-center text-center">
           <p className={`text-[12.5px] ${isDarkMode ? 'text-neutral-300' : 'text-neutral-600'} font-normal`}>
             Sender can't accept replies. Contact them directly.{' '}

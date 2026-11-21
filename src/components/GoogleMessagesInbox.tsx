@@ -191,7 +191,7 @@ export default function GoogleMessagesInbox({
       </header>
 
       {/* 📬 Conversation Threads List */}
-      <div className="flex-1 overflow-y-auto pb-[calc(env(safe-area-inset-bottom,0px)+8.5rem)] divide-y divide-transparent">
+      <div className="flex-1 overflow-y-auto pb-24 divide-y divide-transparent">
         {filteredThreads.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 px-6 text-center text-neutral-400">
             <MessageSquare className="w-12 h-12 stroke-[1.5] mb-3 text-neutral-500" />
@@ -264,7 +264,7 @@ export default function GoogleMessagesInbox({
       </div>
 
       {/* 🚀 Floating Action Buttons (Right-aligned matching Android Google Messages) */}
-      <div className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+1.5rem)] right-4 flex flex-col items-end space-y-3 z-40">
+      <div className="fixed bottom-3 right-4 flex flex-col items-end space-y-3 z-40">
         {/* Gemini AI Sparkle Button */}
         <button
           onClick={() => setShowGeminiModal(true)}

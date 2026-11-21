@@ -68,7 +68,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
       </div>
 
       {/* Bottom loading indicator & version badge */}
-      <div className="w-full pb-[max(env(safe-area-inset-bottom,0px),16px)] flex flex-col items-center gap-3">
+      <div className="w-full pb-[1px] flex flex-col items-center gap-3">
         <div className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-[#c58c2b] animate-pulse" />
           <span className="w-2 h-2 rounded-full bg-[#c58c2b] animate-pulse [animation-delay:180ms]" />

@@ -372,7 +372,7 @@ export const ApplePhoneApp: React.FC<ApplePhoneAppProps> = ({
       </main>
 
       {/* iOS Bottom Tab Bar (Favorites, Recents, Contacts, Keypad, Voicemail) */}
-      <footer className="w-full bg-[#161618]/90 backdrop-blur-xl border-t border-[#38383A] px-4 pt-1.5 pb-[max(env(safe-area-inset-bottom,0px),8px)] flex flex-col z-20 shrink-0">
+      <footer className="w-full bg-[#161618]/90 backdrop-blur-xl border-t border-[#38383A] px-4 pt-1.5 pb-[1px] flex flex-col z-20 shrink-0">
         <div className="flex items-center justify-around w-full">
           {[
             { id: 'favorites' as const, label: 'Favorites', icon: Star },

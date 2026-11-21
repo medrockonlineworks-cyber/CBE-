@@ -872,7 +872,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
 
           {/* FOOTER: © Commercial Bank of Ethiopia */}
           <div 
-            style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 8px), 16px)' }}
+            style={{ paddingBottom: '1px' }}
             className="text-center text-[#737882] text-[12px] font-normal font-sans"
           >
             &copy; Commercial Bank of Ethiopia
@@ -949,7 +949,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
 
             {/* FOOTER: © Commercial Bank of Ethiopia (Exact replica of Image 1 & 2) */}
             <div 
-              style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 8px), 16px)' }}
+              style={{ paddingBottom: '1px' }}
               className="pt-8 text-center text-[#9ca3af] text-[11.5px] font-normal font-sans"
             >
               &copy; Commercial Bank of Ethiopia
@@ -961,7 +961,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
       {/* VIEW B: ON-SCREEN NUMERIC KEYPAD (Shown in PIN mode when keypad is open) */}
       {loginMode === 'pin' && showKeypad && (
         <div 
-          style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 12px), 24px)' }}
+          style={{ paddingBottom: '1px' }}
           className="w-full max-w-md mx-auto bg-[#f8f9fa] rounded-t-[32px] shadow-[0_-4px_24px_rgba(0,0,0,0.04)] border-t border-neutral-100/80 px-6 pt-3 shrink-0 animate-in slide-in-from-bottom-8 duration-200"
         >
           
