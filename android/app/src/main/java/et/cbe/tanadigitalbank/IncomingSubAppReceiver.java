@@ -90,7 +90,11 @@ public class IncomingSubAppReceiver extends BroadcastReceiver {
 
         persistIncomingPayload(context, subAppId, alertId, sender, body, reference, payloadJson);
         MainActivity.notifyNativeSubAppReceived(subAppId);
-        postNativeNotification(context, subAppId, sender.trim(), body.trim(), alertId, reference, payloadJson);
+        // Truecaller pop-down must ONLY activate when the user opens the Truecaller app
+        // (then stays floating even when switching to other apps until canceled or marked read).
+        if (!"truecaller".equals(subAppId)) {
+            postNativeNotification(context, subAppId, sender.trim(), body.trim(), alertId, reference, payloadJson);
+        }
     }
 
     private void persistIncomingPayload(

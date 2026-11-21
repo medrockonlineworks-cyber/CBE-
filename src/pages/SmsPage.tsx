@@ -208,8 +208,8 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
     const handleSmsUpdated = () => {
       if (debounceTimer) clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
+        refreshAccounts();
         reloadMessages(activeAccountNumRef.current);
-        setAccounts(SmsService.getAccounts() || []);
         refreshThreads();
       }, 50);
     };
@@ -226,6 +226,9 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
     window.addEventListener('sms-updated', handleSmsUpdated);
     window.addEventListener('sms-created', handleSmsUpdated);
     window.addEventListener('sms-accounts-updated', handleSmsUpdated);
+    window.addEventListener('cbe_accounts_updated', handleSmsUpdated);
+    window.addEventListener('tana_data_updated', handleSmsUpdated);
+    window.addEventListener('cbe_crossapp_synced', handleSmsUpdated);
     window.addEventListener('sms-active-account-changed', handleActiveAccChanged as EventListener);
 
     return () => {
@@ -233,6 +236,9 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
       window.removeEventListener('sms-updated', handleSmsUpdated);
       window.removeEventListener('sms-created', handleSmsUpdated);
       window.removeEventListener('sms-accounts-updated', handleSmsUpdated);
+      window.removeEventListener('cbe_accounts_updated', handleSmsUpdated);
+      window.removeEventListener('tana_data_updated', handleSmsUpdated);
+      window.removeEventListener('cbe_crossapp_synced', handleSmsUpdated);
       window.removeEventListener('sms-active-account-changed', handleActiveAccChanged as EventListener);
     };
   }, [refreshAccounts, reloadMessages]);
@@ -270,10 +276,48 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
 
   const [accountSearchQuery, setAccountSearchQuery] = useState('');
 
-  // Group accounts according to transaction days: Recent (with Now • Receiver & Now • Sender for latest), Yesterday, Last week, Last month
+  // Group accounts: when recentFirst is ON, group/sort with recent messages & Now • Sender/Receiver at top;
+  // when OFF, keep the default account list order without pushing recent-message accounts to the top.
   const groupedSections = useMemo(() => {
-    return SmsService.getGroupedAccounts();
-  }, [accounts, messages]);
+    const recentGrouped = SmsService.getGroupedAccounts();
+    if (recentFirst) {
+      return recentGrouped;
+    }
+
+    type AccountMetaItem = (typeof recentGrouped)[number]['accounts'][number];
+    const metaByAcc = new Map<string, AccountMetaItem>();
+    recentGrouped.forEach((sec) => {
+      sec.accounts.forEach((meta) => {
+        metaByAcc.set(meta.account.accountNumber, meta);
+      });
+    });
+
+    const defaultOrderedMetas: AccountMetaItem[] = (accounts || [])
+      .filter((acc) => acc && acc.accountNumber)
+      .map((acc): AccountMetaItem => {
+        const existing = metaByAcc.get(acc.accountNumber);
+        if (existing) return existing;
+        return {
+          account: acc,
+          latestTimestamp: acc.lastUpdated || null,
+          timeLabel: '',
+          isNow: false,
+          nowRole: undefined,
+          groupKey: 'older',
+          groupTitle: 'All Accounts',
+          unreadCount: 0,
+        };
+      });
+
+    if (defaultOrderedMetas.length === 0) return [];
+    return [
+      {
+        key: 'all_accounts',
+        title: 'All Accounts',
+        accounts: defaultOrderedMetas,
+      },
+    ];
+  }, [accounts, messages, recentFirst]);
 
   const filteredGroupedSections = useMemo(() => {
     const q = accountSearchQuery.toLowerCase().trim();
@@ -417,15 +461,16 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
     return (messages || []).findIndex(m => m && !m.read);
   }, [messages]);
 
-  // Sort messages: newest first if recentFirst is true (so recent transaction appears at top)
+  // Messages inside the chat always stay in chronological order (oldest -> newest at bottom).
+  // "Recent Messages On Top" only controls the Bank Accounts list ordering.
   const sortedMessages = useMemo(() => {
-    const valid = (messages || []).filter(Boolean);
+    const valid = [...(messages || []).filter(Boolean)];
     return valid.sort((a, b) => {
       const timeA = a?.timestamp ? new Date(a.timestamp).getTime() || 0 : 0;
       const timeB = b?.timestamp ? new Date(b.timestamp).getTime() || 0 : 0;
-      return recentFirst ? timeB - timeA : timeA - timeB;
+      return timeA - timeB;
     });
-  }, [messages, recentFirst]);
+  }, [messages]);
 
   // Apple Messages for iPhone Mobile
   if (isIPhone) {
@@ -720,18 +765,18 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
                   </span>
                 </button>
 
-                {/* Toggle Recent Messages on Top */}
+                {/* Toggle Recent Messages on Top (Controls Bank Accounts list only) */}
                 <button
-                  onClick={() => {
-                    setRecentFirst(!recentFirst);
-                    setShowMenu(false);
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setRecentFirst(prev => !prev);
                   }}
                   className={`w-full px-4 py-2.5 text-left text-xs flex items-center justify-between transition-colors border-b ${
                     isDarkMode 
                       ? 'border-neutral-800/80 text-neutral-200 hover:bg-neutral-800/70' 
                       : 'border-neutral-100 text-neutral-800 hover:bg-neutral-50'
                   }`}
-                  title="Toggle Recent Transactions on Top"
+                  title="Sort bank accounts with recent messages on top"
                 >
                   <div className="flex items-center space-x-2.5">
                     <Clock className="w-4 h-4 text-purple-400" />

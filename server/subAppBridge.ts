@@ -122,7 +122,7 @@ const VALID_SUB_APPS = new Set([
   'phone',
 ]);
 
-const MAX_KEYS_PER_BUCKET = 25;
+const MAX_KEYS_PER_BUCKET = 60;
 const MAX_BUCKETS = 50;
 const MAX_SUBS_PER_BUCKET = 24;
 const KV_STORE_KEY = 'cbe_subapp_bridge_store_v1';

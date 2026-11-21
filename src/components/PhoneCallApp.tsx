@@ -35,7 +35,6 @@ import {
   ArrowDownLeft,
   ArrowUpRight
 } from 'lucide-react';
-import GboardKeyboard from './GboardKeyboard';
 import PhoneSettingsModal from './PhoneSettingsModal';
 import { PhoneCallService, CallLogItem, ContactItem, CallerAccount, AccountTransactionItem, formatUssdTxAmount, SENDER_PRESET_BALANCES } from '../services/phoneCallService';
 import { LocalDb } from '../lib/mockData';
@@ -274,6 +273,8 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
     window.addEventListener('phone_call_updated', handleAccountsUpdate);
     window.addEventListener('cbe_account_switched', handleExternalAccountSwitch);
     window.addEventListener('cbe_crossapp_synced', handleAccountsUpdate);
+    window.addEventListener('cbe_accounts_updated', handleAccountsUpdate);
+    window.addEventListener('tana_data_updated', handleAccountsUpdate);
     window.addEventListener('cbe_balance_updated', handleAccountsUpdate);
     window.addEventListener('cbe_transaction_completed', handleAccountsUpdate);
     window.addEventListener('storage', handleAccountsUpdate);
@@ -283,6 +284,8 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
       window.removeEventListener('phone_call_updated', handleAccountsUpdate);
       window.removeEventListener('cbe_account_switched', handleExternalAccountSwitch);
       window.removeEventListener('cbe_crossapp_synced', handleAccountsUpdate);
+      window.removeEventListener('cbe_accounts_updated', handleAccountsUpdate);
+      window.removeEventListener('tana_data_updated', handleAccountsUpdate);
       window.removeEventListener('cbe_balance_updated', handleAccountsUpdate);
       window.removeEventListener('cbe_transaction_completed', handleAccountsUpdate);
       window.removeEventListener('storage', handleAccountsUpdate);
@@ -1781,9 +1784,9 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
       {/* 8. USSD POPUP MODAL (Exact match for Screenshots) */}
       {/* ------------------------------------------------------------- */}
       {ussdStep !== 'idle' && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-[1px] flex flex-col justify-between animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-[1px] flex flex-col justify-center animate-in fade-in duration-150">
           
-          {/* Upper/Center Section: Floating USSD Card */}
+          {/* Center Section: Floating USSD Card (uses device's native keyboard directly — no fake keyboard) */}
           <div className="flex-1 flex flex-col items-center justify-center px-4 py-2">
             {/* Running Spinner */}
             {ussdStep === 'running' ? (
@@ -1794,39 +1797,43 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
             ) : (
               /* USSD Dialog Card */
               <div className="w-full max-w-[340px] bg-[#202227] text-white rounded-[26px] p-6 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150 border border-neutral-700/40">
-                
-                {/* Hidden input for physical keyboard entry */}
-                <input 
-                  ref={ussdInputRef}
-                  type="text"
-                  value={ussdInput}
-                  onChange={(e) => setUssdInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleUssdSubmit();
-                    } else if (e.key === 'Escape') {
-                      handleCloseUssd();
-                    }
-                  }}
-                  className="opacity-0 absolute -top-9999 left-0 pointer-events-none"
-                  autoFocus
-                />
 
                 {/* Dialog Content Text: rendered with exact linebreaks matching Screenshots */}
                 <div className="text-[15px] leading-[1.42] text-[#e2e4ea] font-sans whitespace-pre-line select-text mb-4 min-h-[50px] tracking-[0.01em]">
                   {ussdContentText}
                 </div>
 
-                {/* Blue Underline Input Line with vertical blinking cursor matching screenshots */}
+                {/* Real Blue Underline Input Line — opens native device keyboard directly */}
                 <div 
                   onClick={() => ussdInputRef.current?.focus()}
-                  className="relative mb-4 border-b-[2px] border-[#1a73e8] pb-1 min-h-[26px] flex items-center cursor-text"
+                  className="relative mb-4 border-b-[2px] border-[#1a73e8] pb-1 min-h-[28px] flex items-center cursor-text"
                 >
-                  <span className="text-[16px] text-white font-sans tracking-wide">
-                    {ussdStep === 'cbe_login' ? '•'.repeat(ussdInput.length) : ussdInput}
-                  </span>
-                  <span className="w-[2px] h-[20px] bg-[#2979ff] inline-block animate-pulse ml-0.5" />
+                  <input
+                    ref={ussdInputRef}
+                    type={ussdStep === 'cbe_login' ? 'password' : 'text'}
+                    inputMode={
+                      ussdStep === 'cbe_transfer_reason'
+                        ? 'text'
+                        : ussdStep === 'cbe_transfer_amount'
+                          ? 'decimal'
+                          : 'numeric'
+                    }
+                    autoComplete="off"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    value={ussdInput}
+                    onChange={(e) => setUssdInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleUssdSubmit();
+                      } else if (e.key === 'Escape') {
+                        handleCloseUssd();
+                      }
+                    }}
+                    className="w-full bg-transparent text-[16px] text-white font-sans tracking-wide outline-none border-none p-0 m-0 caret-[#2979ff]"
+                    autoFocus
+                  />
                 </div>
 
                 {/* Action Buttons: Cancel | Send (Centered in 2 equal halves matching screenshots) */}
@@ -1853,14 +1860,6 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
               </div>
             )}
           </div>
-
-          {/* Bottom Section: Interactive Gboard Keyboard matching Screenshots 2, 3, 4 */}
-          <GboardKeyboard 
-            onKeyPress={(char) => setUssdInput(prev => prev + char)}
-            onBackspace={() => setUssdInput(prev => prev.slice(0, -1))}
-            onSubmit={() => handleUssdSubmit()}
-            onClose={() => handleCloseUssd('USSD session ended.')}
-          />
 
         </div>
       )}

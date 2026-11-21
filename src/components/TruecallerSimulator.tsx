@@ -657,7 +657,12 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
     const takeoverActive = view === 'takeover' && isPopdownVisible && Boolean(currentAlert);
     window.dispatchEvent(new CustomEvent('tc_takeover_popdown_state', { detail: { active: takeoverActive } }));
     if (takeoverActive && currentAlert && !currentAlert.read) {
-      TruecallerService.setActivePopdownAlert(currentAlert, { skipEvent: true, skipPush: true });
+      TruecallerService.setActivePopdownAlert(currentAlert, {
+        skipEvent: true,
+        skipPush: true,
+        armNativeOverlay: true,
+      });
+      window.dispatchEvent(new CustomEvent('tc_truecaller_popdown_activated', { detail: { alert: currentAlert } }));
     }
     return () => {
       window.dispatchEvent(new CustomEvent('tc_takeover_popdown_state', { detail: { active: false } }));
@@ -707,6 +712,8 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
     window.addEventListener('tc_account_changed', handleExternalAccountSwitch);
     window.addEventListener('cbe_account_switched', handleExternalAccountSwitch);
     window.addEventListener('cbe_crossapp_synced', handleUpdate);
+    window.addEventListener('cbe_accounts_updated', handleUpdate);
+    window.addEventListener('tana_data_updated', handleUpdate);
     window.addEventListener('cbe_balance_updated', handleUpdate);
     window.addEventListener('cbe_transaction_completed', handleUpdate);
     window.addEventListener('sms-created', handleUpdate);
@@ -719,6 +726,8 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
       window.removeEventListener('tc_account_changed', handleExternalAccountSwitch);
       window.removeEventListener('cbe_account_switched', handleExternalAccountSwitch);
       window.removeEventListener('cbe_crossapp_synced', handleUpdate);
+      window.removeEventListener('cbe_accounts_updated', handleUpdate);
+      window.removeEventListener('tana_data_updated', handleUpdate);
       window.removeEventListener('cbe_balance_updated', handleUpdate);
       window.removeEventListener('cbe_transaction_completed', handleUpdate);
       window.removeEventListener('sms-created', handleUpdate);
@@ -775,7 +784,11 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
     setCurrentAlert(freshAlert);
     setIsPopdownVisible(true);
     setIsPopdownAnimating(true);
-    TruecallerService.setActivePopdownAlert(freshAlert, { skipEvent: true });
+    TruecallerService.setActivePopdownAlert(freshAlert, {
+      skipEvent: true,
+      armNativeOverlay: true,
+    });
+    window.dispatchEvent(new CustomEvent('tc_truecaller_popdown_activated', { detail: { alert: freshAlert } }));
     if (soundEnabled) {
       playTruecallerChime();
     }

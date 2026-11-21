@@ -2,6 +2,7 @@ import { SmsMessage, SmsType, SmsAccount } from '../types/sms';
 import { Transaction } from '../types';
 import { calculateCbeFee } from '../lib/cbeTariff';
 import { ALL_NEW_REGISTERED_ENTRIES } from '../lib/additionalAccountsData';
+import { getCanonicalCbeRegisteredAccounts } from '../lib/cbeAccountRegistrySync';
 import { generateCbeTxId } from '../lib/mockData';
 import { PushNotificationService } from './pushNotificationService';
 
@@ -541,23 +542,31 @@ export class SmsService {
           modified = true;
         }
       });
-      // Always synchronize live balances from tana_users so SMS simulator is 100% in sync
+      // Always register and synchronize ALL CBE accounts (tana_users, tana_accounts, tana_custom_directory_accounts)
       try {
-        const rawUsers = typeof window !== 'undefined' ? localStorage.getItem('tana_users') : null;
-        if (rawUsers) {
-          const uList = JSON.parse(rawUsers);
-          if (Array.isArray(uList)) {
-            uList.forEach((u: any) => {
-              const clean = (u.accountNumber || '').replace(/\D/g, '');
-              if (!clean) return;
-              const target = list.find(a => (a.accountNumber || '').replace(/\D/g, '') === clean);
-              if (target && u.balance !== undefined && !isNaN(u.balance)) {
-                if (target.balance !== u.balance) {
-                  target.balance = u.balance;
-                  modified = true;
-                }
-              }
+        const canonicalCbe = getCanonicalCbeRegisteredAccounts();
+        for (const cbeAcc of canonicalCbe) {
+          const clean = cbeAcc.accountNumber;
+          if (!clean) continue;
+          const target = list.find(a => (a.accountNumber || '').replace(/\D/g, '') === clean);
+          if (target) {
+            if (target.balance !== cbeAcc.balance) {
+              target.balance = cbeAcc.balance;
+              modified = true;
+            }
+            if (cbeAcc.accountName && target.accountName !== cbeAcc.accountName) {
+              target.accountName = cbeAcc.accountName;
+              modified = true;
+            }
+          } else {
+            list.push({
+              accountNumber: clean,
+              accountName: cbeAcc.accountName,
+              bankName: cbeAcc.bankName || 'Commercial Bank of Ethiopia',
+              balance: cbeAcc.balance,
+              lastUpdated: new Date().toISOString(),
             });
+            modified = true;
           }
         }
       } catch {}

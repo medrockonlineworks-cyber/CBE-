@@ -10,6 +10,7 @@ import {
 } from '../types/truecaller';
 import { Transaction } from '../types';
 import { ALL_NEW_REGISTERED_ENTRIES } from '../lib/additionalAccountsData';
+import { getCanonicalCbeRegisteredAccounts } from '../lib/cbeAccountRegistrySync';
 import { generateCbeTxId } from '../lib/mockData';
 import { PushNotificationService } from './pushNotificationService';
 import { CrossAppSyncService } from './crossAppSyncService';
@@ -545,23 +546,41 @@ export const TruecallerService = {
             }
           });
 
-          // Always synchronize live balances from tana_users so Truecaller is 100% in sync
+          // Always register and synchronize ALL CBE accounts (tana_users, tana_accounts, tana_custom_directory_accounts)
           try {
-            const rawUsers = typeof window !== 'undefined' ? localStorage.getItem('tana_users') : null;
-            if (rawUsers) {
-              const uList = JSON.parse(rawUsers);
-              if (Array.isArray(uList)) {
-                uList.forEach((u: any) => {
-                  const clean = (u.accountNumber || '').replace(/\D/g, '');
-                  if (!clean) return;
-                  const target = parsed.find(a => (a.accountNumber || '').replace(/\D/g, '') === clean);
-                  if (target && u.balance !== undefined && !isNaN(u.balance)) {
-                    if (target.balance !== u.balance) {
-                      target.balance = u.balance;
-                      mod = true;
-                    }
-                  }
+            const canonicalCbe = getCanonicalCbeRegisteredAccounts();
+            for (const cbeAcc of canonicalCbe) {
+              const clean = cbeAcc.accountNumber;
+              if (!clean) continue;
+              const target = parsed.find(a => (a.accountNumber || '').replace(/\D/g, '') === clean);
+              if (target) {
+                if (target.balance !== cbeAcc.balance) {
+                  target.balance = cbeAcc.balance;
+                  mod = true;
+                }
+                if (cbeAcc.accountName && target.holderName !== cbeAcc.accountName) {
+                  target.holderName = cbeAcc.accountName;
+                  mod = true;
+                }
+                if (cbeAcc.phone && target.phone !== cbeAcc.phone) {
+                  target.phone = cbeAcc.phone;
+                  mod = true;
+                }
+              } else {
+                parsed.push({
+                  id: 'tc-acc-cbe-' + clean,
+                  bankKey: 'cbe',
+                  bankName: 'CBE',
+                  accountNumber: clean,
+                  maskedAccount: maskTruecallerAccount(clean),
+                  holderName: cbeAcc.accountName,
+                  accountType: 'Savings Account',
+                  phone: cbeAcc.phone,
+                  balance: cbeAcc.balance,
+                  backgroundApp: 'tiktok',
+                  lastTransactionAt: new Date().toISOString(),
                 });
+                mod = true;
               }
             }
           } catch {}
@@ -573,8 +592,29 @@ export const TruecallerService = {
     } catch (e) {
       console.error('Failed to load Truecaller accounts', e);
     }
-    this.saveAccounts(DEFAULT_ACCOUNTS);
-    return DEFAULT_ACCOUNTS;
+    const seeded = [...DEFAULT_ACCOUNTS];
+    try {
+      const canonicalCbe = getCanonicalCbeRegisteredAccounts();
+      for (const cbeAcc of canonicalCbe) {
+        const clean = cbeAcc.accountNumber;
+        if (!clean || seeded.some(a => (a.accountNumber || '').replace(/\D/g, '') === clean)) continue;
+        seeded.push({
+          id: 'tc-acc-cbe-' + clean,
+          bankKey: 'cbe',
+          bankName: 'CBE',
+          accountNumber: clean,
+          maskedAccount: maskTruecallerAccount(clean),
+          holderName: cbeAcc.accountName,
+          accountType: 'Savings Account',
+          phone: cbeAcc.phone,
+          balance: cbeAcc.balance,
+          backgroundApp: 'tiktok',
+          lastTransactionAt: new Date().toISOString(),
+        });
+      }
+    } catch {}
+    this.saveAccounts(seeded);
+    return seeded;
   },
 
   syncBalance(accountNumber: string, newBalance: number): void {
@@ -1226,7 +1266,7 @@ export const TruecallerService = {
 
   setActivePopdownAlert(
     alert: TruecallerAlert,
-    options?: { skipEvent?: boolean; skipPush?: boolean; silent?: boolean }
+    options?: { skipEvent?: boolean; skipPush?: boolean; silent?: boolean; armNativeOverlay?: boolean }
   ): void {
     if (!alert || !alert.id) return;
     try {
@@ -1237,8 +1277,10 @@ export const TruecallerService = {
       localStorage.setItem(STORAGE_TC_DISMISSED_POPDOWN_KEY, JSON.stringify(dismissed.slice(-100)));
       localStorage.setItem(STORAGE_TC_ACTIVE_POPDOWN_KEY, JSON.stringify(alert));
     } catch {}
-    // Keep native Android floating overlay payload synchronized so leaving the app NEVER drops the pop-down
-    this.syncPopdownToNativeOverlay(alert);
+    // Only arm the native Android floating overlay when Truecaller itself is opened/active
+    if (options?.armNativeOverlay) {
+      this.syncPopdownToNativeOverlay(alert);
+    }
     if (!options?.skipPush) {
       try {
         void CrossAppSyncService.pushChangedNow([

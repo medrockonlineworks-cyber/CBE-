@@ -107,7 +107,7 @@ async function startServer() {
 
   // Scope JSON body parsing strictly to /api/auth, /api/notifications, /api/sync, /api/subapp, and /api/pwa/app-logo
   app.use(['/api/auth', '/api/notifications'], express.json({ limit: '128kb' }));
-  app.use(['/api/sync', '/api/subapp'], express.json({ limit: '2mb' }));
+  app.use(['/api/sync', '/api/subapp'], express.json({ limit: '8mb' }));
   app.use('/api/pwa/app-logo', express.json({ limit: '4mb' }));
   app.use(createNotificationRouter());
   app.use(createApkRouter());

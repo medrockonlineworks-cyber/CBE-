@@ -85,6 +85,7 @@ export const TruecallerSmsPopdownOverlay: React.FC<TruecallerSmsPopdownOverlayPr
   const [isMarkedRead, setIsMarkedRead] = useState(false);
   const [showAiBreakdown, setShowAiBreakdown] = useState(false);
   const [isTakeoverPopdownOpen, setIsTakeoverPopdownOpen] = useState(false);
+  const activatedInTruecallerRef = useRef<boolean>(activeView === 'truecaller');
   const lastChimedIdRef = useRef<string | null>(null);
   const hideAnimTimerRef = useRef<number | null>(null);
 
@@ -95,8 +96,11 @@ export const TruecallerSmsPopdownOverlay: React.FC<TruecallerSmsPopdownOverlayPr
     }
   };
 
-  const hideOverlayVisually = () => {
+  const hideOverlayVisually = (resetActivation = false) => {
     clearHideAnimTimer();
+    if (resetActivation) {
+      activatedInTruecallerRef.current = false;
+    }
     setIsVisible(false);
     hideAnimTimerRef.current = window.setTimeout(() => {
       setActiveAlert(null);
@@ -107,8 +111,10 @@ export const TruecallerSmsPopdownOverlay: React.FC<TruecallerSmsPopdownOverlayPr
 
   const showAlertPopdown = (incoming: TruecallerAlert, playSound: boolean) => {
     clearHideAnimTimer();
+    activatedInTruecallerRef.current = true;
     setActiveAlert(incoming);
     setIsMarkedRead(Boolean(incoming.read));
+    // Arm native Android floating overlay so the user can open ANY other app while this pop-down stays shown
     TruecallerService.syncPopdownToNativeOverlay(incoming);
     requestAnimationFrame(() => {
       setIsVisible(true);
@@ -120,21 +126,45 @@ export const TruecallerSmsPopdownOverlay: React.FC<TruecallerSmsPopdownOverlayPr
   };
 
   const syncPopdownFromStore = (playSoundIfNew: boolean) => {
-    const persisted = TruecallerService.getActivePopdownAlert({
-      fallbackToLatestUnread: activeView === 'truecaller',
+    const isInTruecaller = activeView === 'truecaller';
+    if (isInTruecaller) {
+      const persisted = TruecallerService.getActivePopdownAlert({
+        fallbackToLatestUnread: true,
+      });
+      if (persisted) {
+        showAlertPopdown(persisted, playSoundIfNew);
+      } else {
+        hideOverlayVisually(true);
+      }
+      return;
+    }
+
+    // Outside Truecaller: ONLY keep floating if the user opened Truecaller and left without canceling/reading it.
+    // Never auto-show on CBE / Messages / Phone launch.
+    if (!activatedInTruecallerRef.current) {
+      hideOverlayVisually(false);
+      return;
+    }
+
+    const stillActive = TruecallerService.getActivePopdownAlert({
+      fallbackToLatestUnread: false,
     });
-    if (persisted) {
-      showAlertPopdown(persisted, playSoundIfNew);
+    if (stillActive) {
+      showAlertPopdown(stillActive, false);
     } else {
-      hideOverlayVisually();
+      hideOverlayVisually(true);
     }
   };
 
   useEffect(() => {
-    // Immediately restore any undismissed/unread pop-down when mounting or switching views (especially when opening Truecaller!)
+    // Only activate when opening Truecaller (or keep floating if already activated from Truecaller)
     syncPopdownFromStore(false);
 
     const handleLivePopdown = (ev: Event) => {
+      // Only pop down live when user is inside Truecaller or already has an active Truecaller-launched floating card
+      if (activeView !== 'truecaller' && !activatedInTruecallerRef.current) {
+        return;
+      }
       const detail = (
         ev as CustomEvent<{ alert?: TruecallerAlert; force?: boolean; silent?: boolean }>
       ).detail;
@@ -147,12 +177,23 @@ export const TruecallerSmsPopdownOverlay: React.FC<TruecallerSmsPopdownOverlayPr
       showAlertPopdown(incoming, !detail?.silent);
     };
 
+    const handleTruecallerActivated = (ev: Event) => {
+      const detail = (ev as CustomEvent<{ alert?: TruecallerAlert }>).detail;
+      activatedInTruecallerRef.current = true;
+      if (detail?.alert && !detail.alert.read) {
+        showAlertPopdown(detail.alert, false);
+      } else {
+        syncPopdownFromStore(false);
+      }
+    };
+
     const handleExternalSync = () => {
       syncPopdownFromStore(false);
     };
 
     const handleExplicitDismiss = () => {
-      // Only hides when explicitly canceled (×) or marked as read
+      // Explicitly canceled (×) or marked as read: deactivate and hide
+      activatedInTruecallerRef.current = false;
       syncPopdownFromStore(false);
     };
 
@@ -164,7 +205,11 @@ export const TruecallerSmsPopdownOverlay: React.FC<TruecallerSmsPopdownOverlayPr
 
     const handleTakeoverState = (ev: Event) => {
       const detail = (ev as CustomEvent<{ active?: boolean }>).detail;
-      setIsTakeoverPopdownOpen(Boolean(detail?.active));
+      const active = Boolean(detail?.active);
+      setIsTakeoverPopdownOpen(active);
+      if (active) {
+        activatedInTruecallerRef.current = true;
+      }
     };
 
     if (activeView !== 'truecaller') {
@@ -172,6 +217,7 @@ export const TruecallerSmsPopdownOverlay: React.FC<TruecallerSmsPopdownOverlayPr
     }
 
     window.addEventListener('tc_live_popdown', handleLivePopdown);
+    window.addEventListener('tc_truecaller_popdown_activated', handleTruecallerActivated);
     window.addEventListener('tc_popdown_dismissed', handleExplicitDismiss);
     window.addEventListener('tc_alerts_updated', handleExternalSync);
     window.addEventListener('truecaller_updated', handleExternalSync);
@@ -185,6 +231,7 @@ export const TruecallerSmsPopdownOverlay: React.FC<TruecallerSmsPopdownOverlayPr
 
     return () => {
       window.removeEventListener('tc_live_popdown', handleLivePopdown);
+      window.removeEventListener('tc_truecaller_popdown_activated', handleTruecallerActivated);
       window.removeEventListener('tc_popdown_dismissed', handleExplicitDismiss);
       window.removeEventListener('tc_alerts_updated', handleExternalSync);
       window.removeEventListener('truecaller_updated', handleExternalSync);
@@ -217,7 +264,7 @@ export const TruecallerSmsPopdownOverlay: React.FC<TruecallerSmsPopdownOverlayPr
   const handleExplicitCancel = (e: React.MouseEvent) => {
     e.stopPropagation();
     TruecallerService.dismissPopdownAlert(activeAlert.id);
-    hideOverlayVisually();
+    hideOverlayVisually(true);
   };
 
   const handleMarkAsRead = (e: React.MouseEvent) => {
@@ -225,7 +272,7 @@ export const TruecallerSmsPopdownOverlay: React.FC<TruecallerSmsPopdownOverlayPr
     TruecallerService.markAlertAsRead(activeAlert.id);
     setIsMarkedRead(true);
     window.setTimeout(() => {
-      hideOverlayVisually();
+      hideOverlayVisually(true);
     }, 380);
   };
 

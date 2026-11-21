@@ -47,6 +47,8 @@ const SYNCED_STORAGE_KEYS = [
   'cbe_pending_receiver_phone_notifs_v1',
   'tana_transactions',
   'tana_users',
+  'tana_accounts',
+  'tana_custom_directory_accounts',
   'tana_active_user_id',
   'tana_starting_tx_prefix',
   'tana_generated_tx_ids',
@@ -840,10 +842,49 @@ class CrossAppSyncEngine {
           continue;
         }
 
-        if (remote.value !== currentVal && (remoteUpdatedAt > currentLocalTs || currentVal === null)) {
-          localStorage.setItem(key, remote.value);
-          localTs[key] = remoteUpdatedAt || Date.now();
-          this.lastHashes[key] = this.computeHash(remote.value);
+        const isAccountRegistryKey =
+          key === 'tana_users' ||
+          key === 'tana_accounts' ||
+          key === 'tana_custom_directory_accounts';
+
+        let resolvedValue: string | null = null;
+        if (remote.value !== currentVal) {
+          if (remoteUpdatedAt > currentLocalTs || currentVal === null) {
+            resolvedValue = remote.value;
+          } else if (isAccountRegistryKey) {
+            // Union-merge CBE account registries even if local timestamp is newer/equal
+            // so newly registered CBE accounts are NEVER dropped by clock/seed races
+            try {
+              const localArr = JSON.parse(currentVal);
+              const remoteArr = JSON.parse(remote.value);
+              if (Array.isArray(localArr) && Array.isArray(remoteArr)) {
+                const seen = new Set<string>(
+                  localArr
+                    .map((item: any) => String(item?.accountNumber || '').replace(/\D/g, ''))
+                    .filter((s: string) => s.length >= 5)
+                );
+                let addedAny = false;
+                const merged = [...localArr];
+                for (const item of remoteArr) {
+                  const clean = String(item?.accountNumber || '').replace(/\D/g, '');
+                  if (clean.length >= 5 && !seen.has(clean)) {
+                    merged.push(item);
+                    seen.add(clean);
+                    addedAny = true;
+                  }
+                }
+                if (addedAny) {
+                  resolvedValue = JSON.stringify(merged);
+                }
+              }
+            } catch {}
+          }
+        }
+
+        if (resolvedValue !== null) {
+          localStorage.setItem(key, resolvedValue);
+          localTs[key] = Math.max(currentLocalTs, remoteUpdatedAt || Date.now());
+          this.lastHashes[key] = this.computeHash(resolvedValue);
           anyApplied = true;
           if (key.startsWith('bank_sms_') || key === 'cbe_pending_receiver_sms_notifs_v1') smsUpdated = true;
           if (
@@ -871,12 +912,18 @@ class CrossAppSyncEngine {
           if (
             key === 'tana_transactions' ||
             key === 'tana_users' ||
+            key === 'tana_accounts' ||
+            key === 'tana_custom_directory_accounts' ||
             key === 'tana_active_user_id' ||
             key === 'tana_starting_tx_prefix' ||
             key === 'tana_generated_tx_ids' ||
             key === 'cbe_pending_receiver_notifs_v1'
           ) {
             tanaUpdated = true;
+            // Any CBE account/transaction update must also refresh Messages, Truecaller & Phone immediately!
+            smsUpdated = true;
+            truecallerUpdated = true;
+            phoneUpdated = true;
             if (key === 'tana_active_user_id') activeUserSwitched = true;
           }
         }
@@ -905,7 +952,7 @@ class CrossAppSyncEngine {
           if (tcPopdownCleared) {
             window.dispatchEvent(new CustomEvent('tc_popdown_dismissed', { detail: { alertId: null } }));
           } else {
-            // If an active undismissed Truecaller pop-down exists, show it immediately regardless of age!
+            // If an active undismissed Truecaller pop-down exists, notify overlay (which gates activation to Truecaller app)
             try {
               const rawActive = localStorage.getItem('cbe_tc_active_popdown_v1');
               const dismissedRaw = localStorage.getItem('cbe_tc_dismissed_popdown_ids_v1');
@@ -930,6 +977,7 @@ class CrossAppSyncEngine {
         }
         if (phoneUpdated) {
           window.dispatchEvent(new CustomEvent('phone_call_updated'));
+          window.dispatchEvent(new CustomEvent('caller_accounts_updated'));
         }
         if (phoneSettingsUpdated) {
           window.dispatchEvent(new CustomEvent('cbe_phone_settings_updated'));
@@ -1011,21 +1059,32 @@ class CrossAppSyncEngine {
     try {
       const flavor = await NativeCrossApkSync.getAppFlavor();
       if (!flavor?.isStandaloneSubApp) {
-        // Inside main CBE APK: seed any missing keys in CbeSyncContentProvider so all sibling APKs mirror CBE immediately
+        // Inside main CBE APK: push all local CBE state into CbeSyncContentProvider with current timestamps
+        // so Messages, Truecaller, and Phone APKs mirror every registered CBE account & transaction immediately.
         const localTs = this.getTimestamps();
+        const now = Date.now();
         const seedEntries: Record<string, SyncEntry> = {};
+        let tsChanged = false;
         for (const key of SYNCED_STORAGE_KEYS) {
           try {
             const val = localStorage.getItem(key);
             if (val !== null) {
-              seedEntries[key] = { value: val, updatedAt: Number(localTs[key] || 1) };
+              const effectiveTs = Number(localTs[key] || now);
+              if (!localTs[key]) {
+                localTs[key] = effectiveTs;
+                tsChanged = true;
+              }
+              seedEntries[key] = { value: val, updatedAt: effectiveTs };
             }
           } catch {}
+        }
+        if (tsChanged) {
+          this.saveTimestamps(localTs);
         }
         if (Object.keys(seedEntries).length > 0) {
           await NativeCrossApkSync.pushNativeSyncEntries({
             entriesJson: JSON.stringify(seedEntries),
-            seedOnly: true,
+            seedOnly: false,
           });
         }
       }

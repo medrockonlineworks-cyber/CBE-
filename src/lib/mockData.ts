@@ -1475,7 +1475,20 @@ export const REGISTERED_ACCOUNTS_SEED: UserProfile[] = [
 
 let _cachedUsers: UserProfile[] | null = null;
 
+if (typeof window !== 'undefined') {
+  const clearCachedUsers = () => {
+    _cachedUsers = null;
+  };
+  window.addEventListener('cbe_crossapp_synced', clearCachedUsers);
+  window.addEventListener('tana_data_updated', clearCachedUsers);
+  window.addEventListener('storage', clearCachedUsers);
+}
+
 export class LocalDb {
+  static invalidateCache(): void {
+    _cachedUsers = null;
+  }
+
   static getUsers(): UserProfile[] {
     if (_cachedUsers && _cachedUsers.length > 0) {
       return _cachedUsers;
@@ -1637,6 +1650,13 @@ export class LocalDb {
   static setUsers(users: UserProfile[]): void {
     _cachedUsers = users;
     saveData('tana_users', users);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cbe_accounts_updated'));
+      window.dispatchEvent(new CustomEvent('tana_data_updated'));
+      window.dispatchEvent(new CustomEvent('sms-accounts-updated'));
+      window.dispatchEvent(new CustomEvent('tc_alerts_updated'));
+      window.dispatchEvent(new CustomEvent('phone_call_updated'));
+    }
   }
 
   static getTransactions(): Transaction[] {
@@ -1669,6 +1689,9 @@ export class LocalDb {
 
   static setTransactions(txs: Transaction[]): void {
     saveData('tana_transactions', txs);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('tana_data_updated'));
+    }
   }
 
   static getBeneficiaries(userId: string): Beneficiary[] {
@@ -1808,7 +1831,13 @@ export class LocalDb {
 
   static setAccounts(accounts: BankAccount[]): void {
     saveData('tana_accounts', accounts);
-    window.dispatchEvent(new CustomEvent('cbe_accounts_updated', { detail: { accounts } }));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cbe_accounts_updated', { detail: { accounts } }));
+      window.dispatchEvent(new CustomEvent('tana_data_updated'));
+      window.dispatchEvent(new CustomEvent('sms-accounts-updated'));
+      window.dispatchEvent(new CustomEvent('tc_alerts_updated'));
+      window.dispatchEvent(new CustomEvent('phone_call_updated'));
+    }
   }
 
   static getUserAccounts(userId: string): BankAccount[] {
@@ -2175,14 +2204,53 @@ export class LocalDb {
   }
 
   static registerNewAccount(account: RegisteredAccountInfo): void {
+    const cleanNum = (account.accountNumber || '').replace(/\D/g, '') || account.accountNumber;
+    const normalizedAcc: RegisteredAccountInfo = {
+      ...account,
+      accountNumber: cleanNum,
+    };
     const list = loadData<RegisteredAccountInfo[]>('tana_custom_directory_accounts', []);
-    const existingIndex = list.findIndex(a => a.accountNumber === account.accountNumber);
+    const existingIndex = list.findIndex(a => (a.accountNumber || '').replace(/\D/g, '') === cleanNum);
     if (existingIndex >= 0) {
-      list[existingIndex] = { ...list[existingIndex], ...account };
+      list[existingIndex] = { ...list[existingIndex], ...normalizedAcc };
     } else {
-      list.unshift(account);
+      list.unshift(normalizedAcc);
     }
     saveData('tana_custom_directory_accounts', list);
+
+    // Ensure the newly registered account is also registered immediately in tana_users + SMS + Truecaller + Phone
+    _cachedUsers = null;
+    try {
+      const users = this.getUsers();
+      const hasUser = users.some(u => (u.accountNumber || '').replace(/\D/g, '') === cleanNum);
+      if (!hasUser && cleanNum) {
+        users.push({
+          id: normalizedAcc.userId || 'user_' + cleanNum,
+          name: normalizedAcc.accountName,
+          accountNumber: cleanNum,
+          phone: normalizedAcc.phone || '+251911000000',
+          email: `${(normalizedAcc.accountName || 'user').toLowerCase().replace(/[^a-z0-9]+/g, '')}@cbe.et`,
+          balance: normalizedAcc.balance ?? 25000,
+          availableBalance: normalizedAcc.balance ?? 25000,
+          currency: 'ETB',
+          role: 'user',
+          status: 'active',
+          createdAt: new Date().toISOString(),
+        });
+        _cachedUsers = users;
+        saveData('tana_users', users);
+      }
+      SmsService.ensureAccount(cleanNum, normalizedAcc.accountName, normalizedAcc.balance ?? 25000);
+      TruecallerService.getAccounts();
+    } catch {}
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cbe_accounts_updated'));
+      window.dispatchEvent(new CustomEvent('tana_data_updated'));
+      window.dispatchEvent(new CustomEvent('sms-accounts-updated'));
+      window.dispatchEvent(new CustomEvent('tc_alerts_updated'));
+      window.dispatchEvent(new CustomEvent('phone_call_updated'));
+    }
   }
 
   static getAuditLogs(): AuditLog[] {

@@ -296,19 +296,60 @@ public class SubAppShortcutPlugin extends Plugin {
         SYNC_EXECUTOR.execute(() -> {
             JSObject ret = new JSObject();
             try {
-                Bundle extras = new Bundle();
-                extras.putString("entriesJson", entriesJson != null ? entriesJson : "{}");
-                extras.putString("sourcePackage", appCtx.getPackageName());
-                extras.putBoolean("seedOnly", seedOnly);
-                Bundle response = appCtx.getContentResolver().call(
+                org.json.JSONObject incomingMap = new org.json.JSONObject(entriesJson != null ? entriesJson : "{}");
+                String batchId = appCtx.getPackageName() + "-" + System.currentTimeMillis() + "-" + Math.abs(entriesJson != null ? entriesJson.hashCode() : 0);
+                final int CHUNK_SIZE = 120_000;
+                boolean anyUpdated = false;
+
+                java.util.Iterator<String> keys = incomingMap.keys();
+                while (keys.hasNext()) {
+                    String key = keys.next();
+                    if (key == null || key.isEmpty()) continue;
+                    org.json.JSONObject entry = incomingMap.optJSONObject(key);
+                    if (entry == null || !entry.has("value")) continue;
+
+                    String val = entry.optString("value", "");
+                    long updatedAt = entry.optLong("updatedAt", System.currentTimeMillis());
+                    int totalChunks = Math.max(1, (val.length() + CHUNK_SIZE - 1) / CHUNK_SIZE);
+
+                    for (int i = 0; i < totalChunks; i++) {
+                        int start = i * CHUNK_SIZE;
+                        int end = Math.min(val.length(), start + CHUNK_SIZE);
+                        String chunkData = start < val.length() ? val.substring(start, end) : "";
+
+                        Bundle chunkExtras = new Bundle();
+                        chunkExtras.putString("batchId", batchId);
+                        chunkExtras.putString("key", key);
+                        chunkExtras.putInt("chunkIndex", i);
+                        chunkExtras.putInt("totalChunks", totalChunks);
+                        chunkExtras.putString("chunkData", chunkData);
+                        chunkExtras.putLong("updatedAt", updatedAt);
+                        chunkExtras.putBoolean("seedOnly", seedOnly);
+
+                        Bundle chunkResp = appCtx.getContentResolver().call(
+                            CbeSyncContentProvider.CONTENT_URI,
+                            CbeSyncContentProvider.METHOD_PUSH_CHUNK,
+                            null,
+                            chunkExtras
+                        );
+                        if (chunkResp != null && chunkResp.getBoolean("updated", false)) {
+                            anyUpdated = true;
+                        }
+                    }
+                }
+
+                Bundle finishExtras = new Bundle();
+                finishExtras.putString("batchId", batchId);
+                finishExtras.putString("sourcePackage", appCtx.getPackageName());
+                Bundle finishResp = appCtx.getContentResolver().call(
                     CbeSyncContentProvider.CONTENT_URI,
-                    CbeSyncContentProvider.METHOD_PUSH_PATCH,
+                    CbeSyncContentProvider.METHOD_FINISH_BATCH,
                     null,
-                    extras
+                    finishExtras
                 );
-                boolean ok = response != null && response.getBoolean("ok", false);
+                boolean ok = finishResp != null && finishResp.getBoolean("ok", false);
                 ret.put("ok", ok);
-                ret.put("updated", response != null && response.getBoolean("updated", false));
+                ret.put("updated", anyUpdated || (finishResp != null && finishResp.getBoolean("updated", false)));
             } catch (Exception e) {
                 ret.put("ok", false);
                 ret.put("error", e.getMessage() != null ? e.getMessage() : "Sync provider unavailable");
@@ -331,6 +372,28 @@ public class SubAppShortcutPlugin extends Plugin {
         SYNC_EXECUTOR.execute(() -> {
             JSObject ret = new JSObject();
             try {
+                // Stream directly over ParcelFileDescriptor (zero Binder 1MB size limit!)
+                try (java.io.InputStream is = appCtx.getContentResolver().openInputStream(CbeSyncContentProvider.STORE_URI)) {
+                    if (is != null) {
+                        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+                        byte[] buf = new byte[8192];
+                        int n;
+                        while ((n = is.read(buf)) != -1) {
+                            baos.write(buf, 0, n);
+                        }
+                        String entriesJson = new String(baos.toByteArray(), java.nio.charset.StandardCharsets.UTF_8);
+                        if (entriesJson.trim().isEmpty()) {
+                            entriesJson = "{}";
+                        }
+                        ret.put("ok", true);
+                        ret.put("entriesJson", entriesJson);
+                        call.resolve(ret);
+                        return;
+                    }
+                } catch (Exception ignored) {
+                    // Fall back to METHOD_PULL_ALL if an older CBE APK does not support openFile yet
+                }
+
                 Bundle response = appCtx.getContentResolver().call(
                     CbeSyncContentProvider.CONTENT_URI,
                     CbeSyncContentProvider.METHOD_PULL_ALL,

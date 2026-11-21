@@ -1,6 +1,7 @@
 import { LocalDb } from '../lib/mockData';
 import { UserProfile, Transaction } from '../types';
 import { ACCOUNT_BALANCES_UP_TO_50K, ALL_NEW_REGISTERED_ENTRIES } from '../lib/additionalAccountsData';
+import { getCanonicalCbeRegisteredAccounts } from '../lib/cbeAccountRegistrySync';
 import { PushNotificationService } from './pushNotificationService';
 
 const PENDING_RECEIVER_PHONE_NOTIFS_KEY = 'cbe_pending_receiver_phone_notifs_v1';
@@ -960,9 +961,34 @@ export const PhoneCallService = {
   normalizeAccounts(accounts: CallerAccount[]): CallerAccount[] {
     const usedBalances = new Set<number>();
 
-    // Pass 1: Receivers (guarantee initial balance is in [500.00, 150000.00] and unique)
+    // Build live CBE balance lookup so CBE-registered accounts ALWAYS retain their exact CBE balance
+    const liveCbeByAcc = new Map<string, { name: string; phone: string; balance: number }>();
+    try {
+      for (const cbe of getCanonicalCbeRegisteredAccounts()) {
+        liveCbeByAcc.set(cbe.accountNumber, {
+          name: cbe.accountName,
+          phone: cbe.phone,
+          balance: cbe.balance,
+        });
+      }
+    } catch {}
+
+    // Pass 1: Receivers (preserve exact CBE registered balance if present; otherwise keep in [500.00, 150000.00])
     for (const acc of accounts) {
       if (acc.role === 'receiver') {
+        const cleanAcc = (acc.accountNumber || '').replace(/\D/g, '');
+        const cbeMatch = liveCbeByAcc.get(cleanAcc);
+        if (cbeMatch) {
+          if (cbeMatch.name) acc.name = cbeMatch.name;
+          if (cbeMatch.phone) acc.phoneNumber = cbeMatch.phone;
+          const exactBal = Math.round(cbeMatch.balance * 100) / 100;
+          acc.initialBalance = exactBal;
+          acc.availableBalance = exactBal;
+          acc.balance = exactBal;
+          usedBalances.add(exactBal);
+          continue;
+        }
+
         let initBal = typeof acc.initialBalance === 'number' && !isNaN(acc.initialBalance) 
           ? Math.round(acc.initialBalance * 100) / 100 
           : (typeof acc.balance === 'number' && !isNaN(acc.balance) ? Math.round(acc.balance * 100) / 100 : 0);
@@ -1070,7 +1096,8 @@ export const PhoneCallService = {
         cleanAcc === '1000170986671' ||
         acc.name.toLowerCase().includes('global') ||
         SENDER_PRESET_BALANCES[cleanAcc] ||
-        RECEIVER_PRESET_BALANCES[cleanAcc]
+        RECEIVER_PRESET_BALANCES[cleanAcc] ||
+        liveCbeByAcc.has(cleanAcc)
       );
 
       let b = acc.availableBalance;
@@ -1087,14 +1114,51 @@ export const PhoneCallService = {
     return accounts;
   },
 
+  mergeCanonicalCbeAccounts(list: CallerAccount[]): CallerAccount[] {
+    const merged = [...list];
+    try {
+      const canonicalCbe = getCanonicalCbeRegisteredAccounts();
+      for (const cbeAcc of canonicalCbe) {
+        const clean = cbeAcc.accountNumber;
+        if (!clean) continue;
+        const existing = merged.find(a => (a.accountNumber || '').replace(/\D/g, '') === clean);
+        if (existing) {
+          if (cbeAcc.accountName) existing.name = cbeAcc.accountName;
+          if (cbeAcc.phone) existing.phoneNumber = cbeAcc.phone;
+          existing.balance = cbeAcc.balance;
+          existing.availableBalance = cbeAcc.balance;
+        } else {
+          merged.push({
+            id: 'acc-cbe-' + clean,
+            name: cbeAcc.accountName,
+            phoneNumber: cbeAcc.phone || '+251911000000',
+            accountNumber: clean,
+            accountType: `Saving Account-${clean.slice(-4)}`,
+            initialBalance: cbeAcc.balance,
+            balance: cbeAcc.balance,
+            availableBalance: cbeAcc.balance,
+            totalReceived: 0,
+            totalSent: 0,
+            role: 'sender',
+            simSlot: 1,
+            avatarColor: 'from-purple-600 to-indigo-700',
+            note: 'CBE Registered Account',
+          });
+        }
+      }
+    } catch {}
+    return merged;
+  },
+
   getCallerAccounts(): CallerAccount[] {
     try {
       const data = localStorage.getItem(STORAGE_KEY_CALLER_ACCOUNTS);
       if (data) {
         const parsed = JSON.parse(data);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          // Normalize existing accounts to guarantee all receivers have 500-150000 and all accounts are distinct
-          const sanitized = this.normalizeAccounts(parsed);
+          // Automatically register & update ALL CBE registered accounts in Phone *889#
+          const withCbe = this.mergeCanonicalCbeAccounts(parsed);
+          const sanitized = this.normalizeAccounts(withCbe);
 
           // Ensure recent transactions are sorted to the top
           sanitized.sort((a: CallerAccount, b: CallerAccount) => {
@@ -1119,7 +1183,7 @@ export const PhoneCallService = {
     } catch (e) {
       console.error('Failed to load caller accounts', e);
     }
-    const fresh = this.normalizeAccounts([...INITIAL_CALLER_ACCOUNTS]);
+    const fresh = this.normalizeAccounts(this.mergeCanonicalCbeAccounts([...INITIAL_CALLER_ACCOUNTS]));
     this.saveCallerAccounts(fresh);
     return fresh;
   },
