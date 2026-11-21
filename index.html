@@ -30,8 +30,53 @@
     <link id="app-apple-touch-icon" rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link id="app-mask-icon" rel="mask-icon" href="/icons/icon-maskable.svg" color="#deb356" />
 
-    <!-- Early PWA Install Prompt Capture & HMR Error Suppression -->
+    <!-- Early Sub-App Boot Isolation + PWA Install Prompt Capture & HMR Error Suppression -->
     <script>
+      // Synchronously detect standalone sub-apps BEFORE first paint so CBE splash/white screen never flashes
+      (function() {
+        try {
+          var ua = navigator.userAgent || '';
+          var standaloneMatch = ua.match(/CBE_STANDALONE_FLAVOR\/(sms|truecaller|phone)/i);
+          var launchMatch = ua.match(/CBE_LAUNCH_VIEW\/(sms|truecaller|phone)/i);
+          var path = (window.location.pathname || '').toLowerCase().replace(/\/+$/, '') || '/';
+          var params = new URLSearchParams(window.location.search || '');
+          var appParam = (params.get('app') || params.get('view') || '').toLowerCase();
+          var hash = (window.location.hash || '').toLowerCase();
+
+          var pathSubApp = null;
+          if (path === '/sms' || appParam === 'sms' || hash === '#sms' || hash === '#/sms') pathSubApp = 'sms';
+          else if (path === '/truecaller' || appParam === 'truecaller' || hash === '#truecaller' || hash === '#/truecaller') pathSubApp = 'truecaller';
+          else if (path === '/phone' || appParam === 'phone' || hash === '#phone' || hash === '#/phone') pathSubApp = 'phone';
+
+          var lockedSubApp = standaloneMatch ? standaloneMatch[1].toLowerCase() : pathSubApp;
+          var initialSubApp = lockedSubApp || (launchMatch ? launchMatch[1].toLowerCase() : null);
+
+          if (lockedSubApp) {
+            window.__CBE_LOCKED_SUBAPP__ = lockedSubApp;
+          }
+          if (initialSubApp) {
+            window.__CBE_INITIAL_SUBAPP__ = initialSubApp;
+            var metaMap = {
+              sms: { bg: '#121212', title: 'Messages' },
+              truecaller: { bg: '#121316', title: 'Truecaller' },
+              phone: { bg: '#000000', title: 'Phone' }
+            };
+            var m = metaMap[initialSubApp];
+            if (m) {
+              document.title = m.title;
+              document.documentElement.classList.remove('bg-white');
+              document.documentElement.style.backgroundColor = m.bg;
+              var tc = document.getElementById('meta-theme-color');
+              if (tc) tc.setAttribute('content', m.bg);
+              var st = document.createElement('style');
+              st.id = 'subapp-boot-bg';
+              st.textContent = 'html,body,#root{background-color:' + m.bg + ' !important;}';
+              document.head.appendChild(st);
+            }
+          }
+        } catch (e) {}
+      })();
+
       // Suppress Vite HMR WebSocket errors in sandboxed iframe environment
       window.addEventListener('error', function(e) {
         var msg = (e.message || '') + ' ' + ((e.error && e.error.message) || '') + ' ' + ((e.error && e.error.stack) || '');

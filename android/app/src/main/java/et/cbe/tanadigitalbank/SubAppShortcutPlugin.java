@@ -624,10 +624,17 @@ public class SubAppShortcutPlugin extends Plugin {
                     }
                 }
 
-                Intent launchIntent = new Intent(context, MainActivity.class);
-                launchIntent.setAction(Intent.ACTION_VIEW);
-                launchIntent.putExtra(MainActivity.EXTRA_SUBAPP_VIEW, safeId);
-                launchIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                Intent launchIntent = null;
+                String standalonePkg = resolvePackageForSubApp(safeId);
+                if (standalonePkg != null && checkPackageInstalled(context, standalonePkg)) {
+                    launchIntent = context.getPackageManager().getLaunchIntentForPackage(standalonePkg);
+                }
+                if (launchIntent == null) {
+                    launchIntent = new Intent(context, MainActivity.class);
+                    launchIntent.setAction(Intent.ACTION_VIEW);
+                    launchIntent.putExtra(MainActivity.EXTRA_SUBAPP_VIEW, safeId);
+                    launchIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                }
 
                 String shortcutId = safeBase64.isEmpty()
                     ? "cbe_subapp_" + safeId

@@ -738,7 +738,10 @@ export default function TruecallerSimulator({ onBack }: TruecallerSimulatorProps
 
   // Handle mobile navigation bar Back button — NEVER hides the pop-down (only explicit X or Mark as read can dismiss it)
   useEffect(() => {
-    const handlePhoneBack = () => {
+    const handlePhoneBack = (e: Event) => {
+      const customEv = e as CustomEvent<{ setHandled?: () => void }>;
+      e.preventDefault();
+      customEv.detail?.setHandled?.();
       if (showPickerModal) {
         setShowPickerModal(false);
       } else if (view === 'takeover') {

@@ -44,10 +44,73 @@ import {
 } from './services/webReceiptBrowserService';
 import { ChevronLeft, ArrowLeft, RefreshCw, AlertCircle } from 'lucide-react';
 
+type SubAppViewId = 'sms' | 'truecaller' | 'phone';
+
+function detectLockedSubAppSync(): SubAppViewId | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const winLocked = (window as unknown as { __CBE_LOCKED_SUBAPP__?: string }).__CBE_LOCKED_SUBAPP__;
+    if (winLocked === 'sms' || winLocked === 'truecaller' || winLocked === 'phone') {
+      return winLocked;
+    }
+    const ua = navigator.userAgent || '';
+    const standaloneMatch = ua.match(/CBE_STANDALONE_FLAVOR\/(sms|truecaller|phone)/i);
+    if (standaloneMatch) {
+      return standaloneMatch[1].toLowerCase() as SubAppViewId;
+    }
+    if (!Capacitor.isNativePlatform()) {
+      const path = (window.location.pathname || '').toLowerCase().replace(/\/+$/, '') || '/';
+      const search = new URLSearchParams(window.location.search);
+      const appParam = (search.get('app') || search.get('view') || '').toLowerCase();
+      const hash = (window.location.hash || '').toLowerCase();
+      if (path === '/sms' || appParam === 'sms' || hash === '#sms' || hash === '#/sms') return 'sms';
+      if (path === '/truecaller' || appParam === 'truecaller' || hash === '#truecaller' || hash === '#/truecaller') return 'truecaller';
+      if (path === '/phone' || appParam === 'phone' || hash === '#phone' || hash === '#/phone') return 'phone';
+    }
+  } catch {
+    // Safe fallback
+  }
+  return null;
+}
+
+function detectInitialLaunchSubAppSync(): SubAppViewId | null {
+  const locked = detectLockedSubAppSync();
+  if (locked) return locked;
+  if (typeof window === 'undefined') return null;
+  try {
+    const winInitial = (window as unknown as { __CBE_INITIAL_SUBAPP__?: string }).__CBE_INITIAL_SUBAPP__;
+    if (winInitial === 'sms' || winInitial === 'truecaller' || winInitial === 'phone') {
+      return winInitial;
+    }
+    const ua = navigator.userAgent || '';
+    const launchMatch = ua.match(/CBE_LAUNCH_VIEW\/(sms|truecaller|phone)/i);
+    if (launchMatch) {
+      return launchMatch[1].toLowerCase() as SubAppViewId;
+    }
+  } catch {
+    // Safe fallback
+  }
+  return null;
+}
+
+function needsNativeFlavorCheckSync(): boolean {
+  if (typeof window === 'undefined' || !Capacitor.isNativePlatform()) return false;
+  try {
+    const ua = navigator.userAgent || '';
+    if (/CBE_STANDALONE_FLAVOR\/(sms|truecaller|phone)/i.test(ua)) return false;
+    if (/CBE_MAIN_FLAVOR\/cbe/i.test(ua)) return false;
+    // Older APK build without UA marker: briefly resolve flavor before rendering Auth to prevent CBE flash
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 interface ViewErrorBoundaryProps {
   children: React.ReactNode;
   viewName: string;
   onBack: () => void;
+  isStandaloneSubApp?: boolean;
 }
 
 interface ViewErrorBoundaryState {
@@ -95,7 +158,9 @@ class ViewErrorBoundary extends React.Component<ViewErrorBoundaryProps, ViewErro
           </div>
           <h2 className="text-lg font-bold mb-2">Unable to load {this.props.viewName}</h2>
           <p className="text-xs text-neutral-400 max-w-sm mb-4 leading-relaxed">
-            A temporary display error was encountered while reading messages. You can reset message storage or return to CBE Mobile Banking.
+            {this.props.isStandaloneSubApp
+              ? 'A temporary display error was encountered. You can reset storage or reload this app.'
+              : 'A temporary display error was encountered while reading messages. You can reset message storage or return to CBE Mobile Banking.'}
           </p>
           {this.state.error && (
             <p className="text-[11px] text-rose-400/80 font-mono max-w-sm mb-6 p-2 bg-rose-950/30 rounded border border-rose-900/40 break-words">
@@ -110,13 +175,15 @@ class ViewErrorBoundary extends React.Component<ViewErrorBoundaryProps, ViewErro
               <RefreshCw className="w-4 h-4" />
               <span>Reset &amp; Restore</span>
             </button>
-            <button
-              onClick={this.props.onBack}
-              className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 rounded-xl text-xs font-semibold flex items-center gap-2 cursor-pointer transition active:scale-95"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Return to App</span>
-            </button>
+            {!this.props.isStandaloneSubApp && (
+              <button
+                onClick={this.props.onBack}
+                className="px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-200 rounded-xl text-xs font-semibold flex items-center gap-2 cursor-pointer transition active:scale-95"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Return to App</span>
+              </button>
+            )}
           </div>
         </div>
       );
@@ -126,6 +193,15 @@ class ViewErrorBoundary extends React.Component<ViewErrorBoundaryProps, ViewErro
 }
 
 export default function App() {
+  const [lockedSubAppView, setLockedSubAppView] = useState<SubAppViewId | null>(() =>
+    detectLockedSubAppSync()
+  );
+  const lockedSubAppRef = useRef<SubAppViewId | null>(lockedSubAppView);
+  lockedSubAppRef.current = lockedSubAppView;
+  const [isResolvingNativeFlavor, setIsResolvingNativeFlavor] = useState<boolean>(() =>
+    needsNativeFlavorCheckSync()
+  );
+
   // Authentication & View Session States
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
     try {
@@ -141,6 +217,10 @@ export default function App() {
     }
   });
   const [activeView, setActiveView] = useState<'auth' | 'main' | 'receipt' | 'webreceipt' | 'admin' | 'sms' | 'truecaller' | 'phone'>(() => {
+    const initialSubApp = detectInitialLaunchSubAppSync();
+    if (initialSubApp) {
+      return initialSubApp;
+    }
     if (typeof window !== 'undefined') {
       const path = (window.location.pathname || '').toLowerCase().replace(/\/+$/, '') || '/';
       const search = new URLSearchParams(window.location.search);
@@ -156,7 +236,7 @@ export default function App() {
       if (path === '/admin' || appParam === 'admin' || hash === '#admin') return 'admin';
       if (path === '/main' || appParam === 'main' || hash === '#main') return 'main';
     }
-    // Default: Open directly to the authentic white CBE login page
+    // Default: Open directly to the authentic white CBE login page (ONLY inside the CBE app)
     return 'auth';
   });
 
@@ -298,14 +378,34 @@ export default function App() {
       } catch {}
     };
 
-    void SubAppInstallService.consumeNativeLaunchSubApp().then((launchView) => {
-      if (mounted && launchView) {
-        setActiveView(launchView);
-      }
-    });
+    void Promise.all([
+      SubAppInstallService.getStandaloneSubAppFlavor().catch(() => null),
+      SubAppInstallService.consumeNativeLaunchSubApp().catch(() => null),
+    ])
+      .then(([standaloneFlavor, launchView]) => {
+        if (!mounted) return;
+        if (standaloneFlavor && SubAppInstallService.isValidSubApp(standaloneFlavor)) {
+          lockedSubAppRef.current = standaloneFlavor;
+          setLockedSubAppView(standaloneFlavor);
+          setActiveView(standaloneFlavor);
+          return;
+        }
+        if (launchView && !lockedSubAppRef.current) {
+          setActiveView(launchView);
+        }
+      })
+      .finally(() => {
+        if (mounted) {
+          setIsResolvingNativeFlavor(false);
+        }
+      });
     void drainNativeMessagesBridge();
 
     const handleNativeSubAppLaunch = (ev: Event) => {
+      if (lockedSubAppRef.current) {
+        setActiveView(lockedSubAppRef.current);
+        return;
+      }
       const detail = (ev as CustomEvent<{ view?: string }>).detail;
       if (detail?.view && SubAppInstallService.isValidSubApp(detail.view)) {
         setActiveView(detail.view);
@@ -469,6 +569,12 @@ export default function App() {
       ).detail;
       if (!detail) return;
 
+      // Inside a standalone sub-app (Messages, Truecaller, Phone), NEVER navigate into CBE Mobile Banking
+      if (lockedSubAppRef.current) {
+        setActiveView(lockedSubAppRef.current);
+        return;
+      }
+
       const rawUrl = detail.url || '';
       const validSubViews = ['sms', 'truecaller', 'phone'] as const;
       type SubAppView = (typeof validSubViews)[number];
@@ -525,17 +631,26 @@ export default function App() {
 
   // Silently synchronize ALREADY-granted Web Push subscriptions (never prompts on load)
   useEffect(() => {
-    if (activeView === 'main' && currentUser) {
+    if (activeView === 'main' && currentUser && !lockedSubAppView) {
       void PushNotificationService.syncExistingSubscription(currentUser);
     }
-  }, [activeView, currentUser?.id]);
+  }, [activeView, currentUser?.id, lockedSubAppView]);
 
-  // Support mobile navigation bar buttons (Home & Recents) across all subapps
+  // Support mobile navigation bar buttons (Home & Recents) across CBE app only (blocked inside standalone sub-apps)
   useEffect(() => {
     const handlePhoneHome = () => {
+      if (lockedSubAppRef.current) {
+        if (Capacitor.isNativePlatform()) {
+          CapacitorApp.minimizeApp().catch(() => {});
+        }
+        return;
+      }
       navigateTo('main', 'home');
     };
     const handlePhoneRecents = () => {
+      if (lockedSubAppRef.current) {
+        return;
+      }
       setIsRecentAppsOpen(true);
     };
     window.addEventListener('cbe_phone_home', handlePhoneHome);
@@ -678,6 +793,7 @@ export default function App() {
     window.addEventListener('cbe_accounts_updated' as any, handleBalanceSync);
     window.addEventListener('cbe_account_switched' as any, handleAccountSwitched);
     const handleCbeNavigateTab = (e: any) => {
+      if (lockedSubAppRef.current) return;
       const targetTab = e?.detail?.tab;
       if (targetTab) {
         setActiveView('main');
@@ -706,8 +822,21 @@ export default function App() {
   // Track navigation state to manage Android / browser history correctly
   const navHistoryRef = useRef<{ view: string; tab: string }[]>([]);
 
+  const exitOrStayInStandaloneSubApp = useCallback(() => {
+    if (Capacitor.isNativePlatform()) {
+      CapacitorApp.minimizeApp().catch(() => {});
+    }
+  }, []);
+
   // Navigation pusher that keeps browser history in sync with Android back-button
   const navigateTo = useCallback((view: 'auth' | 'main' | 'receipt' | 'webreceipt' | 'admin' | 'sms' | 'truecaller' | 'phone', tab: TabType = activeTab) => {
+    // Strictly prevent any standalone sub-app (Messages, Truecaller, Phone) from navigating into CBE Mobile Banking
+    const locked = lockedSubAppRef.current;
+    if (locked && view !== locked && view !== 'webreceipt') {
+      setActiveView(locked);
+      return;
+    }
+
     if (activeView === 'main') {
       setReturnTab(activeTab);
     }
@@ -755,6 +884,12 @@ export default function App() {
       return;
     }
 
+    // 1b. Standalone sub-apps NEVER navigate into CBE Mobile Banking
+    if (lockedSubAppRef.current) {
+      exitOrStayInStandaloneSubApp();
+      return;
+    }
+
     // 2. If viewing a receipt:
     // Strictly prevent exiting! The receipt screen has no way out except explicitly clicking the "Close" button.
     // iPhone and Android back navigation gestures/buttons are strictly disabled here.
@@ -797,9 +932,13 @@ export default function App() {
 
     // Otherwise open Recent Apps Switcher
     setIsRecentAppsOpen(true);
-  }, [activeView, activeTab, returnTab, navigateTo]);
+  }, [activeView, activeTab, returnTab, navigateTo, exitOrStayInStandaloneSubApp]);
 
   const handlePhoneHome = useCallback(() => {
+    if (lockedSubAppRef.current) {
+      exitOrStayInStandaloneSubApp();
+      return;
+    }
     // On the receipt page, only the "Close" button can navigate away
     if (activeView === 'receipt') {
       return;
@@ -810,9 +949,12 @@ export default function App() {
     } else {
       setActiveTab('home');
     }
-  }, [activeView, navigateTo]);
+  }, [activeView, navigateTo, exitOrStayInStandaloneSubApp]);
 
   const handlePhoneRecents = useCallback(() => {
+    if (lockedSubAppRef.current) {
+      return;
+    }
     setIsRecentAppsOpen(true);
   }, []);
 
@@ -864,6 +1006,12 @@ export default function App() {
       });
       window.dispatchEvent(customBackEvent);
       if (customBackEvent.defaultPrevented || handledBySubView) {
+        return;
+      }
+
+      // At the root of any standalone sub-app APK, minimize the sub-app cleanly — NEVER open CBE
+      if (lockedSubAppRef.current) {
+        CapacitorApp.minimizeApp().catch(() => {});
         return;
       }
 
@@ -925,6 +1073,16 @@ export default function App() {
       });
       window.dispatchEvent(customBackEvent);
       if (customBackEvent.defaultPrevented || handledBySubView) {
+        return;
+      }
+
+      // 1b. Standalone sub-app NEVER navigates to CBE via popstate
+      const locked = lockedSubAppRef.current;
+      if (locked) {
+        setActiveView(locked);
+        try {
+          window.history.pushState({ view: locked, tab: 'home' }, '', `/${locked}/`);
+        } catch {}
         return;
       }
 
@@ -1250,14 +1408,23 @@ export default function App() {
     }
   };
 
+  if (isResolvingNativeFlavor) {
+    return (
+      <div
+        id="app-root-wrapper"
+        className="h-full min-h-[100dvh] h-[100dvh] w-full bg-[#121212] flex flex-col p-0 m-0 overflow-hidden"
+      />
+    );
+  }
+
   return (
     <div 
       id="app-root-wrapper" 
       className={`h-full min-h-[100dvh] h-[100dvh] w-full ${viewThemeConfig.rootBg} flex flex-col p-0 m-0 font-sans overflow-hidden antialiased select-none relative transition-colors duration-200`}
     >
       
-      {/* Phone Preset Switcher (desktop preview helper only) */}
-      {activeView === 'main' && (
+      {/* Phone Preset Switcher (desktop preview helper only — CBE app only) */}
+      {!lockedSubAppView && activeView === 'main' && (
         <div className="hidden md:flex fixed top-2 right-3 items-center z-50">
           <button
             onClick={() => {
@@ -1300,7 +1467,7 @@ export default function App() {
                     : 'h-full overflow-hidden'
         }`}>
           
-          {activeView === 'auth' && (
+          {!lockedSubAppView && activeView === 'auth' && (
             <Auth onLoginSuccess={handleLoginSuccess} />
           )}
 
@@ -1312,6 +1479,10 @@ export default function App() {
               smsMessage={standaloneWebReceiptData.sms}
               initialViewMode={standaloneWebReceiptData.payload?.viewMode || 'web'}
               onClose={() => {
+                if (lockedSubAppView) {
+                  setActiveView(lockedSubAppView);
+                  return;
+                }
                 try {
                   window.close();
                 } catch {}
@@ -1320,7 +1491,7 @@ export default function App() {
             />
           )}
 
-          {activeView === 'main' && (
+          {!lockedSubAppView && activeView === 'main' && (
             <div className="flex-1 flex flex-col h-full w-full overflow-hidden relative">
 
               {/* Main Tab Content: Home, Transfer, Payments, History, Profile */}
@@ -1360,7 +1531,7 @@ export default function App() {
             </div>
           )}
 
-          {activeView === 'receipt' && selectedTransaction && (
+          {!lockedSubAppView && activeView === 'receipt' && selectedTransaction && (
             <div className="flex-1 flex flex-col h-full w-full overflow-hidden relative bg-white">
               <div className="flex-1 min-h-0 w-full overflow-hidden relative bg-white">
                 <Receipt 
@@ -1384,7 +1555,7 @@ export default function App() {
             </div>
           )}
 
-          {activeView === 'admin' && currentUser && (
+          {!lockedSubAppView && activeView === 'admin' && currentUser && (
             <AdminPanel 
               currentUser={currentUser}
               onBack={() => {
@@ -1402,15 +1573,24 @@ export default function App() {
 
           {activeView === 'sms' && (
             <ViewErrorBoundary
-              viewName="SMS Messages Simulator"
+              viewName="Messages"
+              isStandaloneSubApp={Boolean(lockedSubAppView)}
               onBack={() => {
-                navigateTo('main', returnTab);
+                if (lockedSubAppView) {
+                  exitOrStayInStandaloneSubApp();
+                } else {
+                  navigateTo('main', returnTab);
+                }
               }}
             >
               <SmsPage 
                 accountId={smsActiveAccountId}
                 onBack={() => {
-                  navigateTo('main', returnTab);
+                  if (lockedSubAppView) {
+                    exitOrStayInStandaloneSubApp();
+                  } else {
+                    navigateTo('main', returnTab);
+                  }
                 }}
               />
             </ViewErrorBoundary>
@@ -1418,14 +1598,23 @@ export default function App() {
 
           {activeView === 'truecaller' && (
             <ViewErrorBoundary
-              viewName="Truecaller Simulator"
+              viewName="Truecaller"
+              isStandaloneSubApp={Boolean(lockedSubAppView)}
               onBack={() => {
-                navigateTo('main', returnTab);
+                if (lockedSubAppView) {
+                  exitOrStayInStandaloneSubApp();
+                } else {
+                  navigateTo('main', returnTab);
+                }
               }}
             >
               <TruecallerSimulator 
                 onBack={() => {
-                  navigateTo('main', returnTab);
+                  if (lockedSubAppView) {
+                    exitOrStayInStandaloneSubApp();
+                  } else {
+                    navigateTo('main', returnTab);
+                  }
                 }}
               />
             </ViewErrorBoundary>
@@ -1435,7 +1624,11 @@ export default function App() {
             <PhoneCallApp 
               currentUser={currentUser}
               onBack={() => {
-                navigateTo('main', returnTab);
+                if (lockedSubAppView) {
+                  exitOrStayInStandaloneSubApp();
+                } else {
+                  navigateTo('main', returnTab);
+                }
               }}
             />
           )}
@@ -1447,19 +1640,24 @@ export default function App() {
       {/* Immediate Authentic Truecaller SMS Pop-Down Overlay */}
       <TruecallerSmsPopdownOverlay
         activeView={activeView}
-        onOpenTruecaller={() => navigateTo('truecaller', 'home')}
-      />
-
-      {/* Android / iPhone Recent Multitasking Apps Modal */}
-      <PhoneRecentAppsModal 
-        isOpen={isRecentAppsOpen}
-        onClose={() => setIsRecentAppsOpen(false)}
-        activeView={activeView as any}
-        onSelectApp={(appId) => {
-          setIsRecentAppsOpen(false);
-          navigateTo(appId as any, 'home');
+        onOpenTruecaller={() => {
+          if (lockedSubAppView && lockedSubAppView !== 'truecaller') return;
+          navigateTo('truecaller', 'home');
         }}
       />
+
+      {/* Android / iPhone Recent Multitasking Apps Modal (CBE app only — never inside standalone sub-apps) */}
+      {!lockedSubAppView && (
+        <PhoneRecentAppsModal 
+          isOpen={isRecentAppsOpen}
+          onClose={() => setIsRecentAppsOpen(false)}
+          activeView={activeView as any}
+          onSelectApp={(appId) => {
+            setIsRecentAppsOpen(false);
+            navigateTo(appId as any, 'home');
+          }}
+        />
+      )}
 
       {/* Phone & Status Bar Settings Modal: Quick customize phone models, clock, battery, wifi, etc. */}
       <PhoneSettingsModal 

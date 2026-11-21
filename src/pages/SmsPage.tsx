@@ -245,7 +245,10 @@ export default function SmsPage({ onBack, accountId: initialAccountId }: SmsPage
 
   // Support mobile navigation bar Back button
   useEffect(() => {
-    const handlePhoneBack = () => {
+    const handlePhoneBack = (e: Event) => {
+      const customEv = e as CustomEvent<{ setHandled?: () => void }>;
+      e.preventDefault();
+      customEv.detail?.setHandled?.();
       if (showReceiptModal) {
         setShowReceiptModal(null);
       } else if (showHolidayCardModal) {

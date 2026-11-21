@@ -17,7 +17,12 @@ if (typeof window !== 'undefined') {
     }
 
     if (Capacitor.isNativePlatform()) {
-      SplashScreen.hide({ fadeOutDuration: 200 }).catch(() => {});
+      const isSubApp = Boolean(
+        (window as unknown as { __CBE_LOCKED_SUBAPP__?: string; __CBE_INITIAL_SUBAPP__?: string }).__CBE_LOCKED_SUBAPP__ ||
+        (window as unknown as { __CBE_INITIAL_SUBAPP__?: string }).__CBE_INITIAL_SUBAPP__ ||
+        /CBE_STANDALONE_FLAVOR\/(sms|truecaller|phone)/i.test(navigator.userAgent || '')
+      );
+      SplashScreen.hide({ fadeOutDuration: isSubApp ? 0 : 200 }).catch(() => {});
 
       // Native Capacitor APKs serve all assets offline from bundled local files;
       // ensure no stale Service Worker intercepts updates inside the WebView.
@@ -101,8 +106,18 @@ class RootErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundar
 
   render() {
     if (this.state.hasError) {
+      const isSubApp =
+        typeof window !== 'undefined' &&
+        Boolean(
+          (window as unknown as { __CBE_LOCKED_SUBAPP__?: string }).__CBE_LOCKED_SUBAPP__ ||
+          /CBE_STANDALONE_FLAVOR\/(sms|truecaller|phone)/i.test(navigator.userAgent || '')
+        );
       return (
-        <div className="min-h-screen w-full bg-[#70189F] text-white flex flex-col items-center justify-center p-6 text-center">
+        <div
+          className={`min-h-screen w-full ${
+            isSubApp ? 'bg-[#121212]' : 'bg-[#70189F]'
+          } text-white flex flex-col items-center justify-center p-6 text-center`}
+        >
           <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center mb-4 text-2xl font-bold">
             !
           </div>
@@ -115,7 +130,9 @@ class RootErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundar
               this.setState({ hasError: false, error: null });
               window.location.reload();
             }}
-            className="px-6 py-2.5 bg-[#deb356] text-black font-bold rounded-xl shadow-lg active:scale-95 transition-transform cursor-pointer"
+            className={`px-6 py-2.5 ${
+              isSubApp ? 'bg-[#1A73E8] text-white' : 'bg-[#deb356] text-black'
+            } font-bold rounded-xl shadow-lg active:scale-95 transition-transform cursor-pointer`}
           >
             Reload App
           </button>

@@ -9,11 +9,18 @@ import android.view.WindowInsetsController;
 import android.view.WindowManager;
 import androidx.core.view.WindowCompat;
 import com.getcapacitor.BridgeActivity;
+import com.getcapacitor.CapConfig;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import org.json.JSONObject;
 
 /**
  * MainActivity
  * Enforces true edge-to-edge full-screen rendering on Android so the application
- * extends seamlessly under both the status bar and navigation bar.
+ * extends seamlessly under both the status bar and navigation bar, and strictly
+ * isolates standalone sub-app flavors so CBE splash/UI never appears inside sub-apps.
  */
 public class MainActivity extends BridgeActivity {
 
@@ -22,12 +29,149 @@ public class MainActivity extends BridgeActivity {
         // navigation bar stays transparent edge-to-edge as in the original design.
     }
 
+    private static String getFlavorBackgroundHex(String flavor) {
+        if ("sms".equals(flavor)) return "#121212";
+        if ("truecaller".equals(flavor)) return "#121316";
+        if ("phone".equals(flavor)) return "#000000";
+        return "#FFFFFF";
+    }
+
+    private String resolveFlavorForBoot() {
+        String defaultFlavor = getDefaultFlavorStartView();
+        if (BuildConfig.IS_STANDALONE_SUBAPP || (defaultFlavor != null && !defaultFlavor.isEmpty())) {
+            return defaultFlavor != null && !defaultFlavor.isEmpty() ? defaultFlavor : "sms";
+        }
+        return null;
+    }
+
+    private CapConfig buildFlavorCapConfig() {
+        try {
+            JSONObject cfg = new JSONObject();
+            try (InputStream is = getAssets().open("capacitor.config.json");
+                 BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = br.readLine()) != null) {
+                    sb.append(line).append('\n');
+                }
+                if (sb.length() > 0) {
+                    cfg = new JSONObject(sb.toString());
+                }
+            } catch (Exception ignored) {
+            }
+
+            String standaloneFlavor = resolveFlavorForBoot();
+            JSONObject androidObj = cfg.optJSONObject("android");
+            if (androidObj == null) {
+                androidObj = new JSONObject();
+                cfg.put("android", androidObj);
+            }
+            JSONObject pluginsObj = cfg.optJSONObject("plugins");
+            if (pluginsObj == null) {
+                pluginsObj = new JSONObject();
+                cfg.put("plugins", pluginsObj);
+            }
+
+            if (standaloneFlavor != null) {
+                String bgHex = getFlavorBackgroundHex(standaloneFlavor);
+                String existingUa = androidObj.optString("appendUserAgent", "").trim();
+                String marker = "CBE_STANDALONE_FLAVOR/" + standaloneFlavor;
+                androidObj.put("appendUserAgent", existingUa.isEmpty() ? marker : existingUa + " " + marker);
+                androidObj.put("backgroundColor", bgHex);
+
+                // Never hold a splash screen overlay or show CBE colors on standalone sub-apps
+                JSONObject splashObj = pluginsObj.optJSONObject("SplashScreen");
+                if (splashObj == null) {
+                    splashObj = new JSONObject();
+                    pluginsObj.put("SplashScreen", splashObj);
+                }
+                splashObj.put("launchShowDuration", 0);
+                splashObj.put("launchAutoHide", true);
+                splashObj.put("backgroundColor", bgHex);
+
+                JSONObject navObj = pluginsObj.optJSONObject("NavigationBar");
+                if (navObj == null) {
+                    navObj = new JSONObject();
+                    pluginsObj.put("NavigationBar", navObj);
+                }
+                navObj.put("color", bgHex);
+                navObj.put("darkButtons", false);
+
+                JSONObject notifObj = pluginsObj.optJSONObject("LocalNotifications");
+                if (notifObj == null) {
+                    notifObj = new JSONObject();
+                    pluginsObj.put("LocalNotifications", notifObj);
+                }
+                if ("sms".equals(standaloneFlavor)) {
+                    notifObj.put("smallIcon", "ic_stat_sms");
+                    notifObj.put("iconColor", "#1A73E8");
+                } else if ("truecaller".equals(standaloneFlavor)) {
+                    notifObj.put("smallIcon", "ic_stat_truecaller");
+                    notifObj.put("iconColor", "#0066FF");
+                } else if ("phone".equals(standaloneFlavor)) {
+                    notifObj.put("smallIcon", "ic_stat_phone");
+                    notifObj.put("iconColor", "#16A34A");
+                }
+            } else {
+                String existingUa = androidObj.optString("appendUserAgent", "").trim();
+                StringBuilder marker = new StringBuilder("CBE_MAIN_FLAVOR/cbe");
+                try {
+                    android.content.Intent launchIntent = getIntent();
+                    if (launchIntent != null) {
+                        String extraView = launchIntent.getStringExtra(EXTRA_SUBAPP_VIEW);
+                        if (extraView != null) {
+                            String clean = extraView.trim().toLowerCase();
+                            if ("sms".equals(clean) || "truecaller".equals(clean) || "phone".equals(clean)) {
+                                marker.append(" CBE_LAUNCH_VIEW/").append(clean);
+                                String bgHex = getFlavorBackgroundHex(clean);
+                                androidObj.put("backgroundColor", bgHex);
+                                JSONObject splashObj = pluginsObj.optJSONObject("SplashScreen");
+                                if (splashObj != null) {
+                                    splashObj.put("launchShowDuration", 0);
+                                    splashObj.put("backgroundColor", bgHex);
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception ignored) {
+                }
+                androidObj.put("appendUserAgent", existingUa.isEmpty() ? marker.toString() : existingUa + " " + marker);
+            }
+
+            return new CapConfig(getAssets(), cfg);
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    @Override
+    protected void load() {
+        CapConfig customConfig = buildFlavorCapConfig();
+        if (customConfig != null) {
+            this.config = customConfig;
+        }
+        super.load();
+    }
+
     private void applyEdgeToEdge() {
         try {
             Window window = getWindow();
             if (window == null) return;
 
             WindowCompat.setDecorFitsSystemWindows(window, false);
+
+            String standaloneFlavor = resolveFlavorForBoot();
+            boolean isDarkStandalone = standaloneFlavor != null;
+            if (isDarkStandalone) {
+                try {
+                    int bgColor = Color.parseColor(getFlavorBackgroundHex(standaloneFlavor));
+                    window.getDecorView().setBackgroundColor(bgColor);
+                    if (getBridge() != null && getBridge().getWebView() != null) {
+                        getBridge().getWebView().setBackgroundColor(bgColor);
+                    }
+                } catch (Exception ignored) {
+                }
+            }
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
@@ -43,8 +187,11 @@ public class MainActivity extends BridgeActivity {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 WindowInsetsController controller = window.getInsetsController();
                 if (controller != null) {
+                    int appearance = isDarkStandalone
+                        ? 0
+                        : WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
                     controller.setSystemBarsAppearance(
-                        WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
+                        appearance,
                         WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
                             | WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS
                     );
@@ -54,8 +201,10 @@ public class MainActivity extends BridgeActivity {
                 if (decorView != null) {
                     int flags = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
                               | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                              | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                              | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+                              | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;
+                    if (!isDarkStandalone) {
+                        flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;
+                    }
                     decorView.setSystemUiVisibility(flags);
                 }
             }
@@ -84,10 +233,15 @@ public class MainActivity extends BridgeActivity {
     }
 
     public static String consumePendingSubAppView() {
+        String defaultFlavor = getDefaultFlavorStartView();
+        if (BuildConfig.IS_STANDALONE_SUBAPP && defaultFlavor != null && !defaultFlavor.isEmpty()) {
+            pendingSubAppView = null;
+            return defaultFlavor;
+        }
         String view = pendingSubAppView;
         pendingSubAppView = null;
         if (view == null || view.isEmpty()) {
-            return getDefaultFlavorStartView();
+            return defaultFlavor;
         }
         return view;
     }
@@ -189,11 +343,20 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void handleSubAppIntent(android.content.Intent intent, boolean notifyBridge) {
-        if (intent == null) return;
         try {
+            String defaultFlavor = getDefaultFlavorStartView();
+            // Standalone sub-app APKs are permanently locked to their own sub-app view
+            if (BuildConfig.IS_STANDALONE_SUBAPP && defaultFlavor != null && !defaultFlavor.isEmpty()) {
+                pendingSubAppView = defaultFlavor;
+                if (notifyBridge && getBridge() != null) {
+                    getBridge().triggerWindowJSEvent("cbe_subapp_launch", "{\"view\":\"" + defaultFlavor + "\"}");
+                }
+                return;
+            }
+            if (intent == null) return;
             String targetView = intent.getStringExtra(EXTRA_SUBAPP_VIEW);
             if (targetView == null || targetView.trim().isEmpty()) {
-                targetView = getDefaultFlavorStartView();
+                targetView = defaultFlavor;
             }
             if (targetView != null && !targetView.trim().isEmpty()) {
                 String clean = targetView.trim().toLowerCase();
