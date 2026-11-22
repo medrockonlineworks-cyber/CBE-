@@ -7,6 +7,8 @@ import AccountCard from './AccountCard';
 import TransactionDetailModal from './TransactionDetailModal';
 import { RegisteredAccountsModal } from './RegisteredAccountsModal';
 import { RefreshIcon, AccountScanIcon, AccountSearchDirectoryIcon } from './CbeCustomIcons';
+import { TransferBiometricGate } from './TransferBiometricGate';
+import { BiometricAuthService } from '../services/biometricAuthService';
 import { 
   Send, 
   ArrowLeftRight, 
@@ -82,7 +84,9 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
 
-  // Pin Verification State
+  // Biometric + Pin Verification State (Both Required)
+  const [showBiometricGate, setShowBiometricGate] = useState(false);
+  const [biometricConfirmed, setBiometricConfirmed] = useState(false);
   const [showPinModal, setShowPinModal] = useState(false);
   const [showTariffModal, setShowTariffModal] = useState(false);
   const [enteredPin, setEnteredPin] = useState('');
@@ -323,17 +327,25 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
   const [airtimeType, setAirtimeType] = useState<'airtime' | 'data'>('airtime');
   const [selectedDataPackage, setSelectedDataPackage] = useState('Weekly 5GB Unlimited - 250 ETB');
 
-  // Trigger PIN Verification Modal
+  // Trigger 2-Step Verification: Biometric (Fingerprint/Face ID) -> PIN
   const requestPinAuthorize = (action: () => void) => {
     setErrorMsg('');
     setEnteredPin('');
     setPendingAction(() => action);
-    setShowPinModal(true);
+    setBiometricConfirmed(false);
+    setShowPinModal(false);
+    setShowBiometricGate(true);
   };
 
   const handlePinSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
+
+    if (!biometricConfirmed) {
+      setShowPinModal(false);
+      setShowBiometricGate(true);
+      return;
+    }
 
     // PIN is verified
     if (enteredPin.length !== 4) {
@@ -342,6 +354,7 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
     }
 
     setShowPinModal(false);
+    setBiometricConfirmed(false);
     if (pendingAction) {
       pendingAction();
     }
@@ -2465,10 +2478,72 @@ export default function Transactions({ currentUser, onTransactionComplete, onSel
         </div>
       )}
 
-      {/* ================= SECURITY TRANSACTIONS PIN GATE MODAL ================= */}
-      {showPinModal && (
+      {/* ================= STEP 1: BIOMETRIC IDENTITY CONFIRMATION ================= */}
+      <TransferBiometricGate
+        open={showBiometricGate}
+        user={currentUser}
+        amountDisplay={
+          activeTab === 'transfer' && transferAmount && !isNaN(parseFloat(transferAmount))
+            ? `ETB ${parseFloat(transferAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+            : activeTab === 'send' && sendAmount && !isNaN(parseFloat(sendAmount))
+              ? `ETB ${parseFloat(sendAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+              : activeTab === 'merchant' && merchantPayAmount && !isNaN(parseFloat(merchantPayAmount))
+                ? `ETB ${parseFloat(merchantPayAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                : activeTab === 'airtime' && airtimeAmount && !isNaN(parseFloat(airtimeAmount))
+                  ? `ETB ${parseFloat(airtimeAmount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                  : undefined
+        }
+        recipientName={
+          activeTab === 'transfer'
+            ? (transferRecipientName || verifiedAccountName || transferAccount || undefined)
+            : activeTab === 'send'
+              ? (sendRecipientName || sendRecipient || undefined)
+              : activeTab === 'merchant'
+                ? (verifiedMerchantName || merchantCode || undefined)
+                : activeTab === 'airtime'
+                  ? (airtimePhone || airtimeNetwork)
+                  : undefined
+        }
+        onConfirmed={() => {
+          setBiometricConfirmed(true);
+          setShowBiometricGate(false);
+          setEnteredPin('');
+          setShowPinModal(true);
+        }}
+        onCancel={() => {
+          setShowBiometricGate(false);
+          setBiometricConfirmed(false);
+          setPendingAction(null);
+        }}
+      />
+
+      {/* ================= STEP 2: SECURITY TRANSACTIONS PIN GATE MODAL ================= */}
+      {showPinModal && biometricConfirmed && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-gray-100 text-center relative animate-in fade-in zoom-in-95 duration-200">
+            <button
+              type="button"
+              onClick={() => {
+                setShowPinModal(false);
+                setBiometricConfirmed(false);
+                setEnteredPin('');
+                setPendingAction(null);
+              }}
+              className="absolute right-4 top-4 w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition cursor-pointer"
+              aria-label="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#16a34a] mb-1">
+              <Check className="w-3.5 h-3.5 stroke-[3]" />
+              <span>
+                {BiometricAuthService.getBiometricMethod() === 'faceid'
+                  ? 'Face ID confirmed • Step 2 of 2'
+                  : 'Fingerprint confirmed • Step 2 of 2'}
+              </span>
+            </div>
+
             <h3 className="text-lg font-extrabold text-emerald-950 mb-1.5 flex items-center justify-center gap-1.5">
               <ShieldCheck className="w-5 h-5 text-emerald-600 animate-pulse" />
               <span>Authorize Ledger Gate</span>

@@ -71,7 +71,11 @@ interface DeviceBiometricsPluginInterface {
     allowDeviceCredential?: boolean;
   }): Promise<NativeBiometricResponse>;
   clearToken(options: { userId: string }): Promise<{ cleared: boolean }>;
-  authenticate(options: { reason: string }): Promise<NativeBiometricResponse>;
+  authenticate(options: {
+    title?: string;
+    reason: string;
+    description?: string;
+  }): Promise<NativeBiometricResponse>;
 }
 
 const DeviceBiometricsNative = registerPlugin<DeviceBiometricsPluginInterface>('DeviceBiometrics');
@@ -765,6 +769,109 @@ export class BiometricAuthService {
     await AuthSessionService.sealRefreshTokenWithKey(user.id, refreshResult.refreshToken);
     this.markBiometricEnrolled(user.id, method);
     return { status: 'success', method };
+  }
+
+  /**
+   * Transfer / Payment identity confirmation workflow (Step 1 before PIN):
+   * Prompts real Android Fingerprint or iOS Face ID directly without requiring
+   * prior biometric login-token enrollment.
+   */
+  public static async confirmIdentityForTransfer(
+    user: UserProfile,
+    options?: { amountDisplay?: string; recipientName?: string }
+  ): Promise<BiometricAttemptResult> {
+    const method = this.getBiometricMethod();
+    const methodName = this.getDeviceBiometricName(method);
+    const reasonText =
+      options?.amountDisplay && options?.recipientName
+        ? `Confirm ${options.amountDisplay} payment to ${options.recipientName}`
+        : method === 'faceid'
+          ? "Confirm it's you with Face ID to continue to PIN"
+          : "Confirm it's you with Fingerprint to continue to PIN";
+
+    // 1. Native Capacitor Path (Android BiometricPrompt / iOS LAContext)
+    if (typeof window !== 'undefined' && Capacitor.isNativePlatform()) {
+      try {
+        const res = await DeviceBiometricsNative.authenticate({
+          title: "Confirm it's you",
+          reason: reasonText,
+          description:
+            method === 'faceid'
+              ? 'Use Face ID to verify your identity before entering your PIN'
+              : 'Touch the fingerprint sensor to confirm payment',
+        });
+
+        const resolvedMethod: BiometricMethod =
+          res?.method === 'faceid' || res?.method === 'touchid'
+            ? 'faceid'
+            : res?.method === 'fingerprint'
+              ? 'fingerprint'
+              : method;
+
+        if (res?.verified) {
+          return { status: 'success', method: resolvedMethod };
+        }
+        return this.mapNativeFailure(res, resolvedMethod);
+      } catch (nativeErr: unknown) {
+        const errMsg = nativeErr instanceof Error ? nativeErr.message : String(nativeErr);
+        if (!/not implemented|UNIMPLEMENTED/i.test(errMsg)) {
+          return {
+            status: 'error',
+            method,
+            message: errMsg || `${methodName} verification failed.`,
+          };
+        }
+      }
+    }
+
+    // 2. Web / PWA Path: Real Platform WebAuthn (iOS Safari Face ID / Android Chrome Fingerprint)
+    const availability = await this.checkAvailability();
+    if (!availability.available) {
+      if (availability.hardwareStatus === 'iframe_blocked') {
+        return {
+          status: 'iframe_blocked',
+          method,
+          message: availability.reason,
+        };
+      }
+      return {
+        status: availability.hardwareStatus === 'not_enrolled' ? 'not_enrolled' : 'unsupported',
+        method,
+        message: availability.reason || `${methodName} is unavailable on this browser/device.`,
+      };
+    }
+
+    const currentHost = window.location.hostname;
+    const storedCred = this.getStoredCredential(user.id);
+    const startedAt = Date.now();
+
+    if (storedCred && storedCred.rpId === currentHost) {
+      try {
+        await this.verifyPlatformCredential(storedCred.credId, currentHost);
+        return { status: 'success', method };
+      } catch (err) {
+        const errName = err instanceof DOMException ? err.name : '';
+        // If previously saved credential was invalidated/cleared on device, re-create with live UV check
+        if (errName === 'InvalidStateError' || errName === 'NotFoundError') {
+          try {
+            await this.enrollPlatformCredential(user, method);
+            return { status: 'success', method };
+          } catch (reEnrollErr) {
+            return this.mapWebAuthnError(reEnrollErr, method, startedAt);
+          }
+        }
+        return this.mapWebAuthnError(err, method, startedAt);
+      }
+    }
+
+    // First-time platform biometric verification on this origin: creates a hardware-bound platform credential
+    // with userVerification: 'required', which natively triggers iOS Face ID / Android Fingerprint.
+    try {
+      await this.enrollPlatformCredential(user, method);
+      return { status: 'success', method };
+    } catch (err) {
+      return this.mapWebAuthnError(err, method, startedAt);
+    }
   }
 
   private static mapNativeFailure(

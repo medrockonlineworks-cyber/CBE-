@@ -442,7 +442,9 @@ public class DeviceBiometricsPlugin extends Plugin {
 
     @PluginMethod
     public void authenticate(PluginCall call) {
+        final String title = call.getString("title", "Unlock to use Mobile Banking");
         final String reason = call.getString("reason", "Authenticate to continue.");
+        final String description = call.getString("description", "Touch the fingerprint sensor");
         final FragmentActivity activity = getActivity();
 
         if (activity == null) {
@@ -503,9 +505,9 @@ public class DeviceBiometricsPlugin extends Plugin {
             );
 
             BiometricPrompt.PromptInfo promptInfo = new BiometricPrompt.PromptInfo.Builder()
-                .setTitle("Unlock to use Mobile Banking")
+                .setTitle(title)
                 .setSubtitle(reason)
-                .setDescription("Touch the fingerprint sensor")
+                .setDescription(description)
                 .setNegativeButtonText("Cancel")
                 .setAllowedAuthenticators(authenticators)
                 .build();

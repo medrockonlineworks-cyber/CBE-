@@ -19,6 +19,8 @@ import {
 import { UserProfile, Transaction, Beneficiary, RegisteredAccountInfo } from '../types';
 import { LocalDb } from '../lib/mockData';
 import { RegisteredAccountsModal } from './RegisteredAccountsModal';
+import { TransferBiometricGate } from './TransferBiometricGate';
+import { BiometricAuthService } from '../services/biometricAuthService';
 
 interface CbeTransferProps {
   currentUser: UserProfile;
@@ -139,7 +141,9 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
     }
   }, [currentUser.id]);
 
-  // Flow states: 'form' | 'confirm_pin'
+  // Flow states: 'form' | 'biometric_gate' | 'confirm_pin'
+  const [showBiometricGate, setShowBiometricGate] = useState(false);
+  const [biometricConfirmed, setBiometricConfirmed] = useState(false);
   const [showPinSheet, setShowPinSheet] = useState(false);
   const [showRegisteredModal, setShowRegisteredModal] = useState(false);
   const [pin, setPin] = useState('');
@@ -260,8 +264,16 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
         e?.preventDefault?.();
         return;
       }
+      if (showBiometricGate) {
+        setShowBiometricGate(false);
+        setBiometricConfirmed(false);
+        e?.detail?.setHandled?.();
+        e?.preventDefault?.();
+        return;
+      }
       if (showPinSheet) {
         setShowPinSheet(false);
+        setBiometricConfirmed(false);
         setPin('');
         setPinError('');
         e?.detail?.setHandled?.();
@@ -281,7 +293,7 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
 
     window.addEventListener('cbe_phone_back', handlePhoneBack);
     return () => window.removeEventListener('cbe_phone_back', handlePhoneBack);
-  }, [showCalcModal, showRegisteredModal, showPinSheet, selectedRecipient, onBack]);
+  }, [showCalcModal, showRegisteredModal, showBiometricGate, showPinSheet, selectedRecipient, onBack]);
 
   // Step 1: Validate form inputs and open PIN confirmation sheet
   const handleInitiateTransfer = (e: React.FormEvent) => {
@@ -324,19 +336,27 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
       }
     }
 
-    // Dismiss any OS soft keyboard before showing the in-app PIN confirmation keypad
+    // Dismiss any OS soft keyboard before showing biometric confirmation
     try {
       (document.activeElement as HTMLElement | null)?.blur?.();
     } catch {}
 
-    // Open the PIN confirmation bottom sheet
+    // Step 1 (Required): Confirm it's you with Fingerprint (Android) or Face ID (iOS) before PIN
     setPin('');
     setPinError('');
-    setShowPinSheet(true);
+    setBiometricConfirmed(false);
+    setShowPinSheet(false);
+    setShowBiometricGate(true);
   };
 
-  // Step 2: Confirm 6-digit PIN -> complete transfer & show receipt
+  // Step 2 (Required): Confirm 6-digit PIN after biometric confirmation -> complete transfer & show receipt
   const handleConfirmPin = () => {
+    if (!biometricConfirmed) {
+      setShowPinSheet(false);
+      setShowBiometricGate(true);
+      return;
+    }
+
     if (pin.length !== 6) {
       setPinError('Please enter your 6-digit PIN.');
       return;
@@ -397,6 +417,7 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
 
       setIsSubmitting(false);
       setShowPinSheet(false);
+      setBiometricConfirmed(false);
 
       // Navigate to official CBE Receipt view
       onTransactionComplete(newTx);
@@ -468,8 +489,12 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
             id="btn-cbe-transfer-back"
             type="button"
             onClick={() => {
-              if (showPinSheet) {
+              if (showBiometricGate) {
+                setShowBiometricGate(false);
+                setBiometricConfirmed(false);
+              } else if (showPinSheet) {
                 setShowPinSheet(false);
+                setBiometricConfirmed(false);
                 setPin('');
                 setPinError('');
               } else if (selectedRecipient) {
@@ -484,7 +509,7 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
             <ChevronLeft className="w-5 h-5 stroke-[2.4] -ml-0.5" />
           </button>
           <h1 className="text-[19px] font-semibold text-white tracking-tight">
-            {selectedRecipient || showPinSheet ? 'Transfer' : 'CBE Transfer'}
+            {selectedRecipient || showBiometricGate || showPinSheet ? 'Transfer' : 'CBE Transfer'}
           </h1>
         </div>
       </div>
@@ -632,8 +657,8 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
                 </button>
               </div>
             </form>
-          ) : showPinSheet ? (
-            /* Transfer summary cards visible behind PIN bottom sheet when initiated from main CBE Transfer form */
+          ) : showBiometricGate || showPinSheet ? (
+            /* Transfer summary cards visible behind Biometric & PIN sheets when initiated from main CBE Transfer form */
             <div className="space-y-3 pt-1">
               <div className="bg-[#ECEAEF] rounded-[18px] px-4 py-3.5">
                 <span className="text-[12.5px] text-[#6B6875] font-normal block mb-2">Transfer to</span>
@@ -1006,9 +1031,34 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
       />
 
       {/* ========================================================================= */}
-      {/* CBE PIN CONFIRMATION BOTTOM SHEET (EXACTLY MATCHING IMAGE 2: IMG_0553.jpeg) */}
+      {/* STEP 1: BIOMETRIC IDENTITY CONFIRMATION (FINGERPRINT / FACE ID)           */}
       {/* ========================================================================= */}
-      {showPinSheet && (
+      <TransferBiometricGate
+        open={showBiometricGate}
+        user={currentUser}
+        amountDisplay={
+          amount && !isNaN(parseFloat(amount))
+            ? `ETB ${parseFloat(amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+            : undefined
+        }
+        recipientName={activeRecipientName}
+        onConfirmed={() => {
+          setBiometricConfirmed(true);
+          setShowBiometricGate(false);
+          setPin('');
+          setPinError('');
+          setShowPinSheet(true);
+        }}
+        onCancel={() => {
+          setShowBiometricGate(false);
+          setBiometricConfirmed(false);
+        }}
+      />
+
+      {/* ========================================================================= */}
+      {/* STEP 2: CBE PIN CONFIRMATION BOTTOM SHEET (ONLY AFTER BIOMETRIC CONFIRMED) */}
+      {/* ========================================================================= */}
+      {showPinSheet && biometricConfirmed && (
         <div className="fixed inset-0 z-[130] bg-black/50 backdrop-blur-2xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
           <div 
             className="bg-white rounded-t-[32px] sm:rounded-3xl pt-3 pb-[max(env(safe-area-inset-bottom,0px),60px)] sm:pb-6 px-5 max-w-sm w-full shadow-2xl border border-gray-100 flex flex-col animate-in slide-in-from-bottom-6 duration-200"
@@ -1023,6 +1073,7 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
                 id="btn-close-pin-sheet"
                 onClick={() => {
                   setShowPinSheet(false);
+                  setBiometricConfirmed(false);
                   setPin('');
                   setPinError('');
                 }}
@@ -1033,8 +1084,16 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
               </button>
             </div>
 
-            {/* Title: "Enter your PIN to confirm" in CBE Purple */}
+            {/* Verified Identity Indicator + Title: "Enter your PIN to confirm" */}
             <div className="text-center pt-2 pb-1">
+              <div className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#16a34a] mb-1">
+                <Check className="w-3.5 h-3.5 stroke-[3]" />
+                <span>
+                  {BiometricAuthService.getBiometricMethod() === 'faceid'
+                    ? 'Face ID confirmed • Step 2 of 2'
+                    : 'Fingerprint confirmed • Step 2 of 2'}
+                </span>
+              </div>
               <h3 className="text-base font-bold text-[#70189F] tracking-tight">
                 Enter your PIN to confirm
               </h3>
@@ -1067,6 +1126,7 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
                 type="button"
                 onClick={() => {
                   setShowPinSheet(false);
+                  setBiometricConfirmed(false);
                   setPin('');
                   setPinError('');
                 }}
