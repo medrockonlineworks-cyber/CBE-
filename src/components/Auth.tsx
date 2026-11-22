@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Capacitor } from '@capacitor/core';
+import React, { useState, useEffect } from 'react';
 import { LocalDb } from '../lib/mockData';
 import { UserProfile } from '../types';
 import { SystemBarsService } from '../services/systemBarsService';
@@ -14,8 +13,7 @@ import {
   X, 
   Users, 
   Plus,
-  Loader2,
-  Lock
+  Loader2
 } from 'lucide-react';
 
 interface AuthProps {
@@ -115,12 +113,11 @@ export function CbeFaceIdIcon({
 
 export default function Auth({ onLoginSuccess }: AuthProps) {
   const [pin, setPin] = useState<string>('');
-  const [accountPassword, setAccountPassword] = useState<string>('');
-  const [credentialType, setCredentialType] = useState<'pin' | 'password'>('pin');
+  // Default first screen is biometric view (never auto-activates biometrics); PIN screen opens only when clicking "Use PIN"
   const [loginMode, setLoginMode] = useState<'biometric' | 'pin'>('biometric');
   const [showError, setShowError] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string>('This field is required');
-  // showKeypad: Keyboard is ONLY activated when PIN input method is tapped
+  // showKeypad: NEVER active automatically; keypad opens ONLY when user taps the PIN field
   const [showKeypad, setShowKeypad] = useState<boolean>(false);
   const [selectedLanguage, setSelectedLanguage] = useState<'English' | 'አማርኛ'>('English');
   const [showLangMenu, setShowLangMenu] = useState<boolean>(false);
@@ -132,7 +129,6 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
     null | 'authenticating' | 'authenticated'
   >(null);
   const [iframeBlockedNotice, setIframeBlockedNotice] = useState<BiometricMethod | null>(null);
-  const autoPromptedRef = useRef<boolean>(false);
 
   const [biometricMethod, setBiometricMethod] = useState<BiometricMethod>(() =>
     BiometricAuthService.getBiometricMethod()
@@ -233,49 +229,32 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
     };
   }, []);
 
-  // Handle typing from physical keyboard when in PIN mode
+  // Handle typing from physical keyboard ONLY after user clicks the PIN box (loginMode === 'pin' && showKeypad === true)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (showAccountSwitcher || loginMode !== 'pin' || credentialType !== 'pin') return;
+      if (showAccountSwitcher || loginMode !== 'pin' || !showKeypad) return;
       if (e.key >= '0' && e.key <= '9') {
         e.preventDefault();
         setShowError(false);
         setPin(prev => (prev.length < 6 ? prev + e.key : prev));
       } else if (e.key === 'Backspace') {
         e.preventDefault();
-        setPin(prev => {
-          const nextVal = prev.slice(0, -1);
-          if (nextVal.length === 0) {
-            setShowError(true);
-            setErrorMessage('This field is required');
-          }
-          return nextVal;
-        });
+        setShowError(false);
+        setPin(prev => prev.slice(0, -1));
       } else if (e.key === 'Enter') {
         e.preventDefault();
         void handleLoginAttempt();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setShowKeypad(false);
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [pin, selectedUser, showAccountSwitcher, loginMode, credentialType]);
+  }, [pin, selectedUser, showAccountSwitcher, loginMode, showKeypad]);
 
-  // STEP 2 & 3: On native mobile app launch, auto-trigger OS biometric prompt if previously enabled for this account
-  useEffect(() => {
-    if (autoPromptedRef.current) return;
-    if (
-      typeof window !== 'undefined' &&
-      Capacitor.isNativePlatform() &&
-      BiometricAuthService.isBiometricEnrolledForUser(selectedUser.id)
-    ) {
-      autoPromptedRef.current = true;
-      const timer = setTimeout(() => {
-        void handleBiometricsLogin();
-      }, 280);
-      return () => clearTimeout(timer);
-    }
-  }, [selectedUser.id]);
+  // Note: Biometrics and PIN NEVER auto-activate on launch — user must explicitly click PIN or USE BIOMETRICS.
 
   const handleKeypadPress = (digit: string) => {
     setShowError(false);
@@ -285,47 +264,32 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
   };
 
   const handleBackspace = () => {
-    setPin(prev => {
-      const nextVal = prev.slice(0, -1);
-      if (nextVal.length === 0) {
-        setShowError(true);
-        setErrorMessage('This field is required');
-      }
-      return nextVal;
-    });
+    setShowError(false);
+    setPin(prev => prev.slice(0, -1));
   };
 
   const handleLoginAttempt = async () => {
     if (isAuthLoading) return;
 
-    if (credentialType === 'password') {
-      if (!accountPassword || accountPassword.trim().length < 6) {
-        setShowError(true);
-        setErrorMessage('Password must be at least 6 characters');
-        return;
-      }
-    } else {
-      if (!pin || pin.trim().length === 0) {
-        setShowError(true);
-        setErrorMessage('This field is required');
-        return;
-      }
-      if (pin.length < 4) {
-        setShowError(true);
-        setErrorMessage('PIN must be at least 4 digits');
-        return;
-      }
+    if (!pin || pin.trim().length === 0) {
+      setShowError(true);
+      setErrorMessage('This field is required');
+      return;
+    }
+    if (pin.length < 4) {
+      setShowError(true);
+      setErrorMessage('PIN must be at least 4 digits');
+      return;
     }
 
     setIsAuthLoading(true);
     setShowError(false);
 
-    const secret = credentialType === 'password' ? accountPassword : pin;
     const authRes = await AuthSessionService.loginWithCredentials({
       userId: selectedUser.id,
       email: selectedUser.email,
-      authType: credentialType,
-      secret,
+      authType: 'pin',
+      secret: pin,
     });
 
     setIsAuthLoading(false);
@@ -333,22 +297,17 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
     if (!authRes.ok) {
       setShowError(true);
       setErrorMessage(authRes.message || 'Authentication failed. Please try again.');
-      if (credentialType === 'pin') setPin('');
-      else setAccountPassword('');
+      setPin('');
       return;
     }
 
-    if (credentialType === 'pin') {
-      await BiometricAuthService.saveAppPin(selectedUser.id, pin);
-    } else {
-      await BiometricAuthService.saveAppPassword(selectedUser.id, accountPassword);
-    }
+    await BiometricAuthService.saveAppPin(selectedUser.id, pin);
 
     LocalDb.addAuditLog(
       selectedUser.id,
       selectedUser.email,
       'USER_LOGIN',
-      `User ${selectedUser.name} signed in via verified ${credentialType} session.`
+      `User ${selectedUser.name} signed in via verified pin session.`
     );
     localStorage.setItem('tana_active_user_id', selectedUser.id);
     void PushNotificationService.establishBackendSession(selectedUser, { notifyNewDevice: true }).then(() =>
@@ -431,15 +390,14 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
     setShowError(false);
     setErrorMessage('This field is required');
     setPin('');
-    setAccountPassword('');
   };
 
   const handleOpenPinMode = () => {
     setShowError(false);
     setErrorMessage('This field is required');
-    setCredentialType('pin');
     setLoginMode('pin');
-    setShowKeypad(true);
+    // Keep keypad closed until user explicitly clicks the PIN input box
+    setShowKeypad(false);
   };
 
   return (
@@ -646,12 +604,13 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
 
       {/* TOP BRANDING & CONDITIONAL PIN INPUT AREA */}
       <div
-        className={`px-6 max-w-md mx-auto w-full flex flex-col justify-center ${
+        onClick={() => {
+          if (loginMode === 'pin' && showKeypad) setShowKeypad(false);
+        }}
+        className={`px-7 max-w-md mx-auto w-full flex flex-col justify-center ${
           loginMode === 'pin' && showKeypad
-            ? 'pt-2 pb-1'
-            : loginMode === 'pin'
-              ? 'py-4 flex-1 my-auto'
-              : 'pt-8 sm:pt-10 pb-2'
+            ? 'pt-3 pb-2 flex-1'
+            : 'pt-8 sm:pt-10 pb-2'
         }`}
       >
         
@@ -659,160 +618,103 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
         <div className="flex flex-col items-center text-center">
           
           {/* Golden Spiral Emblem */}
-          <div className="w-18 h-18 sm:w-20 sm:h-20 flex items-center justify-center mb-3">
-            <CbeLogo className="w-18 h-18 sm:w-20 sm:h-20 object-contain drop-shadow-xs" />
+          <div className="w-20 h-20 sm:w-[86px] sm:h-[86px] flex items-center justify-center mb-3">
+            <CbeLogo className="w-20 h-20 sm:w-[86px] sm:h-[86px] object-contain drop-shadow-xs" />
           </div>
 
-          {/* Amharic Header in Golden Bronze (Authentic Ethiopic typography) */}
-          <h2 className="text-[#c09349] font-semibold text-[20px] sm:text-[21px] tracking-normal leading-tight font-['Noto_Serif_Ethiopic','Noto_Sans_Ethiopic',serif]">
+          {/* Amharic Header in Golden Bronze */}
+          <h2 className="text-[#b8863b] font-semibold text-[21px] sm:text-[22px] tracking-normal leading-tight font-['Noto_Serif_Ethiopic','Noto_Sans_Ethiopic',serif]">
             የኢትዮጵያ ንግድ ባንክ
           </h2>
 
           {/* English Header in Spaced Charcoal */}
-          <h1 className="text-[#374151] font-semibold text-[10.5px] sm:text-[11px] tracking-[0.24em] uppercase mt-1.5 font-sans">
+          <h1 className="text-[#3d4148] font-semibold text-[11px] sm:text-[11.5px] tracking-[0.22em] uppercase mt-1.5 font-sans">
             COMMERCIAL BANK OF ETHIOPIA
           </h1>
 
           {/* Hairline Divider */}
-          <div className="w-40 h-[1px] bg-neutral-200/90 mt-4 mb-4" />
+          <div className="w-36 h-[1px] bg-neutral-200/80 mt-5 mb-5" />
 
-          {/* Welcome back Subtitle */}
-          <p className="text-[#6b7280] font-normal text-[16px] font-sans">
+          {/* Welcome back Subtitle ONLY (No "Authenticate to continue.") */}
+          <p className="text-[#6b7280] font-normal text-[17px] font-sans">
             Welcome back
-          </p>
-          <p className="text-[#9ca3af] font-normal text-[12px] font-sans mt-0.5">
-            Authenticate to continue.
           </p>
         </div>
 
-        {/* PIN OR PASSWORD RECOVERY INPUT FIELD: Shown ONLY after clicking "Use PIN" */}
+        {/* PIN INPUT BOX: Shown ONLY after clicking "Use PIN" */}
         {loginMode === 'pin' && (
-          <div className="mt-5 mb-1 animate-in fade-in duration-150">
-            {credentialType === 'pin' ? (
-              <div
-                id="cbe-pin-input-box"
-                onClick={() => setShowKeypad(true)}
-                className={`w-full rounded-[18px] bg-white border py-3.5 px-4 flex items-center gap-3 transition-all cursor-pointer shadow-xs ${
-                  showError 
-                    ? 'border-[#e05347] border-[1.5px] bg-[#fffcfc]' 
-                    : showKeypad 
-                      ? 'border-[#c58c2b] ring-2 ring-[#c58c2b]/20' 
-                      : 'border-neutral-300 hover:border-neutral-400'
-                }`}
-              >
-                {/* Golden Padlock Icon with Arched Shackle */}
-                <svg width="19" height="19" viewBox="0 0 24 24" fill="none" className="shrink-0">
-                  <path 
-                    d="M7 10V7a5 5 0 0 1 10 0v3" 
-                    stroke="#d49a37" 
-                    strokeWidth="2.2" 
-                    strokeLinecap="round" 
-                  />
-                  <rect 
-                    x="4.5" 
-                    y="10" 
-                    width="15" 
-                    height="11" 
-                    rx="2.5" 
-                    fill="#d49a37" 
-                  />
-                  <circle cx="12" cy="14.5" r="1.2" fill="#ffffff" />
-                  <path d="M12 15.5v2" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-
-                {/* PIN characters or placeholder with Red Cursor |PIN */}
-                <div className="flex-1 flex items-center text-neutral-800 text-[15px] font-normal min-h-[24px]">
-                  {pin.length === 0 ? (
-                    <div className="flex items-center text-[#9ca3af] tracking-normal font-normal">
-                      <span className="w-[1.5px] h-5 bg-[#e05347] animate-pulse mr-1.5" />
-                      <span className="tracking-wide">PIN</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2">
-                      {Array.from({ length: pin.length }).map((_, i) => (
-                        <span 
-                          key={i} 
-                          className="w-2.5 h-2.5 rounded-full bg-neutral-800 inline-block" 
-                        />
-                      ))}
-                      <span className="w-[1.5px] h-5 bg-[#e05347] animate-pulse ml-0.5" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Clear button when digits are typed */}
-                {pin.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setPin('');
-                      setShowError(true);
-                      setErrorMessage('This field is required');
-                    }}
-                    className="text-neutral-400 hover:text-neutral-600 p-1 cursor-pointer"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div className="w-full rounded-[18px] bg-white border border-neutral-300 focus-within:border-[#c58c2b] focus-within:ring-2 focus-within:ring-[#c58c2b]/20 py-3 px-4 flex items-center gap-3 shadow-xs">
-                <Lock className="w-4.5 h-4.5 text-[#d49a37] shrink-0" />
-                <input
-                  type="text"
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="off"
-                  spellCheck={false}
-                  data-form-type="other"
-                  placeholder="Account Password (min 6 chars)"
-                  value={accountPassword}
-                  onChange={(e) => {
-                    setShowError(false);
-                    setAccountPassword(e.target.value);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      void handleLoginAttempt();
-                    }
-                  }}
-                  className="flex-1 text-[14px] text-neutral-800 bg-transparent focus:outline-none [-webkit-text-security:disc]"
-                />
-                {accountPassword.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setAccountPassword('')}
-                    className="text-neutral-400 hover:text-neutral-600 p-1 cursor-pointer"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            )}
-
-            <div className="flex justify-end mt-2 px-1">
-              <button
-                type="button"
-                onClick={() => {
+          <div className="mt-7 mb-1 animate-in fade-in duration-150">
+            <div
+              id="cbe-pin-input-box"
+              role="button"
+              tabIndex={0}
+              aria-label="Enter PIN"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowError(false);
+                setShowKeypad(true);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
                   setShowError(false);
-                  if (credentialType === 'pin') {
-                    setCredentialType('password');
-                    setShowKeypad(false);
-                  } else {
-                    setCredentialType('pin');
-                    setShowKeypad(true);
-                  }
-                }}
-                className="text-[11.5px] font-medium text-[#70189F] hover:underline cursor-pointer"
-              >
-                {credentialType === 'pin' ? 'Use Password Login' : 'Use PIN Keypad'}
-              </button>
+                  setShowKeypad(true);
+                }
+              }}
+              className={`w-full h-[58px] rounded-[14px] px-4.5 flex items-center gap-3.5 transition-all cursor-pointer ${
+                showError
+                  ? 'bg-white border-[1.5px] border-[#e05347] shadow-xs'
+                  : showKeypad
+                    ? 'bg-white border-[1.5px] border-[#7A1FA2] shadow-[0_2px_10px_rgba(122,31,162,0.06)]'
+                    : 'bg-[#f4f5f7] border border-transparent shadow-[0_2px_8px_rgba(0,0,0,0.04)] hover:bg-[#eff0f3]'
+              }`}
+            >
+              {/* Golden Padlock Icon */}
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="shrink-0">
+                <path 
+                  d="M7 10V7a5 5 0 0 1 10 0v3" 
+                  stroke="#cf9334" 
+                  strokeWidth="2.3" 
+                  strokeLinecap="round" 
+                />
+                <rect 
+                  x="4.5" 
+                  y="10" 
+                  width="15" 
+                  height="11" 
+                  rx="2.5" 
+                  fill="#cf9334" 
+                />
+                <circle cx="12" cy="15.2" r="1.3" fill="#ffffff" />
+              </svg>
+
+              {/* PIN characters or placeholder (Purple cursor ONLY when PIN box is active/clicked) */}
+              <div className="flex-1 flex items-center text-neutral-800 text-[15px] font-normal min-h-[24px]">
+                {pin.length === 0 ? (
+                  <div className="flex items-center text-[#9ca3af] tracking-normal font-normal">
+                    {showKeypad && (
+                      <span className="w-[1.5px] h-[22px] bg-[#7A1FA2] animate-pulse mr-[1px]" />
+                    )}
+                    <span className="tracking-wide text-[15px]">PIN</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-[5px]">
+                    {Array.from({ length: pin.length }).map((_, i) => (
+                      <span 
+                        key={i} 
+                        className="w-[6px] h-[6px] rounded-full bg-[#1f2937] inline-block" 
+                      />
+                    ))}
+                    {showKeypad && (
+                      <span className="w-[1.5px] h-[22px] bg-[#7A1FA2] animate-pulse ml-0.5" />
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
             {showError && (
-              <p className="text-[#e05347] text-[12px] font-normal mt-1.5 text-center animate-in fade-in">
+              <p className="text-[#e05347] text-[12px] font-normal mt-2 text-center animate-in fade-in">
                 {errorMessage}
               </p>
             )}
@@ -821,44 +723,44 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
 
       </div>
 
-      {/* DEFAULT VIEW: BIOMETRIC LOGIN SCREEN (Exact match to IMG_1247_9b2d1afc.jpeg) */}
+      {/* FIRST SCREEN (Default on open): Biometric circle + USE BIOMETRICS + underlined Use PIN + Footer */}
       {loginMode === 'biometric' && (
-        <div className="px-6 max-w-md mx-auto w-full flex-1 flex flex-col justify-between pb-6 animate-in fade-in duration-150">
+        <div className="px-7 max-w-md mx-auto w-full flex-1 flex flex-col justify-between pb-4 animate-in fade-in duration-150">
           
-          {/* Centered Biometric Halo Button + USE BIOMETRICS + Use PIN */}
-          <div className="flex-1 flex flex-col items-center justify-center pb-6">
-            {/* Circular Purple Biometrics Button with soft lavender halo & white inner ring */}
+          {/* Lower-Center Biometric Button + USE BIOMETRICS + Use PIN (never auto-activates) */}
+          <div className="flex-1 flex flex-col items-center justify-end pb-14 sm:pb-16">
+            {/* Circular Purple Biometrics Button with crisp outer lavender halo ring */}
             <button
               id="btn-use-biometrics"
               type="button"
               aria-label="Use Biometrics"
               onClick={handleBiometricsLogin}
               disabled={isBiometricScanning}
-              className={`w-[84px] h-[84px] rounded-full bg-[#841ca6]/18 p-[5px] flex items-center justify-center transition-all cursor-pointer active:scale-95 ${
-                isBiometricScanning ? 'animate-pulse ring-4 ring-purple-300/60' : 'hover:bg-[#841ca6]/24'
+              className={`w-[88px] h-[88px] rounded-full p-[5px] bg-white border border-[#7A1FA2]/25 shadow-[0_3px_16px_rgba(122,31,162,0.16)] flex items-center justify-center transition-all cursor-pointer active:scale-95 ${
+                isBiometricScanning ? 'animate-pulse ring-4 ring-purple-300/60' : 'hover:border-[#7A1FA2]/45'
               }`}
             >
-              <span className="w-full h-full rounded-full bg-[#841ca6] hover:bg-[#731693] border-[2px] border-white flex items-center justify-center text-white shadow-sm transition-colors overflow-hidden">
-                {renderBiometricGlyph(biometricMethod === 'faceid' ? 35 : 37, '#ffffff', 1.9, 42)}
+              <span className="w-full h-full rounded-full bg-[#6F1A9C] hover:bg-[#5f1587] flex items-center justify-center text-white shadow-inner transition-colors overflow-hidden">
+                {renderBiometricGlyph(biometricMethod === 'faceid' ? 34 : 36, '#ffffff', 1.85, 40)}
               </span>
             </button>
 
-            {/* "USE BIOMETRICS" text */}
+            {/* "USE BIOMETRICS" label */}
             <button
               type="button"
               onClick={handleBiometricsLogin}
               disabled={isBiometricScanning}
-              className="text-[#6b7280] text-[11.5px] font-semibold tracking-[0.18em] uppercase mt-4 cursor-pointer hover:text-[#70189F] transition font-sans disabled:opacity-70"
+              className="text-[#5c616b] text-[11px] font-semibold tracking-[0.18em] uppercase mt-4 cursor-pointer hover:text-[#6F1A9C] transition font-sans disabled:opacity-70"
             >
               USE BIOMETRICS
             </button>
 
-            {/* Underlined "Use PIN" link -> reveals PIN input method */}
+            {/* Underlined "Use PIN" link -> opens the PIN login screen */}
             <button
               id="btn-use-pin"
               type="button"
               onClick={handleOpenPinMode}
-              className="text-[#6b7280] hover:text-[#1f2937] text-[14px] font-medium underline underline-offset-[4px] decoration-[#6b7280]/75 mt-5 cursor-pointer transition font-sans"
+              className="text-[#4b5059] hover:text-[#1f2937] text-[14px] font-medium underline underline-offset-[4px] decoration-[#6b7280]/75 mt-5 cursor-pointer transition font-sans"
             >
               Use PIN
             </button>
@@ -871,62 +773,49 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
           </div>
 
           {/* FOOTER: © Commercial Bank of Ethiopia */}
-          <div className="text-center text-[#737882] text-[12px] font-normal font-sans pb-[max(env(safe-area-inset-bottom,0px),16px)]">
+          <div className="pt-2 pb-[max(env(safe-area-inset-bottom,0px),14px)] text-center text-[#6b7280] text-[12px] font-normal font-sans">
             &copy; Commercial Bank of Ethiopia
           </div>
         </div>
       )}
 
-      {/* PIN MODE (Keypad collapsed): Login button + Use Biometrics switch */}
+      {/* SECOND SCREEN (After clicking "Use PIN", keypad idle): Biometrics circle + USE BIOMETRICS + Golden Login button + Footer */}
       {loginMode === 'pin' && !showKeypad && (
-        <div className="px-6 max-w-md mx-auto w-full flex-1 flex flex-col justify-between pb-6 animate-in fade-in duration-150">
+        <div className="px-7 max-w-md mx-auto w-full flex-1 flex flex-col justify-between pb-4 animate-in fade-in duration-150">
           
-          {/* Center Biometrics Switch */}
-          <div className="flex flex-col items-center mt-6">
+          {/* Centered Purple Biometrics Button + USE BIOMETRICS (user must click explicitly) */}
+          <div className="flex-1 flex flex-col items-center justify-center py-4">
             <button
               id="btn-use-biometrics"
               type="button"
               aria-label="Use Biometrics"
               onClick={handleBiometricsLogin}
               disabled={isBiometricScanning}
-              className={`w-14 h-14 rounded-full bg-[#70189F] hover:bg-[#5e1385] active:scale-95 text-white flex items-center justify-center shadow-md transition-all cursor-pointer relative overflow-hidden ${
-                isBiometricScanning ? 'animate-pulse ring-4 ring-purple-300' : ''
+              className={`w-[60px] h-[60px] rounded-full bg-[#7A1FA2] hover:bg-[#6a198f] active:scale-95 text-white flex items-center justify-center shadow-[0_4px_14px_rgba(122,31,162,0.28)] transition-all cursor-pointer overflow-hidden ${
+                isBiometricScanning ? 'animate-pulse ring-4 ring-purple-300/60' : ''
               }`}
             >
-              {renderBiometricGlyph(biometricMethod === 'faceid' ? 30 : 32, '#ffffff', 1.9, 34)}
+              {renderBiometricGlyph(biometricMethod === 'faceid' ? 28 : 30, '#ffffff', 1.85, 32)}
             </button>
 
             <button
               type="button"
               onClick={handleBiometricsLogin}
               disabled={isBiometricScanning}
-              className="text-[#1f2937] text-[11px] font-bold tracking-[0.16em] uppercase mt-3 cursor-pointer hover:text-[#70189F] transition font-sans disabled:opacity-70"
+              className="text-[#1f2937] text-[11px] font-bold tracking-[0.16em] uppercase mt-3.5 cursor-pointer hover:text-[#7A1FA2] transition font-sans disabled:opacity-70"
             >
               USE BIOMETRICS
             </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setShowError(false);
-                setShowKeypad(false);
-                setLoginMode('biometric');
-              }}
-              className="text-[#6b7280] hover:text-[#1f2937] text-xs font-medium underline underline-offset-4 mt-3 cursor-pointer font-sans"
-            >
-              Back to Biometrics
-            </button>
           </div>
 
-          {/* Bottom Actions: Login Button + Footer */}
+          {/* Bottom Actions: Golden Login Button + Copyright Footer */}
           <div className="w-full mt-auto">
-            {/* Wide Golden/Bronze "Login ->" Button (Exact replica of Image 1 & 2) */}
             <button
               id="btn-cbe-login"
               type="button"
               disabled={isAuthLoading}
               onClick={handleLoginAttempt}
-              className="w-full py-3.5 rounded-[18px] bg-[#c58c2b] hover:bg-[#b87f22] active:bg-[#a9731b] text-white font-semibold text-[16px] shadow-sm transition flex items-center justify-center gap-2.5 cursor-pointer active:scale-[0.99] font-sans disabled:opacity-70"
+              className="w-full h-[52px] rounded-[14px] bg-[#b67b35] hover:bg-[#a66e2d] active:bg-[#966126] text-white font-semibold text-[16px] shadow-xs transition flex items-center justify-center gap-2 cursor-pointer active:scale-[0.99] font-sans disabled:opacity-70"
             >
               {isAuthLoading ? (
                 <>
@@ -936,53 +825,62 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
               ) : (
                 <>
                   <span className="text-[16px] font-semibold">Login</span>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="5" y1="12" x2="19" y2="12" />
-                    <polyline points="12 5 19 12 12 19" />
+                    <polyline points="13 6 19 12 13 18" />
                   </svg>
                 </>
               )}
             </button>
 
-            {/* FOOTER: © Commercial Bank of Ethiopia (Exact replica of Image 1 & 2) */}
-            <div className="pt-8 pb-[max(env(safe-area-inset-bottom,0px),16px)] text-center text-[#9ca3af] text-[11.5px] font-normal font-sans">
+            {/* FOOTER: © Commercial Bank of Ethiopia */}
+            <div className="pt-5 pb-[max(env(safe-area-inset-bottom,0px),14px)] text-center text-[#6b7280] text-[12.5px] font-normal font-sans">
               &copy; Commercial Bank of Ethiopia
             </div>
           </div>
         </div>
       )}
 
-      {/* VIEW B: ON-SCREEN NUMERIC KEYPAD (Always visible in PIN mode above system navigation bar) */}
+      {/* CUSTOM NUMERIC KEYPAD SHEET (Exact match to Photos 2 & 3 — opens ONLY when PIN box is clicked) */}
       {loginMode === 'pin' && showKeypad && (
-        <div className="w-full max-w-md mx-auto bg-[#f8f9fa] rounded-t-[32px] shadow-[0_-4px_24px_rgba(0,0,0,0.04)] border-t border-neutral-100/80 px-6 pt-3 pb-[max(env(safe-area-inset-bottom,0px),56px)] sm:pb-5 shrink-0 animate-in slide-in-from-bottom-8 duration-200">
-          
-          {/* Subtle grab handle bar at top center */}
-          <div className="w-12 h-1 bg-[#d1d5db] rounded-full mx-auto mb-3.5" />
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="w-full max-w-md mx-auto bg-[#f9f9fb] rounded-t-[26px] shadow-[0_-4px_20px_rgba(0,0,0,0.04)] border-t border-neutral-100 px-4 pt-3 pb-[max(env(safe-area-inset-bottom,0px),22px)] shrink-0 animate-in slide-in-from-bottom-8 duration-200"
+        >
+          {/* Subtle grab handle bar at top center (tap to dismiss keypad) */}
+          <button
+            type="button"
+            aria-label="Hide keypad"
+            onClick={() => setShowKeypad(false)}
+            className="w-full flex justify-center pb-3.5 pt-0.5 cursor-pointer"
+          >
+            <span className="w-10 h-[3.5px] bg-[#d8dade] rounded-full block" />
+          </button>
 
-          {/* 3x4 Numeric Keypad Grid (Exact replica of Image 2) */}
+          {/* 3x4 Numeric Keypad Grid (Exact match to Photos 2 & 3) */}
           <div className="grid grid-cols-3 gap-2.5 w-full">
             {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
               <button
                 key={digit}
                 type="button"
                 onClick={() => handleKeypadPress(digit)}
-                className="h-[58px] rounded-2xl bg-[#f3f4f6] hover:bg-[#eaecef] active:bg-[#dfe2e6] text-[#1e232a] text-[26px] font-normal flex items-center justify-center transition shadow-xs cursor-pointer select-none"
+                className="h-[54px] sm:h-[58px] rounded-[12px] bg-[#f1f2f5] hover:bg-[#e8eaef] active:bg-[#dfe2e8] text-[#1f2937] text-[22px] font-medium flex items-center justify-center transition cursor-pointer select-none"
               >
                 {digit}
               </button>
             ))}
 
-            {/* Backspace Key: Red/Coral outline box with an X inside (Exact replica of Image 2) */}
+            {/* Backspace Key: Red outline delete box with X inside */}
             <button
               type="button"
               aria-label="Backspace"
               onClick={handleBackspace}
-              className="h-[58px] rounded-2xl bg-[#f3f4f6] hover:bg-[#eaecef] active:bg-[#dfe2e6] text-[#e05347] flex items-center justify-center transition shadow-xs cursor-pointer select-none"
+              className="h-[54px] sm:h-[58px] rounded-[12px] bg-[#f1f2f5] hover:bg-[#e8eaef] active:bg-[#dfe2e8] text-[#d64545] flex items-center justify-center transition cursor-pointer select-none"
             >
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#e05347" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z" />
-                <line x1="18" y1="9" x2="12" y2="15" />
-                <line x1="12" y1="9" x2="18" y2="15" />
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d64545" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 5H9l-6 7 6 7h12a1.5 1.5 0 0 0 1.5-1.5v-11A1.5 1.5 0 0 0 21 5z" />
+                <line x1="17.5" y1="9.5" x2="12.5" y2="14.5" />
+                <line x1="12.5" y1="9.5" x2="17.5" y2="14.5" />
               </svg>
             </button>
 
@@ -990,50 +888,41 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
             <button
               type="button"
               onClick={() => handleKeypadPress('0')}
-              className="h-[58px] rounded-2xl bg-[#f3f4f6] hover:bg-[#eaecef] active:bg-[#dfe2e6] text-[#1e232a] text-[26px] font-normal flex items-center justify-center transition shadow-xs cursor-pointer select-none"
+              className="h-[54px] sm:h-[58px] rounded-[12px] bg-[#f1f2f5] hover:bg-[#e8eaef] active:bg-[#dfe2e8] text-[#1f2937] text-[22px] font-medium flex items-center justify-center transition cursor-pointer select-none"
             >
               0
             </button>
 
-            {/* Submit Checkmark Key: Turns solid CBE Purple when 6 digits are filled */}
+            {/* Submit Checkmark Key: Muted gray/lavender when < 4 digits (Photo 2), solid CBE Purple with white check when filled (Photo 3) */}
             <button
               type="button"
               aria-label="Submit PIN"
+              disabled={isAuthLoading}
               onClick={handleLoginAttempt}
-              className={`h-[58px] rounded-2xl flex items-center justify-center transition-all duration-150 cursor-pointer select-none ${
-                pin.length === 6
-                  ? 'bg-[#70189F] hover:bg-[#5e1385] active:bg-[#4e0f70] shadow-md shadow-purple-900/25'
-                  : 'bg-[#f3f4f6] hover:bg-purple-50 active:bg-purple-100 shadow-xs'
+              className={`h-[54px] sm:h-[58px] rounded-[12px] flex items-center justify-center transition-all duration-150 cursor-pointer select-none ${
+                pin.length >= 4
+                  ? 'bg-[#6E1B9E] hover:bg-[#5e1687] active:bg-[#4f1273] shadow-sm'
+                  : 'bg-[#f1f2f5] hover:bg-[#eceaf2] active:bg-[#e5e1ee]'
               }`}
             >
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke={pin.length === 6 ? '#ffffff' : '#b4a2db'}
-                strokeWidth="2.75"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
+              {isAuthLoading ? (
+                <Loader2 className={`w-5 h-5 animate-spin ${pin.length >= 4 ? 'text-white' : 'text-[#6E1B9E]'}`} />
+              ) : (
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke={pin.length >= 4 ? '#ffffff' : '#c7bdd6'}
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              )}
             </button>
           </div>
-
-          {/* Biometrics switch */}
-          <div className="flex items-center justify-center pt-3 mt-1 px-1">
-            <button
-              type="button"
-              onClick={handleBiometricsLogin}
-              disabled={isBiometricScanning}
-              className="flex items-center gap-1.5 text-xs font-bold text-[#70189F] hover:underline cursor-pointer disabled:opacity-70"
-            >
-              {renderBiometricGlyph(18, '#70189F', 2.0, 18)}
-              <span>Use Biometrics</span>
-            </button>
-          </div>
-
         </div>
       )}
 

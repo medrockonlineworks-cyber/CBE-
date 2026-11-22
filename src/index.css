@@ -115,24 +115,40 @@ input, select, textarea {
   animation: progressShrink 5s linear forwards;
 }
 
-/* Authentic CBE Receipt PAID Badge Animation (straight 0deg horizontal pop-in) */
-@keyframes paidStampIn {
+/* Authentic CBE Receipt PAID Badge Animations (-6deg subtle tilt, smooth scale+fade birth & disappear) */
+@keyframes paidBadgeBorn {
   0% {
     opacity: 0;
-    transform: scale(0.84);
+    transform: rotate(-6deg) scale(0.68);
   }
-  55% {
+  72% {
     opacity: 1;
-    transform: scale(1.03);
+    transform: rotate(-6deg) scale(1.03);
   }
   100% {
     opacity: 1;
-    transform: scale(1);
+    transform: rotate(-6deg) scale(1);
   }
 }
 
-.animate-paid-stamp {
-  animation: paidStampIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+@keyframes paidBadgeDisappear {
+  0% {
+    opacity: 1;
+    transform: rotate(-6deg) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(-6deg) scale(0.74);
+  }
+}
+
+.animate-paid-born {
+  animation: paidBadgeBorn 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  will-change: transform, opacity;
+}
+
+.animate-paid-disappear {
+  animation: paidBadgeDisappear 0.48s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   will-change: transform, opacity;
 }
 

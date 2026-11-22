@@ -303,9 +303,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   // Double-tap/click to toggle hiding action controls (top-right icon and bottom action buttons: receipt, screenshot, share)
   const [hideUiElements, setHideUiElements] = useState<boolean>(false);
 
-  // Floating "PAID" badge in CBE purple (#6E1B9E), shown ONLY on deliberate tap of the details area (never on scroll or mount)
-  const [showPaidBadge, setShowPaidBadge] = useState<boolean>(false);
-  const [isFadingPaidBadge, setIsFadingPaidBadge] = useState<boolean>(false);
+  // Floating "PAID" badge in CBE purple (#6D1B9A), shown ONLY on deliberate tap of the details area (never on scroll or mount)
+  const [paidPhase, setPaidPhase] = useState<'hidden' | 'entering' | 'exiting'>('hidden');
   const [stampKey, setStampKey] = useState<number>(0);
   const paidBadgeTimerRef = useRef<any>(null);
   const paidFadeTimerRef = useRef<any>(null);
@@ -314,21 +313,19 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     if (paidBadgeTimerRef.current) clearTimeout(paidBadgeTimerRef.current);
     if (paidFadeTimerRef.current) clearTimeout(paidFadeTimerRef.current);
 
-    // Replay straight horizontal PAID badge pop-in
+    // Replay smooth -6deg scale+fade birth animation
     setStampKey(prev => prev + 1);
-    setIsFadingPaidBadge(false);
-    setShowPaidBadge(true);
+    setPaidPhase('entering');
 
-    // Begin fade out after 1.6s
+    // Begin smooth scale-down + fade disappear after ~1.35s
     paidFadeTimerRef.current = setTimeout(() => {
-      setIsFadingPaidBadge(true);
-    }, 1600);
+      setPaidPhase('exiting');
+    }, 1350);
 
-    // Complete fade out and hide at 2.0s
+    // Unmount cleanly after disappear animation completes (~0.48s)
     paidBadgeTimerRef.current = setTimeout(() => {
-      setShowPaidBadge(false);
-      setIsFadingPaidBadge(false);
-    }, 2000);
+      setPaidPhase('hidden');
+    }, 1850);
   };
 
   useEffect(() => {
@@ -353,38 +350,20 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
   const barsToastTimerRef = useRef<any>(null);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   const lastScrollTimeRef = useRef<number>(0);
-  const lastTouchEndTimeRef = useRef<number>(0);
-  const detailsTouchGestureRef = useRef<{
-    active: boolean;
+  const detailsGestureRef = useRef<{
+    isDown: boolean;
     startX: number;
     startY: number;
-    startTime: number;
     startScrollTop: number;
-    moved: boolean;
-    invalid: boolean;
+    dragged: boolean;
+    scrolled: boolean;
   }>({
-    active: false,
+    isDown: false,
     startX: 0,
     startY: 0,
-    startTime: 0,
     startScrollTop: 0,
-    moved: false,
-    invalid: false,
-  });
-  const detailsMouseGestureRef = useRef<{
-    active: boolean;
-    startX: number;
-    startY: number;
-    startTime: number;
-    startScrollTop: number;
-    moved: boolean;
-  }>({
-    active: false,
-    startX: 0,
-    startY: 0,
-    startTime: 0,
-    startScrollTop: 0,
-    moved: false,
+    dragged: false,
+    scrolled: false,
   });
   const screenTouchMovedRef = useRef<boolean>(false);
   const touchStartXRef = useRef<number>(0);
@@ -449,152 +428,88 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     };
   }, []);
 
-  const TAP_MOVE_THRESHOLD_PX = 8;
+  const TAP_MOVE_THRESHOLD_PX = 18;
 
   const handleReceiptAreaScroll = () => {
     lastScrollTimeRef.current = Date.now();
-    detailsTouchGestureRef.current.moved = true;
-    detailsMouseGestureRef.current.moved = true;
+    detailsGestureRef.current.scrolled = true;
     screenTouchMovedRef.current = true;
   };
 
-  const handleDetailsTouchStart = (e: React.TouchEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.closest('button') || target.closest('a') || target.closest('input')) {
-      detailsTouchGestureRef.current.active = false;
-      detailsTouchGestureRef.current.invalid = true;
-      return;
-    }
-    if (!e.touches || e.touches.length !== 1) {
-      detailsTouchGestureRef.current.active = false;
-      detailsTouchGestureRef.current.invalid = true;
-      return;
-    }
-    const touch = e.touches[0];
-    detailsTouchGestureRef.current = {
-      active: true,
-      startX: touch.clientX,
-      startY: touch.clientY,
-      startTime: Date.now(),
-      startScrollTop: scrollContainerRef.current?.scrollTop ?? 0,
-      moved: false,
-      invalid: false,
-    };
-  };
-
-  const handleDetailsTouchMove = (e: React.TouchEvent) => {
-    const g = detailsTouchGestureRef.current;
-    if (!g.active) return;
-    if (!e.touches || e.touches.length !== 1) {
-      g.invalid = true;
-      g.moved = true;
-      return;
-    }
-    const touch = e.touches[0];
-    const dx = Math.abs(touch.clientX - g.startX);
-    const dy = Math.abs(touch.clientY - g.startY);
-    if (dx > TAP_MOVE_THRESHOLD_PX || dy > TAP_MOVE_THRESHOLD_PX) {
-      g.moved = true;
-    }
-  };
-
-  const handleDetailsTouchCancel = () => {
-    detailsTouchGestureRef.current.active = false;
-    detailsTouchGestureRef.current.moved = true;
-  };
-
-  const handleDetailsTouchEnd = (e: React.TouchEvent) => {
-    lastTouchEndTimeRef.current = Date.now();
-    const g = detailsTouchGestureRef.current;
-    detailsTouchGestureRef.current.active = false;
-
-    if (!g.active || g.moved || g.invalid) return;
-    if (!e.changedTouches || e.changedTouches.length !== 1) return;
-
-    const target = e.target as HTMLElement;
-    if (target.closest('button') || target.closest('a') || target.closest('input')) return;
-
-    const touch = e.changedTouches[0];
-    const dx = Math.abs(touch.clientX - g.startX);
-    const dy = Math.abs(touch.clientY - g.startY);
-    const elapsed = Date.now() - g.startTime;
-    const currentScrollTop = scrollContainerRef.current?.scrollTop ?? 0;
-    const scrollDelta = Math.abs(currentScrollTop - g.startScrollTop);
-    const timeSinceScroll = Date.now() - lastScrollTimeRef.current;
-
-    // Strictly distinguish a clean tap from a scroll, drag, swipe, or long-press
-    if (
-      dx > TAP_MOVE_THRESHOLD_PX ||
-      dy > TAP_MOVE_THRESHOLD_PX ||
-      scrollDelta > 2 ||
-      elapsed > 420 ||
-      timeSinceScroll < 260
-    ) {
-      return;
-    }
-
-    const selectedText = typeof window !== 'undefined' ? window.getSelection()?.toString()?.trim() : '';
-    if (selectedText) return;
-
-    triggerPaidBadge();
-  };
-
-  const handleDetailsMouseDown = (e: React.MouseEvent) => {
-    if (Date.now() - lastTouchEndTimeRef.current < 600) return;
-    const target = e.target as HTMLElement;
-    if (target.closest('button') || target.closest('a') || target.closest('input')) {
-      detailsMouseGestureRef.current.active = false;
-      return;
-    }
-    detailsMouseGestureRef.current = {
-      active: true,
+  const handleDetailsPointerDown = (e: React.PointerEvent) => {
+    detailsGestureRef.current = {
+      isDown: true,
       startX: e.clientX,
       startY: e.clientY,
-      startTime: Date.now(),
       startScrollTop: scrollContainerRef.current?.scrollTop ?? 0,
-      moved: false,
+      dragged: false,
+      scrolled: false,
     };
   };
 
-  const handleDetailsMouseMove = (e: React.MouseEvent) => {
-    const g = detailsMouseGestureRef.current;
-    if (!g.active) return;
+  const handleDetailsPointerMove = (e: React.PointerEvent) => {
+    const g = detailsGestureRef.current;
+    if (!g.isDown) return;
+    if (e.pointerType === 'mouse' && e.buttons === 0) return;
     if (
       Math.abs(e.clientX - g.startX) > TAP_MOVE_THRESHOLD_PX ||
       Math.abs(e.clientY - g.startY) > TAP_MOVE_THRESHOLD_PX
     ) {
-      g.moved = true;
+      g.dragged = true;
+    }
+  };
+
+  const handleDetailsTouchStart = (e: React.TouchEvent) => {
+    if (e.touches && e.touches.length === 1) {
+      detailsGestureRef.current = {
+        isDown: true,
+        startX: e.touches[0].clientX,
+        startY: e.touches[0].clientY,
+        startScrollTop: scrollContainerRef.current?.scrollTop ?? 0,
+        dragged: false,
+        scrolled: false,
+      };
+    } else {
+      detailsGestureRef.current.dragged = true;
+    }
+  };
+
+  const handleDetailsTouchMove = (e: React.TouchEvent) => {
+    if (!e.touches || e.touches.length !== 1) {
+      detailsGestureRef.current.dragged = true;
+      return;
+    }
+    const g = detailsGestureRef.current;
+    if (!g.isDown) return;
+    if (
+      Math.abs(e.touches[0].clientX - g.startX) > TAP_MOVE_THRESHOLD_PX ||
+      Math.abs(e.touches[0].clientY - g.startY) > TAP_MOVE_THRESHOLD_PX
+    ) {
+      g.dragged = true;
     }
   };
 
   const handleDetailsClick = (e: React.MouseEvent) => {
-    // Ignore synthetic click events generated after touch gestures
-    if (Date.now() - lastTouchEndTimeRef.current < 600) return;
     const target = e.target as HTMLElement;
-    if (target.closest('button') || target.closest('a') || target.closest('input')) return;
-
-    const g = detailsMouseGestureRef.current;
-    detailsMouseGestureRef.current.active = false;
-    const dx = g.startTime ? Math.abs(e.clientX - g.startX) : 0;
-    const dy = g.startTime ? Math.abs(e.clientY - g.startY) : 0;
-    const elapsed = g.startTime ? Date.now() - g.startTime : 0;
-    const currentScrollTop = scrollContainerRef.current?.scrollTop ?? 0;
-    const scrollDelta = g.startTime ? Math.abs(currentScrollTop - g.startScrollTop) : 0;
-    const timeSinceScroll = Date.now() - lastScrollTimeRef.current;
-
-    if (
-      g.moved ||
-      dx > TAP_MOVE_THRESHOLD_PX ||
-      dy > TAP_MOVE_THRESHOLD_PX ||
-      scrollDelta > 2 ||
-      elapsed > 450 ||
-      timeSinceScroll < 260
-    ) {
+    if (target.closest('button') || target.closest('a') || target.closest('input')) {
       return;
     }
 
-    const selectedText = typeof window !== 'undefined' ? window.getSelection()?.toString()?.trim() : '';
-    if (selectedText) return;
+    const g = detailsGestureRef.current;
+    const currentScrollTop = scrollContainerRef.current?.scrollTop ?? 0;
+    const scrollDelta = Math.abs(currentScrollTop - g.startScrollTop);
+    const recentlyScrolled = Date.now() - lastScrollTimeRef.current < 150;
+
+    const wasScrollOrDrag = g.dragged || g.scrolled || scrollDelta > 4 || recentlyScrolled;
+
+    // Reset gesture state so future taps are never blocked by stale scroll state
+    detailsGestureRef.current.isDown = false;
+    detailsGestureRef.current.dragged = false;
+    detailsGestureRef.current.scrolled = false;
+
+    if (wasScrollOrDrag) {
+      return;
+    }
 
     triggerPaidBadge();
   };
@@ -1221,11 +1136,16 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             <div className="h-[45px] flex-shrink-0" />
           </div>
 
-          {/* SCROLLABLE MIDDLE TEXT & CARD PART: Only this upper text area scrolls between the static header and static bottom buttons */}
+          {/* SCROLLABLE MIDDLE TEXT & CARD PART (Details Area): PAID badge triggers ONLY on clean tap here, never on scroll */}
           <div
             ref={scrollContainerRef}
             onScroll={handleReceiptAreaScroll}
-            className={`bg-white -mt-px px-5 ${hideUiElements ? 'pb-24' : 'pb-4'} flex-1 overflow-y-auto overscroll-contain scrollbar-none min-h-0`}
+            onPointerDown={handleDetailsPointerDown}
+            onPointerMove={handleDetailsPointerMove}
+            onTouchStart={handleDetailsTouchStart}
+            onTouchMove={handleDetailsTouchMove}
+            onClick={handleDetailsClick}
+            className={`bg-white -mt-px px-5 ${hideUiElements ? 'pb-24' : 'pb-4'} flex-1 overflow-y-auto overscroll-contain scrollbar-none min-h-0 cursor-pointer`}
           >
             <div className="pb-2">
               {/* Headline */}
@@ -1236,17 +1156,10 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 Transaction Completed Successfully!
               </h1>
 
-              {/* Main Transaction Summary Gray Card (Details Area): PAID badge triggers ONLY on clean tap here, never on scroll */}
+              {/* Main Transaction Summary Gray Card */}
               <div
                 id="cbe-receipt-details-area"
-                onTouchStart={handleDetailsTouchStart}
-                onTouchMove={handleDetailsTouchMove}
-                onTouchEnd={handleDetailsTouchEnd}
-                onTouchCancel={handleDetailsTouchCancel}
-                onMouseDown={handleDetailsMouseDown}
-                onMouseMove={handleDetailsMouseMove}
-                onClick={handleDetailsClick}
-                className="bg-[#f3f3f5] rounded-[24px] px-[18px] pt-[18px] pb-[20px] border border-[#e3e4e8] shadow-[0_2px_1px_0_rgba(0,0,0,0.07)] cursor-pointer"
+                className="bg-[#f3f3f5] rounded-[24px] px-[18px] pt-[18px] pb-[20px] border border-[#e3e4e8] shadow-[0_2px_1px_0_rgba(0,0,0,0.07)]"
               >
                 <p className="text-[#929292] font-normal text-[12.5px] sm:text-[13px] mb-3">Transaction Summary</p>
 
@@ -1254,7 +1167,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 <div className="relative mb-0 pb-0">
                   {isCredit ? (
                     <p 
-                      className="text-[14px] sm:text-[14.5px] leading-[1.6] text-[#111111] font-normal select-text tracking-[0.01em] m-0 p-0"
+                      className="text-[14px] sm:text-[14.5px] leading-[1.6] text-[#111111] font-normal select-none tracking-[0.01em] m-0 p-0"
                       style={{ 
                         margin: 0,
                         padding: 0,
@@ -1265,7 +1178,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                     </p>
                   ) : (
                     <p 
-                      className="text-[14px] sm:text-[14.5px] leading-[1.6] text-[#111111] font-normal select-text tracking-[0.01em] m-0 p-0"
+                      className="text-[14px] sm:text-[14.5px] leading-[1.6] text-[#111111] font-normal select-none tracking-[0.01em] m-0 p-0"
                       style={{ 
                         margin: 0,
                         padding: 0,
@@ -1276,19 +1189,21 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                     </p>
                   )}
 
-                  {/* Authentic Floating "PAID" Badge matching exact CBE photo: straight horizontal (0deg), purple fill, crisp white border, wide letter-spaced PAID */}
-                  {showPaidBadge && !isCapturing && (
+                  {/* Authentic Floating "PAID" Badge matching exact CBE photos: compact width, -6deg subtle tilt, crisp white border, smooth scale+fade birth & disappear */}
+                  {paidPhase !== 'hidden' && !isCapturing && (
                     <div 
                       key={stampKey}
                       data-html2canvas-ignore="true"
                       data-screenshot-exclude="true"
-                      className={`absolute left-1/2 top-[53%] -translate-x-1/2 -translate-y-1/2 z-30 select-none pointer-events-none transition-opacity duration-300 ease-out ${
-                        isFadingPaidBadge ? 'opacity-0' : 'opacity-100'
-                      }`}
+                      className="absolute left-1/2 top-[53%] -translate-x-1/2 -translate-y-1/2 z-40 select-none pointer-events-none"
                     >
-                      <div className="animate-paid-stamp bg-[#6D1B9A] text-white min-w-[168px] sm:min-w-[178px] h-[58px] sm:h-[62px] px-7 rounded-[14px] border-[2.5px] border-white shadow-[0_6px_18px_rgba(0,0,0,0.28)] flex items-center justify-center">
+                      <div
+                        className={`${
+                          paidPhase === 'exiting' ? 'animate-paid-disappear' : 'animate-paid-born'
+                        } bg-[#6D1B9A] text-white w-[136px] sm:w-[142px] h-[52px] sm:h-[54px] px-4 rounded-[12px] border-[2px] border-white shadow-[0_4px_14px_rgba(0,0,0,0.26)] flex items-center justify-center`}
+                      >
                         <span
-                          className="font-extrabold text-[25px] sm:text-[27px] tracking-[0.22em] pl-[0.22em] text-white leading-none select-none"
+                          className="font-extrabold text-[22px] sm:text-[23px] tracking-[0.18em] pl-[0.18em] text-white leading-none select-none"
                           style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, sans-serif' }}
                         >
                           PAID
