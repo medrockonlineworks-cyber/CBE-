@@ -115,28 +115,41 @@ input, select, textarea {
   animation: progressShrink 5s linear forwards;
 }
 
-/* Authentic CBE Receipt PAID Rubber Stamp Animation */
+/* Authentic CBE Receipt PAID Badge Animation (straight 0deg horizontal pop-in) */
 @keyframes paidStampIn {
   0% {
     opacity: 0;
-    transform: translate(-50%, -50%) rotate(-17deg) scale(1.38);
+    transform: scale(0.84);
   }
-  38% {
+  55% {
     opacity: 1;
-    transform: translate(-50%, -50%) rotate(-11deg) scale(0.95);
-  }
-  68% {
-    opacity: 1;
-    transform: translate(-50%, -50%) rotate(-12.5deg) scale(1.02);
+    transform: scale(1.03);
   }
   100% {
     opacity: 1;
-    transform: translate(-50%, -50%) rotate(-12deg) scale(1);
+    transform: scale(1);
   }
 }
 
 .animate-paid-stamp {
-  animation: paidStampIn 0.32s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+  animation: paidStampIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+/* Authentic CBE Screenshot Mini Thumbnail Pop-In */
+@keyframes cbeThumbIn {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.88);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-cbe-thumb-in {
+  animation: cbeThumbIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   will-change: transform, opacity;
 }
 

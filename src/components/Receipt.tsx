@@ -266,16 +266,47 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     };
   }, []);
 
-  // Screenshot capture & image state
+  // Screenshot capture & image state + CBE-style mini thumbnail & green toast feedback
   const [capturedScreenshotUrl, setCapturedScreenshotUrl] = useState<string | null>(null);
+  const [showScreenshotThumb, setShowScreenshotThumb] = useState<boolean>(false);
+  const [isFadingScreenshotThumb, setIsFadingScreenshotThumb] = useState<boolean>(false);
+  const [screenshotGreenToast, setScreenshotGreenToast] = useState<string | null>(null);
+  const screenshotThumbTimerRef = useRef<any>(null);
+  const screenshotThumbFadeTimerRef = useRef<any>(null);
+  const screenshotToastTimerRef = useRef<any>(null);
+
+  const triggerScreenshotFeedback = (toastMessage: string) => {
+    if (screenshotThumbTimerRef.current) clearTimeout(screenshotThumbTimerRef.current);
+    if (screenshotThumbFadeTimerRef.current) clearTimeout(screenshotThumbFadeTimerRef.current);
+    if (screenshotToastTimerRef.current) clearTimeout(screenshotToastTimerRef.current);
+
+    setIsFadingScreenshotThumb(false);
+    setShowScreenshotThumb(true);
+    setScreenshotGreenToast(toastMessage);
+
+    // Green snackbar stays ~2.3s (matching video)
+    screenshotToastTimerRef.current = setTimeout(() => {
+      setScreenshotGreenToast(null);
+    }, 2350);
+
+    // Mini receipt thumbnail stays slightly longer (~3.2s) then fades out smoothly
+    screenshotThumbFadeTimerRef.current = setTimeout(() => {
+      setIsFadingScreenshotThumb(true);
+    }, 3100);
+
+    screenshotThumbTimerRef.current = setTimeout(() => {
+      setShowScreenshotThumb(false);
+      setIsFadingScreenshotThumb(false);
+    }, 3450);
+  };
 
   // Double-tap/click to toggle hiding action controls (top-right icon and bottom action buttons: receipt, screenshot, share)
   const [hideUiElements, setHideUiElements] = useState<boolean>(false);
 
-  // Floating "PAID" stamp badge in CBE purple (#70189F), shown for 2 seconds on screen click & mount
-  const [showPaidBadge, setShowPaidBadge] = useState<boolean>(true);
+  // Floating "PAID" badge in CBE purple (#6E1B9E), shown ONLY on deliberate tap of the details area (never on scroll or mount)
+  const [showPaidBadge, setShowPaidBadge] = useState<boolean>(false);
   const [isFadingPaidBadge, setIsFadingPaidBadge] = useState<boolean>(false);
-  const [stampKey, setStampKey] = useState<number>(1);
+  const [stampKey, setStampKey] = useState<number>(0);
   const paidBadgeTimerRef = useRef<any>(null);
   const paidFadeTimerRef = useRef<any>(null);
 
@@ -283,7 +314,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     if (paidBadgeTimerRef.current) clearTimeout(paidBadgeTimerRef.current);
     if (paidFadeTimerRef.current) clearTimeout(paidFadeTimerRef.current);
 
-    // Replay stamp animation with impact
+    // Replay straight horizontal PAID badge pop-in
     setStampKey(prev => prev + 1);
     setIsFadingPaidBadge(false);
     setShowPaidBadge(true);
@@ -293,19 +324,20 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       setIsFadingPaidBadge(true);
     }, 1600);
 
-    // Complete fade out and hide at 2.05s
+    // Complete fade out and hide at 2.0s
     paidBadgeTimerRef.current = setTimeout(() => {
       setShowPaidBadge(false);
       setIsFadingPaidBadge(false);
-    }, 2050);
+    }, 2000);
   };
 
   useEffect(() => {
-    // Show for 2 seconds when receipt screen opens
-    triggerPaidBadge();
     return () => {
       if (paidBadgeTimerRef.current) clearTimeout(paidBadgeTimerRef.current);
       if (paidFadeTimerRef.current) clearTimeout(paidFadeTimerRef.current);
+      if (screenshotThumbTimerRef.current) clearTimeout(screenshotThumbTimerRef.current);
+      if (screenshotThumbFadeTimerRef.current) clearTimeout(screenshotThumbFadeTimerRef.current);
+      if (screenshotToastTimerRef.current) clearTimeout(screenshotToastTimerRef.current);
     };
   }, []);
 
@@ -319,7 +351,42 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
   const [barsToast, setBarsToast] = useState<string | null>(null);
   const barsToastTimerRef = useRef<any>(null);
-  const lastTapRef = useRef<{ time: number; x: number; y: number }>({ time: 0, x: 0, y: 0 });
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const lastScrollTimeRef = useRef<number>(0);
+  const lastTouchEndTimeRef = useRef<number>(0);
+  const detailsTouchGestureRef = useRef<{
+    active: boolean;
+    startX: number;
+    startY: number;
+    startTime: number;
+    startScrollTop: number;
+    moved: boolean;
+    invalid: boolean;
+  }>({
+    active: false,
+    startX: 0,
+    startY: 0,
+    startTime: 0,
+    startScrollTop: 0,
+    moved: false,
+    invalid: false,
+  });
+  const detailsMouseGestureRef = useRef<{
+    active: boolean;
+    startX: number;
+    startY: number;
+    startTime: number;
+    startScrollTop: number;
+    moved: boolean;
+  }>({
+    active: false,
+    startX: 0,
+    startY: 0,
+    startTime: 0,
+    startScrollTop: 0,
+    moved: false,
+  });
+  const screenTouchMovedRef = useRef<boolean>(false);
   const touchStartXRef = useRef<number>(0);
   const touchStartYRef = useRef<number>(0);
   const isTouchRef = useRef<boolean>(false);
@@ -382,15 +449,176 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
     };
   }, []);
 
+  const TAP_MOVE_THRESHOLD_PX = 8;
+
+  const handleReceiptAreaScroll = () => {
+    lastScrollTimeRef.current = Date.now();
+    detailsTouchGestureRef.current.moved = true;
+    detailsMouseGestureRef.current.moved = true;
+    screenTouchMovedRef.current = true;
+  };
+
+  const handleDetailsTouchStart = (e: React.TouchEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('a') || target.closest('input')) {
+      detailsTouchGestureRef.current.active = false;
+      detailsTouchGestureRef.current.invalid = true;
+      return;
+    }
+    if (!e.touches || e.touches.length !== 1) {
+      detailsTouchGestureRef.current.active = false;
+      detailsTouchGestureRef.current.invalid = true;
+      return;
+    }
+    const touch = e.touches[0];
+    detailsTouchGestureRef.current = {
+      active: true,
+      startX: touch.clientX,
+      startY: touch.clientY,
+      startTime: Date.now(),
+      startScrollTop: scrollContainerRef.current?.scrollTop ?? 0,
+      moved: false,
+      invalid: false,
+    };
+  };
+
+  const handleDetailsTouchMove = (e: React.TouchEvent) => {
+    const g = detailsTouchGestureRef.current;
+    if (!g.active) return;
+    if (!e.touches || e.touches.length !== 1) {
+      g.invalid = true;
+      g.moved = true;
+      return;
+    }
+    const touch = e.touches[0];
+    const dx = Math.abs(touch.clientX - g.startX);
+    const dy = Math.abs(touch.clientY - g.startY);
+    if (dx > TAP_MOVE_THRESHOLD_PX || dy > TAP_MOVE_THRESHOLD_PX) {
+      g.moved = true;
+    }
+  };
+
+  const handleDetailsTouchCancel = () => {
+    detailsTouchGestureRef.current.active = false;
+    detailsTouchGestureRef.current.moved = true;
+  };
+
+  const handleDetailsTouchEnd = (e: React.TouchEvent) => {
+    lastTouchEndTimeRef.current = Date.now();
+    const g = detailsTouchGestureRef.current;
+    detailsTouchGestureRef.current.active = false;
+
+    if (!g.active || g.moved || g.invalid) return;
+    if (!e.changedTouches || e.changedTouches.length !== 1) return;
+
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('a') || target.closest('input')) return;
+
+    const touch = e.changedTouches[0];
+    const dx = Math.abs(touch.clientX - g.startX);
+    const dy = Math.abs(touch.clientY - g.startY);
+    const elapsed = Date.now() - g.startTime;
+    const currentScrollTop = scrollContainerRef.current?.scrollTop ?? 0;
+    const scrollDelta = Math.abs(currentScrollTop - g.startScrollTop);
+    const timeSinceScroll = Date.now() - lastScrollTimeRef.current;
+
+    // Strictly distinguish a clean tap from a scroll, drag, swipe, or long-press
+    if (
+      dx > TAP_MOVE_THRESHOLD_PX ||
+      dy > TAP_MOVE_THRESHOLD_PX ||
+      scrollDelta > 2 ||
+      elapsed > 420 ||
+      timeSinceScroll < 260
+    ) {
+      return;
+    }
+
+    const selectedText = typeof window !== 'undefined' ? window.getSelection()?.toString()?.trim() : '';
+    if (selectedText) return;
+
+    triggerPaidBadge();
+  };
+
+  const handleDetailsMouseDown = (e: React.MouseEvent) => {
+    if (Date.now() - lastTouchEndTimeRef.current < 600) return;
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('a') || target.closest('input')) {
+      detailsMouseGestureRef.current.active = false;
+      return;
+    }
+    detailsMouseGestureRef.current = {
+      active: true,
+      startX: e.clientX,
+      startY: e.clientY,
+      startTime: Date.now(),
+      startScrollTop: scrollContainerRef.current?.scrollTop ?? 0,
+      moved: false,
+    };
+  };
+
+  const handleDetailsMouseMove = (e: React.MouseEvent) => {
+    const g = detailsMouseGestureRef.current;
+    if (!g.active) return;
+    if (
+      Math.abs(e.clientX - g.startX) > TAP_MOVE_THRESHOLD_PX ||
+      Math.abs(e.clientY - g.startY) > TAP_MOVE_THRESHOLD_PX
+    ) {
+      g.moved = true;
+    }
+  };
+
+  const handleDetailsClick = (e: React.MouseEvent) => {
+    // Ignore synthetic click events generated after touch gestures
+    if (Date.now() - lastTouchEndTimeRef.current < 600) return;
+    const target = e.target as HTMLElement;
+    if (target.closest('button') || target.closest('a') || target.closest('input')) return;
+
+    const g = detailsMouseGestureRef.current;
+    detailsMouseGestureRef.current.active = false;
+    const dx = g.startTime ? Math.abs(e.clientX - g.startX) : 0;
+    const dy = g.startTime ? Math.abs(e.clientY - g.startY) : 0;
+    const elapsed = g.startTime ? Date.now() - g.startTime : 0;
+    const currentScrollTop = scrollContainerRef.current?.scrollTop ?? 0;
+    const scrollDelta = g.startTime ? Math.abs(currentScrollTop - g.startScrollTop) : 0;
+    const timeSinceScroll = Date.now() - lastScrollTimeRef.current;
+
+    if (
+      g.moved ||
+      dx > TAP_MOVE_THRESHOLD_PX ||
+      dy > TAP_MOVE_THRESHOLD_PX ||
+      scrollDelta > 2 ||
+      elapsed > 450 ||
+      timeSinceScroll < 260
+    ) {
+      return;
+    }
+
+    const selectedText = typeof window !== 'undefined' ? window.getSelection()?.toString()?.trim() : '';
+    if (selectedText) return;
+
+    triggerPaidBadge();
+  };
+
   const handleScreenTouchStart = (e: React.TouchEvent) => {
+    screenTouchMovedRef.current = false;
     if (e.touches && e.touches[0]) {
       touchStartXRef.current = e.touches[0].clientX;
       touchStartYRef.current = e.touches[0].clientY;
     }
   };
 
+  const handleScreenTouchMove = (e: React.TouchEvent) => {
+    if (e.touches && e.touches[0]) {
+      if (
+        Math.abs(e.touches[0].clientX - touchStartXRef.current) > TAP_MOVE_THRESHOLD_PX ||
+        Math.abs(e.touches[0].clientY - touchStartYRef.current) > TAP_MOVE_THRESHOLD_PX
+      ) {
+        screenTouchMovedRef.current = true;
+      }
+    }
+  };
+
   const handleScreenClick = (e: React.MouseEvent) => {
-    triggerPaidBadge();
     if (isTouchRef.current) {
       isTouchRef.current = false;
       return;
@@ -406,11 +634,11 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
 
   const handleScreenTouchEnd = (e: React.TouchEvent) => {
     isTouchRef.current = true;
+    if (screenTouchMovedRef.current) return;
     const target = e.target as HTMLElement;
     if (target.closest('button') || target.closest('a') || target.closest('input')) {
       return;
     }
-    triggerPaidBadge();
     if (hideUiElements) {
       toggleUiElements();
     }
@@ -659,8 +887,7 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           if (Capacitor.isNativePlatform()) {
             try {
               await saveAndShareReceiptImage(dataUrl, txId, false);
-              setCopiedToast('Screenshot saved to Photos');
-              setTimeout(() => setCopiedToast(null), 3000);
+              triggerScreenshotFeedback('Screenshot saved to CBE Mobile album.');
               return;
             } catch (nativeSaveErr) {
               console.warn('Native iOS photo save note:', nativeSaveErr);
@@ -677,7 +904,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 title: 'CBE Receipt',
               });
               sharedSuccessfully = true;
-              setCopiedToast('Screenshot saved to Apple Photos!');
+              setCopiedToast(null);
+              triggerScreenshotFeedback('Screenshot saved to CBE Mobile album.');
             } catch (shareErr: any) {
               if (shareErr?.name === 'AbortError') {
                 sharedSuccessfully = true;
@@ -697,9 +925,10 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           if (!sharedSuccessfully) {
             setShowIosPhotoPreview(true);
             setCopiedToast('Touch & hold image to Save to Photos');
+            setTimeout(() => setCopiedToast(null), 3000);
           }
         } else {
-          // Android: Automatic silent gallery save
+          // Android: Automatic silent gallery save + authentic CBE bottom-left thumbnail & green toast
           try {
             const result = await saveAndShareReceiptImage(dataUrl, txId, false);
             if (!result.saved) {
@@ -709,10 +938,8 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
             console.warn('[Screenshot] Android save notice:', saveErr);
             triggerDirectDownload(dataUrl, txId);
           }
-          setCopiedToast('Screenshot saved to gallery');
+          triggerScreenshotFeedback('Screenshot saved to CBE Mobile album.');
         }
-
-        setTimeout(() => setCopiedToast(null), 3000);
       }
     } catch (err) {
       console.error('Screenshot capture error:', err);
@@ -807,8 +1034,9 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
       onClick={handleScreenClick}
       onDoubleClick={handleScreenDoubleClick}
       onTouchStart={handleScreenTouchStart}
+      onTouchMove={handleScreenTouchMove}
       onTouchEnd={handleScreenTouchEnd}
-      className="w-full h-full min-h-[100dvh] h-[100dvh] bg-white text-slate-800 flex flex-col relative overflow-hidden select-none cursor-pointer"
+      className="w-full h-full min-h-[100dvh] h-[100dvh] bg-white text-slate-800 flex flex-col relative overflow-hidden select-none"
     >
       
       {/* Floating Home Back Button when in clean screenshot view mode (like Image 1) */}
@@ -852,6 +1080,38 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
         >
           <CheckCircle2 className="w-4 h-4 text-green-400" />
           <span>{copiedToast}</span>
+        </div>
+      )}
+
+      {/* Authentic CBE Bottom-Left Floating Screenshot Preview Thumbnail (matches video) */}
+      {showScreenshotThumb && capturedScreenshotUrl && (
+        <div
+          data-html2canvas-ignore="true"
+          data-screenshot-exclude="true"
+          className={`fixed left-3.5 bottom-[70px] z-[85] pointer-events-none transition-all duration-300 ease-out ${
+            isFadingScreenshotThumb ? 'opacity-0 -translate-x-4' : 'opacity-100 translate-x-0'
+          }`}
+        >
+          <div className="animate-cbe-thumb-in w-[92px] sm:w-[98px] rounded-[12px] overflow-hidden bg-white border-[2px] border-white shadow-[0_8px_24px_rgba(0,0,0,0.32)]">
+            <img
+              src={capturedScreenshotUrl}
+              alt="Saved CBE receipt preview"
+              className="w-full h-auto block object-cover"
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Authentic CBE Green Bottom Snackbar ("Screenshot saved to CBE Mobile album.") */}
+      {screenshotGreenToast && (
+        <div
+          data-html2canvas-ignore="true"
+          data-screenshot-exclude="true"
+          className="fixed left-3.5 right-3.5 bottom-[max(env(safe-area-inset-bottom,0px),18px)] z-[90] pointer-events-none flex justify-center animate-in fade-in slide-in-from-bottom-2 duration-200"
+        >
+          <div className="w-full max-w-[440px] bg-[#4CAF50] text-white text-[13.5px] font-medium px-4 py-2.5 rounded-[10px] shadow-[0_4px_14px_rgba(0,0,0,0.24)] tracking-[0.01em]">
+            {screenshotGreenToast}
+          </div>
         </div>
       )}
 
@@ -962,7 +1222,11 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
           </div>
 
           {/* SCROLLABLE MIDDLE TEXT & CARD PART: Only this upper text area scrolls between the static header and static bottom buttons */}
-          <div className={`bg-white -mt-px px-5 ${hideUiElements ? 'pb-24' : 'pb-4'} flex-1 overflow-y-auto overscroll-contain scrollbar-none min-h-0`}>
+          <div
+            ref={scrollContainerRef}
+            onScroll={handleReceiptAreaScroll}
+            className={`bg-white -mt-px px-5 ${hideUiElements ? 'pb-24' : 'pb-4'} flex-1 overflow-y-auto overscroll-contain scrollbar-none min-h-0`}
+          >
             <div className="pb-2">
               {/* Headline */}
               <h1 
@@ -972,8 +1236,18 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                 Transaction Completed Successfully!
               </h1>
 
-              {/* Main Transaction Summary Gray Card with crisp hairline border and subtle bottom edge (no blurry shadow) */}
-              <div className="bg-[#f3f3f5] rounded-[24px] px-[18px] pt-[18px] pb-[20px] border border-[#e3e4e8] shadow-[0_2px_1px_0_rgba(0,0,0,0.07)]">
+              {/* Main Transaction Summary Gray Card (Details Area): PAID badge triggers ONLY on clean tap here, never on scroll */}
+              <div
+                id="cbe-receipt-details-area"
+                onTouchStart={handleDetailsTouchStart}
+                onTouchMove={handleDetailsTouchMove}
+                onTouchEnd={handleDetailsTouchEnd}
+                onTouchCancel={handleDetailsTouchCancel}
+                onMouseDown={handleDetailsMouseDown}
+                onMouseMove={handleDetailsMouseMove}
+                onClick={handleDetailsClick}
+                className="bg-[#f3f3f5] rounded-[24px] px-[18px] pt-[18px] pb-[20px] border border-[#e3e4e8] shadow-[0_2px_1px_0_rgba(0,0,0,0.07)] cursor-pointer"
+              >
                 <p className="text-[#929292] font-normal text-[12.5px] sm:text-[13px] mb-3">Transaction Summary</p>
 
                 {/* Paragraph Text with bold highlights and floating PAID badge */}
@@ -1002,17 +1276,21 @@ export default function Receipt({ transaction, onBack }: ReceiptProps) {
                     </p>
                   )}
 
-                  {/* Floating "PAID" Rubber Stamp Badge matching exact video animation: -12deg tilt, stamp impact bounce & fade */}
+                  {/* Authentic Floating "PAID" Badge matching exact CBE photo: straight horizontal (0deg), purple fill, crisp white border, wide letter-spaced PAID */}
                   {showPaidBadge && !isCapturing && (
                     <div 
                       key={stampKey}
+                      data-html2canvas-ignore="true"
                       data-screenshot-exclude="true"
-                      className={`absolute left-[52%] top-[55%] z-30 select-none pointer-events-none transition-opacity duration-400 ease-out animate-paid-stamp ${
+                      className={`absolute left-1/2 top-[53%] -translate-x-1/2 -translate-y-1/2 z-30 select-none pointer-events-none transition-opacity duration-300 ease-out ${
                         isFadingPaidBadge ? 'opacity-0' : 'opacity-100'
                       }`}
                     >
-                      <div className="bg-[#7A1FA2] text-white px-6 py-2 sm:px-7 sm:py-2.5 rounded-2xl shadow-xl shadow-purple-950/40 flex items-center justify-center border border-purple-400/25">
-                        <span className="font-black text-[22px] sm:text-[25px] tracking-wider text-white drop-shadow-sm select-none">
+                      <div className="animate-paid-stamp bg-[#6D1B9A] text-white min-w-[168px] sm:min-w-[178px] h-[58px] sm:h-[62px] px-7 rounded-[14px] border-[2.5px] border-white shadow-[0_6px_18px_rgba(0,0,0,0.28)] flex items-center justify-center">
+                        <span
+                          className="font-extrabold text-[25px] sm:text-[27px] tracking-[0.22em] pl-[0.22em] text-white leading-none select-none"
+                          style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, sans-serif' }}
+                        >
                           PAID
                         </span>
                       </div>
