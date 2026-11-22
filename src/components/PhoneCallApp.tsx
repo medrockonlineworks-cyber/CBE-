@@ -167,6 +167,25 @@ function AndroidPhoneCallApp({ currentUser, onBack }: PhoneCallAppProps) {
   });
 
   const ussdInputRef = useRef<HTMLInputElement>(null);
+  const [ussdViewportBox, setUssdViewportBox] = useState<{ top: number; height: number } | null>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.visualViewport) return;
+    const vv = window.visualViewport;
+    const updateViewport = () => {
+      setUssdViewportBox({
+        top: Math.max(0, Math.round(vv.offsetTop)),
+        height: Math.max(240, Math.round(vv.height)),
+      });
+    };
+    updateViewport();
+    vv.addEventListener('resize', updateViewport);
+    vv.addEventListener('scroll', updateViewport);
+    return () => {
+      vv.removeEventListener('resize', updateViewport);
+      vv.removeEventListener('scroll', updateViewport);
+    };
+  }, []);
 
   // Audio DTMF Generator for realistic touch tones
   const playTone = (freq: number = 440) => {
@@ -1547,8 +1566,8 @@ function AndroidPhoneCallApp({ currentUser, onBack }: PhoneCallAppProps) {
         )}
       </div>
 
-      {/* 5. Keypad Overlay Sheet (Matching Screenshot_20260906-121622.png) */}
-      {isKeypadOpen && (
+      {/* 5. Keypad Overlay Sheet (hidden while USSD dialog is open so only real device keyboard shows) */}
+      {isKeypadOpen && ussdStep === 'idle' && (
         <div className="w-full bg-black border-t border-neutral-900/80 px-4 pt-1 pb-[max(env(safe-area-inset-bottom,0px),8px)] shrink-0 z-20 animate-in slide-in-from-bottom-6 duration-200">
           
           {/* Dialed Number Display (if any) */}
@@ -1741,7 +1760,7 @@ function AndroidPhoneCallApp({ currentUser, onBack }: PhoneCallAppProps) {
       )}
 
       {/* Floating Keypad Open Button when collapsed */}
-      {!isKeypadOpen && (
+      {!isKeypadOpen && ussdStep === 'idle' && (
         <div className="absolute bottom-20 right-4 z-20">
           <button 
             type="button"
@@ -1789,10 +1808,22 @@ function AndroidPhoneCallApp({ currentUser, onBack }: PhoneCallAppProps) {
       {/* 8. USSD POPUP MODAL (Exact match for Screenshots) */}
       {/* ------------------------------------------------------------- */}
       {ussdStep !== 'idle' && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-[1px] flex flex-col justify-center animate-in fade-in duration-150">
-          
-          {/* Center Section: Floating USSD Card (uses device's native keyboard directly — no fake keyboard) */}
-          <div className="flex-1 flex flex-col items-center justify-center px-4 py-2">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-[1px] animate-in fade-in duration-150">
+          {/* Center Section: Floating USSD Card pinned inside visualViewport above the real device keyboard */}
+          <div
+            className="w-full flex flex-col items-center justify-center px-4 py-2 overflow-y-auto"
+            style={
+              ussdViewportBox
+                ? {
+                    position: 'fixed',
+                    left: 0,
+                    right: 0,
+                    top: `${ussdViewportBox.top}px`,
+                    height: `${ussdViewportBox.height}px`,
+                  }
+                : { height: '100dvh' }
+            }
+          >
             {/* Running Spinner */}
             {ussdStep === 'running' ? (
               <div className="bg-[#202227] text-white rounded-[24px] px-8 py-6 shadow-2xl flex flex-col items-center gap-3 border border-neutral-700/40">

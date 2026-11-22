@@ -211,32 +211,38 @@ export const ApplePhoneApp: React.FC<ApplePhoneAppProps> = ({
   }>({ recipientAccount: '', recipientName: '', amount: '' });
   const [transferResultText, setTransferResultText] = useState<string>('');
   const [airtimeResultText, setAirtimeResultText] = useState<string>('');
-  const [viewportHeight, setViewportHeight] = useState<number | null>(null);
+  const [visualViewportBox, setVisualViewportBox] = useState<{ top: number; height: number } | null>(null);
 
   const replyInputRef = useRef<HTMLInputElement>(null);
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Track real visualViewport height so Reply input sits directly above the native device keyboard
+  // Track real visualViewport offsetTop & height so USSD Reply stays pinned cleanly above the native iOS keyboard
   useEffect(() => {
     if (typeof window === 'undefined' || !window.visualViewport) return;
     const vv = window.visualViewport;
-    const updateHeight = () => {
-      setViewportHeight(vv.height);
+    const updateViewport = () => {
+      setVisualViewportBox({
+        top: Math.max(0, Math.round(vv.offsetTop)),
+        height: Math.max(240, Math.round(vv.height)),
+      });
     };
-    updateHeight();
-    vv.addEventListener('resize', updateHeight);
-    vv.addEventListener('scroll', updateHeight);
+    updateViewport();
+    vv.addEventListener('resize', updateViewport);
+    vv.addEventListener('scroll', updateViewport);
     return () => {
-      vv.removeEventListener('resize', updateHeight);
-      vv.removeEventListener('scroll', updateHeight);
+      vv.removeEventListener('resize', updateViewport);
+      vv.removeEventListener('scroll', updateViewport);
     };
   }, []);
 
-  // Auto-focus real device keyboard when entering USSD Reply Mode
+  // Auto-focus real device keyboard when entering USSD Reply Mode and keep viewport anchored
   useEffect(() => {
     if (isUssdReplying && ussdStep !== 'idle' && ussdStep !== 'running') {
       const t = setTimeout(() => {
-        replyInputRef.current?.focus();
+        replyInputRef.current?.focus({ preventScroll: true });
+        try {
+          window.scrollTo(0, 0);
+        } catch {}
       }, 40);
       return () => clearTimeout(t);
     }
@@ -931,8 +937,8 @@ export const ApplePhoneApp: React.FC<ApplePhoneAppProps> = ({
           '-apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif',
       }}
     >
-      {/* Main Tab Area */}
-      <main className="flex-1 min-h-0 flex flex-col overflow-hidden">
+      {/* Main Tab Area (hidden while USSD overlay is active so dialer keypad never shows above the real iOS keyboard) */}
+      <main className={`flex-1 min-h-0 flex flex-col overflow-hidden ${ussdStep !== 'idle' ? 'invisible pointer-events-none' : ''}`}>
         {/* TAB: KEYPAD (Exact iOS 26 Pure Black Dialer) */}
         {activeTab === 'keypad' && (
           <div className="flex-1 flex flex-col justify-between pt-[max(env(safe-area-inset-top,0px),14px)] pb-3 px-4 max-w-[390px] mx-auto w-full">
@@ -1153,7 +1159,7 @@ export const ApplePhoneApp: React.FC<ApplePhoneAppProps> = ({
       </main>
 
       {/* iOS 26 Floating Liquid Glass Bottom Bar (Calls · Contacts · Keypad) + Separate Circular Search Button */}
-      <footer className="w-full px-4 pt-1 pb-[max(env(safe-area-inset-bottom,0px),18px)] flex items-center gap-3 z-20 shrink-0 max-w-[420px] mx-auto">
+      <footer className={`w-full px-4 pt-1 pb-[max(env(safe-area-inset-bottom,0px),18px)] flex items-center gap-3 z-20 shrink-0 max-w-[420px] mx-auto ${ussdStep !== 'idle' ? 'invisible pointer-events-none' : ''}`}>
         <div className="flex-1 bg-[#1C1C1E]/92 backdrop-blur-2xl border border-white/[0.11] rounded-full p-1 flex items-center justify-between shadow-[0_8px_28px_rgba(0,0,0,0.6)]">
           <button
             type="button"
@@ -1279,12 +1285,23 @@ export const ApplePhoneApp: React.FC<ApplePhoneAppProps> = ({
       {/* FULL-SCREEN NATIVE iOS USSD OVERLAY (EXACT MATCH TO VIDEO 00:06-01:07)*/}
       {/* ===================================================================== */}
       {ussdStep !== 'idle' && (
-        <div
-          className="fixed inset-x-0 top-0 z-50 bg-[#545454] text-white flex flex-col overflow-hidden"
-          style={{
-            height: isUssdReplying && viewportHeight ? `${viewportHeight}px` : '100dvh',
-          }}
-        >
+        <div className="fixed inset-0 z-50 bg-[#545454] text-white overflow-hidden">
+          <div
+            className="w-full flex flex-col overflow-hidden bg-[#545454]"
+            style={
+              isUssdReplying && visualViewportBox
+                ? {
+                    position: 'fixed',
+                    left: 0,
+                    right: 0,
+                    top: `${visualViewportBox.top}px`,
+                    height: `${visualViewportBox.height}px`,
+                  }
+                : {
+                    height: '100dvh',
+                  }
+            }
+          >
           {/* 1. LOADING STATE ("Please Wait...") */}
           {ussdStep === 'running' && (
             <div className="flex-1 flex flex-col items-center justify-center px-6">
@@ -1387,6 +1404,7 @@ export const ApplePhoneApp: React.FC<ApplePhoneAppProps> = ({
               </div>
             </form>
           )}
+          </div>
         </div>
       )}
 
