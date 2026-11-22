@@ -357,6 +357,16 @@ function isLocalHostname(hostname: string): boolean {
   return h === 'localhost' || h === '127.0.0.1' || h === '0.0.0.0' || h === '[::1]';
 }
 
+function isNonPublicSimulatedReceiptHost(hostname: string): boolean {
+  const h = hostname.toLowerCase();
+  return (
+    h === 'mbreceipt.cbe.com.et' ||
+    h === 'mreciept.cbe.com.et' ||
+    h === 'mbreciept.cbe.com.et' ||
+    h.endsWith('.mbreceipt.cbe.com.et')
+  );
+}
+
 /**
  * Call during app boot on web/PWA so if the app is ever accessed from a real public domain,
  * native Capacitor builds on the same device know the reachable HTTPS origin if present.
@@ -409,17 +419,14 @@ export function setOpenInRealBrowserEnabled(enabled: boolean): void {
 }
 
 export function getRealBrowserTargetMode(): RealBrowserTargetMode {
-  try {
-    const raw = localStorage.getItem(STORAGE_REAL_BROWSER_TARGET_MODE_KEY);
-    return raw === 'official_url' ? 'official_url' : 'hosted';
-  } catch {
-    return 'hosted';
-  }
+  // Always use the reachable app-hosted receipt route (/v2-hfHCxG...) for external browser tabs,
+  // because mbreceipt.cbe.com.et is not a publicly resolvable DNS domain (causes DNS_PROBE_FINISHED_NXDOMAIN).
+  return 'hosted';
 }
 
-export function setRealBrowserTargetMode(mode: RealBrowserTargetMode): void {
+export function setRealBrowserTargetMode(_mode: RealBrowserTargetMode): void {
   try {
-    localStorage.setItem(STORAGE_REAL_BROWSER_TARGET_MODE_KEY, mode);
+    localStorage.setItem(STORAGE_REAL_BROWSER_TARGET_MODE_KEY, 'hosted');
   } catch {}
 }
 
@@ -431,23 +438,39 @@ export function buildOfficialCbeWebReceiptUrl(refId?: string | null): string {
 export function resolveWebReceiptPublicOrigin(): string | null {
   if (typeof window === 'undefined') return null;
 
-  // 1. Explicit custom host configured by the user (works for both Web and Capacitor APKs)
+  // 1. Explicit custom host configured by the user (ignore non-existent mbreceipt.cbe.com.et host)
   const customHost = normalizeOriginUrl(getCustomWebReceiptHost());
-  if (customHost) return customHost;
+  if (customHost) {
+    try {
+      const parsedCustom = new URL(customHost);
+      if (!isNonPublicSimulatedReceiptHost(parsedCustom.hostname)) {
+        return customHost;
+      }
+      // Clean up invalid stored host that causes DNS_PROBE_FINISHED_NXDOMAIN
+      localStorage.removeItem(STORAGE_CUSTOM_HOST_KEY);
+    } catch {}
+  }
 
   // 2. Environment public app URL configured at build time
   const envPublicUrl = normalizeOriginUrl(
     (import.meta as any)?.env?.VITE_PUBLIC_APP_URL as string | undefined
   );
-  if (envPublicUrl) return envPublicUrl;
+  if (envPublicUrl) {
+    try {
+      const parsedEnv = new URL(envPublicUrl);
+      if (!isNonPublicSimulatedReceiptHost(parsedEnv.hostname)) {
+        return envPublicUrl;
+      }
+    } catch {}
+  }
 
   const isNative = Capacitor.isNativePlatform();
 
   // 3. On Web / PWA (Chrome, Safari, desktop, iOS home screen PWA, iframe preview):
   // Any http(s) origin (including http://localhost:3000 in local dev/web) opens cleanly in a real browser tab!
   if (!isNative) {
-    const { protocol, origin } = window.location;
-    if (protocol === 'http:' || protocol === 'https:') {
+    const { protocol, origin, hostname } = window.location;
+    if ((protocol === 'http:' || protocol === 'https:') && !isNonPublicSimulatedReceiptHost(hostname)) {
       return origin;
     }
     return null;
@@ -455,12 +478,14 @@ export function resolveWebReceiptPublicOrigin(): string | null {
 
   // 4. On Native Capacitor (Android/iOS):
   // Capacitor serves bundled assets at https://localhost or capacitor://localhost, which external Chrome/Safari
-  // cannot resolve. Only open externally if a cached non-localhost public http(s) origin is available.
+  // cannot resolve. Only open externally if a cached reachable non-localhost public http(s) origin is available.
   try {
     const cached = normalizeOriginUrl(localStorage.getItem(STORAGE_PUBLIC_ORIGIN_KEY));
     if (cached) {
       const u = new URL(cached);
-      if (!isLocalHostname(u.hostname)) return cached;
+      if (!isLocalHostname(u.hostname) && !isNonPublicSimulatedReceiptHost(u.hostname)) {
+        return cached;
+      }
     }
   } catch {}
 
@@ -538,6 +563,15 @@ export function buildStandaloneWebReceiptUrl(params: {
 export function openExternalUrlInBrowser(url: string): boolean {
   if (typeof window === 'undefined' || !url) return false;
 
+  // Never send the non-existent simulated mbreceipt.cbe.com.et domain to Chrome/Safari
+  // (it always fails with DNS_PROBE_FINISHED_NXDOMAIN).
+  try {
+    const parsed = new URL(url);
+    if (isNonPublicSimulatedReceiptHost(parsed.hostname)) {
+      return false;
+    }
+  } catch {}
+
   if (Capacitor.isNativePlatform()) {
     Browser.open({
       url,
@@ -567,9 +601,8 @@ export function openExternalUrlInBrowser(url: string): boolean {
 
 /**
  * Attempts to open the CBE Web Receipt directly in a real web browser tab/controller.
- * Returns `true` if successfully handed off to the real browser, or `false` if the caller
- * should display the in-app CbeWebReceiptModal fallback (e.g. when auto-open is disabled or
- * when running strictly offline inside a Capacitor native localhost container with no remote host).
+ * Returns `true` if successfully handed off to a reachable hosted browser URL, or `false` so
+ * the caller displays the instant in-app CbeWebReceiptModal (with the mbreceipt.cbe.com.et URL bar).
  */
 export function openWebReceiptInRealBrowser(params: {
   transaction?: Transaction | null;
@@ -578,21 +611,10 @@ export function openWebReceiptInRealBrowser(params: {
   forceOpen?: boolean;
   targetModeOverride?: RealBrowserTargetMode;
 }): boolean {
-  const { transaction, smsMessage, initialViewMode, forceOpen = false, targetModeOverride } = params;
+  const { transaction, smsMessage, initialViewMode, forceOpen = false } = params;
 
   if (!forceOpen && !isOpenInRealBrowserEnabled()) {
     return false;
-  }
-
-  const targetMode = targetModeOverride || getRealBrowserTargetMode();
-  if (targetMode === 'official_url') {
-    const payload = buildWebReceiptPayload({
-      transaction,
-      smsMessage,
-      initialViewMode,
-    });
-    saveWebReceiptPayload(payload);
-    return openExternalUrlInBrowser(buildOfficialCbeWebReceiptUrl(payload.refId));
   }
 
   const origin = resolveWebReceiptPublicOrigin();

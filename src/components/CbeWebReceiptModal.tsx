@@ -1764,38 +1764,13 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                   </button>
                 </div>
 
-                <div className="bg-neutral-850/80 border border-neutral-700/70 rounded-xl p-2.5 space-y-2">
+                <div className="bg-neutral-850/80 border border-neutral-700/70 rounded-xl p-2.5 space-y-1.5">
                   <div className="text-[10.5px] font-semibold text-neutral-300 flex items-center justify-between">
-                    <span>Real Browser Address Mode</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => handleSelectRealBrowserTarget('hosted')}
-                      className={`py-1.5 px-2 rounded-lg text-[10.5px] font-semibold transition text-center cursor-pointer border ${
-                        realBrowserTarget === 'hosted'
-                          ? 'bg-emerald-600/25 border-emerald-500 text-emerald-300'
-                          : 'bg-neutral-900 border-neutral-700 text-neutral-400 hover:text-neutral-200'
-                      }`}
-                    >
-                      App Hosted (/v2-hfHCxG...)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleSelectRealBrowserTarget('official_url')}
-                      className={`py-1.5 px-2 rounded-lg text-[10.5px] font-semibold transition text-center cursor-pointer border ${
-                        realBrowserTarget === 'official_url'
-                          ? 'bg-emerald-600/25 border-emerald-500 text-emerald-300'
-                          : 'bg-neutral-900 border-neutral-700 text-neutral-400 hover:text-neutral-200'
-                      }`}
-                    >
-                      CBE URL (mbreceipt...)
-                    </button>
+                    <span>External Browser Receipt URL</span>
+                    <span className="text-[9.5px] text-emerald-400 font-medium">App Hosted</span>
                   </div>
                   <div className="text-[9.5px] text-neutral-400 leading-relaxed font-mono break-all bg-neutral-900/70 px-2 py-1 rounded border border-neutral-800">
-                    {realBrowserTarget === 'official_url'
-                      ? webReceiptUrl
-                      : `${resolveWebReceiptPublicOrigin() || ''}/v2-hfHCxG${receiptData.refId}`}
+                    {`${resolveWebReceiptPublicOrigin() || '(In-app viewer)'}/v2-hfHCxG${receiptData.refId}`}
                   </div>
                 </div>
 
