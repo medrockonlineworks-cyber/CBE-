@@ -401,7 +401,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
   };
 
   return (
-    <div className="h-full min-h-[100dvh] w-full bg-white text-neutral-900 flex flex-col justify-between relative overflow-hidden select-none font-sans">
+    <div className="h-[100dvh] max-h-[100dvh] w-full bg-white text-neutral-900 flex flex-col justify-between relative overflow-hidden select-none font-sans">
       
       {/* Notification Toast Modal */}
       {showNotificationToast && (
@@ -609,7 +609,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
         }}
         className={`px-7 max-w-md mx-auto w-full flex flex-col justify-center ${
           loginMode === 'pin' && showKeypad
-            ? 'pt-3 pb-2 flex-1'
+            ? 'pt-1.5 pb-1.5 flex-1 min-h-0 overflow-y-auto scrollbar-none'
             : 'pt-8 sm:pt-10 pb-2'
         }`}
       >
@@ -618,32 +618,48 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
         <div className="flex flex-col items-center text-center">
           
           {/* Golden Spiral Emblem */}
-          <div className="w-20 h-20 sm:w-[86px] sm:h-[86px] flex items-center justify-center mb-3">
-            <CbeLogo className="w-20 h-20 sm:w-[86px] sm:h-[86px] object-contain drop-shadow-xs" />
+          <div className={`flex items-center justify-center transition-all duration-150 ${
+            loginMode === 'pin' && showKeypad
+              ? 'w-14 h-14 sm:w-[74px] sm:h-[74px] mb-1.5 sm:mb-2.5'
+              : 'w-20 h-20 sm:w-[86px] sm:h-[86px] mb-3'
+          }`}>
+            <CbeLogo className="w-full h-full object-contain drop-shadow-xs" />
           </div>
 
           {/* Amharic Header in Golden Bronze */}
-          <h2 className="text-[#b8863b] font-semibold text-[21px] sm:text-[22px] tracking-normal leading-tight font-['Noto_Serif_Ethiopic','Noto_Sans_Ethiopic',serif]">
+          <h2 className={`text-[#b8863b] font-semibold tracking-normal leading-tight font-['Noto_Serif_Ethiopic','Noto_Sans_Ethiopic',serif] ${
+            loginMode === 'pin' && showKeypad
+              ? 'text-[18px] sm:text-[21px]'
+              : 'text-[21px] sm:text-[22px]'
+          }`}>
             የኢትዮጵያ ንግድ ባንክ
           </h2>
 
           {/* English Header in Spaced Charcoal */}
-          <h1 className="text-[#3d4148] font-semibold text-[11px] sm:text-[11.5px] tracking-[0.22em] uppercase mt-1.5 font-sans">
+          <h1 className={`text-[#3d4148] font-semibold tracking-[0.22em] uppercase font-sans ${
+            loginMode === 'pin' && showKeypad
+              ? 'text-[10px] sm:text-[11px] mt-1'
+              : 'text-[11px] sm:text-[11.5px] mt-1.5'
+          }`}>
             COMMERCIAL BANK OF ETHIOPIA
           </h1>
 
           {/* Hairline Divider */}
-          <div className="w-36 h-[1px] bg-neutral-200/80 mt-5 mb-5" />
+          <div className={`w-36 h-[1px] bg-neutral-200/80 ${
+            loginMode === 'pin' && showKeypad ? 'mt-2.5 mb-2.5 sm:mt-4 sm:mb-4' : 'mt-5 mb-5'
+          }`} />
 
           {/* Welcome back Subtitle ONLY (No "Authenticate to continue.") */}
-          <p className="text-[#6b7280] font-normal text-[17px] font-sans">
+          <p className={`text-[#6b7280] font-normal font-sans ${
+            loginMode === 'pin' && showKeypad ? 'text-[15px] sm:text-[17px]' : 'text-[17px]'
+          }`}>
             Welcome back
           </p>
         </div>
 
         {/* PIN INPUT BOX: Shown ONLY after clicking "Use PIN" */}
         {loginMode === 'pin' && (
-          <div className="mt-7 mb-1 animate-in fade-in duration-150">
+          <div className={`${showKeypad ? 'mt-3.5 sm:mt-5 mb-1' : 'mt-7 mb-1'} animate-in fade-in duration-150`}>
             <div
               id="cbe-pin-input-box"
               role="button"
@@ -661,7 +677,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
                   setShowKeypad(true);
                 }
               }}
-              className={`w-full h-[58px] rounded-[14px] px-4.5 flex items-center gap-3.5 transition-all cursor-pointer ${
+              className={`w-full ${showKeypad ? 'h-[50px] sm:h-[56px]' : 'h-[58px]'} rounded-[14px] px-4.5 flex items-center gap-3.5 transition-all cursor-pointer ${
                 showError
                   ? 'bg-white border-[1.5px] border-[#e05347] shadow-xs'
                   : showKeypad
@@ -845,26 +861,26 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
       {loginMode === 'pin' && showKeypad && (
         <div
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-md mx-auto bg-[#f9f9fb] rounded-t-[26px] shadow-[0_-4px_20px_rgba(0,0,0,0.04)] border-t border-neutral-100 px-4 pt-3 pb-[max(env(safe-area-inset-bottom,0px),22px)] shrink-0 animate-in slide-in-from-bottom-8 duration-200"
+          className="w-full max-w-md mx-auto bg-[#f9f9fb] rounded-t-[24px] shadow-[0_-4px_20px_rgba(0,0,0,0.04)] border-t border-neutral-100 px-3.5 pt-2 pb-[max(env(safe-area-inset-bottom,0px),12px)] shrink-0 animate-in slide-in-from-bottom-8 duration-200"
         >
           {/* Subtle grab handle bar at top center (tap to dismiss keypad) */}
           <button
             type="button"
             aria-label="Hide keypad"
             onClick={() => setShowKeypad(false)}
-            className="w-full flex justify-center pb-3.5 pt-0.5 cursor-pointer"
+            className="w-full flex justify-center pb-2 pt-0.5 cursor-pointer"
           >
             <span className="w-10 h-[3.5px] bg-[#d8dade] rounded-full block" />
           </button>
 
-          {/* 3x4 Numeric Keypad Grid (Exact match to Photos 2 & 3) */}
-          <div className="grid grid-cols-3 gap-2.5 w-full">
+          {/* 3x4 Numeric Keypad Grid (Exact match to Photos 2 & 3, responsive height so row 4 is never cut off) */}
+          <div className="grid grid-cols-3 gap-2 sm:gap-2.5 w-full">
             {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((digit) => (
               <button
                 key={digit}
                 type="button"
                 onClick={() => handleKeypadPress(digit)}
-                className="h-[54px] sm:h-[58px] rounded-[12px] bg-[#f1f2f5] hover:bg-[#e8eaef] active:bg-[#dfe2e8] text-[#1f2937] text-[22px] font-medium flex items-center justify-center transition cursor-pointer select-none"
+                className="h-[44px] sm:h-[54px] rounded-[12px] bg-[#f1f2f5] hover:bg-[#e8eaef] active:bg-[#dfe2e8] text-[#1f2937] text-[20px] sm:text-[22px] font-medium flex items-center justify-center transition cursor-pointer select-none"
               >
                 {digit}
               </button>
@@ -875,9 +891,9 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
               type="button"
               aria-label="Backspace"
               onClick={handleBackspace}
-              className="h-[54px] sm:h-[58px] rounded-[12px] bg-[#f1f2f5] hover:bg-[#e8eaef] active:bg-[#dfe2e8] text-[#d64545] flex items-center justify-center transition cursor-pointer select-none"
+              className="h-[44px] sm:h-[54px] rounded-[12px] bg-[#f1f2f5] hover:bg-[#e8eaef] active:bg-[#dfe2e8] text-[#d64545] flex items-center justify-center transition cursor-pointer select-none"
             >
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d64545" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="#d64545" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M21 5H9l-6 7 6 7h12a1.5 1.5 0 0 0 1.5-1.5v-11A1.5 1.5 0 0 0 21 5z" />
                 <line x1="17.5" y1="9.5" x2="12.5" y2="14.5" />
                 <line x1="12.5" y1="9.5" x2="17.5" y2="14.5" />
@@ -888,7 +904,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
             <button
               type="button"
               onClick={() => handleKeypadPress('0')}
-              className="h-[54px] sm:h-[58px] rounded-[12px] bg-[#f1f2f5] hover:bg-[#e8eaef] active:bg-[#dfe2e8] text-[#1f2937] text-[22px] font-medium flex items-center justify-center transition cursor-pointer select-none"
+              className="h-[44px] sm:h-[54px] rounded-[12px] bg-[#f1f2f5] hover:bg-[#e8eaef] active:bg-[#dfe2e8] text-[#1f2937] text-[20px] sm:text-[22px] font-medium flex items-center justify-center transition cursor-pointer select-none"
             >
               0
             </button>
@@ -899,7 +915,7 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
               aria-label="Submit PIN"
               disabled={isAuthLoading}
               onClick={handleLoginAttempt}
-              className={`h-[54px] sm:h-[58px] rounded-[12px] flex items-center justify-center transition-all duration-150 cursor-pointer select-none ${
+              className={`h-[44px] sm:h-[54px] rounded-[12px] flex items-center justify-center transition-all duration-150 cursor-pointer select-none ${
                 pin.length >= 4
                   ? 'bg-[#6E1B9E] hover:bg-[#5e1687] active:bg-[#4f1273] shadow-sm'
                   : 'bg-[#f1f2f5] hover:bg-[#eceaf2] active:bg-[#e5e1ee]'
@@ -909,8 +925,8 @@ export default function Auth({ onLoginSuccess }: AuthProps) {
                 <Loader2 className={`w-5 h-5 animate-spin ${pin.length >= 4 ? 'text-white' : 'text-[#6E1B9E]'}`} />
               ) : (
                 <svg
-                  width="22"
-                  height="22"
+                  width="21"
+                  height="21"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke={pin.length >= 4 ? '#ffffff' : '#c7bdd6'}

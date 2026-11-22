@@ -19,8 +19,8 @@ import {
 import { UserProfile, Transaction, Beneficiary, RegisteredAccountInfo } from '../types';
 import { LocalDb } from '../lib/mockData';
 import { RegisteredAccountsModal } from './RegisteredAccountsModal';
-import { TransferBiometricGate } from './TransferBiometricGate';
-import { BiometricAuthService } from '../services/biometricAuthService';
+import { TransferBiometricGate, TransferBiometricPhase } from './TransferBiometricGate';
+import { BiometricAuthService, BiometricMethod } from '../services/biometricAuthService';
 
 interface CbeTransferProps {
   currentUser: UserProfile;
@@ -141,8 +141,12 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
     }
   }, [currentUser.id]);
 
-  // Flow states: 'form' | 'biometric_gate' | 'confirm_pin'
-  const [showBiometricGate, setShowBiometricGate] = useState(false);
+  // Flow states: 'form' | 'biometric_auth' | 'confirm_pin'
+  const [biometricPhase, setBiometricPhase] = useState<TransferBiometricPhase>(null);
+  const [biometricMethod, setBiometricMethod] = useState<BiometricMethod>(() =>
+    BiometricAuthService.getBiometricMethod()
+  );
+  const [iframeBlockedMethod, setIframeBlockedMethod] = useState<BiometricMethod | null>(null);
   const [biometricConfirmed, setBiometricConfirmed] = useState(false);
   const [showPinSheet, setShowPinSheet] = useState(false);
   const [showRegisteredModal, setShowRegisteredModal] = useState(false);
@@ -264,9 +268,13 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
         e?.preventDefault?.();
         return;
       }
-      if (showBiometricGate) {
-        setShowBiometricGate(false);
-        setBiometricConfirmed(false);
+      if (iframeBlockedMethod) {
+        setIframeBlockedMethod(null);
+        e?.detail?.setHandled?.();
+        e?.preventDefault?.();
+        return;
+      }
+      if (biometricPhase) {
         e?.detail?.setHandled?.();
         e?.preventDefault?.();
         return;
@@ -293,9 +301,57 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
 
     window.addEventListener('cbe_phone_back', handlePhoneBack);
     return () => window.removeEventListener('cbe_phone_back', handlePhoneBack);
-  }, [showCalcModal, showRegisteredModal, showBiometricGate, showPinSheet, selectedRecipient, onBack]);
+  }, [showCalcModal, showRegisteredModal, iframeBlockedMethod, biometricPhase, showPinSheet, selectedRecipient, onBack]);
 
-  // Step 1: Validate form inputs and open PIN confirmation sheet
+  // Trigger native device Fingerprint (Android) / Face ID (iOS) directly, then open PIN sheet
+  const triggerTransferBiometrics = async (resolvedRecipientName: string, parsedAmount: number) => {
+    if (biometricPhase) return;
+    const detectedMethod = BiometricAuthService.getBiometricMethod();
+    setBiometricMethod(detectedMethod);
+    setBiometricConfirmed(false);
+    setShowPinSheet(false);
+    setPin('');
+    setPinError('');
+    setErrorMsg('');
+    setIframeBlockedMethod(null);
+    setBiometricPhase('authenticating');
+
+    const result = await BiometricAuthService.confirmIdentityForTransfer(currentUser, {
+      amountDisplay: `ETB ${parsedAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      recipientName: resolvedRecipientName,
+    });
+
+    setBiometricMethod(result.method);
+
+    if (result.status === 'success') {
+      setBiometricPhase('confirmed');
+      window.setTimeout(() => {
+        setBiometricPhase(null);
+        setBiometricConfirmed(true);
+        setPin('');
+        setPinError('');
+        setShowPinSheet(true);
+      }, 650);
+      return;
+    }
+
+    setBiometricPhase(null);
+    setBiometricConfirmed(false);
+
+    if (result.status === 'iframe_blocked') {
+      setIframeBlockedMethod(result.method);
+      return;
+    }
+
+    if (result.status !== 'cancelled') {
+      setErrorMsg(
+        result.message ||
+          `${result.method === 'faceid' ? 'Face ID' : 'Fingerprint'} verification is required to transfer.`
+      );
+    }
+  };
+
+  // Validate form inputs and immediately launch native device biometrics (Android Fingerprint / iOS Face ID)
   const handleInitiateTransfer = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
@@ -322,38 +378,41 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
     }
 
     // Resolve recipient name if not already set
-    if (!recipientName) {
+    let resolvedRecipient = recipientName;
+    if (!resolvedRecipient) {
       const matched = LocalDb.findRegisteredAccount(phoneOrAccount);
       if (matched) {
+        resolvedRecipient = matched.accountName;
         setRecipientName(matched.accountName);
       } else {
         const matchingRecent = recentTransfers.find(r => r.accountNumber === phoneOrAccount);
         if (matchingRecent) {
-          setRecipientName(matchingRecent.fullName || matchingRecent.name);
+          resolvedRecipient = matchingRecent.fullName || matchingRecent.name;
+          setRecipientName(resolvedRecipient);
         } else {
-          setRecipientName('Ayenew Wubete Parent Wubete Hotel');
+          resolvedRecipient = 'Ayenew Wubete Parent Wubete Hotel';
+          setRecipientName(resolvedRecipient);
         }
       }
     }
 
-    // Dismiss any OS soft keyboard before showing biometric confirmation
+    // Dismiss any OS soft keyboard before native biometric prompt
     try {
       (document.activeElement as HTMLElement | null)?.blur?.();
     } catch {}
 
-    // Step 1 (Required): Confirm it's you with Fingerprint (Android) or Face ID (iOS) before PIN
-    setPin('');
-    setPinError('');
-    setBiometricConfirmed(false);
-    setShowPinSheet(false);
-    setShowBiometricGate(true);
+    // Immediately trigger native OS Fingerprint (Android) / Face ID (iOS)
+    void triggerTransferBiometrics(resolvedRecipient, parsedAmount);
   };
 
-  // Step 2 (Required): Confirm 6-digit PIN after biometric confirmation -> complete transfer & show receipt
+  // Confirm 6-digit PIN after biometric verification -> complete transfer & show receipt
   const handleConfirmPin = () => {
     if (!biometricConfirmed) {
       setShowPinSheet(false);
-      setShowBiometricGate(true);
+      const parsedAmount = parseFloat(amount);
+      if (!isNaN(parsedAmount) && parsedAmount > 0) {
+        void triggerTransferBiometrics(activeRecipientName, parsedAmount);
+      }
       return;
     }
 
@@ -489,9 +548,8 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
             id="btn-cbe-transfer-back"
             type="button"
             onClick={() => {
-              if (showBiometricGate) {
-                setShowBiometricGate(false);
-                setBiometricConfirmed(false);
+              if (biometricPhase) {
+                return;
               } else if (showPinSheet) {
                 setShowPinSheet(false);
                 setBiometricConfirmed(false);
@@ -509,7 +567,7 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
             <ChevronLeft className="w-5 h-5 stroke-[2.4] -ml-0.5" />
           </button>
           <h1 className="text-[19px] font-semibold text-white tracking-tight">
-            {selectedRecipient || showBiometricGate || showPinSheet ? 'Transfer' : 'CBE Transfer'}
+            {selectedRecipient || biometricPhase || showPinSheet ? 'Transfer' : 'CBE Transfer'}
           </h1>
         </div>
       </div>
@@ -657,7 +715,7 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
                 </button>
               </div>
             </form>
-          ) : showBiometricGate || showPinSheet ? (
+          ) : biometricPhase || showPinSheet ? (
             /* Transfer summary cards visible behind Biometric & PIN sheets when initiated from main CBE Transfer form */
             <div className="space-y-3 pt-1">
               <div className="bg-[#ECEAEF] rounded-[18px] px-4 py-3.5">
@@ -1031,32 +1089,17 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
       />
 
       {/* ========================================================================= */}
-      {/* STEP 1: BIOMETRIC IDENTITY CONFIRMATION (FINGERPRINT / FACE ID)           */}
+      {/* BIOMETRIC ANIMATION OVERLAY (EXACT LOGIN STYLE: AUTHENTICATING -> CONFIRMED) */}
       {/* ========================================================================= */}
       <TransferBiometricGate
-        open={showBiometricGate}
-        user={currentUser}
-        amountDisplay={
-          amount && !isNaN(parseFloat(amount))
-            ? `ETB ${parseFloat(amount).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-            : undefined
-        }
-        recipientName={activeRecipientName}
-        onConfirmed={() => {
-          setBiometricConfirmed(true);
-          setShowBiometricGate(false);
-          setPin('');
-          setPinError('');
-          setShowPinSheet(true);
-        }}
-        onCancel={() => {
-          setShowBiometricGate(false);
-          setBiometricConfirmed(false);
-        }}
+        phase={biometricPhase}
+        method={biometricMethod}
+        iframeBlockedMethod={iframeBlockedMethod}
+        onDismissIframeNotice={() => setIframeBlockedMethod(null)}
       />
 
       {/* ========================================================================= */}
-      {/* STEP 2: CBE PIN CONFIRMATION BOTTOM SHEET (ONLY AFTER BIOMETRIC CONFIRMED) */}
+      {/* CBE PIN CONFIRMATION BOTTOM SHEET (CLEAN, KEPT AS BEFORE)                 */}
       {/* ========================================================================= */}
       {showPinSheet && biometricConfirmed && (
         <div className="fixed inset-0 z-[130] bg-black/50 backdrop-blur-2xs flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
@@ -1084,16 +1127,8 @@ export const CbeTransfer: React.FC<CbeTransferProps> = ({
               </button>
             </div>
 
-            {/* Verified Identity Indicator + Title: "Enter your PIN to confirm" */}
+            {/* Title: "Enter your PIN to confirm" in CBE Purple */}
             <div className="text-center pt-2 pb-1">
-              <div className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-[#16a34a] mb-1">
-                <Check className="w-3.5 h-3.5 stroke-[3]" />
-                <span>
-                  {BiometricAuthService.getBiometricMethod() === 'faceid'
-                    ? 'Face ID confirmed • Step 2 of 2'
-                    : 'Fingerprint confirmed • Step 2 of 2'}
-                </span>
-              </div>
               <h3 className="text-base font-bold text-[#70189F] tracking-tight">
                 Enter your PIN to confirm
               </h3>

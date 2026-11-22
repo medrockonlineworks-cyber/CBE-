@@ -824,20 +824,18 @@ export class BiometricAuthService {
       }
     }
 
-    // 2. Web / PWA Path: Real Platform WebAuthn (iOS Safari Face ID / Android Chrome Fingerprint)
-    const availability = await this.checkAvailability();
-    if (!availability.available) {
-      if (availability.hardwareStatus === 'iframe_blocked') {
-        return {
-          status: 'iframe_blocked',
-          method,
-          message: availability.reason,
-        };
-      }
+    // 2. Web / PWA Path: Invoke Real Platform WebAuthn (iOS Safari Face ID / Android Chrome Fingerprint)
+    // immediately within the user click gesture (no extra async await beforehand so iOS Safari preserves activation).
+    if (
+      typeof window === 'undefined' ||
+      !window.isSecureContext ||
+      !navigator.credentials ||
+      typeof window.PublicKeyCredential === 'undefined'
+    ) {
       return {
-        status: availability.hardwareStatus === 'not_enrolled' ? 'not_enrolled' : 'unsupported',
+        status: 'unsupported',
         method,
-        message: availability.reason || `${methodName} is unavailable on this browser/device.`,
+        message: `${methodName} requires HTTPS or a native mobile build.`,
       };
     }
 
