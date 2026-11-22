@@ -77,6 +77,22 @@ type UssdStep =
   | 'ethio_telecom_balance';
 
 export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps) {
+  const [isIPhone, setIsIPhone] = useState<boolean>(() => PhoneSettingsService.isIPhoneMode());
+
+  useEffect(() => {
+    return PhoneSettingsService.subscribe(() => {
+      setIsIPhone(PhoneSettingsService.isIPhoneMode());
+    });
+  }, []);
+
+  if (isIPhone) {
+    return <ApplePhoneApp currentUser={currentUser} onBack={onBack || (() => {})} />;
+  }
+
+  return <AndroidPhoneCallApp currentUser={currentUser} onBack={onBack} />;
+}
+
+function AndroidPhoneCallApp({ currentUser, onBack }: PhoneCallAppProps) {
   // Navigation & Tabs
   const [activeTab, setActiveTab] = useState<'recents' | 'contacts'>('recents');
   const [recentsFilter, setRecentsFilter] = useState<'all' | 'missed'>('all');
@@ -109,17 +125,6 @@ export default function PhoneCallApp({ currentUser, onBack }: PhoneCallAppProps)
   const [callerAccountSearch, setCallerAccountSearch] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [isPhoneSettingsOpen, setIsPhoneSettingsOpen] = useState(false);
-  const [isIPhone, setIsIPhone] = useState<boolean>(() => PhoneSettingsService.isIPhoneMode());
-
-  useEffect(() => {
-    return PhoneSettingsService.subscribe(() => {
-      setIsIPhone(PhoneSettingsService.isIPhoneMode());
-    });
-  }, []);
-
-  if (isIPhone) {
-    return <ApplePhoneApp currentUser={currentUser} onBack={onBack || (() => {})} />;
-  }
 
   // Active Calling Screen (outgoing and incoming)
   const [activeCall, setActiveCall] = useState<{

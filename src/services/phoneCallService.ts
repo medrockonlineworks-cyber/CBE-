@@ -71,6 +71,64 @@ const STORAGE_KEY_CALLER_ACCOUNTS = 'tana_caller_accounts_v4';
 const STORAGE_KEY_ACTIVE_CALLER_ID = 'tana_active_caller_account_id_v2';
 const STORAGE_KEY_CALLER_TRANSACTIONS = 'tana_caller_transactions_v5';
 
+// Lightweight in-memory caches to avoid repeated JSON.parse/stringify & O(N^2) localStorage stalls on iOS Safari
+let _cachedTxMap: Record<string, AccountTransactionItem[]> | null = null;
+let _cachedTxMapRaw: string | null = null;
+let _cachedAccounts: CallerAccount[] | null = null;
+let _cachedAccountsAt = 0;
+
+function readStoredTxMapFast(): Record<string, AccountTransactionItem[]> {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_CALLER_TRANSACTIONS);
+    if (!raw) {
+      _cachedTxMap = {};
+      _cachedTxMapRaw = null;
+      return _cachedTxMap;
+    }
+    if (_cachedTxMap && _cachedTxMapRaw === raw) {
+      return _cachedTxMap;
+    }
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      // Automatically prune bloated legacy template-only caches (> 350 KB) that caused iOS Safari hangs/quota errors
+      if (raw.length > 350_000) {
+        const compacted: Record<string, AccountTransactionItem[]> = {};
+        for (const [accId, list] of Object.entries(parsed as Record<string, AccountTransactionItem[]>)) {
+          if (!Array.isArray(list)) continue;
+          const hasRealTx = list.some(
+            (t) => t && typeof t.id === 'string' && (t.id.startsWith('tx-recv-') || t.id.startsWith('tx-send-'))
+          );
+          if (hasRealTx) {
+            compacted[accId] = list.slice(0, 30);
+          }
+        }
+        _cachedTxMap = compacted;
+        try {
+          const nextRaw = JSON.stringify(compacted);
+          localStorage.setItem(STORAGE_KEY_CALLER_TRANSACTIONS, nextRaw);
+          _cachedTxMapRaw = nextRaw;
+        } catch {
+          _cachedTxMapRaw = raw;
+        }
+        return _cachedTxMap;
+      }
+      _cachedTxMap = parsed as Record<string, AccountTransactionItem[]>;
+      _cachedTxMapRaw = raw;
+      return _cachedTxMap;
+    }
+  } catch {
+    // Fallback cleanly on corrupted storage
+  }
+  _cachedTxMap = {};
+  _cachedTxMapRaw = null;
+  return _cachedTxMap;
+}
+
+function invalidateCallerAccountsCache(): void {
+  _cachedAccounts = null;
+  _cachedAccountsAt = 0;
+}
+
 export function formatUssdTxAmount(amt: number): string {
   if (amt < 1 && amt > 0) return amt.toFixed(2);
   if (Number.isInteger(amt)) return amt.toFixed(1);
@@ -900,28 +958,25 @@ export const PhoneCallService = {
 
   getCallerTransactions(accountId: string): AccountTransactionItem[] {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY_CALLER_TRANSACTIONS);
-      let allMap: Record<string, AccountTransactionItem[]> = {};
-      if (stored) {
-        allMap = JSON.parse(stored);
-      }
+      const allMap = readStoredTxMapFast();
       if (allMap[accountId] && allMap[accountId].length >= 8) {
         return allMap[accountId];
       }
 
-      // Need to seed or top-up traction
-      const allAccounts = this.getCallerAccountsRaw();
+      // Compute deterministic traction transactions on-the-fly without bloating localStorage with 591 accounts
+      const allAccounts = _cachedAccounts || this.getCallerAccountsRaw();
       const acc = allAccounts.find(a => a.id === accountId) || allAccounts[0];
       if (!acc) return [];
 
       const seeded = this.generateSmallTractionTransactions(acc);
-      allMap[accountId] = seeded;
-      try {
-        localStorage.setItem(STORAGE_KEY_CALLER_TRANSACTIONS, JSON.stringify(allMap));
-      } catch {}
+      if (allMap[accountId] && allMap[accountId].length > 0) {
+        // Preserve any real synced transactions at the top, followed by deterministic fallback items
+        const existingIds = new Set(allMap[accountId].map(t => t.id));
+        return [...allMap[accountId], ...seeded.filter(t => !existingIds.has(t.id))];
+      }
       return seeded;
     } catch {
-      const allAccounts = this.getCallerAccountsRaw();
+      const allAccounts = _cachedAccounts || this.getCallerAccountsRaw();
       const acc = allAccounts.find(a => a.id === accountId) || allAccounts[0];
       return acc ? this.generateSmallTractionTransactions(acc) : [];
     }
@@ -929,13 +984,12 @@ export const PhoneCallService = {
 
   saveCallerTransactions(accountId: string, txs: AccountTransactionItem[]): void {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY_CALLER_TRANSACTIONS);
-      let allMap: Record<string, AccountTransactionItem[]> = {};
-      if (stored) {
-        allMap = JSON.parse(stored);
-      }
-      allMap[accountId] = txs;
-      localStorage.setItem(STORAGE_KEY_CALLER_TRANSACTIONS, JSON.stringify(allMap));
+      const allMap = { ...readStoredTxMapFast() };
+      allMap[accountId] = txs.slice(0, 40);
+      const serialized = JSON.stringify(allMap);
+      localStorage.setItem(STORAGE_KEY_CALLER_TRANSACTIONS, serialized);
+      _cachedTxMap = allMap;
+      _cachedTxMapRaw = serialized;
     } catch (e) {
       console.error('Failed to save caller transactions', e);
     }
@@ -949,7 +1003,7 @@ export const PhoneCallService = {
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
     } catch {}
-    return [...INITIAL_CALLER_ACCOUNTS];
+    return INITIAL_CALLER_ACCOUNTS.map(a => ({ ...a }));
   },
 
   /**
@@ -961,7 +1015,7 @@ export const PhoneCallService = {
   normalizeAccounts(accounts: CallerAccount[]): CallerAccount[] {
     const usedBalances = new Set<number>();
 
-    // Build live CBE balance lookup so CBE-registered accounts ALWAYS retain their exact CBE balance
+    // Preload lookup maps ONCE (O(N) instead of O(N^2) localStorage reads inside loop)
     const liveCbeByAcc = new Map<string, { name: string; phone: string; balance: number }>();
     try {
       for (const cbe of getCanonicalCbeRegisteredAccounts()) {
@@ -970,6 +1024,38 @@ export const PhoneCallService = {
           phone: cbe.phone,
           balance: cbe.balance,
         });
+      }
+    } catch {}
+
+    const storedTxMap = readStoredTxMapFast();
+
+    const userBalByAcc = new Map<string, number>();
+    const userBalByName = new Map<string, number>();
+    let cachedUsers: UserProfile[] = [];
+    try {
+      cachedUsers = LocalDb.getUsers?.() || [];
+      for (const u of cachedUsers) {
+        const bal = typeof u.availableBalance === 'number' && !Number.isNaN(u.availableBalance)
+          ? u.availableBalance
+          : u.balance;
+        if (typeof bal !== 'number' || Number.isNaN(bal)) continue;
+        const cleanU = (u.accountNumber || '').replace(/\D/g, '');
+        if (cleanU) userBalByAcc.set(cleanU, bal);
+        if (u.name) userBalByName.set(u.name.toLowerCase(), bal);
+      }
+    } catch {}
+
+    const allAccBalByAcc = new Map<string, number>();
+    try {
+      const allAccs = LocalDb.getAllAccounts?.() || [];
+      for (const a of allAccs) {
+        const cleanA = (a.accountNumber || '').replace(/\D/g, '');
+        const bal = typeof a.availableBalance === 'number' && !Number.isNaN(a.availableBalance)
+          ? a.availableBalance
+          : a.balance;
+        if (cleanA && typeof bal === 'number' && !Number.isNaN(bal)) {
+          allAccBalByAcc.set(cleanA, bal);
+        }
       }
     } catch {}
 
@@ -989,9 +1075,9 @@ export const PhoneCallService = {
           continue;
         }
 
-        let initBal = typeof acc.initialBalance === 'number' && !isNaN(acc.initialBalance) 
-          ? Math.round(acc.initialBalance * 100) / 100 
-          : (typeof acc.balance === 'number' && !isNaN(acc.balance) ? Math.round(acc.balance * 100) / 100 : 0);
+        let initBal = typeof acc.initialBalance === 'number' && Number.isFinite(acc.initialBalance)
+          ? Math.round(acc.initialBalance * 100) / 100
+          : (typeof acc.balance === 'number' && Number.isFinite(acc.balance) ? Math.round(acc.balance * 100) / 100 : 0);
 
         // If outside 500-150000 or duplicate of already used balance
         if (initBal < 500 || initBal > 150000 || usedBalances.has(initBal)) {
@@ -1001,13 +1087,15 @@ export const PhoneCallService = {
         acc.initialBalance = initBal;
         usedBalances.add(initBal);
 
-        // Calculate available balance: strictly the total of the received amount and initial balance
-        const txs = this.getCallerTransactions(acc.id);
-        const inTx = txs.find(t => t.type === 'in');
+        // Calculate available balance from real stored transactions if present, else fallback without writing storage
+        const storedTxs = storedTxMap[acc.id];
+        const inTx = storedTxs ? storedTxs.find(t => t.type === 'in') : undefined;
         const receivedAmt = inTx ? inTx.rawAmount : (acc.lastTxAmount || 50.0);
 
         acc.totalReceived = receivedAmt;
-        acc.totalSent = Math.round(txs.filter(t => t.type === 'out').reduce((sum, t) => sum + t.rawAmount, 0) * 100) / 100;
+        acc.totalSent = storedTxs
+          ? Math.round(storedTxs.filter(t => t.type === 'out').reduce((sum, t) => sum + (t.rawAmount || 0), 0) * 100) / 100
+          : (acc.totalSent || 0);
         let availBal = Math.round((acc.initialBalance + receivedAmt) * 100) / 100;
         if (availBal < 500) availBal = 500;
 
@@ -1020,37 +1108,33 @@ export const PhoneCallService = {
     for (const acc of accounts) {
       if (acc.role !== 'receiver') {
         const cleanAcc = (acc.accountNumber || '').replace(/\D/g, '');
-        const isGlobal = acc.id === 'acc-global' || cleanAcc === '1000684396671' || cleanAcc === '1000170986671' || acc.name.toLowerCase().includes('global');
-        
-        // 1. Check if this account belongs to an app user in LocalDb or registered account
-        let appUserBal: number | undefined = undefined;
-        try {
-          const users = LocalDb.getUsers?.() || [];
-          const matchedUser = users.find(u => 
-            (u.accountNumber && u.accountNumber.replace(/\D/g, '') === cleanAcc) ||
-            (u.name && acc.name && (
-              u.name.toLowerCase() === acc.name.toLowerCase() ||
-              u.name.toLowerCase().includes(acc.name.toLowerCase()) ||
-              acc.name.toLowerCase().includes(u.name.toLowerCase()) ||
-              (acc.name.toLowerCase().includes('global') && u.name.toLowerCase().includes('global'))
-            ))
+        const lowerName = (acc.name || '').toLowerCase();
+        const isGlobal = acc.id === 'acc-global' || cleanAcc === '1000684396671' || cleanAcc === '1000170986671' || lowerName.includes('global');
+
+        // 1. Check if this account belongs to an app user in LocalDb or registered account (O(1) map first)
+        let appUserBal: number | undefined = userBalByAcc.get(cleanAcc) ?? userBalByName.get(lowerName);
+        if (appUserBal === undefined && lowerName) {
+          const matchedUser = cachedUsers.find(u =>
+            u.name && (
+              u.name.toLowerCase().includes(lowerName) ||
+              lowerName.includes(u.name.toLowerCase()) ||
+              (lowerName.includes('global') && u.name.toLowerCase().includes('global'))
+            )
           );
           if (matchedUser) {
-            appUserBal = typeof matchedUser.availableBalance === 'number' 
-              ? matchedUser.availableBalance 
+            appUserBal = typeof matchedUser.availableBalance === 'number'
+              ? matchedUser.availableBalance
               : matchedUser.balance;
           } else {
-            const allAccs = LocalDb.getAllAccounts?.() || [];
-            const matchedAcc = allAccs.find(a => (a.accountNumber && a.accountNumber.replace(/\D/g, '') === cleanAcc));
-            if (matchedAcc) {
-              appUserBal = typeof matchedAcc.availableBalance === 'number' ? matchedAcc.availableBalance : matchedAcc.balance;
-            }
+            appUserBal = allAccBalByAcc.get(cleanAcc);
           }
-        } catch {}
+        }
 
         const presetAvail = SENDER_PRESET_BALANCES[cleanAcc];
-        const txs = this.getCallerTransactions(acc.id);
-        const totalOut = Math.round(txs.filter(t => t.type === 'out').reduce((sum, t) => sum + (t.rawAmount || 0), 0) * 100) / 100;
+        const storedTxs = storedTxMap[acc.id];
+        const totalOut = storedTxs
+          ? Math.round(storedTxs.filter(t => t.type === 'out').reduce((sum, t) => sum + (t.rawAmount || 0), 0) * 100) / 100
+          : 0;
         const currentSent = totalOut > 0 ? totalOut : ((acc.lastTxAmount && acc.lastTxAmount > 0) ? acc.lastTxAmount : 50.0);
 
         let finalAvail: number;
@@ -1059,18 +1143,16 @@ export const PhoneCallService = {
         if (isGlobal) {
           finalAvail = 2500000.00;
           initBal = 2500000.00;
-        } else if (typeof appUserBal === 'number' && !isNaN(appUserBal)) {
-          // App user account (e.g. registered in app): available balance is strictly app balance
+        } else if (typeof appUserBal === 'number' && Number.isFinite(appUserBal)) {
           finalAvail = appUserBal;
           initBal = Math.round((appUserBal + currentSent) * 100) / 100;
-        } else if (typeof presetAvail === 'number' && !isNaN(presetAvail)) {
-          // Known preset account (e.g. Dejene, Kasahun)
+        } else if (typeof presetAvail === 'number' && Number.isFinite(presetAvail)) {
           finalAvail = presetAvail;
           initBal = Math.round((presetAvail + currentSent) * 100) / 100;
-        } else if (typeof acc.initialBalance === 'number' && !isNaN(acc.initialBalance) && acc.initialBalance > currentSent) {
+        } else if (typeof acc.initialBalance === 'number' && Number.isFinite(acc.initialBalance) && acc.initialBalance > currentSent) {
           initBal = Math.round(acc.initialBalance * 100) / 100;
           finalAvail = Math.max(0, Math.round((initBal - currentSent) * 100) / 100);
-        } else if (typeof acc.balance === 'number' && !isNaN(acc.balance) && acc.balance > 0) {
+        } else if (typeof acc.balance === 'number' && Number.isFinite(acc.balance) && acc.balance > 0) {
           finalAvail = Math.round(acc.balance * 100) / 100;
           initBal = Math.round((acc.balance + currentSent) * 100) / 100;
         } else {
@@ -1094,16 +1176,18 @@ export const PhoneCallService = {
       const cleanAcc = (acc.accountNumber || '').replace(/\D/g, '');
       const isProtected = Boolean(
         cleanAcc === '1000170986671' ||
-        acc.name.toLowerCase().includes('global') ||
+        (acc.name || '').toLowerCase().includes('global') ||
         SENDER_PRESET_BALANCES[cleanAcc] ||
         RECEIVER_PRESET_BALANCES[cleanAcc] ||
         liveCbeByAcc.has(cleanAcc)
       );
 
-      let b = acc.availableBalance;
+      let b = Number.isFinite(acc.availableBalance) ? acc.availableBalance : 500;
       if (!isProtected) {
-        while (usedAvail.has(b)) {
+        let guard = 0;
+        while (usedAvail.has(b) && guard < 2000) {
           b = Math.round((b + 0.25) * 100) / 100;
+          guard++;
         }
       }
       acc.availableBalance = b;
@@ -1116,11 +1200,18 @@ export const PhoneCallService = {
 
   mergeCanonicalCbeAccounts(list: CallerAccount[]): CallerAccount[] {
     const merged = [...list];
+    const byCleanAcc = new Map<string, CallerAccount>();
+    for (const a of merged) {
+      const clean = (a.accountNumber || '').replace(/\D/g, '');
+      if (clean && !byCleanAcc.has(clean)) {
+        byCleanAcc.set(clean, a);
+      }
+    }
     try {
       for (const e of ALL_NEW_REGISTERED_ENTRIES) {
         const clean = (e.accountNumber || '').replace(/\D/g, '');
-        if (!clean || merged.some(a => (a.accountNumber || '').replace(/\D/g, '') === clean)) continue;
-        merged.push({
+        if (!clean || byCleanAcc.has(clean)) continue;
+        const entry: CallerAccount = {
           id: 'acc-cbe-' + clean,
           name: e.name,
           phoneNumber: e.phone || '+251911000000',
@@ -1135,7 +1226,9 @@ export const PhoneCallService = {
           simSlot: 1,
           avatarColor: 'from-purple-600 to-indigo-700',
           note: 'CBE Registered Account',
-        });
+        };
+        merged.push(entry);
+        byCleanAcc.set(clean, entry);
       }
     } catch {}
     try {
@@ -1143,14 +1236,14 @@ export const PhoneCallService = {
       for (const cbeAcc of canonicalCbe) {
         const clean = cbeAcc.accountNumber;
         if (!clean) continue;
-        const existing = merged.find(a => (a.accountNumber || '').replace(/\D/g, '') === clean);
+        const existing = byCleanAcc.get(clean);
         if (existing) {
           if (cbeAcc.accountName) existing.name = cbeAcc.accountName;
           if (cbeAcc.phone) existing.phoneNumber = cbeAcc.phone;
           existing.balance = cbeAcc.balance;
           existing.availableBalance = cbeAcc.balance;
         } else {
-          merged.push({
+          const entry: CallerAccount = {
             id: 'acc-cbe-' + clean,
             name: cbeAcc.accountName,
             phoneNumber: cbeAcc.phone || '+251911000000',
@@ -1165,14 +1258,21 @@ export const PhoneCallService = {
             simSlot: 1,
             avatarColor: 'from-purple-600 to-indigo-700',
             note: 'CBE Registered Account',
-          });
+          };
+          merged.push(entry);
+          byCleanAcc.set(clean, entry);
         }
       }
     } catch {}
     return merged;
   },
 
-  getCallerAccounts(): CallerAccount[] {
+  getCallerAccounts(options?: { bypassCache?: boolean }): CallerAccount[] {
+    const now = Date.now();
+    if (!options?.bypassCache && _cachedAccounts && now - _cachedAccountsAt < 1500) {
+      return _cachedAccounts;
+    }
+
     try {
       const data = localStorage.getItem(STORAGE_KEY_CALLER_ACCOUNTS);
       if (data) {
@@ -1194,10 +1294,15 @@ export const PhoneCallService = {
             return 0;
           });
 
-          // Resave sanitized version so localStorage stays clean
-          try {
-            localStorage.setItem(STORAGE_KEY_CALLER_ACCOUNTS, JSON.stringify(sanitized));
-          } catch {}
+          _cachedAccounts = sanitized;
+          _cachedAccountsAt = now;
+
+          // Only persist back when count changed or first load to avoid unnecessary storage writes
+          if (sanitized.length !== parsed.length) {
+            try {
+              localStorage.setItem(STORAGE_KEY_CALLER_ACCOUNTS, JSON.stringify(sanitized));
+            } catch {}
+          }
 
           return sanitized;
         }
@@ -1205,15 +1310,27 @@ export const PhoneCallService = {
     } catch (e) {
       console.error('Failed to load caller accounts', e);
     }
-    const fresh = this.normalizeAccounts(this.mergeCanonicalCbeAccounts([...INITIAL_CALLER_ACCOUNTS]));
-    this.saveCallerAccounts(fresh);
+    const fresh = this.normalizeAccounts(
+      this.mergeCanonicalCbeAccounts(INITIAL_CALLER_ACCOUNTS.map(a => ({ ...a })))
+    );
+    _cachedAccounts = fresh;
+    _cachedAccountsAt = now;
+    try {
+      localStorage.setItem(STORAGE_KEY_CALLER_ACCOUNTS, JSON.stringify(fresh));
+    } catch {}
     return fresh;
   },
 
-  saveCallerAccounts(accounts: CallerAccount[]): void {
+  saveCallerAccounts(accounts: CallerAccount[], options?: { alreadyNormalized?: boolean }): void {
     try {
-      const normalized = this.normalizeAccounts(accounts);
-      localStorage.setItem(STORAGE_KEY_CALLER_ACCOUNTS, JSON.stringify(normalized));
+      const normalized = options?.alreadyNormalized ? accounts : this.normalizeAccounts(accounts);
+      _cachedAccounts = normalized;
+      _cachedAccountsAt = Date.now();
+      try {
+        localStorage.setItem(STORAGE_KEY_CALLER_ACCOUNTS, JSON.stringify(normalized));
+      } catch {
+        // Non-fatal if iOS Safari storage quota is tight
+      }
       window.dispatchEvent(new CustomEvent('caller_accounts_updated', { detail: { accounts: normalized } }));
     } catch (e) {
       console.error('Failed to save caller accounts', e);
@@ -1414,8 +1531,7 @@ export const PhoneCallService = {
       this.saveCallerTransactions(senderAcc.id, senderTxs);
     }
 
-    // Normalize and ensure all accounts have different balances, receivers are 500-150000,
-    // and available balance is total of received amount and initial balance
+    // Normalize ONCE and save cleanly without redundant re-normalization
     this.normalizeAccounts(accounts);
 
     // Sort accounts so that recent transactions are always at the top
@@ -1430,7 +1546,7 @@ export const PhoneCallService = {
       return 0;
     });
 
-    this.saveCallerAccounts(accounts);
+    this.saveCallerAccounts(accounts, { alreadyNormalized: true });
 
     // Add a call interaction between sender and receiver in the call logs
     // Both can call each other!
@@ -1617,14 +1733,34 @@ export const PhoneCallService = {
     } catch {}
   },
 
-  // Scan all past transactions and ensure all senders and receivers have caller accounts
+  // Scan all past transactions and ensure all senders and receivers have caller accounts (fast single-pass batch)
   syncAllTransactionsToCallerAccounts(txs?: Transaction[]): void {
     const raw = txs || LocalDb.getTransactions();
     if (!raw || raw.length === 0) return;
+    invalidateCallerAccountsCache();
     const list = [...raw];
     // Sort oldest first so that the latest transaction is synced last and gets isNow=true and highest timestamp
     list.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-    for (const tx of list) {
+
+    // Skip already-synced transactions so opening Phone is instantaneous
+    const txMap = readStoredTxMapFast();
+    const alreadySyncedTxIds = new Set<string>();
+    for (const items of Object.values(txMap)) {
+      if (!Array.isArray(items)) continue;
+      for (const item of items) {
+        if (item?.id?.startsWith('tx-recv-')) alreadySyncedTxIds.add(item.id.slice('tx-recv-'.length));
+        if (item?.id?.startsWith('tx-send-')) alreadySyncedTxIds.add(item.id.slice('tx-send-'.length));
+      }
+    }
+
+    const pending = list.filter(tx => tx?.id && !alreadySyncedTxIds.has(tx.id));
+    if (pending.length === 0) {
+      // Just ensure accounts cache is fresh
+      this.getCallerAccounts();
+      return;
+    }
+
+    for (const tx of pending) {
       this.syncTransactionToCallerApp(tx, { notify: false });
     }
   }

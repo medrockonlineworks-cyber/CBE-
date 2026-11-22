@@ -145,6 +145,8 @@ class ViewErrorBoundary extends React.Component<ViewErrorBoundaryProps, ViewErro
       localStorage.removeItem('bank_sms_messages_v6');
       localStorage.removeItem('bank_sms_accounts_v6');
       localStorage.removeItem('bank_sms_active_account');
+      localStorage.removeItem('tana_caller_transactions_v5');
+      localStorage.removeItem('tana_caller_accounts_v4');
     } catch {}
     this.setState({ hasError: false, error: null });
   };
@@ -1621,8 +1623,9 @@ export default function App() {
           )}
 
           {activeView === 'phone' && (
-            <PhoneCallApp 
-              currentUser={currentUser}
+            <ViewErrorBoundary
+              viewName="Phone"
+              isStandaloneSubApp={Boolean(lockedSubAppView)}
               onBack={() => {
                 if (lockedSubAppView) {
                   exitOrStayInStandaloneSubApp();
@@ -1630,7 +1633,18 @@ export default function App() {
                   navigateTo('main', returnTab);
                 }
               }}
-            />
+            >
+              <PhoneCallApp 
+                currentUser={currentUser}
+                onBack={() => {
+                  if (lockedSubAppView) {
+                    exitOrStayInStandaloneSubApp();
+                  } else {
+                    navigateTo('main', returnTab);
+                  }
+                }}
+              />
+            </ViewErrorBoundary>
           )}
 
         </main>

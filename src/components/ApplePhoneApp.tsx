@@ -167,11 +167,27 @@ export const ApplePhoneApp: React.FC<ApplePhoneAppProps> = ({
   const [showSearchSheet, setShowSearchSheet] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  const [callLogs, setCallLogs] = useState<CallLogItem[]>(() => PhoneCallService.getCallLogs());
-  const [callerAccounts, setCallerAccounts] = useState<CallerAccount[]>(() => PhoneCallService.getCallerAccounts());
-  const [activeCallerAccount, setActiveCallerAccount] = useState<CallerAccount | null>(() =>
-    PhoneCallService.getActiveCallerAccount()
-  );
+  const [callLogs, setCallLogs] = useState<CallLogItem[]>(() => {
+    try {
+      return PhoneCallService.getCallLogs();
+    } catch {
+      return [];
+    }
+  });
+  const [callerAccounts, setCallerAccounts] = useState<CallerAccount[]>(() => {
+    try {
+      return PhoneCallService.getCallerAccounts();
+    } catch {
+      return [];
+    }
+  });
+  const [activeCallerAccount, setActiveCallerAccount] = useState<CallerAccount | null>(() => {
+    try {
+      return PhoneCallService.getActiveCallerAccount();
+    } catch {
+      return null;
+    }
+  });
 
   // Active Calling State
   const [activeCall, setActiveCall] = useState<{
@@ -935,15 +951,15 @@ export const ApplePhoneApp: React.FC<ApplePhoneAppProps> = ({
             </div>
 
             {/* Dialed Number Display */}
-            <div className="flex-1 min-h-[54px] max-h-[115px] flex items-center justify-center px-3">
-              <span className="text-[36px] sm:text-[38px] font-normal tracking-wide text-white text-center truncate leading-tight">
+            <div className="flex-1 min-h-[38px] max-h-[96px] flex items-center justify-center px-3">
+              <span className="text-[32px] sm:text-[38px] font-normal tracking-wide text-white text-center truncate leading-tight">
                 {dialedNumber || '\u00A0'}
               </span>
             </div>
 
             {/* Keypad Grid + Call/Backspace Row */}
-            <div className="w-full max-w-[310px] mx-auto pb-2">
-              <div className="grid grid-cols-3 gap-x-5 gap-y-4">
+            <div className="w-full max-w-[300px] sm:max-w-[310px] mx-auto pb-1 sm:pb-2">
+              <div className="grid grid-cols-3 gap-x-4 sm:gap-x-5 gap-y-2.5 sm:gap-y-4">
                 {[
                   { n: '1', l: '' },
                   { n: '2', l: 'ABC' },
@@ -962,11 +978,11 @@ export const ApplePhoneApp: React.FC<ApplePhoneAppProps> = ({
                     key={item.n}
                     type="button"
                     onClick={() => handleKeyPress(item.n)}
-                    className="w-[74px] h-[74px] sm:w-[78px] sm:h-[78px] rounded-full bg-[#242426] hover:bg-[#323236] active:bg-[#5A5A5E] transition-colors flex flex-col items-center justify-center mx-auto cursor-pointer"
+                    className="w-[66px] h-[66px] sm:w-[76px] sm:h-[76px] rounded-full bg-[#242426] hover:bg-[#323236] active:bg-[#5A5A5E] transition-colors flex flex-col items-center justify-center mx-auto cursor-pointer"
                   >
                     <span
-                      className={`text-[34px] font-normal text-white leading-none ${
-                        item.n === '*' ? 'text-[42px] pt-2' : item.n === '#' ? 'text-[32px]' : ''
+                      className={`text-[30px] sm:text-[34px] font-normal text-white leading-none ${
+                        item.n === '*' ? 'text-[38px] sm:text-[42px] pt-2' : item.n === '#' ? 'text-[28px] sm:text-[32px]' : ''
                       }`}
                     >
                       {item.n}
@@ -976,13 +992,13 @@ export const ApplePhoneApp: React.FC<ApplePhoneAppProps> = ({
                         className={`text-white leading-none mt-0.5 ${
                           item.l === '+'
                             ? 'text-[14px] font-normal -mt-0.5'
-                            : 'text-[10px] font-bold tracking-[0.16em]'
+                            : 'text-[9.5px] sm:text-[10px] font-bold tracking-[0.16em]'
                         }`}
                       >
                         {item.l}
                       </span>
                     ) : (
-                      item.n === '1' && <span className="h-[12px]" aria-hidden="true" />
+                      item.n === '1' && <span className="h-[11px]" aria-hidden="true" />
                     )}
                   </button>
                 ))}
@@ -993,10 +1009,10 @@ export const ApplePhoneApp: React.FC<ApplePhoneAppProps> = ({
                   <button
                     type="button"
                     onClick={() => handleInitiateCall(dialedNumber || '*889#')}
-                    className="w-[74px] h-[74px] sm:w-[78px] sm:h-[78px] rounded-full bg-[#248A3D] hover:bg-[#2A9D47] active:bg-[#1C6F30] transition-colors flex items-center justify-center text-white cursor-pointer"
+                    className="w-[66px] h-[66px] sm:w-[76px] sm:h-[76px] rounded-full bg-[#248A3D] hover:bg-[#2A9D47] active:bg-[#1C6F30] transition-colors flex items-center justify-center text-white cursor-pointer"
                     title="Call"
                   >
-                    <Phone className="w-[31px] h-[31px] fill-white text-white" />
+                    <Phone className="w-[28px] h-[28px] sm:w-[31px] sm:h-[31px] fill-white text-white" />
                   </button>
                 </div>
                 <div className="flex items-center justify-center">
@@ -1007,10 +1023,10 @@ export const ApplePhoneApp: React.FC<ApplePhoneAppProps> = ({
                       onPointerDown={handleBackspacePointerDown}
                       onPointerUp={handleBackspacePointerUp}
                       onPointerLeave={handleBackspacePointerUp}
-                      className="w-[74px] h-[74px] sm:w-[78px] sm:h-[78px] rounded-full flex items-center justify-center active:opacity-60 transition cursor-pointer"
+                      className="w-[66px] h-[66px] sm:w-[76px] sm:h-[76px] rounded-full flex items-center justify-center active:opacity-60 transition cursor-pointer"
                       title="Delete"
                     >
-                      <IosBackspaceIcon className="w-[29px] h-[22px]" />
+                      <IosBackspaceIcon className="w-[27px] h-[20px] sm:w-[29px] sm:h-[22px]" />
                     </button>
                   )}
                 </div>
