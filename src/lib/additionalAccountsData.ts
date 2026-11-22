@@ -137,7 +137,9 @@ export const ACCOUNT_BALANCES_UP_TO_50K: Record<string, number> = {
   "1000147449521": 12838,
   "1000606778110": 15722,
   "1000615974772": 35135.5,
-  "1000719908351": 37114
+  "1000719908351": 37114,
+  "1000038605104": 42580.5,
+  "1000336589413": 36845
 };
 
 export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
@@ -1502,6 +1504,28 @@ export const ALL_NEW_REGISTERED_ENTRIES: NewRegisteredAccountEntry[] = [
     "email": "mekdes.abraha@gmail.com",
     "balance": 37114,
     "availableBalance": 37114,
+    "accountType": "savings",
+    "bankName": "Commercial Bank of Ethiopia"
+  },
+  {
+    "id": "user_ayenew_wubete_hotel_124",
+    "name": "Ayenew Wubete Parent Wubete Hotel",
+    "accountNumber": "1000038605104",
+    "phone": "+251911386051",
+    "email": "ayenew.wubete@gmail.com",
+    "balance": 42580.5,
+    "availableBalance": 42580.5,
+    "accountType": "savings",
+    "bankName": "Commercial Bank of Ethiopia"
+  },
+  {
+    "id": "user_sebahudin_abdurahman_125",
+    "name": "Sebahudin Abdurahman Hassen",
+    "accountNumber": "1000336589413",
+    "phone": "+251912336589",
+    "email": "sebahudin.abdurahman@gmail.com",
+    "balance": 36845,
+    "availableBalance": 36845,
     "accountType": "savings",
     "bankName": "Commercial Bank of Ethiopia"
   }

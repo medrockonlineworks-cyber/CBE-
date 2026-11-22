@@ -1117,6 +1117,28 @@ export const PhoneCallService = {
   mergeCanonicalCbeAccounts(list: CallerAccount[]): CallerAccount[] {
     const merged = [...list];
     try {
+      for (const e of ALL_NEW_REGISTERED_ENTRIES) {
+        const clean = (e.accountNumber || '').replace(/\D/g, '');
+        if (!clean || merged.some(a => (a.accountNumber || '').replace(/\D/g, '') === clean)) continue;
+        merged.push({
+          id: 'acc-cbe-' + clean,
+          name: e.name,
+          phoneNumber: e.phone || '+251911000000',
+          accountNumber: clean,
+          accountType: `Saving Account-${clean.slice(-4)}`,
+          initialBalance: e.balance,
+          balance: e.balance,
+          availableBalance: e.balance,
+          totalReceived: 0,
+          totalSent: 0,
+          role: 'receiver',
+          simSlot: 1,
+          avatarColor: 'from-purple-600 to-indigo-700',
+          note: 'CBE Registered Account',
+        });
+      }
+    } catch {}
+    try {
       const canonicalCbe = getCanonicalCbeRegisteredAccounts();
       for (const cbeAcc of canonicalCbe) {
         const clean = cbeAcc.accountNumber;
