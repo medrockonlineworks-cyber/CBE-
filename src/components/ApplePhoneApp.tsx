@@ -15,12 +15,14 @@ import {
   ChevronRight,
   Info,
   Check,
+  Bell,
 } from 'lucide-react';
 import { UserProfile, Transaction } from '../types';
 import { PhoneCallService, CallLogItem, CallerAccount, AccountTransactionItem } from '../services/phoneCallService';
 import { LocalDb } from '../lib/mockData';
 import { SmsService } from '../services/smsService';
 import { TruecallerService } from '../services/truecallerService';
+import SubAppPushModal from './SubAppPushModal';
 
 interface ApplePhoneAppProps {
   currentUser?: UserProfile | null;
@@ -165,6 +167,7 @@ export const ApplePhoneApp: React.FC<ApplePhoneAppProps> = ({
   const [recentsFilter, setRecentsFilter] = useState<'all' | 'missed'>('all');
   const [dialedNumber, setDialedNumber] = useState<string>('');
   const [showSearchSheet, setShowSearchSheet] = useState<boolean>(false);
+  const [showPushModal, setShowPushModal] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
   const [callLogs, setCallLogs] = useState<CallLogItem[]>(() => {
@@ -1046,24 +1049,35 @@ export const ApplePhoneApp: React.FC<ApplePhoneAppProps> = ({
           <div className="flex-1 overflow-y-auto px-4 pt-[max(env(safe-area-inset-top,0px),14px)] pb-24">
             <div className="flex items-center justify-between mb-3">
               <h1 className="text-[32px] font-bold tracking-tight text-white">Calls</h1>
-              <div className="flex items-center bg-[#1C1C1E] p-0.5 rounded-full border border-white/10">
+              <div className="flex items-center gap-2">
+                <div className="flex items-center bg-[#1C1C1E] p-0.5 rounded-full border border-white/10">
+                  <button
+                    type="button"
+                    onClick={() => setRecentsFilter('all')}
+                    className={`px-3 py-1 text-xs font-semibold rounded-full transition cursor-pointer ${
+                      recentsFilter === 'all' ? 'bg-[#3A3A3C] text-white' : 'text-[#8E8E93]'
+                    }`}
+                  >
+                    All
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRecentsFilter('missed')}
+                    className={`px-3 py-1 text-xs font-semibold rounded-full transition cursor-pointer ${
+                      recentsFilter === 'missed' ? 'bg-[#3A3A3C] text-white' : 'text-[#8E8E93]'
+                    }`}
+                  >
+                    Missed
+                  </button>
+                </div>
                 <button
                   type="button"
-                  onClick={() => setRecentsFilter('all')}
-                  className={`px-3 py-1 text-xs font-semibold rounded-full transition cursor-pointer ${
-                    recentsFilter === 'all' ? 'bg-[#3A3A3C] text-white' : 'text-[#8E8E93]'
-                  }`}
+                  onClick={() => setShowPushModal(true)}
+                  className="w-8 h-8 rounded-full bg-[#1C1C1E] border border-white/10 flex items-center justify-center text-[#0A84FF] active:opacity-70 transition cursor-pointer"
+                  title="Install Standalone Phone App & Push Settings"
+                  aria-label="Phone App Install & Push Settings"
                 >
-                  All
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRecentsFilter('missed')}
-                  className={`px-3 py-1 text-xs font-semibold rounded-full transition cursor-pointer ${
-                    recentsFilter === 'missed' ? 'bg-[#3A3A3C] text-white' : 'text-[#8E8E93]'
-                  }`}
-                >
-                  Missed
+                  <Bell className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -1471,6 +1485,12 @@ export const ApplePhoneApp: React.FC<ApplePhoneAppProps> = ({
           </div>
         </div>
       )}
+      <SubAppPushModal
+        isOpen={showPushModal}
+        onClose={() => setShowPushModal(false)}
+        subAppId="phone"
+        isDarkMode={true}
+      />
     </div>
   );
 };

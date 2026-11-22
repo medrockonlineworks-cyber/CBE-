@@ -535,9 +535,6 @@ export class SubAppInstallService {
       }
     }
 
-    // Apply latest uploaded logo to <head> manifest & Apple Touch Icon immediately
-    AppLogoService.applyHeadBrandingForApp(subAppId, { isIPhone: isIosSms });
-
     const ua = typeof navigator !== 'undefined' ? navigator.userAgent || '' : '';
     const isIOS =
       /iPad|iPhone|iPod/i.test(ua) ||
@@ -545,11 +542,22 @@ export class SubAppInstallService {
         navigator.platform === 'MacIntel' &&
         navigator.maxTouchPoints > 1);
 
+    const bootedSubApp =
+      typeof window !== 'undefined'
+        ? (window as unknown as { __CBE_LOCKED_SUBAPP__?: string }).__CBE_LOCKED_SUBAPP__
+        : undefined;
+    const isDirectlyLoadedSubApp =
+      bootedSubApp === subAppId && AppLogoService.detectAppIdFromPath() === subAppId;
+
+    // Only mutate <head> manifest/icon when we are ALREADY directly booted on this sub-app's standalone HTML
+    if (isDirectlyLoadedSubApp) {
+      AppLogoService.applyHeadBrandingForApp(subAppId, { isIPhone: isIosSms });
+    }
+
     if (isIOS) {
       const fullUrl =
         typeof window !== 'undefined' ? `${window.location.origin}${routePath}` : routePath;
-      const onSubAppRoute = AppLogoService.detectAppIdFromPath() === subAppId;
-      if (onSubAppRoute) {
+      if (isDirectlyLoadedSubApp) {
         return {
           ok: true,
           mode: 'ios_safari',
@@ -557,6 +565,21 @@ export class SubAppInstallService {
           message: hasCustom
             ? `Your custom ${meta.shortName} logo is ready! Tap Safari Share (↑) → Add to Home Screen to install ${meta.shortName} with your uploaded logo.`
             : `Tap Safari Share (↑) → Add to Home Screen right here to install ${meta.shortName} with its own icon.`,
+        };
+      }
+      // If inside Safari browser (not standalone CBE PWA), navigate directly to the dedicated standalone HTML
+      // so Safari loads /phone/index.html with start_url="/phone/" before Add to Home Screen!
+      const isStandalonePwa =
+        typeof window !== 'undefined' &&
+        (window.matchMedia('(display-mode: standalone)').matches ||
+          (window.navigator as unknown as { standalone?: boolean }).standalone === true);
+      if (!isStandalonePwa && typeof window !== 'undefined') {
+        window.location.assign(routePath);
+        return {
+          ok: true,
+          mode: 'ios_safari',
+          routePath,
+          message: `Opening standalone ${meta.shortName} (${routePath}) — tap Safari Share (↑) → Add to Home Screen.`,
         };
       }
       let copied = false;
@@ -571,8 +594,8 @@ export class SubAppInstallService {
         mode: 'ios_safari',
         routePath,
         message: copied
-          ? `Link copied (${routePath})! Open iPhone Safari, paste it, then tap Share → Add to Home Screen for ${meta.shortName} with ${hasCustom ? 'your uploaded custom logo' : 'its own icon'}.`
-          : `Open ${fullUrl} in iPhone Safari, then tap Share → Add to Home Screen for ${meta.shortName}.`,
+          ? `Link copied (${routePath})! Open iPhone Safari, paste it, then tap Share → Add to Home Screen so ${meta.shortName} opens directly without CBE.`
+          : `Open ${fullUrl} in iPhone Safari, then tap Share → Add to Home Screen so ${meta.shortName} opens directly without CBE.`,
       };
     }
 

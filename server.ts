@@ -8,40 +8,63 @@ import { createApkRouter } from './server/apkRoutes.ts';
 import { createSyncRouter } from './server/syncRoutes.ts';
 
 interface SubAppBranding {
+  slug: string;
   title: string;
   icon: string;
   manifest: string;
   themeColor: string;
+  bgColor: string;
 }
 
 const SUBAPP_IOS_BRANDING: Record<string, SubAppBranding> = {
   '/sms': {
+    slug: 'sms',
     title: 'Messages',
     icon: '/icons/notif-sms-ios.png',
     manifest: '/manifests/subapp-sms.webmanifest',
     themeColor: '#000000',
+    bgColor: '#000000',
   },
   '/truecaller': {
+    slug: 'truecaller',
     title: 'Truecaller',
     icon: '/icons/notif-truecaller.png',
     manifest: '/manifests/subapp-truecaller.webmanifest',
     themeColor: '#0066FF',
+    bgColor: '#0b1220',
   },
   '/phone': {
+    slug: 'phone',
     title: 'Phone',
     icon: '/icons/notif-phone.png',
     manifest: '/manifests/subapp-phone.webmanifest',
-    themeColor: '#16a34a',
+    themeColor: '#000000',
+    bgColor: '#000000',
   },
 };
 
+function getSubAppBrandingForPath(reqPath: string): SubAppBranding | null {
+  const firstSeg = (reqPath || '').toLowerCase().replace(/^\/+|\/+$/g, '').split('/')[0] || '';
+  return SUBAPP_IOS_BRANDING[`/${firstSeg}`] || null;
+}
+
 function applySubAppHeadBranding(html: string, reqPath: string): string {
-  const normalized = (reqPath || '').toLowerCase().replace(/\/+$/, '') || '/';
-  const brand = SUBAPP_IOS_BRANDING[normalized];
+  const brand = getSubAppBrandingForPath(reqPath);
   if (!brand) return html;
+
+  const bootLockTag = `<script>window.__CBE_LOCKED_SUBAPP__="${brand.slug}";window.__CBE_INITIAL_SUBAPP__="${brand.slug}";</script><style id="subapp-static-bg">html,body,#root{background-color:${brand.bgColor}!important;}</style>`;
 
   return html
     .replace(/<link\s+rel="manifest"\s+href="\/manifest\.webmanifest"\s*\/?>/gi, '')
+    .replace(
+      /<html([^>]*)class="([^"]*?)bg-white([^"]*?)"/i,
+      `<html$1class="$2bg-black$3" style="background-color:${brand.bgColor}"`
+    )
+    .replace(
+      /<body([^>]*)class="([^"]*?)bg-white([^"]*?)"/i,
+      `<body$1class="$2bg-black$3" style="background-color:${brand.bgColor}"`
+    )
+    .replace(/<head>/i, `<head>\n    ${bootLockTag}`)
     .replace(/<title>[^<]*<\/title>/i, `<title>${brand.title}</title>`)
     .replace(
       /(<meta\s+name="apple-mobile-web-app-title"\s+content=")[^"]*(")/i,
@@ -58,6 +81,18 @@ function applySubAppHeadBranding(html: string, reqPath: string): string {
     .replace(
       /(<meta\s+name="theme-color"\s+content=")[^"]*(")/i,
       `$1${brand.themeColor}$2`
+    )
+    .replace(
+      /(<meta\s+name="msapplication-navbutton-color"\s+content=")[^"]*(")/i,
+      `$1${brand.bgColor}$2`
+    )
+    .replace(
+      /(<meta\s+name="navigation-bar-color"\s+content=")[^"]*(")/i,
+      `$1${brand.bgColor}$2`
+    )
+    .replace(
+      /(<meta\s+name="color-scheme"\s+content=")[^"]*(")/i,
+      `$1dark$2`
     )
     .replace(
       /(<link\s+id="pwa-manifest-link"\s+rel="manifest"\s+href=")[^"]*(")/i,
@@ -134,7 +169,7 @@ async function startServer() {
     });
 
     // Serve sub-app branded HTML head for iPhone Safari "Add to Home Screen"
-    const devSubAppPaths = Object.keys(SUBAPP_IOS_BRANDING).flatMap((p) => [p, `${p}/`]);
+    const devSubAppPaths = Object.keys(SUBAPP_IOS_BRANDING).flatMap((p) => [p, `${p}/`, `${p}/index.html`]);
     app.get(devSubAppPaths, async (req, res, next) => {
       try {
         const indexPath = path.resolve(process.cwd(), 'index.html');
@@ -154,10 +189,9 @@ async function startServer() {
     app.get('*', (req, res) => {
       const indexFile = path.join(prodDistDir, 'index.html');
       if (fs.existsSync(indexFile)) {
-        const normalized = (req.path || '').toLowerCase().replace(/\/+$/, '') || '/';
-        if (SUBAPP_IOS_BRANDING[normalized]) {
+        if (getSubAppBrandingForPath(req.path)) {
           const rawHtml = fs.readFileSync(indexFile, 'utf-8');
-          const brandedHtml = applySubAppHeadBranding(rawHtml, normalized);
+          const brandedHtml = applySubAppHeadBranding(rawHtml, req.path);
           res.status(200).set({ 'Content-Type': 'text/html' }).send(brandedHtml);
           return;
         }

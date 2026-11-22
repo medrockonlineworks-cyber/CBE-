@@ -73,6 +73,10 @@ export const SubAppPermissionBanner: React.FC<SubAppPermissionBannerProps> = ({ 
   const isIosSms = subAppId === 'sms' && PhoneSettingsService.isIPhoneMode();
   const logoSrc = isIosSms ? '/icons/notif-sms-ios.png' : meta.webIcon;
   const accentColor = isIosSms ? '#16C64F' : meta.color;
+  const isDirectlyLoadedSubApp =
+    typeof window !== 'undefined' &&
+    (window as unknown as { __CBE_LOCKED_SUBAPP__?: string }).__CBE_LOCKED_SUBAPP__ === subAppId;
+  const standaloneRoute = `/${subAppId}/`;
 
   const handleDismiss = () => {
     setDismissed(true);
@@ -134,7 +138,9 @@ export const SubAppPermissionBanner: React.FC<SubAppPermissionBannerProps> = ({ 
               {justEnabled
                 ? `New ${meta.shortName} alerts will appear on your Lock Screen with ${meta.shortName}'s logo.`
                 : caps.requiresIosHomeScreenInstall
-                  ? `Tap Safari Share → Add to Home Screen to install ${meta.shortName} with its own iPhone icon and Lock Screen alerts.`
+                  ? isDirectlyLoadedSubApp
+                    ? `Tap Safari Share → Add to Home Screen to install ${meta.shortName} so it opens directly without CBE.`
+                    : `Open standalone ${meta.shortName} in Safari first, then tap Share → Add to Home Screen so it opens directly without CBE.`
                   : `Show new ${meta.shortName} alerts on your Lock Screen & Notification Center as ${meta.shortName}.`}
             </p>
           </div>
@@ -152,19 +158,39 @@ export const SubAppPermissionBanner: React.FC<SubAppPermissionBannerProps> = ({ 
             <span>Ready to receive {meta.shortName} alerts</span>
           </div>
         ) : caps.requiresIosHomeScreenInstall ? (
-          <div className="flex items-center justify-between gap-2 pt-0.5">
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-300">
-              <Share className="w-3.5 h-3.5 shrink-0" />
-              <span>Share → Add to Home Screen</span>
-            </span>
-            <button
-              type="button"
-              onClick={handleDismiss}
-              className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-xs font-semibold text-white transition cursor-pointer"
-            >
-              Got it
-            </button>
-          </div>
+          isDirectlyLoadedSubApp ? (
+            <div className="flex items-center justify-between gap-2 pt-0.5">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-300">
+                <Share className="w-3.5 h-3.5 shrink-0" />
+                <span>Share → Add to Home Screen</span>
+              </span>
+              <button
+                type="button"
+                onClick={handleDismiss}
+                className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/15 text-xs font-semibold text-white transition cursor-pointer"
+              >
+                Got it
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2 pt-0.5">
+              <button
+                type="button"
+                onClick={handleDismiss}
+                className="py-2 px-3 rounded-xl bg-white/10 hover:bg-white/15 text-neutral-200 text-xs font-semibold transition cursor-pointer"
+              >
+                Not now
+              </button>
+              <a
+                href={standaloneRoute}
+                style={{ backgroundColor: accentColor }}
+                className="py-2 px-3 rounded-xl text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm hover:opacity-95 active:scale-[0.99] transition"
+              >
+                <Share className="w-3.5 h-3.5 shrink-0" />
+                <span>Open Standalone</span>
+              </a>
+            </div>
+          )
         ) : (
           <div className="grid grid-cols-2 gap-2 pt-0.5">
             <button

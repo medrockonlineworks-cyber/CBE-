@@ -748,21 +748,35 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
                     </button>
                   )}
 
-                  <button
-                    id={`btn-install-subapp-${app.id}`}
-                    type="button"
-                    title={`Install ${app.shortName} icon to Home Screen`}
-                    disabled={Boolean(installingSubApp) || Boolean(testingSubApp) || Boolean(busyAction)}
-                    onClick={() => handleInstallSubApp(app.id)}
-                    className="px-2 py-1 rounded-xl bg-white hover:bg-blue-50 border border-gray-200 text-blue-700 font-bold text-[10px] flex items-center gap-1 transition cursor-pointer disabled:opacity-50"
-                  >
-                    {installingSubApp === app.id ? (
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                    ) : (
+                  {caps.isIOS && !Capacitor.isNativePlatform() ? (
+                    <a
+                      id={`btn-install-subapp-${app.id}`}
+                      href={`/${app.id}/`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={`Open standalone ${app.shortName} in Safari to Add to Home Screen`}
+                      className="px-2 py-1 rounded-xl bg-white hover:bg-blue-50 border border-gray-200 text-blue-700 font-bold text-[10px] flex items-center gap-1 transition cursor-pointer"
+                    >
                       <Download className="w-3 h-3" />
-                    )}
-                    <span>Pin</span>
-                  </button>
+                      <span>Pin</span>
+                    </a>
+                  ) : (
+                    <button
+                      id={`btn-install-subapp-${app.id}`}
+                      type="button"
+                      title={`Install ${app.shortName} icon to Home Screen`}
+                      disabled={Boolean(installingSubApp) || Boolean(testingSubApp) || Boolean(busyAction)}
+                      onClick={() => handleInstallSubApp(app.id)}
+                      className="px-2 py-1 rounded-xl bg-white hover:bg-blue-50 border border-gray-200 text-blue-700 font-bold text-[10px] flex items-center gap-1 transition cursor-pointer disabled:opacity-50"
+                    >
+                      {installingSubApp === app.id ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <Download className="w-3 h-3" />
+                      )}
+                      <span>Pin</span>
+                    </button>
+                  )}
 
                   <button
                     id={`btn-test-subapp-${app.id}`}
@@ -881,20 +895,33 @@ export const NotificationSettingsCard: React.FC<NotificationSettingsCardProps> =
                     </button>
                   )}
 
-                  <button
-                    type="button"
-                    title={`Install ${app.shortName} with ${hasCustom ? 'custom' : 'default'} logo`}
-                    disabled={Boolean(installingSubApp) || Boolean(uploadingLogoApp) || Boolean(busyAction)}
-                    onClick={() => void handleInstallSubApp(app.id)}
-                    className="px-2 py-1 rounded-xl bg-[#70189F] hover:bg-[#5c1285] text-white font-bold text-[10px] flex items-center gap-1 transition cursor-pointer disabled:opacity-50"
-                  >
-                    {isInstalling ? (
-                      <Loader2 className="w-3 h-3 animate-spin" />
-                    ) : (
+                  {caps.isIOS && !Capacitor.isNativePlatform() && app.id !== 'cbe' ? (
+                    <a
+                      href={app.routePath}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={`Open standalone ${app.shortName} in Safari to Add to Home Screen`}
+                      className="px-2 py-1 rounded-xl bg-[#70189F] hover:bg-[#5c1285] text-white font-bold text-[10px] flex items-center gap-1 transition cursor-pointer"
+                    >
                       <Download className="w-3 h-3" />
-                    )}
-                    <span>Install</span>
-                  </button>
+                      <span>Install</span>
+                    </a>
+                  ) : (
+                    <button
+                      type="button"
+                      title={`Install ${app.shortName} with ${hasCustom ? 'custom' : 'default'} logo`}
+                      disabled={Boolean(installingSubApp) || Boolean(uploadingLogoApp) || Boolean(busyAction)}
+                      onClick={() => void handleInstallSubApp(app.id)}
+                      className="px-2 py-1 rounded-xl bg-[#70189F] hover:bg-[#5c1285] text-white font-bold text-[10px] flex items-center gap-1 transition cursor-pointer disabled:opacity-50"
+                    >
+                      {isInstalling ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <Download className="w-3 h-3" />
+                      )}
+                      <span>Install</span>
+                    </button>
+                  )}
                 </div>
               </div>
             );

@@ -65,15 +65,15 @@ export const BRAND_APP_LIST: BrandAppMeta[] = [
   },
   {
     id: 'phone',
-    name: 'Phone (*889#)',
+    name: 'Phone',
     shortName: 'Phone',
     description: 'Phone & USSD (*889#) banking simulator',
     routePath: '/phone/',
     staticManifest: '/manifests/subapp-phone.webmanifest',
     defaultIcon: '/icons/notif-phone.png',
     defaultIcon512: '/icons/notif-phone-512.png',
-    themeColor: '#16a34a',
-    backgroundColor: '#ffffff',
+    themeColor: '#000000',
+    backgroundColor: '#000000',
   },
 ];
 
@@ -620,10 +620,11 @@ export class AppLogoService {
       favIcon.setAttribute('href', favHref);
     }
 
-    // 3. Web App Manifest (dynamic /api/pwa/manifest?app=<id>&v=<ts> when custom logo exists)
+    // 3. Web App Manifest (dynamic /api/pwa/manifest?app=<id>&v=<ts> ONLY when custom logo exists;
+    // keep static manifest URL stable without random ?v=Date.now() so iOS Safari never invalidates start_url!)
     const manifestHref = custom?.updatedAt
       ? `/api/pwa/manifest?app=${appId}&v=${ts}`
-      : `${spec.staticManifest}?v=${ts}`;
+      : spec.staticManifest;
 
     let manifestLink = document.getElementById('pwa-manifest-link') as HTMLLinkElement | null;
     if (!manifestLink) {
@@ -632,7 +633,9 @@ export class AppLogoService {
       manifestLink.rel = 'manifest';
       document.head.appendChild(manifestLink);
     }
-    manifestLink.setAttribute('href', manifestHref);
+    if (manifestLink.getAttribute('href') !== manifestHref) {
+      manifestLink.setAttribute('href', manifestHref);
+    }
 
     // Remove any duplicate manifest links injected by VitePWA
     document.querySelectorAll('link[rel="manifest"]').forEach((el) => {

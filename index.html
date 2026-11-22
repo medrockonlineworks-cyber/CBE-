@@ -39,16 +39,21 @@
           var standaloneMatch = ua.match(/CBE_STANDALONE_FLAVOR\/(sms|truecaller|phone)/i);
           var launchMatch = ua.match(/CBE_LAUNCH_VIEW\/(sms|truecaller|phone)/i);
           var path = (window.location.pathname || '').toLowerCase().replace(/\/+$/, '') || '/';
+          var firstSeg = path.replace(/^\/+/, '').split('/')[0] || '';
           var params = new URLSearchParams(window.location.search || '');
           var appParam = (params.get('app') || params.get('view') || '').toLowerCase();
           var hash = (window.location.hash || '').toLowerCase();
 
           var pathSubApp = null;
-          if (path === '/sms' || appParam === 'sms' || hash === '#sms' || hash === '#/sms') pathSubApp = 'sms';
-          else if (path === '/truecaller' || appParam === 'truecaller' || hash === '#truecaller' || hash === '#/truecaller') pathSubApp = 'truecaller';
-          else if (path === '/phone' || appParam === 'phone' || hash === '#phone' || hash === '#/phone') pathSubApp = 'phone';
+          if (firstSeg === 'sms' || appParam === 'sms' || hash === '#sms' || hash.indexOf('#/sms') === 0) pathSubApp = 'sms';
+          else if (firstSeg === 'truecaller' || appParam === 'truecaller' || hash === '#truecaller' || hash.indexOf('#/truecaller') === 0) pathSubApp = 'truecaller';
+          else if (firstSeg === 'phone' || appParam === 'phone' || hash === '#phone' || hash.indexOf('#/phone') === 0) pathSubApp = 'phone';
 
-          var lockedSubApp = standaloneMatch ? standaloneMatch[1].toLowerCase() : pathSubApp;
+          var presetLocked = window.__CBE_LOCKED_SUBAPP__;
+          var lockedSubApp =
+            (presetLocked === 'sms' || presetLocked === 'truecaller' || presetLocked === 'phone')
+              ? presetLocked
+              : (standaloneMatch ? standaloneMatch[1].toLowerCase() : pathSubApp);
           var initialSubApp = lockedSubApp || (launchMatch ? launchMatch[1].toLowerCase() : null);
 
           if (lockedSubApp) {
@@ -57,8 +62,8 @@
           if (initialSubApp) {
             window.__CBE_INITIAL_SUBAPP__ = initialSubApp;
             var metaMap = {
-              sms: { bg: '#121212', title: 'Messages' },
-              truecaller: { bg: '#121316', title: 'Truecaller' },
+              sms: { bg: '#000000', title: 'Messages' },
+              truecaller: { bg: '#0b1220', title: 'Truecaller' },
               phone: { bg: '#000000', title: 'Phone' }
             };
             var m = metaMap[initialSubApp];

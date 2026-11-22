@@ -191,13 +191,14 @@ function pwaBrandingSyncPlugin() {
 function subAppStandaloneHtmlPlugin() {
   const SUBAPPS: Record<
     string,
-    { title: string; icon: string; manifest: string; themeColor: string; description: string }
+    { title: string; icon: string; manifest: string; themeColor: string; bgColor: string; description: string }
   > = {
     sms: {
       title: 'Messages',
       icon: '/icons/notif-sms-ios.png',
       manifest: '/manifests/subapp-sms.webmanifest',
       themeColor: '#000000',
+      bgColor: '#000000',
       description: 'Messages — SMS & Bank Alerts',
     },
     truecaller: {
@@ -205,13 +206,15 @@ function subAppStandaloneHtmlPlugin() {
       icon: '/icons/notif-truecaller.png',
       manifest: '/manifests/subapp-truecaller.webmanifest',
       themeColor: '#0066FF',
+      bgColor: '#0b1220',
       description: 'Truecaller — Caller ID & Bank SMS Alerts',
     },
     phone: {
       title: 'Phone',
       icon: '/icons/notif-phone.png',
       manifest: '/manifests/subapp-phone.webmanifest',
-      themeColor: '#16a34a',
+      themeColor: '#000000',
+      bgColor: '#000000',
       description: 'Phone & USSD (*889#)',
     },
   };
@@ -234,7 +237,17 @@ function subAppStandaloneHtmlPlugin() {
       }
 
       for (const [slug, brand] of Object.entries(SUBAPPS)) {
+        const bootLockTag = `<script>window.__CBE_LOCKED_SUBAPP__="${slug}";window.__CBE_INITIAL_SUBAPP__="${slug}";</script><style id="subapp-static-bg">html,body,#root{background-color:${brand.bgColor}!important;}</style>`;
         const subHtml = cleanedBaseHtml
+          .replace(
+            /<html([^>]*)class="([^"]*?)bg-white([^"]*?)"/i,
+            `<html$1class="$2bg-black$3" style="background-color:${brand.bgColor}"`
+          )
+          .replace(
+            /<body([^>]*)class="([^"]*?)bg-white([^"]*?)"/i,
+            `<body$1class="$2bg-black$3" style="background-color:${brand.bgColor}"`
+          )
+          .replace(/<head>/i, `<head>\n    ${bootLockTag}`)
           .replace(/<title>[^<]*<\/title>/i, `<title>${brand.title}</title>`)
           .replace(
             /(<meta\s+name="description"\s+content=")[^"]*(")/i,
@@ -259,6 +272,18 @@ function subAppStandaloneHtmlPlugin() {
           .replace(
             /(<meta\s+name="theme-color"\s+content=")[^"]*(")/i,
             `$1${brand.themeColor}$2`
+          )
+          .replace(
+            /(<meta\s+name="msapplication-navbutton-color"\s+content=")[^"]*(")/i,
+            `$1${brand.bgColor}$2`
+          )
+          .replace(
+            /(<meta\s+name="navigation-bar-color"\s+content=")[^"]*(")/i,
+            `$1${brand.bgColor}$2`
+          )
+          .replace(
+            /(<meta\s+name="color-scheme"\s+content=")[^"]*(")/i,
+            `$1dark$2`
           )
           .replace(
             /(<link\s+id="pwa-manifest-link"\s+rel="manifest"\s+href=")[^"]*(")/i,

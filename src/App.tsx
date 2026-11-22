@@ -60,12 +60,13 @@ function detectLockedSubAppSync(): SubAppViewId | null {
     }
     if (!Capacitor.isNativePlatform()) {
       const path = (window.location.pathname || '').toLowerCase().replace(/\/+$/, '') || '/';
+      const firstSeg = path.replace(/^\/+/, '').split('/')[0] || '';
       const search = new URLSearchParams(window.location.search);
       const appParam = (search.get('app') || search.get('view') || '').toLowerCase();
       const hash = (window.location.hash || '').toLowerCase();
-      if (path === '/sms' || appParam === 'sms' || hash === '#sms' || hash === '#/sms') return 'sms';
-      if (path === '/truecaller' || appParam === 'truecaller' || hash === '#truecaller' || hash === '#/truecaller') return 'truecaller';
-      if (path === '/phone' || appParam === 'phone' || hash === '#phone' || hash === '#/phone') return 'phone';
+      if (firstSeg === 'sms' || appParam === 'sms' || hash === '#sms' || hash.startsWith('#/sms')) return 'sms';
+      if (firstSeg === 'truecaller' || appParam === 'truecaller' || hash === '#truecaller' || hash.startsWith('#/truecaller')) return 'truecaller';
+      if (firstSeg === 'phone' || appParam === 'phone' || hash === '#phone' || hash.startsWith('#/phone')) return 'phone';
     }
   } catch {
     // Safe fallback
@@ -225,6 +226,7 @@ export default function App() {
     }
     if (typeof window !== 'undefined') {
       const path = (window.location.pathname || '').toLowerCase().replace(/\/+$/, '') || '/';
+      const firstSeg = path.replace(/^\/+/, '').split('/')[0] || '';
       const search = new URLSearchParams(window.location.search);
       const appParam = (search.get('app') || search.get('view') || '').toLowerCase();
       const hash = (window.location.hash || '').toLowerCase();
@@ -232,9 +234,9 @@ export default function App() {
       const pathId = extractWebReceiptIdFromPath(window.location.pathname);
 
       if (pathId || path === '/webreceipt' || appParam === 'webreceipt' || hash === '#webreceipt' || hash === '#/webreceipt') return 'webreceipt';
-      if (path === '/sms' || appParam === 'sms' || hash === '#sms' || hash === '#/sms') return 'sms';
-      if (path === '/truecaller' || appParam === 'truecaller' || hash === '#truecaller' || hash === '#/truecaller') return 'truecaller';
-      if (path === '/phone' || appParam === 'phone' || hash === '#phone' || hash === '#/phone') return 'phone';
+      if (firstSeg === 'sms' || appParam === 'sms' || hash === '#sms' || hash.startsWith('#/sms')) return 'sms';
+      if (firstSeg === 'truecaller' || appParam === 'truecaller' || hash === '#truecaller' || hash.startsWith('#/truecaller')) return 'truecaller';
+      if (firstSeg === 'phone' || appParam === 'phone' || hash === '#phone' || hash.startsWith('#/phone')) return 'phone';
       if (path === '/admin' || appParam === 'admin' || hash === '#admin') return 'admin';
       if (path === '/main' || appParam === 'main' || hash === '#main') return 'main';
     }
@@ -536,14 +538,9 @@ export default function App() {
   // Sync page title, Apple Touch Icon & dynamic PWA manifest with active app & any custom uploaded logo
   useEffect(() => {
     if (typeof document === 'undefined') return;
-    const validBrandApps: BrandAppId[] = [
-      'sms',
-      'truecaller',
-      'phone',
-    ];
-    const activeBrandApp: BrandAppId = (validBrandApps as string[]).includes(activeView)
-      ? (activeView as BrandAppId)
-      : 'cbe';
+    // Only apply sub-app manifest/icon branding when actually booted in that standalone sub-app
+    // so iOS Safari never bookmarks CBE's root document with a sub-app icon + CBE start_url ('/')!
+    const activeBrandApp: BrandAppId = lockedSubAppView ? lockedSubAppView : 'cbe';
 
     const applyNow = () => {
       AppLogoService.applyHeadBrandingForApp(activeBrandApp, { isIPhone });
@@ -554,7 +551,7 @@ export default function App() {
     return () => {
       window.removeEventListener('cbe_app_logos_updated', applyNow);
     };
-  }, [activeView, isIPhone]);
+  }, [lockedSubAppView, isIPhone]);
 
   // Attach Service Worker notification click & subscription renewal listeners + deep-link handler
   const currentUserRef = useRef<UserProfile | null>(currentUser);
