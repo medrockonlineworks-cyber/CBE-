@@ -50,6 +50,8 @@ interface HomeProps {
   initialNavTab?: 'home' | 'history';
   initialDetailTxId?: string | null;
   onClearInitialDetailTx?: () => void;
+  autoSyncOnMount?: boolean;
+  onAutoSyncHandled?: () => void;
   onNavigateToTab?: (tab: 'home' | 'transfer' | 'payments' | 'history' | 'profile', subTab?: string) => void;
   onSelectTransaction?: (tx: Transaction) => void;
   onOpenAdmin?: () => void;
@@ -66,6 +68,8 @@ export const Home: React.FC<HomeProps> = ({
   initialNavTab = 'home',
   initialDetailTxId = null,
   onClearInitialDetailTx,
+  autoSyncOnMount = false,
+  onAutoSyncHandled,
   onNavigateToTab,
   onSelectTransaction,
   onOpenAdmin,
@@ -112,9 +116,10 @@ export const Home: React.FC<HomeProps> = ({
   const [currentDateTime, setCurrentDateTime] = useState('01 Jul 2026 • 10:14 AM');
   const [customLogoUrl, setCustomLogoUrl] = useState<string | null>(null);
 
-  // Account Sync Feedback State (Triggered ONLY by rotating button, matching IMG_1213)
+  // Account Sync Feedback State (Triggered by rotating button or automatically after closing receipt)
   const [showAccountSynced, setShowAccountSynced] = useState(false);
-  const accountSyncedTimerRef = useRef<any>(null);
+  const accountSyncedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const refreshSpinTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mainScrollRef = useRef<HTMLElement | null>(null);
 
   // Transaction history filter state
@@ -325,7 +330,7 @@ export const Home: React.FC<HomeProps> = ({
     return () => clearInterval(interval);
   }, [loadTransactions, updateTime]);
 
-  // Refresh triggered ONLY by rotating button in top header
+  // Refresh triggered by rotating button in top header or automatically after closing a receipt
   const handleRefresh = useCallback(async () => {
     if (isRefreshing) return;
     setIsRefreshing(true);
@@ -333,6 +338,9 @@ export const Home: React.FC<HomeProps> = ({
 
     if (accountSyncedTimerRef.current) {
       clearTimeout(accountSyncedTimerRef.current);
+    }
+    if (refreshSpinTimerRef.current) {
+      clearTimeout(refreshSpinTimerRef.current);
     }
 
     // 1. Fetch freshest user data from LocalDb
@@ -352,7 +360,7 @@ export const Home: React.FC<HomeProps> = ({
     window.dispatchEvent(new CustomEvent('cbe_balance_refreshed', { detail: { balance: freshUser.balance } }));
 
     // Stop button spinning after 850ms
-    setTimeout(() => {
+    refreshSpinTimerRef.current = setTimeout(() => {
       setIsRefreshing(false);
     }, 850);
 
@@ -362,11 +370,28 @@ export const Home: React.FC<HomeProps> = ({
     }, 2600);
   }, [activeUser, isRefreshing, onUpdateCurrentUser, updateTime]);
 
-  // Clean up timer on unmount
+  const handleRefreshRef = useRef(handleRefresh);
+  handleRefreshRef.current = handleRefresh;
+
+  // Automatically spin rotating sync icon & display "Account Synced!" when returning from Receipt Close
+  useEffect(() => {
+    if (!autoSyncOnMount) return;
+    const startTimer = setTimeout(() => {
+      onAutoSyncHandled?.();
+      void handleRefreshRef.current();
+    }, 80);
+    return () => clearTimeout(startTimer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoSyncOnMount]);
+
+  // Clean up timers on unmount
   useEffect(() => {
     return () => {
       if (accountSyncedTimerRef.current) {
         clearTimeout(accountSyncedTimerRef.current);
+      }
+      if (refreshSpinTimerRef.current) {
+        clearTimeout(refreshSpinTimerRef.current);
       }
     };
   }, []);

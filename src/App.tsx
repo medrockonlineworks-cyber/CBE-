@@ -481,6 +481,7 @@ export default function App() {
   const [returnTab, setReturnTab] = useState<TabType>('home');
   const [isRecentAppsOpen, setIsRecentAppsOpen] = useState<boolean>(false);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [autoSyncAfterReceipt, setAutoSyncAfterReceipt] = useState<boolean>(false);
   const [initialTxTab, setInitialTxTab] = useState<'send' | 'transfer' | 'merchant' | 'receive' | 'airtime'>('transfer');
   const [smsActiveAccountId, setSmsActiveAccountId] = useState<string | undefined>(undefined);
   const [isIPhone, setIsIPhone] = useState<boolean>(() => PhoneSettingsService.isIPhoneMode());
@@ -1324,6 +1325,8 @@ export default function App() {
             onUpdateCurrentUser={handleUpdateUserProfile}
             promptBiometricEnroll={showBiometricEnrollPrompt}
             onDismissBiometricPrompt={() => setShowBiometricEnrollPrompt(false)}
+            autoSyncOnMount={autoSyncAfterReceipt}
+            onAutoSyncHandled={() => setAutoSyncAfterReceipt(false)}
             initialDetailTxId={activeDetailTxId}
             onClearInitialDetailTx={() => setActiveDetailTxId(null)}
             onNavigateToTab={(tab, subTab) => {
@@ -1545,6 +1548,7 @@ export default function App() {
                     setActiveView('main');
                     setActiveTab('home');
                     setSelectedTransaction(null);
+                    setAutoSyncAfterReceipt(true);
                     try {
                       window.history.pushState({ view: 'main', tab: 'home' }, '', '/');
                     } catch {}
