@@ -252,8 +252,7 @@ jobs:
           if [ -n "$CUSTOM_NOTES" ]; then
             export CHANGE_SUMMARY="$CUSTOM_NOTES"
           else
-            export CHANGE_SUMMARY="- Performance and stability improvements
-- Security enhancements and bug fixes"
+            export CHANGE_SUMMARY="$(printf '%s\n%s' '- Performance and stability improvements' '- Security enhancements and bug fixes')"
           fi
 
           # Generate valid JSON update-manifest.json and clean release-notes.md with Node.js
