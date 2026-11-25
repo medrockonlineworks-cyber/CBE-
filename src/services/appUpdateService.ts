@@ -481,7 +481,7 @@ async function fetchLatestGitHubRelease(
           ok: false,
           reason: 'rate_limited',
           retryAfterMs,
-          message: 'GitHub API rate limit reached. Please try again shortly.',
+          message: 'Update server busy. Please try again shortly.',
         };
       }
     } catch {}
@@ -537,7 +537,7 @@ async function fetchLatestGitHubRelease(
           ok: false,
           reason: 'rate_limited',
           retryAfterMs: Math.max(1000, untilMs - Date.now()),
-          message: 'GitHub API limit temporarily reached. Automatic checks will resume after cooldown.',
+          message: 'Update server busy. Please try again shortly.',
         };
       }
     }
@@ -546,7 +546,7 @@ async function fetchLatestGitHubRelease(
       return {
         ok: false,
         reason: 'error',
-        message: `No published GitHub Release found for ${repo}.`,
+        message: 'No published update now',
       };
     }
 
@@ -554,7 +554,7 @@ async function fetchLatestGitHubRelease(
       return {
         ok: false,
         reason: 'error',
-        message: `GitHub Releases API returned HTTP ${response.status}.`,
+        message: 'Unable to check for updates right now. Please try again later.',
       };
     }
 
@@ -574,7 +574,7 @@ async function fetchLatestGitHubRelease(
       reason: 'offline',
       message: isAbort
         ? 'Update check timed out. Check your internet connection.'
-        : 'Unable to reach GitHub Releases. Please check your internet connection.',
+        : 'Unable to reach update server. Please check your internet connection.',
     };
   } finally {
     window.clearTimeout(timeoutId);
@@ -624,7 +624,7 @@ export const AppUpdateService = {
       return {
         status: 'not_configured',
         installed,
-        message: 'GitHub release repository is not configured yet for this build.',
+        message: 'No published update now',
       };
     }
 
@@ -660,7 +660,7 @@ export const AppUpdateService = {
     if (!matched) {
       return {
         status: 'error',
-        message: `Latest release (${release.tag_name}) does not include an APK asset for ${installed.appName}.`,
+        message: 'No published update now',
       };
     }
 
@@ -668,7 +668,7 @@ export const AppUpdateService = {
     if (!isAllowedGitHubDownloadUrl(asset.browser_download_url)) {
       return {
         status: 'error',
-        message: 'Blocked update asset with non-GitHub download URL.',
+        message: 'Update package source could not be verified.',
       };
     }
 

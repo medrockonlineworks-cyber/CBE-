@@ -420,7 +420,7 @@ export default function AppUpdateModal({
                       : stage === 'installing'
                         ? 'Verified! Opening Android installer...'
                         : progress.stage === 'connecting'
-                          ? 'Connecting to GitHub...'
+                          ? 'Connecting to update server...'
                           : 'Downloading update...'}
                   </span>
                 </span>

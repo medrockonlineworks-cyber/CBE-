@@ -1825,7 +1825,7 @@ export default function Profile({
                   <p className="text-[11px] text-gray-400 truncate">
                     {installedAppInfo
                       ? `Version v${installedAppInfo.versionName} (Build ${installedAppInfo.versionCode})`
-                      : 'Check GitHub Releases for new APK'}
+                      : 'Check for available app updates'}
                   </p>
                 </div>
               </div>

@@ -172,7 +172,7 @@ public class AppUpdaterPlugin extends Plugin {
         final String expectedPackageName = safeTrim(call.getString("expectedPackageName", ""));
 
         if (!isAllowedGitHubHttpsUrl(downloadUrl)) {
-            call.reject("INVALID_URL: APK download URL must use HTTPS from an official GitHub Releases domain.");
+            call.reject("INVALID_URL: Update download URL must use a verified HTTPS source.");
             return;
         }
 
@@ -220,7 +220,7 @@ public class AppUpdaterPlugin extends Plugin {
                 connection = openValidatedConnection(downloadUrl);
                 int statusCode = connection.getResponseCode();
                 if (statusCode < 200 || statusCode >= 300) {
-                    throw new IOException("GitHub download server responded with HTTP " + statusCode);
+                    throw new IOException("Update server responded with HTTP " + statusCode);
                 }
 
                 long contentLength = connection.getContentLengthLong();
