@@ -3,7 +3,7 @@ apply plugin: 'com.android.application'
 def ciVersionCode = (project.hasProperty('appVersionCode') ? project.property('appVersionCode') : (System.getenv('APP_VERSION_CODE') ?: '100')).toString().toInteger()
 def ciVersionName = (project.hasProperty('appVersionName') ? project.property('appVersionName') : (System.getenv('APP_VERSION_NAME') ?: "1.0.${ciVersionCode}")).toString()
 def rawGithubRepo = (project.hasProperty('githubRepo') ? project.property('githubRepo') : (System.getenv('GITHUB_REPOSITORY') ?: '')).toString().trim()
-def ciGithubRepo = rawGithubRepo.replaceAll(/[^A-Za-z0-9._\/-]/, '')
+def ciGithubRepo = rawGithubRepo.replaceAll('[^A-Za-z0-9._/-]', '')
 
 // Persistent signing configuration sourced from CI Secrets / Gradle properties (never hardcoded in source)
 def persistentKeystorePath = (project.findProperty('androidKeystoreFile') ?: System.getenv('ANDROID_KEYSTORE_FILE') ?: '').toString().trim()
@@ -122,6 +122,7 @@ repositories {
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
+    implementation "androidx.core:core:$androidxCoreVersion"
     implementation "androidx.biometric:biometric:1.1.0"
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"

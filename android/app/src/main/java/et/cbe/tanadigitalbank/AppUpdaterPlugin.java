@@ -166,10 +166,10 @@ public class AppUpdaterPlugin extends Plugin {
 
     @PluginMethod
     public void downloadAndVerifyApk(PluginCall call) {
-        final String downloadUrl = call.getString("downloadUrl", "").trim();
-        final String expectedSha256Raw = call.getString("expectedSha256", "").trim().toLowerCase(Locale.US);
-        final String rawFileName = call.getString("fileName", "").trim();
-        final String expectedPackageName = call.getString("expectedPackageName", "").trim();
+        final String downloadUrl = safeTrim(call.getString("downloadUrl", ""));
+        final String expectedSha256Raw = safeTrim(call.getString("expectedSha256", "")).toLowerCase(Locale.US);
+        final String rawFileName = safeTrim(call.getString("fileName", ""));
+        final String expectedPackageName = safeTrim(call.getString("expectedPackageName", ""));
 
         if (!isAllowedGitHubHttpsUrl(downloadUrl)) {
             call.reject("INVALID_URL: APK download URL must use HTTPS from an official GitHub Releases domain.");
@@ -320,7 +320,7 @@ public class AppUpdaterPlugin extends Plugin {
 
     @PluginMethod
     public void installVerifiedApk(PluginCall call) {
-        final String rawFileName = call.getString("fileName", "").trim();
+        final String rawFileName = safeTrim(call.getString("fileName", ""));
         final String safeFileName = sanitizeApkFileName(rawFileName);
         if (safeFileName == null) {
             call.reject("INVALID_FILENAME: Cannot install an invalid APK filename.");
@@ -435,6 +435,10 @@ public class AppUpdaterPlugin extends Plugin {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    private static String safeTrim(String raw) {
+        return raw == null ? "" : raw.trim();
     }
 
     private static String sanitizeApkFileName(String raw) {

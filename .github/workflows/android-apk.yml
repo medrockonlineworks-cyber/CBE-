@@ -166,6 +166,7 @@ jobs:
           RELEASE_TAG: ${{ steps.version.outputs.release_tag }}
           BUILD_TYPE: ${{ steps.version.outputs.build_type }}
           CUSTOM_NOTES: ${{ github.event.inputs.release_notes }}
+          REPO_SLUG: ${{ github.repository }}
         run: |
           mkdir -p release-dist
           if [ "$BUILD_TYPE" = "release" ]; then
@@ -184,33 +185,50 @@ jobs:
           cp "$MSG_SRC" release-dist/Messages-SMS-debug.apk
           cp "$TC_SRC" release-dist/Truecaller-debug.apk
           cp "$PHONE_SRC" release-dist/Phone-debug.apk
+          ls -lh release-dist/*.apk
 
-          APKSIGNER=$(find "${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools" -name apksigner 2>/dev/null | sort -V | tail -n 1)
-          AAPT2=$(find "${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools" -name aapt2 2>/dev/null | sort -V | tail -n 1)
+          APKSIGNER=$(find "${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools" -name apksigner 2>/dev/null | sort -V | tail -n 1 || true)
+          AAPT2=$(find "${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools" -name aapt2 2>/dev/null | sort -V | tail -n 1 || true)
 
-          CBE_CERT=""
-          MSG_CERT=""
-          TC_CERT=""
-          PHONE_CERT=""
+          extract_cert_sha256() {
+            local apk_path="$1"
+            if [ -z "$APKSIGNER" ]; then
+              echo ""
+              return 0
+            fi
+            local verify_out
+            verify_out=$("$APKSIGNER" verify --print-certs "$apk_path" 2>&1)
+            printf '%s\n' "$verify_out" | grep -E "Signer #1 certificate (DN|SHA-256)" >&2 || true
+            printf '%s\n' "$verify_out" | awk '/Signer #1 certificate SHA-256 digest:/ {print $NF; exit}' | tr -d '[:space:]'
+          }
 
-          if [ -n "$APKSIGNER" ]; then
-            echo "=== Verifying APK Signatures ==="
-            for apk in release-dist/*.apk; do
-              "$APKSIGNER" verify --print-certs "$apk" | grep -E "Signer #1 certificate (DN|SHA-256)"
-            done
-            CBE_CERT=$("$APKSIGNER" verify --print-certs release-dist/CBE-Mobile-Banking-debug.apk | awk '/Signer #1 certificate SHA-256 digest:/ {print $6}')
-            MSG_CERT=$("$APKSIGNER" verify --print-certs release-dist/Messages-SMS-debug.apk | awk '/Signer #1 certificate SHA-256 digest:/ {print $6}')
-            TC_CERT=$("$APKSIGNER" verify --print-certs release-dist/Truecaller-debug.apk | awk '/Signer #1 certificate SHA-256 digest:/ {print $6}')
-            PHONE_CERT=$("$APKSIGNER" verify --print-certs release-dist/Phone-debug.apk | awk '/Signer #1 certificate SHA-256 digest:/ {print $6}')
-          fi
+          verify_badging_pkg() {
+            local apk_path="$1"
+            local expected_pkg="$2"
+            if [ -z "$AAPT2" ]; then
+              return 0
+            fi
+            local badging_out
+            badging_out=$("$AAPT2" dump badging "$apk_path" 2>&1)
+            if [[ "$badging_out" != *"name='${expected_pkg}'"* ]]; then
+              echo "ERROR: Expected package '${expected_pkg}' in ${apk_path}" >&2
+              printf '%s\n' "$badging_out" | head -n 5 >&2
+              exit 1
+            fi
+            echo "Verified package ${expected_pkg} in $(basename "$apk_path")"
+          }
 
-          if [ -n "$AAPT2" ]; then
-            echo "=== Verifying Package IDs & Version Codes ==="
-            "$AAPT2" dump badging release-dist/CBE-Mobile-Banking-debug.apk | grep -q "name='et.cbe.tanadigitalbank'"
-            "$AAPT2" dump badging release-dist/Messages-SMS-debug.apk | grep -q "name='et.cbe.messages'"
-            "$AAPT2" dump badging release-dist/Truecaller-debug.apk | grep -q "name='et.cbe.truecaller'"
-            "$AAPT2" dump badging release-dist/Phone-debug.apk | grep -q "name='et.cbe.phone'"
-          fi
+          echo "=== Verifying APK Signatures ==="
+          export CBE_CERT="$(extract_cert_sha256 release-dist/CBE-Mobile-Banking-debug.apk)"
+          export MSG_CERT="$(extract_cert_sha256 release-dist/Messages-SMS-debug.apk)"
+          export TC_CERT="$(extract_cert_sha256 release-dist/Truecaller-debug.apk)"
+          export PHONE_CERT="$(extract_cert_sha256 release-dist/Phone-debug.apk)"
+
+          echo "=== Verifying Package IDs ==="
+          verify_badging_pkg release-dist/CBE-Mobile-Banking-debug.apk "et.cbe.tanadigitalbank"
+          verify_badging_pkg release-dist/Messages-SMS-debug.apk "et.cbe.messages"
+          verify_badging_pkg release-dist/Truecaller-debug.apk "et.cbe.truecaller"
+          verify_badging_pkg release-dist/Phone-debug.apk "et.cbe.phone"
 
           # Generate individual .sha256 files and combined SHA256SUMS.txt
           (
@@ -221,83 +239,65 @@ jobs:
             sha256sum CBE-Mobile-Banking-debug.apk Messages-SMS-debug.apk Truecaller-debug.apk Phone-debug.apk > SHA256SUMS.txt
           )
 
-          CBE_SHA=$(awk '{print $1}' release-dist/CBE-Mobile-Banking-debug.apk.sha256)
-          MSG_SHA=$(awk '{print $1}' release-dist/Messages-SMS-debug.apk.sha256)
-          TC_SHA=$(awk '{print $1}' release-dist/Truecaller-debug.apk.sha256)
-          PHONE_SHA=$(awk '{print $1}' release-dist/Phone-debug.apk.sha256)
-
-          CBE_SIZE=$(stat -c%s release-dist/CBE-Mobile-Banking-debug.apk)
-          MSG_SIZE=$(stat -c%s release-dist/Messages-SMS-debug.apk)
-          TC_SIZE=$(stat -c%s release-dist/Truecaller-debug.apk)
-          PHONE_SIZE=$(stat -c%s release-dist/Phone-debug.apk)
-          PUBLISHED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-
-          # Build update-manifest.json
-          cat <<EOF > release-dist/update-manifest.json
-          {
-            "versionCode": ${APP_VERSION_CODE},
-            "versionName": "${APP_VERSION_NAME}",
-            "tagName": "${RELEASE_TAG}",
-            "repository": "${{ github.repository }}",
-            "publishedAt": "${PUBLISHED_AT}",
-            "apks": {
-              "CBE-Mobile-Banking-debug.apk": {
-                "packageName": "et.cbe.tanadigitalbank",
-                "sha256": "${CBE_SHA}",
-                "sizeBytes": ${CBE_SIZE},
-                "certSha256": "${CBE_CERT}"
-              },
-              "Messages-SMS-debug.apk": {
-                "packageName": "et.cbe.messages",
-                "sha256": "${MSG_SHA}",
-                "sizeBytes": ${MSG_SIZE},
-                "certSha256": "${MSG_CERT}"
-              },
-              "Truecaller-debug.apk": {
-                "packageName": "et.cbe.truecaller",
-                "sha256": "${TC_SHA}",
-                "sizeBytes": ${TC_SIZE},
-                "certSha256": "${TC_CERT}"
-              },
-              "Phone-debug.apk": {
-                "packageName": "et.cbe.phone",
-                "sha256": "${PHONE_SHA}",
-                "sizeBytes": ${PHONE_SIZE},
-                "certSha256": "${PHONE_CERT}"
-              }
-            }
-          }
-          EOF
-
-          # Build human-readable release notes + embedded machine-readable metadata for CORS-free in-app verification
           if [ -n "$CUSTOM_NOTES" ]; then
-            CHANGE_SUMMARY="$CUSTOM_NOTES"
+            export CHANGE_SUMMARY="$CUSTOM_NOTES"
           else
-            CHANGE_SUMMARY=$(git log -n 5 --pretty=format:"- %s" 2>/dev/null || echo "- Performance improvements and bug fixes.")
+            export CHANGE_SUMMARY="$(git log -n 5 --pretty=format:"- %s" 2>/dev/null || echo "- Performance improvements and bug fixes.")"
           fi
 
-          MANIFEST_COMPACT=$(node -e "const fs=require('fs'); console.log(JSON.stringify(JSON.parse(fs.readFileSync('release-dist/update-manifest.json','utf8'))));")
+          # Generate valid JSON update-manifest.json and clean release-notes.md with Node.js
+          node -e '
+            const fs = require("fs");
+            const path = require("path");
+            const distDir = path.resolve("release-dist");
+            const readSha = (name) => fs.readFileSync(path.join(distDir, `${name}.sha256`), "utf8").trim().split(/\s+/)[0];
+            const readSize = (name) => fs.statSync(path.join(distDir, name)).size;
 
-          cat <<EOF > release-dist/release-notes.md
-          ### Release v${APP_VERSION_NAME} (Build ${APP_VERSION_CODE})
+            const specs = [
+              { file: "CBE-Mobile-Banking-debug.apk", label: "CBE Mobile Banking", pkg: "et.cbe.tanadigitalbank", cert: (process.env.CBE_CERT || "").trim() },
+              { file: "Messages-SMS-debug.apk", label: "Messages", pkg: "et.cbe.messages", cert: (process.env.MSG_CERT || "").trim() },
+              { file: "Truecaller-debug.apk", label: "Truecaller", pkg: "et.cbe.truecaller", cert: (process.env.TC_CERT || "").trim() },
+              { file: "Phone-debug.apk", label: "Phone", pkg: "et.cbe.phone", cert: (process.env.PHONE_CERT || "").trim() },
+            ];
 
-          ${CHANGE_SUMMARY}
+            const apks = {};
+            for (const s of specs) {
+              apks[s.file] = {
+                packageName: s.pkg,
+                sha256: readSha(s.file),
+                sizeBytes: readSize(s.file),
+                certSha256: s.cert,
+              };
+            }
 
-          #### Verified Android APKs
-          - **CBE Mobile Banking** (\`et.cbe.tanadigitalbank\`): \`CBE-Mobile-Banking-debug.apk\`
-            SHA256(CBE-Mobile-Banking-debug.apk): ${CBE_SHA}
-          - **Messages** (\`et.cbe.messages\`): \`Messages-SMS-debug.apk\`
-            SHA256(Messages-SMS-debug.apk): ${MSG_SHA}
-          - **Truecaller** (\`et.cbe.truecaller\`): \`Truecaller-debug.apk\`
-            SHA256(Truecaller-debug.apk): ${TC_SHA}
-          - **Phone** (\`et.cbe.phone\`): \`Phone-debug.apk\`
-            SHA256(Phone-debug.apk): ${PHONE_SHA}
+            const manifest = {
+              versionCode: Number(process.env.APP_VERSION_CODE),
+              versionName: String(process.env.APP_VERSION_NAME || ""),
+              tagName: String(process.env.RELEASE_TAG || ""),
+              repository: String(process.env.REPO_SLUG || ""),
+              publishedAt: new Date().toISOString(),
+              apks,
+            };
 
-          <!-- UPDATE_METADATA
-          ${MANIFEST_COMPACT}
-          -->
-          EOF
+            fs.writeFileSync(path.join(distDir, "update-manifest.json"), JSON.stringify(manifest, null, 2) + "\n", "utf8");
 
+            const lines = [
+              `### Release v${manifest.versionName} (Build ${manifest.versionCode})`,
+              "",
+              (process.env.CHANGE_SUMMARY || "- Performance improvements and bug fixes.").trim(),
+              "",
+              "#### Verified Android APKs",
+              ...specs.map((s) => `- **${s.label}** (\`${s.pkg}\`): \`${s.file}\`\n  SHA256(${s.file}): ${apks[s.file].sha256}`),
+              "",
+              "<!-- UPDATE_METADATA",
+              JSON.stringify(manifest),
+              "-->",
+              "",
+            ];
+            fs.writeFileSync(path.join(distDir, "release-notes.md"), lines.join("\n"), "utf8");
+          '
+
+          echo "=== SHA256SUMS.txt ==="
           cat release-dist/SHA256SUMS.txt
 
       - name: Upload Build Artifacts
@@ -318,6 +318,7 @@ jobs:
           RELEASE_TAG: ${{ steps.version.outputs.release_tag }}
           APP_VERSION_NAME: ${{ steps.version.outputs.version_name }}
           APP_VERSION_CODE: ${{ steps.version.outputs.version_code }}
+          TARGET_SHA: ${{ github.sha }}
         run: |
           ASSETS=(
             release-dist/CBE-Mobile-Banking-debug.apk
@@ -340,6 +341,7 @@ jobs:
               --latest
           else
             gh release create "$RELEASE_TAG" "${ASSETS[@]}" \
+              --target "$TARGET_SHA" \
               --title "CBE Suite v${APP_VERSION_NAME} (Build ${APP_VERSION_CODE})" \
               --notes-file release-dist/release-notes.md \
               --latest
