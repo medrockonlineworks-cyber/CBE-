@@ -42,6 +42,7 @@ jobs:
         env:
           INPUT_VERSION_NAME: ${{ github.event.inputs.version_name }}
           INPUT_BUILD_TYPE: ${{ github.event.inputs.build_type }}
+          PUBLIC_RELEASE_REPO: ${{ secrets.PUBLIC_RELEASE_REPO }}
         run: |
           APP_VERSION_CODE=$((100 + ${{ github.run_number }}))
           if [ -n "$INPUT_VERSION_NAME" ]; then
@@ -51,11 +52,20 @@ jobs:
           fi
           BUILD_TYPE="${INPUT_BUILD_TYPE:-debug}"
           RELEASE_TAG="v${APP_VERSION_NAME}"
+          if [ -n "$PUBLIC_RELEASE_REPO" ]; then
+            RELEASE_REPO="$PUBLIC_RELEASE_REPO"
+            EXTERNAL_RELEASE="true"
+          else
+            RELEASE_REPO="${{ github.repository }}"
+            EXTERNAL_RELEASE="false"
+          fi
           echo "version_code=$APP_VERSION_CODE" >> "$GITHUB_OUTPUT"
           echo "version_name=$APP_VERSION_NAME" >> "$GITHUB_OUTPUT"
           echo "release_tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
           echo "build_type=$BUILD_TYPE" >> "$GITHUB_OUTPUT"
-          echo "Resolved versionCode=$APP_VERSION_CODE versionName=$APP_VERSION_NAME tag=$RELEASE_TAG buildType=$BUILD_TYPE"
+          echo "release_repo=$RELEASE_REPO" >> "$GITHUB_OUTPUT"
+          echo "external_release=$EXTERNAL_RELEASE" >> "$GITHUB_OUTPUT"
+          echo "Resolved versionCode=$APP_VERSION_CODE versionName=$APP_VERSION_NAME tag=$RELEASE_TAG buildType=$BUILD_TYPE externalRelease=$EXTERNAL_RELEASE"
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -84,7 +94,7 @@ jobs:
 
       - name: Build web application with GitHub repository metadata
         env:
-          VITE_GITHUB_REPO: ${{ github.repository }}
+          VITE_GITHUB_REPO: ${{ steps.version.outputs.release_repo }}
         run: npm run build
 
       - name: Prepare dist assets for Capacitor
@@ -156,7 +166,7 @@ jobs:
           ./gradlew $TASKS \
             -PappVersionCode="$APP_VERSION_CODE" \
             -PappVersionName="$APP_VERSION_NAME" \
-            -PgithubRepo="${{ github.repository }}" \
+            -PgithubRepo="${{ steps.version.outputs.release_repo }}" \
             --no-daemon
 
       - name: Verify APK signatures, package IDs, icons & generate SHA-256 checksums
@@ -166,7 +176,7 @@ jobs:
           RELEASE_TAG: ${{ steps.version.outputs.release_tag }}
           BUILD_TYPE: ${{ steps.version.outputs.build_type }}
           CUSTOM_NOTES: ${{ github.event.inputs.release_notes }}
-          REPO_SLUG: ${{ github.repository }}
+          REPO_SLUG: ${{ steps.version.outputs.release_repo }}
         run: |
           mkdir -p release-dist
           if [ "$BUILD_TYPE" = "release" ]; then
@@ -242,7 +252,8 @@ jobs:
           if [ -n "$CUSTOM_NOTES" ]; then
             export CHANGE_SUMMARY="$CUSTOM_NOTES"
           else
-            export CHANGE_SUMMARY="$(git log -n 5 --pretty=format:"- %s" 2>/dev/null || echo "- Performance improvements and bug fixes.")"
+            export CHANGE_SUMMARY="- Performance and stability improvements
+- Security enhancements and bug fixes"
           fi
 
           # Generate valid JSON update-manifest.json and clean release-notes.md with Node.js
@@ -282,12 +293,7 @@ jobs:
             fs.writeFileSync(path.join(distDir, "update-manifest.json"), JSON.stringify(manifest, null, 2) + "\n", "utf8");
 
             const lines = [
-              `### Release v${manifest.versionName} (Build ${manifest.versionCode})`,
-              "",
-              (process.env.CHANGE_SUMMARY || "- Performance improvements and bug fixes.").trim(),
-              "",
-              "#### Verified Android APKs",
-              ...specs.map((s) => `- **${s.label}** (\`${s.pkg}\`): \`${s.file}\`\n  SHA256(${s.file}): ${apks[s.file].sha256}`),
+              (process.env.CHANGE_SUMMARY || "- Performance and stability improvements\n- Security enhancements and bug fixes").trim(),
               "",
               "<!-- UPDATE_METADATA",
               JSON.stringify(manifest),
@@ -314,7 +320,9 @@ jobs:
 
       - name: Publish Versioned GitHub Release (marked Latest for Auto-Updater)
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.PUBLIC_RELEASE_TOKEN || github.token }}
+          RELEASE_REPO: ${{ steps.version.outputs.release_repo }}
+          EXTERNAL_RELEASE: ${{ steps.version.outputs.external_release }}
           RELEASE_TAG: ${{ steps.version.outputs.release_tag }}
           APP_VERSION_NAME: ${{ steps.version.outputs.version_name }}
           APP_VERSION_CODE: ${{ steps.version.outputs.version_code }}
@@ -333,14 +341,22 @@ jobs:
             release-dist/update-manifest.json
           )
 
-          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release upload "$RELEASE_TAG" "${ASSETS[@]}" --clobber
+          if gh release view "$RELEASE_TAG" --repo "$RELEASE_REPO" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "${ASSETS[@]}" --repo "$RELEASE_REPO" --clobber
             gh release edit "$RELEASE_TAG" \
+              --repo "$RELEASE_REPO" \
+              --title "CBE Suite v${APP_VERSION_NAME} (Build ${APP_VERSION_CODE})" \
+              --notes-file release-dist/release-notes.md \
+              --latest
+          elif [ "$EXTERNAL_RELEASE" = "true" ]; then
+            gh release create "$RELEASE_TAG" "${ASSETS[@]}" \
+              --repo "$RELEASE_REPO" \
               --title "CBE Suite v${APP_VERSION_NAME} (Build ${APP_VERSION_CODE})" \
               --notes-file release-dist/release-notes.md \
               --latest
           else
             gh release create "$RELEASE_TAG" "${ASSETS[@]}" \
+              --repo "$RELEASE_REPO" \
               --target "$TARGET_SHA" \
               --title "CBE Suite v${APP_VERSION_NAME} (Build ${APP_VERSION_CODE})" \
               --notes-file release-dist/release-notes.md \

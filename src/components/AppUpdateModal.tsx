@@ -3,7 +3,6 @@ import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import {
   Download,
-  ShieldCheck,
   AlertTriangle,
   CheckCircle2,
   Settings,
@@ -339,7 +338,6 @@ export default function AppUpdateModal({
               </p>
               <p className="text-xs font-bold font-mono mt-0.5 truncate">
                 v{update.currentVersionName}
-                <span className="opacity-60 font-normal"> ({update.currentVersionCode})</span>
               </p>
             </div>
 
@@ -363,9 +361,6 @@ export default function AppUpdateModal({
                 }`}
               >
                 v{update.latestVersionName}
-                {update.latestVersionCode ? (
-                  <span className="opacity-70 font-normal"> ({update.latestVersionCode})</span>
-                ) : null}
               </p>
             </div>
           </div>
@@ -416,11 +411,11 @@ export default function AppUpdateModal({
                   )}
                   <span>
                     {stage === 'verifying'
-                      ? 'Verifying SHA-256 & signature...'
+                      ? 'Verifying update...'
                       : stage === 'installing'
-                        ? 'Verified! Opening Android installer...'
+                        ? 'Opening installer...'
                         : progress.stage === 'connecting'
-                          ? 'Connecting to update server...'
+                          ? 'Connecting...'
                           : 'Downloading update...'}
                   </span>
                 </span>
@@ -453,7 +448,6 @@ export default function AppUpdateModal({
                   <span>
                     {formatBytes(progress.downloadedBytes)} / {formatBytes(totalBytesDisplay)}
                   </span>
-                  <span className="truncate max-w-[160px]">{update.assetName}</span>
                 </div>
               )}
             </div>
@@ -506,18 +500,6 @@ export default function AppUpdateModal({
               <p className="leading-relaxed break-words">{errorMessage}</p>
             </div>
           )}
-
-          {/* Security & Data Preservation Assurance */}
-          <div
-            className={`flex items-center gap-2 text-[11px] ${
-              isDarkTheme ? 'text-neutral-400' : 'text-gray-500'
-            }`}
-          >
-            <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0" />
-            <span>
-              SHA-256 &amp; signature verified. Sessions and local data are preserved.
-            </span>
-          </div>
         </div>
 
         {/* Action Buttons */}

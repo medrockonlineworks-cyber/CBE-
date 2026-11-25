@@ -265,12 +265,39 @@ function parseEmbeddedMetadata(body: string): EmbeddedReleaseMetadata | null {
 }
 
 function cleanReleaseNotes(body: string): string {
-  if (!body) return 'Bug fixes, security enhancements, and performance improvements.';
-  const stripped = body
+  const fallbackNotes = '• Performance and stability improvements\n• Security enhancements and bug fixes';
+  if (!body) return fallbackNotes;
+
+  const withoutTechnicalSections = body
     .replace(/<!--\s*UPDATE_METADATA[\s\S]*?-->/gi, '')
-    .replace(/\r\n/g, '\n')
-    .trim();
-  return stripped || 'Bug fixes, security enhancements, and performance improvements.';
+    .replace(/#{2,6}\s*Verified Android APKs[\s\S]*$/i, '')
+    .replace(/\r\n/g, '\n');
+
+  const cleanedLines = withoutTechnicalSections
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => {
+      if (!line) return false;
+      // Strip raw markdown release headers
+      if (/^#{1,6}\s*Release\b/i.test(line)) return false;
+      // Strip raw SHA256 / package ID / APK filename / GitHub technical lines
+      if (/SHA256\s*\(/i.test(line)) return false;
+      if (/\.apk\b/i.test(line)) return false;
+      if (/\bet\.cbe\./i.test(line)) return false;
+      if (/\bgithub\b/i.test(line)) return false;
+      // Strip raw git conventional commit lines (chore:, ci:, feat:, fix:, etc.)
+      if (/^[-*•]?\s*(feat|fix|chore|ci|build|docs|style|refactor|perf|test|revert)(\([^)]*\))?:\s*/i.test(line)) {
+        return false;
+      }
+      return true;
+    })
+    .map((line) => line.replace(/^#{1,6}\s+/, '').replace(/^-\s+/, '• '));
+
+  if (cleanedLines.length === 0) {
+    return fallbackNotes;
+  }
+
+  return cleanedLines.join('\n');
 }
 
 function normalizeSha256(raw: string | null | undefined): string {
