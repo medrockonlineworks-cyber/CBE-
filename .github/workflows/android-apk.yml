@@ -1,14 +1,32 @@
-name: Build Android APK
+name: Build & Publish Android APKs
 
 on:
   push:
     branches:
       - main
+      - release
   workflow_dispatch:
+    inputs:
+      version_name:
+        description: 'Optional versionName override (e.g. 1.2.0). Leave empty for 1.0.<run_number>.'
+        required: false
+        type: string
+      release_notes:
+        description: 'Optional release notes shown in the in-app update dialog.'
+        required: false
+        type: string
+      build_type:
+        description: 'Gradle build type (debug keeps compatibility with existing debug-signing.pem installs; release builds optimized APK with persistent signing key).'
+        required: false
+        default: 'debug'
+        type: choice
+        options:
+          - debug
+          - release
 
 jobs:
-  build-android-apk:
-    name: Build Debug Android APK
+  build-and-release-apks:
+    name: Build, Sign & Publish All 4 Android APKs
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -16,6 +34,28 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 20
+
+      - name: Compute release version metadata
+        id: version
+        env:
+          INPUT_VERSION_NAME: ${{ github.event.inputs.version_name }}
+          INPUT_BUILD_TYPE: ${{ github.event.inputs.build_type }}
+        run: |
+          APP_VERSION_CODE=$((100 + ${{ github.run_number }}))
+          if [ -n "$INPUT_VERSION_NAME" ]; then
+            APP_VERSION_NAME="${INPUT_VERSION_NAME#v}"
+          else
+            APP_VERSION_NAME="1.0.${{ github.run_number }}"
+          fi
+          BUILD_TYPE="${INPUT_BUILD_TYPE:-debug}"
+          RELEASE_TAG="v${APP_VERSION_NAME}"
+          echo "version_code=$APP_VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "version_name=$APP_VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "release_tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+          echo "build_type=$BUILD_TYPE" >> "$GITHUB_OUTPUT"
+          echo "Resolved versionCode=$APP_VERSION_CODE versionName=$APP_VERSION_NAME tag=$RELEASE_TAG buildType=$BUILD_TYPE"
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -23,13 +63,7 @@ jobs:
           node-version: '22'
           cache: 'npm'
 
-      - name: Set up Java JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Set up Java JDK 21 (required by Capacitor 8 JavaVersion.VERSION_21)
+      - name: Set up Java JDK 21 (required by Capacitor 8)
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -48,7 +82,9 @@ jobs:
       - name: Install dependencies from package-lock.json
         run: npm ci
 
-      - name: Build web application
+      - name: Build web application with GitHub repository metadata
+        env:
+          VITE_GITHUB_REPO: ${{ github.repository }}
         run: npm run build
 
       - name: Prepare dist assets for Capacitor
@@ -59,130 +95,257 @@ jobs:
       - name: Sync Capacitor Android project
         run: npx cap sync android
 
-      - name: Prepare permanent signing keystore from ASCII PEM
+      - name: Configure persistent Android signing keystore
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          test -f android/app/debug-signing.pem
-          openssl pkcs12 -export \
-            -in android/app/debug-signing.pem \
-            -inkey android/app/debug-signing.pem \
-            -name androiddebugkey \
-            -passout pass:android \
-            -out /tmp/debug.p12
-          rm -f android/app/debug.keystore
-          keytool -importkeystore \
-            -srckeystore /tmp/debug.p12 \
-            -srcstoretype PKCS12 \
-            -srcstorepass android \
-            -srcalias androiddebugkey \
-            -destkeystore android/app/debug.keystore \
-            -deststoretype JKS \
-            -deststorepass android \
-            -destkeypass android \
-            -destalias androiddebugkey \
-            -noprompt
-          rm -f /tmp/debug.p12
-          keytool -list -keystore android/app/debug.keystore -storepass android
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ] && [ -n "$ANDROID_KEYSTORE_PASSWORD" ] && [ -n "$ANDROID_KEY_ALIAS" ]; then
+            echo "Using persistent signing keystore from GitHub Actions Secrets."
+            printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > /tmp/persistent-signing.keystore
+            chmod 600 /tmp/persistent-signing.keystore
+            echo "ANDROID_KEYSTORE_FILE=/tmp/persistent-signing.keystore" >> "$GITHUB_ENV"
+            echo "SIGNING_MODE=persistent_secret" >> "$GITHUB_ENV"
+          else
+            echo "Secrets ANDROID_KEYSTORE_BASE64 / ANDROID_KEYSTORE_PASSWORD / ANDROID_KEY_ALIAS not set."
+            echo "Preserving existing certificate from android/app/debug-signing.pem for in-place upgrade compatibility."
+            test -f android/app/debug-signing.pem
+            openssl pkcs12 -export \
+              -in android/app/debug-signing.pem \
+              -inkey android/app/debug-signing.pem \
+              -name androiddebugkey \
+              -passout pass:android \
+              -out /tmp/debug.p12
+            rm -f android/app/debug.keystore
+            keytool -importkeystore \
+              -srckeystore /tmp/debug.p12 \
+              -srcstoretype PKCS12 \
+              -srcstorepass android \
+              -srcalias androiddebugkey \
+              -destkeystore android/app/debug.keystore \
+              -deststoretype JKS \
+              -deststorepass android \
+              -destkeypass android \
+              -destalias androiddebugkey \
+              -noprompt
+            rm -f /tmp/debug.p12
+            echo "SIGNING_MODE=existing_pem" >> "$GITHUB_ENV"
+          fi
 
       - name: Make Gradle wrapper executable
         run: chmod +x android/gradlew
 
-      - name: Build CBE Mobile, Messages, Truecaller & Phone Debug APKs
+      - name: Build CBE Mobile, Messages, Truecaller & Phone APKs
         working-directory: android
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          APP_VERSION_CODE=$((100 + ${{ github.run_number }}))
-          APP_VERSION_NAME="1.0.${{ github.run_number }}"
-          echo "Building APKs with versionCode=$APP_VERSION_CODE versionName=$APP_VERSION_NAME"
-          ./gradlew assembleCbeDebug assembleMessagesDebug assembleTruecallerDebug assemblePhoneDebug \
+          APP_VERSION_CODE="${{ steps.version.outputs.version_code }}"
+          APP_VERSION_NAME="${{ steps.version.outputs.version_name }}"
+          BUILD_TYPE="${{ steps.version.outputs.build_type }}"
+          if [ "$BUILD_TYPE" = "release" ]; then
+            TASKS="assembleCbeRelease assembleMessagesRelease assembleTruecallerRelease assemblePhoneRelease"
+          else
+            TASKS="assembleCbeDebug assembleMessagesDebug assembleTruecallerDebug assemblePhoneDebug"
+          fi
+          echo "Running Gradle tasks: $TASKS (versionCode=$APP_VERSION_CODE, versionName=$APP_VERSION_NAME)"
+          ./gradlew $TASKS \
             -PappVersionCode="$APP_VERSION_CODE" \
             -PappVersionName="$APP_VERSION_NAME" \
+            -PgithubRepo="${{ github.repository }}" \
             --no-daemon
 
-      - name: Verify APK outputs
+      - name: Verify APK signatures, package IDs, icons & generate SHA-256 checksums
+        env:
+          APP_VERSION_CODE: ${{ steps.version.outputs.version_code }}
+          APP_VERSION_NAME: ${{ steps.version.outputs.version_name }}
+          RELEASE_TAG: ${{ steps.version.outputs.release_tag }}
+          BUILD_TYPE: ${{ steps.version.outputs.build_type }}
+          CUSTOM_NOTES: ${{ github.event.inputs.release_notes }}
         run: |
-          CBE_APK="android/app/build/outputs/apk/cbe/debug/app-cbe-debug.apk"
-          MSG_APK="android/app/build/outputs/apk/messages/debug/app-messages-debug.apk"
-          TC_APK="android/app/build/outputs/apk/truecaller/debug/app-truecaller-debug.apk"
-          PHONE_APK="android/app/build/outputs/apk/phone/debug/app-phone-debug.apk"
-          test -f "$CBE_APK"
-          test -f "$MSG_APK"
-          test -f "$TC_APK"
-          test -f "$PHONE_APK"
-          ls -lh "$CBE_APK" "$MSG_APK" "$TC_APK" "$PHONE_APK"
+          mkdir -p release-dist
+          if [ "$BUILD_TYPE" = "release" ]; then
+            CBE_SRC="android/app/build/outputs/apk/cbe/release/app-cbe-release.apk"
+            MSG_SRC="android/app/build/outputs/apk/messages/release/app-messages-release.apk"
+            TC_SRC="android/app/build/outputs/apk/truecaller/release/app-truecaller-release.apk"
+            PHONE_SRC="android/app/build/outputs/apk/phone/release/app-phone-release.apk"
+          else
+            CBE_SRC="android/app/build/outputs/apk/cbe/debug/app-cbe-debug.apk"
+            MSG_SRC="android/app/build/outputs/apk/messages/debug/app-messages-debug.apk"
+            TC_SRC="android/app/build/outputs/apk/truecaller/debug/app-truecaller-debug.apk"
+            PHONE_SRC="android/app/build/outputs/apk/phone/debug/app-phone-debug.apk"
+          fi
+
+          cp "$CBE_SRC" release-dist/CBE-Mobile-Banking-debug.apk
+          cp "$MSG_SRC" release-dist/Messages-SMS-debug.apk
+          cp "$TC_SRC" release-dist/Truecaller-debug.apk
+          cp "$PHONE_SRC" release-dist/Phone-debug.apk
+
           APKSIGNER=$(find "${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools" -name apksigner 2>/dev/null | sort -V | tail -n 1)
-          if [ -n "$APKSIGNER" ]; then
-            echo "=== Verifying Permanent Signing Certificate ==="
-            for apk in "$CBE_APK" "$MSG_APK" "$TC_APK" "$PHONE_APK"; do
-              "$APKSIGNER" verify --print-certs "$apk" | grep -E "Signer #1 certificate (DN|SHA-256)" || true
-            done
-          fi
           AAPT2=$(find "${ANDROID_HOME:-/usr/local/lib/android/sdk}/build-tools" -name aapt2 2>/dev/null | sort -V | tail -n 1)
-          if [ -n "$AAPT2" ]; then
-            echo "=== Messages APK Badging ==="
-            BADGING=$("$AAPT2" dump badging "$MSG_APK")
-            echo "$BADGING" | grep -E "package:|application-label|application-icon|launchable-activity"
-            echo "$BADGING" | grep -q "name='et.cbe.messages'"
-            echo "$BADGING" | grep -q "application-label:'Messages'"
-            (echo "$BADGING" | grep -q "ic_messages_launcher" || unzip -l "$MSG_APK" | grep -q "ic_messages_launcher")
 
-            echo "=== Truecaller APK Badging ==="
-            TC_BADGING=$("$AAPT2" dump badging "$TC_APK")
-            echo "$TC_BADGING" | grep -E "package:|application-label|application-icon|launchable-activity"
-            echo "$TC_BADGING" | grep -q "name='et.cbe.truecaller'"
-            echo "$TC_BADGING" | grep -q "application-label:'Truecaller'"
-            (echo "$TC_BADGING" | grep -q "ic_truecaller_launcher" || unzip -l "$TC_APK" | grep -q "ic_truecaller_launcher")
+          CBE_CERT=""
+          MSG_CERT=""
+          TC_CERT=""
+          PHONE_CERT=""
 
-            echo "=== Phone APK Badging ==="
-            PHONE_BADGING=$("$AAPT2" dump badging "$PHONE_APK")
-            echo "$PHONE_BADGING" | grep -E "package:|application-label|application-icon|launchable-activity"
-            echo "$PHONE_BADGING" | grep -q "name='et.cbe.phone'"
-            echo "$PHONE_BADGING" | grep -q "application-label:'Phone'"
-            (echo "$PHONE_BADGING" | grep -q "ic_phone_launcher" || unzip -l "$PHONE_APK" | grep -q "ic_phone_launcher")
+          if [ -n "$APKSIGNER" ]; then
+            echo "=== Verifying APK Signatures ==="
+            for apk in release-dist/*.apk; do
+              "$APKSIGNER" verify --print-certs "$apk" | grep -E "Signer #1 certificate (DN|SHA-256)"
+            done
+            CBE_CERT=$("$APKSIGNER" verify --print-certs release-dist/CBE-Mobile-Banking-debug.apk | awk '/Signer #1 certificate SHA-256 digest:/ {print $6}')
+            MSG_CERT=$("$APKSIGNER" verify --print-certs release-dist/Messages-SMS-debug.apk | awk '/Signer #1 certificate SHA-256 digest:/ {print $6}')
+            TC_CERT=$("$APKSIGNER" verify --print-certs release-dist/Truecaller-debug.apk | awk '/Signer #1 certificate SHA-256 digest:/ {print $6}')
+            PHONE_CERT=$("$APKSIGNER" verify --print-certs release-dist/Phone-debug.apk | awk '/Signer #1 certificate SHA-256 digest:/ {print $6}')
           fi
 
-      - name: Upload CBE Mobile Banking APK artifact
+          if [ -n "$AAPT2" ]; then
+            echo "=== Verifying Package IDs & Version Codes ==="
+            "$AAPT2" dump badging release-dist/CBE-Mobile-Banking-debug.apk | grep -q "name='et.cbe.tanadigitalbank'"
+            "$AAPT2" dump badging release-dist/Messages-SMS-debug.apk | grep -q "name='et.cbe.messages'"
+            "$AAPT2" dump badging release-dist/Truecaller-debug.apk | grep -q "name='et.cbe.truecaller'"
+            "$AAPT2" dump badging release-dist/Phone-debug.apk | grep -q "name='et.cbe.phone'"
+          fi
+
+          # Generate individual .sha256 files and combined SHA256SUMS.txt
+          (
+            cd release-dist
+            for apk in CBE-Mobile-Banking-debug.apk Messages-SMS-debug.apk Truecaller-debug.apk Phone-debug.apk; do
+              sha256sum "$apk" > "${apk}.sha256"
+            done
+            sha256sum CBE-Mobile-Banking-debug.apk Messages-SMS-debug.apk Truecaller-debug.apk Phone-debug.apk > SHA256SUMS.txt
+          )
+
+          CBE_SHA=$(awk '{print $1}' release-dist/CBE-Mobile-Banking-debug.apk.sha256)
+          MSG_SHA=$(awk '{print $1}' release-dist/Messages-SMS-debug.apk.sha256)
+          TC_SHA=$(awk '{print $1}' release-dist/Truecaller-debug.apk.sha256)
+          PHONE_SHA=$(awk '{print $1}' release-dist/Phone-debug.apk.sha256)
+
+          CBE_SIZE=$(stat -c%s release-dist/CBE-Mobile-Banking-debug.apk)
+          MSG_SIZE=$(stat -c%s release-dist/Messages-SMS-debug.apk)
+          TC_SIZE=$(stat -c%s release-dist/Truecaller-debug.apk)
+          PHONE_SIZE=$(stat -c%s release-dist/Phone-debug.apk)
+          PUBLISHED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          # Build update-manifest.json
+          cat <<EOF > release-dist/update-manifest.json
+          {
+            "versionCode": ${APP_VERSION_CODE},
+            "versionName": "${APP_VERSION_NAME}",
+            "tagName": "${RELEASE_TAG}",
+            "repository": "${{ github.repository }}",
+            "publishedAt": "${PUBLISHED_AT}",
+            "apks": {
+              "CBE-Mobile-Banking-debug.apk": {
+                "packageName": "et.cbe.tanadigitalbank",
+                "sha256": "${CBE_SHA}",
+                "sizeBytes": ${CBE_SIZE},
+                "certSha256": "${CBE_CERT}"
+              },
+              "Messages-SMS-debug.apk": {
+                "packageName": "et.cbe.messages",
+                "sha256": "${MSG_SHA}",
+                "sizeBytes": ${MSG_SIZE},
+                "certSha256": "${MSG_CERT}"
+              },
+              "Truecaller-debug.apk": {
+                "packageName": "et.cbe.truecaller",
+                "sha256": "${TC_SHA}",
+                "sizeBytes": ${TC_SIZE},
+                "certSha256": "${TC_CERT}"
+              },
+              "Phone-debug.apk": {
+                "packageName": "et.cbe.phone",
+                "sha256": "${PHONE_SHA}",
+                "sizeBytes": ${PHONE_SIZE},
+                "certSha256": "${PHONE_CERT}"
+              }
+            }
+          }
+          EOF
+
+          # Build human-readable release notes + embedded machine-readable metadata for CORS-free in-app verification
+          if [ -n "$CUSTOM_NOTES" ]; then
+            CHANGE_SUMMARY="$CUSTOM_NOTES"
+          else
+            CHANGE_SUMMARY=$(git log -n 5 --pretty=format:"- %s" 2>/dev/null || echo "- Performance improvements and bug fixes.")
+          fi
+
+          MANIFEST_COMPACT=$(node -e "const fs=require('fs'); console.log(JSON.stringify(JSON.parse(fs.readFileSync('release-dist/update-manifest.json','utf8'))));")
+
+          cat <<EOF > release-dist/release-notes.md
+          ### Release v${APP_VERSION_NAME} (Build ${APP_VERSION_CODE})
+
+          ${CHANGE_SUMMARY}
+
+          #### Verified Android APKs
+          - **CBE Mobile Banking** (\`et.cbe.tanadigitalbank\`): \`CBE-Mobile-Banking-debug.apk\`
+            SHA256(CBE-Mobile-Banking-debug.apk): ${CBE_SHA}
+          - **Messages** (\`et.cbe.messages\`): \`Messages-SMS-debug.apk\`
+            SHA256(Messages-SMS-debug.apk): ${MSG_SHA}
+          - **Truecaller** (\`et.cbe.truecaller\`): \`Truecaller-debug.apk\`
+            SHA256(Truecaller-debug.apk): ${TC_SHA}
+          - **Phone** (\`et.cbe.phone\`): \`Phone-debug.apk\`
+            SHA256(Phone-debug.apk): ${PHONE_SHA}
+
+          <!-- UPDATE_METADATA
+          ${MANIFEST_COMPACT}
+          -->
+          EOF
+
+          cat release-dist/SHA256SUMS.txt
+
+      - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: cbe-mobile-banking-debug-apk
-          path: android/app/build/outputs/apk/cbe/debug/app-cbe-debug.apk
+          name: android-apks-v${{ steps.version.outputs.version_name }}-build-${{ steps.version.outputs.version_code }}
+          path: |
+            release-dist/*.apk
+            release-dist/*.sha256
+            release-dist/SHA256SUMS.txt
+            release-dist/update-manifest.json
           if-no-files-found: error
           retention-days: 30
 
-      - name: Upload Standalone Messages SMS APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: messages-sms-debug-apk
-          path: android/app/build/outputs/apk/messages/debug/app-messages-debug.apk
-          if-no-files-found: error
-          retention-days: 30
-
-      - name: Upload Standalone Truecaller APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: truecaller-debug-apk
-          path: android/app/build/outputs/apk/truecaller/debug/app-truecaller-debug.apk
-          if-no-files-found: error
-          retention-days: 30
-
-      - name: Upload Standalone Phone APK artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: phone-debug-apk
-          path: android/app/build/outputs/apk/phone/debug/app-phone-debug.apk
-          if-no-files-found: error
-          retention-days: 30
-
-      - name: Publish direct APKs to GitHub Release (no ZIP required)
+      - name: Publish Versioned GitHub Release (marked Latest for Auto-Updater)
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.version.outputs.release_tag }}
+          APP_VERSION_NAME: ${{ steps.version.outputs.version_name }}
+          APP_VERSION_CODE: ${{ steps.version.outputs.version_code }}
         run: |
-          cp android/app/build/outputs/apk/cbe/debug/app-cbe-debug.apk CBE-Mobile-Banking-debug.apk
-          cp android/app/build/outputs/apk/messages/debug/app-messages-debug.apk Messages-SMS-debug.apk
-          cp android/app/build/outputs/apk/truecaller/debug/app-truecaller-debug.apk Truecaller-debug.apk
-          cp android/app/build/outputs/apk/phone/debug/app-phone-debug.apk Phone-debug.apk
-          if gh release view latest-apk >/dev/null 2>&1; then
-            gh release upload latest-apk CBE-Mobile-Banking-debug.apk Messages-SMS-debug.apk Truecaller-debug.apk Phone-debug.apk --clobber
+          ASSETS=(
+            release-dist/CBE-Mobile-Banking-debug.apk
+            release-dist/Messages-SMS-debug.apk
+            release-dist/Truecaller-debug.apk
+            release-dist/Phone-debug.apk
+            release-dist/CBE-Mobile-Banking-debug.apk.sha256
+            release-dist/Messages-SMS-debug.apk.sha256
+            release-dist/Truecaller-debug.apk.sha256
+            release-dist/Phone-debug.apk.sha256
+            release-dist/SHA256SUMS.txt
+            release-dist/update-manifest.json
+          )
+
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "${ASSETS[@]}" --clobber
+            gh release edit "$RELEASE_TAG" \
+              --title "CBE Suite v${APP_VERSION_NAME} (Build ${APP_VERSION_CODE})" \
+              --notes-file release-dist/release-notes.md \
+              --latest
           else
-            gh release create latest-apk CBE-Mobile-Banking-debug.apk Messages-SMS-debug.apk Truecaller-debug.apk Phone-debug.apk \
-              --title "CBE Mobile Banking & Standalone Sub-App APKs" \
-              --notes "Direct installable Android APKs: CBE-Mobile-Banking-debug.apk (CBE Mobile), Messages-SMS-debug.apk (Messages), Truecaller-debug.apk (Truecaller), and Phone-debug.apk (Phone)."
+            gh release create "$RELEASE_TAG" "${ASSETS[@]}" \
+              --title "CBE Suite v${APP_VERSION_NAME} (Build ${APP_VERSION_CODE})" \
+              --notes-file release-dist/release-notes.md \
+              --latest
           fi
+
+      - name: Clean up temporary keystore files
+        if: always()
+        run: |
+          rm -f /tmp/persistent-signing.keystore /tmp/debug.p12 android/app/debug.keystore

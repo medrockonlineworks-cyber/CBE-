@@ -33,6 +33,12 @@ import PhoneRecentAppsModal, { AppViewId } from './components/PhoneRecentAppsMod
 import PhoneSettingsModal from './components/PhoneSettingsModal';
 import SubAppPermissionBanner from './components/SubAppPermissionBanner';
 import TruecallerSmsPopdownOverlay from './components/TruecallerSmsPopdownOverlay';
+import AppUpdateModal from './components/AppUpdateModal';
+import {
+  AppUpdateService,
+  AvailableUpdateInfo,
+  getLastUpdateCheckTimestamp,
+} from './services/appUpdateService';
 import { CbeWebReceiptModal } from './components/CbeWebReceiptModal';
 import {
   cacheCurrentPublicOriginIfReachable,
@@ -487,6 +493,8 @@ export default function App() {
   const [isIPhone, setIsIPhone] = useState<boolean>(() => PhoneSettingsService.isIPhoneMode());
   const [showPhoneSettingsModal, setShowPhoneSettingsModal] = useState<boolean>(false);
   const [showBiometricEnrollPrompt, setShowBiometricEnrollPrompt] = useState<boolean>(false);
+  const [availableUpdate, setAvailableUpdate] = useState<AvailableUpdateInfo | null>(null);
+  const [pendingUpdateAfterReceipt, setPendingUpdateAfterReceipt] = useState<AvailableUpdateInfo | null>(null);
   const [pendingDeepLinkTxId, setPendingDeepLinkTxId] = useState<string | null>(() => {
     if (typeof window === 'undefined') return null;
     try {
@@ -535,6 +543,99 @@ export default function App() {
   useEffect(() => {
     SystemBarsService.syncForView(activeView, { isIPhone });
   }, [activeView, isIPhone]);
+
+  // Automatic GitHub Releases APK update checker (on app open, periodic every 6h, and on resume if stale)
+  const activeViewForUpdateRef = useRef(activeView);
+  activeViewForUpdateRef.current = activeView;
+
+  useEffect(() => {
+    const presentUpdate = (update: AvailableUpdateInfo) => {
+      if (
+        activeViewForUpdateRef.current === 'receipt' ||
+        activeViewForUpdateRef.current === 'webreceipt'
+      ) {
+        setPendingUpdateAfterReceipt(update);
+      } else {
+        setAvailableUpdate(update);
+      }
+    };
+
+    const handleManualUpdateOpen = (ev: Event) => {
+      const detail = (ev as CustomEvent<{ update?: AvailableUpdateInfo }>).detail;
+      if (detail?.update) {
+        setPendingUpdateAfterReceipt(null);
+        setAvailableUpdate(detail.update);
+      }
+    };
+    window.addEventListener('cbe_open_app_update_modal', handleManualUpdateOpen);
+
+    if (!AppUpdateService.isSupportedNativeAndroid()) {
+      return () => {
+        window.removeEventListener('cbe_open_app_update_modal', handleManualUpdateOpen);
+      };
+    }
+
+    let cancelled = false;
+    const runBackgroundCheck = async () => {
+      if (cancelled) return;
+      const result = await AppUpdateService.checkForUpdate({
+        manual: false,
+        respectSnooze: true,
+      });
+      if (!cancelled && result.status === 'update_available') {
+        presentUpdate(result.update);
+      }
+    };
+
+    const startupTimer = window.setTimeout(() => {
+      void runBackgroundCheck();
+    }, 3500);
+
+    // Periodic background check every 6 hours while running
+    const periodicInterval = window.setInterval(() => {
+      void runBackgroundCheck();
+    }, 6 * 60 * 60 * 1000);
+
+    // Re-check when returning from background if last check is older than 1 hour
+    let removeStateListener: (() => Promise<void>) | null = null;
+    CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+      if (!isActive || cancelled) return;
+      const lastCheck = getLastUpdateCheckTimestamp();
+      if (Date.now() - lastCheck > 60 * 60 * 1000) {
+        void runBackgroundCheck();
+      }
+    })
+      .then((handle) => {
+        if (!cancelled) {
+          removeStateListener = () => handle.remove();
+        } else {
+          handle.remove().catch(() => {});
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(startupTimer);
+      window.clearInterval(periodicInterval);
+      window.removeEventListener('cbe_open_app_update_modal', handleManualUpdateOpen);
+      if (removeStateListener) {
+        void removeStateListener();
+      }
+    };
+  }, []);
+
+  // Show deferred update modal as soon as the user closes a receipt
+  useEffect(() => {
+    if (
+      pendingUpdateAfterReceipt &&
+      activeView !== 'receipt' &&
+      activeView !== 'webreceipt'
+    ) {
+      setAvailableUpdate(pendingUpdateAfterReceipt);
+      setPendingUpdateAfterReceipt(null);
+    }
+  }, [activeView, pendingUpdateAfterReceipt]);
 
   // Sync page title, Apple Touch Icon & dynamic PWA manifest with active app & any custom uploaded logo
   useEffect(() => {
@@ -1686,6 +1787,15 @@ export default function App() {
         activeView === 'phone') && (
         <SubAppPermissionBanner subAppId={activeView} />
       )}
+
+      {/* Native Android GitHub Releases Automatic APK Update Modal */}
+      <AppUpdateModal
+        update={availableUpdate}
+        onClose={() => setAvailableUpdate(null)}
+        onDismissLater={(versionKey) => {
+          AppUpdateService.dismissUpdateLater(versionKey);
+        }}
+      />
     </div>
   );
 }

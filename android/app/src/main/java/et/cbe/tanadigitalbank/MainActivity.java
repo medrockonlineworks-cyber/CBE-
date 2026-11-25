@@ -374,6 +374,7 @@ public class MainActivity extends BridgeActivity {
         activeInstanceRef = new java.lang.ref.WeakReference<>(this);
         registerPlugin(DeviceBiometricsPlugin.class);
         registerPlugin(SubAppShortcutPlugin.class);
+        registerPlugin(AppUpdaterPlugin.class);
         super.onCreate(savedInstanceState);
         applyEdgeToEdge();
         String defaultView = getDefaultFlavorStartView();

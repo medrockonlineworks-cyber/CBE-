@@ -42,12 +42,14 @@ import {
   RotateCcw,
   ShieldCheck,
   MonitorSmartphone,
-  Hash
+  Hash,
+  Download
 } from 'lucide-react';
 import BankLogoModal from './BankLogoModal';
 import AppInstallPrompt from './AppInstallPrompt';
 import NotificationSettingsCard from './NotificationSettingsCard';
 import { PushNotificationService } from '../services/pushNotificationService';
+import { AppUpdateService, InstalledAppInfo } from '../services/appUpdateService';
 import EthiopianNameAutocomplete, { EthiopianThreePartNameInput } from './EthiopianNameAutocomplete';
 
 interface ProfileProps {
@@ -208,6 +210,42 @@ export default function Profile({
   const [newPass, setNewPass] = useState('');
 
   const [showTerms, setShowTerms] = useState(false);
+
+  // App Update Check States
+  const [installedAppInfo, setInstalledAppInfo] = useState<InstalledAppInfo | null>(null);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [updateStatusNote, setUpdateStatusNote] = useState<string>('');
+
+  useEffect(() => {
+    let active = true;
+    AppUpdateService.getInstalledAppInfo().then((info) => {
+      if (active && info) setInstalledAppInfo(info);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const handleManualUpdateCheck = async () => {
+    if (checkingUpdate) return;
+    setCheckingUpdate(true);
+    setUpdateStatusNote('');
+    const result = await AppUpdateService.checkForUpdate({ manual: true, respectSnooze: false });
+    setCheckingUpdate(false);
+
+    if (result.status === 'update_available') {
+      setUpdateStatusNote(`New version v${result.update.latestVersionName} available`);
+      window.dispatchEvent(
+        new CustomEvent('cbe_open_app_update_modal', { detail: { update: result.update } })
+      );
+      return;
+    }
+    if (result.status === 'up_to_date') {
+      setUpdateStatusNote(`Up to date (v${result.installed.versionName})`);
+      return;
+    }
+    setUpdateStatusNote(result.message);
+  };
 
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
@@ -1763,6 +1801,43 @@ export default function Profile({
                 Support Email: <span className="font-bold font-mono text-emerald-850">support@tanabank.demo</span>
               </p>
             </div>
+          </div>
+
+          {/* App Software Updates Check */}
+          <div className="border-t border-gray-50 pt-3 space-y-2">
+            <button
+              id="btn-check-app-updates"
+              type="button"
+              disabled={checkingUpdate}
+              onClick={handleManualUpdateCheck}
+              className="w-full flex justify-between items-center text-sm font-semibold text-gray-700 hover:text-[#70189F] transition cursor-pointer disabled:opacity-60"
+            >
+              <div className="flex items-center gap-3 text-left min-w-0">
+                <div className="p-2 bg-purple-50 text-[#70189F] rounded-xl shrink-0">
+                  {checkingUpdate ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Download className="w-5 h-5" />
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-bold text-gray-800">App Updates</p>
+                  <p className="text-[11px] text-gray-400 truncate">
+                    {installedAppInfo
+                      ? `Version v${installedAppInfo.versionName} (Build ${installedAppInfo.versionCode})`
+                      : 'Check GitHub Releases for new APK'}
+                  </p>
+                </div>
+              </div>
+              <span className="text-xs font-bold text-[#70189F] bg-purple-50 px-2.5 py-1 rounded-xl shrink-0">
+                {checkingUpdate ? 'Checking...' : 'Check'}
+              </span>
+            </button>
+            {updateStatusNote && (
+              <p className="text-[11px] text-gray-500 pl-12 leading-snug">
+                {updateStatusNote}
+              </p>
+            )}
           </div>
 
           {/* Terms & Privacy Popup trigger */}
