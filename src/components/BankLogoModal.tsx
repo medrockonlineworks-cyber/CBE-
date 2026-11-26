@@ -4,6 +4,7 @@ import { UserProfile } from '../types';
 import { CbeLogo } from './CbeLogo';
 import { compressImageFile } from '../lib/imageUtils';
 import { updatePwaBranding } from '../utils/pwaBranding';
+import { GITHUB_BUNDLED_LOGO_DATA_URL } from '../generated/githubBranding';
 import { 
   Image as ImageIcon, 
   Upload, 
@@ -122,20 +123,21 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
 
   const handleResetLogoToDefault = async () => {
     setLogoErrorMsg('');
+    const defaultLogo = GITHUB_BUNDLED_LOGO_DATA_URL || '/custom-bank-logo.png';
     LocalDb.setCustomBankLogo('/custom-bank-logo.png');
-    setCurrentLogo('/custom-bank-logo.png');
-    setPreviewLogo('/custom-bank-logo.png');
+    setCurrentLogo(defaultLogo);
+    setPreviewLogo(defaultLogo);
     setLogoSaveSuccess(true);
-    // Reset PWA icons, server disk assets, and manifest back to uploaded PNG logo
+    // Reset PWA icons, server disk assets, and manifest back to bundled logo
     await updatePwaBranding('/custom-bank-logo.png');
     LocalDb.addAuditLog(
       currentUser.id, 
       currentUser.email, 
       'RESET_BANK_LOGO', 
-      `Administrator ${currentUser.name} reset the bank logo to recently uploaded PNG logo.`
+      `Administrator ${currentUser.name} reset the bank logo to the bundled default logo.`
     );
     if (onLogoUpdated) {
-      onLogoUpdated('/custom-bank-logo.png');
+      onLogoUpdated(defaultLogo);
     }
     setTimeout(() => setLogoSaveSuccess(false), 3000);
   };
@@ -368,7 +370,7 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
 
             {/* Footer Actions */}
             <div className="pt-2 border-t border-gray-100 flex items-center justify-between">
-              {currentLogo && currentLogo !== '/custom-bank-logo.png' ? (
+              {currentLogo && currentLogo !== '/custom-bank-logo.png' && currentLogo !== GITHUB_BUNDLED_LOGO_DATA_URL ? (
                 <button
                   id="btn-reset-logo-in-modal"
                   type="button"
@@ -376,12 +378,12 @@ export default function BankLogoModal({ isOpen, onClose, currentUser, onLogoUpda
                   className="text-xs font-semibold text-rose-600 hover:text-rose-700 transition flex items-center gap-1.5 cursor-pointer py-1.5 px-2 rounded-lg hover:bg-rose-50"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
-                  <span>Reset to Uploaded PNG Logo</span>
+                  <span>Reset to Default App Logo</span>
                 </button>
               ) : (
                 <span className="text-[11px] text-gray-500 font-medium flex items-center gap-1">
                   <Check className="w-3.5 h-3.5 text-emerald-600" />
-                  Active: Recently uploaded PNG logo
+                  Active: Bundled app logo
                 </span>
               )}
 

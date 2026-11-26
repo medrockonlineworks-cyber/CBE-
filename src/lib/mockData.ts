@@ -24,6 +24,12 @@ import {
   ADDITIONAL_BANK_ACCOUNTS 
 } from './additionalAccountsData';
 import {
+  GITHUB_BUNDLED_LOGO_DATA_URL,
+  GITHUB_BUNDLED_LOGO_VERSION,
+  GITHUB_BUNDLED_STAMP_DATA_URL,
+  GITHUB_BUNDLED_STAMP_VERSION,
+} from '../generated/githubBranding';
+import {
   BULK_DIRECTORY_ACCOUNTS,
   BULK_USERS_SEED,
   BULK_BANK_ACCOUNTS
@@ -2656,31 +2662,52 @@ export class LocalDb {
 
   static getCustomBankLogo(): string | null {
     try {
-      const val = localStorage.getItem('tana_custom_bank_logo');
-      if (val && val.trim().length > 0) return val;
-      const val2 = localStorage.getItem('cbe_custom_bank_logo');
-      if (val2 && val2.trim().length > 0) return val2;
-      const val3 = localStorage.getItem('custom_bank_logo');
-      if (val3 && val3.trim().length > 0) return val3;
+      const val =
+        localStorage.getItem('tana_custom_bank_logo') ||
+        localStorage.getItem('cbe_custom_bank_logo') ||
+        localStorage.getItem('custom_bank_logo');
+      const trimmed = val && val.trim().length > 0 ? val.trim() : null;
+
+      if (GITHUB_BUNDLED_LOGO_DATA_URL && GITHUB_BUNDLED_LOGO_VERSION) {
+        const overrideVer = localStorage.getItem('tana_custom_bank_logo_override_ver');
+        if (trimmed && trimmed !== '/custom-bank-logo.png' && overrideVer === GITHUB_BUNDLED_LOGO_VERSION) {
+          return trimmed;
+        }
+        return GITHUB_BUNDLED_LOGO_DATA_URL;
+      }
+
+      if (trimmed) return trimmed;
     } catch {
-      // ignore
+      if (GITHUB_BUNDLED_LOGO_DATA_URL) return GITHUB_BUNDLED_LOGO_DATA_URL;
     }
-    return '/custom-bank-logo.png';
+    return GITHUB_BUNDLED_LOGO_DATA_URL || '/custom-bank-logo.png';
   }
 
   static setCustomBankLogo(logo: string | null): void {
+    const trimmed = logo && logo.trim().length > 0 ? logo.trim() : null;
+    const isResetToDefault = !trimmed || trimmed === '/custom-bank-logo.png';
     try {
-      if (!logo || logo.trim().length === 0) {
+      if (isResetToDefault) {
         localStorage.removeItem('tana_custom_bank_logo');
+        localStorage.removeItem('cbe_custom_bank_logo');
+        localStorage.removeItem('custom_bank_logo');
+        localStorage.removeItem('tana_custom_bank_logo_override_ver');
       } else {
-        localStorage.setItem('tana_custom_bank_logo', logo);
+        localStorage.setItem('tana_custom_bank_logo', trimmed);
+        if (GITHUB_BUNDLED_LOGO_VERSION) {
+          localStorage.setItem('tana_custom_bank_logo_override_ver', GITHUB_BUNDLED_LOGO_VERSION);
+        }
       }
     } catch (err) {
       console.warn('[LocalDb] Failed writing custom logo to localStorage:', err);
     }
-    
+
+    const effectiveLogo = isResetToDefault
+      ? (GITHUB_BUNDLED_LOGO_DATA_URL || '/custom-bank-logo.png')
+      : trimmed;
+
     // Broadcast across windows and local components
-    window.dispatchEvent(new CustomEvent('cbe_logo_updated', { detail: { logo: logo || '/custom-bank-logo.png' } }));
+    window.dispatchEvent(new CustomEvent('cbe_logo_updated', { detail: { logo: effectiveLogo } }));
   }
 
   static getCustomPdfLogo(): string | null {
@@ -2690,7 +2717,7 @@ export class LocalDb {
     } catch {
       // ignore
     }
-    return LocalDb.getCustomBankLogo() || '/custom-bank-logo.png';
+    return LocalDb.getCustomBankLogo() || GITHUB_BUNDLED_LOGO_DATA_URL || '/custom-bank-logo.png';
   }
 
   static setCustomPdfLogo(logo: string | null): void {
@@ -2709,25 +2736,48 @@ export class LocalDb {
   static getCustomBankStamp(): string | null {
     try {
       const val = localStorage.getItem('tana_custom_bank_stamp');
-      return (val && val.trim().length > 0) ? val : null;
+      const trimmed = val && val.trim().length > 0 ? val.trim() : null;
+
+      if (GITHUB_BUNDLED_STAMP_DATA_URL && GITHUB_BUNDLED_STAMP_VERSION) {
+        const removedVer = localStorage.getItem('tana_custom_bank_stamp_removed_ver');
+        if (removedVer === GITHUB_BUNDLED_STAMP_VERSION) {
+          return null;
+        }
+        const overrideVer = localStorage.getItem('tana_custom_bank_stamp_override_ver');
+        if (trimmed && overrideVer === GITHUB_BUNDLED_STAMP_VERSION) {
+          return trimmed;
+        }
+        return GITHUB_BUNDLED_STAMP_DATA_URL;
+      }
+
+      return trimmed;
     } catch {
-      return null;
+      return GITHUB_BUNDLED_STAMP_DATA_URL || null;
     }
   }
 
   static setCustomBankStamp(stamp: string | null): void {
+    const trimmed = stamp && stamp.trim().length > 0 ? stamp.trim() : null;
     try {
-      if (!stamp || stamp.trim().length === 0) {
+      if (!trimmed) {
         localStorage.removeItem('tana_custom_bank_stamp');
+        localStorage.removeItem('tana_custom_bank_stamp_override_ver');
+        if (GITHUB_BUNDLED_STAMP_VERSION) {
+          localStorage.setItem('tana_custom_bank_stamp_removed_ver', GITHUB_BUNDLED_STAMP_VERSION);
+        }
       } else {
-        localStorage.setItem('tana_custom_bank_stamp', stamp);
+        localStorage.setItem('tana_custom_bank_stamp', trimmed);
+        localStorage.removeItem('tana_custom_bank_stamp_removed_ver');
+        if (GITHUB_BUNDLED_STAMP_VERSION) {
+          localStorage.setItem('tana_custom_bank_stamp_override_ver', GITHUB_BUNDLED_STAMP_VERSION);
+        }
       }
     } catch (err) {
       console.warn('[LocalDb] Failed writing custom stamp to localStorage:', err);
     }
     
     // Broadcast across windows and local components
-    window.dispatchEvent(new CustomEvent('cbe_stamp_updated', { detail: { stamp } }));
+    window.dispatchEvent(new CustomEvent('cbe_stamp_updated', { detail: { stamp: trimmed } }));
   }
 
   static getCustomBiometricIcon(): string | null {

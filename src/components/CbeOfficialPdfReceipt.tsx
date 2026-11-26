@@ -2,6 +2,9 @@ import React, { forwardRef } from 'react';
 import { CbeGoldenEmblemSvg } from './CbeLogo';
 import { StampWeight, StampPosition, getOfficialCbeStampSvg, OFFICIAL_CBE_STAMP_LOGO, LocalDb, getAuthenticCbeQrSvgDataUri } from '../lib/mockData';
 import { CBE_DEFAULT_LOGO_BASE64 } from '../assets/cbeLogoBase64';
+import { GITHUB_BUNDLED_LOGO_DATA_URL } from '../generated/githubBranding';
+
+const EMBEDDED_DEFAULT_LOGO = GITHUB_BUNDLED_LOGO_DATA_URL || CBE_DEFAULT_LOGO_BASE64;
 
 export interface CbePdfReceiptData {
   refId: string;
@@ -114,7 +117,8 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
           {/* Left: CBE Official Bank Logo */}
           <div style={{ width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
             {(() => {
-              const effectiveLogo = customPdfLogo || LocalDb.getCustomBankLogo() || CBE_DEFAULT_LOGO_BASE64;
+              const rawLogo = customPdfLogo || LocalDb.getCustomBankLogo() || EMBEDDED_DEFAULT_LOGO;
+              const effectiveLogo = rawLogo === '/custom-bank-logo.png' ? EMBEDDED_DEFAULT_LOGO : rawLogo;
               return (
                 <img 
                   src={effectiveLogo} 
@@ -123,8 +127,8 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
                   crossOrigin="anonymous" 
                   onError={(e) => {
                     const target = e.currentTarget;
-                    if (target.src !== CBE_DEFAULT_LOGO_BASE64) {
-                      target.src = CBE_DEFAULT_LOGO_BASE64;
+                    if (target.src !== EMBEDDED_DEFAULT_LOGO) {
+                      target.src = EMBEDDED_DEFAULT_LOGO;
                     }
                   }}
                 />

@@ -5,6 +5,9 @@ import { Media } from '@capacitor-community/media';
 import html2canvas from 'html2canvas-pro';
 import { LocalDb, DEFAULT_CBE_LOGO } from '../lib/mockData';
 import { CBE_DEFAULT_LOGO_BASE64 } from '../assets/cbeLogoBase64';
+import { GITHUB_BUNDLED_LOGO_DATA_URL } from '../generated/githubBranding';
+
+const EMBEDDED_DEFAULT_LOGO = GITHUB_BUNDLED_LOGO_DATA_URL || CBE_DEFAULT_LOGO_BASE64;
 
 /**
  * Sanitizes transaction ID for safe cross-platform file naming.
@@ -108,7 +111,7 @@ async function inlineImageElement(img: HTMLImageElement): Promise<void> {
     if (savedCustomLogo && savedCustomLogo.startsWith('data:image/')) {
       img.src = savedCustomLogo;
     } else {
-      img.src = CBE_DEFAULT_LOGO_BASE64;
+      img.src = EMBEDDED_DEFAULT_LOGO;
     }
     if ('decode' in img) {
       await img.decode().catch(() => {});
@@ -140,7 +143,7 @@ async function inlineImageElement(img: HTMLImageElement): Promise<void> {
 
   // If default local logo, replace with embedded base64
   if (!img.src || img.src.includes('custom-bank-logo') || img.src.includes('cbe-gold-logo')) {
-    img.src = CBE_DEFAULT_LOGO_BASE64;
+    img.src = EMBEDDED_DEFAULT_LOGO;
     if ('decode' in img) {
       await img.decode().catch(() => {});
     }
@@ -462,7 +465,7 @@ export async function captureReceiptElement(
     const clonedImgs = clonedDoc.querySelectorAll('img');
     clonedImgs.forEach((clonedImg) => {
       if (!clonedImg.src || clonedImg.src.includes('custom-bank-logo') || clonedImg.src.includes('cbe-gold-logo')) {
-        clonedImg.src = CBE_DEFAULT_LOGO_BASE64;
+        clonedImg.src = EMBEDDED_DEFAULT_LOGO;
       }
     });
   };

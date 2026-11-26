@@ -23,6 +23,14 @@ on:
         options:
           - debug
           - release
+      app_logo_url:
+        description: 'Optional direct HTTPS image URL to override the CBE app logo for this build (or commit branding/app-logo.png in GitHub).'
+        required: false
+        type: string
+      stamp_url:
+        description: 'Optional direct HTTPS image URL to override the receipt stamp for this build (or commit branding/stamp.png in GitHub).'
+        required: false
+        type: string
 
 jobs:
   build-and-release-apks:
@@ -91,6 +99,32 @@ jobs:
 
       - name: Install dependencies from package-lock.json
         run: npm ci
+
+      - name: Sync GitHub-uploaded app logo and receipt stamp
+        env:
+          INPUT_APP_LOGO_URL: ${{ github.event.inputs.app_logo_url }}
+          INPUT_STAMP_URL: ${{ github.event.inputs.stamp_url }}
+        run: |
+          mkdir -p branding
+          if [ -n "$INPUT_APP_LOGO_URL" ]; then
+            if [[ "$INPUT_APP_LOGO_URL" =~ ^https:// ]]; then
+              echo "Downloading app logo from workflow input URL..."
+              curl -fsSL --max-filesize 10485760 "$INPUT_APP_LOGO_URL" -o branding/app-logo.png
+            else
+              echo "ERROR: app_logo_url must start with https://" >&2
+              exit 1
+            fi
+          fi
+          if [ -n "$INPUT_STAMP_URL" ]; then
+            if [[ "$INPUT_STAMP_URL" =~ ^https:// ]]; then
+              echo "Downloading receipt stamp from workflow input URL..."
+              curl -fsSL --max-filesize 10485760 "$INPUT_STAMP_URL" -o branding/stamp.png
+            else
+              echo "ERROR: stamp_url must start with https://" >&2
+              exit 1
+            fi
+          fi
+          node scripts/sync-github-branding.cjs
 
       - name: Build web application with GitHub repository metadata
         env:

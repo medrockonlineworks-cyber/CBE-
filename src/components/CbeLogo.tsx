@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { LocalDb, DEFAULT_CBE_LOGO } from '../lib/mockData';
 import { CBE_DEFAULT_LOGO_BASE64 } from '../assets/cbeLogoBase64';
+import { GITHUB_BUNDLED_LOGO_DATA_URL } from '../generated/githubBranding';
+
+const EMBEDDED_DEFAULT_LOGO = GITHUB_BUNDLED_LOGO_DATA_URL || CBE_DEFAULT_LOGO_BASE64;
 
 interface CbeLogoProps {
   className?: string;
@@ -121,9 +124,9 @@ export const CbeLogo: React.FC<CbeLogoProps> = ({
   }, [src]);
 
   const rawSrc = activeUrl || LocalDb.getCustomBankLogo() || DEFAULT_CBE_LOGO;
-  // If default path, use the instant Base64 Data URL to guarantee 100% offline & canvas availability
+  // If default path, use the instant Base64 Data URL (GitHub-uploaded logo if present, else default CBE emblem)
   const finalSrc = (!rawSrc || rawSrc === DEFAULT_CBE_LOGO || rawSrc === '/custom-bank-logo.png')
-    ? CBE_DEFAULT_LOGO_BASE64
+    ? EMBEDDED_DEFAULT_LOGO
     : rawSrc;
 
   if (imgError || !finalSrc) {
@@ -148,9 +151,9 @@ export const CbeLogo: React.FC<CbeLogoProps> = ({
       crossOrigin={finalSrc.startsWith('data:') ? undefined : 'anonymous'}
       referrerPolicy="no-referrer"
       onError={() => {
-        if (finalSrc !== CBE_DEFAULT_LOGO_BASE64) {
+        if (finalSrc !== EMBEDDED_DEFAULT_LOGO) {
           console.warn('[CbeLogo] Custom URL failed to load, falling back to embedded CBE logo');
-          setActiveUrl(CBE_DEFAULT_LOGO_BASE64);
+          setActiveUrl(EMBEDDED_DEFAULT_LOGO);
         } else {
           console.warn('[CbeLogo] Base64 logo fallback to SVG emblem');
           setImgError(true);
