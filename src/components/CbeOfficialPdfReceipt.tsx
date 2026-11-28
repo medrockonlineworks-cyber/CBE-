@@ -64,7 +64,7 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
   onStampDoubleClick,
   onStampTouchEnd
 }, ref) => {
-  const effectiveStamp = activeStamp || getOfficialCbeStampSvg(stampWeight) || OFFICIAL_CBE_STAMP_LOGO;
+  const effectiveStamp = activeStamp || LocalDb.getCustomBankStamp() || getOfficialCbeStampSvg(stampWeight) || OFFICIAL_CBE_STAMP_LOGO;
   // Use full, prominent stamp size (default 330px) to match the authentic web receipt layout
   const effectiveStampSize = stampSize || LocalDb.getPdfStampSize() || 330;
   const effectiveStampPos = stampPosition || LocalDb.getPdfStampPosition();
@@ -357,6 +357,7 @@ export const CbeOfficialPdfReceipt = forwardRef<HTMLDivElement, CbeOfficialPdfRe
                 height: '100%',
                 objectFit: 'contain',
                 transform: 'rotate(-13deg)',
+                mixBlendMode: 'multiply',
                 opacity: stampWeight === 'light' ? 0.88 : stampWeight === 'normal' ? 0.96 : 1
               }}
             />

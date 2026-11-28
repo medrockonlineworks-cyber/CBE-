@@ -2706,14 +2706,23 @@ export class LocalDb {
       ? (GITHUB_BUNDLED_LOGO_DATA_URL || '/custom-bank-logo.png')
       : trimmed;
 
-    // Broadcast across windows and local components
+    // Broadcast across windows, local components, and standalone sub-apps (Messages, Truecaller, Phone)
     window.dispatchEvent(new CustomEvent('cbe_logo_updated', { detail: { logo: effectiveLogo } }));
+    CrossAppSyncService.schedulePush();
   }
 
   static getCustomPdfLogo(): string | null {
     try {
       const val = localStorage.getItem('cbe_custom_pdf_logo');
-      if (val && val.trim().length > 0) return val;
+      const trimmed = val && val.trim().length > 0 ? val.trim() : null;
+      if (GITHUB_BUNDLED_LOGO_DATA_URL && GITHUB_BUNDLED_LOGO_VERSION) {
+        const overrideVer = localStorage.getItem('cbe_custom_pdf_logo_override_ver');
+        if (trimmed && trimmed !== '/custom-bank-logo.png' && overrideVer === GITHUB_BUNDLED_LOGO_VERSION) {
+          return trimmed;
+        }
+        return LocalDb.getCustomBankLogo() || GITHUB_BUNDLED_LOGO_DATA_URL;
+      }
+      if (trimmed) return trimmed;
     } catch {
       // ignore
     }
@@ -2721,16 +2730,22 @@ export class LocalDb {
   }
 
   static setCustomPdfLogo(logo: string | null): void {
+    const trimmed = logo && logo.trim().length > 0 ? logo.trim() : null;
     try {
-      if (!logo || logo.trim().length === 0) {
+      if (!trimmed || trimmed === '/custom-bank-logo.png') {
         localStorage.removeItem('cbe_custom_pdf_logo');
+        localStorage.removeItem('cbe_custom_pdf_logo_override_ver');
       } else {
-        localStorage.setItem('cbe_custom_pdf_logo', logo);
+        localStorage.setItem('cbe_custom_pdf_logo', trimmed);
+        if (GITHUB_BUNDLED_LOGO_VERSION) {
+          localStorage.setItem('cbe_custom_pdf_logo_override_ver', GITHUB_BUNDLED_LOGO_VERSION);
+        }
       }
     } catch (err) {
       console.warn('[LocalDb] Failed writing custom pdf logo to localStorage:', err);
     }
-    window.dispatchEvent(new CustomEvent('cbe_pdf_logo_updated', { detail: { logo } }));
+    window.dispatchEvent(new CustomEvent('cbe_pdf_logo_updated', { detail: { logo: trimmed } }));
+    CrossAppSyncService.schedulePush();
   }
 
   static getCustomBankStamp(): string | null {
@@ -2776,8 +2791,9 @@ export class LocalDb {
       console.warn('[LocalDb] Failed writing custom stamp to localStorage:', err);
     }
     
-    // Broadcast across windows and local components
+    // Broadcast across windows, local components, and standalone sub-apps
     window.dispatchEvent(new CustomEvent('cbe_stamp_updated', { detail: { stamp: trimmed } }));
+    CrossAppSyncService.schedulePush();
   }
 
   static getCustomBiometricIcon(): string | null {
@@ -2829,6 +2845,7 @@ export class LocalDb {
     }
     window.dispatchEvent(new CustomEvent('cbe_web_stamp_size_updated', { detail: { size } }));
     window.dispatchEvent(new CustomEvent('cbe_stamp_size_updated', { detail: { size } }));
+    CrossAppSyncService.schedulePush();
   }
 
   static getPdfStampSize(): number {
@@ -2851,6 +2868,7 @@ export class LocalDb {
       console.warn('[LocalDb] Failed writing pdf stamp size to localStorage:', err);
     }
     window.dispatchEvent(new CustomEvent('cbe_pdf_stamp_size_updated', { detail: { size } }));
+    CrossAppSyncService.schedulePush();
   }
 
   static getBankStampSize(): number {
@@ -2920,6 +2938,7 @@ export class LocalDb {
     }
     window.dispatchEvent(new CustomEvent('cbe_web_stamp_weight_updated', { detail: { weight } }));
     window.dispatchEvent(new CustomEvent('cbe_stamp_weight_updated', { detail: { weight } }));
+    CrossAppSyncService.schedulePush();
   }
 
   static getPdfStampWeight(): StampWeight {
@@ -2939,6 +2958,7 @@ export class LocalDb {
       console.warn('[LocalDb] Failed writing pdf stamp weight to localStorage:', err);
     }
     window.dispatchEvent(new CustomEvent('cbe_pdf_stamp_weight_updated', { detail: { weight } }));
+    CrossAppSyncService.schedulePush();
   }
 
   static getBankStampWeight(): StampWeight {
@@ -2983,6 +3003,7 @@ export class LocalDb {
     }
     window.dispatchEvent(new CustomEvent('cbe_web_stamp_position_updated', { detail: { position: pos } }));
     window.dispatchEvent(new CustomEvent('cbe_stamp_position_updated', { detail: { position: pos } }));
+    CrossAppSyncService.schedulePush();
   }
 
   static getPdfStampPosition(): StampPosition {
@@ -3015,6 +3036,7 @@ export class LocalDb {
       console.warn('[LocalDb] Failed writing pdf stamp position to localStorage:', err);
     }
     window.dispatchEvent(new CustomEvent('cbe_pdf_stamp_position_updated', { detail: { position: pos } }));
+    CrossAppSyncService.schedulePush();
   }
 
   static getBankStampPosition(): StampPosition {

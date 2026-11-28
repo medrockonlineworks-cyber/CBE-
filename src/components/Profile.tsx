@@ -210,6 +210,15 @@ export default function Profile({
   const [newPass, setNewPass] = useState('');
 
   const [showTerms, setShowTerms] = useState(false);
+  const [legalModalMode, setLegalModalMode] = useState<'terms' | 'privacy'>('terms');
+
+  // Authentic CBE Settings view (default) vs Full Existing Settings view (opened by tapping "Settings" at top)
+  const [showLegacySettings, setShowLegacySettings] = useState(false);
+  const [activePreferenceSheet, setActivePreferenceSheet] = useState<
+    null | 'language' | 'account' | 'notifications' | 'services' | 'biometrics' | 'pin' | 'passphrase' | 'logout'
+  >(null);
+  const [fastTransferConfirm, setFastTransferConfirm] = useState(true);
+  const [showQuickBalanceOnHome, setShowQuickBalanceOnHome] = useState(true);
 
   // App Update Check States
   const [installedAppInfo, setInstalledAppInfo] = useState<InstalledAppInfo | null>(null);
@@ -284,8 +293,27 @@ export default function Profile({
         e?.preventDefault?.();
         return;
       }
+      if (showSecurityAuthGate) {
+        setShowSecurityAuthGate(false);
+        setPendingSecurityAction(null);
+        e?.detail?.setHandled?.();
+        e?.preventDefault?.();
+        return;
+      }
       if (showLogoModal) {
         setShowLogoModal(false);
+        e?.detail?.setHandled?.();
+        e?.preventDefault?.();
+        return;
+      }
+      if (activePreferenceSheet) {
+        setActivePreferenceSheet(null);
+        e?.detail?.setHandled?.();
+        e?.preventDefault?.();
+        return;
+      }
+      if (showLegacySettings) {
+        setShowLegacySettings(false);
         e?.detail?.setHandled?.();
         e?.preventDefault?.();
         return;
@@ -301,7 +329,18 @@ export default function Profile({
     return () => {
       window.removeEventListener('cbe_phone_back', handlePhoneBack);
     };
-  }, [showEditProfileModal, showAccountsModal, showPinForm, showPassForm, showTerms, showLogoModal, onBack]);
+  }, [
+    showEditProfileModal,
+    showAccountsModal,
+    showPinForm,
+    showPassForm,
+    showTerms,
+    showSecurityAuthGate,
+    showLogoModal,
+    activePreferenceSheet,
+    showLegacySettings,
+    onBack,
+  ]);
 
   const generateRandomCbeAccount = () => {
     return '1000' + Math.floor(100000000 + Math.random() * 900000000).toString();
@@ -742,7 +781,10 @@ export default function Profile({
     setSuccessMsg('Your security PIN was updated securely!');
     setOldPin('');
     setNewPin('');
-    setTimeout(() => setShowPinForm(false), 1800);
+    setTimeout(() => {
+      setShowPinForm(false);
+      setActivePreferenceSheet((prev) => (prev === 'pin' ? null : prev));
+    }, 1800);
   };
 
   const handlePasswordChange = async () => {
@@ -782,7 +824,10 @@ export default function Profile({
     setSuccessMsg('Security password updated securely!');
     setOldPass('');
     setNewPass('');
-    setTimeout(() => setShowPassForm(false), 1800);
+    setTimeout(() => {
+      setShowPassForm(false);
+      setActivePreferenceSheet((prev) => (prev === 'passphrase' ? null : prev));
+    }, 1800);
   };
 
   const handleLangChange = (code: string) => {
@@ -797,37 +842,326 @@ export default function Profile({
     setTimeout(() => setSuccessMsg(''), 3500);
   };
 
-  return (
-    <div id="profile-screen" className="w-full h-full overflow-y-auto overscroll-contain bg-gray-50 pb-36 font-sans select-none">
-      
-      {/* Settings Top Header Bar */}
-      <div className="sticky top-0 z-30 bg-[#70189F] text-white px-4 pt-[max(env(safe-area-inset-top,0px),10px)] pb-3 flex items-center justify-between shadow-xs">
-        <button
-          type="button"
-          onClick={() => {
-            if (onBack) onBack();
-            else window.history.back();
-          }}
-          className="flex items-center gap-0.5 text-white hover:text-purple-200 active:opacity-70 transition text-[15px] font-normal cursor-pointer"
-        >
-          <ChevronLeft className="w-5 h-5 -ml-1.5 stroke-[2.5]" />
-          <span>Home</span>
-        </button>
-        <span className="font-bold text-base text-white">Settings</span>
-        <div className="w-12 flex justify-end">
-          {isAdmin && (
-            <button
-              onClick={onOpenAdmin}
-              className="text-xs bg-amber-400 text-purple-950 px-2 py-0.5 rounded-full font-bold hover:bg-amber-300 transition cursor-pointer"
-              title="Admin Panel"
-            >
-              Admin
-            </button>
-          )}
-        </div>
-      </div>
+  const activeLanguageShortLabel = useMemo(() => {
+    if (activeLang === 'am') return 'Amharic';
+    if (activeLang === 'or') return 'Oromo';
+    if (activeLang === 'ti') return 'Tigrinya';
+    return 'English';
+  }, [activeLang]);
 
-      <div className="max-w-md mx-auto min-h-full">
+  return (
+    <div
+      id="profile-screen"
+      className={
+        showLegacySettings
+          ? 'w-full h-full overflow-y-auto overscroll-contain bg-gray-50 pb-36 font-sans select-none'
+          : 'w-full h-full flex flex-col overflow-hidden bg-[#70189F] font-sans select-none'
+      }
+    >
+      {!showLegacySettings ? (
+        <>
+          {/* Authentic CBE Settings Top Header Bar */}
+          <div className="shrink-0 bg-[#70189F] text-white px-4 pt-[max(env(safe-area-inset-top,0px),12px)] pb-4 flex items-center gap-4">
+            <button
+              id="btn-cbe-settings-back"
+              type="button"
+              aria-label="Back"
+              onClick={() => {
+                if (onBack) onBack();
+                else window.history.back();
+              }}
+              className="w-9 h-9 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 transition flex items-center justify-center text-white cursor-pointer shrink-0"
+            >
+              <ChevronLeft className="w-5 h-5 stroke-[2.2] -ml-0.5" />
+            </button>
+            <button
+              id="btn-open-full-settings"
+              type="button"
+              onClick={() => setShowLegacySettings(true)}
+              className="text-[20px] font-bold text-white tracking-[-0.01em] leading-none active:opacity-75 transition cursor-pointer text-left"
+            >
+              Settings
+            </button>
+          </div>
+
+          {/* Rounded Light-Gray Sheet Body */}
+          <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain bg-[#F6F6F8] rounded-t-[26px] px-4 pt-5 pb-32">
+            <div className="max-w-md mx-auto">
+              {errorMsg && (
+                <div className="mb-4 bg-red-500/10 border border-red-500/20 text-red-800 text-xs py-2.5 px-3.5 rounded-2xl flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                  <span>{errorMsg}</span>
+                </div>
+              )}
+              {successMsg && (
+                <div className="mb-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 text-xs py-2.5 px-3.5 rounded-2xl flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>{successMsg}</span>
+                </div>
+              )}
+
+              {/* PREFERENCES */}
+              <h2 className="text-[12.5px] font-semibold uppercase tracking-[0.07em] text-[#752599] px-1 mb-2.5">
+                PREFERENCES
+              </h2>
+              <div className="bg-white rounded-[20px] shadow-[0_1px_3px_rgba(16,16,24,0.03)] overflow-hidden divide-y divide-[#F3F3F6]">
+                {/* Language */}
+                <button
+                  id="cbe-setting-language"
+                  type="button"
+                  onClick={() => setActivePreferenceSheet('language')}
+                  className="w-full px-4 py-4 flex items-center gap-4 text-left hover:bg-[#FAFAFC] active:bg-[#F3EEF7] transition-colors cursor-pointer"
+                >
+                  <div className="w-[42px] h-[42px] rounded-[12px] bg-[#F5F2F8] flex items-center justify-center shrink-0">
+                    <svg className="w-[21px] h-[21px] text-[#752599]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="9.5" />
+                      <path d="M2.8 12h18.4" />
+                      <path d="M4.5 7.5h15" />
+                      <path d="M4.5 16.5h15" />
+                      <ellipse cx="12" cy="12" rx="4.2" ry="9.5" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[15.5px] font-medium text-[#222226] leading-snug">Language</p>
+                    <p className="text-[13px] font-normal text-[#94949C] mt-0.5 leading-tight">{activeLanguageShortLabel}</p>
+                  </div>
+                  <ChevronRight className="w-[17px] h-[17px] text-[#C8C8D0] shrink-0 stroke-[1.9]" />
+                </button>
+
+                {/* Account Preferences */}
+                <button
+                  id="cbe-setting-account-preferences"
+                  type="button"
+                  onClick={() => setActivePreferenceSheet('account')}
+                  className="w-full px-4 py-4 flex items-center gap-4 text-left hover:bg-[#FAFAFC] active:bg-[#F3EEF7] transition-colors cursor-pointer"
+                >
+                  <div className="w-[42px] h-[42px] rounded-[12px] bg-[#F5F2F8] flex items-center justify-center shrink-0">
+                    <svg className="w-[21px] h-[21px] text-[#752599]" viewBox="0 0 24 24" fill="currentColor">
+                      <circle cx="9.5" cy="7.5" r="3.6" />
+                      <path d="M3 18.8c0-3.2 2.9-5.3 6.5-5.3 1.4 0 2.7.3 3.7.9-.3.7-.5 1.5-.5 2.3 0 .8.2 1.5.5 2.1H3z" />
+                      <path d="M18.3 13.8l.4-1.1h1.2l.4 1.1c.3.1.6.2.8.4l1.1-.4.6 1-.8.9c.1.3.1.6 0 .9l.8.9-.6 1-1.1-.4c-.2.2-.5.3-.8.4l-.4 1.1h-1.2l-.4-1.1c-.3-.1-.6-.2-.8-.4l-1.1.4-.6-1 .8-.9c-.1-.3-.1-.6 0-.9l-.8-.9.6-1 1.1.4c.2-.2.5-.3.8-.4zm1 3.7a1.3 1.3 0 1 0 0-2.6 1.3 1.3 0 0 0 0 2.6z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[15.5px] font-medium text-[#222226] leading-snug">Account Preferences</p>
+                  </div>
+                  <ChevronRight className="w-[17px] h-[17px] text-[#C8C8D0] shrink-0 stroke-[1.9]" />
+                </button>
+
+                {/* Notification Preferences */}
+                <button
+                  id="cbe-setting-notification-preferences"
+                  type="button"
+                  onClick={() => setActivePreferenceSheet('notifications')}
+                  className="w-full px-4 py-4 flex items-center gap-4 text-left hover:bg-[#FAFAFC] active:bg-[#F3EEF7] transition-colors cursor-pointer"
+                >
+                  <div className="w-[42px] h-[42px] rounded-[12px] bg-[#F5F2F8] flex items-center justify-center shrink-0">
+                    <svg className="w-[21px] h-[21px] text-[#752599]" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 4.2a1.1 1.1 0 0 1 1.1 1.1v.45a5.2 5.2 0 0 1 4.1 5.08v3.97l1.2 1.35a.7.7 0 0 1-.52 1.16H6.12a.7.7 0 0 1-.52-1.16l1.2-1.35v-3.97a5.2 5.2 0 0 1 4.1-5.08V5.3A1.1 1.1 0 0 1 12 4.2z" />
+                      <path d="M10.1 18.4a2 2 0 0 0 3.8 0h-3.8z" />
+                      <path d="M4.2 8.2a.8.8 0 0 1 1.13.05c-.85 1.15-.85 2.85 0 4a.8.8 0 1 1-1.25 1c-1.33-1.67-1.33-4.33 0-6a.8.8 0 0 1 .12-.05z" opacity="0.85" />
+                      <path d="M19.8 8.2a.8.8 0 0 0-1.13.05c.85 1.15.85 2.85 0 4a.8.8 0 1 0 1.25 1c1.33-1.67 1.33-4.33 0-6a.8.8 0 0 0-.12-.05z" opacity="0.85" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[15.5px] font-medium text-[#222226] leading-snug">Notification Preferences</p>
+                  </div>
+                  <ChevronRight className="w-[17px] h-[17px] text-[#C8C8D0] shrink-0 stroke-[1.9]" />
+                </button>
+
+                {/* Service Preferences */}
+                <button
+                  id="cbe-setting-service-preferences"
+                  type="button"
+                  onClick={() => setActivePreferenceSheet('services')}
+                  className="w-full px-4 py-4 flex items-center gap-4 text-left hover:bg-[#FAFAFC] active:bg-[#F3EEF7] transition-colors cursor-pointer"
+                >
+                  <div className="w-[42px] h-[42px] rounded-[12px] bg-[#F5F2F8] flex items-center justify-center shrink-0">
+                    <svg className="w-[20px] h-[20px] text-[#752599]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round">
+                      <line x1="4" y1="6.5" x2="20" y2="6.5" />
+                      <line x1="9" y1="4.2" x2="9" y2="8.8" />
+                      <line x1="4" y1="12" x2="20" y2="12" />
+                      <line x1="15.5" y1="9.7" x2="15.5" y2="14.3" />
+                      <line x1="4" y1="17.5" x2="20" y2="17.5" />
+                      <line x1="10.5" y1="15.2" x2="10.5" y2="19.8" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[15.5px] font-medium text-[#222226] leading-snug">Service Preferences</p>
+                  </div>
+                  <ChevronRight className="w-[17px] h-[17px] text-[#C8C8D0] shrink-0 stroke-[1.9]" />
+                </button>
+              </div>
+
+              {/* SECURITY SETTINGS */}
+              <h2 className="text-[12.5px] font-semibold uppercase tracking-[0.07em] text-[#752599] px-1 mt-6 mb-2.5">
+                SECURITY SETTINGS
+              </h2>
+              <div className="bg-white rounded-[20px] shadow-[0_1px_3px_rgba(16,16,24,0.03)] overflow-hidden divide-y divide-[#F3F3F6]">
+                {/* Biometric Login */}
+                <button
+                  id="cbe-setting-biometric-login"
+                  type="button"
+                  onClick={() => setActivePreferenceSheet('biometrics')}
+                  className="w-full px-4 py-4 flex items-center gap-4 text-left hover:bg-[#FAFAFC] active:bg-[#F3EEF7] transition-colors cursor-pointer"
+                >
+                  <div className="w-[42px] h-[42px] rounded-[12px] bg-[#F5F2F8] flex items-center justify-center shrink-0">
+                    <Fingerprint className="w-[21px] h-[21px] text-[#752599] stroke-[1.7]" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[15.5px] font-medium text-[#222226] leading-snug">Biometric Login</p>
+                  </div>
+                  <ChevronRight className="w-[17px] h-[17px] text-[#C8C8D0] shrink-0 stroke-[1.9]" />
+                </button>
+
+                {/* Change PIN */}
+                <button
+                  id="cbe-setting-change-pin"
+                  type="button"
+                  onClick={() => {
+                    setErrorMsg('');
+                    setSuccessMsg('');
+                    setOldPin('');
+                    setNewPin('');
+                    void requireSecurityAuth(() => setActivePreferenceSheet('pin'));
+                  }}
+                  className="w-full px-4 py-4 flex items-center gap-4 text-left hover:bg-[#FAFAFC] active:bg-[#F3EEF7] transition-colors cursor-pointer"
+                >
+                  <div className="w-[42px] h-[42px] rounded-[12px] bg-[#F5F2F8] flex items-center justify-center shrink-0">
+                    <svg className="w-[21px] h-[21px] text-[#752599]" viewBox="0 0 24 24" fill="currentColor">
+                      <path
+                        fillRule="evenodd"
+                        clipRule="evenodd"
+                        d="M7.5 8a4 4 0 1 0 3.74 5.4h4.26v2.1a1 1 0 1 0 2 0v-2.1h1v2.6a1 1 0 1 0 2 0v-2.6h.5a1 1 0 1 0 0-2h-9.76A4 4 0 0 0 7.5 8zm0 2.2a1.8 1.8 0 1 0 0 3.6 1.8 1.8 0 0 0 0-3.6z"
+                      />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[15.5px] font-medium text-[#222226] leading-snug">Change PIN</p>
+                  </div>
+                  <ChevronRight className="w-[17px] h-[17px] text-[#C8C8D0] shrink-0 stroke-[1.9]" />
+                </button>
+
+                {/* Change Passphrase */}
+                <button
+                  id="cbe-setting-change-passphrase"
+                  type="button"
+                  onClick={() => {
+                    setErrorMsg('');
+                    setSuccessMsg('');
+                    setOldPass('');
+                    setNewPass('');
+                    void requireSecurityAuth(() => setActivePreferenceSheet('passphrase'));
+                  }}
+                  className="w-full px-4 py-4 flex items-center gap-4 text-left hover:bg-[#FAFAFC] active:bg-[#F3EEF7] transition-colors cursor-pointer"
+                >
+                  <div className="w-[42px] h-[42px] rounded-[12px] bg-[#F5F2F8] flex items-center justify-center shrink-0">
+                    <svg className="w-[20px] h-[20px] text-[#752599]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="5" y="10.5" width="14" height="9.5" rx="2.5" />
+                      <path d="M8.5 10.5V7.8a3.5 3.5 0 0 1 7 0v2.7" />
+                      <circle cx="12" cy="15.2" r="1.2" fill="currentColor" stroke="none" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[15.5px] font-medium text-[#222226] leading-snug">Change Passphrase</p>
+                  </div>
+                  <ChevronRight className="w-[17px] h-[17px] text-[#C8C8D0] shrink-0 stroke-[1.9]" />
+                </button>
+              </div>
+
+              {/* ACCOUNT ACTIONS */}
+              <h2 className="text-[12.5px] font-semibold uppercase tracking-[0.07em] text-[#752599] px-1 mt-6 mb-2.5">
+                ACCOUNT ACTIONS
+              </h2>
+              <div className="bg-white rounded-[20px] shadow-[0_1px_3px_rgba(16,16,24,0.03)] overflow-hidden">
+                <button
+                  id="cbe-setting-logout"
+                  type="button"
+                  onClick={() => setActivePreferenceSheet('logout')}
+                  className="w-full px-4 py-4 flex items-center gap-4 text-left hover:bg-[#FFF8F8] active:bg-[#FDF0F0] transition-colors cursor-pointer"
+                >
+                  <div className="w-[42px] h-[42px] rounded-[12px] bg-[#FDF1F1] flex items-center justify-center shrink-0">
+                    <svg className="w-[20px] h-[20px] text-[#D84035]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M10.5 4.5H6.5a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h4" />
+                      <path d="M15 8.5L19 12l-4 3.5" />
+                      <line x1="9.5" y1="12" x2="18.5" y2="12" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[15.5px] font-medium text-[#D84035] leading-snug">Log out</p>
+                  </div>
+                  <ChevronRight className="w-[17px] h-[17px] text-[#C8C8D0] shrink-0 stroke-[1.9]" />
+                </button>
+              </div>
+
+              {/* Footer Version & Legal Links */}
+              <div className="mt-9 pb-4 text-center">
+                <p className="text-[13.5px] text-[#9898A0] font-normal">Version: 6.1.0</p>
+                <div className="mt-3 flex items-center justify-center gap-3 text-[13.5px] font-semibold text-[#752599]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLegalModalMode('privacy');
+                      setShowTerms(true);
+                    }}
+                    className="hover:opacity-75 active:opacity-60 transition cursor-pointer"
+                  >
+                    Privacy Policy
+                  </button>
+                  <span aria-hidden="true" className="text-[#C7B4D4] text-[10px]">•</span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLegalModalMode('terms');
+                      setShowTerms(true);
+                    }}
+                    className="hover:opacity-75 active:opacity-60 transition cursor-pointer"
+                  >
+                    Terms and Tarrifs
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          {/* Existing Full Settings Top Header Bar (accessed by clicking "Settings" text at top) */}
+          <div className="sticky top-0 z-30 bg-[#70189F] text-white px-4 pt-[max(env(safe-area-inset-top,0px),10px)] pb-3 flex items-center justify-between shadow-xs">
+            <button
+              type="button"
+              onClick={() => {
+                if (onBack) onBack();
+                else window.history.back();
+              }}
+              className="flex items-center gap-0.5 text-white hover:text-purple-200 active:opacity-70 transition text-[15px] font-normal cursor-pointer"
+            >
+              <ChevronLeft className="w-5 h-5 -ml-1.5 stroke-[2.5]" />
+              <span>Home</span>
+            </button>
+            <button
+              id="btn-back-to-cbe-settings"
+              type="button"
+              onClick={() => setShowLegacySettings(false)}
+              className="font-bold text-base text-white active:opacity-75 transition cursor-pointer"
+              title="Back to CBE Settings"
+            >
+              Settings
+            </button>
+            <div className="w-12 flex justify-end">
+              {isAdmin && (
+                <button
+                  onClick={onOpenAdmin}
+                  className="text-xs bg-amber-400 text-purple-950 px-2 py-0.5 rounded-full font-bold hover:bg-amber-300 transition cursor-pointer"
+                  title="Admin Panel"
+                >
+                  Admin
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="max-w-md mx-auto min-h-full">
         {/* Profile Header */}
         <div className="bg-[#70189F] text-white px-5 pt-5 pb-8 rounded-b-[2rem] shadow-md text-center space-y-3 relative">
         <div className="w-20 h-20 rounded-full bg-white/15 border-2 border-[#deb356] mx-auto flex items-center justify-center font-black text-[#deb356] text-3xl shadow-lg relative">
@@ -1869,19 +2203,428 @@ export default function Profile({
 
       </div>
     </div>
+        </>
+      )}
 
-      {/* ================= TERMS & CONDITIONS POPUP MODAL ================= */}
+      {/* ================= CBE SETTINGS INTERACTIVE PREFERENCE SHEETS ================= */}
+      {activePreferenceSheet && (
+        <div
+          className="fixed inset-0 bg-black/55 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 z-50 animate-in fade-in duration-150"
+          onClick={() => setActivePreferenceSheet(null)}
+        >
+          <div
+            className="bg-white rounded-t-[26px] sm:rounded-3xl p-5 pb-8 sm:pb-6 max-w-md w-full shadow-2xl border border-gray-100 max-h-[85vh] overflow-y-auto relative animate-in slide-in-from-bottom-4 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4 sm:hidden" />
+
+            {/* Language Sheet */}
+            {activePreferenceSheet === 'language' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-bold text-[#222226]">Language</h3>
+                  <button
+                    type="button"
+                    onClick={() => setActivePreferenceSheet(null)}
+                    className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="divide-y divide-gray-100 rounded-2xl border border-gray-100 overflow-hidden">
+                  {LANGUAGES.map((lang) => {
+                    const selected = activeLang === lang.code;
+                    return (
+                      <button
+                        key={lang.code}
+                        type="button"
+                        onClick={() => {
+                          handleLangChange(lang.code);
+                          setActivePreferenceSheet(null);
+                        }}
+                        className="w-full px-4 py-3.5 flex items-center justify-between text-left hover:bg-[#FAF8FC] active:bg-[#F3EEF7] transition cursor-pointer"
+                      >
+                        <span className={`text-sm ${selected ? 'font-bold text-[#70189F]' : 'font-medium text-gray-800'}`}>
+                          {lang.label}
+                        </span>
+                        {selected && <Check className="w-4 h-4 text-[#70189F] stroke-[2.5]" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Account Preferences Sheet */}
+            {activePreferenceSheet === 'account' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-bold text-[#222226]">Account Preferences</h3>
+                  <button
+                    type="button"
+                    onClick={() => setActivePreferenceSheet(null)}
+                    className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="bg-[#F6F6F8] rounded-2xl p-4 space-y-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Account Holder</span>
+                    <span className="font-bold text-gray-900">{currentUser.name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Account Number</span>
+                    <span className="font-mono font-bold text-[#70189F]">{currentUser.accountNumber}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Account Type</span>
+                    <span className="capitalize font-semibold text-gray-800">{currentUser.accountType || 'Savings'}</span>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActivePreferenceSheet(null);
+                      handleOpenEditProfile();
+                    }}
+                    className="py-3 px-3 rounded-2xl bg-[#70189F] hover:bg-[#5e1385] text-white text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span>Edit Account</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActivePreferenceSheet(null);
+                      setShowNewAccountForm(false);
+                      setShowAccountsModal(true);
+                    }}
+                    className="py-3 px-3 rounded-2xl bg-[#F5F2F8] hover:bg-[#ECE5F4] text-[#70189F] text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5"
+                  >
+                    <Users className="w-3.5 h-3.5" />
+                    <span>Switch Account</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Notification Preferences Sheet */}
+            {activePreferenceSheet === 'notifications' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-bold text-[#222226]">Notification Preferences</h3>
+                  <button
+                    type="button"
+                    onClick={() => setActivePreferenceSheet(null)}
+                    className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#F6F6F8]">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">SMS Transaction Alerts</p>
+                      <p className="text-xs text-gray-500">Instant SMS on credit and debit activity</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSmsAlerts(!smsAlerts)}
+                      className={`w-11 h-6 rounded-full p-0.5 transition cursor-pointer ${smsAlerts ? 'bg-[#70189F]' : 'bg-gray-300'}`}
+                    >
+                      <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${smsAlerts ? 'translate-x-5' : 'translate-x-0'}`} />
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#F6F6F8]">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">Email Statements</p>
+                      <p className="text-xs text-gray-500">Monthly account statement summary</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setEmailStatements(!emailStatements)}
+                      className={`w-11 h-6 rounded-full p-0.5 transition cursor-pointer ${emailStatements ? 'bg-[#70189F]' : 'bg-gray-300'}`}
+                    >
+                      <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${emailStatements ? 'translate-x-5' : 'translate-x-0'}`} />
+                    </button>
+                  </div>
+                  <NotificationSettingsCard
+                    currentUser={currentUser}
+                    onSuccess={(msg) => {
+                      setErrorMsg('');
+                      setSuccessMsg(msg);
+                    }}
+                    onError={(msg) => {
+                      setSuccessMsg('');
+                      setErrorMsg(msg);
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Service Preferences Sheet */}
+            {activePreferenceSheet === 'services' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-bold text-[#222226]">Service Preferences</h3>
+                  <button
+                    type="button"
+                    onClick={() => setActivePreferenceSheet(null)}
+                    className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#F6F6F8]">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">Fast Transfer Confirmation</p>
+                      <p className="text-xs text-gray-500">Streamlined summary before finalizing transfers</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setFastTransferConfirm(!fastTransferConfirm)}
+                      className={`w-11 h-6 rounded-full p-0.5 transition cursor-pointer ${fastTransferConfirm ? 'bg-[#70189F]' : 'bg-gray-300'}`}
+                    >
+                      <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${fastTransferConfirm ? 'translate-x-5' : 'translate-x-0'}`} />
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between p-3.5 rounded-2xl bg-[#F6F6F8]">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">Quick Balance Display</p>
+                      <p className="text-xs text-gray-500">Allow quick balance toggle on dashboard</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowQuickBalanceOnHome(!showQuickBalanceOnHome)}
+                      className={`w-11 h-6 rounded-full p-0.5 transition cursor-pointer ${showQuickBalanceOnHome ? 'bg-[#70189F]' : 'bg-gray-300'}`}
+                    >
+                      <div className={`w-5 h-5 rounded-full bg-white shadow transition-transform ${showQuickBalanceOnHome ? 'translate-x-5' : 'translate-x-0'}`} />
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={checkingUpdate}
+                    onClick={handleManualUpdateCheck}
+                    className="w-full p-3.5 rounded-2xl bg-[#F5F2F8] hover:bg-[#ECE5F4] flex items-center justify-between transition cursor-pointer disabled:opacity-60"
+                  >
+                    <div className="text-left">
+                      <p className="text-sm font-semibold text-[#70189F]">Check for App Updates</p>
+                      <p className="text-xs text-gray-500">{updateStatusNote || 'Verify latest installed version'}</p>
+                    </div>
+                    {checkingUpdate ? (
+                      <Loader2 className="w-4 h-4 text-[#70189F] animate-spin" />
+                    ) : (
+                      <Download className="w-4 h-4 text-[#70189F]" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Biometric Login Sheet */}
+            {activePreferenceSheet === 'biometrics' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-bold text-[#222226]">Biometric Login</h3>
+                  <button
+                    type="button"
+                    onClick={() => setActivePreferenceSheet(null)}
+                    className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="flex items-center justify-between p-4 rounded-2xl bg-[#F6F6F8]">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[#F5F2F8] text-[#70189F] flex items-center justify-center">
+                      <Fingerprint className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900">
+                        {BiometricAuthService.getDeviceBiometricName()} Login
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {biometrics ? 'Enabled on this device' : 'Use fingerprint or Face ID to sign in'}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={biometricBusy}
+                    onClick={handleToggleBiometrics}
+                    className={`w-12 h-6.5 rounded-full p-1 transition cursor-pointer disabled:opacity-60 ${
+                      biometrics ? 'bg-[#70189F]' : 'bg-gray-300'
+                    }`}
+                  >
+                    <div className={`w-4.5 h-4.5 bg-white rounded-full shadow transition-transform ${
+                      biometrics ? 'translate-x-5.5' : 'translate-x-0'
+                    }`} />
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <button
+                    type="button"
+                    disabled={checkingAvailability}
+                    onClick={handleCheckBiometricAvailability}
+                    className="py-2.5 px-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-800 text-xs font-semibold transition cursor-pointer"
+                  >
+                    {checkingAvailability ? 'Checking...' : 'Check Device'}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={biometricBusy}
+                    onClick={() => requireSecurityAuth(performEnableBiometrics)}
+                    className="py-2.5 px-3 rounded-xl bg-[#70189F] hover:bg-[#5e1385] text-white text-xs font-semibold transition cursor-pointer"
+                  >
+                    Re-enable Biometric
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Change PIN Sheet */}
+            {activePreferenceSheet === 'pin' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-bold text-[#222226]">Change PIN</h3>
+                  <button
+                    type="button"
+                    onClick={() => setActivePreferenceSheet(null)}
+                    className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                {errorMsg && <p className="text-xs text-red-600 font-medium">{errorMsg}</p>}
+                {successMsg && <p className="text-xs text-emerald-700 font-medium">{successMsg}</p>}
+                <div className="space-y-3">
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    maxLength={6}
+                    placeholder="Current PIN"
+                    value={oldPin}
+                    onChange={(e) => setOldPin(e.target.value.replace(/\D/g, ''))}
+                    className="w-full bg-[#F6F6F8] border border-gray-200 focus:border-[#70189F] focus:bg-white rounded-xl px-3.5 py-3 text-sm font-mono focus:outline-none"
+                  />
+                  <input
+                    type="password"
+                    inputMode="numeric"
+                    maxLength={6}
+                    placeholder="New 4-digit PIN"
+                    value={newPin}
+                    onChange={(e) => setNewPin(e.target.value.replace(/\D/g, ''))}
+                    className="w-full bg-[#F6F6F8] border border-gray-200 focus:border-[#70189F] focus:bg-white rounded-xl px-3.5 py-3 text-sm font-mono focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await handlePinChange();
+                    }}
+                    className="w-full py-3 rounded-xl bg-[#70189F] hover:bg-[#5e1385] text-white font-bold text-sm transition cursor-pointer"
+                  >
+                    Update PIN
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Change Passphrase Sheet */}
+            {activePreferenceSheet === 'passphrase' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-bold text-[#222226]">Change Passphrase</h3>
+                  <button
+                    type="button"
+                    onClick={() => setActivePreferenceSheet(null)}
+                    className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 cursor-pointer"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                {errorMsg && <p className="text-xs text-red-600 font-medium">{errorMsg}</p>}
+                {successMsg && <p className="text-xs text-emerald-700 font-medium">{successMsg}</p>}
+                <div className="space-y-3">
+                  <input
+                    type="password"
+                    placeholder="Current Passphrase"
+                    value={oldPass}
+                    onChange={(e) => setOldPass(e.target.value)}
+                    className="w-full bg-[#F6F6F8] border border-gray-200 focus:border-[#70189F] focus:bg-white rounded-xl px-3.5 py-3 text-sm focus:outline-none"
+                  />
+                  <input
+                    type="password"
+                    placeholder="New Passphrase (min 6 characters)"
+                    value={newPass}
+                    onChange={(e) => setNewPass(e.target.value)}
+                    className="w-full bg-[#F6F6F8] border border-gray-200 focus:border-[#70189F] focus:bg-white rounded-xl px-3.5 py-3 text-sm focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await handlePasswordChange();
+                    }}
+                    className="w-full py-3 rounded-xl bg-[#70189F] hover:bg-[#5e1385] text-white font-bold text-sm transition cursor-pointer"
+                  >
+                    Update Passphrase
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Log out Confirmation Sheet */}
+            {activePreferenceSheet === 'logout' && (
+              <div className="space-y-4 text-center">
+                <div className="w-12 h-12 rounded-2xl bg-[#FDF1F1] text-[#D84035] mx-auto flex items-center justify-center">
+                  <LogOut className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-[#222226]">Log out</h3>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Are you sure you want to log out of your CBE Mobile Banking session?
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-2.5 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setActivePreferenceSheet(null)}
+                    className="py-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold text-sm transition cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActivePreferenceSheet(null);
+                      onLogout();
+                    }}
+                    className="py-3 rounded-xl bg-[#D84035] hover:bg-[#c0352b] text-white font-semibold text-sm transition cursor-pointer"
+                  >
+                    Log out
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ================= TERMS & PRIVACY POPUP MODAL ================= */}
       {showTerms && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-in fade-in duration-200">
           <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl border border-gray-100 max-h-[80vh] overflow-y-auto relative animate-in zoom-in-95 duration-200">
-            <h3 className="text-lg font-black text-emerald-950 mb-3 flex items-center gap-2">
-              <FileText className="w-5 h-5 text-emerald-800" />
-              <span>Terms of Service</span>
+            <h3 className="text-lg font-black text-[#70189F] mb-3 flex items-center gap-2">
+              <FileText className="w-5 h-5 text-[#70189F]" />
+              <span>{legalModalMode === 'privacy' ? 'Privacy Policy' : 'Terms and Tarrifs'}</span>
             </h3>
             <div className="space-y-3.5 text-xs text-gray-600 leading-relaxed font-sans pr-1">
-              <p className="font-bold text-gray-900">1. Simulated Nature of Ledger</p>
+              <p className="font-bold text-gray-900">1. Commercial Bank of Ethiopia Mobile Banking</p>
               <p>
-                Tana Digital Bank is a financial application prototype. All deposits, balances, interest rates, utility payments, and mobile airtime recharges represented herein are strictly simulated and have no actual real-world fiscal value.
+                Commercial Bank of Ethiopia Mobile Banking provides convenient digital access to your accounts, fund transfers, utility payments, and account preferences.
               </p>
               <p className="font-bold text-gray-900">2. Security and Passcode Guard</p>
               <p>

@@ -55,7 +55,37 @@ const SYNCED_STORAGE_KEYS = [
   'tana_phone_settings_v1',
   'cbe_receipt_browser_type',
   'cbe_pending_receiver_notifs_v1',
+  'tana_custom_bank_logo',
+  'tana_custom_bank_logo_override_ver',
+  'cbe_custom_pdf_logo',
+  'cbe_custom_pdf_logo_override_ver',
+  'tana_custom_bank_stamp',
+  'tana_custom_bank_stamp_override_ver',
+  'tana_custom_bank_stamp_removed_ver',
+  'tana_web_bank_stamp_size',
+  'tana_bank_stamp_size',
+  'tana_pdf_bank_stamp_size',
+  'tana_web_bank_stamp_weight',
+  'tana_bank_stamp_weight',
+  'tana_pdf_bank_stamp_weight',
+  'tana_web_bank_stamp_position',
+  'tana_bank_stamp_position',
+  'tana_pdf_bank_stamp_position',
 ] as const;
+
+const CLEARABLE_SYNC_KEYS = new Set<string>([
+  'cbe_tc_active_popdown_v1',
+  'tana_custom_bank_logo',
+  'tana_custom_bank_logo_override_ver',
+  'cbe_custom_pdf_logo',
+  'cbe_custom_pdf_logo_override_ver',
+  'tana_custom_bank_stamp',
+  'tana_custom_bank_stamp_override_ver',
+  'tana_custom_bank_stamp_removed_ver',
+  'tana_web_bank_stamp_position',
+  'tana_bank_stamp_position',
+  'tana_pdf_bank_stamp_position',
+]);
 
 const META_TIMESTAMPS_KEY = 'cbe_crossapp_sync_ts_v1';
 const CUSTOM_BUCKET_KEY = 'cbe_crossapp_sync_bucket_v1';
@@ -766,10 +796,10 @@ class CrossAppSyncEngine {
     for (const key of SYNCED_STORAGE_KEYS) {
       try {
         const val = localStorage.getItem(key);
-        // Allow empty-string sentinel propagation when cbe_tc_active_popdown_v1 is explicitly cleared
+        // Allow empty-string sentinel propagation when clearable keys are explicitly cleared
         if (val === null) {
           if (
-            key === 'cbe_tc_active_popdown_v1' &&
+            CLEARABLE_SYNC_KEYS.has(key) &&
             (this.lastHashes[key] !== 'EMPTY' || (forceSet && forceSet.has(key)))
           ) {
             this.lastHashes[key] = 'EMPTY';
@@ -801,7 +831,7 @@ class CrossAppSyncEngine {
         const val = localStorage.getItem(key);
         if (val !== null) {
           this.lastHashes[key] = this.computeHash(val);
-        } else if (key === 'cbe_tc_active_popdown_v1') {
+        } else if (CLEARABLE_SYNC_KEYS.has(key)) {
           this.lastHashes[key] = 'EMPTY';
         }
       } catch {}
@@ -820,6 +850,10 @@ class CrossAppSyncEngine {
     let phoneSettingsUpdated = false;
     let tanaUpdated = false;
     let activeUserSwitched = false;
+    let brandingLogoUpdated = false;
+    let brandingPdfLogoUpdated = false;
+    let brandingStampUpdated = false;
+    let brandingStampSettingsUpdated = false;
 
     this.isApplyingRemote = true;
     try {
@@ -830,14 +864,28 @@ class CrossAppSyncEngine {
         const currentLocalTs = Number(localTs[key] || 0);
         const currentVal = localStorage.getItem(key);
 
-        if (key === 'cbe_tc_active_popdown_v1' && remote.value === '') {
+        if (CLEARABLE_SYNC_KEYS.has(key) && remote.value === '') {
           if (currentVal !== null && remoteUpdatedAt > currentLocalTs) {
             localStorage.removeItem(key);
             localTs[key] = remoteUpdatedAt || Date.now();
             this.lastHashes[key] = 'EMPTY';
             anyApplied = true;
-            truecallerUpdated = true;
-            tcPopdownCleared = true;
+            if (key === 'cbe_tc_active_popdown_v1') {
+              truecallerUpdated = true;
+              tcPopdownCleared = true;
+            } else if (key === 'tana_custom_bank_logo' || key === 'tana_custom_bank_logo_override_ver') {
+              brandingLogoUpdated = true;
+            } else if (key === 'cbe_custom_pdf_logo' || key === 'cbe_custom_pdf_logo_override_ver') {
+              brandingPdfLogoUpdated = true;
+            } else if (
+              key === 'tana_custom_bank_stamp' ||
+              key === 'tana_custom_bank_stamp_override_ver' ||
+              key === 'tana_custom_bank_stamp_removed_ver'
+            ) {
+              brandingStampUpdated = true;
+            } else if (key.includes('_stamp_')) {
+              brandingStampSettingsUpdated = true;
+            }
           }
           continue;
         }
@@ -909,6 +957,32 @@ class CrossAppSyncEngine {
           if (key === 'tana_phone_settings_v1' || key === 'cbe_receipt_browser_type') {
             phoneSettingsUpdated = true;
           }
+          if (key === 'tana_custom_bank_logo' || key === 'tana_custom_bank_logo_override_ver') {
+            brandingLogoUpdated = true;
+          }
+          if (key === 'cbe_custom_pdf_logo' || key === 'cbe_custom_pdf_logo_override_ver') {
+            brandingPdfLogoUpdated = true;
+          }
+          if (
+            key === 'tana_custom_bank_stamp' ||
+            key === 'tana_custom_bank_stamp_override_ver' ||
+            key === 'tana_custom_bank_stamp_removed_ver'
+          ) {
+            brandingStampUpdated = true;
+          }
+          if (
+            key === 'tana_web_bank_stamp_size' ||
+            key === 'tana_bank_stamp_size' ||
+            key === 'tana_pdf_bank_stamp_size' ||
+            key === 'tana_web_bank_stamp_weight' ||
+            key === 'tana_bank_stamp_weight' ||
+            key === 'tana_pdf_bank_stamp_weight' ||
+            key === 'tana_web_bank_stamp_position' ||
+            key === 'tana_bank_stamp_position' ||
+            key === 'tana_pdf_bank_stamp_position'
+          ) {
+            brandingStampSettingsUpdated = true;
+          }
           if (
             key === 'tana_transactions' ||
             key === 'tana_users' ||
@@ -932,6 +1006,24 @@ class CrossAppSyncEngine {
       if (anyApplied) {
         this.saveTimestamps(localTs);
         window.dispatchEvent(new CustomEvent('cbe_crossapp_synced'));
+        if (brandingLogoUpdated) {
+          window.dispatchEvent(new CustomEvent('cbe_logo_updated'));
+          window.dispatchEvent(new CustomEvent('bank_logo_updated'));
+        }
+        if (brandingPdfLogoUpdated) {
+          window.dispatchEvent(new CustomEvent('cbe_pdf_logo_updated'));
+        }
+        if (brandingStampUpdated) {
+          window.dispatchEvent(new CustomEvent('cbe_stamp_updated'));
+        }
+        if (brandingStampSettingsUpdated) {
+          window.dispatchEvent(new CustomEvent('cbe_web_stamp_size_updated'));
+          window.dispatchEvent(new CustomEvent('cbe_web_stamp_weight_updated'));
+          window.dispatchEvent(new CustomEvent('cbe_web_stamp_position_updated'));
+          window.dispatchEvent(new CustomEvent('cbe_pdf_stamp_size_updated'));
+          window.dispatchEvent(new CustomEvent('cbe_pdf_stamp_weight_updated'));
+          window.dispatchEvent(new CustomEvent('cbe_pdf_stamp_position_updated'));
+        }
         if (smsUpdated) {
           window.dispatchEvent(new CustomEvent('sms-updated'));
           window.dispatchEvent(new CustomEvent('sms-accounts-updated'));

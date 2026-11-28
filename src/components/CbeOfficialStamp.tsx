@@ -1,5 +1,5 @@
 import React from 'react';
-import { DEFAULT_CBE_LOGO } from '../lib/mockData';
+import { DEFAULT_CBE_LOGO, LocalDb } from '../lib/mockData';
 
 interface CbeOfficialStampProps {
   className?: string;
@@ -33,6 +33,34 @@ export const CbeOfficialStamp: React.FC<CbeOfficialStampProps> = ({
   adminLogo = null,
   preferAdminUploaded = false,
 }) => {
+  const uploadedStamp = LocalDb.getCustomBankStamp();
+  if (uploadedStamp) {
+    return (
+      <div
+        className={`relative pointer-events-none select-none shrink-0 ${className}`}
+        style={{
+          width: `${size}px`,
+          height: `${size}px`,
+          minWidth: `${size}px`,
+          minHeight: `${size}px`,
+          maxWidth: `${size}px`,
+          maxHeight: `${size}px`,
+          aspectRatio: '1 / 1',
+          transform: `rotate(${rotation}deg)`,
+          mixBlendMode: 'multiply',
+          opacity: 0.95,
+        }}
+      >
+        <img
+          src={uploadedStamp}
+          alt="Official Bank Stamp"
+          draggable={false}
+          className="w-full h-full object-contain block"
+        />
+      </div>
+    );
+  }
+
   const inkColor = '#5e1887'; // Authentic CBE signature vibrant purple rubber ink
 
   // Generate the 14 radial arms of connected chain loops for the lower feather array

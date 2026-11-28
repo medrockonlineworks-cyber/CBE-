@@ -556,9 +556,22 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
       setHasUnsavedStampPos(false);
     };
 
+    const handleCrossAppSynced = () => {
+      handleSyncLogo();
+      handleSyncPdfLogo();
+      handleSyncStamp();
+      setWebStampSize(LocalDb.getWebStampSize());
+      setWebStampWeight(LocalDb.getWebStampWeight());
+      setWebStampPosition(LocalDb.getWebStampPosition());
+      setPdfStampSize(LocalDb.getPdfStampSize());
+      setPdfStampWeight(LocalDb.getPdfStampWeight());
+      setPdfStampPosition(LocalDb.getPdfStampPosition());
+    };
+
     window.addEventListener('cbe_logo_updated', handleSyncLogo);
     window.addEventListener('cbe_pdf_logo_updated', handleSyncPdfLogo);
     window.addEventListener('cbe_stamp_updated', handleSyncStamp);
+    window.addEventListener('cbe_crossapp_synced', handleCrossAppSynced);
     window.addEventListener('cbe_web_stamp_size_updated', handleSyncWebStampSize);
     window.addEventListener('cbe_stamp_size_updated', handleSyncWebStampSize);
     window.addEventListener('cbe_web_stamp_weight_updated', handleSyncWebStampWeight);
@@ -577,6 +590,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
       window.removeEventListener('cbe_logo_updated', handleSyncLogo);
       window.removeEventListener('cbe_pdf_logo_updated', handleSyncPdfLogo);
       window.removeEventListener('cbe_stamp_updated', handleSyncStamp);
+      window.removeEventListener('cbe_crossapp_synced', handleCrossAppSynced);
       window.removeEventListener('cbe_web_stamp_size_updated', handleSyncWebStampSize);
       window.removeEventListener('cbe_stamp_size_updated', handleSyncWebStampSize);
       window.removeEventListener('cbe_web_stamp_weight_updated', handleSyncWebStampWeight);
@@ -3007,6 +3021,7 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
                     className="w-full h-full object-contain pointer-events-none select-none transition-all duration-150"
                     style={{
                       transform: 'rotate(-13deg)',
+                      mixBlendMode: 'multiply',
                       opacity: webStampWeight === 'light' ? 0.88 : webStampWeight === 'normal' ? 0.96 : 1,
                     }}
                   />
