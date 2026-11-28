@@ -13,6 +13,7 @@ interface HeaderProps {
   onChangeLanguage?: (lang: string) => void;
   isRefreshing?: boolean;
   showProfileIcon?: boolean;
+  showLanguageSelector?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -25,6 +26,7 @@ export const Header: React.FC<HeaderProps> = ({
   onChangeLanguage,
   isRefreshing = false,
   showProfileIcon = true,
+  showLanguageSelector = true,
 }) => {
   const [langDropdownOpen, setLangDropdownOpen] = useState(false);
   const [isIPhone, setIsIPhone] = useState<boolean>(() => PhoneSettingsService.isIPhoneMode());
@@ -81,38 +83,40 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Right Controls: Language Selector, Refresh Icon, Processing/Status Icon */}
       <div className="flex items-center gap-2">
         {/* Language Selector Pill */}
-        <div className="relative" ref={dropdownRef}>
-          <button
-            id="btn-language-selector"
-            aria-label="Select Language"
-            onClick={() => setLangDropdownOpen(!langDropdownOpen)}
-            className="bg-white/15 hover:bg-white/25 border border-white/20 px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 text-white transition cursor-pointer backdrop-blur-xs active:scale-95"
-          >
-            <span>{selectedLanguage}</span>
-            <ChevronDown className={`w-3.5 h-3.5 opacity-90 transition-transform duration-200 ${langDropdownOpen ? 'rotate-180' : ''}`} />
-          </button>
+        {showLanguageSelector && (
+          <div className="relative" ref={dropdownRef}>
+            <button
+              id="btn-language-selector"
+              aria-label="Select Language"
+              onClick={() => setLangDropdownOpen(!langDropdownOpen)}
+              className="bg-white/15 hover:bg-white/25 border border-white/20 px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 text-white transition cursor-pointer backdrop-blur-xs active:scale-95"
+            >
+              <span>{selectedLanguage}</span>
+              <ChevronDown className={`w-3.5 h-3.5 opacity-90 transition-transform duration-200 ${langDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
 
-          {/* Language Dropdown Menu */}
-          {langDropdownOpen && (
-            <div className="absolute right-0 mt-2 w-36 bg-white rounded-2xl shadow-xl py-1.5 border border-gray-100 text-gray-800 z-50 animate-in fade-in zoom-in-95 duration-150">
-              {languages.map((lang) => (
-                <button
-                  key={lang.code}
-                  onClick={() => {
-                    onChangeLanguage?.(lang.label);
-                    setLangDropdownOpen(false);
-                  }}
-                  className="w-full text-left px-3.5 py-2 text-xs font-semibold hover:bg-purple-50 hover:text-[#781FA5] flex items-center justify-between transition cursor-pointer"
-                >
-                  <span>{lang.native}</span>
-                  {selectedLanguage === lang.label && (
-                    <Check className="w-3.5 h-3.5 text-[#781FA5]" />
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+            {/* Language Dropdown Menu */}
+            {langDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-36 bg-white rounded-2xl shadow-xl py-1.5 border border-gray-100 text-gray-800 z-50 animate-in fade-in zoom-in-95 duration-150">
+                {languages.map((lang) => (
+                  <button
+                    key={lang.code}
+                    onClick={() => {
+                      onChangeLanguage?.(lang.label);
+                      setLangDropdownOpen(false);
+                    }}
+                    className="w-full text-left px-3.5 py-2 text-xs font-semibold hover:bg-purple-50 hover:text-[#781FA5] flex items-center justify-between transition cursor-pointer"
+                  >
+                    <span>{lang.native}</span>
+                    {selectedLanguage === lang.label && (
+                      <Check className="w-3.5 h-3.5 text-[#781FA5]" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* 1. Refresh / Reload Icon Button (Broken circle arrow, upper-left arrowhead) */}
         <button

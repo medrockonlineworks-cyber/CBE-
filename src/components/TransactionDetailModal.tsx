@@ -242,13 +242,13 @@ export default function TransactionDetailModal({
                   id="btn-copy-txid"
                   type="button"
                   onClick={() => handleCopy(txId, 'txid')}
-                  className="p-1 text-gray-400 hover:text-[#70189F] hover:bg-purple-50 rounded transition cursor-pointer"
+                  className="p-1 text-[#752599]/80 hover:text-[#70189F] hover:bg-purple-50 rounded transition cursor-pointer"
                   title="Copy Transaction ID"
                 >
                   {copiedField === 'txid' ? (
                     <Check className="w-4 h-4 text-emerald-600 stroke-[2.5]" />
                   ) : (
-                    <svg className="w-4 h-4 text-gray-400 hover:text-[#70189F]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <svg className="w-4 h-4 text-[#752599]/80 hover:text-[#70189F]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                     </svg>
@@ -257,31 +257,24 @@ export default function TransactionDetailModal({
               </div>
             </div>
 
-            {/* 4. Receipt ID (Wrapped nicely matching Image One) */}
-            <div className="flex items-start justify-between gap-3">
-              <span className="text-gray-500 font-medium whitespace-nowrap text-[14.5px] sm:text-[15px] pt-0.5">Receipt ID</span>
-              <div className="flex items-center gap-1.5 justify-end">
-                <span className="font-bold font-mono text-gray-900 text-[14px] sm:text-[14.5px] tracking-tight leading-tight max-w-[210px] break-all text-right">
-                  {receiptId.startsWith('v2-') ? (
-                    <>
-                      <span>v2-</span><br />
-                      <span>{receiptId.slice(3)}</span>
-                    </>
-                  ) : (
-                    receiptId
-                  )}
+            {/* 4. Receipt ID (Single clean line matching reference video) */}
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-gray-500 font-medium whitespace-nowrap text-[14.5px] sm:text-[15px]">Receipt ID</span>
+              <div className="flex items-center gap-1.5 justify-end min-w-0">
+                <span className="font-bold font-mono text-gray-900 text-[13px] sm:text-[14px] tracking-tight leading-tight whitespace-nowrap truncate text-right">
+                  {receiptId}
                 </span>
                 <button
                   id="btn-copy-receiptid"
                   type="button"
                   onClick={() => handleCopy(receiptId, 'receiptid')}
-                  className="p-1 text-gray-400 hover:text-[#70189F] hover:bg-purple-50 rounded transition cursor-pointer shrink-0"
+                  className="p-1 text-[#752599]/80 hover:text-[#70189F] hover:bg-purple-50 rounded transition cursor-pointer shrink-0"
                   title="Copy Receipt ID"
                 >
                   {copiedField === 'receiptid' ? (
                     <Check className="w-4 h-4 text-emerald-600 stroke-[2.5]" />
                   ) : (
-                    <svg className="w-4 h-4 text-gray-400 hover:text-[#70189F]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                    <svg className="w-4 h-4 text-[#752599]/80 hover:text-[#70189F]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
                       <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
                       <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
                     </svg>
@@ -322,7 +315,7 @@ export default function TransactionDetailModal({
                   setShowWebReceipt(true);
                 }
               }}
-              className="w-auto min-w-[172px] max-w-[196px] h-[44px] sm:h-[46px] px-6 py-2.5 text-xs bg-[#70189F] hover:bg-[#5e1286] active:scale-[0.98] text-white rounded-full font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-[0_4px_14px_rgba(112,24,159,0.35)] transition-all cursor-pointer"
+              className="w-auto min-w-[196px] max-w-[228px] h-[46px] sm:h-[48px] px-7 py-2.5 text-xs bg-[#761C9E] hover:bg-[#5e1286] active:scale-[0.98] text-white rounded-[14px] font-bold uppercase tracking-wider flex items-center justify-center gap-2.5 shadow-[0_4px_14px_rgba(112,24,159,0.32)] transition-all cursor-pointer"
             >
               <svg 
                 className="w-4 h-4 text-white shrink-0" 

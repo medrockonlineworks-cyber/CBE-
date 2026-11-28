@@ -239,6 +239,36 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
   });
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  // Authentic 2-stage CBE Web Receipt opening animation: spinning purple ring -> CBE emblem -> receipt
+  const [receiptLoadPhase, setReceiptLoadPhase] = useState<'ring' | 'logo' | 'done'>(() =>
+    (initialPayload?.viewMode || initialViewMode || 'web') === 'web' ? 'ring' : 'done'
+  );
+  const receiptLoadTimersRef = useRef<number[]>([]);
+
+  const startReceiptLoadingSequence = () => {
+    receiptLoadTimersRef.current.forEach((id) => window.clearTimeout(id));
+    receiptLoadTimersRef.current = [];
+    setReceiptLoadPhase('ring');
+    const t1 = window.setTimeout(() => {
+      setReceiptLoadPhase('logo');
+    }, 620);
+    const t2 = window.setTimeout(() => {
+      setReceiptLoadPhase('done');
+      setIsRefreshing(false);
+    }, 1320);
+    receiptLoadTimersRef.current = [t1, t2];
+  };
+
+  useEffect(() => {
+    if ((initialPayload?.viewMode || initialViewMode || 'web') === 'web') {
+      startReceiptLoadingSequence();
+    }
+    return () => {
+      receiptLoadTimersRef.current.forEach((id) => window.clearTimeout(id));
+      receiptLoadTimersRef.current = [];
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Sync browserType with external changes in PhoneSettings
   useEffect(() => {
@@ -1104,6 +1134,10 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
 
   const handleRefresh = () => {
     setIsRefreshing(true);
+    if (viewMode === 'web') {
+      startReceiptLoadingSequence();
+      return;
+    }
     setTimeout(() => {
       setIsRefreshing(false);
     }, 500);
@@ -2727,7 +2761,34 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
       ) : (
         /* Web Receipt Mode */
         <>
-          <main className="w-full flex-1 overflow-y-auto px-2 pt-2.5 pb-[max(env(safe-area-inset-bottom,0px),96px)] bg-[#f0f2f5] flex justify-center">
+          {receiptLoadPhase !== 'done' ? (
+            <main
+              id="cbe-web-receipt-loading-screen"
+              className="w-full flex-1 bg-[#F5F5F7] flex flex-col items-center justify-center px-6 select-none"
+            >
+              <div className="flex flex-col items-center justify-center -mt-12">
+                <div className="w-[64px] h-[64px] flex items-center justify-center relative">
+                  {receiptLoadPhase === 'ring' ? (
+                    <div
+                      aria-label="Loading receipt"
+                      className="w-[58px] h-[58px] rounded-full border-[4px] border-[#E7D8EF] border-t-[#7A1FA2] animate-spin"
+                    />
+                  ) : (
+                    <div className="w-[58px] h-[58px] flex items-center justify-center animate-in fade-in zoom-in-90 duration-250">
+                      <CbeLogo
+                        src={adminLogo}
+                        className="w-[54px] h-[54px] object-contain animate-cbe-pulse"
+                      />
+                    </div>
+                  )}
+                </div>
+                <p className="mt-4 text-[14.5px] font-medium text-[#7D828C] tracking-[-0.01em]">
+                  Loading receipt...
+                </p>
+              </div>
+            </main>
+          ) : (
+          <main className="w-full flex-1 overflow-y-auto px-2 pt-2.5 pb-[max(env(safe-area-inset-bottom,0px),96px)] bg-[#f0f2f5] flex justify-center animate-in fade-in duration-250">
         <div 
           ref={receiptCardRef}
           className={`bg-white w-full max-w-[460px] shadow-[0_4px_24px_rgba(0,0,0,0.08)] border border-gray-200/90 rounded-2xl overflow-hidden text-gray-900 self-start transition-opacity ${
@@ -3084,22 +3145,25 @@ export const CbeWebReceiptModal: React.FC<CbeWebReceiptModalProps> = ({
 
         </div>
       </main>
+          )}
 
-      {/* Floating Download PDF Button (Respects physical device navigation bar) */}
-          <div className="fixed bottom-[max(env(safe-area-inset-bottom,0px),16px)] inset-x-0 flex flex-col items-center gap-1.5 z-20 pointer-events-auto px-4">
-            {downloadError && (
-              <div className="bg-red-900/90 border border-red-500 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg max-w-sm text-center">
-                {downloadError}
-              </div>
-            )}
-            <button
-              type="button"
-              onClick={handleOpenPdfView}
-              className="bg-[#781d77] hover:bg-[#70189F] active:bg-[#580f68] text-white font-semibold text-[13px] sm:text-[13.5px] py-2 px-7 rounded-xl shadow-lg shadow-purple-950/25 flex items-center justify-center transition active:scale-95 cursor-pointer"
-            >
-              <span>Download PDF</span>
-            </button>
-          </div>
+      {/* Floating Download PDF Button (Appears once receipt finishes loading) */}
+          {receiptLoadPhase === 'done' && (
+            <div className="fixed bottom-[max(env(safe-area-inset-bottom,0px),16px)] inset-x-0 flex flex-col items-center gap-1.5 z-20 pointer-events-auto px-4 animate-in fade-in slide-in-from-bottom-2 duration-200">
+              {downloadError && (
+                <div className="bg-red-900/90 border border-red-500 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg max-w-sm text-center">
+                  {downloadError}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={handleOpenPdfView}
+                className="bg-[#781d77] hover:bg-[#70189F] active:bg-[#580f68] text-white font-semibold text-[13px] sm:text-[13.5px] py-2.5 px-7 rounded-xl shadow-lg shadow-purple-950/25 flex items-center justify-center transition active:scale-95 cursor-pointer"
+              >
+                <span>Download PDF</span>
+              </button>
+            </div>
+          )}
           {/* Solid White Device Navigation Bar Safe-Area Strip */}
           <div 
             data-html2canvas-ignore="true" 

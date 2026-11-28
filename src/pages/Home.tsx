@@ -595,12 +595,13 @@ export const Home: React.FC<HomeProps> = ({
             onChangeLanguage={(lang) => setSelectedLanguage(lang)}
             isRefreshing={isRefreshing}
             showProfileIcon={activeNavTab !== 'history'}
+            showLanguageSelector={activeNavTab !== 'history'}
           />
 
           {/* 2. ACCOUNT CARD SECTION (Distinct Previous Curves: Floating on Home, Rounded Sheet on Transactions) */}
           <div className={`w-full mt-2 sm:mt-3 transition-all duration-200 ${
             activeNavTab === 'history' 
-              ? 'rounded-t-[26px] sm:rounded-t-[28px] bg-[#E2E4E8] pt-2 sm:pt-2.5 px-1 sm:px-2 shadow-xs' 
+              ? 'rounded-t-[26px] sm:rounded-t-[28px] bg-[#F3F3F5] pt-3 sm:pt-3.5 px-1 sm:px-2' 
               : ''
           }`}>
             {/* BLACK ACCOUNT CARD */}
@@ -621,16 +622,18 @@ export const Home: React.FC<HomeProps> = ({
 
             {/* 3. STATIC GOLD / YELLOW INDICATOR (Line on Home, Circular Dot on Transactions) */}
             <div 
-              className="w-full flex justify-center items-center pt-1.5 pb-2 relative z-20 cursor-pointer active:scale-95 transition-transform"
+              className={`w-full flex justify-center items-center relative z-20 cursor-pointer active:scale-95 transition-transform ${
+                activeNavTab === 'history' ? 'pt-4 pb-2.5' : 'pt-1.5 pb-2'
+              }`}
               onClick={() => setShowRegisteredAccountsModal(true)}
               title="Click to switch registered account"
             >
               <div 
                 id="static-gold-indicator-line"
-                className={`bg-gradient-to-r from-[#d4af37] via-[#f59e0b] to-[#deb356] rounded-full shadow-[0_1px_2px_rgba(212,175,55,0.3)] transition-all duration-300 ${
+                className={`rounded-full transition-all duration-300 ${
                   activeNavTab === 'history'
-                    ? 'w-2.5 h-2.5 rounded-full'
-                    : 'w-7 h-2 rounded-full'
+                    ? 'w-2.5 h-2.5 bg-[#D9A74A]'
+                    : 'w-7 h-2 bg-gradient-to-r from-[#d4af37] via-[#f59e0b] to-[#deb356] shadow-[0_1px_2px_rgba(212,175,55,0.3)]'
                 }`} 
                 title="CBE Section Indicator - Click to switch registered account"
               />
@@ -657,15 +660,17 @@ export const Home: React.FC<HomeProps> = ({
       {/* ========================================================
           SCROLLABLE CONTENT AREA (From Yellow Line Downwards)
           ======================================================== */}
-      <main ref={mainScrollRef as any} className="flex-1 min-h-0 overflow-y-auto overscroll-contain overflow-x-hidden scrollbar-none relative z-10 w-full pb-14 sm:pb-16 bg-[#F7F7F7]">
+      <main ref={mainScrollRef as any} className={`flex-1 min-h-0 overflow-y-auto overscroll-contain overflow-x-hidden scrollbar-none relative z-10 w-full pb-14 sm:pb-16 ${
+        activeNavTab === 'history' ? 'bg-[#F3F3F5]' : 'bg-[#F7F7F7]'
+      }`}>
         {/* DYNAMIC CONTENT UNDER CARD BASED ON ACTIVE TAB */}
         {activeNavTab === 'history' ? (
           /* ========================================================
-             TRANSACTION HISTORY SECTION (Matching Exact CBE Layout from Screenshot)
+             TRANSACTION HISTORY SECTION (Matching Exact CBE Reference Screenshot)
              ======================================================== */
-          <div className="w-full max-w-md mx-auto min-h-[460px] pb-8 flex flex-col animate-in fade-in duration-200">
-            {/* Sticky Filter Tabs & Search Icon Row with perfectly equal spacing across all 4 items */}
-            <div className="sticky top-0 z-20 bg-[#F7F7F7] w-full px-2 sm:px-3 pt-3.5 pb-2 border-b border-gray-200/40">
+          <div className="w-full max-w-md mx-auto min-h-[460px] pb-10 flex flex-col animate-in fade-in duration-200">
+            {/* Sticky Filter Tabs & Search Icon Row */}
+            <div className="sticky top-0 z-20 bg-[#F3F3F5] w-full px-3 sm:px-4 pt-2 pb-2.5">
               <div className="grid grid-cols-4 items-center">
                 {/* 1. All */}
                 <button
@@ -674,18 +679,16 @@ export const Home: React.FC<HomeProps> = ({
                   onClick={() => setHistoryFilter('all')}
                   className="flex flex-col items-center justify-center cursor-pointer group focus:outline-none select-none w-full"
                 >
-                  <span className={`text-xs transition-colors ${
+                  <span className={`text-[15px] sm:text-[16px] transition-colors ${
                     historyFilter === 'all'
-                      ? 'text-[#70189f] font-bold'
-                      : 'text-[#64748b] font-medium hover:text-[#70189f]'
+                      ? 'text-[#752599] font-semibold'
+                      : 'text-[#555568] font-medium hover:text-[#752599]'
                   }`}>
                     All
                   </span>
-                  {historyFilter === 'all' ? (
-                    <div className="w-7 h-[3px] bg-[#70189f] rounded-full mt-1 animate-in fade-in duration-150" />
-                  ) : (
-                    <div className="w-7 h-[3px] bg-transparent mt-1" />
-                  )}
+                  <div className={`w-6 h-[3.5px] rounded-full mt-1.5 transition-all duration-150 ${
+                    historyFilter === 'all' ? 'bg-[#752599]' : 'bg-transparent'
+                  }`} />
                 </button>
 
                 {/* 2. Debited */}
@@ -695,18 +698,16 @@ export const Home: React.FC<HomeProps> = ({
                   onClick={() => setHistoryFilter('debited')}
                   className="flex flex-col items-center justify-center cursor-pointer group focus:outline-none select-none w-full"
                 >
-                  <span className={`text-xs transition-colors ${
+                  <span className={`text-[15px] sm:text-[16px] transition-colors ${
                     historyFilter === 'debited'
-                      ? 'text-[#70189f] font-bold'
-                      : 'text-[#64748b] font-medium hover:text-[#70189f]'
+                      ? 'text-[#752599] font-semibold'
+                      : 'text-[#555568] font-medium hover:text-[#752599]'
                   }`}>
                     Debited
                   </span>
-                  {historyFilter === 'debited' ? (
-                    <div className="w-14 h-[3px] bg-[#70189f] rounded-full mt-1 animate-in fade-in duration-150" />
-                  ) : (
-                    <div className="w-14 h-[3px] bg-transparent mt-1" />
-                  )}
+                  <div className={`w-12 h-[3.5px] rounded-full mt-1.5 transition-all duration-150 ${
+                    historyFilter === 'debited' ? 'bg-[#752599]' : 'bg-transparent'
+                  }`} />
                 </button>
 
                 {/* 3. Credited */}
@@ -716,18 +717,16 @@ export const Home: React.FC<HomeProps> = ({
                   onClick={() => setHistoryFilter('credited')}
                   className="flex flex-col items-center justify-center cursor-pointer group focus:outline-none select-none w-full"
                 >
-                  <span className={`text-xs transition-colors ${
+                  <span className={`text-[15px] sm:text-[16px] transition-colors ${
                     historyFilter === 'credited'
-                      ? 'text-[#70189f] font-bold'
-                      : 'text-[#64748b] font-medium hover:text-[#70189f]'
+                      ? 'text-[#752599] font-semibold'
+                      : 'text-[#555568] font-medium hover:text-[#752599]'
                   }`}>
                     Credited
                   </span>
-                  {historyFilter === 'credited' ? (
-                    <div className="w-14 h-[3px] bg-[#70189f] rounded-full mt-1 animate-in fade-in duration-150" />
-                  ) : (
-                    <div className="w-14 h-[3px] bg-transparent mt-1" />
-                  )}
+                  <div className={`w-12 h-[3.5px] rounded-full mt-1.5 transition-all duration-150 ${
+                    historyFilter === 'credited' ? 'bg-[#752599]' : 'bg-transparent'
+                  }`} />
                 </button>
 
                 {/* 4. Search Icon */}
@@ -738,27 +737,26 @@ export const Home: React.FC<HomeProps> = ({
                     aria-label="Toggle Search"
                     onClick={() => setIsHistorySearchOpen(!isHistorySearchOpen)}
                     className={`p-1.5 rounded-full transition-colors cursor-pointer select-none focus:outline-none ${
-                      isHistorySearchOpen ? 'bg-purple-100 text-[#70189f]' : 'text-[#70189f] hover:bg-purple-50'
+                      isHistorySearchOpen ? 'bg-purple-100 text-[#752599]' : 'text-[#752599] hover:bg-purple-50'
                     }`}
                   >
-                    <Search className="w-4.5 h-4.5 stroke-[2.4]" />
+                    <Search className="w-[21px] h-[21px] stroke-[2.2]" />
                   </button>
-                  {/* Invisible spacer to maintain identical vertical rhythm with the tab indicator underlines */}
-                  <div className="h-[3px] mt-1" />
+                  <div className="h-[3.5px] mt-1.5" />
                 </div>
               </div>
             </div>
 
             {/* Optional Search bar */}
             {isHistorySearchOpen && (
-              <div className="px-4 mt-2.5 mb-2 relative animate-in fade-in slide-in-from-top-1 duration-150">
+              <div className="px-4 mt-1 mb-2.5 relative animate-in fade-in slide-in-from-top-1 duration-150">
                 <input
                   type="text"
                   placeholder="Search by name, account, or ref..."
                   value={historySearchText}
                   onChange={(e) => setHistorySearchText(e.target.value)}
                   autoFocus
-                  className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#70189f] shadow-xs"
+                  className="w-full bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#752599] shadow-xs"
                 />
                 {historySearchText && (
                   <button
@@ -773,9 +771,9 @@ export const Home: React.FC<HomeProps> = ({
             )}
 
             {/* Discrete Transaction Cards List */}
-            <div className="px-4 pt-2.5 flex flex-col space-y-2.5">
+            <div className="px-4 pt-1 flex flex-col space-y-3">
               {filteredHistoryTransactions.length === 0 ? (
-                <div className="py-14 text-center text-xs text-gray-400 bg-white rounded-2xl border border-gray-100 p-6 shadow-xs">
+                <div className="py-14 text-center text-xs text-gray-400 bg-white rounded-[18px] border border-gray-100 p-6 shadow-xs">
                   No transactions found.
                 </div>
               ) : (
@@ -790,8 +788,16 @@ export const Home: React.FC<HomeProps> = ({
 
                   const displayName = isCredit 
                     ? (tx.senderName || 'Deposit') 
-                    : (tx.recipientName || 'CBE Transfer');
-                  const categoryTag = getCbeCategory(tx);
+                    : (tx.recipientName || 'Withdrawal');
+                  const rawCategory = getCbeCategory(tx);
+                  const categoryTag =
+                    tx.category
+                      ? tx.category
+                      : isCredit
+                        ? 'MOBILE CREDIT'
+                        : rawCategory === 'ACCOUNT TO ACCOUNT'
+                          ? 'MOBILE DEBIT'
+                          : rawCategory;
                   const formattedDate = formatCbeHistoryDate(tx.createdAt);
 
                   return (
@@ -799,41 +805,41 @@ export const Home: React.FC<HomeProps> = ({
                       key={tx.id}
                       id={`tx-item-${tx.id}`}
                       onClick={() => setSelectedDetailTx(tx)}
-                      className="bg-white rounded-2xl p-2.5 sm:p-3 shadow-[0_1px_3px_rgba(0,0,0,0.03)] border border-gray-100/90 flex items-center justify-between hover:border-purple-200 active:scale-[0.99] transition-all cursor-pointer select-none group"
+                      className="bg-white rounded-[18px] px-4 py-3.5 shadow-[0_1px_4px_rgba(15,15,25,0.03)] border border-black/[0.03] flex items-center justify-between hover:border-purple-200 active:scale-[0.99] transition-all cursor-pointer select-none group"
                     >
-                      {/* Left: Direction Circular Badge + Title + Timestamp */}
-                      <div className="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1 mr-2">
-                        {/* Directional Circular Icon (Green arrow down for credit, Red arrow up for debit) */}
-                        <div className={`w-8 h-8 sm:w-8.5 sm:h-8.5 rounded-full flex items-center justify-center flex-shrink-0 ${
-                          isCredit ? 'bg-[#e8f7ee] text-[#16a34a]' : 'bg-[#feecee] text-[#ef4444]'
+                      {/* Left: Direction Circular Badge + Purple Title + Timestamp */}
+                      <div className="flex items-center gap-3 min-w-0 flex-1 mr-3">
+                        {/* Directional Circular Icon (Soft circle, Green down arrow for credit, Red up arrow for debit) */}
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                          isCredit ? 'bg-[#EEF5F0] text-[#22A85A]' : 'bg-[#F6F0F2] text-[#E14A4A]'
                         }`}>
                           {isCredit ? (
-                            <ArrowDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5]" />
+                            <ArrowDown className="w-[18px] h-[18px] stroke-[2.2]" />
                           ) : (
-                            <ArrowUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 stroke-[2.5]" />
+                            <ArrowUp className="w-[18px] h-[18px] stroke-[2.2]" />
                           )}
                         </div>
 
-                        {/* Title and Date */}
+                        {/* Title (CBE Purple) and Date */}
                         <div className="flex flex-col min-w-0">
-                          <span className="font-bold text-[#2d0938] text-xs sm:text-[13px] leading-snug truncate group-hover:text-[#70189f] transition-colors">
+                          <span className="font-semibold text-[#6F2293] text-[15px] leading-snug truncate">
                             {displayName}
                           </span>
-                          <span className="text-[9.5px] sm:text-[10px] text-gray-400 font-normal leading-tight mt-0.5">
+                          <span className="text-[12px] text-[#9A9AA6] font-normal leading-tight mt-0.5 tabular-nums">
                             {formattedDate}
                           </span>
                         </div>
                       </div>
 
-                      {/* Right: Amount + Category Pill Badge */}
+                      {/* Right: Colored Amount (Red Debit / Green Credit) + Rounded Category Tag */}
                       <div className="flex flex-col items-end flex-shrink-0">
-                        <span className={`text-xs sm:text-[13px] font-bold tracking-tight text-right ${
-                          isCredit ? 'text-[#16a34a]' : 'text-gray-900'
+                        <span className={`text-[15px] font-bold tracking-tight text-right tabular-nums ${
+                          isCredit ? 'text-[#22A85A]' : 'text-[#E13E44]'
                         }`}>
                           {isCredit ? '+' : '-'}{tx.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ETB
                         </span>
 
-                        <span className="bg-[#f5eef8] text-[#70189f] px-2 py-0.5 rounded-full text-[8.5px] sm:text-[9px] font-bold uppercase tracking-wider mt-0.5 text-right inline-block whitespace-nowrap">
+                        <span className="bg-[#F2EBF6] text-[#752599] px-2.5 py-0.5 rounded-[7px] text-[10px] font-bold uppercase tracking-[0.04em] mt-1.5 text-right inline-block whitespace-nowrap">
                           {categoryTag}
                         </span>
                       </div>
