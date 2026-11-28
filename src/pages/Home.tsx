@@ -130,7 +130,7 @@ export const Home: React.FC<HomeProps> = ({
 
   // Active Interactive Modal state
   const [activeModal, setActiveModal] = useState<
-    'qr' | 'search' | 'menu' | 'cashout' | 'ministatement' | 'cards' | 'billshare' | 'schedules' | 'cbe-transfer' | 'receive' | 'airtime' | 'other-transfers' | 'cbebirr' | 'bills-utilities' | 'banking' | 'government-services' | 'pay-merchant' | 'travel' | 'shopping' | 'entertainment' | 'tax-payment' | null
+    'qr' | 'search' | 'menu' | 'cashout' | 'ministatement' | 'cards' | 'billshare' | 'schedules' | 'receipt' | 'cbe-transfer' | 'receive' | 'airtime' | 'other-transfers' | 'cbebirr' | 'bills-utilities' | 'banking' | 'government-services' | 'pay-merchant' | 'travel' | 'shopping' | 'entertainment' | 'tax-payment' | null
   >(null);
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -334,7 +334,7 @@ export const Home: React.FC<HomeProps> = ({
   const handleRefresh = useCallback(async () => {
     if (isRefreshing) return;
     setIsRefreshing(true);
-    setShowAccountSynced(true);
+    setShowAccountSynced(false);
 
     if (accountSyncedTimerRef.current) {
       clearTimeout(accountSyncedTimerRef.current);
@@ -349,25 +349,26 @@ export const Home: React.FC<HomeProps> = ({
     
     // 2. Refresh transactions & update clock
     const txs = LocalDb.getTransactions();
-    updateTime();
 
-    setActiveUser({ ...freshUser });
-    setAllTransactions(txs);
-    setRecentTransactions(txs.slice(0, 6));
-    onUpdateCurrentUser?.(freshUser);
-
-    // Notify other components if needed
-    window.dispatchEvent(new CustomEvent('cbe_balance_refreshed', { detail: { balance: freshUser.balance } }));
-
-    // Stop button spinning after 850ms
+    // Keep balance shimmer & rotating icon active for ~900ms, then reveal updated balance and "Account Synced!" pill
     refreshSpinTimerRef.current = setTimeout(() => {
-      setIsRefreshing(false);
-    }, 850);
+      updateTime();
+      setActiveUser({ ...freshUser });
+      setAllTransactions(txs);
+      setRecentTransactions(txs.slice(0, 6));
+      onUpdateCurrentUser?.(freshUser);
 
-    // Keep "Account Synced!" pill badge visible for 2.6s, matching IMG_1213
-    accountSyncedTimerRef.current = setTimeout(() => {
-      setShowAccountSynced(false);
-    }, 2600);
+      // Notify other components if needed
+      window.dispatchEvent(new CustomEvent('cbe_balance_refreshed', { detail: { balance: freshUser.balance } }));
+
+      setIsRefreshing(false);
+      setShowAccountSynced(true);
+
+      // Keep "Account Synced!" pill badge visible for 2.4s after sync finishes
+      accountSyncedTimerRef.current = setTimeout(() => {
+        setShowAccountSynced(false);
+      }, 2400);
+    }, 900);
   }, [activeUser, isRefreshing, onUpdateCurrentUser, updateTime]);
 
   const handleRefreshRef = useRef(handleRefresh);
@@ -474,7 +475,7 @@ export const Home: React.FC<HomeProps> = ({
   };
 
   // Quick action handler
-  const handleQuickAction = (actionId: 'ministatement' | 'cashout' | 'billshare' | 'cards' | 'schedules') => {
+  const handleQuickAction = (actionId: 'ministatement' | 'cashout' | 'billshare' | 'cards' | 'schedules' | 'receipt') => {
     setActiveModal(actionId as any);
   };
 
@@ -613,6 +614,7 @@ export const Home: React.FC<HomeProps> = ({
                 accountNumber={activeUser.accountNumber}
                 dateTimeString={currentDateTime}
                 showBalanceDefault={false}
+                isRefreshing={isRefreshing}
                 customLogoUrl={customLogoUrl}
               />
             </div>
@@ -1361,13 +1363,83 @@ export const Home: React.FC<HomeProps> = ({
 
             <button
               onClick={() => {
-                alert('Scheduled payment creator opened.');
                 setActiveModal(null);
                 onNavigateToTab?.('transfer', 'send');
               }}
               className="w-full bg-[#711A9F] text-white text-xs font-bold py-2.5 rounded-xl hover:bg-[#8A24B6] transition cursor-pointer"
             >
               + Create New Scheduled Payment
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* RECEIPT QUICK ACTION MODAL */}
+      {activeModal === 'receipt' && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in"
+          onClick={() => setActiveModal(null)}
+        >
+          <div
+            className="bg-white rounded-3xl p-5 max-w-sm w-full shadow-2xl relative max-h-[82vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <div>
+                <h3 className="font-bold text-sm text-gray-900">Transaction Receipts</h3>
+                <p className="text-[11px] text-gray-500">Select a transaction to view or share its CBE receipt</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveModal(null)}
+                className="text-gray-400 hover:text-gray-700 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-2 my-3">
+              {recentTransactions.length === 0 ? (
+                <p className="text-xs text-gray-400 text-center py-6">No recent transaction receipts yet.</p>
+              ) : (
+                recentTransactions.map((tx) => (
+                  <button
+                    key={tx.id}
+                    type="button"
+                    onClick={() => {
+                      setActiveModal(null);
+                      onSelectTransaction?.(tx);
+                    }}
+                    className="w-full p-3 bg-gray-50 hover:bg-purple-50/70 rounded-2xl border border-gray-100 flex items-center justify-between text-left transition cursor-pointer"
+                  >
+                    <div className="min-w-0 pr-2">
+                      <p className="text-xs font-bold text-gray-900 truncate">
+                        {tx.recipientName || tx.description || 'CBE Transfer'}
+                      </p>
+                      <p className="text-[10px] text-gray-500 font-mono mt-0.5 truncate">
+                        {tx.reference || tx.id}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-xs font-extrabold text-[#70189F] tabular-nums">
+                        {Number(tx.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })} ETB
+                      </p>
+                      <p className="text-[9.5px] text-gray-400 mt-0.5">View Receipt</p>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setActiveModal(null);
+                onNavigateToTab?.('history');
+              }}
+              className="w-full bg-[#711A9F] text-white text-xs font-bold py-2.5 rounded-xl hover:bg-[#8A24B6] transition cursor-pointer"
+            >
+              View All Transactions
             </button>
           </div>
         </div>

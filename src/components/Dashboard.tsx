@@ -3,7 +3,7 @@ import { UserProfile, Transaction, SystemNotification } from '../types';
 import { LocalDb, DEFAULT_CBE_LOGO } from '../lib/mockData';
 import { CbeLogo as CbeGoldenLogo } from './CbeLogo';
 import DottedWorldMap from './DottedWorldMap';
-import { BillShareIcon, CardsIcon, MiniStatementIcon, CopyIcon, RefreshIcon } from './CbeCustomIcons';
+import { BillShareIcon, CardsIcon, CashOutIcon, MiniStatementIcon, CopyIcon, RefreshIcon } from './CbeCustomIcons';
 import { 
   Eye, 
   EyeOff, 
@@ -327,7 +327,7 @@ export default function Dashboard({ currentUser, onNavigateToTab, onSelectTransa
             className="flex flex-col items-center flex-1 group cursor-pointer"
           >
             <div className="w-13 h-13 rounded-full bg-white border border-gray-100 shadow-[0_2px_8px_rgba(0,0,0,0.04)] flex items-center justify-center text-[#70189F] transition group-hover:scale-105 group-active:scale-95">
-              <ArrowUpRight className="w-6 h-6 stroke-[2.5]" />
+              <CashOutIcon size={25} color="#70189F" strokeWidth={1.9} />
             </div>
             <span className="text-[11px] font-extrabold text-[#70189F] mt-2 text-center leading-tight">
               Cash Out

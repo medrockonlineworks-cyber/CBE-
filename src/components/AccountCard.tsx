@@ -13,6 +13,7 @@ interface AccountCardProps {
   accountNumber?: string;
   dateTimeString?: string;
   showBalanceDefault?: boolean;
+  isRefreshing?: boolean;
   onToggleBalance?: () => void;
   customLogoUrl?: string | null;
   className?: string;
@@ -27,6 +28,7 @@ export const AccountCard: React.FC<AccountCardProps> = ({
   accountNumber = '1000284758657',
   dateTimeString = '01 Jul 2026 • 10:14 AM',
   showBalanceDefault = false,
+  isRefreshing = false,
   onToggleBalance,
   customLogoUrl = null,
   className = '',
@@ -115,21 +117,32 @@ export const AccountCard: React.FC<AccountCardProps> = ({
 
         {/* MIDDLE SECTION: Horizontally Centered Balance & Right Eye Toggle (Fixed height to prevent card resize) */}
         <div className="my-5 sm:my-6 h-[32px] sm:h-[34px] relative flex items-center justify-center z-10">
-          {/* Centered Balance text */}
-          <div className="flex items-baseline justify-center gap-2 text-center whitespace-nowrap px-9 max-w-full overflow-hidden">
-            {showBalance ? (
-              <span className="font-sans text-[23px] sm:text-[25px] font-extrabold tracking-tight text-white leading-none truncate">
-                {formattedBalanceAmount}
+          {/* Centered Balance text or Refresh Shimmer Skeleton */}
+          {isRefreshing ? (
+            <div
+              id="cbe-balance-shimmer-skeleton"
+              aria-label="Refreshing balance"
+              className="flex items-end justify-center gap-2 px-9"
+            >
+              <div className="cbe-balance-shimmer w-[144px] sm:w-[158px] h-[30px] sm:h-[34px] rounded-[9px]" />
+              <div className="cbe-balance-shimmer w-[42px] sm:w-[46px] h-[18px] sm:h-[20px] rounded-[6px]" />
+            </div>
+          ) : (
+            <div className="flex items-baseline justify-center gap-2 text-center whitespace-nowrap px-9 max-w-full overflow-hidden">
+              {showBalance ? (
+                <span className="font-sans text-[23px] sm:text-[25px] font-extrabold tracking-tight text-white leading-none truncate">
+                  {formattedBalanceAmount}
+                </span>
+              ) : (
+                <span className="font-mono text-[24px] sm:text-[26px] font-extrabold tracking-[0.11em] text-white leading-none">
+                  ******
+                </span>
+              )}
+              <span className="font-sans text-[15px] sm:text-[16px] font-bold text-white tracking-normal leading-none shrink-0">
+                {currency}
               </span>
-            ) : (
-              <span className="font-mono text-[24px] sm:text-[26px] font-extrabold tracking-[0.11em] text-white leading-none">
-                ******
-              </span>
-            )}
-            <span className="font-sans text-[15px] sm:text-[16px] font-bold text-white tracking-normal leading-none shrink-0">
-              {currency}
-            </span>
-          </div>
+            </div>
+          )}
 
           {/* Eye Visibility Toggle Button positioned at right */}
           <button

@@ -250,14 +250,14 @@ export const MiniStatementIcon: React.FC<IconProps> = ({
 );
 
 /**
- * 6b. Cash Out Icon (Matching Image 2 in CBE App)
- * Circular outline with gap at top-right, diagonal arrow pointing up-right,
- * and a dollar sign '$' inside.
+ * 6b. Cash Out Icon (Exact CBE Reference Video Match)
+ * Circular purple outline open at top-right (12 to 3 o'clock),
+ * crisp centered vector '$' inside, and diagonal arrow pointing up-right.
  */
 export const CashOutIcon: React.FC<IconProps> = ({
   size = 24,
   className = '',
-  strokeWidth = 2,
+  strokeWidth = 1.9,
   color = '#70189F',
   ...props
 }) => (
@@ -269,34 +269,35 @@ export const CashOutIcon: React.FC<IconProps> = ({
     className={className}
     {...props}
   >
-    {/* Circular ring with opening at upper-right */}
+    {/* Circular ring open at top-right quadrant (12 o'clock to 3 o'clock) */}
     <path
-      d="M 15.5 6.2 A 7.8 7.8 0 1 0 19.2 12.8"
+      d="M 18.9 13 A 7.4 7.4 0 1 1 11.5 5.6"
       stroke={color || '#70189F'}
       strokeWidth={strokeWidth}
       strokeLinecap="round"
     />
-    {/* Diagonal arrow pointing up-right out of opening */}
+    {/* Diagonal arrow pointing up-right cleanly in upper-right opening */}
     <path
-      d="M 13.8 10.2 L 20 4 M 20 4 H 15.8 M 20 4 V 8.2"
+      d="M 14.3 10.2 L 19.3 5.2 M 15.7 5.2 H 19.3 V 8.8"
       stroke={color || '#70189F'}
       strokeWidth={strokeWidth}
       strokeLinecap="round"
       strokeLinejoin="round"
     />
-    {/* Dollar symbol inside center */}
-    <text
-      x="10.8"
-      y="14.8"
-      fontSize="8.8"
-      fontWeight="700"
-      fontFamily="system-ui, -apple-system, sans-serif"
-      fill={color || '#70189F'}
-      textAnchor="middle"
-      stroke="none"
-    >
-      $
-    </text>
+    {/* Crisp vector dollar symbol centered inside the circle */}
+    <path
+      d="M 11.5 8.7 V 17.3"
+      stroke={color || '#70189F'}
+      strokeWidth={1.65}
+      strokeLinecap="round"
+    />
+    <path
+      d="M 13.5 10.8 C 13.5 9.85 12.65 9.3 11.5 9.3 C 10.35 9.3 9.55 9.9 9.55 10.8 C 9.55 11.75 10.35 12.2 11.5 12.55 C 12.7 12.9 13.55 13.4 13.55 14.45 C 13.55 15.45 12.65 16.15 11.5 16.15 C 10.3 16.15 9.45 15.55 9.45 14.6"
+      stroke={color || '#70189F'}
+      strokeWidth={1.65}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
   </svg>
 );
 
@@ -390,13 +391,13 @@ export const BillShareIcon: React.FC<ReceiptIconProps> = ({
 
 /**
  * 9. Schedules / Clock Icon
- * Perfect circular clock outline with simple hour and minute hands
+ * Clean circular clock outline with hour and minute hands matching CBE reference
  */
 export const SchedulesClockIcon: React.FC<IconProps> = ({
   size = 24,
   className = '',
-  strokeWidth = 2.2,
-  color = 'currentColor',
+  strokeWidth = 1.9,
+  color = '#70189F',
   ...props
 }) => (
   <svg
@@ -404,7 +405,7 @@ export const SchedulesClockIcon: React.FC<IconProps> = ({
     height={size}
     viewBox="0 0 24 24"
     fill="none"
-    stroke={color}
+    stroke={color || '#70189F'}
     strokeWidth={strokeWidth}
     strokeLinecap="round"
     strokeLinejoin="round"
@@ -412,9 +413,36 @@ export const SchedulesClockIcon: React.FC<IconProps> = ({
     {...props}
   >
     {/* Clock circle */}
-    <circle cx="12" cy="12" r="9.5" />
-    {/* Hour and minute hands */}
-    <polyline points="12 6.5 12 12 16.5 13.5" />
+    <circle cx="12" cy="12" r="8.8" />
+    {/* Clock hands pointing 12 o'clock and ~4:30 */}
+    <polyline points="12 7.4 12 12.2 15.1 14.3" />
+  </svg>
+);
+
+/**
+ * 9b. Receipt Checkmark Icon (Quick Action #6 in CBE App)
+ * Clean bold purple checkmark centered inside circular quick action button
+ */
+export const ReceiptCheckIcon: React.FC<IconProps> = ({
+  size = 24,
+  className = '',
+  strokeWidth = 2.5,
+  color = '#70189F',
+  ...props
+}) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={color || '#70189F'}
+    strokeWidth={strokeWidth}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    {...props}
+  >
+    <polyline points="5.8 12.7 10.1 17 18.4 8.2" />
   </svg>
 );
 
